@@ -1,4 +1,4 @@
-defmodule Expresso.Templates.Decks.Default do
+defmodule Expresso.Builtins.Templates.Decks.Default do
   use Expresso.Template.Deck
 
   def header(assigns) do

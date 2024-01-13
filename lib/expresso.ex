@@ -12,7 +12,7 @@ defmodule Expresso do
   end
 
   @doc """
-  Load all the deck and slide templates
+  Load all the custom deck and slide templates
   """
   @spec load_templates() :: :ok
   def load_templates() do

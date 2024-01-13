@@ -17,12 +17,11 @@ defmodule Expresso.Template do
   """
   @spec render_slide_template(assigns :: Keyword.t() | map()) :: term()
   def render_slide_template(assigns) do
-    template = assigns[:slide].metadata[:template] || "default"
+    template = assigns[:slide].metadata[:template] || {:builtins, :default}
 
     assigns = [metadata: assigns[:slide].metadata] |> Keyword.merge(assigns[:slide].data)
 
-    module =
-      Module.concat(Expresso.Templates.Slides, :string.titlecase(template))
+    module = module_from_template_definition(:slide, template)
 
     temple do
       c(&do_render_template(module, &1), rest!: assigns)
@@ -34,10 +33,9 @@ defmodule Expresso.Template do
   """
   @spec render_deck_template(part :: :header | :footer, assigns :: Keyword.t() | map()) :: term()
   def render_deck_template(part, assigns) do
-    template = assigns[:template] || "default"
+    template = assigns[:template] || {:builtins, :default}
 
-    module =
-      Module.concat(Expresso.Templates.Decks, :string.titlecase(template))
+    module = module_from_template_definition(:deck, template)
 
     temple do
       c(&do_render_deck_template(module, part, &1), rest!: assigns)
@@ -50,5 +48,15 @@ defmodule Expresso.Template do
 
   defp do_render_deck_template(module, part, assigns) do
     apply(module, part, [assigns])
+  end
+
+  defp module_from_template_definition(:slide, {:builtins, name}) do
+    suffix = name |> Atom.to_string() |> :string.titlecase()
+    Module.concat(Expresso.Builtins.Templates.Slides, suffix)
+  end
+
+  defp module_from_template_definition(:deck, {:builtins, name}) do
+    suffix = name |> Atom.to_string() |> :string.titlecase()
+    Module.concat(Expresso.Builtins.Templates.Decks, suffix)
   end
 end
