@@ -49,6 +49,5 @@ defmodule Expresso.Deck do
     |> Phoenix.HTML.safe_to_string()
     |> Floki.parse_document!()
     |> Floki.raw_html(pretty: true)
-    |> IO.puts()
   end
 end
