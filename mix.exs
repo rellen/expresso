@@ -21,6 +21,9 @@ defmodule Expresso.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:earmark_parser, "~> 1.4"},
+      {:floki, "~> 0.35"},
+      {:temple, "~> 0.12"},
       # docs
       {:ex_doc, "~> 0.22", only: :dev, runtime: false},
 
