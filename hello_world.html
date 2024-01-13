@@ -65,19 +65,25 @@
     </div>
     <script>
       let slide_number = 0;
+
 const slides = document.getElementsByClassName("slide");
 const max_slide_number = slides.length - 1;
-console.log(max_slide_number);
+
 document.addEventListener("keydown", (e) => {
-  if (e.key === "k" && slide_number > 0) { slide_number--; } else if (e.key === "j" && slide_number < max_slide_number) { slide_number++; }
+  if (e.key === "k" && slide_number > 0) {
+    slide_number--;
+  } else if (e.key === "j" && slide_number < max_slide_number){
+    slide_number++;
+  }
+
   for(i=0;i<=max_slide_number;i++) {
     const element = document.getElementById("slide-"+i);
     element.style.display = "none";
   }
+
   const element = document.getElementById("slide-"+slide_number);
   element.style.display = "flex";
 });
     </script>
   </body>
 </html>
-

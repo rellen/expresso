@@ -4,11 +4,12 @@ let
   erlang = pkgs.beam.interpreters.erlangR26;
   elixir = pkgs.beam.packages.erlangR26.elixir_1_15;
   elixir_ls = pkgs.elixir_ls.override { elixir = elixir; };
+  zig = pkgs.zig_0_11;
 
 in pkgs.mkShell rec {
   name = "Elixir";
   buildInputs = with pkgs;
-    [ rebar rebar3 erlang elixir elixir_ls nodejs ]
+    [ rebar rebar3 erlang elixir elixir_ls nodejs zig xz ]
     ++ optional stdenv.isLinux inotify-tools ++ optionals stdenv.isDarwin
     (with darwin.apple_sdk.frameworks; [ CoreFoundation CoreServices ]);
 

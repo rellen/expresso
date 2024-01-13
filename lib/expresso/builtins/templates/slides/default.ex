@@ -1,4 +1,4 @@
-defmodule Expresso.Templates.Slides.Default do
+defmodule Expresso.Builtins.Templates.Slides.Default do
   use Expresso.Template
 
   def render(assigns) do
