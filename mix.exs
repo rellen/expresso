@@ -16,7 +16,7 @@ defmodule Expresso.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {Expresso.Application, []}
+      mod: {Expresso.BurritoEntryPoint, []}
     ]
   end
 
