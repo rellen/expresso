@@ -12,14 +12,14 @@ defmodule Expresso.Renderer do
           title(do: @deck.name)
         end
 
-        body do
+        body style: "min-height: 100vh; width: 100%; margin: 0px;" do
           div style:
-                "height: 100%; width: 100%; display: flex; align-items: center; justify-content: center;" do
+                "height: 100%; width: 100%; display: flex, flex-direction: row; align-items: center; justify-content: center;" do
             for {slide, index} <- Enum.with_index(@deck.slides) do
               section id: "slide-#{slide.metadata.slide_number}",
                       class: "slide",
                       style:
-                        "aspect-ratio: 16 / 9; height: 100%; display: #{if index == 0, do: "flex", else: "none"}; flex-direction: column; justify-content: stretch" do
+                        "height: 100%; display: #{if index == 0, do: "flex", else: "none"}; flex-direction: column; justify-content: stretch" do
                 div style: "width: 100%; flex-grow: 0; display: flex;justify-content: center;" do
                   c(&Expresso.Template.render_deck_template(:header, &1),
                     deck: @deck,
@@ -31,7 +31,8 @@ defmodule Expresso.Renderer do
                   c(&Expresso.Template.render_slide_template/1, slide: slide)
                 end
 
-                div style: "width: 100%; flex-grow: 0; display: flex;justify-content: center;" do
+                div style:
+                      "width: 100%; flex-grow: 0; flex-shrink: 0; display: flex;justify-content: center;" do
                   c(&Expresso.Template.render_deck_template(:footer, &1),
                     deck: @deck,
                     slide: slide
