@@ -52,10 +52,17 @@ defmodule Expresso.Renderer do
             document.addEventListener("keydown", (e) => {
               if (e.key === "k" && slide_number > 0) {
                 slide_number--;
+                update_slide_visibility();
               } else if (e.key === "j" && slide_number < max_slide_number){
                 slide_number++;
+                update_slide_visibility();
+              } else if (e.key === "p"){
+                update_slides_for_print();
               }
 
+            });
+
+            function update_slide_visibility() {
               for(i=0;i<=max_slide_number;i++) {
                 const element = document.getElementById("slide-"+i);
                 element.style.display = "none";
@@ -63,7 +70,14 @@ defmodule Expresso.Renderer do
 
               const element = document.getElementById("slide-"+slide_number);
               element.style.display = "flex";
-            });
+            };
+
+            function update_slides_for_print() {
+              for(i=0;i<=max_slide_number;i++) {
+                const element = document.getElementById("slide-"+i);
+                element.style.display = "flex";
+              }
+            };
             """)
           end
         end
