@@ -31,9 +31,7 @@ defmodule Expresso do
     result =
       case File.stat(input_path) do
         {:ok, _stat} ->
-          {deck, _} =
-            Code.eval_file(input_path)
-
+          {deck, _} = evaluate_deck_file(input_path)
           {:ok, Expresso.Deck.render(deck)}
 
         _ ->
@@ -43,7 +41,7 @@ defmodule Expresso do
     case result do
       {:ok, rendered} ->
         unless output_path == nil do
-          File.write(output_path, rendered)
+          write_to_file(rendered, output_path)
         else
           IO.puts(rendered)
         end
@@ -54,5 +52,15 @@ defmodule Expresso do
         IO.puts(msg)
         err
     end
+  end
+
+  # sobelow_skip ["RCE"]
+  defp evaluate_deck_file(input_path) do
+    Code.eval_file(input_path)
+  end
+
+  # sobelow_skip ["Traversal"]
+  defp write_to_file(rendered, output_path) do
+    File.write(output_path, rendered)
   end
 end

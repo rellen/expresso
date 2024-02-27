@@ -7,8 +7,11 @@ defmodule Expresso.BurritoEntryPoint do
     input_path = Enum.at(args, 0)
     output_path = Enum.at(args, 1)
 
-    Expresso.main(input_path, output_path)
+    Task.start(fn ->
+      Expresso.main(input_path, output_path)
+      System.stop(0)
+    end)
 
-    System.halt(0)
+    Supervisor.start_link([], strategy: :one_for_one)
   end
 end
