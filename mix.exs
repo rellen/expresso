@@ -8,7 +8,8 @@ defmodule Expresso.MixProject do
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      releases: releases()
+      releases: releases(),
+      dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix]]
     ]
   end
 
