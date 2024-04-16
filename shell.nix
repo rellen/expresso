@@ -9,7 +9,7 @@ let
 in pkgs.mkShell rec {
   name = "Elixir";
   buildInputs = with pkgs;
-    [ rebar rebar3 erlang elixir elixir_ls nodejs zig xz ]
+    [ rebar rebar3 erlang elixir elixir_ls nodejs nodePackages.prettier zig xz ]
     ++ optional stdenv.isLinux inotify-tools ++ optionals stdenv.isDarwin
     (with darwin.apple_sdk.frameworks; [ CoreFoundation CoreServices ]);
 
