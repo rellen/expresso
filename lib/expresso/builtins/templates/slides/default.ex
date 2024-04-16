@@ -3,13 +3,15 @@ defmodule Expresso.Builtins.Templates.Slides.Default do
 
   def render(assigns) do
     temple do
-      div do
-        h1 style: "font-size: 72px" do
-          @heading
+      div class: "slide-body" do
+        div class: "slide-heading-container" do
+          h1 style: "margin: 0.5rem 0; text-align: center" do
+            @metadata.heading
+          end
         end
 
-        p do
-          Phoenix.HTML.raw(@text)
+        div class: "slide-main" do
+          c(&Expresso.Template.render_elements(&1), elements: @elements)
         end
       end
     end

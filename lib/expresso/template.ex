@@ -19,7 +19,7 @@ defmodule Expresso.Template do
   def render_slide_template(assigns) do
     template = assigns[:slide].metadata[:template] || {:builtins, :default}
 
-    assigns = [metadata: assigns[:slide].metadata] |> Keyword.merge(assigns[:slide].data)
+    assigns = Expresso.Slide.get_assigns(assigns[:slide])
 
     module = module_from_template_definition(:slide, template)
 
@@ -58,5 +58,17 @@ defmodule Expresso.Template do
   defp module_from_template_definition(:deck, {:builtins, name}) do
     suffix = name |> Atom.to_string() |> :string.titlecase()
     Module.concat(Expresso.Builtins.Templates.Decks, suffix)
+  end
+
+  def render_elements(assigns) do
+    temple do
+      for %module{} = element <- assigns.elements do
+        c(&do_render_element(module, &1), rest!: module.get_assigns(element))
+      end
+    end
+  end
+
+  defp do_render_element(module, assigns) do
+    apply(module, :render, [assigns])
   end
 end

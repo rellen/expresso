@@ -3,6 +3,17 @@ defmodule Expresso.Renderer do
 
   use Temple.Component
 
+  @fonts File.read!("./assets/fonts.css")
+  @style File.read!("./assets/style.css")
+
+  defp fonts() do
+    @fonts
+  end
+
+  defp style() do
+    @style
+  end
+
   def render(assigns) do
     temple do
       "<!DOCTYPE html>"
@@ -10,6 +21,14 @@ defmodule Expresso.Renderer do
       html do
         head do
           title(do: @deck.name)
+
+          style do
+            Phoenix.HTML.raw(fonts())
+          end
+
+          style do
+            Phoenix.HTML.raw(style())
+          end
         end
 
         body style: "min-height: 100vh; width: 100%; margin: 0px;" do

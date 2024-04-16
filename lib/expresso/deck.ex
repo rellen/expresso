@@ -18,10 +18,15 @@ defmodule Expresso.Deck do
   @doc """
   Add a slide to a deck
   """
-  @spec add_slide(deck :: t(), name :: String.t() | nil, metadata :: map(), data :: Keyword.t()) ::
+  @spec add_slide(
+          deck :: t(),
+          name :: String.t() | nil,
+          metadata :: map(),
+          elements :: Keyword.t()
+        ) ::
           t()
-  def add_slide(deck, name \\ nil, metadata \\ %{}, data \\ []) do
-    new_slide = Expresso.Slide.new(name, metadata, data)
+  def add_slide(deck, name \\ nil, metadata \\ %{}, elements \\ []) do
+    new_slide = Expresso.Slide.new(name, metadata, elements)
     %__MODULE__{deck | slides: deck.slides ++ [new_slide]} |> number_slides()
   end
 

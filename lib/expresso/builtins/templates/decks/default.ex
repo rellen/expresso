@@ -4,7 +4,7 @@ defmodule Expresso.Builtins.Templates.Decks.Default do
   def header(assigns) do
     temple do
       div do
-        span do
+        span class: "header" do
           "Header " <> @deck.name
         end
       end
@@ -14,7 +14,7 @@ defmodule Expresso.Builtins.Templates.Decks.Default do
   def footer(assigns) do
     temple do
       div do
-        span do
+        span class: "footer" do
           "Footer: slide " <> Integer.to_string(@slide.metadata.slide_number)
         end
       end
