@@ -2,6 +2,15 @@ defmodule Expresso do
   @moduledoc """
   Documentation for `Expresso`.
   """
+  use Spark.Dsl,
+    default_extensions: [extensions: Expresso.Extension]
+
+  def parse(module) do
+    %Expresso.Deck{
+      name: Spark.Dsl.Extension.get_opt(module, [:deck], :name),
+      slides: Spark.Dsl.Extension.get_entities(module, [:deck])
+    }
+  end
 
   @doc """
   present a deck

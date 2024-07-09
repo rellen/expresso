@@ -40,6 +40,9 @@ defmodule Expresso.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      # DSL
+      {:spark, "~> 2.2"},
+
       # HTML
       {:earmark_parser, "~> 1.4"},
       {:floki, "~> 0.35"},
