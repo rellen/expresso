@@ -1,17 +1,19 @@
 { pkgs ? import <nixpkgs> { }, nixpkgs ? <nixpkgs> }:
 let
-  inherit (pkgs.lib) optional optionals;
-  erlang = pkgs.beam.interpreters.erlangR26;
-  elixir = pkgs.beam.packages.erlangR26.elixir_1_15;
-  elixir_ls = pkgs.elixir_ls.override { elixir = elixir; };
-  zig = pkgs.zig_0_11;
+  inherit (pkgs.lib) optional;
+  beam = pkgs.beam.packages.erlang_28;
+  erlang = pkgs.beam.interpreters.erlang_28;
+  elixir = beam.elixir_1_20;
+  elixir-ls = beam.elixir-ls.override { inherit elixir; };
+  # Burrito pins the Zig it builds wrappers with; keep this in step with
+  # @zig_version_expected in burrito.ex (1.6.0 wants exactly 0.16.0).
+  zig = pkgs.zig_0_16;
 
 in pkgs.mkShell rec {
   name = "Elixir";
   buildInputs = with pkgs;
-    [ rebar rebar3 erlang elixir elixir_ls nodejs nodePackages.prettier zig xz ]
-    ++ optional stdenv.isLinux inotify-tools ++ optionals stdenv.isDarwin
-    (with darwin.apple_sdk.frameworks; [ CoreFoundation CoreServices ]);
+    [ rebar rebar3 erlang elixir elixir-ls nodejs_24 prettier zig xz ]
+    ++ optional stdenv.isLinux inotify-tools;
 
   shellHook = ''
     # this allows mix to work on the local directory
