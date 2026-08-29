@@ -44,7 +44,6 @@ defmodule Expresso.MixProject do
       {:spark, "~> 2.7"},
 
       # HTML
-      {:earmark_parser, "~> 1.4"},
       {:floki, "~> 0.38"},
       {:phoenix_html, "~> 4.3"},
       {:temple, "~> 0.14"},
