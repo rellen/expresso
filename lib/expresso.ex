@@ -27,7 +27,7 @@ defmodule Expresso do
   def load_templates() do
     templates = Path.wildcard("./priv/templates/{decks,slides}/*.exs")
 
-    Kernel.ParallelCompiler.compile(templates)
+    Kernel.ParallelCompiler.compile(templates, return_diagnostics: true)
 
     :ok
   end
