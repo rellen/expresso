@@ -5,7 +5,7 @@ defmodule Expresso.Slide do
 
   @type t :: %__MODULE__{:name => String.t() | nil, :metadata => map(), :elements => Keyword.t()}
 
-  defstruct [:name, :metadata, :elements]
+  defstruct [:name, :metadata, :elements, __spark_metadata__: nil]
 
   @doc """
   Create a new slide
@@ -24,8 +24,7 @@ defmodule Expresso.Slide do
   Add an element to a slide
   """
   @spec add_element(t(), term()) :: t()
-  def add_element(slide, element) do
-    %__MODULE__{elements: elements} = slide
+  def add_element(%__MODULE__{elements: elements} = slide, element) do
     updated_elements = elements ++ [element]
 
     %__MODULE__{slide | elements: updated_elements}

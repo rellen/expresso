@@ -25,18 +25,15 @@ defmodule Expresso.Deck do
           elements :: Keyword.t()
         ) ::
           t()
-  def add_slide(deck, name \\ nil, metadata \\ %{}, elements \\ []) do
+  def add_slide(%__MODULE__{} = deck, name \\ nil, metadata \\ %{}, elements \\ []) do
     new_slide = Expresso.Slide.new(name, metadata, elements)
     %__MODULE__{deck | slides: deck.slides ++ [new_slide]} |> number_slides()
   end
 
-  defp number_slides(deck) do
-    %__MODULE__{slides: slides} = deck
-
+  defp number_slides(%__MODULE__{slides: slides} = deck) do
     numbered_slides =
       slides
-      |> Enum.with_index(fn slide, index ->
-        %Expresso.Slide{metadata: metadata} = slide
+      |> Enum.with_index(fn %Expresso.Slide{metadata: metadata} = slide, index ->
         %Expresso.Slide{slide | metadata: Map.put(metadata, :slide_number, index)}
       end)
 

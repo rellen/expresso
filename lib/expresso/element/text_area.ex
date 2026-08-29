@@ -5,7 +5,7 @@ defmodule Expresso.Element.TextArea do
 
   use Expresso.Element
 
-  defstruct [:text]
+  defstruct [:text, __spark_metadata__: nil]
 
   def new(text) do
     %__MODULE__{text: text}
