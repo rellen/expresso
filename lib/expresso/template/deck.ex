@@ -1,4 +1,10 @@
 defmodule Expresso.Template.Deck do
+  @moduledoc """
+  The behaviour of a deck template
+
+  A deck template gives a header and a footer.
+  """
+
   use Expresso.Template
 
   @callback header(assigns :: map() | Keyword.t()) :: term()

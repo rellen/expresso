@@ -1,24 +1,38 @@
 defmodule Expresso.Renderer do
+  @moduledoc """
+  The renderer
+
+  It makes one HTML document from a deck. The document holds each slide, the styles
+  and the script of the presenter.
+  """
+
   import Temple
 
   use Temple.Component
+
+  @external_resource "./assets/fonts.css"
+  @external_resource "./assets/style.css"
+  @external_resource "./assets/main.js"
 
   @fonts File.read!("./assets/fonts.css")
   @style File.read!("./assets/style.css")
   @main_js File.read!("./assets/main.js")
 
-  defp fonts() do
+  defp fonts do
     @fonts
   end
 
-  defp style() do
+  defp style do
     @style
   end
 
-  defp main_js() do
+  defp main_js do
     @main_js
   end
 
+  # The three assets are files of this repository. The renderer reads them at compile
+  # time, and no input of a user can change them.
+  # sobelow_skip ["XSS.Raw"]
   def render(assigns) do
     temple do
       "<!DOCTYPE html>"
@@ -38,7 +52,7 @@ defmodule Expresso.Renderer do
 
         body style: "min-height: 100vh; width: 100%; margin: 0px;" do
           div style:
-                "height: 100%; width: 100%; display: flex, flex-direction: row; align-items: center; justify-content: center;" do
+                "height: 100%; width: 100%; display: flex; flex-direction: row; align-items: center; justify-content: center;" do
             for {slide, index} <- Enum.with_index(@deck.slides) do
               section id: "slide-#{slide.metadata.slide_number}",
                       class: "slide",

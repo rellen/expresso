@@ -25,6 +25,20 @@ defmodule ExpressoTest do
     end
   end
 
+  defmodule NamedSlideDeck do
+    use Expresso
+
+    name("named slide deck")
+
+    slide "intro" do
+      text_box do
+        text_area do
+          text "an intro slide"
+        end
+      end
+    end
+  end
+
   describe "parse/1" do
     test "reads the name of the deck" do
       assert Expresso.parse(DslDeck).name == "dsl deck"
@@ -38,10 +52,25 @@ defmodule ExpressoTest do
       assert Expresso.parse(DslDeck).metadata == %{}
     end
 
-    test "numbers the slides from 0" do
+    test "numbers the slides from 1" do
       numbers = Expresso.parse(DslDeck).slides |> Enum.map(& &1.metadata.slide_number)
 
-      assert numbers == [0, 1]
+      assert numbers == [1, 2]
+    end
+
+    test "reads the name of a slide from the first argument" do
+      assert Expresso.parse(NamedSlideDeck).slides |> Enum.map(& &1.name) == ["intro"]
+    end
+  end
+
+  describe "number_slides/1" do
+    test "numbers the slides of an imperative deck from 1" do
+      deck =
+        Expresso.Deck.new("imperative deck")
+        |> Expresso.Deck.add_slide("first", %{}, [])
+        |> Expresso.Deck.add_slide("second", %{}, [])
+
+      assert Enum.map(deck.slides, & &1.metadata.slide_number) == [1, 2]
     end
   end
 
@@ -103,6 +132,30 @@ defmodule ExpressoTest do
 
     test "writes no heading, because the DSL gives none", %{document: document} do
       assert Floki.find(document, ".slide-heading-container") == []
+    end
+  end
+
+  describe "render/1 with a custom template" do
+    defmodule CustomSlideTemplate do
+      use Expresso.Template
+
+      def render(assigns) do
+        temple do
+          div class: "custom-slide" do
+            "custom template"
+          end
+        end
+      end
+    end
+
+    test "accepts a module as the template of a slide" do
+      document =
+        Expresso.Deck.new("custom deck")
+        |> Expresso.Deck.add_slide("first", %{template: CustomSlideTemplate}, [])
+        |> Expresso.Deck.render()
+        |> Floki.parse_document!()
+
+      assert document |> Floki.find(".custom-slide") |> Floki.text() =~ "custom template"
     end
   end
 

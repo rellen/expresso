@@ -1,4 +1,10 @@
 defmodule Expresso.Builtins.Templates.Decks.Default do
+  @moduledoc """
+  The default deck template
+
+  It gives the header and the footer of each slide.
+  """
+
   use Expresso.Template.Deck
 
   def header(assigns) do
