@@ -109,8 +109,8 @@ html
 ```
 
 The renderer holds the three asset files in module attributes. It reads them with
-`File.read!/1` at compile time. Therefore a change to `assets/style.css` needs a new compile
-of `Expresso.Renderer`.
+`File.read!/1` at compile time. Each file is an `@external_resource` of the module.
+Therefore a change to an asset file starts a new compile of `Expresso.Renderer`.
 
 The renderer writes an inline `style` attribute on each `section`. The first slide gets
 `display: flex`, and each other slide gets `display: none`.
@@ -128,9 +128,9 @@ A slide template gives the body of a slide. It has a `render/1` function.
 default value is `{:builtins, :default}`. The function
 `Expresso.Template.module_from_template_definition/2` maps this value to a module name.
 
-This function has a clause for `{:builtins, name}` only. Therefore
-`Expresso.load_templates/0` can compile a template from `./priv/templates/`, but no value of
-`slide.metadata[:template]` can select it. A clause for a custom template is necessary.
+The value takes one of two forms. The tuple `{:builtins, name}` selects a built-in template.
+A module selects that module. Therefore a template that `Expresso.load_templates/0` compiles
+from `./priv/templates/` is available as a module.
 
 ## The elements
 
@@ -159,14 +159,14 @@ and a `text_box` holds `text_area` entities.
 The extension has an empty `imports` option and an empty `transformers` option. It has no
 verifiers.
 
-The `slide` entity has a `name` option, but it has no `args` option. Therefore the DSL
-accepts `slide do` only. It does not accept `slide "name" do`.
+The `slide` entity takes an optional name as its first argument. The DSL accepts `slide do`
+and `slide "name" do`.
 
 ## The presenter
 
-`assets/main.js` controls the document in the browser. It holds one number, the index of
-the current slide. It shows a slide and hides a slide with the inline `style.display`
-property.
+`assets/main.js` controls the document in the browser. It holds one number, the number of
+the current slide. The first slide is slide 1. The code shows a slide and hides a slide with
+the inline `style.display` property.
 
 The keys are:
 
@@ -191,19 +191,10 @@ The commands are:
 - `mix release expresso_cli_app` makes a binary with Burrito. The targets are macOS and
   Linux, for x86_64 and for aarch64.
 
-## Known inconsistencies
+## Open work
 
-- `examples/hello_world.exs` gives `heading: "Hello", text: "<b>World!!!</b>"` as the
-  elements of a slide. `Expresso.Deck.add_slide/4` expects a list of element structs, and
-  the templates expect the heading in the metadata. This example is not in step with
-  `Expresso.Deck`.
-- `Expresso.Deck` numbers the first slide 0. The default footer shows "slide 0" for the
-  first slide.
-- The inline style of the slide container in `Expresso.Renderer` contains
-  `display: flex, flex-direction: row;`. A comma is not a separator in a style attribute,
-  so the browser ignores this declaration and each declaration after it.
 - `Expresso.present/0` raises an error with the text "not implemented".
-- `Expresso.BurritoEntryPoint.start/2` calls `Expresso.main/2` at the start of the
-  application. The commands `mix test` and `mix run` also start the application, and the
-  arguments of the BEAM are not the arguments of a deck. The log then contains a
-  `Mix.Error` from the entry point. This error does not stop a test.
+- The `slide` entity has no `heading` option. A deck from the DSL shows no heading.
+- `mix doctor` does not pass. The moduledoc coverage is 100 percent, but the doc coverage
+  and the spec coverage are near 50 percent. Many public functions have no `@doc` and no
+  `@spec`.
