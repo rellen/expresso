@@ -1,0 +1,204 @@
+# Architecture
+
+This document tells you how Expresso makes an HTML document from a deck. It gives the
+structure of the code at this time. It also names the parts that are not complete.
+
+## The two input paths
+
+Expresso has two ways to make an `Expresso.Deck` struct. Only one of the two paths reaches
+HTML.
+
+### The imperative path
+
+This path operates. A script builds a deck with function calls, and the script returns the
+deck.
+
+```elixir
+Expresso.Deck.new("demo")
+|> Expresso.Deck.add_slide("heading_with_text_box", %{heading: "This is a heading"}, [
+  Expresso.Element.TextBox.new("This is a text-area inside a text-box.")
+])
+```
+
+`Expresso.main/2` reads a file of this kind. The section "The render pipeline" gives the
+steps.
+
+### The DSL path
+
+This path is not complete. A module declares a deck with the Spark DSL.
+
+```elixir
+defmodule Expresso.Example do
+  use Expresso
+
+  name("my presso")
+
+  slide do
+    text_box do
+      text_area do
+        text "hello, world!!!"
+      end
+    end
+  end
+end
+```
+
+`Expresso.parse/1` reads the DSL state of such a module. It returns an `Expresso.Deck`
+struct. No other function calls `Expresso.parse/1`, and `Expresso.main/2` does not accept a
+module. Therefore a DSL deck cannot make an HTML document at this time.
+
+`Expresso.parse/1` also has two defects. It does not write the metadata of the deck, and it
+does not number the slides. The private function `Expresso.Deck.number_slides/1` writes the
+number of a slide, and only `Expresso.Deck.add_slide/4` calls it. A slide from the DSL then
+holds `nil` in its metadata field. The default deck template reads the slide number from
+the metadata, and the default slide template reads the heading from the metadata. Both
+templates give an error for a slide of this kind.
+
+To make the DSL path complete, do this work:
+
+1. Let `Expresso.main/2` accept a module, or let the input script return a module.
+2. Write the metadata of the deck in `Expresso.parse/1`.
+3. Number the slides in `Expresso.parse/1`. This step needs a public function, because
+   `Expresso.Deck.number_slides/1` is private.
+
+This work is a prerequisite for overlays. `docs/overlays.md` gives a design for a
+transformer and for a verifier. A transformer and a verifier operate on a DSL module only.
+
+## The render pipeline
+
+`Expresso.main/2` does these steps:
+
+1. `File.stat/1` makes sure that the input file is present.
+2. `Code.eval_file/1` evaluates the input script. The script returns an `Expresso.Deck`
+   struct.
+3. `Expresso.Deck.render/1` makes the HTML.
+4. The function writes the HTML to the output file, or to the standard output.
+
+`Expresso.Deck.render/1` does these steps:
+
+1. `Expresso.load_templates/0` compiles each file in `./priv/templates/decks/` and in
+   `./priv/templates/slides/`.
+2. `Expresso.Renderer.render/1` makes an HTML tree with Temple.
+3. `Phoenix.HTML.safe_to_string/1` makes a string.
+4. `Floki.parse_document!/1` and `Floki.raw_html(pretty: true)` format the string.
+
+Two entry points call `Expresso.main/2`:
+
+- `Mix.Tasks.Expresso`, for the command `mix expresso <input> [output]`.
+- `Expresso.BurritoEntryPoint`, for the binary that Burrito makes.
+
+## The document
+
+`Expresso.Renderer.render/1` writes one HTML document with this structure:
+
+```
+html
+  head
+    title            the name of the deck
+    style            assets/fonts.css
+    style            assets/style.css
+    body
+      div            one flex container for all the slides
+        section      one for each slide, class "slide", id "slide-<number>"
+          div        the header, from the deck template
+          div        the body, from the slide template
+          div        the footer, from the deck template
+      script         assets/main.js
+```
+
+The renderer holds the three asset files in module attributes. It reads them with
+`File.read!/1` at compile time. Therefore a change to `assets/style.css` needs a new compile
+of `Expresso.Renderer`.
+
+The renderer writes an inline `style` attribute on each `section`. The first slide gets
+`display: flex`, and each other slide gets `display: none`.
+
+## The templates
+
+A template makes the HTML for a part of the document. There are two kinds.
+
+A deck template gives a header and a footer. It implements the `Expresso.Template.Deck`
+behaviour, which has the callbacks `header/1` and `footer/1`.
+
+A slide template gives the body of a slide. It has a `render/1` function.
+
+`Expresso.Template` selects a template with the value of `slide.metadata[:template]`. The
+default value is `{:builtins, :default}`. The function
+`Expresso.Template.module_from_template_definition/2` maps this value to a module name.
+
+This function has a clause for `{:builtins, name}` only. Therefore
+`Expresso.load_templates/0` can compile a template from `./priv/templates/`, but no value of
+`slide.metadata[:template]` can select it. A clause for a custom template is necessary.
+
+## The elements
+
+An element is the content of a slide. `Expresso.Element.TextBox` and
+`Expresso.Element.TextArea` are the two elements at this time.
+
+An element module has these parts:
+
+- A struct with a `__spark_metadata__` field.
+- A `get_assigns/1` function. It makes a map of assigns from the struct.
+- A `render/1` function. It makes the HTML from the assigns.
+
+`Expresso.Template.render_elements/1` matches `%module{}` for each element. It then calls
+`module.get_assigns/1` and `module.render/1`. There is no `@behaviour` for an element, and
+the compiler does not make sure that a module has the two functions.
+
+A `text_box` contains other elements. A `text_area` contains text. The renderer writes the
+text with `Phoenix.HTML.raw/1`, so the text can contain HTML.
+
+## The DSL
+
+`Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a
+top level section. The section holds `slide` entities. A `slide` holds `text_box` entities,
+and a `text_box` holds `text_area` entities.
+
+The extension has an empty `imports` option and an empty `transformers` option. It has no
+verifiers.
+
+The `slide` entity has a `name` option, but it has no `args` option. Therefore the DSL
+accepts `slide do` only. It does not accept `slide "name" do`.
+
+## The presenter
+
+`assets/main.js` controls the document in the browser. It holds one number, the index of
+the current slide. It shows a slide and hides a slide with the inline `style.display`
+property.
+
+The keys are:
+
+- `j` shows the next slide.
+- `k` shows the previous slide.
+- `p` shows all the slides, for a printer.
+
+## The build
+
+The repository gives a Nix shell. `flake.nix` and `shell.nix` give Erlang 28, Elixir 1.20,
+Node 24, Prettier and Zig 0.16. Zig is a dependency of Burrito. The `.tool-versions` file
+gives the same versions for a different tool manager.
+
+The commands are:
+
+- `mix deps.get` gets the dependencies.
+- `mix expresso examples/demo.exs out.html` makes an HTML document.
+- `mix check` runs the curated tools of `ex_check`. These include the compiler, the
+  formatter, Credo, Doctor, Dialyzer, Sobelow, MixAudit and ExUnit. `.check.exs` gives the
+  configuration. It makes a compiler warning an error, and it lets Sobelow read the skip
+  comments.
+- `mix release expresso_cli_app` makes a binary with Burrito. The targets are macOS and
+  Linux, for x86_64 and for aarch64.
+
+## Known inconsistencies
+
+- `examples/hello_world.exs` gives `heading: "Hello", text: "<b>World!!!</b>"` as the
+  elements of a slide. `Expresso.Deck.add_slide/4` expects a list of element structs, and
+  the templates expect the heading in the metadata. This example is not in step with
+  `Expresso.Deck`.
+- `Expresso.Deck` numbers the first slide 0. The default footer shows "slide 0" for the
+  first slide.
+- The inline style of the slide container in `Expresso.Renderer` contains
+  `display: flex, flex-direction: row;`. A comma is not a separator in a style attribute,
+  so the browser ignores this declaration and each declaration after it.
+- `Expresso.present/0` raises an error with the text "not implemented".
+- The test file contains a doctest only.
