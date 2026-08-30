@@ -4,9 +4,11 @@ defmodule Expresso.Builtins.Templates.Slides.Default do
   def render(assigns) do
     temple do
       div class: "slide-body" do
-        div class: "slide-heading-container" do
-          h1 style: "margin: 0.5rem 0; text-align: center" do
-            @metadata.heading
+        if heading = Map.get(@metadata, :heading) do
+          div class: "slide-heading-container" do
+            h1 style: "margin: 0.5rem 0; text-align: center" do
+              heading
+            end
           end
         end
 
