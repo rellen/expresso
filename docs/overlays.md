@@ -69,6 +69,20 @@ This rule lets an element move in the slide without a change to a number. It als
 element take two steps. The `at` option takes the first step, and an `on` entity in the
 same element takes the second step.
 
+### An element without an `at` option
+
+An element without an `at` option shows at each step of the slide. The renderer writes no
+`data-on` attribute for such an element.
+
+Therefore a `pause` entity alone reveals no element. A `pause` changes the counter only. An
+element must contain a `+` to read the new value of the counter. This behavior is different
+from `\pause` in Beamer, which reveals the content after it.
+
+The proposal is to keep this explicit rule. An author who wants the behavior of Beamer
+writes `at: ~o"+-"` on each element. A later version can add an `auto_reveal` option to the
+`slide` entity. This option gives an implicit `at: ~o"+-"` to each element without an `at`
+option.
+
 ```elixir
 slide "pipeline" do
   text_box at: ~o"+-" do
@@ -109,6 +123,18 @@ text_box at: ~o"2-" do
   end
 end
 ```
+
+### The limit of the class option
+
+CSS cannot add a class name to an element. A selector matches an element, and the rule
+then sets properties. No CSS construction copies the declarations of a class into a
+different rule. Therefore the generated CSS cannot apply `class: "alert"` at step 3.
+
+This design does not solve this problem. The open decisions give three options and a
+proposal.
+
+The `set` option does not have this problem. A generated rule writes a custom property
+directly, and the property has a value at the step that the rule selects.
 
 ### Why the set is small
 
@@ -203,8 +229,13 @@ The renderer writes these attributes:
   number.
 - Each element with an overlay gets a `data-on` attribute. The value is a list of step
   numbers with a space between each number.
+- Each `section` element gets a `data-max-step` attribute. The value is the maximum step
+  number of the slide.
 - Each element with an `on` entity gets a `data-el` attribute. The value is unique in the
   document.
+
+The JavaScript code reads `data-max-step`. Without this attribute the code cannot know when
+a slide reaches its last step, and it cannot move to the next slide.
 
 A rule for step 3 looks like this:
 
@@ -227,7 +258,8 @@ element, each element is visible before its first step.
 }
 ```
 
-The JavaScript code writes the `data-step` attribute. It does no other operation.
+The JavaScript code writes the `data-step` attribute. It does no other operation, except
+the operation that the open decision about the class can add.
 
 ### The identity of an element
 
@@ -236,7 +268,9 @@ the same step and can hold different values. A selector on `data-on` alone appli
 values to both elements.
 
 Therefore the renderer gives a `data-el` attribute to each element with an `on` entity.
-The value is unique in the document. A rule for one `on` entity uses this attribute:
+The value is unique in the document. The renderer makes the value from the number of the
+slide and the position of the element in the tree. Therefore the value is stable between
+two renders of the same deck. A rule for one `on` entity uses this attribute:
 
 ```css
 section[data-step="4"] [data-el="s2-e1"] {
@@ -247,6 +281,17 @@ section[data-step="4"] [data-el="s2-e1"] {
 The renderer writes the rules for the `on` entities in document order. Two rules with the
 same specificity can set the same property. CSS then applies the last rule, and document
 order gives a stable result.
+
+### Nested elements
+
+An element can contain a different element, and both elements can have an `at` option. The
+rule is that an element shows only when the element and each of its ancestors show.
+
+The base rule gives this result without more work. A parent with `opacity: 0` hides its
+children, and a parent with `display: none` removes them from the layout.
+
+A child with a step that its parent does not contain is a defect. The verifier must give an
+error for this condition.
 
 ### Custom properties
 
@@ -289,8 +334,19 @@ The duration and the easing function are properties of the element or of the the
 The renderer must write these constructions:
 
 - A `prefers-reduced-motion` block that sets each duration to zero.
-- A handout view that shows all the steps of each slide at the same time. This view helps
-  a screen reader and a printer.
+- A handout view for a screen reader and for a printer.
+
+The handout view is not a simple override of the base rule. An override that shows each
+element at the same time puts the elements of all the steps on one page. An element that
+moves with `set` then holds one position only, and the page loses the sequence.
+
+The proposal is that the handout view is a second render. The renderer writes one page for
+each step of each slide. This second render is safe, because the handout view needs no
+transition. The first render and the handout render go into the same document, and a
+`@media print` block selects one of them.
+
+A smaller first version writes the last step of each slide only. This version keeps one
+render and gives a correct page for most slides.
 
 The `aria-hidden` attribute is not part of this design. An attribute is not a CSS
 property, and CSS cannot write it. Only JavaScript can write it, and the design gives
@@ -363,7 +419,10 @@ The necessary changes are:
 - Hold the current step index and the maximum step index of the current slide.
 - Move to the next step first. Move to the next slide only after the last step.
 - Move to the previous slide at the first step, and show the last step of that slide.
+- Read the maximum step index from the `data-max-step` attribute of the current `section`.
 - Write the step index into the `data-step` attribute of the current `section`.
+- Apply the class names of the current step, if the open decision about the class takes
+  option 2.
 - Show all the steps of all the slides for the print key.
 
 ### The imperative API
@@ -372,6 +431,21 @@ The necessary changes are:
 DSL. `examples/demo.exs` uses this API. These functions have no parameter for an overlay,
 and no transformer runs for them. The design must say whether this API keeps parity with
 the DSL, or whether overlays need the DSL.
+
+## The test plan
+
+The repository contains one test file with a doctest only. This design needs these tests:
+
+- Parser tests for `Expresso.Overlay.validate/1`. Each row of the two tables in the section
+  "Syntax" is one test. A malformed specification gives an error.
+- Transformer tests. A slide with a `pause` and a `+` gives the correct step number for each
+  element. An open range expands to the maximum step number of the slide. The transformer
+  removes each `pause` entity.
+- Verifier tests. Each condition in the section "The verifier" gives an error.
+- Render tests. Floki is a dependency of this project. A test parses the HTML and asserts
+  the value of `data-step`, `data-max-step`, `data-on` and `data-el`.
+- A CSS test. A test asserts that the generated style block contains one rule for each step
+  number of the deck.
 
 ## The open decisions
 
@@ -390,6 +464,28 @@ element.
 The proposal is an error. A step that does not show the element cannot show a state of the
 element. Such an `on` entity makes CSS rules that no step applies. An error tells the
 author about the defect at compile time.
+
+### How does the `on` entity apply a class?
+
+CSS cannot add a class name. The section "The limit of the class option" gives the problem.
+There are three options:
+
+1. Remove the `class` option. The `on` entity then holds `set` only. A theme expresses each
+   state as a custom property. This option keeps the CSS contract pure, but it makes a
+   simple state, such as a highlight, more difficult to write.
+2. Let the JavaScript code apply the class names. The renderer writes a `data-class`
+   attribute that maps a step number to a class name. The code then adds and removes the
+   class names at each change of the step. This option adds a second operation to the
+   JavaScript code.
+3. Use a CSS style query. The `on` entity writes a custom property, and the theme selects
+   the state with `@container style(--alert: 1)`. This option keeps the CSS contract pure,
+   but the browser support for a style query is more recent than the support for the
+   `@property` at-rule.
+
+The proposal is option 2. A class name is the construction that a theme author expects, and
+the code is approximately ten lines. A class change on one element does not stop a
+transition, because the element stays the same element. The rule "JavaScript writes the step
+index only" becomes "JavaScript writes the step state only".
 
 ### Does the deck declare a maximum step number, or does each slide calculate its own?
 
