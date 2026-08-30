@@ -5,11 +5,47 @@ defmodule Expresso do
   use Spark.Dsl,
     default_extensions: [extensions: Expresso.Extension]
 
+  @doc """
+  Make a deck from a module that uses the DSL
+  """
+  @spec parse(module()) :: Expresso.Deck.t()
   def parse(module) do
-    %Expresso.Deck{
-      name: Spark.Dsl.Extension.get_opt(module, [:deck], :name),
-      slides: Spark.Dsl.Extension.get_entities(module, [:deck])
-    }
+    name = Spark.Dsl.Extension.get_opt(module, [:deck], :name)
+    slides = Spark.Dsl.Extension.get_entities(module, [:deck])
+
+    name
+    |> Expresso.Deck.new(%{}, slides)
+    |> Expresso.Deck.number_slides()
+  end
+
+  @doc """
+  Make a deck from the value of an input script
+
+  An input script returns one of three values. It returns a deck, or a module that
+  uses the DSL, or the tuple of a `defmodule` expression.
+  """
+  @spec to_deck(term()) :: {:ok, Expresso.Deck.t()} | {:error, String.t()}
+  def to_deck(%Expresso.Deck{} = deck), do: {:ok, deck}
+
+  def to_deck({:module, module, _binary, _result}), do: to_deck(module)
+
+  def to_deck(module) when is_atom(module) do
+    if dsl_module?(module) do
+      {:ok, parse(module)}
+    else
+      {:error, unknown_input_message()}
+    end
+  end
+
+  def to_deck(_value), do: {:error, unknown_input_message()}
+
+  defp dsl_module?(module) do
+    Code.ensure_loaded?(module) and function_exported?(module, :spark_is, 0) and
+      module.spark_is() == __MODULE__
+  end
+
+  defp unknown_input_message do
+    "The input file must return an Expresso.Deck struct, or a module that uses Expresso"
   end
 
   @doc """
@@ -40,8 +76,12 @@ defmodule Expresso do
     result =
       case File.stat(input_path) do
         {:ok, _stat} ->
-          {deck, _} = evaluate_deck_file(input_path)
-          {:ok, Expresso.Deck.render(deck)}
+          {value, _bindings} = evaluate_deck_file(input_path)
+
+          case to_deck(value) do
+            {:ok, deck} -> {:ok, Expresso.Deck.render(deck)}
+            {:error, _message} = error -> error
+          end
 
         _ ->
           {:error, "Couldn't find input file"}

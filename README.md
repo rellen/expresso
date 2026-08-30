@@ -7,8 +7,9 @@ a small script. You give the document to a browser, and you present from the bro
 
 ## Status
 
-Expresso is at an early stage. The imperative API operates. The Spark DSL parses a deck, but
-it cannot make an HTML document yet. `docs/architecture.md` gives the details.
+Expresso is at an early stage. It has two elements, `text_box` and `text_area`, and one
+built-in theme. Overlays, which are the steps inside one slide, are a design only. See
+`docs/overlays.md`.
 
 ## Install
 
@@ -24,7 +25,28 @@ mix deps.get
 
 ## Make a deck
 
-Write a script that returns an `Expresso.Deck` struct:
+Write a script in one of two styles.
+
+With the DSL, declare a module:
+
+```elixir
+# my_deck.exs
+defmodule MyDeck do
+  use Expresso
+
+  name("my deck")
+
+  slide do
+    text_box do
+      text_area do
+        text "A text area in a text box. Text accepts <b>HTML</b>."
+      end
+    end
+  end
+end
+```
+
+With the functions, build a deck and return it. This style also gives a heading to a slide:
 
 ```elixir
 # my_deck.exs

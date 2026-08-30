@@ -374,14 +374,13 @@ document, which write `slide "pipeline" do`, need `args: [:name]` on the entity.
 
 ### The slide metadata
 
-The transformer writes the maximum step number into `slide.metadata`. A slide that comes
-from the DSL holds `nil` in this field, because the `slide` entity has no `metadata`
-option and the struct default is `nil`. The transformer must put a map into the field
-before it writes the maximum step number.
+The transformer writes the maximum step number into `slide.metadata`. `Expresso.parse/1`
+now writes a map into this field and numbers the slides. Therefore the transformer can put
+the maximum step number into the map of an existing slide.
 
-This field has a second defect at this time. `Expresso.Builtins.Templates.Slides.Default`
-reads `@metadata.heading`, and a DSL slide gives an error. A correction to the metadata of
-the DSL slide is a prerequisite for the transformer.
+The `slide` entity itself has no `metadata` option, and the struct default is `nil`. A
+transformer that operates on the DSL state, before `Expresso.parse/1` runs, must accept
+`nil` in this field.
 
 ### The elements
 

@@ -30,11 +30,18 @@ defmodule Expresso.Deck do
     %__MODULE__{deck | slides: deck.slides ++ [new_slide]} |> number_slides()
   end
 
-  defp number_slides(%__MODULE__{slides: slides} = deck) do
+  @doc """
+  Write the number of each slide into the metadata of the slide
+
+  A slide from the DSL holds `nil` in its metadata field. This function puts an
+  empty map into that field first.
+  """
+  @spec number_slides(t()) :: t()
+  def number_slides(%__MODULE__{slides: slides} = deck) do
     numbered_slides =
       slides
       |> Enum.with_index(fn %Expresso.Slide{metadata: metadata} = slide, index ->
-        %Expresso.Slide{slide | metadata: Map.put(metadata, :slide_number, index)}
+        %Expresso.Slide{slide | metadata: Map.put(metadata || %{}, :slide_number, index)}
       end)
 
     %__MODULE__{deck | slides: numbered_slides}

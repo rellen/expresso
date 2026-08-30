@@ -5,13 +5,11 @@ structure of the code at this time. It also names the parts that are not complet
 
 ## The two input paths
 
-Expresso has two ways to make an `Expresso.Deck` struct. Only one of the two paths reaches
-HTML.
+Expresso has two ways to make an `Expresso.Deck` struct. Both paths reach HTML.
 
 ### The imperative path
 
-This path operates. A script builds a deck with function calls, and the script returns the
-deck.
+A script builds a deck with function calls, and the script returns the deck.
 
 ```elixir
 Expresso.Deck.new("demo")
@@ -25,7 +23,7 @@ steps.
 
 ### The DSL path
 
-This path is not complete. A module declares a deck with the Spark DSL.
+A module declares a deck with the Spark DSL. The script returns the module.
 
 ```elixir
 defmodule Expresso.Example do
@@ -44,35 +42,39 @@ end
 ```
 
 `Expresso.parse/1` reads the DSL state of such a module. It returns an `Expresso.Deck`
-struct. No other function calls `Expresso.parse/1`, and `Expresso.main/2` does not accept a
-module. Therefore a DSL deck cannot make an HTML document at this time.
+struct with an empty metadata map, and it numbers the slides with
+`Expresso.Deck.number_slides/1`.
 
-`Expresso.parse/1` also has two defects. It does not write the metadata of the deck, and it
-does not number the slides. The private function `Expresso.Deck.number_slides/1` writes the
-number of a slide, and only `Expresso.Deck.add_slide/4` calls it. A slide from the DSL then
-holds `nil` in its metadata field. The default deck template reads the slide number from
-the metadata, and the default slide template reads the heading from the metadata. Both
-templates give an error for a slide of this kind.
+The DSL gives no heading for a slide. The `slide` entity has a `name` option only. The
+default slide template writes the heading container only when the metadata contains a
+heading. Therefore a slide from the DSL shows its elements without a heading.
 
-To make the DSL path complete, do this work:
-
-1. Let `Expresso.main/2` accept a module, or let the input script return a module.
-2. Write the metadata of the deck in `Expresso.parse/1`.
-3. Number the slides in `Expresso.parse/1`. This step needs a public function, because
-   `Expresso.Deck.number_slides/1` is private.
-
-This work is a prerequisite for overlays. `docs/overlays.md` gives a design for a
-transformer and for a verifier. A transformer and a verifier operate on a DSL module only.
+A heading option for the `slide` entity is open work.
 
 ## The render pipeline
 
 `Expresso.main/2` does these steps:
 
 1. `File.stat/1` makes sure that the input file is present.
-2. `Code.eval_file/1` evaluates the input script. The script returns an `Expresso.Deck`
-   struct.
-3. `Expresso.Deck.render/1` makes the HTML.
-4. The function writes the HTML to the output file, or to the standard output.
+2. `Code.eval_file/1` evaluates the input script.
+3. `Expresso.to_deck/1` makes an `Expresso.Deck` struct from the value of the script.
+4. `Expresso.Deck.render/1` makes the HTML.
+5. The function writes the HTML to the output file, or to the standard output.
+
+`Expresso.to_deck/1` accepts three values:
+
+| Value | Operation |
+| --- | --- |
+| An `Expresso.Deck` struct | The function returns the struct. |
+| A module that uses the DSL | The function calls `Expresso.parse/1`. |
+| The tuple of a `defmodule` expression | The function reads the module from the tuple. |
+
+A script that ends with a `defmodule` expression returns the third value. Therefore a script
+that declares a deck module needs no other line.
+
+`Expresso.to_deck/1` reads `spark_is/0` to know a module of the DSL. Spark writes this
+function into each module that uses `Expresso`. For a different value the function returns
+an error tuple, and `Expresso.main/2` writes the message.
 
 `Expresso.Deck.render/1` does these steps:
 
@@ -201,4 +203,7 @@ The commands are:
   `display: flex, flex-direction: row;`. A comma is not a separator in a style attribute,
   so the browser ignores this declaration and each declaration after it.
 - `Expresso.present/0` raises an error with the text "not implemented".
-- The test file contains a doctest only.
+- `Expresso.BurritoEntryPoint.start/2` calls `Expresso.main/2` at the start of the
+  application. The commands `mix test` and `mix run` also start the application, and the
+  arguments of the BEAM are not the arguments of a deck. The log then contains a
+  `Mix.Error` from the entry point. This error does not stop a test.
