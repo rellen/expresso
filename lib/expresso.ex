@@ -52,7 +52,7 @@ defmodule Expresso do
   present a deck
   """
   @spec present() :: no_return
-  def present() do
+  def present do
     raise "not implemented"
   end
 
@@ -60,7 +60,7 @@ defmodule Expresso do
   Load all the custom deck and slide templates
   """
   @spec load_templates() :: :ok
-  def load_templates() do
+  def load_templates do
     templates = Path.wildcard("./priv/templates/{decks,slides}/*.exs")
 
     Kernel.ParallelCompiler.compile(templates, return_diagnostics: true)
@@ -89,10 +89,10 @@ defmodule Expresso do
 
     case result do
       {:ok, rendered} ->
-        unless output_path == nil do
-          write_to_file(rendered, output_path)
-        else
+        if output_path == nil do
           IO.puts(rendered)
+        else
+          write_to_file(rendered, output_path)
         end
 
         :ok

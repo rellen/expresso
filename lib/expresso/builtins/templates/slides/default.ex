@@ -1,4 +1,10 @@
 defmodule Expresso.Builtins.Templates.Slides.Default do
+  @moduledoc """
+  The default slide template
+
+  It gives the heading of a slide and the elements of a slide.
+  """
+
   use Expresso.Template
 
   def render(assigns) do

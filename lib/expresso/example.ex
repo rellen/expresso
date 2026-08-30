@@ -1,4 +1,8 @@
 defmodule Expresso.Example do
+  @moduledoc """
+  An example deck that uses the DSL
+  """
+
   use Expresso
 
   name("my presso")

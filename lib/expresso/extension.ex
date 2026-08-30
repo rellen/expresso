@@ -1,4 +1,10 @@
 defmodule Expresso.Extension do
+  @moduledoc """
+  The Spark DSL extension
+
+  It gives the `deck` section, the `slide` entity and the entities of an element.
+  """
+
   @text_area %Spark.Dsl.Entity{
     name: :text_area,
     target: Expresso.Element.TextArea,
@@ -16,6 +22,7 @@ defmodule Expresso.Extension do
   @slide %Spark.Dsl.Entity{
     name: :slide,
     target: Expresso.Slide,
+    args: [{:optional, :name}],
     entities: @slide_elements,
     schema: [name: [type: :string]]
   }

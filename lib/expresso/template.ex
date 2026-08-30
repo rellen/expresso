@@ -60,6 +60,8 @@ defmodule Expresso.Template do
     Module.concat(Expresso.Builtins.Templates.Decks, suffix)
   end
 
+  defp module_from_template_definition(_part, module) when is_atom(module), do: module
+
   def render_elements(assigns) do
     temple do
       for %module{} = element <- assigns.elements do
