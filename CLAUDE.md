@@ -38,6 +38,14 @@ Do not change a version in `.tool-versions` or in `mix.exs` to make a command wo
 container of a remote session uses different versions, and `docs/development.md` tells you
 why.
 
+## Git
+
+Do not commit to `main` and do not push to `main`. Make a branch, push the branch, and
+open a pull request. The maintainer merges it.
+
+Run the commands in "Build and test" before each commit. A push with a red check costs the
+maintainer a cycle.
+
 ## Commit messages
 
 Use the Conventional Commits 1.0.0 specification. See https://www.conventionalcommits.org/en/v1.0.0/.

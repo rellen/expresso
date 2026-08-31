@@ -58,7 +58,14 @@ mix test
 
 `mix credo`, `mix sobelow`, `mix format` and `mix test` pass. `mix doctor` does not pass.
 The moduledoc coverage is 100 percent, but the doc coverage and the spec coverage are near
-50 percent.
+50 percent. Therefore `mix check` does not pass as a whole. Run the tools one at a time
+until the coverage is sufficient.
+
+Dialyzer needs the `erlang-dialyzer` package, which is a package that is separate from
+`erlang-nox`. The hook installs it. The first `mix dialyzer` builds a PLT of approximately
+570 modules, and this operation takes approximately two minutes. The PLT stays in
+`_build`, so each `mix dialyzer` after the first takes a few seconds. Dialyzer reports no
+error at this time.
 
 Sobelow gives a warning for `Phoenix.HTML.raw/1`. Put a `# sobelow_skip` comment above the
 function when the input is safe. `Expresso.main/2` and `Expresso.Renderer.render/1` show
@@ -68,10 +75,12 @@ Prettier formats the files in `assets/`. The Nix shell gives Prettier.
 
 ## Look at a deck
 
-Make an HTML document, and then open it:
+Make an HTML document, and then open it. `examples/demo.exs` uses the functions, and
+`examples/dsl_deck.exs` uses the DSL:
 
 ```sh
 mix expresso examples/demo.exs /tmp/demo.html
+mix expresso examples/dsl_deck.exs /tmp/dsl.html
 ```
 
 A remote container has no display, but it has Chromium and Playwright. Use them to make
