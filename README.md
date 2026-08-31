@@ -93,10 +93,13 @@ mix format
 ```
 
 `CLAUDE.md` gives the conventions for a commit message and for prose.
+`docs/development.md` gives more detail, and it tells you how to get a toolchain in a
+container that has no Nix.
 
 ## Documents
 
 - `docs/architecture.md` — how the code makes an HTML document from a deck.
+- `docs/development.md` — the toolchain, the checks and a browser.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide.
 
 ## License
