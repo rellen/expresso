@@ -14,11 +14,12 @@ ELIXIR_VERSION="1.18.4"
 OTP_RELEASE="25"
 ELIXIR_DIR="/opt/elixir"
 
-# Erlang. The apt package gives OTP 25.
-if ! command -v erl >/dev/null 2>&1; then
+# Erlang. The apt package gives OTP 25. The dialyzer package is a separate package,
+# and `mix check` needs it.
+if ! command -v erl >/dev/null 2>&1 || ! command -v dialyzer >/dev/null 2>&1; then
   export DEBIAN_FRONTEND=noninteractive
   apt-get update -qq
-  apt-get install -y -qq erlang-nox erlang-dev unzip curl
+  apt-get install -y -qq erlang-nox erlang-dev erlang-dialyzer unzip curl
 fi
 
 # Elixir. The apt package gives 1.14, and mix.exs needs 1.17 or later. Therefore
