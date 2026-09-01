@@ -52,14 +52,21 @@ defmodule Expresso.Deck do
 
   @doc """
   Render a deck to HTML
+
+  The HTML starts with the doctype of HTML 5. Floki drops a doctype node when it
+  parses a document, so this function puts the doctype in front of the formatted
+  tree. Without the doctype a browser uses the quirks mode.
   """
   @spec render(t()) :: String.t()
   def render(deck) do
     Expresso.load_templates()
 
-    Expresso.Renderer.render(deck: deck)
-    |> Phoenix.HTML.safe_to_string()
-    |> Floki.parse_document!()
-    |> Floki.raw_html(pretty: true)
+    body =
+      Expresso.Renderer.render(deck: deck)
+      |> Phoenix.HTML.safe_to_string()
+      |> Floki.parse_document!()
+      |> Floki.raw_html(pretty: true)
+
+    "<!DOCTYPE html>\n" <> body
   end
 end

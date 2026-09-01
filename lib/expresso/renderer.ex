@@ -30,13 +30,15 @@ defmodule Expresso.Renderer do
     @main_js
   end
 
+  # `Expresso.Deck.render/1` writes the doctype. Floki drops a doctype node, and the
+  # deck function formats this tree with Floki. Therefore the doctype cannot come
+  # from this function.
+  #
   # The three assets are files of this repository. The renderer reads them at compile
   # time, and no input of a user can change them.
   # sobelow_skip ["XSS.Raw"]
   def render(assigns) do
     temple do
-      "<!DOCTYPE html>"
-
       html do
         head do
           title(do: @deck.name)
@@ -52,7 +54,7 @@ defmodule Expresso.Renderer do
 
         body style: "min-height: 100vh; width: 100%; margin: 0px;" do
           div style:
-                "height: 100%; width: 100%; display: flex; flex-direction: row; align-items: center; justify-content: center;" do
+                "height: 100vh; width: 100%; display: flex; flex-direction: row; align-items: center; justify-content: center;" do
             for {slide, index} <- Enum.with_index(@deck.slides) do
               section id: "slide-#{slide.metadata.slide_number}",
                       class: "slide",
