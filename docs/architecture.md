@@ -189,7 +189,8 @@ The commands are:
   configuration. It makes a compiler warning an error, and it lets Sobelow read the skip
   comments.
 - `mix release expresso_cli_app` makes a binary with Burrito. The targets are macOS and
-  Linux, for x86_64 and for aarch64.
+  Linux, for x86_64 and for aarch64. Burrito needs Zig 0.16.0 and `xz` on the path.
+  `shell.nix` pins the Zig version, and `mix.exs` must agree with it.
 
 ## Open work
 
