@@ -39,6 +39,16 @@ Elixir 1.18 compile this project and run each check. Two rules apply:
 - The container gives a latin1 name encoding. Therefore `ELIXIR_ERL_OPTIONS` must contain
   `+fnu`, or each command writes a warning.
 
+The hook does not install Zig. Therefore `mix release expresso_cli_app` gives the error
+"You MUST have `zig` and `xz` installed to use Burrito" in a remote container. Make a
+release on your machine, where the Nix shell gives Zig 0.16.0.
+
+One result of this limit is that `Expresso.BurritoEntryPoint` runs in a remote session
+without a test. The module calls `Expresso.main/2` only when `Burrito.Util` reads the
+environment variable `__BURRITO`, and the launcher of Burrito writes this variable. See
+`deps/burrito/src/erlang_launcher.zig`. Make sure that a binary reads its arguments after
+you change this module.
+
 To run the hook again by hand:
 
 ```sh

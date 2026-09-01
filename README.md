@@ -84,6 +84,9 @@ mix release expresso_cli_app
 
 The binary takes the same two paths as the mix task.
 
+This command needs Zig 0.16.0 and `xz` on the path. The Nix shell gives both. A container of
+a remote Claude Code session has `xz`, but it has no Zig, and the command gives an error.
+
 ## Develop
 
 ```sh
