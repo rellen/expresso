@@ -148,6 +148,26 @@ defmodule ExpressoTest do
       end
     end
 
+    defmodule CustomDeckTemplate do
+      use Expresso.Template.Deck
+
+      def header(_assigns) do
+        temple do
+          div class: "custom-header" do
+            "custom header"
+          end
+        end
+      end
+
+      def footer(_assigns) do
+        temple do
+          div class: "custom-footer" do
+            "custom footer"
+          end
+        end
+      end
+    end
+
     test "accepts a module as the template of a slide" do
       document =
         Expresso.Deck.new("custom deck")
@@ -156,6 +176,27 @@ defmodule ExpressoTest do
         |> Floki.parse_document!()
 
       assert document |> Floki.find(".custom-slide") |> Floki.text() =~ "custom template"
+    end
+
+    test "accepts a module as the template of a deck" do
+      document =
+        Expresso.Deck.new("custom deck", %{template: CustomDeckTemplate})
+        |> Expresso.Deck.add_slide("first", %{}, [])
+        |> Expresso.Deck.render()
+        |> Floki.parse_document!()
+
+      assert document |> Floki.find(".custom-header") |> Floki.text() =~ "custom header"
+      assert document |> Floki.find(".custom-footer") |> Floki.text() =~ "custom footer"
+    end
+
+    test "uses the built-in deck template when the metadata gives none" do
+      document =
+        Expresso.Deck.new("plain deck")
+        |> Expresso.Deck.add_slide("first", %{}, [])
+        |> Expresso.Deck.render()
+        |> Floki.parse_document!()
+
+      assert document |> Floki.find("span.header") |> Floki.text() =~ "plain deck"
     end
   end
 
