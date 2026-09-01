@@ -194,11 +194,42 @@ The commands are:
 
 ## Open work
 
+This list gives the work in the order of its value. Take the first item that you can do.
+
+### 1. Answer the open decisions for overlays
+
+`docs/overlays.md` ends with four open decisions. Answer them before you write code for
+overlays, because each answer changes the DSL.
+
+Answer the decision about the `class` option first. CSS cannot add a class name to an
+element, so the `on` entity cannot apply a class with a generated rule. The three options
+are: remove the `class` option, let the JavaScript code apply the class names, or use a
+CSS style query. The document gives a proposal for each decision. The maintainer decides.
+
+### 2. Write the code for overlays
+
+The section "Changes to the current code" in `docs/overlays.md` lists each change, and the
+section "The test plan" lists each test. This work is the largest item in this list.
+
+### 3. Give a heading to a slide of the DSL
+
+The `slide` entity has a `name` option only. A deck from the DSL shows no heading, because
+the default slide template reads the heading from the metadata. Add a `heading` option to
+the entity, and write it into the metadata in `Expresso.parse/1`.
+
+### 4. Raise the coverage that `mix doctor` measures
+
+`mix doctor` does not pass. The moduledoc coverage is 100 percent, but the doc coverage
+and the spec coverage are near 50 percent. Many public functions have no `@doc` and no
+`@spec`. Approximately fifteen functions need both. This work makes `mix check` pass,
+except for the tools that already pass.
+
+### 5. Smaller items
+
 - `Expresso.present/0` raises an error with the text "not implemented".
-- The repository has no continuous integration. No check runs on a pull request.
 - `examples/hello_world.exs` needs the expresso package on Hex, which has no release at
   this time.
-- The `slide` entity has no `heading` option. A deck from the DSL shows no heading.
-- `mix doctor` does not pass. The moduledoc coverage is 100 percent, but the doc coverage
-  and the spec coverage are near 50 percent. Many public functions have no `@doc` and no
-  `@spec`.
+- The repository has no continuous integration. No check runs on a pull request. Each
+  result in this repository comes from a command that a person or a session ran.
+- No session compiled this project on the versions of `.tool-versions`. A container gives
+  Erlang/OTP 25 and Elixir 1.18. See `docs/development.md`.

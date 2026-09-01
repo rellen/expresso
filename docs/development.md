@@ -67,10 +67,16 @@ mix deps.audit
 mix test
 ```
 
-`mix credo`, `mix sobelow`, `mix format` and `mix test` pass. `mix doctor` does not pass.
-The moduledoc coverage is 100 percent, but the doc coverage and the spec coverage are near
-50 percent. Therefore `mix check` does not pass as a whole. Run the tools one at a time
-until the coverage is sufficient.
+Each command above passes. `mix doctor` does not pass. The moduledoc coverage is 100
+percent, but the doc coverage and the spec coverage are near 50 percent. Therefore
+`mix check` does not pass as a whole. Run the tools one at a time until the coverage is
+sufficient.
+
+Each result above comes from a remote container, which gives Erlang/OTP 25 and Elixir
+1.18. No session compiled this project on Erlang 28 and Elixir 1.20, which
+`.tool-versions` gives. A command can give a different result in the Nix shell, and a
+warning of a later Elixir is not visible in a remote container. Make sure of a result on
+your machine before a release.
 
 Dialyzer needs the `erlang-dialyzer` package, which is a package that is separate from
 `erlang-nox`. The hook installs it. The first `mix dialyzer` builds a PLT of approximately
