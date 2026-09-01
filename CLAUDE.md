@@ -9,7 +9,8 @@ Expresso makes one HTML document from a deck. A browser then presents the deck.
 Read these documents before you change the code:
 
 - `docs/architecture.md` — the two input paths, the render pipeline, the templates, the
-  elements, the DSL, the presenter and the build. It also lists the open work.
+  elements, the DSL, the presenter and the build. Its section "Open work" gives the next
+  items in the order of their value. Start there.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide. The
   code does not contain this design yet. The document ends with four open decisions.
 - `docs/development.md` — how to get a toolchain, how to run the checks and how to look at
@@ -32,9 +33,14 @@ mix dialyzer
 mix test
 ```
 
-`mix credo`, `mix sobelow`, `mix format` and `mix test` pass at this time. Keep them so.
+Each command above passes at this time, and `mix deps.audit` passes. Keep them so.
 `mix doctor` does not pass, because the doc coverage and the spec coverage are near 50
 percent.
+
+These results come from Erlang/OTP 25 and Elixir 1.18, which the hook installs. They do
+not come from Erlang 28 and Elixir 1.20, which `.tool-versions` gives. No session compiled
+this project on the versions of `.tool-versions`. Therefore a command can give a different
+result in the Nix shell. `docs/development.md` tells you why the versions are different.
 
 Do not change a version in `.tool-versions` or in `mix.exs` to make a command work. The
 container of a remote session uses different versions, and `docs/development.md` tells you
