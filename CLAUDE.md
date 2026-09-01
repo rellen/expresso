@@ -27,6 +27,8 @@ Run these commands before each commit:
 mix compile --warnings-as-errors
 mix format
 mix credo
+mix sobelow --exit --skip
+mix dialyzer
 mix test
 ```
 
@@ -43,8 +45,9 @@ why.
 Do not commit to `main` and do not push to `main`. Make a branch, push the branch, and
 open a pull request. The maintainer merges it.
 
-Run the commands in "Build and test" before each commit. A push with a red check costs the
-maintainer a cycle.
+The repository has no continuous integration. No check runs on a pull request. Therefore
+the commands in "Build and test" are the only gate, and you must run them before each
+commit. Tell the maintainer in the pull request which commands you ran.
 
 ## Commit messages
 

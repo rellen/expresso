@@ -24,7 +24,8 @@ The hook does nothing on your machine, where the Nix shell gives the tools.
 
 The hook does these operations:
 
-1. `apt-get install erlang-nox erlang-dev unzip curl`. The apt package gives Erlang/OTP 25.
+1. `apt-get install erlang-nox erlang-dev erlang-dialyzer unzip curl`. The apt package
+   gives Erlang/OTP 25. The dialyzer package is separate, and `mix check` needs it.
 2. Download the Elixir build for OTP 25 from the Elixir release on GitHub, and put it in
    `/opt/elixir`. The apt package gives Elixir 1.14, and `mix.exs` needs 1.17 or later.
 3. Write `PATH` and `ELIXIR_ERL_OPTIONS` into `$CLAUDE_ENV_FILE`.
@@ -82,6 +83,10 @@ Make an HTML document, and then open it. `examples/demo.exs` uses the functions,
 mix expresso examples/demo.exs /tmp/demo.html
 mix expresso examples/dsl_deck.exs /tmp/dsl.html
 ```
+
+`examples/hello_world.exs` shows a deck outside a Mix project. It does not run with
+`mix expresso`, because `Mix.install/2` gives an error inside a Mix project. It also needs
+the expresso package on Hex, which has no release at this time.
 
 A remote container has no display, but it has Chromium and Playwright. Use them to make
 sure that a change to the CSS or to `assets/main.js` is correct. The browser is at

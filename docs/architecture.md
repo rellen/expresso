@@ -194,6 +194,9 @@ The commands are:
 ## Open work
 
 - `Expresso.present/0` raises an error with the text "not implemented".
+- The repository has no continuous integration. No check runs on a pull request.
+- `examples/hello_world.exs` needs the expresso package on Hex, which has no release at
+  this time.
 - The `slide` entity has no `heading` option. A deck from the DSL shows no heading.
 - `mix doctor` does not pass. The moduledoc coverage is 100 percent, but the doc coverage
   and the spec coverage are near 50 percent. Many public functions have no `@doc` and no
