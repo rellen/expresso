@@ -369,8 +369,8 @@ overlay verifier.
 The extension must contain a `pause` entity and an `on` entity. The `pause` entity needs a
 struct target, because Spark builds a struct for each entity.
 
-The `slide` entity has no `args` option at this time. Therefore the examples in this
-document, which write `slide "pipeline" do`, need `args: [:name]` on the entity.
+The `slide` entity takes an optional name as its first argument. Therefore the examples in
+this document, which write `slide "pipeline" do`, are correct.
 
 ### The slide metadata
 
@@ -410,8 +410,9 @@ The renderer must also write `data-step="1"` on each `section` element.
 
 ### The JavaScript code
 
-`assets/main.js` holds one slide index. It shows and hides a slide with the inline
-`style.display` property. The code must also hold a step index for each slide.
+`assets/main.js` holds the number of the current slide, and the first slide is slide 1. It
+shows and hides a slide with the inline `style.display` property. The code must also hold a
+step index for each slide.
 
 The necessary changes are:
 
