@@ -139,7 +139,7 @@ defmodule ExpressoTest do
     defmodule CustomSlideTemplate do
       use Expresso.Template
 
-      def render(assigns) do
+      def render(_assigns) do
         temple do
           div class: "custom-slide" do
             "custom template"
@@ -156,6 +156,17 @@ defmodule ExpressoTest do
         |> Floki.parse_document!()
 
       assert document |> Floki.find(".custom-slide") |> Floki.text() =~ "custom template"
+    end
+  end
+
+  describe "render/1 and the doctype" do
+    test "writes the doctype of HTML 5 in front of the document" do
+      html =
+        Expresso.Deck.new("doctype deck")
+        |> Expresso.Deck.add_slide("first", %{}, [])
+        |> Expresso.Deck.render()
+
+      assert String.starts_with?(html, "<!DOCTYPE html>\n<html")
     end
   end
 
@@ -185,6 +196,7 @@ defmodule ExpressoTest do
 
       html = File.read!(output_path)
 
+      assert String.starts_with?(html, "<!DOCTYPE html>")
       assert html =~ "dsl deck"
     end
   end
