@@ -1,6 +1,17 @@
 defmodule Expresso do
   @moduledoc """
-  Documentation for `Expresso`.
+  Expresso makes one HTML document from a deck
+
+  A deck comes from one of two input paths. A script builds an `Expresso.Deck`
+  struct with function calls, or a module declares a deck with the DSL of this
+  module. `to_deck/1` accepts the value of either path.
+
+  `main/2` is the entry point of the command `mix expresso <input> [output]` and
+  of the binary that Burrito makes. It reads the input script, it makes the HTML,
+  and it writes the HTML to the output path or to the standard output.
+
+  `docs/architecture.md` gives the render pipeline, the templates and the
+  elements.
   """
   use Spark.Dsl,
     default_extensions: [extensions: Expresso.Extension]
@@ -69,10 +80,24 @@ defmodule Expresso do
   end
 
   @doc """
-  Main function
+  Make an HTML document from an input script
+
+  The function writes the HTML to `output_path`. With `nil` as the output path,
+  the function writes the HTML to the standard output.
+
+  With `nil` as the input path, the function writes the usage text and returns an
+  error tuple. The mix task gives `nil` when the command has no argument.
   """
-  @spec main(Path.t(), Path.t() | nil) :: :ok | {:error, String.t()}
-  def main(input_path, output_path \\ nil) do
+  @spec main(Path.t() | nil, Path.t() | nil) :: :ok | {:error, String.t()}
+  def main(input_path, output_path \\ nil)
+
+  def main(nil, _output_path) do
+    message = "Usage: mix expresso <input> [output]"
+    IO.puts(message)
+    {:error, message}
+  end
+
+  def main(input_path, output_path) do
     result =
       case File.stat(input_path) do
         {:ok, _stat} ->

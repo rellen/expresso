@@ -63,6 +63,7 @@ mix expresso my_deck.exs my_deck.html
 ```
 
 The second path is optional. Without it, the task writes the HTML to the standard output.
+Without the first path, the task writes the usage text.
 
 ## Present a deck
 
