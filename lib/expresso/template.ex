@@ -29,11 +29,14 @@ defmodule Expresso.Template do
   end
 
   @doc """
-  Render a deck template
+  Render the header or the footer of a deck template
+
+  The function reads the template from `deck.metadata[:template]`. The default
+  value is `{:builtins, :default}`.
   """
   @spec render_deck_template(part :: :header | :footer, assigns :: Keyword.t() | map()) :: term()
   def render_deck_template(part, assigns) do
-    template = assigns[:template] || {:builtins, :default}
+    template = deck_template(assigns[:deck])
 
     module = module_from_template_definition(:deck, template)
 
@@ -41,6 +44,10 @@ defmodule Expresso.Template do
       c(&do_render_deck_template(module, part, &1), rest!: assigns)
     end
   end
+
+  defp deck_template(%Expresso.Deck{metadata: %{template: template}}), do: template
+
+  defp deck_template(_deck), do: {:builtins, :default}
 
   defp do_render_template(module, assigns) do
     apply(module, :render, [assigns])
