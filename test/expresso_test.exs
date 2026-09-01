@@ -159,6 +159,36 @@ defmodule ExpressoTest do
     end
   end
 
+  describe "main/2" do
+    import ExUnit.CaptureIO
+
+    test "writes the usage text when the input path is nil" do
+      output = capture_io(fn -> assert {:error, _message} = Expresso.main(nil, nil) end)
+
+      assert output =~ "Usage: mix expresso <input> [output]"
+    end
+
+    test "gives an error when the input file is not present" do
+      output =
+        capture_io(fn ->
+          assert {:error, _message} = Expresso.main("test/no_such_deck.exs", nil)
+        end)
+
+      assert output =~ "Couldn't find input file"
+    end
+
+    test "writes the HTML to the output path" do
+      output_path = Path.join(System.tmp_dir!(), "expresso_main_test.html")
+      on_exit(fn -> File.rm(output_path) end)
+
+      assert :ok = Expresso.main("examples/dsl_deck.exs", output_path)
+
+      html = File.read!(output_path)
+
+      assert html =~ "dsl deck"
+    end
+  end
+
   describe "render/1 for a deck from the imperative API" do
     test "writes the heading from the metadata" do
       document =
