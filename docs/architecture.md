@@ -61,6 +61,10 @@ A heading option for the `slide` entity is open work.
 4. `Expresso.Deck.render/1` makes the HTML.
 5. The function writes the HTML to the output file, or to the standard output.
 
+The function has a clause for `nil` in front of these steps. `Mix.Tasks.Expresso` and
+`Expresso.BurritoEntryPoint` read the input path with `Enum.at/2`, which gives `nil` for
+a command with no argument. The clause writes the usage text and returns an error tuple.
+
 `Expresso.to_deck/1` accepts three values:
 
 | Value | Operation |
@@ -83,6 +87,15 @@ an error tuple, and `Expresso.main/2` writes the message.
 2. `Expresso.Renderer.render/1` makes an HTML tree with Temple.
 3. `Phoenix.HTML.safe_to_string/1` makes a string.
 4. `Floki.parse_document!/1` and `Floki.raw_html(pretty: true)` format the string.
+5. The function puts `<!DOCTYPE html>` and a newline in front of the string.
+
+The wildcard of step 1 is relative to the working directory of the command. This
+repository has no `priv/templates/` directory, so step 1 compiles no file here. A deck
+that needs a custom template gives a module instead. See "The templates".
+
+Step 5 is necessary because Floki drops a doctype node. Therefore the renderer cannot
+write the doctype, and the deck function adds it after step 4. Without the doctype a
+browser uses the quirks mode, and the layout is not correct.
 
 Two entry points call `Expresso.main/2`:
 
@@ -91,9 +104,11 @@ Two entry points call `Expresso.main/2`:
 
 ## The document
 
-`Expresso.Renderer.render/1` writes one HTML document with this structure:
+`Expresso.Deck.render/1` writes one HTML document with this structure. Each part below
+the doctype comes from `Expresso.Renderer.render/1`:
 
 ```
+<!DOCTYPE html>
 html
   head
     title            the name of the deck
@@ -115,6 +130,11 @@ Therefore a change to an asset file starts a new compile of `Expresso.Renderer`.
 The renderer writes an inline `style` attribute on each `section`. The first slide gets
 `display: flex`, and each other slide gets `display: none`.
 
+The container `div` gets `height: 100vh`, and each `section` gets `height: 100%`. The
+viewport unit is necessary because the `body` gets `min-height`, and a percentage height
+cannot resolve against a minimum height. With `height: 100%` on the container, each slide
+takes the height of its content only.
+
 ## The templates
 
 A template makes the HTML for a part of the document. There are two kinds.
@@ -124,13 +144,23 @@ behaviour, which has the callbacks `header/1` and `footer/1`.
 
 A slide template gives the body of a slide. It has a `render/1` function.
 
-`Expresso.Template` selects a template with the value of `slide.metadata[:template]`. The
-default value is `{:builtins, :default}`. The function
-`Expresso.Template.module_from_template_definition/2` maps this value to a module name.
+`Expresso.Template` selects a template from the metadata. A slide template comes from
+`slide.metadata[:template]`, and a deck template comes from `deck.metadata[:template]`.
+The default value of each is `{:builtins, :default}`. The private function
+`module_from_template_definition/2` maps this value to a module name.
 
 The value takes one of two forms. The tuple `{:builtins, name}` selects a built-in template.
 A module selects that module. Therefore a template that `Expresso.load_templates/0` compiles
 from `./priv/templates/` is available as a module.
+
+These two lines show each kind:
+
+```elixir
+Expresso.Deck.new("my deck", %{template: MyDeckTemplate})
+|> Expresso.Deck.add_slide("first", %{template: MySlideTemplate}, [])
+```
+
+The DSL gives no template option. A deck from the DSL uses the built-in templates.
 
 ## The elements
 
