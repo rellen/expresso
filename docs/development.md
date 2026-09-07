@@ -84,6 +84,18 @@ Dialyzer needs the `erlang-dialyzer` package, which is a package that is separat
 `_build`, so each `mix dialyzer` after the first takes a few seconds. Dialyzer reports no
 error at this time.
 
+`mix deps.audit` alone is not sufficient for a vulnerable dependency. It reads an advisory
+source that does not contain each advisory.
+
+In September 2026, Hex reported two advisories for mint 1.9.3 in the output of
+`mix deps.get`. The advisories are EEF-CVE-2026-82728 and EEF-CVE-2026-82729.
+`mix deps.audit` gave "No vulnerabilities found" for the same lockfile. A new copy of its
+advisory source gave the same result. Therefore the source does not contain these
+advisories, and the copy was not old.
+
+Read the output of `mix deps.get` for a line that ends with `VULNERABLE!`. The session
+start hook runs this command, so this line is in the output of the hook. Use both signals.
+
 Sobelow gives a warning for `Phoenix.HTML.raw/1`. Put a `# sobelow_skip` comment above the
 function when the input is safe. `Expresso.main/2` and `Expresso.Renderer.render/1` show
 this pattern.

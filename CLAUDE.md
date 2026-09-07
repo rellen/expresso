@@ -37,6 +37,10 @@ Each command above passes at this time, and `mix deps.audit` passes. Keep them s
 `mix doctor` does not pass, because the doc coverage and the spec coverage are near 50
 percent.
 
+`mix deps.audit` alone is not sufficient for a vulnerable dependency. Hex reports an
+advisory in the output of `mix deps.get`, and this output is the more current signal. Read
+it. `docs/development.md` gives an example.
+
 These results come from Erlang/OTP 25 and Elixir 1.18, which the hook installs. They do
 not come from Erlang 28 and Elixir 1.20, which `.tool-versions` gives. No session compiled
 this project on the versions of `.tool-versions`. Therefore a command can give a different
