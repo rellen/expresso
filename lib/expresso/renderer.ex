@@ -12,11 +12,16 @@ defmodule Expresso.Renderer do
 
   @external_resource "./assets/fonts.css"
   @external_resource "./assets/style.css"
-  @external_resource "./assets/main.js"
+
+  # `Mix.Tasks.Compile.Presenter` makes the bundle from these sources before
+  # this module compiles. A change to a source starts a new compile here.
+  for source <- Path.wildcard("./assets/src/**/*.ts") do
+    @external_resource source
+  end
 
   @fonts File.read!("./assets/fonts.css")
   @style File.read!("./assets/style.css")
-  @main_js File.read!("./assets/main.js")
+  @presenter File.read!("./priv/static/presenter.js")
 
   defp fonts do
     @fonts
@@ -26,16 +31,17 @@ defmodule Expresso.Renderer do
     @style
   end
 
-  defp main_js do
-    @main_js
+  defp presenter do
+    @presenter
   end
 
   # `Expresso.Deck.render/1` writes the doctype. Floki drops a doctype node, and the
   # deck function formats this tree with Floki. Therefore the doctype cannot come
   # from this function.
   #
-  # The three assets are files of this repository. The renderer reads them at compile
-  # time, and no input of a user can change them.
+  # The two style sheets are files of this repository, and the presenter bundle
+  # comes from files of this repository. The renderer reads them at compile time,
+  # and no input of a user can change them.
   # sobelow_skip ["XSS.Raw"]
   def render(assigns) do
     temple do
@@ -83,7 +89,7 @@ defmodule Expresso.Renderer do
           end
 
           script do
-            Phoenix.HTML.raw(main_js())
+            Phoenix.HTML.raw(presenter())
           end
         end
       end

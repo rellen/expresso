@@ -7,6 +7,7 @@ defmodule Expresso.MixProject do
       version: "0.1.0",
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
+      compilers: [:presenter] ++ Mix.compilers(),
       deps: deps(),
       releases: releases(),
       dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix]]
@@ -51,6 +52,9 @@ defmodule Expresso.MixProject do
       # releasing
       {:burrito, "~> 1.6"},
 
+      # the presenter bundle
+      {:esbuild, "~> 0.10", runtime: false},
+
       # docs
       {:ex_doc, "~> 0.40", only: :dev, runtime: false},
 
@@ -64,5 +68,58 @@ defmodule Expresso.MixProject do
       {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
       {:sobelow, ">= 0.0.0", only: :dev, runtime: false}
     ]
+  end
+end
+
+defmodule Mix.Tasks.Compile.Presenter do
+  @moduledoc """
+  Make the presenter bundle with esbuild
+
+  `mix.exs` puts this compiler in front of the Elixir compiler. esbuild reads
+  `assets/src/main.ts`, it follows each import, and it writes one minified
+  script to `priv/static/presenter.js`. `Expresso.Renderer` reads that file at
+  compile time. The profile is in `config/config.exs`.
+
+  This module is in `mix.exs` and not in `lib/`. Mix runs the compilers before
+  it compiles `lib/`, so a compiler in `lib/` is not present when Mix needs it.
+  Mix loads `mix.exs` first, so a module here is present.
+
+  The compiler runs esbuild when a source is newer than the bundle, when the
+  bundle is not present, or when the command has `--force`. `mix clean` removes
+  the bundle. See `docs/typescript.md`.
+  """
+
+  use Mix.Task.Compiler
+
+  @sources "assets/src/**/*.ts"
+  @bundle "priv/static/presenter.js"
+
+  @impl Mix.Task.Compiler
+  def run(args) do
+    if "--force" in args or Mix.Utils.stale?(Path.wildcard(@sources), [@bundle]) do
+      bundle()
+      {:ok, []}
+    else
+      {:noop, []}
+    end
+  end
+
+  @impl Mix.Task.Compiler
+  def clean do
+    File.rm(@bundle)
+    :ok
+  end
+
+  defp bundle do
+    # The first run downloads the esbuild binary, and the download needs these
+    # applications. `mix esbuild` starts them the same way.
+    Mix.ensure_application!(:inets)
+    Mix.ensure_application!(:ssl)
+    Application.ensure_all_started(:esbuild)
+
+    case Esbuild.install_and_run(:presenter, []) do
+      0 -> :ok
+      status -> Mix.raise("esbuild gave the exit status #{status}")
+    end
   end
 end

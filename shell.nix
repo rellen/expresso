@@ -12,7 +12,7 @@ let
 in pkgs.mkShell rec {
   name = "Elixir";
   buildInputs = with pkgs;
-    [ rebar rebar3 erlang elixir elixir-ls nodejs_24 prettier zig xz ]
+    [ rebar rebar3 erlang elixir elixir-ls nodejs_24 zig xz ]
     ++ optional stdenv.hostPlatform.isLinux inotify-tools;
 
   shellHook = ''

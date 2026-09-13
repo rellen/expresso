@@ -98,13 +98,21 @@ start hook runs this command, so this line is in the output of the hook. Use bot
 
 ## The presenter script
 
-`docs/typescript.md` gives the plan. The parts that exist are:
+`docs/typescript.md` gives the design. The parts are:
 
 - `assets/src/state.ts` — the state of the presenter and the function that changes it.
-  No code reads this module yet. `assets/main.js` is still the script in the document.
+- `assets/src/dom.ts` — the code that reads the document and writes to it.
+- `assets/src/main.ts` — the entry, which esbuild bundles.
 - `assets/test/state.test.ts` — the tests of the state.
 - `assets/tsconfig.json` — the options of the type check.
 - `package.json` — the tools, with a pinned version of each.
+- `config/config.exs` — the esbuild profile.
+- `Mix.Tasks.Compile.Presenter` in `mix.exs` — the compiler that makes the bundle.
+
+`mix compile` makes `priv/static/presenter.js` with esbuild, in front of the Elixir
+compiler. The first `mix compile` downloads the esbuild binary from the npm registry, and
+the download passes the proxy of the remote container. Git does not hold the bundle. A
+content change to a source makes a new bundle and a new compile of `Expresso.Renderer`.
 
 The commands are:
 
@@ -156,6 +164,10 @@ const browser = await chromium.launch({
 });
 const page = await browser.newPage({ viewport: { width: 1000, height: 620 } });
 await page.goto("file:///tmp/demo.html");
+
+// Make sure that the result comes from the standards mode. In the quirks mode
+// a percentage height gives a different layout, and the defect is not visible.
+console.log(await page.evaluate(() => document.compatMode)); // "CSS1Compat"
 
 // The presenter reads the keys j, k and p.
 await page.keyboard.press("j");

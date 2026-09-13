@@ -242,6 +242,18 @@ defmodule ExpressoTest do
     end
   end
 
+  describe "the presenter script" do
+    test "the document holds the bundle as one classic script" do
+      document = DslDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+      [script] = document |> Floki.find("script") |> Enum.map(&Floki.text(&1, js: true))
+
+      assert script =~ "keydown"
+      refute script =~ "import "
+      refute script =~ "export "
+      refute script =~ "</script>"
+    end
+  end
+
   describe "render/1 for a deck from the imperative API" do
     test "writes the heading from the metadata" do
       document =
