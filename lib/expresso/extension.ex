@@ -24,7 +24,10 @@ defmodule Expresso.Extension do
     target: Expresso.Slide,
     args: [{:optional, :name}],
     entities: @slide_elements,
-    schema: [name: [type: :string]]
+    schema: [
+      name: [type: :string, doc: "A name for the slide."],
+      heading: [type: :string, doc: "The heading that the slide template shows."]
+    ]
   }
 
   @deck %Spark.Dsl.Section{

@@ -37,6 +37,8 @@ defmodule MyDeck do
   name("my deck")
 
   slide do
+    heading("Hello")
+
     text_box do
       text_area do
         text "A text area in a text box. Text accepts <b>HTML</b>."
@@ -46,7 +48,7 @@ defmodule MyDeck do
 end
 ```
 
-With the functions, build a deck and return it. This style also gives a heading to a slide:
+With the functions, build a deck and return it. The heading goes into the metadata:
 
 ```elixir
 # my_deck.exs

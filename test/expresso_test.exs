@@ -31,6 +31,8 @@ defmodule ExpressoTest do
     name("named slide deck")
 
     slide "intro" do
+      heading("An intro")
+
       text_box do
         text_area do
           text "an intro slide"
@@ -60,6 +62,18 @@ defmodule ExpressoTest do
 
     test "reads the name of a slide from the first argument" do
       assert Expresso.parse(NamedSlideDeck).slides |> Enum.map(& &1.name) == ["intro"]
+    end
+
+    test "writes the heading option into the metadata of the slide" do
+      [slide] = Expresso.parse(NamedSlideDeck).slides
+
+      assert slide.metadata.heading == "An intro"
+    end
+
+    test "gives no heading key to a slide without the option" do
+      [slide | _] = Expresso.parse(DslDeck).slides
+
+      refute Map.has_key?(slide.metadata, :heading)
     end
   end
 
@@ -130,8 +144,20 @@ defmodule ExpressoTest do
       assert text =~ "second slide"
     end
 
-    test "writes no heading, because the DSL gives none", %{document: document} do
+    test "writes no heading for a slide without the heading option", %{document: document} do
       assert Floki.find(document, ".slide-heading-container") == []
+    end
+
+    test "writes the heading of a slide with the heading option" do
+      heading =
+        NamedSlideDeck
+        |> Expresso.parse()
+        |> Expresso.Deck.render()
+        |> Floki.parse_document!()
+        |> Floki.find(".slide-heading-container h1")
+        |> Floki.text()
+
+      assert String.trim(heading) == "An intro"
     end
   end
 
