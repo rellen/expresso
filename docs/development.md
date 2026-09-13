@@ -96,6 +96,29 @@ advisories, and the copy was not old.
 Read the output of `mix deps.get` for a line that ends with `VULNERABLE!`. The session
 start hook runs this command, so this line is in the output of the hook. Use both signals.
 
+## The presenter script
+
+`docs/typescript.md` gives the plan. The parts that exist are:
+
+- `assets/src/state.ts` — the state of the presenter and the function that changes it.
+  No code reads this module yet. `assets/main.js` is still the script in the document.
+- `assets/test/state.test.ts` — the tests of the state.
+- `assets/tsconfig.json` — the options of the type check.
+- `package.json` — the tools, with a pinned version of each.
+
+The commands are:
+
+```sh
+npm install      # the hook runs this command in a remote session
+npm run check    # tsc, the type check
+npm test         # node --test, which runs a .ts file directly
+npm run format   # prettier
+```
+
+Node runs the test files with no build step. Node 22.22 and Node 24 read a `.ts` file
+directly when the file uses only erasable syntax, and `erasableSyntaxOnly` in
+`tsconfig.json` makes the compiler refuse other syntax.
+
 Sobelow gives a warning for `Phoenix.HTML.raw/1`. Put a `# sobelow_skip` comment above the
 function when the input is safe. `Expresso.main/2` and `Expresso.Renderer.render/1` show
 this pattern.

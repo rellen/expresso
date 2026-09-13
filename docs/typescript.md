@@ -146,7 +146,8 @@ Add `package.json` at the root of the repository, with `typescript`, `@types/nod
 `prettier` as development dependencies, and with these scripts:
 
 - `check` — `tsc -p assets`.
-- `test` — `node --test assets/test/`.
+- `test` — `node --test "assets/test/**/*.test.ts"`. A directory as the argument does
+  not work, and Node reports the directory as one failed test.
 - `format` — `prettier --write assets`.
 
 Pin each version, and commit `package-lock.json`. Add `node_modules/` to `.gitignore`.
@@ -172,6 +173,15 @@ person runs them before a commit.
   `priv/static/presenter.js` as the bundle. In "The render pipeline", add the compiler.
 - `docs/overlays.md` — in "The JavaScript code", name `state.ts` for the rules and
   `dom.ts` for the attributes.
+
+## Progress
+
+- Step 1: done as a test on 2026-09-13. The esbuild binary downloads through the proxy of
+  the remote container, and it makes a minified IIFE from `.ts` modules. The Hex package
+  is not in `mix.exs` yet.
+- Steps 2 and 3: done. `package.json`, `assets/tsconfig.json`, `assets/src/state.ts` and
+  its tests are in the repository. The hook runs `npm install`.
+- Steps 4 to 10: not done. `assets/main.js` is still the script in the document.
 
 ## The steps
 

@@ -13,3 +13,6 @@ erl_crash.dump
 .nix-hex
 .nix-mix
 burrito_out
+
+# the tools for the presenter script
+node_modules/

@@ -33,9 +33,13 @@ mix credo
 mix sobelow --exit --skip
 mix dialyzer
 mix test
+npm run check
+npm test
 ```
 
 Each command above passes at this time, and `mix deps.audit` passes. Keep them so.
+The two `npm` commands need Node, and the hook runs `npm install`. `mix compile` does
+not need Node.
 `mix doctor` does not pass, because the doc coverage and the spec coverage are near 50
 percent.
 

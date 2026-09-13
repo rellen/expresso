@@ -53,4 +53,8 @@ mix local.rebar --force --if-missing
 mix deps.get
 mix compile
 
+# The tools for the presenter script. `mix compile` does not need them, and the
+# type check and the tests do. package.json pins each version.
+npm install --no-audit --no-fund
+
 echo "Expresso: $(elixir --version | tail -1) is ready."
