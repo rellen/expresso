@@ -7,6 +7,10 @@ defmodule Expresso.Builtins.Templates.Slides.Default do
 
   use Expresso.Template
 
+  @doc """
+  Make the body of a slide, with the heading and the elements
+  """
+  @spec render(map()) :: Phoenix.HTML.safe()
   def render(assigns) do
     temple do
       div class: "slide-body" do

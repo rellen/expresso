@@ -58,7 +58,7 @@ CLAUDE_CODE_REMOTE=true CLAUDE_PROJECT_DIR="$PWD" ./.claude/hooks/session-start.
 ## The checks
 
 ```sh
-mix check                      # each tool below, and Dialyzer
+mix check                      # each tool below, and ex_doc and unused_deps
 mix compile --warnings-as-errors
 mix format --check-formatted
 mix credo
@@ -67,10 +67,12 @@ mix deps.audit
 mix test
 ```
 
-Each command above passes. `mix doctor` does not pass. The moduledoc coverage is 100
-percent, but the doc coverage and the spec coverage are near 50 percent. Therefore
-`mix check` does not pass as a whole. Run the tools one at a time until the coverage is
-sufficient.
+Each command above passes, and `mix check` passes as a whole. `mix doctor` passes with a
+doc coverage, a spec coverage and a moduledoc coverage of 100 percent. Doctor reads the
+source and not the compiled
+modules, so the functions that `use Spark.Dsl` and `use Temple.Component` write do not
+count. Each public function that a person writes needs a `@doc` and a `@spec`, and each
+struct needs a `@type t`.
 
 Each result above comes from a remote container, which gives Erlang/OTP 25 and Elixir
 1.18. No session compiled this project on Erlang 28 and Elixir 1.20, which

@@ -257,29 +257,7 @@ This list gives the work in the order of its value. Take the first item that you
 each test. The rules of the presenter go into `assets/src/state.ts` with a test for each
 rule. This work is the largest item in this list.
 
-### 2. Raise the coverage that `mix doctor` measures
-
-`mix doctor` does not pass. The moduledoc coverage is 100 percent, but the doc coverage
-and the spec coverage are each 51.9 percent.
-
-Twelve functions of this project have no `@doc`, or no `@spec`, or neither:
-
-- `Expresso.Slide.get_assigns/1`
-- `Expresso.Renderer.render/1`
-- `Expresso.Template.render_elements/1`
-- `Expresso.Element.TextBox.new/1`, `get_assigns/1` and `render/1`
-- `Expresso.Element.TextArea.new/1`, `get_assigns/1` and `render/1`
-- `Expresso.Builtins.Templates.Decks.Default.header/1` and `footer/1`
-- `Expresso.Builtins.Templates.Slides.Default.render/1`
-
-The count of the tool is larger than twelve, because `use Spark.Dsl` writes ten more
-public functions into `Expresso`, and `use Temple.Component` writes more into each
-element. Examples are `Expresso.init/1` and `Expresso.opt_schema/0`. You do not write
-these functions, and a `@doc` for them is not possible in the usual way. Therefore make
-sure that the tool can pass before you start. `mix doctor` reads `.doctor.exs`, which this
-repository does not have, and that file can remove a module from the report.
-
-### 3. Smaller items
+### 2. Smaller items
 
 - `Expresso.present/0` raises an error with the text "not implemented".
 - `examples/hello_world.exs` needs the expresso package on Hex, which has no release at

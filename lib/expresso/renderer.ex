@@ -42,6 +42,13 @@ defmodule Expresso.Renderer do
   # The two style sheets are files of this repository, and the presenter bundle
   # comes from files of this repository. The renderer reads them at compile time,
   # and no input of a user can change them.
+  @doc """
+  Make the HTML tree of a deck
+
+  The assigns hold the deck under the key `deck`. `Expresso.Deck.render/1` calls
+  this function, and it formats the tree and adds the doctype.
+  """
+  @spec render(map() | keyword()) :: Phoenix.HTML.safe()
   # sobelow_skip ["XSS.Raw"]
   def render(assigns) do
     temple do

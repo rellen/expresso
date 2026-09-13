@@ -7,6 +7,11 @@ defmodule Expresso.Builtins.Templates.Decks.Default do
 
   use Expresso.Template.Deck
 
+  @doc """
+  Make the header of a slide, with the name of the deck
+  """
+  @impl Expresso.Template.Deck
+  @spec header(map()) :: Phoenix.HTML.safe()
   def header(assigns) do
     temple do
       div do
@@ -17,6 +22,11 @@ defmodule Expresso.Builtins.Templates.Decks.Default do
     end
   end
 
+  @doc """
+  Make the footer of a slide, with the number of the slide
+  """
+  @impl Expresso.Template.Deck
+  @spec footer(map()) :: Phoenix.HTML.safe()
   def footer(assigns) do
     temple do
       div do

@@ -38,11 +38,9 @@ npm run check
 npm test
 ```
 
-Each command above passes at this time, and `mix deps.audit` passes. Keep them so.
-The two `npm` commands need Node, and the hook runs `npm install`. `mix compile` does
-not need Node.
-`mix doctor` does not pass, because the doc coverage and the spec coverage are near 50
-percent.
+Each command above passes at this time, and `mix check` passes as a whole. Keep them so. The
+two `npm` commands need Node, and the hook runs `npm install`. `mix compile`
+does not need Node.
 
 `mix deps.audit` alone is not sufficient for a vulnerable dependency. Hex reports an
 advisory in the output of `mix deps.get`, and this output is the more current signal. Read
