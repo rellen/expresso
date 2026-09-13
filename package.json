@@ -1,0 +1,15 @@
+{
+  "name": "expresso-assets",
+  "private": true,
+  "description": "The tools for the presenter script. mix compile does not need them.",
+  "scripts": {
+    "check": "tsc -p assets",
+    "test": "node --test \"assets/test/**/*.test.ts\"",
+    "format": "prettier --write assets"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.2",
+    "prettier": "3.9.6",
+    "typescript": "7.0.2"
+  }
+}

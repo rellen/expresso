@@ -94,6 +94,8 @@ a remote Claude Code session has `xz`, but it has no Zig, and the command gives 
 mix check      # the compiler, the formatter, Credo, Dialyzer, Sobelow and the tests
 mix test
 mix format
+npm run check  # the types of the presenter script
+npm test       # the tests of the presenter script
 ```
 
 `CLAUDE.md` gives the conventions for a commit message and for prose.
