@@ -237,13 +237,15 @@ This list gives the work in the order of its value. Take the first item that you
 
 ### 1. Answer the open decisions for overlays
 
-`docs/overlays.md` ends with four open decisions. Answer them before you write code for
-overlays, because each answer changes the DSL.
+`docs/overlays.md` ends with three open decisions and one decision. Answer the open ones
+before you write code for overlays, because each answer changes the DSL.
 
-Answer the decision about the `class` option first. CSS cannot add a class name to an
-element, so the `on` entity cannot apply a class with a generated rule. The three options
-are: remove the `class` option, let the JavaScript code apply the class names, or use a
-CSS style query. The document gives a proposal for each decision. The maintainer decides.
+The maintainer made the decision about the `state` option. The `on` entity writes a
+custom property, and the theme owns the appearance. `docs/research/` holds the prompt and
+the report that
+gave the evidence. The three open decisions are the scope of `pause`, an `on` outside the
+`at` option, and the maximum step number. The document gives a proposal for each. The
+maintainer decides.
 
 ### 2. Write the code for overlays
 

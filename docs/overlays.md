@@ -86,7 +86,7 @@ option.
 ```elixir
 slide "pipeline" do
   text_box at: ~o"+-" do
-    on ~o"+", class: "alert"
+    on ~o"+", state: :alert
 
     text_area do
       text "This box appears at one step. It becomes prominent at the next step."
@@ -110,12 +110,13 @@ the same specification forms as the `at` option.
 
 The `on` entity can change two things only:
 
-- `class` adds one or more class names.
+- `state` names a state of the theme. The compiler maps the state `alert` to the custom
+  property `--alert`, and it sets the property to `1` on those steps.
 - `set` writes custom properties. The compiler maps the key `x` to the property `--x`.
 
 ```elixir
 text_box at: ~o"2-" do
-  on ~o"3", class: "alert"
+  on ~o"3", state: :alert
   on ~o"4-", set: [x: "400px", dim: 0.3]
 
   text_area do
@@ -124,14 +125,51 @@ text_box at: ~o"2-" do
 end
 ```
 
-### The limit of the class option
+Both options write a custom property. A `state` is a `set` of one property with the value
+`1`. The option has its own name because a state is the usual case.
 
-CSS cannot add a class name to an element. A selector matches an element, and the rule
-then sets properties. No CSS construction copies the declarations of a class into a
-different rule. Therefore the generated CSS cannot apply `class: "alert"` at step 3.
+### Why the on entity does not apply a class
 
-This design does not solve this problem. The open decisions give three options and a
-proposal.
+An earlier version of this design gave the `on` entity a `class` option. CSS cannot add a
+class name to an element. A selector matches an element, and the rule then sets
+properties. No CSS construction copies the declarations of a class into a different rule.
+Therefore a generated rule cannot apply `.alert` at step 3. No browser at the floor of
+this design has a construction for it. The floor is July 2024, and the section "Custom
+properties" defines it. The decision "How does the `on` entity apply a state?" gives the
+evidence.
+
+### The state option
+
+The compiler registers each state as a number:
+
+```css
+@property --alert {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+section[data-step="3"] [data-el="s2-e1"] {
+  --alert: 1;
+}
+```
+
+The theme owns the appearance of the state. It reads the number in the base rule of the
+element. The renderer does not know the values of the theme:
+
+```css
+.text-box {
+  outline-width: calc(var(--alert) * 2px);
+  background: color-mix(in srgb, var(--alert-bg) calc(var(--alert) * 100%), transparent);
+  transition: outline-width var(--dur), background var(--dur);
+}
+```
+
+A registered number interpolates. Therefore the state fades in across the step, and the
+theme does not write a transition for it. A value that CSS cannot multiply takes the
+space toggle. The theme writes `--alert-on: ;` for the state, and `var(--alert-on) #fee`
+for the value. This form does not interpolate, but it works in each browser with custom
+properties.
 
 The `set` option does not have this problem. A generated rule writes a custom property
 directly, and the property has a value at the step that the rule selects.
@@ -258,8 +296,7 @@ element, each element is visible before its first step.
 }
 ```
 
-The JavaScript code writes the `data-step` attribute. It does no other operation, except
-the operation that the open decision about the class can add.
+The JavaScript code writes the `data-step` attribute. It does no other operation.
 
 ### The identity of an element
 
@@ -322,7 +359,9 @@ The element reads the property in a base rule:
 ```
 
 The `@property` at-rule became available in all major browsers in July 2024. Chrome 85,
-Safari 16.4 and Firefox 128 support it.
+Safari 16.4 and Firefox 128 support it. The floor of this design is that date, and not
+the Chrome version. A construction that each engine gave before July 2024 is inside the
+floor. `color-mix()` is an example: Chrome 111, Safari 16.2 and Firefox 113 support it.
 
 ### Duration and easing
 
@@ -422,8 +461,6 @@ The necessary changes are:
 - Move to the previous slide at the first step, and show the last step of that slide.
 - Read the maximum step index from the `data-max-step` attribute of the current `section`.
 - Write the step index into the `data-step` attribute of the current `section`.
-- Apply the class names of the current step, if the open decision about the class takes
-  option 2.
 - Show all the steps of all the slides for the print key.
 
 ### The imperative API
@@ -466,27 +503,36 @@ The proposal is an error. A step that does not show the element cannot show a st
 element. Such an `on` entity makes CSS rules that no step applies. An error tells the
 author about the defect at compile time.
 
-### How does the `on` entity apply a class?
+### How does the `on` entity apply a state? (decided)
 
-CSS cannot add a class name. The section "The limit of the class option" gives the problem.
-There are three options:
+The maintainer decided this on 2026-09-13. The `on` entity does not apply a class. It
+writes a custom property, `--<state>: 1`, and the theme owns the appearance. The section
+"The state option" gives the contract. The JavaScript code writes `data-step` only.
 
-1. Remove the `class` option. The `on` entity then holds `set` only. A theme expresses each
-   state as a custom property. This option keeps the CSS contract pure, but it makes a
-   simple state, such as a highlight, more difficult to write.
-2. Let the JavaScript code apply the class names. The renderer writes a `data-class`
-   attribute that maps a step number to a class name. The code then adds and removes the
-   class names at each change of the step. This option adds a second operation to the
-   JavaScript code.
-3. Use a CSS style query. The `on` entity writes a custom property, and the theme selects
-   the state with `@container style(--alert: 1)`. This option keeps the CSS contract pure,
-   but the browser support for a style query is more recent than the support for the
-   `@property` at-rule.
+The evidence is in `docs/research/overlay-class-report.md`, which answers the prompt in
+`docs/research/overlay-class-prompt.md`. The findings that gave the decision:
 
-The proposal is option 2. A class name is the construction that a theme author expects, and
-the code is approximately ten lines. A class change on one element does not stop a
-transition, because the element stays the same element. The rule "JavaScript writes the step
-index only" becomes "JavaScript writes the step state only".
+- No construction of CSS applies a named class to an element on a condition, at the floor
+  of this design. `@mixin` and `@apply` are in no browser, and they inline declarations
+  that the author of the deck writes, not the declarations of the theme.
+- `if()` with `style()` applies a value on the condition of a custom property of the
+  same element. Chrome 137 has it. Firefox and Safari do not, as of September 2026. It
+  is not usable at the floor.
+- `@container style()` applies to descendants only, and it needs Safari 18 and Firefox
+  151. It raises the floor by more than one year.
+- reveal.js, impress.js, Slidev, Marp and Spectacle apply a state with a class toggle in
+  JavaScript. None does it in CSS. The limit is a limit of CSS, not of this design.
+
+The report ranks a custom-property contract first and a class toggle in the JavaScript
+code second. Its example of the contract puts the colors of the theme into the generated
+rule, and the design forbids this. The contract above corrects it. The generated rule
+writes a number, and the theme maps the number to values.
+
+The JavaScript code does not toggle a class. A class toggle is a known alternative for a
+theme that must apply a class that it cannot express as custom properties. The report
+gives its cost. The change to `data-step` and the change to the class list must be in one
+synchronous function. The initial state must be in the HTML, or the page shows a flash
+before the script runs.
 
 ### Does the deck declare a maximum step number, or does each slide calculate its own?
 
