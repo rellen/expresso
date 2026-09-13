@@ -15,6 +15,8 @@ Read these documents before you change the code:
   code does not contain this design yet. The document ends with four open decisions.
 - `docs/development.md` — how to get a toolchain, how to run the checks and how to look at
   a deck in a browser.
+- `docs/typescript.md` — the plan for a conversion of the presenter script to TypeScript.
+  The code does not contain this conversion yet.
 
 ## Build and test
 
