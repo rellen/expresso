@@ -238,7 +238,8 @@ CSS style query. The document gives a proposal for each decision. The maintainer
 
 ### 2. Convert the presenter script to TypeScript
 
-`docs/typescript.md` gives the plan and its four open decisions. Do this item before the
+`docs/typescript.md` gives the plan and its four decisions, which the maintainer
+accepted. Do this item before the
 overlay code, because the overlay code makes the script three or four times larger. The
 conversion of 35 lines costs little now, and the overlay code then gets types from the
 start.
