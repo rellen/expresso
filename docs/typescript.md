@@ -1,7 +1,7 @@
 # TypeScript for the presenter script
 
 This document gives a plan for the presenter script in TypeScript. The code does not
-contain this plan yet. The document ends with four open decisions.
+contain this plan yet. The document ends with four decisions.
 
 ## The constraint
 
@@ -68,7 +68,7 @@ run each ES2022 construction.
 
 The IIFE format gives a classic script with no module statement. Therefore the `script`
 element of the renderer keeps its form, and the script runs at the same point in the
-document as the script today. See the third open decision for the alternative.
+document as the script today. See the third decision for the alternative.
 
 esbuild comes from the Hex package `esbuild`. The package downloads one binary, and Elixir
 runs it. Therefore `mix compile` needs no Node. The package needs `runtime: false` and no
@@ -199,7 +199,10 @@ passes the checks.
 10. Run each command in "Build and test" of `CLAUDE.md`, `npm run check` and `npm test`.
     Commit.
 
-## The open decisions
+## The decisions
+
+The maintainer accepted each proposal below on 2026-09-13. The decisions are settled.
+A later change needs a new decision, and this document then records it.
 
 ### 1. Where does the bundle step run?
 
@@ -211,7 +214,7 @@ There are two options:
    person commits it. `mix compile` reads the file as today. A check compares the file
    with a new build.
 
-The proposal is option 1. A minified file in Git gives a diff that no person can read, and
+The decision is option 1. A minified file in Git gives a diff that no person can read, and
 a stale file in Git is a defect that the check finds only when a person runs the check.
 Option 1 gives one source of truth, and it costs one Hex package.
 
@@ -221,7 +224,7 @@ At compile time, the renderer holds the bundle in a module attribute, as it does
 At run time, the renderer reads `priv/static/presenter.js` with
 `Application.app_dir/2` on each render.
 
-The proposal is compile time. It is the smallest change to the renderer, and the binary
+The decision is compile time. It is the smallest change to the renderer, and the binary
 that Burrito makes then holds the script in the code and not in a file. The run-time
 option lets a person change the script without a new compile, and nobody needs that.
 
@@ -231,12 +234,11 @@ An inline module script runs after the document is complete, and it has its own 
 The IIFE bundle has no module statement, so it runs in a classic `script` element as the
 script does today.
 
-The proposal is the classic element. The behavior at run time is then equal to the
+The decision is the classic element. The behavior at run time is then equal to the
 behavior today, and the conversion changes one thing at a time. Change the element when
 a reason appears.
 
 ### 4. Is the order of the work correct?
 
-The proposal is to do this conversion before the overlay code. In `docs/architecture.md`,
-this conversion is item 2 of "Open work", and the overlay code is item 3. Move the items
-if you decide the other order.
+The decision is to do this conversion before the overlay code. In `docs/architecture.md`,
+this conversion is item 2 of "Open work", and the overlay code is item 3.
