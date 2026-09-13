@@ -1,208 +1,242 @@
 # TypeScript for the presenter script
 
-This document gives a plan for a conversion of `assets/main.js` to TypeScript. The code
-does not contain this conversion yet. The document ends with four open decisions.
+This document gives a plan for the presenter script in TypeScript. The code does not
+contain this plan yet. The document ends with four open decisions.
+
+## The constraint
+
+One constraint holds. The output of Expresso is one HTML file that stands alone. The file
+holds the presenter script, and a person can open the file with no other file. A minified
+script is acceptable.
+
+Nothing else holds. The structure of the script today, and the form of the `script`
+element today, are results of a small first version. They are not constraints. The plan
+below changes both.
 
 ## The script today
 
 `assets/main.js` is the presenter. It holds the number of the current slide, it reads the
 keys `j`, `k` and `p`, and it shows a slide with the inline `style.display` property. It
-has approximately 35 lines.
+has approximately 35 lines in one file. It has no `import` and no `export`.
 
-The script is a classic script, and it is not a module. It has no `import` and no
-`export`. `Expresso.Renderer` reads the file with `File.read!/1` at compile time, and it
-writes the text into one `script` element. The file is an `@external_resource` of the
-renderer, so a change to the file starts a new compile.
-
-No build step exists for the file. Prettier formats it, and the Nix shell gives Prettier.
-No test exists for the file. `docs/development.md` gives a recipe with Playwright, and a
-person runs that recipe by hand.
+`Expresso.Renderer` reads the file with `File.read!/1` at compile time. It writes the text
+into one `script` element. The file is an `@external_resource` of the renderer. No build
+step exists, and no test exists. `docs/development.md` gives a Playwright recipe that a
+person runs by hand.
 
 ## Why now
 
-`docs/overlays.md` gives the largest change that the script will get. The script must
-hold a step index for each slide, read `data-max-step`, write `data-step`, and possibly
-apply class names. That work makes the script three or four times larger, and it adds
-state that a person can get wrong.
+`docs/overlays.md` gives the largest change that the script will get. The script must hold
+a step index for each slide, read `data-max-step`, write `data-step`, and possibly apply
+class names. That work makes the script three or four times larger, and it adds state that
+a person can get wrong.
 
-A conversion of 35 lines costs little. A conversion after the overlay work costs more,
-and the overlay work then goes into the script without types. Therefore do the conversion
-first, and write the overlay code in TypeScript from the start.
+A conversion of 35 lines costs little. A conversion after the overlay work costs more, and
+the overlay code then goes into the script without types and without tests. Therefore do
+the conversion first.
 
-## The parts of the conversion
+## The design
 
-### The source file
+### The source
 
-Move `assets/main.js` to `assets/main.ts` with `git mv`, so that Git keeps the history.
-Then add the types. The surface is small:
+Put the source in `assets/src/`, as a set of modules:
 
-- `document.getElementById/1` returns `HTMLElement | null`. The script assumes an
-  element each time. With `strict`, the compiler refuses this assumption. Add one function
-  that reads a slide by its number and raises an error when the element is not present. A
-  missing slide is a defect of the renderer, and a loud error is correct.
-- `e.key` is a `string`. The listener gets a `KeyboardEvent`.
-- `document.getElementsByClassName/1` returns an `HTMLCollectionOf<Element>`.
+- `state.ts` — the state of the presenter and the function that changes it. The state is
+  the number of the slide and the number of the step. The function takes a state, a key
+  and the limits of the deck, and it returns a new state. It does not touch the document.
+- `dom.ts` — the code that reads the document and writes to it. It reads the limits from
+  the `section` elements, and it applies a state with `style.display` and, later, with
+  `data-step`.
+- `main.ts` — the entry. It reads the initial state, it adds the `keydown` listener, and
+  it connects `state.ts` to `dom.ts`.
 
-Keep the file a classic script. Do not add an `import` or an `export`. The renderer writes
-the text into a `script` element without `type="module"`, and a module statement gives a
-syntax error in that element. See the open decisions for the point at which this rule
-changes.
+This split gives the state a unit test, and it keeps the document code thin. The overlay
+code then goes into `state.ts` with a test for each rule of `docs/overlays.md`.
 
-Do not put the text `</script>` into a string in the script. The renderer writes the text
-with `Phoenix.HTML.raw/1`, and that text closes the element early.
+Use only the syntax that Node can erase. Do not use `enum`, `namespace` or a parameter
+property. The option `erasableSyntaxOnly` in `tsconfig.json` makes the compiler refuse the
+other syntax. Node runs a `.ts` file with such syntax directly, and the tests below need
+this.
 
-### The configuration
+### The bundle
 
-Add `assets/tsconfig.json`:
+esbuild makes one script from the modules. It reads `main.ts`, it follows each `import`,
+it strips the types, and it writes one file in the IIFE format with `--minify`. The
+target is `ES2020`. `docs/overlays.md` commits to Chrome 85, Safari 16.4 and Firefox 128
+for the `@property` at-rule, and each of these browsers runs ES2020. Chrome 85 does not
+run each ES2022 construction.
+
+The IIFE format gives a classic script with no module statement. Therefore the `script`
+element of the renderer keeps its form, and the script runs at the same point in the
+document as the script today. See the third open decision for the alternative.
+
+esbuild comes from the Hex package `esbuild`. The package downloads one binary, and Elixir
+runs it. Therefore `mix compile` needs no Node. The package needs `runtime: false` and no
+`only:` option, because the compile of a release also makes the bundle.
+
+The bundle goes to `priv/static/presenter.js`. Git does not hold this file, so add it to
+`.gitignore`. A minified file gives a diff that no person can read, and a build that is a
+part of `mix compile` needs no copy in Git.
+
+### The compile step
+
+Add a Mix compiler, `Mix.Tasks.Compile.Presenter`, and put it in front of the Elixir
+compiler in `mix.exs`:
+
+```elixir
+compilers: [:presenter] ++ Mix.compilers()
+```
+
+The compiler runs esbuild when a file under `assets/src/` is newer than the bundle. The
+order makes sure that the bundle exists before the Elixir compiler reads it.
+
+### The renderer
+
+`Expresso.Renderer` reads `priv/static/presenter.js` with `File.read!/1` at compile time,
+as it reads `assets/main.js` today. Each file under `assets/src/` becomes an
+`@external_resource` of the renderer, so a change to a source file starts a new compile of
+the renderer. A `Path.wildcard/1` at compile time gives the list.
+
+The `script` element does not change. The renderer writes the bundle with
+`Phoenix.HTML.raw/1`, as it does today. Do not put the text `</script>` into a string in
+the source. That text closes the element early. esbuild does not escape it.
+
+### The type check
+
+esbuild strips the types, and it does not check them. `tsc --noEmit` checks them. Add
+`assets/tsconfig.json`:
 
 ```json
 {
   "compilerOptions": {
     "target": "ES2020",
     "lib": ["ES2020", "DOM"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "strict": true,
-    "noEmitOnError": true,
-    "outDir": "."
+    "erasableSyntaxOnly": true,
+    "types": ["node"]
   },
-  "files": ["main.ts"]
+  "include": ["src", "test"]
 }
 ```
 
-`ES2020` is the correct target. `docs/overlays.md` commits to Chrome 85, Safari 16.4 and
-Firefox 128 for the `@property` at-rule. Each of these browsers runs ES2020. Chrome 85
-does not run each ES2022 construction, so `ES2022` is not safe.
+Node needs the extension in an import, such as `import { next } from "./state.ts"`.
+esbuild accepts this form. `tsc` accepts it with `allowImportingTsExtensions`, which needs
+`noEmit`. The option `types` gives the test files the types of `node:test`.
 
-`noEmitOnError` makes sure that a type error does not write a new `main.js`. Without it,
-`tsc` writes the file and then reports the error, and the renderer packages the file.
+### The tests
+
+Node runs a `.ts` file directly, and it has a test runner. Put the tests in
+`assets/test/`, and run them with `node --test assets/test/`. No other tool is necessary.
+
+This works on Node 22.22, which the remote container has, and on Node 24, which
+`.tool-versions` gives. A test of two cases ran on this container with no flag and with no
+build step.
+
+The tests cover `state.ts`. The Playwright recipe in `docs/development.md` covers `dom.ts`
+and `main.ts`. Add one line to that recipe: make sure that `document.compatMode` is
+`CSS1Compat`, so that the result comes from the standards mode.
 
 ### The tools
 
-Add `package.json` at the root of the repository:
+Add `package.json` at the root of the repository, with `typescript`, `@types/node` and
+`prettier` as development dependencies, and with these scripts:
 
-```json
-{
-  "private": true,
-  "scripts": {
-    "build": "tsc -p assets",
-    "check": "tsc -p assets && git diff --exit-code assets/main.js",
-    "format": "prettier --write assets"
-  },
-  "devDependencies": {
-    "prettier": "<the version that npm resolves>",
-    "typescript": "<the version that npm resolves>"
-  }
-}
-```
+- `check` — `tsc -p assets`.
+- `test` — `node --test assets/test/`.
+- `format` — `prettier --write assets`.
 
-Pin each version. Record the versions in this document when you add them. Add
-`node_modules/` to `.gitignore`.
+Pin each version, and commit `package-lock.json`. Add `node_modules/` to `.gitignore`.
+esbuild is not in `package.json`, because the Hex package gives it.
 
-The `check` script does two operations. `tsc` type-checks and writes `main.js`, and
-`noEmitOnError` stops the write on a type error. Then `git diff` makes sure that the
-`main.js` in Git is the output of the `main.ts` in Git. See the open decisions for the
-reason that this second operation exists.
+Each environment gets Node from its own source, and the tools from `package.json`:
 
-Each environment gets the tools from `package.json`:
+- The Nix shell gives Node 24. Run `npm install` in the shell. Remove `prettier` from
+  `shell.nix`, so that one file gives the version.
+- The remote container gives Node 22. Add `npm install` to
+  `.claude/hooks/session-start.sh`. The container has a global `tsc` from the image of
+  the harness. Do not use it. It is not a part of this repository.
 
-- The Nix shell gives Node 24. Run `npm install` in the shell. Do not add TypeScript to
-  `shell.nix`, because two sources for one tool give two versions.
-- The remote container gives Node 22, and it has a global `tsc` 6.0.2 from the image of
-  the harness. Do not use the global `tsc`. It is not a part of this repository, and a
-  later image can change it. Add `npm install` to `.claude/hooks/session-start.sh`.
-
-Prettier formats a `.ts` file with no configuration. The repository has no
-`.prettierrc`, and the defaults are sufficient.
-
-### The renderer
-
-`Expresso.Renderer` continues to read `assets/main.js`. The `@external_resource`
-attribute continues to name that file. No change to Elixir code is necessary in the first
-version.
+`mix compile` needs Node in no environment. The type check and the tests need Node, and a
+person runs them before a commit.
 
 ### The documents
 
-- `CLAUDE.md` — add `npm run check` to the commands in "Build and test".
-- `docs/development.md` — add a section that tells you how to build the script and how
-  the check operates.
-- `docs/architecture.md` — in "The presenter", name `assets/main.ts` as the source and
-  `assets/main.js` as the output.
-- `docs/overlays.md` — in "The JavaScript code", name `assets/main.ts`.
+- `CLAUDE.md` — add `npm run check` and `npm test` to the commands in "Build and test".
+- `docs/development.md` — add a section for the script: the source, the bundle, the
+  check, the tests and the `compatMode` line in the Playwright recipe.
+- `docs/architecture.md` — in "The presenter", name `assets/src/` as the source and
+  `priv/static/presenter.js` as the bundle. In "The render pipeline", add the compiler.
+- `docs/overlays.md` — in "The JavaScript code", name `state.ts` for the rules and
+  `dom.ts` for the attributes.
 
 ## The steps
 
 Do the steps in this order. Each step leaves the repository in a state that compiles and
 passes the checks.
 
-1. Add `package.json`, `assets/tsconfig.json` and the `.gitignore` line. Run
-   `npm install`. Commit the lockfile `package-lock.json`.
-2. Move `assets/main.js` to `assets/main.ts` with `git mv`. Add the types. Add the
-   function that reads a slide by number.
-3. Run `npm run build`. Read the output `assets/main.js`. Make sure that the file has no
-   `import`, no `export` and no `</script>`.
-4. Run `mix compile`. Make sure that the compiler rebuilds `Expresso.Renderer`, because
-   `main.js` changed.
-5. Run the Playwright recipe in `docs/development.md`. Make sure that `j`, `k` and `p`
-   give the same result as before. Also make sure that `document.compatMode` is
-   `CSS1Compat`, so that the result comes from the standards mode.
-6. Add `npm install` to the hook, and run the hook by hand.
-7. Update the four documents.
-8. Run each command in "Build and test" of `CLAUDE.md`, and `npm run check`. Commit.
-
-## The test plan
-
-The first version has no unit test for the script. A classic script cannot export a
-function, so a test file cannot import one. The Playwright recipe is the test, and step 5
-runs it.
-
-A unit test becomes possible with the second open decision. When the script becomes a
-set of modules, put the state of the presenter in a pure function, such as
-`next(state, key, limits)`. Test that function with `node --test`. Node 22 and Node 24
-run a `.ts` file with the flag `--experimental-strip-types`, so the test needs no other
-tool.
+1. Add the Hex package `esbuild` and its configuration. Run `mix esbuild.install`. Make
+   sure that the download passes the proxy of the remote container. The hook downloads
+   from the npm registry today, so the registry is reachable.
+2. Add `package.json`, `assets/tsconfig.json` and the `.gitignore` lines. Run
+   `npm install`. Commit the lockfile.
+3. Write `state.ts` with the state of today: the slide number, and the keys `j` and `k`.
+   Write its tests. Run `npm test`.
+4. Write `dom.ts` and `main.ts`. Move the code of `main.js` into them. Remove `main.js`
+   with `git rm`.
+5. Add the Mix compiler and the `compilers` line. Run `mix compile`. Read the bundle.
+   Make sure that it has no `import`, no `export` and no `</script>`.
+6. Point the renderer at the bundle and at the sources. Run `mix compile` again. Make sure
+   that a change to `state.ts` starts a new compile of the renderer.
+7. Run the Playwright recipe. Make sure that `j`, `k` and `p` give the same result as
+   before, and that `document.compatMode` is `CSS1Compat`.
+8. Add `npm install` to the hook, and run the hook by hand. Remove `prettier` from
+   `shell.nix`.
+9. Update the four documents.
+10. Run each command in "Build and test" of `CLAUDE.md`, `npm run check` and `npm test`.
+    Commit.
 
 ## The open decisions
 
-### 1. Where does the output `main.js` live?
+### 1. Where does the bundle step run?
 
-There are three options:
+There are two options:
 
-1. **Commit the output.** `main.ts` and `main.js` are both in Git. `mix compile` reads
-   `main.js` as it does now, and it needs no Node. The `check` script catches a stale
-   `main.js`.
-2. **Write the output at compile time.** A Mix alias runs `tsc` before `compile.elixir`.
-   `main.js` is not in Git. `mix compile` then needs Node and TypeScript in each
-   environment: the Nix shell, the remote container and the Burrito release. The
-   `@external_resource` attribute then names a file that Git does not hold.
-3. **Use the `esbuild` package from Hex.** It downloads a binary, and Elixir runs it with
-   no Node. It strips the types, and it does not check them. A type check still needs
-   `tsc` and Node in development.
+1. **A Mix compiler with the Hex package `esbuild`.** `mix compile` makes the bundle, and
+   it needs no Node. Git does not hold the bundle. This is the design above.
+2. **An npm script, with the bundle in Git.** `npm run build` makes the bundle, and a
+   person commits it. `mix compile` reads the file as today. A check compares the file
+   with a new build.
 
-The proposal is option 1 now. The repository has no continuous integration, and the
-maintainer runs each gate by hand. The `check` script is one more such gate. Option 1
-keeps `mix compile` free of Node, which keeps the release simple. Option 2 gives one
-source of truth, but it costs a tool in three environments for one file of 35 lines.
+The proposal is option 1. A minified file in Git gives a diff that no person can read, and
+a stale file in Git is a defect that the check finds only when a person runs the check.
+Option 1 gives one source of truth, and it costs one Hex package.
 
-Move to option 3 when the script becomes a set of modules. At that point a bundle is
-necessary, and `esbuild` makes one classic script from the modules.
+### 2. Does the renderer read the bundle at compile time or at run time?
 
-### 2. When does the script become a set of modules?
+At compile time, the renderer holds the bundle in a module attribute, as it does today.
+At run time, the renderer reads `priv/static/presenter.js` with
+`Application.app_dir/2` on each render.
 
-A classic script cannot export, so it cannot have a unit test. A set of modules can, but
-it needs a bundle step, which is option 3 above.
+The proposal is compile time. It is the smallest change to the renderer, and the binary
+that Burrito makes then holds the script in the code and not in a file. The run-time
+option lets a person change the script without a new compile, and nobody needs that.
 
-The proposal is to keep one classic script until the overlay work lands. Then split the
-state of the presenter from the code that touches the document, add `esbuild`, and add
-the unit tests. The overlay work is the point at which the logic becomes worth a test.
+### 3. Does the script element get `type="module"`?
 
-### 3. Does this conversion come before or after the overlay code?
+An inline module script runs after the document is complete, and it has its own scope.
+The IIFE bundle has no module statement, so it runs in a classic `script` element as the
+script does today.
 
-The proposal is before. See "Why now". In `docs/architecture.md`, this conversion is
-item 2 of "Open work", and the overlay code is item 3. Move the items if you decide the
-other order.
+The proposal is the classic element. The behavior at run time is then equal to the
+behavior today, and the conversion changes one thing at a time. Change the element when
+a reason appears.
 
-### 4. Where do the tools come from?
+### 4. Is the order of the work correct?
 
-The proposal is `package.json` and `npm install`, in each environment. The alternative is
-`shell.nix` for the Nix shell and the hook for the container. Two sources give two
-versions, and a difference between them is not visible until a build differs. One
-`package.json` with pinned versions gives one answer.
+The proposal is to do this conversion before the overlay code. In `docs/architecture.md`,
+this conversion is item 2 of "Open work", and the overlay code is item 3. Move the items
+if you decide the other order.
