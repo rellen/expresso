@@ -105,6 +105,7 @@ container that has no Nix.
 - `docs/architecture.md` — how the code makes an HTML document from a deck.
 - `docs/development.md` — the toolchain, the checks and a browser.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide.
+- `docs/typescript.md` — the plan for the presenter script in TypeScript.
 
 ## License
 

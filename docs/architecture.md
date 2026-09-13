@@ -236,18 +236,25 @@ element, so the `on` entity cannot apply a class with a generated rule. The thre
 are: remove the `class` option, let the JavaScript code apply the class names, or use a
 CSS style query. The document gives a proposal for each decision. The maintainer decides.
 
-### 2. Write the code for overlays
+### 2. Convert the presenter script to TypeScript
+
+`docs/typescript.md` gives the plan and its four open decisions. Do this item before the
+overlay code, because the overlay code makes the script three or four times larger. The
+conversion of 35 lines costs little now, and the overlay code then gets types from the
+start.
+
+### 3. Write the code for overlays
 
 The section "Changes to the current code" in `docs/overlays.md` lists each change, and the
 section "The test plan" lists each test. This work is the largest item in this list.
 
-### 3. Give a heading to a slide of the DSL
+### 4. Give a heading to a slide of the DSL
 
 The `slide` entity has a `name` option only. A deck from the DSL shows no heading, because
 the default slide template reads the heading from the metadata. Add a `heading` option to
 the entity, and write it into the metadata in `Expresso.parse/1`.
 
-### 4. Raise the coverage that `mix doctor` measures
+### 5. Raise the coverage that `mix doctor` measures
 
 `mix doctor` does not pass. The moduledoc coverage is 100 percent, but the doc coverage
 and the spec coverage are each 51.9 percent.
@@ -269,7 +276,7 @@ these functions, and a `@doc` for them is not possible in the usual way. Therefo
 sure that the tool can pass before you start. `mix doctor` reads `.doctor.exs`, which this
 repository does not have, and that file can remove a module from the report.
 
-### 5. Smaller items
+### 6. Smaller items
 
 - `Expresso.present/0` raises an error with the text "not implemented".
 - `examples/hello_world.exs` needs the expresso package on Hex, which has no release at
