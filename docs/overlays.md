@@ -242,14 +242,17 @@ entity after the entity gives its value to the counter.
 
 The verifier gives an error for these conditions:
 
-- A specification refers to a step number that is more than the maximum step number.
+- A specification refers to a step number that is more than the maximum step number. The
+  maximum is the `steps` option of the slide when the slide declares it.
 - A specification contains a step number that is less than 1.
 - An `on` entity has a specification that no step of the `at` option contains.
+- A `pause` entity is inside a container element.
+- A child element has a step that its parent does not contain.
 
 The first condition needs a maximum step number that comes from a different source than
 the specifications. If each slide calculates its own maximum from its specifications, an
-absolute step number always raises the maximum, and the condition is unreachable. See the
-open decisions for the proposal that makes this condition possible.
+absolute step number always raises the maximum, and the condition is unreachable. The
+`steps` option of the slide is that source. See the decisions.
 
 ### The type
 
@@ -485,23 +488,40 @@ The repository contains one test file with a doctest only. This design needs the
 - A CSS test. A test asserts that the generated style block contains one rule for each step
   number of the deck.
 
-## The open decisions
+## The decisions
 
-### Does `pause` operate on the elements after it, or on one level of the tree?
+The maintainer decided each item below on 2026-09-13. The decisions are settled. A later
+change needs a new decision, and this document then records it.
 
-The proposal is one counter for each slide, and one document order. The transformer reads
-the tree depth first. A `pause` increments the counter for each element after it, at each
-level of the tree.
+### Does `pause` operate on the elements after it, or on one level of the tree? (decided)
 
-The first version must permit a `pause` at the slide level only. This limit keeps the
-order clear while the tree is small. A later version can permit a `pause` in a container
-element.
+Each slide has one counter, and the transformer reads the tree in document order, depth
+first. A `pause` increments the counter for each element after it, at each level of the
+tree. An author reads the file from the top to the bottom, and a `+` gives the next number
+in that order. This is the behavior of `\pause` in Beamer. A counter for each level of the
+tree can give the same step number to two elements in two subtrees. A slide has one
+sequence of steps.
 
-### Can an `on` entity contain a specification that is outside the `at` option?
+The first version permits a `pause` at the slide level only, and the verifier gives an
+error for a `pause` inside a container element. The reason is the rule for nested
+elements. A container at `~o"5-"` with a `pause` at counter 2 gives its later children
+step 3. The verifier then rejects the children, because a child cannot show on a step
+that its parent does not contain. The author wrote nothing wrong and gets an error. A
+later version can permit a `pause` in a container. Such a version needs a rule, for
+example "the first step of a container seeds the counter of its subtree". That rule needs
+its own design.
 
-The proposal is an error. A step that does not show the element cannot show a state of the
-element. Such an `on` entity makes CSS rules that no step applies. An error tells the
-author about the defect at compile time.
+### Can an `on` entity contain a specification that is outside the `at` option? (decided)
+
+No. The verifier gives an error. A step that does not show the element cannot show a state
+of the element. Such an `on` entity makes CSS rules that no step applies, and in practice
+it is a slip after a change to the step numbers. The verifier already reads each step
+range, and this condition is one more in the same list.
+
+One use exists for a state outside the `at` option. An element at `~o"2-4"` with
+`on ~o"5", state: :slide_out` could leave in a different way from the default of the
+theme. This use is rare, and a permissive rule lets the slip pass in silence. If a later
+version needs this, add an explicit `leave` option. Do not loosen this rule.
 
 ### How does the `on` entity apply a state? (decided)
 
@@ -534,13 +554,21 @@ gives its cost. The change to `data-step` and the change to the class list must 
 synchronous function. The initial state must be in the HTML, or the page shows a flash
 before the script runs.
 
-### Does the deck declare a maximum step number, or does each slide calculate its own?
+### Does the deck declare the maximum step number? (decided)
 
-The proposal is that each slide calculates its own maximum step number. The maximum step
-number of the deck is the largest maximum step number of its slides. The renderer uses the
-deck maximum for the number of generated CSS rules.
+Each slide calculates its own maximum step number. The maximum step number of the deck is
+the largest maximum step number of its slides. The renderer uses the deck maximum for the
+number of generated CSS rules. This is the behavior of Beamer, which counts the
+overlays of each frame from its content.
 
-Add an optional `steps` option to the `slide` entity. This option declares a maximum step
-number for one slide. The option lets an author add an empty step at the end of a slide.
-The option also makes the first condition of the verifier possible, because a declared
-maximum can be less than a step number in a specification.
+A maximum for the deck would make `~o"2-"` run to the largest step of the deck. Each slide
+with fewer steps then gets empty steps, and the presenter gets a key press that does
+nothing on each such slide. The presenter also needs the maximum of each slide, and
+`data-max-step` on each `section` gives it. A number for the deck adds nothing that the
+presenter reads.
+
+The `slide` entity gets an optional `steps` option. It declares the maximum step number of
+one slide, and it has two uses. An author can add an empty step at the end of a slide. And
+it makes the first condition of the verifier possible, because a specification above a
+declared maximum is an error. Without a declared maximum, a large step number raises the
+maximum, and nothing reports it.

@@ -235,30 +235,20 @@ The commands are:
 
 This list gives the work in the order of its value. Take the first item that you can do.
 
-### 1. Answer the open decisions for overlays
+### 1. Write the code for overlays
 
-`docs/overlays.md` ends with three open decisions and one decision. Answer the open ones
-before you write code for overlays, because each answer changes the DSL.
+`docs/overlays.md` gives the design, and each of its four decisions is settled. The section
+"Changes to the current code" lists each change, and the section "The test plan" lists
+each test. The rules of the presenter go into `assets/src/state.ts` with a test for each
+rule. This work is the largest item in this list.
 
-The maintainer made the decision about the `state` option. The `on` entity writes a
-custom property, and the theme owns the appearance. `docs/research/` holds the prompt and
-the report that
-gave the evidence. The three open decisions are the scope of `pause`, an `on` outside the
-`at` option, and the maximum step number. The document gives a proposal for each. The
-maintainer decides.
-
-### 2. Write the code for overlays
-
-The section "Changes to the current code" in `docs/overlays.md` lists each change, and the
-section "The test plan" lists each test. This work is the largest item in this list.
-
-### 3. Give a heading to a slide of the DSL
+### 2. Give a heading to a slide of the DSL
 
 The `slide` entity has a `name` option only. A deck from the DSL shows no heading, because
 the default slide template reads the heading from the metadata. Add a `heading` option to
 the entity, and write it into the metadata in `Expresso.parse/1`.
 
-### 4. Raise the coverage that `mix doctor` measures
+### 3. Raise the coverage that `mix doctor` measures
 
 `mix doctor` does not pass. The moduledoc coverage is 100 percent, but the doc coverage
 and the spec coverage are each 51.9 percent.
@@ -280,7 +270,7 @@ these functions, and a `@doc` for them is not possible in the usual way. Therefo
 sure that the tool can pass before you start. `mix doctor` reads `.doctor.exs`, which this
 repository does not have, and that file can remove a module from the report.
 
-### 5. Smaller items
+### 4. Smaller items
 
 - `Expresso.present/0` raises an error with the text "not implemented".
 - `examples/hello_world.exs` needs the expresso package on Hex, which has no release at
