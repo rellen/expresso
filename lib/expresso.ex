@@ -64,14 +64,6 @@ defmodule Expresso do
   end
 
   @doc """
-  present a deck
-  """
-  @spec present() :: no_return
-  def present do
-    raise "not implemented"
-  end
-
-  @doc """
   Load all the custom deck and slide templates
   """
   @spec load_templates() :: :ok

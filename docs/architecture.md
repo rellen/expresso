@@ -259,9 +259,6 @@ rule. This work is the largest item in this list.
 
 ### 2. Smaller items
 
-- `Expresso.present/0` raises an error with the text "not implemented".
-- `examples/hello_world.exs` needs the expresso package on Hex, which has no release at
-  this time.
 - The repository has no continuous integration. No check runs on a pull request. Each
   result in this repository comes from a command that a person or a session ran.
 - No session compiled this project on the versions of `.tool-versions`. A container gives
