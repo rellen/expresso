@@ -69,6 +69,14 @@ defmodule Expresso.Template do
 
   defp module_from_template_definition(_part, module) when is_atom(module), do: module
 
+  @doc """
+  Render each element of a slide
+
+  The assigns hold the elements under the key `elements`. The function reads the
+  module of each element from its struct, and it calls `get_assigns/1` and
+  `render/1` of that module.
+  """
+  @spec render_elements(map()) :: Phoenix.HTML.safe()
   def render_elements(assigns) do
     temple do
       for %module{} = element <- assigns.elements do

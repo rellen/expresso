@@ -20,6 +20,10 @@ defmodule Expresso.Slide do
     %__MODULE__{name: name, metadata: metadata, elements: elements}
   end
 
+  @doc """
+  Make the assigns of a slide template from a slide
+  """
+  @spec get_assigns(t()) :: %{name: String.t() | nil, metadata: map() | nil, elements: list()}
   def get_assigns(slide) do
     %__MODULE__{name: name, metadata: metadata, elements: elements} = slide
     %{name: name, metadata: metadata, elements: elements}

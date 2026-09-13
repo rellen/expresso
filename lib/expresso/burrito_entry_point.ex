@@ -8,6 +8,11 @@ defmodule Expresso.BurritoEntryPoint do
 
   use Application
 
+  @doc """
+  Start the application, and run the command line in a Burrito binary
+  """
+  @impl Application
+  @spec start(Application.start_type(), term()) :: {:ok, pid()} | {:error, term()}
   def start(_, _) do
     if Burrito.Util.running_standalone?() do
       run_cli()
