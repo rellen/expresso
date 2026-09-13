@@ -410,9 +410,10 @@ The renderer must also write `data-step="1"` on each `section` element.
 
 ### The JavaScript code
 
-`assets/main.js` holds the number of the current slide, and the first slide is slide 1. It
-shows and hides a slide with the inline `style.display` property. The code must also hold a
-step index for each slide.
+The presenter is in `assets/src/`. `state.ts` holds the number of the current slide, and
+the first slide is slide 1. `dom.ts` shows and hides a slide with the inline
+`style.display` property. The state must also hold a step index for each slide, and each
+rule below gets a test in `assets/test/`.
 
 The necessary changes are:
 

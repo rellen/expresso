@@ -16,3 +16,6 @@ burrito_out
 
 # the tools for the presenter script
 node_modules/
+
+# the presenter bundle, which mix compile makes
+/priv/static/

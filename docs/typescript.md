@@ -80,8 +80,8 @@ part of `mix compile` needs no copy in Git.
 
 ### The compile step
 
-Add a Mix compiler, `Mix.Tasks.Compile.Presenter`, and put it in front of the Elixir
-compiler in `mix.exs`:
+Add a Mix compiler, `Mix.Tasks.Compile.Presenter`, in `mix.exs`, and put it in front of
+the Elixir compiler:
 
 ```elixir
 compilers: [:presenter] ++ Mix.compilers()
@@ -176,12 +176,17 @@ person runs them before a commit.
 
 ## Progress
 
-- Step 1: done as a test on 2026-09-13. The esbuild binary downloads through the proxy of
-  the remote container, and it makes a minified IIFE from `.ts` modules. The Hex package
-  is not in `mix.exs` yet.
-- Steps 2 and 3: done. `package.json`, `assets/tsconfig.json`, `assets/src/state.ts` and
-  its tests are in the repository. The hook runs `npm install`.
-- Steps 4 to 10: not done. `assets/main.js` is still the script in the document.
+Each step is done, on 2026-09-13. `assets/main.js` is not in the repository. Two facts
+came from the work, and the plan above did not give them:
+
+- The compiler `Mix.Tasks.Compile.Presenter` is in `mix.exs`, and not in `lib/`. Mix runs
+  the compilers before it compiles `lib/`, so a compiler in `lib/` is not present when Mix
+  needs it. Mix loads `mix.exs` first.
+- Elixir compares the content of an `@external_resource`, and not its time. A `touch` of a
+  source does not start a compile of the renderer. A content change does.
+
+The bundle of the presenter today is 662 bytes. Chromium reports `CSS1Compat`, and the
+keys `j`, `k` and `p` give the same result as the script before the conversion.
 
 ## The steps
 

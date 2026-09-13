@@ -83,7 +83,8 @@ an error tuple, and `Expresso.main/2` writes the message.
 `Expresso.Deck.render/1` does these steps:
 
 1. `Expresso.load_templates/0` compiles each file in `./priv/templates/decks/` and in
-   `./priv/templates/slides/`.
+   `./priv/templates/slides/`. The presenter bundle is not a part of this step. It comes
+   from `mix compile`, before any of these steps.
 2. `Expresso.Renderer.render/1` makes an HTML tree with Temple.
 3. `Phoenix.HTML.safe_to_string/1` makes a string.
 4. `Floki.parse_document!/1` and `Floki.raw_html(pretty: true)` format the string.
@@ -120,12 +121,14 @@ html
           div        the header, from the deck template
           div        the body, from the slide template
           div        the footer, from the deck template
-      script         assets/main.js
+      script         priv/static/presenter.js, the presenter bundle
 ```
 
-The renderer holds the three asset files in module attributes. It reads them with
-`File.read!/1` at compile time. Each file is an `@external_resource` of the module.
-Therefore a change to an asset file starts a new compile of `Expresso.Renderer`.
+The renderer holds the two style sheets and the presenter bundle in module attributes.
+It reads them with `File.read!/1` at compile time. Each style sheet, and each source of the
+bundle under `assets/src/`, is an `@external_resource` of the module. Therefore a change to
+one of these files starts a new compile of `Expresso.Renderer`. Elixir compares the content
+of an external resource, and not its time, so a `touch` does not start a compile.
 
 The renderer writes an inline `style` attribute on each `section`. The first slide gets
 `display: flex`, and each other slide gets `display: none`.
@@ -194,9 +197,15 @@ and `slide "name" do`.
 
 ## The presenter
 
-`assets/main.js` controls the document in the browser. It holds one number, the number of
-the current slide. The first slide is slide 1. The code shows a slide and hides a slide with
-the inline `style.display` property.
+The presenter is a TypeScript program under `assets/src/`. `state.ts` holds the number of
+the current slide and the function that changes it, and it does not touch the document.
+`dom.ts` reads the document and applies a state to it with the inline `style.display`
+property. `main.ts` connects the two. The first slide is slide 1.
+
+`Mix.Tasks.Compile.Presenter` bundles these modules with esbuild into one minified script,
+`priv/static/presenter.js`. The compiler runs in front of the Elixir compiler, and Git does
+not hold the bundle. The module is in `mix.exs`, because Mix runs the compilers before it
+compiles `lib/`. `docs/typescript.md` gives the design.
 
 The keys are:
 
@@ -236,26 +245,18 @@ element, so the `on` entity cannot apply a class with a generated rule. The thre
 are: remove the `class` option, let the JavaScript code apply the class names, or use a
 CSS style query. The document gives a proposal for each decision. The maintainer decides.
 
-### 2. Convert the presenter script to TypeScript
-
-`docs/typescript.md` gives the plan and its four decisions, which the maintainer
-accepted. Its section "Progress" says which steps are done. Do this item before the
-overlay code, because the overlay code makes the script three or four times larger. The
-conversion of 35 lines costs little now, and the overlay code then gets types from the
-start.
-
-### 3. Write the code for overlays
+### 2. Write the code for overlays
 
 The section "Changes to the current code" in `docs/overlays.md` lists each change, and the
 section "The test plan" lists each test. This work is the largest item in this list.
 
-### 4. Give a heading to a slide of the DSL
+### 3. Give a heading to a slide of the DSL
 
 The `slide` entity has a `name` option only. A deck from the DSL shows no heading, because
 the default slide template reads the heading from the metadata. Add a `heading` option to
 the entity, and write it into the metadata in `Expresso.parse/1`.
 
-### 5. Raise the coverage that `mix doctor` measures
+### 4. Raise the coverage that `mix doctor` measures
 
 `mix doctor` does not pass. The moduledoc coverage is 100 percent, but the doc coverage
 and the spec coverage are each 51.9 percent.
@@ -277,7 +278,7 @@ these functions, and a `@doc` for them is not possible in the usual way. Therefo
 sure that the tool can pass before you start. `mix doctor` reads `.doctor.exs`, which this
 repository does not have, and that file can remove a module from the report.
 
-### 6. Smaller items
+### 5. Smaller items
 
 - `Expresso.present/0` raises an error with the text "not implemented".
 - `examples/hello_world.exs` needs the expresso package on Hex, which has no release at
