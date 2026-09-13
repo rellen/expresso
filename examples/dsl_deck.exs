@@ -4,6 +4,8 @@ defmodule DslDeck do
   name("dsl deck")
 
   slide "intro" do
+    heading("An intro")
+
     text_box do
       text_area do
         text "A deck from the DSL. Text accepts <b>raw HTML</b>."

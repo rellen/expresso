@@ -45,11 +45,26 @@ end
 struct with an empty metadata map, and it numbers the slides with
 `Expresso.Deck.number_slides/1`.
 
-The DSL gives no heading for a slide. The `slide` entity has a `name` option only. The
-default slide template writes the heading container only when the metadata contains a
-heading. Therefore a slide from the DSL shows its elements without a heading.
+The `slide` entity has a `heading` option. An author writes it as a call inside the block
+of the slide, in the form of Spark:
 
-A heading option for the `slide` entity is open work.
+```elixir
+slide "intro" do
+  heading("An intro")
+
+  text_box do
+    text_area do
+      text "..."
+    end
+  end
+end
+```
+
+Spark puts the option into the `heading` field of the struct. The templates read the
+heading from the metadata, as they do for a slide from `Expresso.Deck.add_slide/4`.
+Therefore `Expresso.parse/1` calls `Expresso.Slide.put_options_in_metadata/1` for each
+slide, and that function puts the heading into the metadata. The default slide template
+writes the heading container only when the metadata contains a heading.
 
 ## The render pipeline
 
@@ -242,13 +257,7 @@ This list gives the work in the order of its value. Take the first item that you
 each test. The rules of the presenter go into `assets/src/state.ts` with a test for each
 rule. This work is the largest item in this list.
 
-### 2. Give a heading to a slide of the DSL
-
-The `slide` entity has a `name` option only. A deck from the DSL shows no heading, because
-the default slide template reads the heading from the metadata. Add a `heading` option to
-the entity, and write it into the metadata in `Expresso.parse/1`.
-
-### 3. Raise the coverage that `mix doctor` measures
+### 2. Raise the coverage that `mix doctor` measures
 
 `mix doctor` does not pass. The moduledoc coverage is 100 percent, but the doc coverage
 and the spec coverage are each 51.9 percent.
@@ -270,7 +279,7 @@ these functions, and a `@doc` for them is not possible in the usual way. Therefo
 sure that the tool can pass before you start. `mix doctor` reads `.doctor.exs`, which this
 repository does not have, and that file can remove a module from the report.
 
-### 4. Smaller items
+### 3. Smaller items
 
 - `Expresso.present/0` raises an error with the text "not implemented".
 - `examples/hello_world.exs` needs the expresso package on Hex, which has no release at

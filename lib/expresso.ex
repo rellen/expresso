@@ -22,7 +22,11 @@ defmodule Expresso do
   @spec parse(module()) :: Expresso.Deck.t()
   def parse(module) do
     name = Spark.Dsl.Extension.get_opt(module, [:deck], :name)
-    slides = Spark.Dsl.Extension.get_entities(module, [:deck])
+
+    slides =
+      module
+      |> Spark.Dsl.Extension.get_entities([:deck])
+      |> Enum.map(&Expresso.Slide.put_options_in_metadata/1)
 
     name
     |> Expresso.Deck.new(%{}, slides)
