@@ -145,10 +145,6 @@ mix expresso examples/demo.exs /tmp/demo.html
 mix expresso examples/dsl_deck.exs /tmp/dsl.html
 ```
 
-`examples/hello_world.exs` shows a deck outside a Mix project. It does not run with
-`mix expresso`, because `Mix.install/2` gives an error inside a Mix project. It also needs
-the expresso package on Hex, which has no release at this time.
-
 A remote container has no display, but it has Chromium and Playwright. Use them to make
 sure that a change to the CSS or to `assets/main.js` is correct. The browser is at
 `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. This path is not the default path of
