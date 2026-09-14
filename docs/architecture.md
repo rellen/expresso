@@ -201,8 +201,10 @@ text with `Phoenix.HTML.raw/1`, so the text can contain HTML.
 ## The DSL
 
 `Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a
-top level section. The section holds `slide` entities. A `slide` holds `text_box` entities,
-and a `text_box` holds `text_area` entities.
+top level section. The section holds `slide` entities. A `slide` holds `text_box` and
+`pause` entities, and a `text_box` holds `text_area` and `on` entities. A `text_area`
+holds `on` entities. Each element has an `at` option, and a slide has a `steps` option.
+`docs/overlays.md` gives the meaning of each.
 
 The extension has an empty `imports` option and an empty `transformers` option. It has no
 verifiers.

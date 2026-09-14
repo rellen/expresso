@@ -39,7 +39,10 @@ A specification is an Elixir term. The `at` option accepts these forms:
 | `[2, from: 5]` | Step 2, and step 5 and each step after step 5. |
 
 A list holds integers, ranges and `from:` items in any order. `[2, from: 5]` is a list
-with a keyword tail, and `mix format` keeps it. Each step number is 1 or more, and a range
+with a keyword tail, and `mix format` keeps it. An author writes the option as a call
+inside the block of the element, `at(3)`, in the form of Spark. Spark does not accept an
+option as a keyword in front of the block, so `text_box at: 3 do` is not a form. Each step
+number is 1 or more, and a range
 goes up with a step of 1.
 
 Two forms need data that a term cannot hold. A `from:` item needs the maximum step number
@@ -80,19 +83,22 @@ option.
 
 ```elixir
 slide "pipeline" do
-  text_box at: [from: :next] do
-    on :next, state: :alert
+  text_box do
+    at([from: :next])
+    on(:next, state: :alert)
 
     text_area do
-      text "This box appears at one step. It becomes prominent at the next step."
+      text("This box appears at one step. It becomes prominent at the next step.")
     end
   end
 
-  pause
+  pause()
 
-  text_box at: 3 do
+  text_box do
+    at(3)
+
     text_area do
-      text "This box uses an absolute step number."
+      text("This box uses an absolute step number.")
     end
   end
 end
@@ -110,12 +116,13 @@ The `on` entity can change two things only:
 - `set` writes custom properties. The compiler maps the key `x` to the property `--x`.
 
 ```elixir
-text_box at: [from: 2] do
-  on 3, state: :alert
-  on [from: 4], set: [x: "400px", dim: 0.3]
+text_box do
+  at([from: 2])
+  on(3, state: :alert)
+  on([from: 4], set: [x: "400px", dim: 0.3])
 
   text_area do
-    text "..."
+    text("...")
   end
 end
 ```
@@ -187,15 +194,19 @@ Use two sibling elements with separate specifications. This construction is equi
 `\only<1>{}` and `\only<2>{}` in Beamer.
 
 ```elixir
-text_box at: 1 do
+text_box do
+  at(1)
+
   text_area do
-    text "before"
+    text("before")
   end
 end
 
-text_box at: 2 do
+text_box do
+  at(2)
+
   text_area do
-    text "after"
+    text("after")
   end
 end
 ```
@@ -490,8 +501,9 @@ The repository contains one test file with a doctest only. This design needs the
 
 - Slice 1, done on 2026-09-14: `Expresso.Overlay`, with `new/1`, `resolve_next/2`,
   `max_step/1` and `steps/2`, and its tests. No entity accepts the `at` option yet.
-- Slice 2, not done: the `at` option on each element, and the `on`, `pause` and `steps`
-  entities.
+- Slice 2, done on 2026-09-14: the `at` option on each element, and the `on`, `pause`
+  and `steps` entities. Each is in the DSL, and the structs hold the specifications. The
+  renderer skips a `pause` until the transformer removes it, and it ignores `at` and `on`.
 - Slice 3, not done: the transformer and the verifier.
 - Slice 4, not done: the CSS contract in the renderer.
 - Slice 5, not done: the step index in `assets/src/state.ts` and `dom.ts`.

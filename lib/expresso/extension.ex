@@ -5,19 +5,50 @@ defmodule Expresso.Extension do
   It gives the `deck` section, the `slide` entity and the entities of an element.
   """
 
+  # The overlay specification of an element. Each element entity merges this
+  # schema into its own. `docs/overlays.md` gives the forms.
+  @overlay_schema [
+    at: [
+      type: {:custom, Expresso.Overlay, :new, []},
+      doc: "The steps that show the element. See docs/overlays.md."
+    ]
+  ]
+
+  @on %Spark.Dsl.Entity{
+    name: :on,
+    target: Expresso.Element.On,
+    args: [:at],
+    schema: [
+      at: [
+        type: {:custom, Expresso.Overlay, :new, []},
+        required: true,
+        doc: "The steps that give the state."
+      ],
+      state: [type: :atom, doc: "A state of the theme, such as :alert."],
+      set: [type: :keyword_list, doc: "Custom properties, such as [x: \"400px\"]."]
+    ]
+  }
+
   @text_area %Spark.Dsl.Entity{
     name: :text_area,
     target: Expresso.Element.TextArea,
-    schema: [text: [type: :string]]
+    entities: [on: [@on]],
+    schema: @overlay_schema ++ [text: [type: :string]]
   }
 
   @text_box %Spark.Dsl.Entity{
     name: :text_box,
     target: Expresso.Element.TextBox,
-    entities: [elements: [@text_area]]
+    entities: [elements: [@text_area], on: [@on]],
+    schema: @overlay_schema
   }
 
-  @slide_elements [elements: [@text_box]]
+  @pause %Spark.Dsl.Entity{
+    name: :pause,
+    target: Expresso.Element.Pause
+  }
+
+  @slide_elements [elements: [@text_box, @pause]]
 
   @slide %Spark.Dsl.Entity{
     name: :slide,
@@ -26,7 +57,8 @@ defmodule Expresso.Extension do
     entities: @slide_elements,
     schema: [
       name: [type: :string, doc: "A name for the slide."],
-      heading: [type: :string, doc: "The heading that the slide template shows."]
+      heading: [type: :string, doc: "The heading that the slide template shows."],
+      steps: [type: :pos_integer, doc: "The maximum step number of the slide."]
     ]
   }
 
