@@ -8,7 +8,7 @@ defmodule Expresso.Element.TextArea do
   @typedoc "The struct of a text area"
   @type t :: %__MODULE__{}
 
-  defstruct [:text, :at, on: [], __spark_metadata__: nil]
+  defstruct [:text, :at, :steps, on: [], __spark_metadata__: nil]
 
   @doc """
   Make a text area with text
