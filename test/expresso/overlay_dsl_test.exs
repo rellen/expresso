@@ -1,7 +1,9 @@
 defmodule Expresso.OverlayDslTest do
   use ExUnit.Case, async: true
 
-  alias Expresso.Element.{On, Pause, TextArea, TextBox}
+  import Spark.Test, only: [dsl_errors: 1]
+
+  alias Expresso.Element.{On, TextArea, TextBox}
   alias Expresso.Overlay
 
   defmodule OverlayDeck do
@@ -24,7 +26,7 @@ defmodule Expresso.OverlayDslTest do
       pause()
 
       text_box do
-        at 3
+        at 2..5
         on [from: 4], set: [x: "400px", dim: 0.3]
 
         text_area do
@@ -41,6 +43,18 @@ defmodule Expresso.OverlayDslTest do
     end
   end
 
+  defmodule PlainDeck do
+    use Expresso
+
+    slide do
+      text_box do
+        text_area do
+          text "no specification"
+        end
+      end
+    end
+  end
+
   setup do
     [slide] = Expresso.parse(OverlayDeck).slides
     {:ok, slide: slide}
@@ -48,15 +62,15 @@ defmodule Expresso.OverlayDslTest do
 
   describe "the at option" do
     test "goes into the element as a specification", %{slide: slide} do
-      [first, _pause, second, third] = slide.elements
+      [first, second, third] = slide.elements
 
-      assert %TextBox{at: %Overlay{pairs: [{:next, :max}]}} = first
-      assert %TextBox{at: %Overlay{pairs: [{3, 3}]}} = second
+      assert %TextBox{at: %Overlay{pairs: [{1, :max}]}} = first
+      assert %TextBox{at: %Overlay{pairs: [{2, 5}]}} = second
       assert %TextBox{at: nil} = third
     end
 
     test "works on a text area", %{slide: slide} do
-      [_, _, %TextBox{elements: [area]}, _] = slide.elements
+      [_, %TextBox{elements: [area]}, _] = slide.elements
 
       assert %TextArea{at: %Overlay{pairs: [{2, 4}]}} = area
     end
@@ -66,24 +80,56 @@ defmodule Expresso.OverlayDslTest do
     test "holds a specification and a state", %{slide: slide} do
       [%TextBox{on: [on]} | _] = slide.elements
 
-      assert %On{at: %Overlay{pairs: [{:next, :next}]}, state: :alert, set: nil} = on
+      assert %On{at: %Overlay{pairs: [{2, 2}]}, state: :alert, set: nil} = on
     end
 
     test "holds a specification and custom properties", %{slide: slide} do
-      [_, _, %TextBox{on: [on]}, _] = slide.elements
+      [_, %TextBox{on: [on]}, _] = slide.elements
 
       assert %On{at: %Overlay{pairs: [{4, :max}]}, state: nil, set: [x: "400px", dim: 0.3]} =
                on
     end
 
     test "is an empty list without an entity", %{slide: slide} do
-      assert [_, _, _, %TextBox{on: []}] = slide.elements
+      assert [_, _, %TextBox{on: []}] = slide.elements
     end
   end
 
-  describe "the pause entity" do
-    test "is an element of the slide, in document order", %{slide: slide} do
-      assert [%TextBox{}, %Pause{}, %TextBox{}, %TextBox{}] = slide.elements
+  describe "the transformer" do
+    test "gives each :next the value of the counter, and a pause increments it", %{
+      slide: slide
+    } do
+      [%TextBox{steps: first, on: [%On{steps: on}]}, _, _] = slide.elements
+
+      assert first == [1, 2, 3, 4, 5]
+      assert on == [2]
+    end
+
+    test "expands each specification into step numbers", %{slide: slide} do
+      [_, %TextBox{steps: box, on: [%On{steps: on}], elements: [%TextArea{steps: area}]}, _] =
+        slide.elements
+
+      assert box == [2, 3, 4, 5]
+      assert on == [4, 5]
+      assert area == [2, 3, 4]
+    end
+
+    test "keeps nil for an element without a specification", %{slide: slide} do
+      assert [_, _, %TextBox{steps: nil, elements: [%TextArea{steps: nil}]}] = slide.elements
+    end
+
+    test "removes each pause from the slide", %{slide: slide} do
+      assert [%TextBox{}, %TextBox{}, %TextBox{}] = slide.elements
+    end
+
+    test "writes the maximum step number into the metadata", %{slide: slide} do
+      assert slide.metadata.max_step == 5
+    end
+
+    test "gives the maximum step number 1 to a slide without a specification" do
+      [slide] = Expresso.parse(PlainDeck).slides
+
+      assert slide.metadata.max_step == 1
     end
 
     test "does not stop the render" do
@@ -97,6 +143,71 @@ defmodule Expresso.OverlayDslTest do
   describe "the steps option" do
     test "goes into the slide", %{slide: slide} do
       assert slide.steps == 5
+    end
+
+    test "is the maximum, and a step above it is an error at compile time" do
+      source = """
+      defmodule Expresso.OverlayDslTest.TooManySteps do
+        use Expresso
+
+        slide "short" do
+          steps 2
+
+          text_box do
+            at 3
+          end
+        end
+      end
+      """
+
+      error = assert_raise Spark.Error.DslError, fn -> Code.compile_string(source) end
+
+      assert Exception.message(error) =~ "deck -> slide -> short"
+      assert Exception.message(error) =~ "the step 3 is more than the maximum step 2"
+    end
+  end
+
+  describe "the verifier" do
+    test "reports an on entity outside the at option" do
+      errors =
+        dsl_errors do
+          defmodule Elixir.Expresso.OverlayDslTest.OnOutside do
+            use Expresso
+
+            slide "outside" do
+              text_box do
+                at 1..2
+                on 3, state: :alert
+              end
+            end
+          end
+        end
+
+      assert [{Expresso.OverlayDslTest.OnOutside, [error]}] = errors
+      assert Exception.message(error) =~ "deck -> slide -> outside"
+      assert Exception.message(error) =~ "the on entity has the step 3"
+    end
+
+    test "reports a child element outside its parent" do
+      errors =
+        dsl_errors do
+          defmodule Elixir.Expresso.OverlayDslTest.ChildOutside do
+            use Expresso
+
+            slide do
+              text_box do
+                at 2
+
+                text_area do
+                  at 1..2
+                end
+              end
+            end
+          end
+        end
+
+      assert [{Expresso.OverlayDslTest.ChildOutside, [error]}] = errors
+      assert Exception.message(error) =~ "the text_area has the step 1"
     end
   end
 

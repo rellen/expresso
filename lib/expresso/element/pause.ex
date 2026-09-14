@@ -4,8 +4,8 @@ defmodule Expresso.Element.Pause do
 
   The `pause` entity increments the counter of the slide, and it has no
   content. The transformer removes each `pause` from the elements of a slide
-  after it reads the counter. Until the transformer exists, the renderer skips
-  it. `docs/overlays.md` gives the rules.
+  after it reads the counter. The renderer also skips it, for a slide that no
+  transformer expanded. `docs/overlays.md` gives the rules.
   """
 
   @typedoc "The struct of a pause entity"

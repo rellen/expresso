@@ -206,8 +206,11 @@ top level section. The section holds `slide` entities. A `slide` holds `text_box
 holds `on` entities. Each element has an `at` option, and a slide has a `steps` option.
 `docs/overlays.md` gives the meaning of each.
 
-The extension has an empty `imports` option and an empty `transformers` option. It has no
-verifiers.
+The extension imports nothing. It lists `Expresso.Overlay.Transformer`, which expands the
+overlay specifications of each slide at compile time, and `Expresso.Overlay.Verifier`,
+which reports a specification that breaks a rule. After the transformer, each element and
+each `on` entity holds its step numbers in the `steps` field, and the metadata of the
+slide holds the maximum step number in `max_step`. `docs/overlays.md` gives the rules.
 
 The `slide` entity takes an optional name as its first argument. The DSL accepts `slide do`
 and `slide "name" do`.

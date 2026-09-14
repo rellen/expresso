@@ -3,6 +3,7 @@ defmodule Expresso.Extension do
   The Spark DSL extension
 
   It gives the `deck` section, the `slide` entity and the entities of an element.
+  The overlay transformer and the overlay verifier run for each deck module.
   """
 
   # The overlay specification of an element. Each element entity merges this
@@ -79,5 +80,6 @@ defmodule Expresso.Extension do
   use Spark.Dsl.Extension,
     sections: @sections,
     imports: [],
-    transformers: []
+    transformers: [Expresso.Overlay.Transformer],
+    verifiers: [Expresso.Overlay.Verifier]
 end

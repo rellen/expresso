@@ -1,7 +1,9 @@
 # Overlay specifications
 
-This document gives a design for overlays. The code does not contain this design yet. The
-section "Changes to the current code" lists the work that this design makes necessary.
+This document gives a design for overlays. The code contains the specification, the DSL,
+the transformer and the verifier of this design. It does not contain the CSS or the
+presenter. The section "Progress" says which slices are done, and the section "Changes to
+the current code" lists the work that remains.
 
 An overlay is a step in a slide. Overlays give reveals, emphasis and movement inside one
 slide.
@@ -248,6 +250,16 @@ Step 6 is necessary because the renderer renders each element of a slide. A `pau
 entity holds no content, and it has no render function. The transformer removes the
 entity after the entity gives its value to the counter.
 
+Inside one element, the transformer reads the `at` option first, then each `on` entity in
+document order, then each child element. Step 4 writes the list of step numbers into the
+`steps` field of the element or of the `on` entity. An element without an `at` option
+keeps `nil` in that field, and it shows at each step of its parent.
+
+`Expresso.Overlay.Expand.slide/1` does the six operations on one `Expresso.Slide` struct,
+and it is a pure function. `Expresso.Overlay.Transformer` calls it for each slide of the
+DSL state. When the expansion gives an error, the transformer makes a
+`Spark.Error.DslError` with the path of the slide.
+
 ### The verifier
 
 The verifier gives an error for these conditions:
@@ -263,6 +275,18 @@ The first condition needs a maximum step number that comes from a different sour
 the specifications. If each slide calculates its own maximum from its specifications, an
 absolute step number always raises the maximum, and the condition is unreachable. The
 `steps` option of the slide is that source. See the decisions.
+
+The transformer reports the first condition, because the expansion of an open
+specification needs the maximum. `Expresso.Overlay.Check.slide/1` reports the other four
+conditions on one expanded `Expresso.Slide` struct, and it is a pure function.
+`Expresso.Overlay.Verifier` calls it for each slide. The DSL does not accept a `pause`
+inside an element, and `Expresso.Overlay.new/1` does not accept a step below 1. Therefore
+the check of those two conditions applies to a slide that a script builds.
+
+Spark runs a verifier in an `@after_verify` callback of the module. Elixir reports an
+error from that callback as a compile warning, and `mix compile --warnings-as-errors`
+then fails. A test collects the error with `Spark.Test.dsl_errors/1`. An error from a
+transformer is different. Spark raises it at compile time, and `assert_raise/2` catches it.
 
 ### The type
 
@@ -411,16 +435,16 @@ theme must also set `visibility: hidden` after the transition.
 
 ## Changes to the current code
 
-The current code does not contain the constructions that this design needs. This section
-lists the work.
+This section lists the work that this design makes necessary. The first three items are
+done, and the section "Progress" gives the date of each.
 
 ### The extension
 
-`Expresso.Extension` has an empty `transformers` option, and it has no verifiers. The
-extension must list the overlay transformer and the overlay verifier. It imports nothing,
-because a specification is a term.
+`Expresso.Extension` lists `Expresso.Overlay.Transformer` in its `transformers` option
+and `Expresso.Overlay.Verifier` in its `verifiers` option. It imports nothing, because a
+specification is a term.
 
-The extension must contain a `pause` entity and an `on` entity. The `pause` entity needs a
+The extension contains a `pause` entity and an `on` entity. The `pause` entity has a
 struct target, because Spark builds a struct for each entity.
 
 The `slide` entity takes an optional name as its first argument. Therefore the examples in
@@ -428,15 +452,16 @@ this document, which write `slide "pipeline" do`, are correct.
 
 ### The slide metadata
 
-The transformer writes the maximum step number into `slide.metadata`. `Expresso.parse/1`
-now writes a map into this field and numbers the slides. Therefore the transformer can put
-the maximum step number into the map of an existing slide.
-
-The `slide` entity itself has no `metadata` option, and the struct default is `nil`. A
-transformer that operates on the DSL state, before `Expresso.parse/1` runs, must accept
-`nil` in this field.
+The transformer writes the maximum step number into `slide.metadata.max_step`. The `slide`
+entity has no `metadata` option, and the struct default is `nil`. The transformer accepts
+`nil`, and it writes a map. `Expresso.parse/1` then puts the heading and the slide number
+into that map.
 
 ### The elements
+
+Each element struct has an `at` field, an `on` field and a `steps` field. The `at` field
+and the `on` field hold the specifications, and the transformer writes the step numbers
+into the `steps` field. An `on` entity has the same three fields.
 
 `Expresso.Template.render_elements/1` reads the assigns of each element with
 `module.get_assigns/1`. It then calls `module.render/1`. The overlay data must pass through
@@ -444,8 +469,7 @@ both functions.
 
 The proposal is:
 
-- Add an `overlay` field and an `on` field to each element struct.
-- Put both fields into the map that `get_assigns/1` returns.
+- Put the `steps` field and the `on` field into the map that `get_assigns/1` returns.
 - Add a shared function, such as `Expresso.Overlay.attributes/1`. This function makes the
   `data-on` attribute and the `data-el` attribute from the assigns.
 - Call this function in the render function of each element.
@@ -508,7 +532,11 @@ The repository contains one test file with a doctest only. This design needs the
 - Slice 2, done on 2026-09-14: the `at` option on each element, and the `on`, `pause`
   and `steps` entities. Each is in the DSL, and the structs hold the specifications. The
   renderer skips a `pause` until the transformer removes it, and it ignores `at` and `on`.
-- Slice 3, not done: the transformer and the verifier.
+- Slice 3, done on 2026-09-14: `Expresso.Overlay.Expand` and `Expresso.Overlay.Check`,
+  which are pure functions on a slide, and `Expresso.Overlay.Transformer` and
+  `Expresso.Overlay.Verifier`, which run them for each deck module. Each element holds
+  its step numbers in the `steps` field, and the slide metadata holds `max_step`. The
+  renderer does not read either field yet.
 - Slice 4, not done: the CSS contract in the renderer.
 - Slice 5, not done: the step index in `assets/src/state.ts` and `dom.ts`.
 
