@@ -73,9 +73,9 @@ Open the HTML document in a browser. The keys are:
 
 | Key | Action |
 | --- | --- |
-| `j` | Go to the next slide. |
-| `k` | Go to the previous slide. |
-| `p` | Show all the slides, for a printer. |
+| `j` | Go to the next step, or to the next slide after the last step. |
+| `k` | Go to the previous step, or to the previous slide at the first step. |
+| `p` | Show all the slides at their last step, for a printer. |
 
 ## Make a binary
 

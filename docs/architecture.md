@@ -228,9 +228,11 @@ and `slide "name" do`.
 ## The presenter
 
 The presenter is a TypeScript program under `assets/src/`. `state.ts` holds the number of
-the current slide and the function that changes it, and it does not touch the document.
-`dom.ts` reads the document and applies a state to it with the inline `style.display`
-property. `main.ts` connects the two. The first slide is slide 1.
+the current slide, the number of the current step and the function that changes them,
+and it does not touch the document. `dom.ts` reads the document and applies a state to
+it with the inline `style.display` property and the `data-step` attribute. `main.ts`
+connects the two. The first slide is slide 1, and the first step is step 1.
+`docs/overlays.md` gives the rules of a step.
 
 `Mix.Tasks.Compile.Presenter` bundles these modules with esbuild into one minified script,
 `priv/static/presenter.js`. The compiler runs in front of the Elixir compiler, and Git does
@@ -239,9 +241,9 @@ compiles `lib/`. `docs/typescript.md` gives the design.
 
 The keys are:
 
-- `j` shows the next slide.
-- `k` shows the previous slide.
-- `p` shows all the slides, for a printer.
+- `j` shows the next step, or the first step of the next slide after the last step.
+- `k` shows the previous step, or the last step of the previous slide at the first step.
+- `p` shows all the slides at their last step, for a printer.
 
 ## The build
 
@@ -265,15 +267,21 @@ The commands are:
 
 This list gives the work in the order of its value. Take the first item that you can do.
 
-### 1. Write the code for overlays
+### 1. Write the handout view of the overlays
 
-`docs/overlays.md` gives the design, and each of its five decisions is settled. Its
-section "Progress" says which slices are done. The section
-"Changes to the current code" lists each change, and the section "The test plan" lists
-each test. The rules of the presenter go into `assets/src/state.ts` with a test for each
-rule. This work is the largest item in this list.
+`docs/overlays.md` gives the design of the overlays, and the code contains each part of
+it except the handout view. The section "Accessibility" of that document gives the
+proposal: a second render, with one page for each step of each slide, and a
+`@media print` block that selects it. The print key of the presenter shows the last step
+of each slide today, and this is the smaller first version that the section names.
 
 ### 2. Smaller items
+
+- `docs/overlays.md` names an `auto_reveal` option of the `slide` entity, which gives an
+  implicit `at: [from: :next]` to each element without an `at` option. The code does not
+  have it.
+- `docs/overlays.md` says that a verifier can give a warning for a key of `set` that no
+  theme registers. The code does not have it.
 
 - The repository has no continuous integration. No check runs on a pull request. Each
   result in this repository comes from a command that a person or a session ran.

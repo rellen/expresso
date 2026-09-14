@@ -3,34 +3,58 @@
 // This module does not touch the document. `dom.ts` reads the document and
 // applies a state to it. This split gives the state a unit test.
 //
-// The state holds the number of the current slide. The overlay design in
-// docs/overlays.md adds the number of the step later.
+// The state holds the number of the current slide and the number of the
+// current step in that slide. docs/overlays.md gives the rules of a step.
 
 export type State = {
   slide: number;
+  step: number;
 };
 
+// `steps` holds the maximum step number of each slide, in slide order. The
+// entry for slide 1 is at index 0.
 export type Limits = {
   slides: number;
+  steps: number[];
 };
 
-// The first slide is slide 1. `Expresso.Deck.number_slides/1` gives the same
-// number to the identifier of each section.
+// The first slide is slide 1, and the first step is step 1.
+// `Expresso.Deck.number_slides/1` gives the same number to the identifier of
+// each section.
 export function initial(): State {
-  return { slide: 1 };
+  return { slide: 1, step: 1 };
+}
+
+// The maximum step number of a slide. A slide without an entry has one step.
+export function maxStep(slide: number, limits: Limits): number {
+  return limits.steps[slide - 1] ?? 1;
 }
 
 // Give the state after one key. An unknown key gives the same state.
 //
-// `j` moves to the next slide, and `k` moves to the previous slide. A move past
-// the first slide or past the last slide gives the same state.
+// `j` moves to the next step, and to the first step of the next slide after
+// the last step. `k` moves to the previous step, and to the last step of the
+// previous slide at the first step. A move past the first slide or past the
+// last slide gives the same state.
 export function next(state: State, key: string, limits: Limits): State {
-  if (key === "j" && state.slide < limits.slides) {
-    return { slide: state.slide + 1 };
+  if (key === "j") {
+    if (state.step < maxStep(state.slide, limits)) {
+      return { slide: state.slide, step: state.step + 1 };
+    }
+    if (state.slide < limits.slides) {
+      return { slide: state.slide + 1, step: 1 };
+    }
+    return state;
   }
 
-  if (key === "k" && state.slide > 1) {
-    return { slide: state.slide - 1 };
+  if (key === "k") {
+    if (state.step > 1) {
+      return { slide: state.slide, step: state.step - 1 };
+    }
+    if (state.slide > 1) {
+      return { slide: state.slide - 1, step: maxStep(state.slide - 1, limits) };
+    }
+    return state;
   }
 
   return state;
