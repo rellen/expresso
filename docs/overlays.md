@@ -44,7 +44,7 @@ goes up with a step of 1.
 
 Two forms need data that a term cannot hold. A `from:` item needs the maximum step number
 of the slide, and `:next` needs the counter of the slide. Therefore
-`Expresso.Overlay.validate/1` puts each form into an `Expresso.Overlay` struct, and the
+`Expresso.Overlay.new/1` puts each form into an `Expresso.Overlay` struct, and the
 transformer resolves the struct later. The struct holds one pair for each item, the first
 step and the last step. In a pair, `:next` stands for the counter and `:max` stands for
 the maximum step number.
@@ -251,7 +251,7 @@ absolute step number always raises the maximum, and the condition is unreachable
 
 ### The type
 
-Use `{:custom, Expresso.Overlay, :validate, []}` for the type of the `at` option. This
+Use `{:custom, Expresso.Overlay, :new, []}` for the type of the `at` option. This
 type accepts each form of the table, and it puts the form into the struct. Spark reports
 an error for a different term, with the name of the entity and the option, and the
 message lists the accepted forms.
@@ -475,7 +475,7 @@ the DSL, or whether overlays need the DSL.
 The repository contains one test file with a doctest only. This design needs these tests:
 
 - Tests for `Expresso.Overlay`. Each row of the table in "The specification" is one test
-  of `validate/1`, and a different term gives an error. `resolve_next/2`, `max_step/1` and
+  of `new/1`, and a different term gives an error. `resolve_next/2`, `max_step/1` and
   `steps/2` get a test for each rule of the counter and of an open range.
 - Transformer tests. A slide with a `pause` and a `+` gives the correct step number for each
   element. An open range expands to the maximum step number of the slide. The transformer
@@ -488,7 +488,7 @@ The repository contains one test file with a doctest only. This design needs the
 
 ## Progress
 
-- Slice 1, done on 2026-09-14: `Expresso.Overlay`, with `validate/1`, `resolve_next/2`,
+- Slice 1, done on 2026-09-14: `Expresso.Overlay`, with `new/1`, `resolve_next/2`,
   `max_step/1` and `steps/2`, and its tests. No entity accepts the `at` option yet.
 - Slice 2, not done: the `at` option on each element, and the `on`, `pause` and `steps`
   entities.

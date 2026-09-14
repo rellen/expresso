@@ -2,7 +2,7 @@ defmodule Expresso.Overlay do
   @moduledoc """
   An overlay specification, which tells the compiler which steps show an element
 
-  A specification is an Elixir term. `validate/1` accepts each form and puts it
+  A specification is an Elixir term. `new/1` accepts each form and puts it
   into this struct. The struct holds one pair for each item of the term: the
   first step and the last step. In a pair, `:next` stands for the counter of the
   slide, and `:max` stands for the maximum step number of the slide. The
@@ -31,18 +31,18 @@ defmodule Expresso.Overlay do
   """
 
   @doc """
-  Put a term into the struct
+  Make a specification from a term
 
   This function is the custom type of the `at` option and of the `on` entity.
   It accepts a struct, a positive integer, a range with a step of 1, `:next`,
   or a list of those and of `from:` items. A different term gives an error
   tuple with a message that lists the forms.
   """
-  @spec validate(term()) :: {:ok, t()} | {:error, String.t()}
-  def validate(%__MODULE__{} = overlay), do: {:ok, overlay}
-  def validate([]), do: {:error, "an overlay specification cannot be an empty list"}
+  @spec new(term()) :: {:ok, t()} | {:error, String.t()}
+  def new(%__MODULE__{} = overlay), do: {:ok, overlay}
+  def new([]), do: {:error, "an overlay specification cannot be an empty list"}
 
-  def validate(items) when is_list(items) do
+  def new(items) when is_list(items) do
     items
     |> Enum.reduce_while({:ok, []}, fn item, {:ok, pairs} ->
       case pair(item) do
@@ -56,7 +56,7 @@ defmodule Expresso.Overlay do
     end
   end
 
-  def validate(term) do
+  def new(term) do
     case pair(term) do
       {:ok, pair} -> {:ok, %__MODULE__{pairs: [pair]}}
       {:error, message} -> {:error, message}
