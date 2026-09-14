@@ -130,9 +130,11 @@ html
     title            the name of the deck
     style            assets/fonts.css
     style            assets/style.css
+    style            the generated rules of the overlays, from Expresso.Overlay.Render
     body
       div            one flex container for all the slides
-        section      one for each slide, class "slide", id "slide-<number>"
+        section      one for each slide, class "slide", id "slide-<number>",
+                     data-step "1", data-max-step from the slide
           div        the header, from the deck template
           div        the body, from the slide template
           div        the footer, from the deck template
@@ -147,6 +149,11 @@ of an external resource, and not its time, so a `touch` does not start a compile
 
 The renderer writes an inline `style` attribute on each `section`. The first slide gets
 `display: flex`, and each other slide gets `display: none`.
+
+Before the tree, the renderer calls `Expresso.Overlay.Render.identify/1` on the deck. It
+gives each element with an `on` entity its `data-el` value. `docs/overlays.md` gives the
+CSS contract of the overlays: the attributes, the base rules in `assets/style.css` and
+the generated style block.
 
 The container `div` gets `height: 100vh`, and each `section` gets `height: 100%`. The
 viewport unit is necessary because the `body` gets `min-height`, and a percentage height
@@ -187,9 +194,12 @@ An element is the content of a slide. `Expresso.Element.TextBox` and
 
 An element module has these parts:
 
-- A struct with a `__spark_metadata__` field.
-- A `get_assigns/1` function. It makes a map of assigns from the struct.
-- A `render/1` function. It makes the HTML from the assigns.
+- A struct with a `__spark_metadata__` field, and with the `at`, `on`, `steps` and `el`
+  fields of the overlays.
+- A `get_assigns/1` function. It makes a map of assigns from the struct. The key `overlay`
+  holds the attributes from `Expresso.Overlay.Render.attributes/1`.
+- A `render/1` function. It makes the HTML from the assigns, and it puts the `overlay`
+  list on the root tag with `rest!: @overlay`.
 
 `Expresso.Template.render_elements/1` matches `%module{}` for each element. It then calls
 `module.get_assigns/1` and `module.render/1`. There is no `@behaviour` for an element, and

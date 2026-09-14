@@ -8,7 +8,7 @@ defmodule Expresso.Element.TextBox do
   @typedoc "The struct of a text box"
   @type t :: %__MODULE__{}
 
-  defstruct [:elements, :at, :steps, on: [], __spark_metadata__: nil]
+  defstruct [:elements, :at, :steps, :el, on: [], __spark_metadata__: nil]
 
   @doc """
   Make a text box with text
@@ -21,11 +21,14 @@ defmodule Expresso.Element.TextBox do
 
   @doc """
   Make the assigns of the render function from the struct
+
+  The key `overlay` holds the attributes of the overlay contract, from
+  `Expresso.Overlay.Render.attributes/1`.
   """
   @spec get_assigns(t()) :: map()
   def get_assigns(text_box) do
     %__MODULE__{elements: elements} = text_box
-    %{elements: elements}
+    %{elements: elements, overlay: Expresso.Overlay.Render.attributes(text_box)}
   end
 
   @doc """
@@ -34,7 +37,7 @@ defmodule Expresso.Element.TextBox do
   @spec render(map()) :: Phoenix.HTML.safe()
   def render(assigns) do
     temple do
-      div class: "text-box" do
+      div class: "text-box", rest!: @overlay do
         c(&Expresso.Template.render_elements(&1), elements: @elements)
       end
     end

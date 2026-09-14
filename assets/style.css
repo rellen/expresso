@@ -47,3 +47,40 @@ h2 {
   flex-direction: column;
   text-align: center;
 }
+:root {
+  --dur: 300ms;
+  --ease: ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur: 0s;
+  }
+}
+@property --x {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+[data-on] {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility 0s linear var(--dur);
+}
+.text-box,
+.text-area {
+  transform: translate(var(--x), var(--y));
+  outline: calc(var(--alert, 0) * 4px) solid currentColor;
+  outline-offset: 0.25rem;
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility 0s linear var(--dur),
+    transform var(--dur) var(--ease),
+    outline-width var(--dur) var(--ease);
+}

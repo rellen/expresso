@@ -1,9 +1,9 @@
 # Overlay specifications
 
 This document gives a design for overlays. The code contains the specification, the DSL,
-the transformer and the verifier of this design. It does not contain the CSS or the
-presenter. The section "Progress" says which slices are done, and the section "Changes to
-the current code" lists the work that remains.
+the transformer, the verifier and the CSS contract of this design. It does not contain
+the step index of the presenter. The section "Progress" says which slices are done, and
+the section "Changes to the current code" lists the work that remains.
 
 An overlay is a step in a slide. Overlays give reveals, emphasis and movement inside one
 slide.
@@ -337,6 +337,14 @@ element, each element is visible before its first step.
 
 The JavaScript code writes the `data-step` attribute. It does no other operation.
 
+`Expresso.Overlay.Render` writes this contract. `identify/1` gives each element with an
+`on` entity its `data-el` value, in the `el` field of the struct. `attributes/1` makes the
+two attributes of one element, and the render function of the element puts them on its
+root tag. `style/1` makes the generated style block. The base rule and the registration
+of `--x` and `--y` are in `assets/style.css`, because the theme owns them. The base rule
+also sets `visibility: hidden`, and the reveal rule sets `visibility: visible`, so a
+hidden element is not in the accessibility tree.
+
 ### The identity of an element
 
 The `data-on` attribute is not sufficient for the `on` entity. Two elements can show at
@@ -357,6 +365,12 @@ section[data-step="4"] [data-el="s2-e1"] {
 The renderer writes the rules for the `on` entities in document order. Two rules with the
 same specificity can set the same property. CSS then applies the last rule, and document
 order gives a stable result.
+
+The renderer writes one rule for each `on` entity, with one selector for each step of the
+entity. The rule sets `--<state>: 1` for the `state` option and `--<key>: <value>` for
+each pair of the `set` option. The renderer escapes `<` in a value, so a value cannot
+close the `style` element. The theme reads a state with a fallback, such as
+`var(--alert, 0)`, because a deck without that state registers no property for it.
 
 ### Nested elements
 
@@ -409,10 +423,11 @@ The duration and the easing function are properties of the element or of the the
 
 ## Accessibility
 
-The renderer must write these constructions:
+The design needs these constructions:
 
-- A `prefers-reduced-motion` block that sets each duration to zero.
-- A handout view for a screen reader and for a printer.
+- A `prefers-reduced-motion` block that sets each duration to zero. `assets/style.css`
+  has this block, and it sets `--dur` to zero.
+- A handout view for a screen reader and for a printer. The code does not have this view.
 
 The handout view is not a simple override of the base rule. An override that shows each
 element at the same time puts the elements of all the steps on one page. An element that
@@ -424,7 +439,9 @@ transition. The first render and the handout render go into the same document, a
 `@media print` block selects one of them.
 
 A smaller first version writes the last step of each slide only. This version keeps one
-render and gives a correct page for most slides.
+render and gives a correct page for most slides. The print key of the presenter can give
+this version without a change to the CSS. It writes the value of `data-max-step` into
+`data-step` on each `section`, and the rules of the last step then apply.
 
 The `aria-hidden` attribute is not part of this design. An attribute is not a CSS
 property, and CSS cannot write it. Only JavaScript can write it, and the design gives
@@ -435,8 +452,9 @@ theme must also set `visibility: hidden` after the transition.
 
 ## Changes to the current code
 
-This section lists the work that this design makes necessary. The first three items are
-done, and the section "Progress" gives the date of each.
+This section lists the work that this design makes necessary. Each item except the
+JavaScript code and the handout view is done, and the section "Progress" gives the date
+of each.
 
 ### The extension
 
@@ -459,32 +477,28 @@ into that map.
 
 ### The elements
 
-Each element struct has an `at` field, an `on` field and a `steps` field. The `at` field
-and the `on` field hold the specifications, and the transformer writes the step numbers
-into the `steps` field. An `on` entity has the same three fields.
+Each element struct has an `at` field, an `on` field, a `steps` field and an `el` field.
+The `at` field and the `on` field hold the specifications. The transformer writes the
+step numbers into the `steps` field, and `Expresso.Overlay.Render.identify/1` writes the
+`data-el` value into the `el` field. An `on` entity has the first three fields.
 
 `Expresso.Template.render_elements/1` reads the assigns of each element with
-`module.get_assigns/1`. It then calls `module.render/1`. The overlay data must pass through
-both functions.
+`module.get_assigns/1`. It then calls `module.render/1`. `get_assigns/1` puts the result
+of `Expresso.Overlay.Render.attributes/1` under the key `overlay`, and `render/1` puts
+the list on the root tag with `rest!: @overlay`. A custom element must do the same.
 
-The proposal is:
-
-- Put the `steps` field and the `on` field into the map that `get_assigns/1` returns.
-- Add a shared function, such as `Expresso.Overlay.attributes/1`. This function makes the
-  `data-on` attribute and the `data-el` attribute from the assigns.
-- Call this function in the render function of each element.
-
-The attributes must go on the root tag of the element. A wrapper element breaks the
-layout, because `.text-box` and `.text-area` are flex children.
+The attributes go on the root tag of the element. A wrapper element breaks the layout,
+because `.text-box` and `.text-area` are flex children.
 
 ### The renderer
 
 `Expresso.Renderer` reads `assets/style.css` with `File.read!/1` at compile time. The step
-rules depend on the deck, and the module attribute cannot hold them. The renderer must
-write a second `style` element. This element holds the generated rules for each step
-number to the maximum step number of the deck.
+rules depend on the deck, and the module attribute cannot hold them. Therefore the
+renderer writes a third `style` element, after the fonts and the theme. It holds the
+result of `Expresso.Overlay.Render.style/1`.
 
-The renderer must also write `data-step="1"` on each `section` element.
+The renderer writes `data-step="1"` and `data-max-step` on each `section` element. A slide
+from the imperative API has no `max_step` in its metadata, and its maximum is 1.
 
 ### The JavaScript code
 
@@ -537,7 +551,10 @@ The repository contains one test file with a doctest only. This design needs the
   `Expresso.Overlay.Verifier`, which run them for each deck module. Each element holds
   its step numbers in the `steps` field, and the slide metadata holds `max_step`. The
   renderer does not read either field yet.
-- Slice 4, not done: the CSS contract in the renderer.
+- Slice 4, done on 2026-09-14: `Expresso.Overlay.Render`, the `el` field, the attributes
+  on each `section` and on each element, the generated style block, and the base rules in
+  `assets/style.css`. The presenter does not write `data-step` yet, so a browser shows
+  step 1 of each slide.
 - Slice 5, not done: the step index in `assets/src/state.ts` and `dom.ts`.
 
 ## The decisions
