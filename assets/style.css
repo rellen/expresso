@@ -84,3 +84,44 @@ h2 {
     transform var(--dur) var(--ease),
     outline-width var(--dur) var(--ease);
 }
+.screen {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+.handout {
+  display: none;
+}
+.handout-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 1rem 0;
+  break-after: page;
+}
+.handout-page:last-child {
+  break-after: auto;
+}
+body[data-view="handout"] .screen {
+  display: none;
+}
+body[data-view="handout"] .handout {
+  display: block;
+}
+@media print {
+  :root {
+    --dur: 0s;
+  }
+  html {
+    font-size: 16px;
+  }
+  .screen {
+    display: none;
+  }
+  .handout {
+    display: block;
+  }
+}

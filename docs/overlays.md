@@ -1,8 +1,8 @@
 # Overlay specifications
 
-This document gives the design for overlays. The code contains each part of this design
-except the handout view. The section "Progress" gives the date of each slice, and the
-section "Changes to the current code" says where each part is.
+This document gives the design for overlays. The code contains each part of this design.
+The section "Progress" gives the date of each slice, and the section "Changes to the
+current code" says where each part is.
 
 An overlay is a step in a slide. Overlays give reveals, emphasis and movement inside one
 slide.
@@ -432,15 +432,25 @@ The handout view is not a simple override of the base rule. An override that sho
 element at the same time puts the elements of all the steps on one page. An element that
 moves with `set` then holds one position only, and the page loses the sequence.
 
-The proposal is that the handout view is a second render. The renderer writes one page for
-each step of each slide. This second render is safe, because the handout view needs no
-transition. The first render and the handout render go into the same document, and a
-`@media print` block selects one of them.
+Therefore the handout view is a second render. The renderer writes one `section` with the
+class `handout-page` for each step of each slide, and it puts `data-step` on that
+`section`. The generated rules of the overlays then apply to the page with no addition,
+because each rule starts with `section[data-step="<step>"]`. A page shows the state of
+its own step only. This second render is safe, because the handout view needs no
+transition.
 
-A smaller first version writes the last step of each slide only. This version keeps one
-render and gives a correct page for most slides. The print key of the presenter can give
-this version without a change to the CSS. It writes the value of `data-max-step` into
-`data-step` on each `section`, and the rules of the last step then apply.
+The two views go into the same document. `assets/style.css` hides the handout view, and
+two constructions show it:
+
+- A `@media print` block. It hides the present view and shows the handout view. A printer
+  gets one page for each step, and the block also makes the base font size smaller.
+- The attribute `data-view` on the `body`. The presenter writes `handout` into it for the
+  key `p`. A screen reader then reads each step of each slide.
+
+A `data-el` value is unique in one view. The handout view holds the same value as the
+present view, and a rule keeps its correct element, because the `data-step` of the
+`section` selects one page. A `section` of the handout view does not get the class
+`slide` or an identifier, because `dom.ts` counts the class and reads the identifier.
 
 The `aria-hidden` attribute is not part of this design. An attribute is not a CSS
 property, and CSS cannot write it. Only JavaScript can write it, and the design gives
@@ -515,8 +525,8 @@ The rules are:
   after the last step.
 - `k` moves to the previous step first. At the first step, it moves to the last step of
   the previous slide.
-- `p` shows each slide at its last step, for a printer. `dom.ts` writes the value of
-  `data-max-step` into `data-step` on each `section`.
+- `p` changes between the present view and the handout view. `dom.ts` writes the view
+  into the `data-view` attribute of the `body`.
 
 ### The imperative API
 
@@ -561,6 +571,9 @@ are in `test/expresso/overlay_*_test.exs`, and the tests of the presenter are in
   step 1 of each slide.
 - Slice 5, done on 2026-09-14: the step number in `assets/src/state.ts` and `dom.ts`,
   with a test for each rule, and a slide with overlays in `examples/dsl_deck.exs`.
+- Slice 6, done on 2026-09-14: the handout view. The renderer writes one page for each
+  step of each slide, a `@media print` block selects that view, and the key `p` changes
+  between the two views.
 
 ## The decisions
 

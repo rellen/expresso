@@ -75,7 +75,10 @@ Open the HTML document in a browser. The keys are:
 | --- | --- |
 | `j` | Go to the next step, or to the next slide after the last step. |
 | `k` | Go to the previous step, or to the previous slide at the first step. |
-| `p` | Show all the slides at their last step, for a printer. |
+| `p` | Change between the present view and the handout view. |
+
+The handout view shows one page for each step of each slide. A printer gets this view
+without the key.
 
 ## Make a binary
 

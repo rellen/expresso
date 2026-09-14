@@ -27,24 +27,17 @@ function slide(number: number): HTMLElement {
   return element;
 }
 
-// Show the slide of the state at the step of the state, and hide each other
-// slide. The generated style block reads `data-step`, and this attribute is
-// the one operation of the presenter on an overlay. docs/overlays.md gives
-// the CSS contract.
+// Apply a state to the document. The function writes the view on the `body`,
+// it shows the slide of the state at the step of the state, and it hides each
+// other slide. The style sheet reads `data-view`, and the generated style
+// block reads `data-step`. These two attributes are the only operations of
+// the presenter on the document. docs/overlays.md gives the CSS contract.
 export function apply(state: State, limits: Limits): void {
+  document.body.dataset.view = state.view;
   for (let number = 1; number <= limits.slides; number++) {
     slide(number).style.display = "none";
   }
   const current = slide(state.slide);
   current.dataset.step = String(state.step);
   current.style.display = "flex";
-}
-
-// Show each slide at its last step, for a printer.
-export function showAll(limits: Limits): void {
-  for (let number = 1; number <= limits.slides; number++) {
-    const element = slide(number);
-    element.dataset.step = String(limits.steps[number - 1] ?? 1);
-    element.style.display = "flex";
-  }
 }
