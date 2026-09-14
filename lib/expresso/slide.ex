@@ -6,11 +6,12 @@ defmodule Expresso.Slide do
   @type t :: %__MODULE__{
           :name => String.t() | nil,
           :heading => String.t() | nil,
+          :steps => pos_integer() | nil,
           :metadata => map() | nil,
           :elements => list()
         }
 
-  defstruct [:name, :heading, :metadata, :elements, __spark_metadata__: nil]
+  defstruct [:name, :heading, :steps, :metadata, :elements, __spark_metadata__: nil]
 
   @doc """
   Create a new slide

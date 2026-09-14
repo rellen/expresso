@@ -12,8 +12,8 @@ Read these documents before you change the code:
   elements, the DSL, the presenter and the build. Its section "Open work" gives the next
   items in the order of their value. Start there.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide. The
-  code contains `Expresso.Overlay` only. The document ends with five decisions, and each
-  is settled.
+  code contains `Expresso.Overlay` and the entities of the DSL, and not the transformer,
+  the CSS or the presenter. The document ends with five decisions, and each is settled.
 - `docs/development.md` — how to get a toolchain, how to run the checks and how to look at
   a deck in a browser.
 - `docs/typescript.md` — the plan for the presenter script in TypeScript, and the record

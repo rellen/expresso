@@ -79,7 +79,7 @@ defmodule Expresso.Template do
   @spec render_elements(map()) :: Phoenix.HTML.safe()
   def render_elements(assigns) do
     temple do
-      for %module{} = element <- assigns.elements do
+      for %module{} = element <- assigns.elements, module != Expresso.Element.Pause do
         c(&do_render_element(module, &1), rest!: module.get_assigns(element))
       end
     end
