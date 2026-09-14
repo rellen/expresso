@@ -6,7 +6,7 @@ defmodule ExpressoTest do
   defmodule DslDeck do
     use Expresso
 
-    name("dsl deck")
+    name "dsl deck"
 
     slide do
       text_box do
@@ -28,10 +28,10 @@ defmodule ExpressoTest do
   defmodule NamedSlideDeck do
     use Expresso
 
-    name("named slide deck")
+    name "named slide deck"
 
     slide "intro" do
-      heading("An intro")
+      heading "An intro"
 
       text_box do
         text_area do

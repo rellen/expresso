@@ -34,10 +34,10 @@ With the DSL, declare a module:
 defmodule MyDeck do
   use Expresso
 
-  name("my deck")
+  name "my deck"
 
   slide do
-    heading("Hello")
+    heading "Hello"
 
     text_box do
       text_area do

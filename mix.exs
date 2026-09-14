@@ -61,6 +61,10 @@ defmodule Expresso.MixProject do
       # checks
       {:ex_check, "~> 0.16", only: :dev},
 
+      # the formatter of the DSL. `Spark.Formatter` and `mix spark.formatter`
+      # need it.
+      {:sourceror, "~> 1.0", only: [:dev, :test], runtime: false},
+
       # static analysis
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
       {:doctor, ">= 0.0.0", only: :dev, runtime: false},

@@ -40,8 +40,12 @@ A specification is an Elixir term. The `at` option accepts these forms:
 
 A list holds integers, ranges and `from:` items in any order. `[2, from: 5]` is a list
 with a keyword tail, and `mix format` keeps it. An author writes the option as a call
-inside the block of the element, `at(3)`, in the form of Spark. Spark does not accept an
-option as a keyword in front of the block, so `text_box at: 3 do` is not a form. Each step
+inside the block of the element, `at 3`, in the form of Spark. Spark does not accept an
+option as a keyword in front of the block, so `text_box at: 3 do` is not a form.
+
+A call of the DSL has no parentheses, and `.formatter.exs` lists each call so that
+`mix format` adds none. `pause()` is the one exception. Elixir reads a bare `pause` as a
+variable, and the compile stops with an error. Each step
 number is 1 or more, and a range
 goes up with a step of 1.
 
@@ -84,21 +88,21 @@ option.
 ```elixir
 slide "pipeline" do
   text_box do
-    at([from: :next])
-    on(:next, state: :alert)
+    at from: :next
+    on :next, state: :alert
 
     text_area do
-      text("This box appears at one step. It becomes prominent at the next step.")
+      text "This box appears at one step. It becomes prominent at the next step."
     end
   end
 
   pause()
 
   text_box do
-    at(3)
+    at 3
 
     text_area do
-      text("This box uses an absolute step number.")
+      text "This box uses an absolute step number."
     end
   end
 end
@@ -117,12 +121,12 @@ The `on` entity can change two things only:
 
 ```elixir
 text_box do
-  at([from: 2])
-  on(3, state: :alert)
-  on([from: 4], set: [x: "400px", dim: 0.3])
+  at from: 2
+  on 3, state: :alert
+  on [from: 4], set: [x: "400px", dim: 0.3]
 
   text_area do
-    text("...")
+    text "..."
   end
 end
 ```
@@ -195,18 +199,18 @@ Use two sibling elements with separate specifications. This construction is equi
 
 ```elixir
 text_box do
-  at(1)
+  at 1
 
   text_area do
-    text("before")
+    text "before"
   end
 end
 
 text_box do
-  at(2)
+  at 2
 
   text_area do
-    text("after")
+    text "after"
   end
 end
 ```

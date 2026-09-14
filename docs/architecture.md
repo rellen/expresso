@@ -29,7 +29,7 @@ A module declares a deck with the Spark DSL. The script returns the module.
 defmodule Expresso.Example do
   use Expresso
 
-  name("my presso")
+  name "my presso"
 
   slide do
     text_box do
@@ -50,7 +50,7 @@ of the slide, in the form of Spark:
 
 ```elixir
 slide "intro" do
-  heading("An intro")
+  heading "An intro"
 
   text_box do
     text_area do

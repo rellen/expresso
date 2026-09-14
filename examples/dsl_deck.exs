@@ -1,10 +1,10 @@
 defmodule DslDeck do
   use Expresso
 
-  name("dsl deck")
+  name "dsl deck"
 
   slide "intro" do
-    heading("An intro")
+    heading "An intro"
 
     text_box do
       text_area do
