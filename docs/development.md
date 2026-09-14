@@ -129,6 +129,12 @@ Node runs the test files with no build step. Node 22.22 and Node 24 read a `.ts`
 directly when the file uses only erasable syntax, and `erasableSyntaxOnly` in
 `tsconfig.json` makes the compiler refuse other syntax.
 
+A call of the DSL has no parentheses. `.formatter.exs` holds the list
+`spark_locals_without_parens`, and `mix format` then adds none. After a change to an
+entity or an option of the DSL, run `mix spark.formatter --extensions Expresso.Extension`
+to make the list again. The task needs the `sourceror` package, which is a development
+dependency. The formatter removes no parentheses, so write a new call without them.
+
 Sobelow gives a warning for `Phoenix.HTML.raw/1`. Put a `# sobelow_skip` comment above the
 function when the input is safe. `Expresso.main/2` and `Expresso.Renderer.render/1` show
 this pattern.

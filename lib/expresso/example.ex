@@ -5,7 +5,7 @@ defmodule Expresso.Example do
 
   use Expresso
 
-  name("my presso")
+  name "my presso"
 
   slide do
     text_box do

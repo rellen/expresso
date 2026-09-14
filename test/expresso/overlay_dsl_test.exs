@@ -7,35 +7,35 @@ defmodule Expresso.OverlayDslTest do
   defmodule OverlayDeck do
     use Expresso
 
-    name("overlay deck")
+    name "overlay deck"
 
     slide "pipeline" do
-      steps(5)
+      steps 5
 
       text_box do
-        at(from: :next)
-        on(:next, state: :alert)
+        at from: :next
+        on :next, state: :alert
 
         text_area do
-          text("appears, then becomes prominent")
+          text "appears, then becomes prominent"
         end
       end
 
       pause()
 
       text_box do
-        at(3)
-        on([from: 4], set: [x: "400px", dim: 0.3])
+        at 3
+        on [from: 4], set: [x: "400px", dim: 0.3]
 
         text_area do
-          at(2..4)
-          text("a text area with its own steps")
+          at 2..4
+          text "a text area with its own steps"
         end
       end
 
       text_box do
         text_area do
-          text("an element without a specification")
+          text "an element without a specification"
         end
       end
     end
@@ -108,10 +108,10 @@ defmodule Expresso.OverlayDslTest do
 
         slide do
           text_box do
-            at("2-4")
+            at "2-4"
 
             text_area do
-              text("x")
+              text "x"
             end
           end
         end
