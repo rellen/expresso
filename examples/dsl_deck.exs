@@ -31,7 +31,7 @@ defmodule DslDeck do
       on :next, state: :alert
 
       text_area do
-        text "This box appears at step 2, and it gets the alert state at step 3."
+        text "This box appears at step 2. It gets the alert state at step 3."
       end
     end
 
@@ -40,7 +40,7 @@ defmodule DslDeck do
       on [from: :next], set: [x: "-200px"]
 
       text_area do
-        text "This box appears at step 4, and it moves left at step 5."
+        text "It moves left at step 5."
       end
     end
   end
