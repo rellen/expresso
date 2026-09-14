@@ -443,7 +443,10 @@ The two views go into the same document. `assets/style.css` hides the handout vi
 two constructions show it:
 
 - A `@media print` block. It hides the present view and shows the handout view. A printer
-  gets one page for each step, and the block also makes the base font size smaller.
+  gets one page for each step. The block gives the page a landscape orientation and a
+  smaller base font size, and it gives each page the full height of the paper. Therefore
+  a page keeps the proportions of a slide, with the header at the top and the footer at
+  the bottom.
 - The attribute `data-view` on the `body`. The presenter writes `handout` into it for the
   key `p`. A screen reader then reads each step of each slide.
 

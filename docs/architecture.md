@@ -259,6 +259,10 @@ A printer gets the handout view, because a `@media print` block selects it. The 
 not necessary for a printer. It makes the handout view available on a screen, and a
 screen reader then reads each step of each slide.
 
+A page of the handout view takes the full height of the screen, or of the paper. The
+print block gives the paper a landscape orientation, because a slide is wider than it is
+high. Therefore each page keeps the proportions of a slide.
+
 ## The build
 
 The repository gives a Nix shell. `flake.nix` and `shell.nix` give Erlang 28, Elixir 1.20,
