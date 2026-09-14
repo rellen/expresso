@@ -20,4 +20,28 @@ defmodule DslDeck do
       end
     end
   end
+
+  slide "overlays" do
+    heading "Overlays"
+
+    pause()
+
+    text_box do
+      at from: :next
+      on :next, state: :alert
+
+      text_area do
+        text "This box appears at step 2, and it gets the alert state at step 3."
+      end
+    end
+
+    text_box do
+      at from: :next
+      on [from: :next], set: [x: "-200px"]
+
+      text_area do
+        text "This box appears at step 4, and it moves left at step 5."
+      end
+    end
+  end
 end

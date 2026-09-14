@@ -1,9 +1,8 @@
 # Overlay specifications
 
-This document gives a design for overlays. The code contains the specification, the DSL,
-the transformer, the verifier and the CSS contract of this design. It does not contain
-the step index of the presenter. The section "Progress" says which slices are done, and
-the section "Changes to the current code" lists the work that remains.
+This document gives the design for overlays. The code contains each part of this design
+except the handout view. The section "Progress" gives the date of each slice, and the
+section "Changes to the current code" says where each part is.
 
 An overlay is a step in a slide. Overlays give reveals, emphasis and movement inside one
 slide.
@@ -452,9 +451,9 @@ theme must also set `visibility: hidden` after the transition.
 
 ## Changes to the current code
 
-This section lists the work that this design makes necessary. Each item except the
-JavaScript code and the handout view is done, and the section "Progress" gives the date
-of each.
+This section lists the work that this design made necessary. Each item is done, and the
+section "Progress" gives the date of each. The handout view of the section
+"Accessibility" is the one open item.
 
 ### The extension
 
@@ -502,19 +501,22 @@ from the imperative API has no `max_step` in its metadata, and its maximum is 1.
 
 ### The JavaScript code
 
-The presenter is in `assets/src/`. `state.ts` holds the number of the current slide, and
-the first slide is slide 1. `dom.ts` shows and hides a slide with the inline
-`style.display` property. The state must also hold a step index for each slide, and each
-rule below gets a test in `assets/test/`.
+The presenter is in `assets/src/`. `state.ts` holds the number of the current slide and
+the number of the current step, and the first of each is 1. `dom.ts` shows and hides a
+slide with the inline `style.display` property, and it writes the step number into the
+`data-step` attribute of the current `section`. Each rule below has a test in
+`assets/test/state.test.ts`.
 
-The necessary changes are:
+The rules are:
 
-- Hold the current step index and the maximum step index of the current slide.
-- Move to the next step first. Move to the next slide only after the last step.
-- Move to the previous slide at the first step, and show the last step of that slide.
-- Read the maximum step index from the `data-max-step` attribute of the current `section`.
-- Write the step index into the `data-step` attribute of the current `section`.
-- Show all the steps of all the slides for the print key.
+- The limits hold the maximum step number of each slide. `dom.ts` reads each from the
+  `data-max-step` attribute of the `section`.
+- `j` moves to the next step first. It moves to the first step of the next slide only
+  after the last step.
+- `k` moves to the previous step first. At the first step, it moves to the last step of
+  the previous slide.
+- `p` shows each slide at its last step, for a printer. `dom.ts` writes the value of
+  `data-max-step` into `data-step` on each `section`.
 
 ### The imperative API
 
@@ -525,7 +527,9 @@ the DSL, or whether overlays need the DSL.
 
 ## The test plan
 
-The repository contains one test file with a doctest only. This design needs these tests:
+The code has each test below. The tests of `Expresso.Overlay` and of its four modules
+are in `test/expresso/overlay_*_test.exs`, and the tests of the presenter are in
+`assets/test/state.test.ts`.
 
 - Tests for `Expresso.Overlay`. Each row of the table in "The specification" is one test
   of `new/1`, and a different term gives an error. `resolve_next/2`, `max_step/1` and
@@ -555,7 +559,8 @@ The repository contains one test file with a doctest only. This design needs the
   on each `section` and on each element, the generated style block, and the base rules in
   `assets/style.css`. The presenter does not write `data-step` yet, so a browser shows
   step 1 of each slide.
-- Slice 5, not done: the step index in `assets/src/state.ts` and `dom.ts`.
+- Slice 5, done on 2026-09-14: the step number in `assets/src/state.ts` and `dom.ts`,
+  with a test for each rule, and a slide with overlays in `examples/dsl_deck.exs`.
 
 ## The decisions
 

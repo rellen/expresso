@@ -1,8 +1,8 @@
 // The entry of the presenter. esbuild bundles this file and its imports into
 // one script, and `Expresso.Renderer` writes that script into the document.
 //
-// The keys are `j` for the next slide, `k` for the previous slide, and `p` to
-// show each slide for a printer.
+// The keys are `j` for the next step or slide, `k` for the previous step or
+// slide, and `p` to show each slide at its last step for a printer.
 
 import { initial, next } from "./state.ts";
 import { apply, limits, showAll } from "./dom.ts";
