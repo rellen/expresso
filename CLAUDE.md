@@ -12,7 +12,7 @@ Read these documents before you change the code:
   elements, the DSL, the presenter and the build. Its section "Open work" gives the next
   items in the order of their value. Start there.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide. The
-  code does not contain this design yet. The document ends with four decisions, and each
+  code contains `Expresso.Overlay` only. The document ends with five decisions, and each
   is settled.
 - `docs/development.md` — how to get a toolchain, how to run the checks and how to look at
   a deck in a browser.
