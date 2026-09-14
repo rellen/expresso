@@ -213,6 +213,34 @@ defmodule Expresso.Overlay.RenderTest do
       assert Floki.attribute(box, "data-el") == []
     end
 
+    test "writes data-view present on the body", %{document: document} do
+      assert document |> Floki.find("body") |> Floki.attribute("data-view") == ["present"]
+    end
+
+    test "writes one handout page for each step of each slide, in order", %{document: document} do
+      pages = Floki.find(document, ".handout .handout-page")
+
+      assert pages
+             |> Enum.map(fn page ->
+               {Floki.attribute([page], "data-slide"), Floki.attribute([page], "data-step")}
+             end) == [{["1"], ["1"]}, {["1"], ["2"]}, {["1"], ["3"]}, {["2"], ["1"]}]
+    end
+
+    test "gives a handout page no identifier and not the class of a slide", %{document: document} do
+      pages = Floki.find(document, ".handout-page")
+
+      assert Floki.attribute(pages, "id") == []
+      assert Floki.find(document, "section.slide") |> length() == 2
+    end
+
+    test "writes the same elements in a handout page", %{document: document} do
+      [page | _] = Floki.find(document, ".handout .handout-page")
+      boxes = Floki.find([page], ".text-box")
+
+      assert Floki.attribute(boxes, "data-on") == ["1 2 3", "2 3"]
+      assert Floki.attribute(boxes, "data-el") == ["s1-e1", "s1-e3"]
+    end
+
     test "writes the generated rules into a third style element", %{document: document} do
       [_fonts, _theme, generated] =
         document |> Floki.find("head style") |> Enum.map(&Floki.text/1)

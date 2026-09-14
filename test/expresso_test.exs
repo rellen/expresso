@@ -154,7 +154,7 @@ defmodule ExpressoTest do
         |> Expresso.parse()
         |> Expresso.Deck.render()
         |> Floki.parse_document!()
-        |> Floki.find(".slide-heading-container h1")
+        |> Floki.find(".screen .slide-heading-container h1")
         |> Floki.text()
 
       assert String.trim(heading) == "An intro"
@@ -290,7 +290,7 @@ defmodule ExpressoTest do
         |> Expresso.Deck.render()
         |> Floki.parse_document!()
 
-      heading = document |> Floki.find(".slide-heading-container h1") |> Floki.text()
+      heading = document |> Floki.find(".screen .slide-heading-container h1") |> Floki.text()
 
       assert String.trim(heading) == "A heading"
     end

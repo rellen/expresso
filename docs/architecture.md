@@ -131,15 +131,23 @@ html
     style            assets/fonts.css
     style            assets/style.css
     style            the generated rules of the overlays, from Expresso.Overlay.Render
-    body
-      div            one flex container for all the slides
+    body           data-view "present"
+      div            the present view, class "screen"
         section      one for each slide, class "slide", id "slide-<number>",
                      data-step "1", data-max-step from the slide
           div        the header, from the deck template
           div        the body, from the slide template
           div        the footer, from the deck template
+      div            the handout view, class "handout"
+        section      one for each step of each slide, class "handout-page",
+                     data-step from the step, data-slide from the slide
+          div        the same three parts as a slide of the present view
       script         priv/static/presenter.js, the presenter bundle
 ```
+
+The two views hold the same slides. Therefore a selector on the full document finds each
+element two times. A test that counts an element, or that reads its text, must select
+inside `.screen` or inside `.handout`.
 
 The renderer holds the two style sheets and the presenter bundle in module attributes.
 It reads them with `File.read!/1` at compile time. Each style sheet, and each source of the
@@ -147,18 +155,20 @@ bundle under `assets/src/`, is an `@external_resource` of the module. Therefore 
 one of these files starts a new compile of `Expresso.Renderer`. Elixir compares the content
 of an external resource, and not its time, so a `touch` does not start a compile.
 
-The renderer writes an inline `style` attribute on each `section`. The first slide gets
-`display: flex`, and each other slide gets `display: none`.
+The renderer writes an inline `style` attribute on each `section` of the present view.
+The first slide gets `display: flex`, and each other slide gets `display: none`. A
+`section` of the handout view has no inline style, because the presenter does not touch
+it. `assets/style.css` gives the style of each view.
 
 Before the tree, the renderer calls `Expresso.Overlay.Render.identify/1` on the deck. It
 gives each element with an `on` entity its `data-el` value. `docs/overlays.md` gives the
 CSS contract of the overlays: the attributes, the base rules in `assets/style.css` and
 the generated style block.
 
-The container `div` gets `height: 100vh`, and each `section` gets `height: 100%`. The
-viewport unit is necessary because the `body` gets `min-height`, and a percentage height
-cannot resolve against a minimum height. With `height: 100%` on the container, each slide
-takes the height of its content only.
+The class `.screen` gives the container `height: 100vh`, and each `section` gets
+`height: 100%`. The viewport unit is necessary because the `body` gets `min-height`, and
+a percentage height cannot resolve against a minimum height. With `height: 100%` on the
+container, each slide takes the height of its content only.
 
 ## The templates
 
@@ -243,7 +253,11 @@ The keys are:
 
 - `j` shows the next step, or the first step of the next slide after the last step.
 - `k` shows the previous step, or the last step of the previous slide at the first step.
-- `p` shows all the slides at their last step, for a printer.
+- `p` changes between the present view and the handout view.
+
+A printer gets the handout view, because a `@media print` block selects it. The key is
+not necessary for a printer. It makes the handout view available on a screen, and a
+screen reader then reads each step of each slide.
 
 ## The build
 
@@ -267,21 +281,16 @@ The commands are:
 
 This list gives the work in the order of its value. Take the first item that you can do.
 
-### 1. Write the handout view of the overlays
+### 1. Smaller items of the overlays
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
-it except the handout view. The section "Accessibility" of that document gives the
-proposal: a second render, with one page for each step of each slide, and a
-`@media print` block that selects it. The print key of the presenter shows the last step
-of each slide today, and this is the smaller first version that the section names.
+it. These two items are in that document, and the code does not have them:
+
+- An `auto_reveal` option of the `slide` entity. It gives an implicit `at: [from: :next]`
+  to each element without an `at` option.
+- A warning from the verifier for a key of `set` that no theme registers.
 
 ### 2. Smaller items
-
-- `docs/overlays.md` names an `auto_reveal` option of the `slide` entity, which gives an
-  implicit `at: [from: :next]` to each element without an `at` option. The code does not
-  have it.
-- `docs/overlays.md` says that a verifier can give a warning for a key of `set` that no
-  theme registers. The code does not have it.
 
 - The repository has no continuous integration. No check runs on a pull request. Each
   result in this repository comes from a command that a person or a session ran.
