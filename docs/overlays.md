@@ -24,36 +24,30 @@ in this document is a result of this limit.
 An overlay specification tells the compiler which steps show an element. Put the
 specification in the `at` option of an element.
 
-### The sigil
+### The specification
 
-The `~o` sigil accepts a specification in the style of Beamer. The extension imports the
-sigil with the `imports` option of `Spark.Dsl.Extension`.
+A specification is an Elixir term. The `at` option accepts these forms:
 
-| Specification | Meaning |
+| Term | Meaning |
 | --- | --- |
-| `~o"3"` | Step 3 only. |
-| `~o"2-4"` | Step 2 to step 4. |
-| `~o"2-"` | Step 2 and each step after step 2. |
-| `~o"-3"` | Each step to step 3. |
-| `~o"2,5-"` | Step 2, and step 5 and each step after step 5. |
-| `~o"+"` | The current value of the slide counter. |
-| `~o"+-"` | The current value of the slide counter, and each step after it. |
+| `3` | Step 3 only. |
+| `2..4` | Step 2 to step 4. |
+| `[2, 5..7]` | Step 2, and step 5 to step 7. |
+| `[from: 2]` | Step 2 and each step after step 2. |
+| `:next` | The current value of the slide counter. |
+| `[from: :next]` | The current value of the slide counter, and each step after it. |
+| `[2, from: 5]` | Step 2, and step 5 and each step after step 5. |
 
-The sigil cannot give a list of step numbers. Two of the forms need data that only the
-transformer holds. A `+` needs the counter of the slide. An open range needs the maximum
-step number of the slide. Therefore the sigil returns an `Expresso.Overlay` struct. The
-struct holds the parts of the specification. The transformer expands the struct later.
+A list holds integers, ranges and `from:` items in any order. `[2, from: 5]` is a list
+with a keyword tail, and `mix format` keeps it. Each step number is 1 or more, and a range
+goes up with a step of 1.
 
-### Plain terms
-
-The `at` option also accepts plain Elixir terms. The sigil is not necessary for a simple
-specification.
-
-| Term | Equivalent sigil |
-| --- | --- |
-| `3` | `~o"3"` |
-| `2..4` | `~o"2-4"` |
-| `[2, 5]` | `~o"2,5"` |
+Two forms need data that a term cannot hold. A `from:` item needs the maximum step number
+of the slide, and `:next` needs the counter of the slide. Therefore
+`Expresso.Overlay.validate/1` puts each form into an `Expresso.Overlay` struct, and the
+transformer resolves the struct later. The struct holds one pair for each item, the first
+step and the last step. In a pair, `:next` stands for the counter and `:max` stands for
+the maximum step number.
 
 ### The slide counter
 
@@ -79,14 +73,15 @@ element must contain a `+` to read the new value of the counter. This behavior i
 from `\pause` in Beamer, which reveals the content after it.
 
 The proposal is to keep this explicit rule. An author who wants the behavior of Beamer
-writes `at: ~o"+-"` on each element. A later version can add an `auto_reveal` option to the
-`slide` entity. This option gives an implicit `at: ~o"+-"` to each element without an `at`
+writes `at: [from: :next]` on each element. A later version can add an `auto_reveal`
+option to the `slide` entity. It gives an implicit `at: [from: :next]` to each element
+without an `at`
 option.
 
 ```elixir
 slide "pipeline" do
-  text_box at: ~o"+-" do
-    on ~o"+", state: :alert
+  text_box at: [from: :next] do
+    on :next, state: :alert
 
     text_area do
       text "This box appears at one step. It becomes prominent at the next step."
@@ -115,9 +110,9 @@ The `on` entity can change two things only:
 - `set` writes custom properties. The compiler maps the key `x` to the property `--x`.
 
 ```elixir
-text_box at: ~o"2-" do
-  on ~o"3", state: :alert
-  on ~o"4-", set: [x: "400px", dim: 0.3]
+text_box at: [from: 2] do
+  on 3, state: :alert
+  on [from: 4], set: [x: "400px", dim: 0.3]
 
   text_area do
     text "..."
@@ -192,13 +187,13 @@ Use two sibling elements with separate specifications. This construction is equi
 `\only<1>{}` and `\only<2>{}` in Beamer.
 
 ```elixir
-text_box at: ~o"1" do
+text_box at: 1 do
   text_area do
     text "before"
   end
 end
 
-text_box at: ~o"2" do
+text_box at: 2 do
   text_area do
     text "after"
   end
@@ -231,7 +226,7 @@ The transformer runs one time for each slide. It does these operations:
 5. Write the maximum step number into `slide.metadata`.
 6. Remove each `pause` entity from the elements of the slide.
 
-An open specification, such as `~o"2-"`, needs the maximum step number of the slide.
+An open specification, such as `[from: 2]`, needs the maximum step number of the slide.
 Therefore the transformer expands the open specifications after step 4 finds that number.
 
 Step 6 is necessary because the renderer renders each element of a slide. A `pause`
@@ -257,7 +252,9 @@ absolute step number always raises the maximum, and the condition is unreachable
 ### The type
 
 Use `{:custom, Expresso.Overlay, :validate, []}` for the type of the `at` option. This
-type accepts the sigil and the plain terms. It also gives control of the error message.
+type accepts each form of the table, and it puts the form into the struct. Spark reports
+an error for a different term, with the name of the entity and the option, and the
+message lists the accepted forms.
 
 Put the `at` option into one shared schema. Merge that schema into the schema of each
 element entity.
@@ -404,9 +401,9 @@ lists the work.
 
 ### The extension
 
-`Expresso.Extension` has an empty `imports` option and an empty `transformers` option. The
-extension must import the sigil module. It must also list the overlay transformer and the
-overlay verifier.
+`Expresso.Extension` has an empty `transformers` option, and it has no verifiers. The
+extension must list the overlay transformer and the overlay verifier. It imports nothing,
+because a specification is a term.
 
 The extension must contain a `pause` entity and an `on` entity. The `pause` entity needs a
 struct target, because Spark builds a struct for each entity.
@@ -477,8 +474,9 @@ the DSL, or whether overlays need the DSL.
 
 The repository contains one test file with a doctest only. This design needs these tests:
 
-- Parser tests for `Expresso.Overlay.validate/1`. Each row of the two tables in the section
-  "Syntax" is one test. A malformed specification gives an error.
+- Tests for `Expresso.Overlay`. Each row of the table in "The specification" is one test
+  of `validate/1`, and a different term gives an error. `resolve_next/2`, `max_step/1` and
+  `steps/2` get a test for each rule of the counter and of an open range.
 - Transformer tests. A slide with a `pause` and a `+` gives the correct step number for each
   element. An open range expands to the maximum step number of the slide. The transformer
   removes each `pause` entity.
@@ -487,6 +485,16 @@ The repository contains one test file with a doctest only. This design needs the
   the value of `data-step`, `data-max-step`, `data-on` and `data-el`.
 - A CSS test. A test asserts that the generated style block contains one rule for each step
   number of the deck.
+
+## Progress
+
+- Slice 1, done on 2026-09-14: `Expresso.Overlay`, with `validate/1`, `resolve_next/2`,
+  `max_step/1` and `steps/2`, and its tests. No entity accepts the `at` option yet.
+- Slice 2, not done: the `at` option on each element, and the `on`, `pause` and `steps`
+  entities.
+- Slice 3, not done: the transformer and the verifier.
+- Slice 4, not done: the CSS contract in the renderer.
+- Slice 5, not done: the step index in `assets/src/state.ts` and `dom.ts`.
 
 ## The decisions
 
@@ -504,7 +512,7 @@ sequence of steps.
 
 The first version permits a `pause` at the slide level only, and the verifier gives an
 error for a `pause` inside a container element. The reason is the rule for nested
-elements. A container at `~o"5-"` with a `pause` at counter 2 gives its later children
+elements. A container at `[from: 5]` with a `pause` at counter 2 gives its later children
 step 3. The verifier then rejects the children, because a child cannot show on a step
 that its parent does not contain. The author wrote nothing wrong and gets an error. A
 later version can permit a `pause` in a container. Such a version needs a rule, for
@@ -518,8 +526,8 @@ of the element. Such an `on` entity makes CSS rules that no step applies, and in
 it is a slip after a change to the step numbers. The verifier already reads each step
 range, and this condition is one more in the same list.
 
-One use exists for a state outside the `at` option. An element at `~o"2-4"` with
-`on ~o"5", state: :slide_out` could leave in a different way from the default of the
+One use exists for a state outside the `at` option. An element at `2..4` with
+`on 5, state: :slide_out` could leave in a different way from the default of the
 theme. This use is rare, and a permissive rule lets the slip pass in silence. If a later
 version needs this, add an explicit `leave` option. Do not loosen this rule.
 
@@ -554,6 +562,22 @@ gives its cost. The change to `data-step` and the change to the class list must 
 synchronous function. The initial state must be in the HTML, or the page shows a flash
 before the script runs.
 
+### Is the specification a term or a text format? (decided)
+
+The maintainer decided this on 2026-09-14. A specification is an Elixir term, and not a
+text format. An earlier version of this design gave a `~o` sigil with a grammar in the
+style of Beamer, such as `~o"2,5-"`. The extension imported the sigil.
+
+Each form of that grammar has a term. `2..4` is a closed range, `[from: 2]` is an open
+range, `:next` is the counter, and a list is a union. Only two forms have no literal, the
+open range and the counter, and a keyword and an atom give them.
+
+A term removes the parser, the sigil macro and the `imports` option of the extension.
+Spark validates the option at compile time, and its error names the entity and the
+option. A term also works in the imperative API, where no import exists. The cost is
+length. `[2, from: 5]` is longer than `"2,5-"`, and an author from Beamer learns a new
+form.
+
 ### Does the deck declare the maximum step number? (decided)
 
 Each slide calculates its own maximum step number. The maximum step number of the deck is
@@ -561,7 +585,8 @@ the largest maximum step number of its slides. The renderer uses the deck maximu
 number of generated CSS rules. This is the behavior of Beamer, which counts the
 overlays of each frame from its content.
 
-A maximum for the deck would make `~o"2-"` run to the largest step of the deck. Each slide
+A maximum for the deck would make `[from: 2]` run to the largest step of the deck. Each
+slide
 with fewer steps then gets empty steps, and the presenter gets a key press that does
 nothing on each such slide. The presenter also needs the maximum of each slide, and
 `data-max-step` on each `section` gives it. A number for the deck adds nothing that the

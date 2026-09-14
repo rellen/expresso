@@ -252,7 +252,8 @@ This list gives the work in the order of its value. Take the first item that you
 
 ### 1. Write the code for overlays
 
-`docs/overlays.md` gives the design, and each of its four decisions is settled. The section
+`docs/overlays.md` gives the design, and each of its five decisions is settled. Its
+section "Progress" says which slices are done. The section
 "Changes to the current code" lists each change, and the section "The test plan" lists
 each test. The rules of the presenter go into `assets/src/state.ts` with a test for each
 rule. This work is the largest item in this list.
