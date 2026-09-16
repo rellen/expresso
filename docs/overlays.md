@@ -499,8 +499,12 @@ step numbers into the `steps` field, and `Expresso.Overlay.Render.identify/1` wr
 of `Expresso.Overlay.Render.attributes/1` under the key `overlay`, and `render/1` puts
 the list on the root tag with `rest!: @overlay`. A custom element must do the same.
 
-The attributes go on the root tag of the element. A wrapper element breaks the layout,
-because `.text-box` and `.text-area` are flex children.
+The attributes go on the root tag of the element. An element around the root tag breaks
+the layout, because `.text-box` and `.text-area` are flex children.
+
+A block element inside the root tag is different, and a text area needs one. The theme
+makes `.text-area` a flex container. Therefore the render function puts the text in one
+block element. `docs/architecture.md` gives the rule in the section "The elements".
 
 ### The renderer
 

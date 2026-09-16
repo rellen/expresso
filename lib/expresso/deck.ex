@@ -54,8 +54,13 @@ defmodule Expresso.Deck do
   Render a deck to HTML
 
   The HTML starts with the doctype of HTML 5. Floki drops a doctype node when it
-  parses a document, so this function puts the doctype in front of the formatted
-  tree. Without the doctype a browser uses the quirks mode.
+  parses a document, so this function puts the doctype in front of the tree.
+  Without the doctype a browser uses the quirks mode.
+
+  Floki writes the tree with no indentation. The pretty printer of Floki puts a
+  line break between two elements, and it does not know an inline element.
+  A line break becomes a space, and the text of a deck then gets a space in
+  front of each inline element and after it.
   """
   @spec render(t()) :: String.t()
   def render(deck) do
@@ -65,7 +70,7 @@ defmodule Expresso.Deck do
       Expresso.Renderer.render(deck: deck)
       |> Phoenix.HTML.safe_to_string()
       |> Floki.parse_document!()
-      |> Floki.raw_html(pretty: true)
+      |> Floki.raw_html()
 
     "<!DOCTYPE html>\n" <> body
   end

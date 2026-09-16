@@ -102,7 +102,7 @@ an error tuple, and `Expresso.main/2` writes the message.
    from `mix compile`, before any of these steps.
 2. `Expresso.Renderer.render/1` makes an HTML tree with Temple.
 3. `Phoenix.HTML.safe_to_string/1` makes a string.
-4. `Floki.parse_document!/1` and `Floki.raw_html(pretty: true)` format the string.
+4. `Floki.parse_document!/1` and `Floki.raw_html/1` normalize the string.
 5. The function puts `<!DOCTYPE html>` and a newline in front of the string.
 
 The wildcard of step 1 is relative to the working directory of the command. This
@@ -209,7 +209,8 @@ An element module has these parts:
 - A `get_assigns/1` function. It makes a map of assigns from the struct. The key `overlay`
   holds the attributes from `Expresso.Overlay.Render.attributes/1`.
 - A `render/1` function. It makes the HTML from the assigns, and it puts the `overlay`
-  list on the root tag with `rest!: @overlay`.
+  list on the root tag with `rest!: @overlay`. An element that writes text from the deck
+  puts that text in one block element inside the root tag.
 
 `Expresso.Template.render_elements/1` matches `%module{}` for each element. It then calls
 `module.get_assigns/1` and `module.render/1`. There is no `@behaviour` for an element, and
@@ -217,6 +218,12 @@ the compiler does not make sure that a module has the two functions.
 
 A `text_box` contains other elements. A `text_area` contains text. The renderer writes the
 text with `Phoenix.HTML.raw/1`, so the text can contain HTML.
+
+The theme makes `.text-area` a flex container. Each element inside a flex container is a
+flex item, and a flex item also holds each run of text between two elements. Therefore
+text with an inline element, such as `<b>`, breaks into more than one line. The render
+function of a text area puts the text in one block element, which is one flex item. A
+custom element that writes text from the deck must do the same.
 
 ## The DSL
 
