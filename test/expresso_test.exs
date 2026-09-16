@@ -25,6 +25,20 @@ defmodule ExpressoTest do
     end
   end
 
+  defmodule MarkupDeck do
+    use Expresso
+
+    name "markup deck"
+
+    slide do
+      text_box do
+        text_area do
+          text "Text accepts <b>raw HTML</b>."
+        end
+      end
+    end
+  end
+
   defmodule NamedSlideDeck do
     use Expresso
 
@@ -142,6 +156,17 @@ defmodule ExpressoTest do
 
       assert text =~ "first slide"
       assert text =~ "second slide"
+    end
+
+    test "puts the text of a text area in one block element" do
+      document =
+        MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+
+      [area] = Floki.find(document, ".screen .text-area")
+      children = area |> Floki.children() |> Enum.filter(&is_tuple/1)
+
+      assert [{"div", [], _}] = children
+      assert children |> Floki.find("b") |> Floki.text() == "raw HTML"
     end
 
     test "writes no heading for a slide without the heading option", %{document: document} do

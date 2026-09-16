@@ -32,12 +32,19 @@ defmodule Expresso.Element.TextArea do
 
   @doc """
   Make the HTML of a text area
+
+  The text goes into one block element inside the root tag. The theme makes
+  the root tag a flex container. Each element of the text is then a flex item,
+  and the text breaks into more than one line. One block element keeps the
+  text in one flex item, and each inline element of the text stays on one line.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
   def render(assigns) do
     temple do
       div class: "text-area", rest!: @overlay do
-        Phoenix.HTML.raw(@text)
+        div do
+          Phoenix.HTML.raw(@text)
+        end
       end
     end
   end
