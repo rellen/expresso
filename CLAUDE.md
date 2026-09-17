@@ -62,7 +62,7 @@ open a pull request. The maintainer merges it.
 
 `.github/workflows/check.yml` runs `mix check` and the two npm commands for a pull
 request. Do not wait for that result. The container has different versions of the
-toolchain, so run the commands in "Build and test" before each commit, and tell the
+toolchain. Therefore run the commands in "Build and test" before each commit. Tell the
 maintainer in the pull request which commands you ran.
 
 The workflow runs two times. The job for Erlang/OTP 25 and Elixir 1.18 must pass. The job

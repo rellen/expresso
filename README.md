@@ -8,9 +8,11 @@ a small script. You give the document to a browser, and you present from the bro
 ## Status
 
 Expresso is at an early stage. It has three elements, `text_box`, `text_area` and `image`,
-and one built-in theme. Overlays, which are the steps inside one slide, are complete: a
-slide takes steps, an element shows at a set of steps, and the document holds a handout
-view for a printer. See `docs/overlays.md`.
+and one built-in theme.
+
+Overlays are the steps inside one slide, and the code contains each part of their design.
+A slide takes steps, and an element shows at a set of steps. The document also holds a
+handout view for a printer. See `docs/overlays.md`.
 
 ## Install
 
