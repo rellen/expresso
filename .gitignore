@@ -19,3 +19,6 @@ node_modules/
 
 # the presenter bundle, which mix compile makes
 /priv/static/
+
+# the directory that ExUnit makes for a test with the tmp_dir tag
+/tmp/
