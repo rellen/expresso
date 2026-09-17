@@ -99,6 +99,55 @@ defmodule Expresso.Overlay.ExpandTest do
     end
   end
 
+  describe "the auto_reveal option" do
+    defp auto(elements), do: expand(elements, auto_reveal: true)
+
+    test "gives an implicit specification to each element of the slide" do
+      slide = auto([%TextBox{}, %TextBox{}, %TextBox{}])
+
+      assert Enum.map(slide.elements, & &1.steps) == [[1, 2, 3], [2, 3], [3]]
+      assert slide.metadata.max_step == 3
+    end
+
+    test "changes no nested element" do
+      [box] = auto([%TextBox{elements: [%TextArea{}, %TextArea{}]}]).elements
+
+      assert box.steps == [1]
+      assert Enum.map(box.elements, & &1.steps) == [nil, nil]
+    end
+
+    test "keeps the specification of an element that has one" do
+      slide = auto([%TextBox{at: spec(3)}, %TextBox{}])
+
+      assert Enum.map(slide.elements, & &1.steps) == [[3], [1, 2, 3]]
+    end
+
+    test "reads the at option before the on entity of the same element" do
+      [box] = auto([%TextBox{on: [%On{at: spec(:next)}]}]).elements
+
+      assert box.steps == [1, 2]
+      assert Enum.map(box.on, & &1.steps) == [[2]]
+    end
+
+    test "gives a pause one step, and the pause reveals no element" do
+      slide = auto([%TextBox{}, %Pause{}, %TextBox{}])
+
+      assert Enum.map(slide.elements, & &1.steps) == [[1, 2, 3], [3]]
+      assert slide.metadata.max_step == 3
+    end
+
+    test "does nothing when the option is false or nil" do
+      assert [%TextBox{steps: nil}] = expand([%TextBox{}], auto_reveal: false).elements
+      assert [%TextBox{steps: nil}] = expand([%TextBox{}]).elements
+    end
+
+    test "leaves a pause of the slide in the counter only" do
+      slide = auto([%Pause{}, %TextBox{}])
+
+      assert Enum.map(slide.elements, & &1.steps) == [[2]]
+    end
+  end
+
   describe "the result" do
     test "removes each pause at the level of the slide" do
       slide = expand([%Pause{}, %TextBox{}, %Pause{}])

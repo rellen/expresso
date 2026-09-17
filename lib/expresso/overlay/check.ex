@@ -19,9 +19,8 @@ defmodule Expresso.Overlay.Check do
 
   - A `pause` entity is inside an element.
   - A step number is less than 1.
-  - An `on` entity has a step that the `at` option of its element does not
-    have.
-  - A child element has a step that its parent does not have.
+  - An `on` entity has a step at which its element does not show.
+  - A child element has a step at which its parent does not show.
 
   An element without an `at` option shows at each step of its parent, and the
   function accepts each step for it. The transformer reports a step that is
@@ -85,9 +84,7 @@ defmodule Expresso.Overlay.Check do
   defp check_inside(steps, parent, name) do
     with parent_steps when is_list(parent_steps) <- Map.get(parent, :steps),
          step when is_integer(step) <- Enum.find(steps, &(&1 not in parent_steps)) do
-      {:error,
-       "#{name} has the step #{step}, and the at option of the #{name(parent)} " <>
-         "does not have it"}
+      {:error, "#{name} has the step #{step}, and the #{name(parent)} does not show at that step"}
     else
       nil -> :ok
     end

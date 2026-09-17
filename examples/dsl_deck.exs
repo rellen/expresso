@@ -44,4 +44,27 @@ defmodule DslDeck do
       end
     end
   end
+
+  slide "auto reveal" do
+    heading "Auto reveal"
+    auto_reveal true
+
+    text_box do
+      text_area do
+        text "This box shows at step 1."
+      end
+    end
+
+    text_box do
+      text_area do
+        text "This box shows at step 2."
+      end
+    end
+
+    text_box do
+      text_area do
+        text "This box shows at step 3."
+      end
+    end
+  end
 end
