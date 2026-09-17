@@ -177,7 +177,7 @@ The `on` entity can change two things only:
 text_box do
   at from: 2
   on 3, state: :alert
-  on [from: 4], set: [x: "400px", dim: 0.3]
+  on [from: 4], set: [x: "400px", y: "100px"]
 
   text_area do
     text "..."
@@ -243,8 +243,10 @@ values between two different elements. The templates must also read the step ind
 this makes each template more complex.
 
 The values stay open, but the mechanism stays closed. The DSL does not contain a list of
-permitted keys for `set`. The theme owns the custom properties. A verifier can give a
-warning for a key that no theme registers.
+permitted keys for `set`. The theme owns the custom properties, and
+`Expresso.Overlay.PropertyVerifier` gives a warning for a key that the theme does not use.
+`assets/style.css` is the one theme of this project, and a deck from the DSL cannot
+replace it.
 
 ### Content that changes
 
@@ -347,6 +349,57 @@ error from that callback as a compile warning, and `mix compile --warnings-as-er
 then fails. A test collects the error with `Spark.Test.dsl_errors/1`. An error from a
 transformer is different. Spark raises it at compile time, and `assert_raise/2` catches it.
 
+### The warnings of the properties
+
+The verifier of the steps gives an error only. `Expresso.Overlay.PropertyVerifier` is a
+second verifier, and it gives a warning for three conditions of a custom property:
+
+- The `state` option, or a key of the `set` option, names a property that the theme does
+  not use. The renderer writes the property, and no rule of the theme reads it. Therefore
+  the value has no effect. This condition catches a key with a spelling mistake, and it
+  catches a key that no theme reads.
+- The `state` option names a property that the theme gives a value of a type that is not
+  a number. The state `dur` is an example, because the theme gives `--dur` the value
+  `300ms`. Each transition of the deck then takes no time.
+- The `state` option names a property that the theme registers with a different syntax
+  than a number. The state `x` is an example, because the theme registers `--x` as a
+  length.
+
+The compiler registers each state as a number with the initial value 0. A registration
+replaces the registration of the theme, and it makes a value of a different type invalid.
+The theme then loses the property. A value that is a number, such as `--alert: 0`, stays
+valid, and it gets no warning.
+
+`Expresso.Theme` reads `assets/style.css` at compile time, and it gives the names of the
+theme. A name after two hyphens is a name that the theme uses. CSS holds a custom property
+name in that one form, in an `@property` rule, in a declaration and in a `var()` function.
+Therefore a property that the theme reads with a fallback, such as `var(--alert, 0)`, is a
+name that the theme uses.
+
+The test is the name, and not the `@property` rule. The theme uses `--dur` and `--ease`
+and registers neither. A test on the `@property` rule alone gives a warning for a correct
+deck.
+
+`Expresso.Overlay.Properties.slide/1` makes the messages for one slide, and it is a pure
+function. Each message holds the path of the slide, and Spark gives it the line of the
+`on` entity.
+
+A warning is not an error. The deck compiles, and the renderer writes the property. Elixir
+reports the warning of a verifier as a compile warning. Therefore
+`mix compile --warnings-as-errors` fails for a deck module in `lib/` with such a property.
+Spark gives the same result for an error of a verifier, so a different severity gives no
+more leniency. Only a transformer can stop a compile.
+
+A false warning is rare, and it is not a fault. The renderer always writes
+`assets/style.css`, and a deck from the DSL cannot select a template. The text of a text
+area goes into the document as raw HTML, so a deck can write a `style` element in that
+text. `Expresso.Theme` does not read the text of a deck, and a property of such a style
+element then gets a warning. The deck still compiles, and a script that `mix expresso`
+reads is correct. A deck module inside a project that runs
+`mix compile --warnings-as-errors` fails, and that project must move the CSS into the
+theme. A later version that gives a deck its own theme must also give the verifier the
+names of that theme.
+
 ### The type
 
 Use `{:custom, Expresso.Overlay, :new, []}` for the type of the `at` option. This
@@ -446,8 +499,9 @@ error for this condition.
 
 The browser holds an unregistered custom property as a text value. The browser cannot
 calculate intermediate values for a text value, and the transition is abrupt. Therefore
-the theme must register each custom property with the `@property` at-rule and a `syntax`
-descriptor.
+the theme must register each custom property that it animates, with the `@property`
+at-rule and a `syntax` descriptor. A property that the theme reads with no transition,
+such as `--dur`, needs no registration. See "The warnings of the properties".
 
 ```css
 @property --x {
@@ -641,6 +695,9 @@ are in `test/expresso/overlay_*_test.exs`, and the tests of the presenter are in
 - Slice 6, done on 2026-09-14: the handout view. The renderer writes one page for each
   step of each slide, a `@media print` block selects that view, and the key `p` changes
   between the two views.
+- The property warnings, done on 2026-09-17. `Expresso.Theme` reads the names of the
+  theme, `Expresso.Overlay.Properties` makes the messages for one slide, and
+  `Expresso.Overlay.PropertyVerifier` gives them to the compiler.
 - The `auto_reveal` option, done on 2026-09-17. `Expresso.Overlay.Expand.slide/1` gives the
   implicit specification to each element at the level of the slide. The rule of this
   document changed at the same time, from each element to each element of the slide.

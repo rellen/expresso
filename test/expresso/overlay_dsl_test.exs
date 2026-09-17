@@ -1,7 +1,7 @@
 defmodule Expresso.OverlayDslTest do
   use ExUnit.Case, async: true
 
-  import Spark.Test, only: [dsl_errors: 1]
+  import Spark.Test, only: [dsl_errors: 1, dsl_warnings: 1, refute_dsl_warnings: 1]
 
   alias Expresso.Element.{On, TextArea, TextBox}
   alias Expresso.Overlay
@@ -27,7 +27,7 @@ defmodule Expresso.OverlayDslTest do
 
       text_box do
         at 2..5
-        on [from: 4], set: [x: "400px", dim: 0.3]
+        on [from: 4], set: [x: "400px", y: "100px"]
 
         text_area do
           at 2..4
@@ -86,7 +86,7 @@ defmodule Expresso.OverlayDslTest do
     test "holds a specification and custom properties", %{slide: slide} do
       [_, %TextBox{on: [on]}, _] = slide.elements
 
-      assert %On{at: %Overlay{pairs: [{4, :max}]}, state: nil, set: [x: "400px", dim: 0.3]} =
+      assert %On{at: %Overlay{pairs: [{4, :max}]}, state: nil, set: [x: "400px", y: "100px"]} =
                on
     end
 
@@ -277,6 +277,82 @@ defmodule Expresso.OverlayDslTest do
 
       assert Exception.message(error) =~
                "the text_area has the step 1, and the text_box does not show at that step"
+    end
+  end
+
+  describe "the property verifier" do
+    test "gives a warning for a set key that the theme does not use" do
+      warnings =
+        dsl_warnings do
+          defmodule Elixir.Expresso.OverlayDslTest.UnusedKey do
+            use Expresso
+
+            slide "unused" do
+              text_box do
+                at 1
+                on 1, set: [x: "400px", dim: 0.3]
+              end
+            end
+          end
+        end
+
+      assert [{Expresso.OverlayDslTest.UnusedKey, [{message, _location}]}] = warnings
+      assert message =~ "deck -> slide -> unused"
+      assert message =~ "the set key `dim` writes the custom property `--dim`"
+    end
+
+    test "gives a warning for a state that the theme does not use" do
+      warnings =
+        dsl_warnings do
+          defmodule Elixir.Expresso.OverlayDslTest.UnusedState do
+            use Expresso
+
+            slide "glow" do
+              text_box do
+                at 1
+                on 1, state: :glow
+              end
+            end
+          end
+        end
+
+      assert [{Expresso.OverlayDslTest.UnusedState, [{message, _location}]}] = warnings
+      assert message =~ "the state `glow` writes the custom property `--glow`"
+    end
+
+    test "gives a warning for a state that the theme registers with a different syntax" do
+      warnings =
+        dsl_warnings do
+          defmodule Elixir.Expresso.OverlayDslTest.StateCollision do
+            use Expresso
+
+            slide "collision" do
+              text_box do
+                at 1
+                on 1, state: :x
+              end
+            end
+          end
+        end
+
+      assert [{Expresso.OverlayDslTest.StateCollision, [{message, _location}]}] = warnings
+      assert message =~ ~s(registers that property with the syntax "<length>")
+    end
+
+    test "gives no warning for a property of the theme" do
+      refute_dsl_warnings do
+        defmodule Elixir.Expresso.OverlayDslTest.UsedProperties do
+          use Expresso
+
+          slide "used" do
+            text_box do
+              at 1
+              on 1, state: :alert
+              on 1, set: [x: "400px", y: "100px"]
+            end
+          end
+        end
+      end
     end
   end
 

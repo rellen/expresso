@@ -155,6 +155,10 @@ bundle under `assets/src/`, is an `@external_resource` of the module. Therefore 
 one of these files starts a new compile of `Expresso.Renderer`. Elixir compares the content
 of an external resource, and not its time, so a `touch` does not start a compile.
 
+`Expresso.Theme` reads `assets/style.css` in the same way. It gives the names of the custom
+properties of the theme to `Expresso.Overlay.PropertyVerifier`, and `docs/overlays.md`
+gives the warnings of that verifier.
+
 The renderer writes an inline `style` attribute on each `section` of the present view.
 The first slide gets `display: flex`, and each other slide gets `display: none`. A
 `section` of the handout view has no inline style, because the presenter does not touch
@@ -234,10 +238,13 @@ holds `on` entities. Each element has an `at` option, and a slide has a `steps` 
 an `auto_reveal` option. `docs/overlays.md` gives the meaning of each.
 
 The extension imports nothing. It lists `Expresso.Overlay.Transformer`, which expands the
-overlay specifications of each slide at compile time, and `Expresso.Overlay.Verifier`,
-which reports a specification that breaks a rule. After the transformer, each element and
-each `on` entity holds its step numbers in the `steps` field, and the metadata of the
-slide holds the maximum step number in `max_step`. `docs/overlays.md` gives the rules.
+overlay specifications of each slide at compile time, `Expresso.Overlay.Verifier`, which
+reports a specification that breaks a rule, and `Expresso.Overlay.PropertyVerifier`, which
+gives a warning for a custom property that the theme does not use.
+
+After the transformer, each element and each `on` entity holds its step numbers in the
+`steps` field, and the metadata of the slide holds the maximum step number in `max_step`.
+`docs/overlays.md` gives the rules.
 
 The `slide` entity takes an optional name as its first argument. The DSL accepts `slide do`
 and `slide "name" do`.
@@ -292,14 +299,10 @@ The commands are:
 
 This list gives the work in the order of its value. Take the first item that you can do.
 
-### 1. Smaller items of the overlays
-
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
-it. This item is in that document, and the code does not have it:
+it.
 
-- A warning from the verifier for a key of `set` that no theme registers.
-
-### 2. Smaller items
+### 1. Smaller items
 
 - The repository has no continuous integration. No check runs on a pull request. Each
   result in this repository comes from a command that a person or a session ran.
