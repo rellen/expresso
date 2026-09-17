@@ -50,7 +50,11 @@ defmodule Expresso.Extension do
             required: true,
             doc: "The path of the image file, from the working directory of the command."
           ],
-          alt: [type: :string, doc: "The text of the image for a screen reader."]
+          alt: [type: :string, doc: "The text of the image for a screen reader."],
+          width: [
+            type: :string,
+            doc: "The width of the image, as a CSS length, such as 900px or 60vw."
+          ]
         ]
   }
 

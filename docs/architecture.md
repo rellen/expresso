@@ -232,9 +232,23 @@ directory of the command. The extension of the path gives the media type, and
 file that the function cannot read stops the render with a message that names the path.
 
 The `alt` option gives the text of the image for a screen reader. An image with no `alt`
-option is decorative, and the render function writes an empty `alt` attribute. The theme
-gives the image its natural size, and it makes the image smaller for a slide that is too
-small. The theme does not make an image larger.
+option is decorative, and the render function writes an empty `alt` attribute.
+
+The `width` option gives the width of the image. The render function writes the value into
+the custom property `--image-width` on the root tag, and the theme reads that property with
+`var(--image-width, auto)`. A custom property inherits, so an `on` entity can also set the
+property, and the width then changes with the step.
+
+An image with no `width` option takes its natural size, and the theme makes it smaller for
+a slide that is too small. Use a length, such as `900px`, or a viewport unit, such as
+`60vw`, for a larger image. A viewport unit is a part of the width of the slide. A
+percentage is a percentage of the container of the image, and the container takes the
+natural width of the image. Therefore a percentage below 100 makes the image smaller, and
+`100%` changes nothing.
+
+The theme does not register `--image-width` with the `@property` at-rule. A registered
+property always has a value, so the fall back to `auto` would not work, and each image
+would take the width zero.
 
 The theme makes `.text-area` a flex container. Each element inside a flex container is a
 flex item, and a flex item also holds each run of text between two elements. Therefore
@@ -318,8 +332,6 @@ it.
 
 ### 1. Smaller items
 
-- An `image` entity has no option for a size. The theme gives an image its natural size,
-  and it makes an image smaller only. A deck that needs a larger image has no option.
 - The repository has no continuous integration. No check runs on a pull request. Each
   result in this repository comes from a command that a person or a session ran.
 - No session compiled this project on the versions of `.tool-versions`. A container gives

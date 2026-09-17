@@ -50,7 +50,10 @@ defmodule MyDeck do
   slide "steps" do
     auto_reveal true
 
-    image "logo.png", alt: "The logo"
+    image "logo.png" do
+      alt "The logo"
+      width "60vw"
+    end
 
     text_box do
       text_area do
@@ -63,7 +66,8 @@ end
 
 `auto_reveal` shows each element of the slide one after the other. An `image` reads the
 file and puts the bytes into the document, so the document stays one file. The path is
-relative to the working directory of the command.
+relative to the working directory of the command. The `width` option takes a CSS length,
+and a viewport unit such as `60vw` is a part of the width of the slide.
 
 With the functions, build a deck and return it. The heading goes into the metadata:
 
