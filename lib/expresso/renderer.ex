@@ -83,6 +83,12 @@ defmodule Expresso.Renderer do
     temple do
       html do
         head do
+          # The encoding goes in front of each other element of the head. A
+          # browser reads the first 1024 bytes of a document for it. Without
+          # this element the browser makes a guess, and the guess comes from
+          # the locale of the person. Elixir writes UTF-8 only.
+          meta charset: "utf-8"
+
           # A deck has no name when the DSL gives no `name` option, or when
           # `Expresso.Deck.new/3` takes `nil`. The `title` element is necessary,
           # so the renderer writes it with no text.

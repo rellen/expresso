@@ -158,6 +158,16 @@ defmodule ExpressoTest do
       assert text =~ "second slide"
     end
 
+    test "declares the encoding in front of each other element of the head" do
+      document =
+        MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+
+      [head] = Floki.find(document, "head")
+      [first | _] = head |> Floki.children() |> Enum.filter(&is_tuple/1)
+
+      assert {"meta", [{"charset", "utf-8"}], _} = first
+    end
+
     test "puts the text of a text area in one block element" do
       document =
         MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
