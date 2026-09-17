@@ -167,6 +167,18 @@ defmodule ExpressoTest do
 
       assert [{"div", [], _}] = children
       assert children |> Floki.find("b") |> Floki.text() == "raw HTML"
+
+      # The document holds no space in front of the period. A line break between
+      # two elements becomes a space, so the renderer writes no line break.
+      assert Floki.text(area) == "Text accepts raw HTML."
+    end
+
+    test "writes the script of the presenter with a closing tag on its own line" do
+      # Floki writes each text node as it is. The bundle must end with a line
+      # break, or the last line of the script hides the closing tag.
+      html = MarkupDeck |> Expresso.parse() |> Expresso.Deck.render()
+
+      assert html =~ "\n</script>"
     end
 
     test "writes no heading for a slide without the heading option", %{document: document} do
