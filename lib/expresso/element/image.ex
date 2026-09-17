@@ -9,6 +9,20 @@ defmodule Expresso.Element.Image do
   The `alt` option gives the text of the image for a screen reader. An image
   with no `alt` option is decorative, and the render function then writes an
   empty `alt` attribute.
+
+  The `width` option gives the width of the image as a CSS width. The render
+  function writes the value into the custom property `--image-width` on the
+  root tag, and the theme reads that property. An image with no `width` option
+  takes its natural size, and the theme makes it smaller for a slide that is
+  too small.
+
+  Use a length, such as `"900px"`, or a viewport unit, such as `"60vw"`. A
+  viewport unit is a part of the width of the slide, because a slide takes the
+  full width of the screen and of the page.
+
+  A percentage is a percentage of the container of the image, and the container
+  takes the natural width of the image. Therefore a percentage below 100 makes
+  the image smaller, and `"100%"` changes nothing.
   """
 
   use Expresso.Element
@@ -16,34 +30,39 @@ defmodule Expresso.Element.Image do
   @typedoc "The struct of an image"
   @type t :: %__MODULE__{}
 
-  defstruct [:src, :alt, :at, :steps, :el, on: [], __spark_metadata__: nil]
+  defstruct [:src, :alt, :width, :at, :steps, :el, on: [], __spark_metadata__: nil]
 
   @doc """
-  Make an image with a path and with text for a screen reader
+  Make an image with a path, with text for a screen reader and with a width
   """
-  @spec new(Path.t(), String.t() | nil) :: t()
-  def new(src, alt \\ nil) do
-    %__MODULE__{src: src, alt: alt}
+  @spec new(Path.t(), String.t() | nil, String.t() | nil) :: t()
+  def new(src, alt \\ nil, width \\ nil) do
+    %__MODULE__{src: src, alt: alt, width: width}
   end
 
   @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from
-  `Expresso.Overlay.Render.attributes/1`. The key `src` holds the data URI of
-  the file, and `Expresso.Image.data_uri!/1` raises for a file that it cannot
-  read.
+  `Expresso.Overlay.Render.attributes/1`, and the `style` attribute of the
+  `width` option. The key `src` holds the data URI of the file, and
+  `Expresso.Image.data_uri!/1` raises for a file that it cannot read.
   """
   @spec get_assigns(t()) :: map()
   def get_assigns(image) do
-    %__MODULE__{src: src, alt: alt} = image
+    %__MODULE__{src: src, alt: alt, width: width} = image
 
     %{
       src: Expresso.Image.data_uri!(src),
       alt: alt || "",
-      overlay: Expresso.Overlay.Render.attributes(image)
+      overlay: Expresso.Overlay.Render.attributes(image) ++ width(width)
     }
   end
+
+  # A custom property inherits, so the property goes on the root tag and the
+  # `img` element reads it. An `on` entity can then also set the property.
+  defp width(nil), do: []
+  defp width(width), do: [{"style", "--image-width: #{width}"}]
 
   @doc """
   Make the HTML of an image

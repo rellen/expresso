@@ -26,7 +26,8 @@ spark_locals_without_parens = [
   text_area: 0,
   text_area: 1,
   text_box: 0,
-  text_box: 1
+  text_box: 1,
+  width: 1
 ]
 
 [
