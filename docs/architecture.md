@@ -230,8 +230,8 @@ custom element that writes text from the deck must do the same.
 `Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a
 top level section. The section holds `slide` entities. A `slide` holds `text_box` and
 `pause` entities, and a `text_box` holds `text_area` and `on` entities. A `text_area`
-holds `on` entities. Each element has an `at` option, and a slide has a `steps` option.
-`docs/overlays.md` gives the meaning of each.
+holds `on` entities. Each element has an `at` option, and a slide has a `steps` option and
+an `auto_reveal` option. `docs/overlays.md` gives the meaning of each.
 
 The extension imports nothing. It lists `Expresso.Overlay.Transformer`, which expands the
 overlay specifications of each slide at compile time, and `Expresso.Overlay.Verifier`,
@@ -295,10 +295,8 @@ This list gives the work in the order of its value. Take the first item that you
 ### 1. Smaller items of the overlays
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
-it. These two items are in that document, and the code does not have them:
+it. This item is in that document, and the code does not have it:
 
-- An `auto_reveal` option of the `slide` entity. It gives an implicit `at: [from: :next]`
-  to each element without an `at` option.
 - A warning from the verifier for a key of `set` that no theme registers.
 
 ### 2. Smaller items

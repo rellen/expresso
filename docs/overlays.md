@@ -74,17 +74,15 @@ same element takes the second step.
 ### An element without an `at` option
 
 An element without an `at` option shows at each step of the slide. The renderer writes no
-`data-on` attribute for such an element.
+`data-on` attribute for such an element. The `auto_reveal` option of the slide changes
+this rule for an element at the level of the slide. See "The auto_reveal option".
 
 Therefore a `pause` entity alone reveals no element. A `pause` changes the counter only. An
 element must contain a `+` to read the new value of the counter. This behavior is different
 from `\pause` in Beamer, which reveals the content after it.
 
-The proposal is to keep this explicit rule. An author who wants the behavior of Beamer
-writes `at: [from: :next]` on each element. A later version can add an `auto_reveal`
-option to the `slide` entity. It gives an implicit `at: [from: :next]` to each element
-without an `at`
-option.
+This explicit rule is the default. An author who wants the behavior of Beamer writes
+`at from: :next` on each element, or gives the slide the `auto_reveal` option.
 
 ```elixir
 slide "pipeline" do
@@ -108,6 +106,61 @@ slide "pipeline" do
   end
 end
 ```
+
+### The `auto_reveal` option
+
+`auto_reveal` is a boolean option of the `slide` entity, and its default value is `false`.
+With the value `true`, the transformer gives `at [from: :next]` to each element at the
+level of the slide that has no `at` option. The elements of the slide then show one after
+the other, which is the behavior of Beamer.
+
+```elixir
+slide "steps" do
+  auto_reveal true
+
+  text_box do
+    text_area do
+      text "This box shows at step 1."
+    end
+  end
+
+  text_box do
+    text_area do
+      text "This box shows at step 2."
+    end
+  end
+end
+```
+
+The option changes an element at the level of the slide only. A nested element keeps
+`nil`, and it shows at each step at which its parent shows. Therefore a `text_box` and its
+`text_area` elements show as one unit.
+
+An earlier version of this document said "each element without an `at` option", with no
+level. That rule is not correct, and this document gives the evidence:
+
+- A nested element under a parent with an explicit `at` takes the counter value 1, because
+  an absolute specification does not move the counter. The child is then outside its
+  parent, and the verifier reports an error for a deck that the author wrote correctly.
+- Where each parent is also implicit, there is no error, but each container costs one step.
+  A slide with one `text_box` and one `text_area` becomes a slide of two steps, and the box
+  shows with no text in it at the first step.
+
+An author who wants a reveal inside one `text_box` writes `at from: :next` on each
+`text_area` of that box. The option and the explicit specification work together.
+
+These rules apply with the option:
+
+- An element at the level of the slide that has an `at` option keeps it. An absolute step
+  number and the implicit sequence share one step space, and they can name the same step.
+- A `pause` gives one step and reveals no element. It puts one step between two elements.
+- An `on` entity reads the counter after the `at` option of the same element. Therefore
+  `on :next` gives the step after the element shows.
+- A nested element with an explicit `at` can name a step at which its parent does not show.
+  The verifier reports this, and the message names the two elements.
+- The maximum step number is the counter value of the last element, and the `steps` option
+  of the slide can make it larger. A `steps` option that is smaller gives an error from the
+  transformer.
 
 ## Per-step state
 
@@ -235,24 +288,31 @@ with a view transition name must leave the layout, and the theme must hide it wi
 
 The transformer runs one time for each slide. It does these operations:
 
-1. Read the elements of the slide in document order.
-2. Increment the counter at each `pause` entity.
-3. Replace each `+` with the current value of the counter, and increment the counter.
-4. Expand each specification into an explicit list of step numbers.
-5. Write the maximum step number into `slide.metadata`.
-6. Remove each `pause` entity from the elements of the slide.
+1. Give `at [from: :next]` to each element at the level of the slide that has no `at`
+   option, when the slide has the `auto_reveal` option.
+2. Read the elements of the slide in document order.
+3. Increment the counter at each `pause` entity.
+4. Replace each `+` with the current value of the counter, and increment the counter.
+5. Expand each specification into an explicit list of step numbers.
+6. Write the maximum step number into `slide.metadata`.
+7. Remove each `pause` entity from the elements of the slide.
+
+Step 1 runs before the counter walk, because the implicit specification takes a value from
+the counter. It also fixes the maximum step number of the slide.
 
 An open specification, such as `[from: 2]`, needs the maximum step number of the slide.
-Therefore the transformer expands the open specifications after step 4 finds that number.
+Therefore the transformer expands the open specifications after step 5 finds that number.
 
-Step 6 is necessary because the renderer renders each element of a slide. A `pause`
+Step 7 is necessary because the renderer renders each element of a slide. A `pause`
 entity holds no content, and it has no render function. The transformer removes the
 entity after the entity gives its value to the counter.
 
 Inside one element, the transformer reads the `at` option first, then each `on` entity in
 document order, then each child element. Step 4 writes the list of step numbers into the
 `steps` field of the element or of the `on` entity. An element without an `at` option
-keeps `nil` in that field, and it shows at each step of its parent.
+keeps `nil` in that field, and it shows at each step of its parent. Step 1 gives an `at`
+option to an element at the level of the slide when the slide has the `auto_reveal`
+option.
 
 `Expresso.Overlay.Expand.slide/1` does the six operations on one `Expresso.Slide` struct,
 and it is a pure function. `Expresso.Overlay.Transformer` calls it for each slide of the
@@ -581,6 +641,9 @@ are in `test/expresso/overlay_*_test.exs`, and the tests of the presenter are in
 - Slice 6, done on 2026-09-14: the handout view. The renderer writes one page for each
   step of each slide, a `@media print` block selects that view, and the key `p` changes
   between the two views.
+- The `auto_reveal` option, done on 2026-09-17. `Expresso.Overlay.Expand.slide/1` gives the
+  implicit specification to each element at the level of the slide. The rule of this
+  document changed at the same time, from each element to each element of the slide.
 
 ## The decisions
 

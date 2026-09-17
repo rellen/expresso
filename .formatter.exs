@@ -6,6 +6,7 @@
 # without them.
 spark_locals_without_parens = [
   at: 1,
+  auto_reveal: 1,
   heading: 1,
   name: 1,
   on: 1,

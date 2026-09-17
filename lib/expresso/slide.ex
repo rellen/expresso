@@ -7,11 +7,20 @@ defmodule Expresso.Slide do
           :name => String.t() | nil,
           :heading => String.t() | nil,
           :steps => pos_integer() | nil,
+          :auto_reveal => boolean() | nil,
           :metadata => map() | nil,
           :elements => list()
         }
 
-  defstruct [:name, :heading, :steps, :metadata, :elements, __spark_metadata__: nil]
+  defstruct [
+    :name,
+    :heading,
+    :steps,
+    :auto_reveal,
+    :metadata,
+    :elements,
+    __spark_metadata__: nil
+  ]
 
   @doc """
   Create a new slide

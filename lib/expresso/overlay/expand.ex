@@ -31,12 +31,18 @@ defmodule Expresso.Overlay.Expand do
   specification into the `steps` field of the element or of the `on` entity.
   An element without an `at` option keeps `nil` in that field.
 
+  The `auto_reveal` option of the slide gives an implicit `[from: :next]` to
+  each element at the level of the slide that has no `at` option. The function
+  applies the option before the counter walk. It changes no nested element,
+  and a nested element without an `at` option keeps `nil`.
+
   The function gives an error when a specification has a step number that is
   more than the maximum.
   """
   @spec slide(Slide.t()) :: {:ok, Slide.t()} | {:error, String.t()}
   def slide(%Slide{} = slide) do
-    {elements, _counter} = resolve(slide.elements || [], 1)
+    elements = auto_reveal(slide.elements || [], slide.auto_reveal)
+    {elements, _counter} = resolve(elements, 1)
     max = slide.steps || max_step(elements) || 1
 
     case expand(elements, max) do
@@ -48,6 +54,19 @@ defmodule Expresso.Overlay.Expand do
         {:error, message}
     end
   end
+
+  # The implicit specification of the auto_reveal option. It goes on each
+  # element at the level of the slide that has no at option. A pause has no at
+  # field, so the first clause does not match it.
+
+  defp auto_reveal(elements, true) do
+    Enum.map(elements, fn
+      %{at: nil} = element -> %{element | at: Overlay.from_next()}
+      element -> element
+    end)
+  end
+
+  defp auto_reveal(elements, _auto_reveal), do: elements
 
   # The counter walk at the level of the slide
 

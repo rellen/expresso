@@ -59,7 +59,12 @@ defmodule Expresso.Extension do
     schema: [
       name: [type: :string, doc: "A name for the slide."],
       heading: [type: :string, doc: "The heading that the slide template shows."],
-      steps: [type: :pos_integer, doc: "The maximum step number of the slide."]
+      steps: [type: :pos_integer, doc: "The maximum step number of the slide."],
+      auto_reveal: [
+        type: :boolean,
+        default: false,
+        doc: "Show each element of the slide one after the other. See docs/overlays.md."
+      ]
     ]
   }
 

@@ -84,6 +84,16 @@ defmodule Expresso.Overlay do
   end
 
   @doc """
+  Give the specification `[from: :next]`
+
+  This specification shows an element from the current value of the counter to
+  the maximum step number of the slide. The `auto_reveal` option of a slide
+  gives it to each element of the slide that has no `at` option.
+  """
+  @spec from_next() :: t()
+  def from_next, do: %__MODULE__{pairs: [{:next, :max}]}
+
+  @doc """
   Replace each `:next` with the value of the counter
 
   Each `:next` in one specification takes the same value. The function

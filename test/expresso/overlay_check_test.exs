@@ -42,14 +42,12 @@ defmodule Expresso.Overlay.CheckTest do
 
   test "reports an on entity outside the at option" do
     assert check([%TextBox{steps: [1, 2], on: [%On{steps: [2, 3]}]}]) ==
-             {:error,
-              "the on entity has the step 3, and the at option of the text_box does not have it"}
+             {:error, "the on entity has the step 3, and the text_box does not show at that step"}
   end
 
   test "reports a child outside its parent" do
     assert check([%TextBox{steps: [2], elements: [%TextArea{steps: [1, 2]}]}]) ==
-             {:error,
-              "the text_area has the step 1, and the at option of the text_box does not have it"}
+             {:error, "the text_area has the step 1, and the text_box does not show at that step"}
   end
 
   test "reports an on entity of a child outside the child" do
@@ -57,6 +55,6 @@ defmodule Expresso.Overlay.CheckTest do
 
     assert check([box]) ==
              {:error,
-              "the on entity has the step 1, and the at option of the text_area does not have it"}
+              "the on entity has the step 1, and the text_area does not show at that step"}
   end
 end

@@ -211,6 +211,75 @@ defmodule Expresso.OverlayDslTest do
     end
   end
 
+  describe "the auto_reveal option" do
+    defmodule AutoDeck do
+      use Expresso
+
+      slide "auto" do
+        auto_reveal true
+
+        text_box do
+          text_area do
+            text "first"
+          end
+        end
+
+        text_box do
+          text_area do
+            text "second"
+          end
+        end
+      end
+    end
+
+    test "shows each element of the slide one after the other" do
+      [slide] = Expresso.parse(AutoDeck).slides
+      [first, second] = slide.elements
+
+      assert first.steps == [1, 2]
+      assert second.steps == [2]
+      assert slide.metadata.max_step == 2
+    end
+
+    test "changes no nested element" do
+      [slide] = Expresso.parse(AutoDeck).slides
+      [%TextBox{elements: [area]} | _] = slide.elements
+
+      assert area.steps == nil
+    end
+
+    test "reports a nested element with a step at which its parent does not show" do
+      errors =
+        dsl_errors do
+          defmodule Elixir.Expresso.OverlayDslTest.AutoOutside do
+            use Expresso
+
+            slide "outside" do
+              auto_reveal true
+
+              text_box do
+                text_area do
+                  text "first"
+                end
+              end
+
+              text_box do
+                text_area do
+                  at 1
+                  text "second"
+                end
+              end
+            end
+          end
+        end
+
+      assert [{Expresso.OverlayDslTest.AutoOutside, [error]}] = errors
+
+      assert Exception.message(error) =~
+               "the text_area has the step 1, and the text_box does not show at that step"
+    end
+  end
+
   describe "a bad specification" do
     test "is an error at compile time, with the accepted forms" do
       source = """
