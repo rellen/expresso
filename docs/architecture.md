@@ -326,13 +326,12 @@ The commands are:
 ## Open work
 
 This list gives the work in the order of its value. Take the first item that you can do.
+The list holds no item at this time.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
-it.
+it. `.github/workflows/check.yml` runs each check for a pull request, and each of the two
+pairs of versions of the toolchain passes.
 
-### 1. Smaller items
-
-- No session compiled this project on the versions of `.tool-versions`. A container gives
-  Erlang/OTP 25 and Elixir 1.18. See `docs/development.md`. The workflow
-  `.github/workflows/check.yml` has a job for those versions, and that job does not stop a
-  pull request. Make the job necessary after it passes, and remove this item.
+One question has no answer, and the maintainer decides it. The section "The imperative
+API" of `docs/overlays.md` asks whether `Expresso.Deck.add_slide/4` keeps parity with the
+DSL for an overlay, or whether an overlay needs the DSL.

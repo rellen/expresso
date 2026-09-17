@@ -32,7 +32,9 @@ The hook does these operations:
 4. `mix local.hex`, `mix local.rebar`, `mix deps.get` and `mix compile`.
 
 The versions of the container are not the versions of `.tool-versions`. Erlang/OTP 25 and
-Elixir 1.18 compile this project and run each check. Two rules apply:
+Elixir 1.18 compile this project and run each check, and so do the versions of
+`.tool-versions`. The workflow of a pull request runs each command on both. Two rules
+apply to the container:
 
 - The Elixir build must agree with the OTP release. The name of the file on GitHub is
   `elixir-otp-25.zip`.
@@ -75,24 +77,27 @@ count. Each public function that a person writes needs a `@doc` and a `@spec`, a
 struct needs a `@type t`.
 
 Each result above comes from a remote container, which gives Erlang/OTP 25 and Elixir
-1.18. No session compiled this project on Erlang 28 and Elixir 1.20, which
-`.tool-versions` gives. A command can give a different result in the Nix shell, and a
-warning of a later Elixir is not visible in a remote container. Make sure of a result on
-your machine before a release.
+1.18. A session cannot run a command on Erlang 28 and Elixir 1.20, which `.tool-versions`
+gives, because the container has no such toolchain. The workflow of a pull request runs
+each command on both pairs of versions, so a pull request gives the result that a session
+cannot.
 
 ### The checks of a pull request
 
 `.github/workflows/check.yml` runs `mix check`, `npm run check` and `npm test` for a pull
-request and for a push to `main`. GitHub runs the job two times:
+request and for a push to `main`. GitHub runs the job two times, and each job must pass:
 
-- The job `Erlang/OTP 25, Elixir 1.18` uses the versions of a remote container. Each
-  result in this repository comes from those versions, so this job must pass.
+- The job `Erlang/OTP 25, Elixir 1.18` uses the versions of a remote container.
 - The job `Erlang 28, Elixir 1.20, from .tool-versions` uses the versions of
-  `.tool-versions`. It does not stop a pull request.
+  `.tool-versions`.
 
-The second job gives the answer to the open item of `docs/architecture.md`: no session
-compiled this project on the versions of `.tool-versions`. Read its result. Make the job
-necessary after it passes, with a branch protection rule, and remove that item.
+The second job passed for the first time on 2026-09-17, on the pull request that added
+the workflow and on the push to `main` after the merge. Each of the ten tools of
+`mix check` passed, and so did the two npm commands. Before that date, no session
+compiled this project on the versions of `.tool-versions`.
+
+GitHub does not make a job necessary by itself. Add a branch protection rule for `main`
+with both jobs, or a pull request with a failure can still merge.
 
 The workflow names the version of Node, because `actions/setup-node` does not read
 `.tool-versions`. Keep the workflow and `.tool-versions` in agreement.

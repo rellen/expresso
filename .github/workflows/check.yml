@@ -5,15 +5,14 @@
 # npm commands, which check the types of the presenter script and run its tests.
 # `CLAUDE.md` gives the same list.
 #
-# The job runs two times, with two versions of the toolchain:
+# The job runs two times, with two versions of the toolchain. Each job must
+# pass:
 #
 # - The versions of the container of a remote session, Erlang/OTP 25 and Elixir
-#   1.18. Each result in this repository comes from these versions, so this job
-#   must pass.
-# - The versions of `.tool-versions`, Erlang 28 and Elixir 1.20. No session
-#   compiled this project on these versions. This job gives that answer, and it
-#   does not stop a pull request. Make it necessary after it passes, and remove
-#   the item from the section "Open work" of `docs/architecture.md`.
+#   1.18. A session runs each command on those versions.
+# - The versions of `.tool-versions`, Erlang 28 and Elixir 1.20. A person who
+#   uses the Nix shell gets those versions. On 2026-09-17 this job passed for
+#   the first time, and it is necessary from that date.
 
 name: check
 
@@ -33,7 +32,6 @@ jobs:
   check:
     name: ${{ matrix.label }}
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.advisory }}
 
     strategy:
       fail-fast: false
@@ -42,11 +40,9 @@ jobs:
           - label: Erlang/OTP 25, Elixir 1.18
             otp: "25.3"
             elixir: "1.18.4"
-            advisory: false
           - label: Erlang 28, Elixir 1.20, from .tool-versions
             otp: "28.5"
             elixir: "1.20.4-otp-28"
-            advisory: true
 
     steps:
       - name: Read the repository
