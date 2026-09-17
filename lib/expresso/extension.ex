@@ -37,10 +37,27 @@ defmodule Expresso.Extension do
     schema: @overlay_schema ++ [text: [type: :string]]
   }
 
+  @image %Spark.Dsl.Entity{
+    name: :image,
+    target: Expresso.Element.Image,
+    args: [:src],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        [
+          src: [
+            type: :string,
+            required: true,
+            doc: "The path of the image file, from the working directory of the command."
+          ],
+          alt: [type: :string, doc: "The text of the image for a screen reader."]
+        ]
+  }
+
   @text_box %Spark.Dsl.Entity{
     name: :text_box,
     target: Expresso.Element.TextBox,
-    entities: [elements: [@text_area], on: [@on]],
+    entities: [elements: [@text_area, @image], on: [@on]],
     schema: @overlay_schema
   }
 
@@ -49,7 +66,7 @@ defmodule Expresso.Extension do
     target: Expresso.Element.Pause
   }
 
-  @slide_elements [elements: [@text_box, @pause]]
+  @slide_elements [elements: [@text_box, @image, @pause]]
 
   @slide %Spark.Dsl.Entity{
     name: :slide,

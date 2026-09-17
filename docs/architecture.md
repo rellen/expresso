@@ -203,8 +203,9 @@ The DSL gives no template option. A deck from the DSL uses the built-in template
 
 ## The elements
 
-An element is the content of a slide. `Expresso.Element.TextBox` and
-`Expresso.Element.TextArea` are the two elements at this time.
+An element is the content of a slide. `Expresso.Element.TextBox`,
+`Expresso.Element.TextArea` and `Expresso.Element.Image` are the three elements at this
+time.
 
 An element module has these parts:
 
@@ -223,6 +224,18 @@ the compiler does not make sure that a module has the two functions.
 A `text_box` contains other elements. A `text_area` contains text. The renderer writes the
 text with `Phoenix.HTML.raw/1`, so the text can contain HTML.
 
+An `image` shows an image file. The document of a deck is one file, so the image cannot be
+a second file. `Expresso.Image` reads the file at render time, and it makes a data URI from
+the bytes. The `src` option gives the path, and the path is relative to the working
+directory of the command. The extension of the path gives the media type, and
+`Expresso.Image` accepts `.avif`, `.gif`, `.jpeg`, `.jpg`, `.png`, `.svg` and `.webp`. A
+file that the function cannot read stops the render with a message that names the path.
+
+The `alt` option gives the text of the image for a screen reader. An image with no `alt`
+option is decorative, and the render function writes an empty `alt` attribute. The theme
+gives the image its natural size, and it makes the image smaller for a slide that is too
+small. The theme does not make an image larger.
+
 The theme makes `.text-area` a flex container. Each element inside a flex container is a
 flex item, and a flex item also holds each run of text between two elements. Therefore
 text with an inline element, such as `<b>`, breaks into more than one line. The render
@@ -234,8 +247,9 @@ custom element that writes text from the deck must do the same.
 `Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a
 top level section. The section holds `slide` entities. A `slide` holds `text_box` and
 `pause` entities, and a `text_box` holds `text_area` and `on` entities. A `text_area`
-holds `on` entities. Each element has an `at` option, and a slide has a `steps` option and
-an `auto_reveal` option. `docs/overlays.md` gives the meaning of each.
+holds `on` entities. A `slide` and a `text_box` also hold `image` entities. Each element
+has an `at` option, and a slide has a `steps` option and an `auto_reveal` option.
+`docs/overlays.md` gives the meaning of each.
 
 The extension imports nothing. It lists `Expresso.Overlay.Transformer`, which expands the
 overlay specifications of each slide at compile time, `Expresso.Overlay.Verifier`, which
@@ -304,6 +318,8 @@ it.
 
 ### 1. Smaller items
 
+- An `image` entity has no option for a size. The theme gives an image its natural size,
+  and it makes an image smaller only. A deck that needs a larger image has no option.
 - The repository has no continuous integration. No check runs on a pull request. Each
   result in this repository comes from a command that a person or a session ran.
 - No session compiled this project on the versions of `.tool-versions`. A container gives

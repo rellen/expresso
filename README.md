@@ -7,9 +7,10 @@ a small script. You give the document to a browser, and you present from the bro
 
 ## Status
 
-Expresso is at an early stage. It has two elements, `text_box` and `text_area`, and one
-built-in theme. Overlays, which are the steps inside one slide, are a design only. See
-`docs/overlays.md`.
+Expresso is at an early stage. It has three elements, `text_box`, `text_area` and `image`,
+and one built-in theme. Overlays, which are the steps inside one slide, are complete: a
+slide takes steps, an element shows at a set of steps, and the document holds a handout
+view for a printer. See `docs/overlays.md`.
 
 ## Install
 
@@ -45,8 +46,24 @@ defmodule MyDeck do
       end
     end
   end
+
+  slide "steps" do
+    auto_reveal true
+
+    image "logo.png", alt: "The logo"
+
+    text_box do
+      text_area do
+        text "This text shows one step after the image."
+      end
+    end
+  end
 end
 ```
+
+`auto_reveal` shows each element of the slide one after the other. An `image` reads the
+file and puts the bytes into the document, so the document stays one file. The path is
+relative to the working directory of the command.
 
 With the functions, build a deck and return it. The heading goes into the metadata:
 

@@ -45,6 +45,12 @@ defmodule DslDeck do
     end
   end
 
+  slide "an image" do
+    heading "An image"
+
+    image "examples/logo.png", alt: "A square with a gradient"
+  end
+
   slide "auto reveal" do
     heading "Auto reveal"
     auto_reveal true

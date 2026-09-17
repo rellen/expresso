@@ -5,9 +5,12 @@
 # parentheses to a call of the DSL. It removes none either, so write a call
 # without them.
 spark_locals_without_parens = [
+  alt: 1,
   at: 1,
   auto_reveal: 1,
   heading: 1,
+  image: 1,
+  image: 2,
   name: 1,
   on: 1,
   on: 2,
