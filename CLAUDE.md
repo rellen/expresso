@@ -47,9 +47,10 @@ advisory in the output of `mix deps.get`, and this output is the more current si
 it. `docs/development.md` gives an example.
 
 These results come from Erlang/OTP 25 and Elixir 1.18, which the hook installs. They do
-not come from Erlang 28 and Elixir 1.20, which `.tool-versions` gives. No session compiled
-this project on the versions of `.tool-versions`. Therefore a command can give a different
-result in the Nix shell. `docs/development.md` tells you why the versions are different.
+not come from Erlang 28 and Elixir 1.20, which `.tool-versions` gives. The workflow runs
+each command on both pairs of versions, and each pair passes. Therefore a command in the
+Nix shell gives the same result. `docs/development.md` tells you why the versions in a
+container are different.
 
 Do not change a version in `.tool-versions` or in `mix.exs` to make a command work. The
 container of a remote session uses different versions, and `docs/development.md` tells you
@@ -65,9 +66,8 @@ request. Do not wait for that result. The container has different versions of th
 toolchain, so run the commands in "Build and test" before each commit, and tell the
 maintainer in the pull request which commands you ran.
 
-The workflow runs two times. The job for Erlang/OTP 25 and Elixir 1.18 must pass. The job
-for the versions of `.tool-versions` does not stop a pull request, because no session
-compiled this project on those versions.
+The workflow runs two times, with the versions of a container and with the versions of
+`.tool-versions`. Each job must pass.
 
 ## Commit messages
 
