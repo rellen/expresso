@@ -1,0 +1,94 @@
+# The checks that run for a pull request and for a push to main.
+#
+# The job runs `mix check`, which runs the compiler, the formatter, Credo,
+# Dialyzer, Doctor, ExDoc, ExUnit, mix_audit and Sobelow. It then runs the two
+# npm commands, which check the types of the presenter script and run its tests.
+# `CLAUDE.md` gives the same list.
+#
+# The job runs two times, with two versions of the toolchain:
+#
+# - The versions of the container of a remote session, Erlang/OTP 25 and Elixir
+#   1.18. Each result in this repository comes from these versions, so this job
+#   must pass.
+# - The versions of `.tool-versions`, Erlang 28 and Elixir 1.20. No session
+#   compiled this project on these versions. This job gives that answer, and it
+#   does not stop a pull request. Make it necessary after it passes, and remove
+#   the item from the section "Open work" of `docs/architecture.md`.
+
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: ${{ matrix.label }}
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.advisory }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Erlang/OTP 25, Elixir 1.18
+            otp: "25.3"
+            elixir: "1.18.4"
+            advisory: false
+          - label: Erlang 28, Elixir 1.20, from .tool-versions
+            otp: "28.5"
+            elixir: "1.20.4-otp-28"
+            advisory: true
+
+    steps:
+      - name: Read the repository
+        uses: actions/checkout@v4
+
+      - name: Install Erlang and Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp }}
+          elixir-version: ${{ matrix.elixir }}
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          # `.tool-versions` gives the exact version. Keep the two in agreement.
+          node-version: "24"
+          cache: npm
+
+      # `_build` holds the PLT of Dialyzer, which `mix.exs` puts there. A change
+      # to `mix.lock` gives a new key, and the tools then run against a new build.
+      - name: Read the cache of the dependencies and of the build
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
+          restore-keys: mix-${{ matrix.otp }}-${{ matrix.elixir }}-
+
+      - name: Get the dependencies of the presenter script
+        run: npm ci
+
+      # Hex reports an advisory of a dependency in this output, and that output
+      # is the more current signal. `docs/development.md` gives an example.
+      - name: Get the dependencies
+        run: mix deps.get
+
+      - name: Run mix check
+        run: mix check
+
+      - name: Check the types of the presenter script
+        run: npm run check
+
+      - name: Run the tests of the presenter script
+        run: npm test
