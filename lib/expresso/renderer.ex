@@ -83,7 +83,10 @@ defmodule Expresso.Renderer do
     temple do
       html do
         head do
-          title(do: @deck.name)
+          # A deck has no name when the DSL gives no `name` option, or when
+          # `Expresso.Deck.new/3` takes `nil`. The `title` element is necessary,
+          # so the renderer writes it with no text.
+          title(do: @deck.name || "")
 
           style do
             Phoenix.HTML.raw(fonts())
