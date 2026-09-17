@@ -15,8 +15,8 @@ below changes both.
 
 ## The script today
 
-`assets/main.js` is the presenter. It holds the number of the current slide, it reads the
-keys `j`, `k` and `p`, and it shows a slide with the inline `style.display` property. It
+`assets/main.js` is the presenter. It holds the number of the current slide, and it reads
+the keys `j`, `k` and `p`. It shows a slide with the inline `style.display` property. It
 has approximately 35 lines in one file. It has no `import` and no `export`.
 
 `Expresso.Renderer` reads the file with `File.read!/1` at compile time. It writes the text
@@ -229,8 +229,8 @@ There are two options:
    person commits it. `mix compile` reads the file as today. A check compares the file
    with a new build.
 
-The decision is option 1. A minified file in Git gives a diff that no person can read, and
-a stale file in Git is a defect that the check finds only when a person runs the check.
+The decision is option 1. A minified file in Git gives a diff that no person can read. A
+stale file in Git is a defect that the check finds only when a person runs the check.
 Option 1 gives one source of truth, and it costs one Hex package.
 
 ### 2. Does the renderer read the bundle at compile time or at run time?
@@ -239,8 +239,8 @@ At compile time, the renderer holds the bundle in a module attribute, as it does
 At run time, the renderer reads `priv/static/presenter.js` with
 `Application.app_dir/2` on each render.
 
-The decision is compile time. It is the smallest change to the renderer, and the binary
-that Burrito makes then holds the script in the code and not in a file. The run-time
+The decision is compile time. It is the smallest change to the renderer. The binary that
+Burrito makes then holds the script in the code, and not in a file. The run-time
 option lets a person change the script without a new compile, and nobody needs that.
 
 ### 3. Does the script element get `type="module"`?
