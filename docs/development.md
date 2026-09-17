@@ -174,9 +174,9 @@ mix expresso examples/dsl_deck.exs /tmp/dsl.html
 ```
 
 A remote container has no display, but it has Chromium and Playwright. Use them to make
-sure that a change to the CSS or to `assets/main.js` is correct. The browser is at
-`/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. This path is not the default path of
-Playwright, so give it to `chromium.launch`.
+sure that a change to `assets/style.css`, or to the presenter in `assets/src/`, is
+correct. The browser is at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. This path
+is not the default path of Playwright, so give it to `chromium.launch`.
 
 ```sh
 npm install playwright     # with PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
@@ -209,6 +209,20 @@ console.log(visible);
 await page.screenshot({ path: "/tmp/slide.png" });
 await browser.close();
 ```
+
+Look at these cases after a change to the theme or to the presenter:
+
+- A deck with no slide. Each key must give no error in the console.
+- A word that is longer than the slide. The document must not become wider than the
+  screen, and `document.documentElement.scrollWidth` gives that answer.
+- A heading of many words, and a slide of many elements.
+- A screen of 1440, 1024, 800 and 500 pixels.
+- The print view, with `page.emulateMedia({ media: "print" })`, on A4 and on letter.
+
+The theme gives `html` a font size of 48 pixels, and that size does not change with the
+screen. Therefore the content of a slide can be taller than the slide on a screen of 800
+pixels or less. A theme with a font size in a viewport unit does not have this limit, and
+that change alters each deck.
 
 Read the computed style, and do not read the attribute. A defect in a style attribute gives
 no error. The browser drops the declaration, and the page looks almost correct.
