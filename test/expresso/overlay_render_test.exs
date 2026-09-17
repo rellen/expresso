@@ -25,7 +25,7 @@ defmodule Expresso.Overlay.RenderTest do
 
       text_box do
         at 2..3
-        on 3, set: [x: "400px", dim: 0.3]
+        on 3, set: [x: "400px", y: "100px"]
 
         text_area do
           at 3
@@ -249,7 +249,7 @@ defmodule Expresso.Overlay.RenderTest do
       assert generated =~ ~s(section[data-step="3"] [data-on~="3"])
       refute generated =~ ~s(section[data-step="4"])
       assert generated =~ ~s(section[data-step="2"] [data-el="s1-e1"] { --alert: 1; })
-      assert generated =~ ~s(section[data-step="3"] [data-el="s1-e3"] { --x: 400px; --dim: 0.3; })
+      assert generated =~ ~s(section[data-step="3"] [data-el="s1-e3"] { --x: 400px; --y: 100px; })
     end
   end
 end

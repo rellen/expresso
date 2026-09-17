@@ -86,5 +86,5 @@ defmodule Expresso.Extension do
     sections: @sections,
     imports: [],
     transformers: [Expresso.Overlay.Transformer],
-    verifiers: [Expresso.Overlay.Verifier]
+    verifiers: [Expresso.Overlay.Verifier, Expresso.Overlay.PropertyVerifier]
 end
