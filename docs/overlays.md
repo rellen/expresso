@@ -143,8 +143,8 @@ level. That rule is not correct, and this document gives the evidence:
   an absolute specification does not move the counter. The child is then outside its
   parent, and the verifier reports an error for a deck that the author wrote correctly.
 - Where each parent is also implicit, there is no error, but each container costs one step.
-  A slide with one `text_box` and one `text_area` becomes a slide of two steps, and the box
-  shows with no text in it at the first step.
+  A slide with one `text_box` and one `text_area` becomes a slide of two steps. The box
+  then shows with no text in it at the first step.
 
 An author who wants a reveal inside one `text_box` writes `at from: :next` on each
 `text_area` of that box. The option and the explicit specification work together.
@@ -565,8 +565,8 @@ two constructions show it:
   key `p`. A screen reader then reads each step of each slide.
 
 A `data-el` value is unique in one view. The handout view holds the same value as the
-present view, and a rule keeps its correct element, because the `data-step` of the
-`section` selects one page. A `section` of the handout view does not get the class
+present view. A rule keeps its correct element, because the `data-step` of the `section`
+selects one page. A `section` of the handout view does not get the class
 `slide` or an identifier, because `dom.ts` counts the class and reads the identifier.
 
 The `aria-hidden` attribute is not part of this design. An attribute is not a CSS
@@ -693,7 +693,7 @@ are in `test/expresso/overlay_*_test.exs`, and the tests of the presenter are in
 - Slice 5, done on 2026-09-14: the step number in `assets/src/state.ts` and `dom.ts`,
   with a test for each rule, and a slide with overlays in `examples/dsl_deck.exs`.
 - Slice 6, done on 2026-09-14: the handout view. The renderer writes one page for each
-  step of each slide, a `@media print` block selects that view, and the key `p` changes
+  step of each slide. A `@media print` block selects that view, and the key `p` changes
   between the two views.
 - The property warnings, done on 2026-09-17. `Expresso.Theme` reads the names of the
   theme, `Expresso.Overlay.Properties` makes the messages for one slide, and

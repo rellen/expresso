@@ -265,13 +265,16 @@ holds `on` entities. A `slide` and a `text_box` also hold `image` entities. Each
 has an `at` option, and a slide has a `steps` option and an `auto_reveal` option.
 `docs/overlays.md` gives the meaning of each.
 
-The extension imports nothing. It lists `Expresso.Overlay.Transformer`, which expands the
-overlay specifications of each slide at compile time, `Expresso.Overlay.Verifier`, which
-reports a specification that breaks a rule, and `Expresso.Overlay.PropertyVerifier`, which
-gives a warning for a custom property that the theme does not use.
+The extension imports nothing, and it lists three modules:
+
+- `Expresso.Overlay.Transformer` expands the overlay specifications of each slide at
+  compile time.
+- `Expresso.Overlay.Verifier` reports a specification that breaks a rule.
+- `Expresso.Overlay.PropertyVerifier` gives a warning for a custom property that the theme
+  does not use.
 
 After the transformer, each element and each `on` entity holds its step numbers in the
-`steps` field, and the metadata of the slide holds the maximum step number in `max_step`.
+`steps` field. The metadata of the slide holds the maximum step number in `max_step`.
 `docs/overlays.md` gives the rules.
 
 The `slide` entity takes an optional name as its first argument. The DSL accepts `slide do`
@@ -280,9 +283,10 @@ and `slide "name" do`.
 ## The presenter
 
 The presenter is a TypeScript program under `assets/src/`. `state.ts` holds the number of
-the current slide, the number of the current step and the function that changes them,
-and it does not touch the document. `dom.ts` reads the document and applies a state to
-it with the inline `style.display` property and the `data-step` attribute. `main.ts`
+the current slide and the number of the current step. It also holds the function that
+changes them, and it does not touch the document. `dom.ts` reads the document, and it
+applies a state with the inline `style.display` property and the `data-step` attribute.
+`main.ts`
 connects the two. The first slide is slide 1, and the first step is step 1.
 `docs/overlays.md` gives the rules of a step.
 
