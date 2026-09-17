@@ -332,7 +332,7 @@ it.
 
 ### 1. Smaller items
 
-- The repository has no continuous integration. No check runs on a pull request. Each
-  result in this repository comes from a command that a person or a session ran.
 - No session compiled this project on the versions of `.tool-versions`. A container gives
-  Erlang/OTP 25 and Elixir 1.18. See `docs/development.md`.
+  Erlang/OTP 25 and Elixir 1.18. See `docs/development.md`. The workflow
+  `.github/workflows/check.yml` has a job for those versions, and that job does not stop a
+  pull request. Make the job necessary after it passes, and remove this item.

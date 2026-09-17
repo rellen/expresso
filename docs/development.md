@@ -80,6 +80,28 @@ Each result above comes from a remote container, which gives Erlang/OTP 25 and E
 warning of a later Elixir is not visible in a remote container. Make sure of a result on
 your machine before a release.
 
+### The checks of a pull request
+
+`.github/workflows/check.yml` runs `mix check`, `npm run check` and `npm test` for a pull
+request and for a push to `main`. GitHub runs the job two times:
+
+- The job `Erlang/OTP 25, Elixir 1.18` uses the versions of a remote container. Each
+  result in this repository comes from those versions, so this job must pass.
+- The job `Erlang 28, Elixir 1.20, from .tool-versions` uses the versions of
+  `.tool-versions`. It does not stop a pull request.
+
+The second job gives the answer to the open item of `docs/architecture.md`: no session
+compiled this project on the versions of `.tool-versions`. Read its result. Make the job
+necessary after it passes, with a branch protection rule, and remove that item.
+
+The workflow names the version of Node, because `actions/setup-node` does not read
+`.tool-versions`. Keep the workflow and `.tool-versions` in agreement.
+
+The workflow keeps `deps` and `_build` in a cache, and the key holds `mix.lock` and the
+two versions. Therefore a change to `mix.lock` gives a new build. A run with a cache
+compiles the files of the change only. For a result from a full compile, run
+`mix compile --warnings-as-errors --force` on your machine.
+
 Dialyzer needs the `erlang-dialyzer` package, which is a package that is separate from
 `erlang-nox`. The hook installs it. The first `mix dialyzer` builds a PLT of approximately
 570 modules, and this operation takes approximately two minutes. The PLT stays in
