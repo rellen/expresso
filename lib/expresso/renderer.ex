@@ -41,7 +41,7 @@ defmodule Expresso.Renderer do
   end
 
   # `Expresso.Deck.render/1` writes the doctype. Floki drops a doctype node, and the
-  # deck function formats this tree with Floki. Therefore the doctype cannot come
+  # deck function writes this tree with Floki. Therefore the doctype cannot come
   # from this function.
   #
   # The two style sheets are files of this repository, and the presenter bundle
@@ -71,7 +71,7 @@ defmodule Expresso.Renderer do
   Make the HTML tree of a deck
 
   The assigns hold the deck under the key `deck`. `Expresso.Deck.render/1` calls
-  this function, and it formats the tree and adds the doctype. The function
+  this function, and it writes the tree and adds the doctype. The function
   gives each element its identity with `Expresso.Overlay.Render.identify/1`
   first.
   """
