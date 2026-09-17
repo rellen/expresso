@@ -29,13 +29,18 @@ function slide(number: number): HTMLElement {
 
 // Apply a state to the document. The function writes the view on the `body`,
 // it shows the slide of the state at the step of the state, and it hides each
-// other slide. The style sheet reads `data-view`, and the generated style
+// other slide. A deck with no slide gets the view only. The style sheet reads `data-view`, and the generated style
 // block reads `data-step`. These two attributes are the only operations of
 // the presenter on the document. docs/overlays.md gives the CSS contract.
 export function apply(state: State, limits: Limits): void {
   document.body.dataset.view = state.view;
   for (let number = 1; number <= limits.slides; number++) {
     slide(number).style.display = "none";
+  }
+  // A deck can hold no slide. The view still changes, and the function must
+  // not read a slide that the document does not have.
+  if (limits.slides === 0) {
+    return;
   }
   const current = slide(state.slide);
   current.dataset.step = String(state.step);
