@@ -46,6 +46,11 @@ h2 {
   align-content: center;
   flex-direction: column;
   text-align: center;
+  /* A word that is longer than the slide breaks. The value `anywhere` also
+     makes the minimum content width smaller, and the flex item can then get
+     smaller. The value `break-word` does not, and the document then becomes
+     wider than the screen. */
+  overflow-wrap: anywhere;
 }
 :root {
   --dur: 300ms;
