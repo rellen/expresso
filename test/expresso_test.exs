@@ -198,6 +198,41 @@ defmodule ExpressoTest do
     end
   end
 
+  describe "render/1 for a deck with no name" do
+    defmodule NoNameDeck do
+      use Expresso
+
+      slide do
+        text_box do
+          text_area do
+            text "a deck with no name"
+          end
+        end
+      end
+    end
+
+    test "writes an empty title, and no header" do
+      document =
+        NoNameDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+
+      assert document |> Floki.find("title") |> Floki.text() == ""
+      assert Floki.find(document, ".screen span.header") == []
+      assert document |> Floki.find(".screen .text-area") |> Floki.text() =~ "a deck with no name"
+    end
+
+    test "works through the imperative API" do
+      document =
+        nil
+        |> Expresso.Deck.new()
+        |> Expresso.Deck.add_slide("first", %{}, [Expresso.Element.TextBox.new("text")])
+        |> Expresso.Deck.render()
+        |> Floki.parse_document!()
+
+      assert document |> Floki.find("title") |> Floki.text() == ""
+      assert Floki.find(document, ".screen span.header") == []
+    end
+  end
+
   describe "render/1 with a custom template" do
     defmodule CustomSlideTemplate do
       use Expresso.Template
