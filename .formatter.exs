@@ -31,7 +31,7 @@ spark_locals_without_parens = [
 ]
 
 [
-  import_deps: [:spark, :temple],
+  import_deps: [:spark, :stream_data, :temple],
   inputs: ["{mix,.formatter,.check}.exs", "{config,lib,test,examples}/**/*.{ex,exs}"],
   locals_without_parens: spark_locals_without_parens,
   export: [locals_without_parens: spark_locals_without_parens]

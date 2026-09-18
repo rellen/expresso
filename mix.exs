@@ -65,6 +65,10 @@ defmodule Expresso.MixProject do
       # need it.
       {:sourceror, "~> 1.0", only: [:dev, :test], runtime: false},
 
+      # property tests. The formatter and the static analysis run in `dev`, and
+      # therefore the dependency is present in `dev` too.
+      {:stream_data, "~> 1.2", only: [:dev, :test], runtime: false},
+
       # static analysis
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
       {:doctor, ">= 0.0.0", only: :dev, runtime: false},
