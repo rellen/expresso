@@ -46,15 +46,14 @@ does not need Node.
 advisory in the output of `mix deps.get`, and this output is the more current signal. Read
 it. `docs/development.md` gives an example.
 
-These results come from Erlang/OTP 25 and Elixir 1.18, which the hook installs. They do
-not come from Erlang 28 and Elixir 1.20, which `.tool-versions` gives. The workflow runs
-each command on both pairs of versions, and each pair passes. Therefore a command in the
-Nix shell gives the same result. `docs/development.md` tells you why the versions in a
-container are different.
+These results come from Erlang/OTP 29.1, Elixir 1.20.4 and Node 24.20.0, which
+`.tool-versions` gives. The hook installs these versions, the Nix shell gives them, and the
+workflow uses them. Therefore a command in a session gives the same result as a command on
+a machine.
 
-Do not change a version in `.tool-versions` or in `mix.exs` to make a command work. The
-container of a remote session uses different versions, and `docs/development.md` tells you
-why.
+Do not change a version in `.tool-versions` or in `mix.exs` to make a command work. Four
+places give the toolchain, and `docs/development.md` names each one. A change to one place
+needs a change to the other three.
 
 ## Git
 

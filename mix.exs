@@ -5,7 +5,7 @@ defmodule Expresso.MixProject do
     [
       app: :expresso,
       version: "0.1.0",
-      elixir: "~> 1.17",
+      elixir: "~> 1.20",
       start_permanent: Mix.env() == :prod,
       compilers: [:presenter] ++ Mix.compilers(),
       elixirc_paths: elixirc_paths(Mix.env()),

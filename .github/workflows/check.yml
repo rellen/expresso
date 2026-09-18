@@ -5,14 +5,10 @@
 # npm commands, which check the types of the presenter script and run its tests.
 # `CLAUDE.md` gives the same list.
 #
-# The job runs two times, with two versions of the toolchain. Each job must
-# pass:
-#
-# - The versions of the container of a remote session, Erlang/OTP 25 and Elixir
-#   1.18. A session runs each command on those versions.
-# - The versions of `.tool-versions`, Erlang 28 and Elixir 1.20. A person who
-#   uses the Nix shell gets those versions. On 2026-09-17 this job passed for
-#   the first time, and it is necessary from that date.
+# The job runs on the versions of `.tool-versions`. The Nix shell gives those
+# versions, and `.claude/hooks/session-start.sh` gives them to a remote session.
+# Therefore each person, each session and this job give the same result. Keep the
+# four places in agreement.
 
 name: check
 
@@ -28,21 +24,16 @@ concurrency:
   group: check-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # The versions of `.tool-versions`.
+  OTP_VERSION: "29.1"
+  ELIXIR_VERSION: "1.20.4-otp-29"
+  NODE_VERSION: "24.20.0"
+
 jobs:
   check:
-    name: ${{ matrix.label }}
+    name: Erlang/OTP 29, Elixir 1.20, Node 24
     runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - label: Erlang/OTP 25, Elixir 1.18
-            otp: "25.3"
-            elixir: "1.18.4"
-          - label: Erlang 28, Elixir 1.20, from .tool-versions
-            otp: "28.5"
-            elixir: "1.20.4-otp-28"
 
     steps:
       - name: Read the repository
@@ -51,14 +42,13 @@ jobs:
       - name: Install Erlang and Elixir
         uses: erlef/setup-beam@v1
         with:
-          otp-version: ${{ matrix.otp }}
-          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ env.OTP_VERSION }}
+          elixir-version: ${{ env.ELIXIR_VERSION }}
 
       - name: Install Node
         uses: actions/setup-node@v4
         with:
-          # `.tool-versions` gives the exact version. Keep the two in agreement.
-          node-version: "24"
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       # `_build` holds the PLT of Dialyzer, which `mix.exs` puts there. A change
@@ -69,8 +59,8 @@ jobs:
           path: |
             deps
             _build
-          key: mix-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('mix.lock') }}
-          restore-keys: mix-${{ matrix.otp }}-${{ matrix.elixir }}-
+          key: mix-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}
+          restore-keys: mix-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-
 
       - name: Get the dependencies of the presenter script
         run: npm ci

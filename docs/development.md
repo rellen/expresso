@@ -5,16 +5,33 @@ deck in a browser.
 
 ## The toolchain
 
-The versions are in `.tool-versions`: Elixir 1.20, Erlang 28 and Node 24.
+The versions are in `.tool-versions`: Elixir 1.20.4, Erlang/OTP 29.1 and Node 24.20.0.
+
+Four places give a toolchain, and each place gives these versions:
+
+- `shell.nix`, which the Nix shell reads on your machine.
+- `.tool-versions`, which asdf and mise read.
+- `.claude/hooks/session-start.sh`, which a remote Claude Code session runs.
+- `.github/workflows/check.yml`, which GitHub runs for a pull request.
+
+Therefore each command gives the same result in each place. After a change to one place,
+change the other three.
 
 ### On your machine
 
 Use the Nix shell. It gives each tool, and it gives Zig for a Burrito release.
 
 ```sh
+nix flake update # nixpkgs follows master, and the lockfile can be old
 nix develop      # or: direnv allow, after you copy .envrc.example to .envrc
 mix deps.get
 ```
+
+`flake.nix` follows `nixpkgs` master, and `flake.lock` holds one commit of master.
+Therefore `nix develop` gives the versions of that commit, and not always the versions of
+`.tool-versions`. Run `nix flake update` to get the newest commit. On 2026-09-18, master
+gave Erlang/OTP 29.1, Elixir 1.20.4 and Node 24.20.0, which are the versions of
+`.tool-versions`.
 
 ### In a Claude Code session on the web
 
@@ -24,22 +41,28 @@ The hook does nothing on your machine, where the Nix shell gives the tools.
 
 The hook does these operations:
 
-1. `apt-get install erlang-nox erlang-dev erlang-dialyzer unzip curl`. The apt package
-   gives Erlang/OTP 25. The dialyzer package is separate, and `mix check` needs it.
-2. Download the Elixir build for OTP 25 from the Elixir release on GitHub, and put it in
-   `/opt/elixir`. The apt package gives Elixir 1.14, and `mix.exs` needs 1.17 or later.
-3. Write `PATH` and `ELIXIR_ERL_OPTIONS` into `$CLAUDE_ENV_FILE`.
-4. `mix local.hex`, `mix local.rebar`, `mix deps.get` and `mix compile`.
+1. Download the Erlang build for Ubuntu 24.04 from `builds.hex.pm`, and put it in
+   `/opt/otp`. The archive holds dialyzer, which `mix check` needs. `setup-beam` reads the
+   same builds in the workflow.
+2. Download the Elixir build for OTP 29 from `builds.hex.pm`, and put it in `/opt/elixir`.
+3. Download the Node build from `nodejs.org`, and put it in `/opt/node`.
+4. Write `PATH`, `ELIXIR_ERL_OPTIONS` and `LANG` into `$CLAUDE_ENV_FILE`.
+5. `mix local.hex`, `mix local.rebar`, `mix deps.get`, `mix compile` and `npm install`.
 
-The versions of the container are not the versions of `.tool-versions`. Erlang/OTP 25 and
-Elixir 1.18 compile this project and run each check, and so do the versions of
-`.tool-versions`. The workflow of a pull request runs each command on both. Two rules
-apply to the container:
+The hook takes a version from an archive and not from an apt package, because the apt
+packages are older. The apt package of Erlang gives OTP 25, the apt package of Elixir gives
+1.14, and the container gives Node 22. Five rules apply to the container:
 
-- The Elixir build must agree with the OTP release. The name of the file on GitHub is
-  `elixir-otp-25.zip`.
+- The Elixir build must agree with the OTP release. The name of the file is
+  `v1.20.4-otp-29.zip`.
+- The archive of Erlang and the archive of Node are builds for Ubuntu 24.04 on x86_64. The
+  hook stops with a message for a container of a different target.
 - The container gives a latin1 name encoding. Therefore `ELIXIR_ERL_OPTIONS` must contain
   `+fnu`, or each command writes a warning.
+- The container gives no utf8 language. Therefore `LANG` must be `C.UTF-8`, or a tool
+  writes an escape sequence in place of a character such as a check mark.
+- An archive of Hex or of rebar from a different OTP release does not load. Therefore the
+  hook writes each archive again with `--force`.
 
 The hook does not install Zig. Therefore `mix release expresso_cli_app` gives the error
 "You MUST have `zig` and `xz` installed to use Burrito" in a remote container. Make a
@@ -76,11 +99,9 @@ modules, so the functions that `use Spark.Dsl` and `use Temple.Component` write 
 count. Each public function that a person writes needs a `@doc` and a `@spec`, and each
 struct needs a `@type t`.
 
-Each result above comes from a remote container, which gives Erlang/OTP 25 and Elixir
-1.18. A session cannot run a command on Erlang 28 and Elixir 1.20, which `.tool-versions`
-gives, because the container has no such toolchain. The workflow of a pull request runs
-each command on both pairs of versions, so a pull request gives the result that a session
-cannot.
+Each result above comes from Erlang/OTP 29.1 and Elixir 1.20.4, which `.tool-versions`
+gives. The Nix shell, a remote session and the workflow each give these versions.
+Therefore a result in a session is a result for each person and for the workflow.
 
 ### Property tests
 
@@ -104,21 +125,18 @@ parentheses after `check all`.
 ### The checks of a pull request
 
 `.github/workflows/check.yml` runs `mix check`, `npm run check` and `npm test` for a pull
-request and for a push to `main`. GitHub runs the job two times, and each job must pass:
+request and for a push to `main`. The job `Erlang/OTP 29, Elixir 1.20, Node 24` uses the
+versions of `.tool-versions`, and one job is sufficient because each place gives these
+versions.
 
-- The job `Erlang/OTP 25, Elixir 1.18` uses the versions of a remote container.
-- The job `Erlang 28, Elixir 1.20, from .tool-versions` uses the versions of
-  `.tool-versions`.
-
-The second job passed for the first time on 2026-09-17, on the pull request that added
-the workflow and on the push to `main` after the merge. Each of the ten tools of
-`mix check` passed, and so did the two npm commands. Before that date, no session
-compiled this project on the versions of `.tool-versions`.
+From 2026-09-17 to 2026-09-18 the workflow ran two jobs, one for the versions of the
+container and one for the versions of `.tool-versions`. The container then took the
+versions of `.tool-versions`, and the second job became the same as the first.
 
 GitHub does not make a job necessary by itself. Add a branch protection rule for `main`
-with both jobs, or a pull request with a failure can still merge.
+with this job, or a pull request with a failure can still merge.
 
-The workflow names the version of Node, because `actions/setup-node` does not read
+The workflow holds each version in one `env` block, because no action reads
 `.tool-versions`. Keep the workflow and `.tool-versions` in agreement.
 
 The workflow keeps `deps` and `_build` in a cache, and the key holds `mix.lock` and the
@@ -126,11 +144,10 @@ two versions. Therefore a change to `mix.lock` gives a new build. A run with a c
 compiles the files of the change only. For a result from a full compile, run
 `mix compile --warnings-as-errors --force` on your machine.
 
-Dialyzer needs the `erlang-dialyzer` package, which is a package that is separate from
-`erlang-nox`. The hook installs it. The first `mix dialyzer` builds a PLT of approximately
-570 modules, and this operation takes approximately two minutes. The PLT stays in
-`_build`, so each `mix dialyzer` after the first takes a few seconds. Dialyzer reports no
-error at this time.
+Dialyzer comes with the Erlang archive of `builds.hex.pm`, and an apt package is not
+necessary. The first `mix dialyzer` builds a PLT of approximately 570 modules, and this
+operation takes approximately two minutes. The PLT stays in `_build`, so each
+`mix dialyzer` after the first takes a few seconds. Dialyzer reports no error at this time.
 
 `mix deps.audit` alone is not sufficient for a vulnerable dependency. It reads an advisory
 source that does not contain each advisory.
@@ -171,7 +188,7 @@ npm test         # node --test, which runs a .ts file directly
 npm run format   # prettier
 ```
 
-Node runs the test files with no build step. Node 22.22 and Node 24 read a `.ts` file
+Node runs the test files with no build step. Node 24 reads a `.ts` file
 directly when the file uses only erasable syntax, and `erasableSyntaxOnly` in
 `tsconfig.json` makes the compiler refuse other syntax.
 
