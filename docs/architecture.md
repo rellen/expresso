@@ -128,7 +128,7 @@ the doctype comes from `Expresso.Renderer.render/1`:
 html
   head
     title            the name of the deck
-    style            assets/fonts.css
+    style            assets/fonts.css, with the bytes of each font file in it
     style            assets/style.css
     style            the generated rules of the overlays, from Expresso.Overlay.Render
     body           data-view "present"
@@ -148,6 +148,23 @@ html
 The two views hold the same slides. Therefore a selector on the full document finds each
 element two times. A test that counts an element, or that reads its text, must select
 inside `.screen` or inside `.handout`.
+
+### The font
+
+The document of a deck is one file, and a font cannot be a second file.
+`assets/fonts.css` holds one `@font-face` rule for each face of the theme, and each rule
+names a file under `assets/fonts/`. `Expresso.Font` reads that stylesheet at compile time,
+and it replaces the path of each `url()` with a data URI of the file.
+
+Therefore a browser needs no network for the font. A document with a `@import` of a font
+service looks correct on the machine of the author, and it loses the font at a conference
+with no network. It also gives the address of each person who reads the deck to that
+service.
+
+Atkinson Hyperlegible is the font, and the Braille Institute of America gives it under the
+SIL Open Font License, Version 1.1. `assets/fonts/OFL.txt` holds that license, and the
+license permits this use. The eight files take approximately 110 kilobytes, and the data
+URIs take approximately 147 kilobytes of the document.
 
 The renderer holds the two style sheets and the presenter bundle in module attributes.
 It reads them with `File.read!/1` at compile time. Each style sheet, and each source of the
