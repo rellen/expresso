@@ -400,6 +400,20 @@ reads is correct. A deck module inside a project that runs
 theme. A later version that gives a deck its own theme must also give the verifier the
 names of that theme.
 
+### The warning of the size of a slide
+
+`Expresso.Overlay.SizeVerifier` gives a warning for a slide that takes more than 50 steps.
+`Expresso.Overlay.Size.slide/1` makes the message for one slide, and it is a pure
+function.
+
+The renderer writes one rule for each step of the deck, and one handout page for each step
+of each slide. Therefore a step number with a mistake, such as `at 1000` for `at 10`, makes
+a document of a thousand pages. The measurement of that deck gives 878 kilobytes.
+
+The warning applies to a slide with no `steps` option only. That option is a statement of
+the author, so a slide with `steps 200` gives no warning. An author who wants many steps
+gives the slide that option.
+
 ### The type
 
 Use `{:custom, Expresso.Overlay, :new, []}` for the type of the `at` option. This
@@ -695,6 +709,7 @@ are in `test/expresso/overlay_*_test.exs`, and the tests of the presenter are in
 - Slice 6, done on 2026-09-14: the handout view. The renderer writes one page for each
   step of each slide. A `@media print` block selects that view, and the key `p` changes
   between the two views.
+- The warning of the size of a slide, done on 2026-09-18.
 - The property warnings, done on 2026-09-17. `Expresso.Theme` reads the names of the
   theme, `Expresso.Overlay.Properties` makes the messages for one slide, and
   `Expresso.Overlay.PropertyVerifier` gives them to the compiler.

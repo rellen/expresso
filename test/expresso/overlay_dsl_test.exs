@@ -356,6 +356,42 @@ defmodule Expresso.OverlayDslTest do
     end
   end
 
+  describe "the size verifier" do
+    test "gives a warning for a slide of very many steps" do
+      warnings =
+        dsl_warnings do
+          defmodule Elixir.Expresso.OverlayDslTest.BigSlide do
+            use Expresso
+
+            slide "typo" do
+              text_box do
+                at 1000
+              end
+            end
+          end
+        end
+
+      assert [{Expresso.OverlayDslTest.BigSlide, [{message, _location}]}] = warnings
+      assert message =~ "deck -> slide -> typo: the slide takes 1000 steps"
+    end
+
+    test "gives no warning for a slide with a steps option" do
+      refute_dsl_warnings do
+        defmodule Elixir.Expresso.OverlayDslTest.BigOnPurpose do
+          use Expresso
+
+          slide "on purpose" do
+            steps 1000
+
+            text_box do
+              at 1000
+            end
+          end
+        end
+      end
+    end
+  end
+
   describe "a bad specification" do
     test "is an error at compile time, with the accepted forms" do
       source = """
