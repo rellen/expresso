@@ -142,3 +142,8 @@ container that has no Nix.
 ## License
 
 Apache License 2.0. See `LICENSE`.
+
+The built-in theme uses Atkinson Hyperlegible, Copyright 2020 Braille Institute of
+America, Inc. That font is under the SIL Open Font License, Version 1.1, and
+`assets/fonts/OFL.txt` holds the license. Each document that Expresso makes holds the
+bytes of the font, so the document needs no network.
