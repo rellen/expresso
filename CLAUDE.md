@@ -61,12 +61,11 @@ Do not commit to `main` and do not push to `main`. Make a branch, push the branc
 open a pull request. The maintainer merges it.
 
 `.github/workflows/check.yml` runs `mix check` and the two npm commands for a pull
-request. Do not wait for that result. The container has different versions of the
-toolchain. Therefore run the commands in "Build and test" before each commit. Tell the
-maintainer in the pull request which commands you ran.
+request. Do not wait for that result. Run the commands in "Build and test" before each
+commit, because the session gives the same versions as the workflow. Tell the maintainer in
+the pull request which commands you ran.
 
-The workflow runs two times, with the versions of a container and with the versions of
-`.tool-versions`. Each job must pass.
+The workflow runs one job, on the versions of `.tool-versions`. This job must pass.
 
 ## Commit messages
 
