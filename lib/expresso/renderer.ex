@@ -74,12 +74,18 @@ defmodule Expresso.Renderer do
   first.
   """
   @spec render(map() | keyword()) :: Phoenix.HTML.safe()
-  # sobelow_skip ["XSS.Raw"]
+  # Sobelow reports `XSS.HTML` for the attribute of the `html` element. The
+  # value of that attribute is the text "en" in this module, and no input of a
+  # user reaches it.
+  # sobelow_skip ["XSS.Raw", "XSS.HTML"]
   def render(assigns) do
     assigns = assigns |> Map.new() |> Map.update!(:deck, &Expresso.Overlay.Render.identify/1)
 
     temple do
-      html do
+      # The language of the document. A screen reader reads the attribute, and
+      # it selects a voice from the value. Each deck takes English at this
+      # time, and a later version can give the `deck` section an option.
+      html lang: "en" do
         head do
           # The encoding goes in front of each other element of the head. A
           # browser reads the first 1024 bytes of a document for it. Without
