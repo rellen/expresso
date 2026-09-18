@@ -4,10 +4,9 @@ defmodule Expresso.Element.ImageTest do
 
   alias Expresso.Element.Image
   alias Expresso.Overlay
+  alias Expresso.Test.CSS
 
   @png "test/fixtures/dot.png"
-
-  @other_widths ["900px", "60vw", "auto", "calc(50% + 10px)", "min(50%, 400px)", "50%%", "%50"]
 
   defmodule ImageDeck do
     use Expresso
@@ -108,23 +107,38 @@ defmodule Expresso.Element.ImageTest do
       assert document |> Floki.find("#slide-1 .image") |> Floki.attribute("style") == []
     end
 
+    test "writes a percentage width as a viewport unit" do
+      assert custom_property("60%") == "60vw"
+      assert custom_property("calc(50% + 10px)") == "calc(50% + 10px)"
+    end
+
     property "writes a percentage width as the same number of viewport units" do
-      check all number <- number(),
-                head <- space(),
-                gap <- space(),
-                tail <- space() do
+      check all number <- CSS.number(),
+                head <- CSS.space(),
+                gap <- CSS.space(),
+                tail <- CSS.space() do
         assert custom_property(head <> number <> gap <> "%" <> tail) == number <> "vw"
       end
     end
 
     property "writes a width of another form without a change" do
-      check all width <- other_width() do
+      check all width <- CSS.other_width(),
+                head <- CSS.space(),
+                tail <- CSS.space() do
+        assert custom_property(head <> width <> tail) == head <> width <> tail
+      end
+    end
+
+    # The DSL takes each string, and a width that is not CSS must also stay the
+    # same. A string with no percent sign is not one number in percent.
+    property "writes a value that is not CSS without a change" do
+      check all width <- filter(string(:printable), &(not String.contains?(&1, "%"))) do
         assert custom_property(width) == width
       end
     end
 
     property "writes a width one time only" do
-      check all width <- one_of([percentage(), other_width()]) do
+      check all width <- CSS.width() do
         value = custom_property(width)
 
         assert custom_property(value) == value
@@ -175,34 +189,4 @@ defmodule Expresso.Element.ImageTest do
 
     value
   end
-
-  # A number with an optional decimal part, as the width option holds it.
-  defp number do
-    gen all whole <- integer(0..9999),
-            part <- one_of([constant(nil), integer(0..999)]) do
-      if part, do: "#{whole}.#{part}", else: "#{whole}"
-    end
-  end
-
-  # Space characters around the number and the percent sign.
-  defp space, do: string([?\s, ?\t], max_length: 3)
-
-  # A width in percent, with space characters in each position that the code
-  # permits.
-  defp percentage do
-    gen all number <- number(), head <- space(), gap <- space(), tail <- space() do
-      head <> number <> gap <> "%" <> tail
-    end
-  end
-
-  # A width that is not one number in percent. The examples give forms that CSS
-  # permits, and the random strings give the other forms.
-  defp other_width do
-    [member_of(@other_widths), string(:printable)]
-    |> one_of()
-    |> filter(&(not percentage?(&1)))
-  end
-
-  # The form that the element rewrites: one number in percent, and nothing more.
-  defp percentage?(width), do: Regex.match?(~r/\A\s*\d+(\.\d+)?\s*%\s*\z/, width)
 end

@@ -266,8 +266,11 @@ natural width of the image. Therefore a percentage in CSS makes an image smaller
 `100%` changes nothing. A slide takes the full width of the screen and of the page, so a
 viewport unit gives the meaning that an author expects.
 
-The function changes a value that is a number and a percent sign only. A value such as
-`calc(50% + 10px)` goes into the document as it is.
+The function changes a value that is one number and a percent sign only. The number takes
+each form that CSS permits, so `60%`, `33.5%`, `.5%`, `+60%` and `6e1%` each become a
+viewport unit. A value such as `calc(50% + 10px)` holds a percentage inside a function, and
+it goes into the document as it is. `Expresso.Test.CSS` makes a random width for the
+property tests of this rule.
 
 The theme does not register `--image-width` with the `@property` at-rule. A registered
 property always has a value, so the fall back to `auto` would not work, and each image

@@ -8,11 +8,17 @@ defmodule Expresso.MixProject do
       elixir: "~> 1.17",
       start_permanent: Mix.env() == :prod,
       compilers: [:presenter] ++ Mix.compilers(),
+      elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       releases: releases(),
       dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix]]
     ]
   end
+
+  # `test/support` holds the generators of the property tests, and only the test
+  # environment compiles them.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_env), do: ["lib"]
 
   # Run "mix help compile.app" to learn about applications.
   def application do
