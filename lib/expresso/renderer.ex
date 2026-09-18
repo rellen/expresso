@@ -15,7 +15,6 @@ defmodule Expresso.Renderer do
 
   use Temple.Component
 
-  @external_resource "./assets/fonts.css"
   @external_resource "./assets/style.css"
 
   # `Mix.Tasks.Compile.Presenter` makes the bundle from these sources before
@@ -24,12 +23,11 @@ defmodule Expresso.Renderer do
     @external_resource source
   end
 
-  @fonts File.read!("./assets/fonts.css")
   @style File.read!("./assets/style.css")
   @presenter File.read!("./priv/static/presenter.js")
 
   defp fonts do
-    @fonts
+    Expresso.Font.css()
   end
 
   defp style do
