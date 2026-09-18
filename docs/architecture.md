@@ -257,11 +257,17 @@ the custom property `--image-width` on the root tag, and the theme reads that pr
 property, and the width then changes with the step.
 
 An image with no `width` option takes its natural size, and the theme makes it smaller for
-a slide that is too small. Use a length, such as `900px`, or a viewport unit, such as
-`60vw`, for a larger image. A viewport unit is a part of the width of the slide. A
-percentage is a percentage of the container of the image, and the container takes the
-natural width of the image. Therefore a percentage below 100 makes the image smaller, and
-`100%` changes nothing.
+a slide that is too small. Use a length, such as `900px`, or a percentage, such as `60%`,
+for a larger image. A percentage is a part of the width of the slide.
+
+The render function writes a percentage as a viewport unit, so `60%` becomes `60vw`. CSS
+resolves a percentage against the container of the image, and that container takes the
+natural width of the image. Therefore a percentage in CSS makes an image smaller only, and
+`100%` changes nothing. A slide takes the full width of the screen and of the page, so a
+viewport unit gives the meaning that an author expects.
+
+The function changes a value that is a number and a percent sign only. A value such as
+`calc(50% + 10px)` goes into the document as it is.
 
 The theme does not register `--image-width` with the `@property` at-rule. A registered
 property always has a value, so the fall back to `auto` would not work, and each image
@@ -289,6 +295,7 @@ The extension imports nothing, and it lists three modules:
 - `Expresso.Overlay.Verifier` reports a specification that breaks a rule.
 - `Expresso.Overlay.PropertyVerifier` gives a warning for a custom property that the theme
   does not use.
+- `Expresso.Overlay.SizeVerifier` gives a warning for a slide of very many steps.
 
 After the transformer, each element and each `on` entity holds its step numbers in the
 `steps` field. The metadata of the slide holds the maximum step number in `max_step`.

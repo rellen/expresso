@@ -105,6 +105,22 @@ defmodule Expresso.Element.ImageTest do
       assert document |> Floki.find("#slide-1 .image") |> Floki.attribute("style") == []
     end
 
+    test "writes a percentage width as a viewport unit" do
+      for {given, want} <- [
+            {"60%", "60vw"},
+            {"100%", "100vw"},
+            {"33.5%", "33.5vw"},
+            {"900px", "900px"},
+            {"60vw", "60vw"},
+            {"calc(50% + 10px)", "calc(50% + 10px)"},
+            {"auto", "auto"}
+          ] do
+        assigns = Image.get_assigns(%Image{src: @png, width: given})
+
+        assert %{overlay: [{"style", "--image-width: " <> ^want}]} = assigns
+      end
+    end
+
     test "escapes a width that holds a quotation mark" do
       image = %Image{src: @png, width: ~s(60vw" onload="x)}
 

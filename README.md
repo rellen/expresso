@@ -69,7 +69,7 @@ end
 `auto_reveal` shows each element of the slide one after the other. An `image` reads the
 file and puts the bytes into the document, so the document stays one file. The path is
 relative to the working directory of the command. The `width` option takes a CSS length,
-and a viewport unit such as `60vw` is a part of the width of the slide.
+such as `900px`, or a percentage of the width of the slide, such as `60%`.
 
 With the functions, build a deck and return it. The heading goes into the metadata:
 
