@@ -26,8 +26,11 @@ defmodule Expresso.Element.Image do
   slide takes the full width of the screen and of the page, so a viewport unit
   gives the meaning that an author expects.
 
-  The function changes a value that is a number and a percent sign only. A
-  value such as `"calc(50% + 10px)"` goes into the document as it is.
+  The function changes a value that is one number and a percent sign only. The
+  number takes each form that CSS permits, so `"60%"`, `"33.5%"`, `".5%"`,
+  `"+60%"` and `"6e1%"` each become a viewport unit. A value such as
+  `"calc(50% + 10px)"` holds a percentage inside a function, and it goes into
+  the document as it is.
   """
 
   use Expresso.Element
@@ -69,8 +72,10 @@ defmodule Expresso.Element.Image do
   defp width(nil), do: []
   defp width(width), do: [{"style", "--image-width: #{viewport_unit(width)}"}]
 
-  # A percentage of the slide, and not of the container of the image.
-  @percentage ~r/\A\s*(\d+(?:\.\d+)?)\s*%\s*\z/
+  # A percentage of the slide, and not of the container of the image. The pattern
+  # takes each form of a CSS number: a sign, a decimal part and an exponent are
+  # each optional, and a number such as `.5` has no whole part.
+  @percentage ~r/\A\s*([+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?)\s*%\s*\z/
 
   defp viewport_unit(width) do
     case Regex.run(@percentage, width, capture: :all_but_first) do

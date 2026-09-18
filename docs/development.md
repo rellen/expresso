@@ -88,6 +88,15 @@ cannot.
 then write `property` in place of `test`. `test/expresso/image_element_test.exs` gives an
 example. It makes a random width, and it compares the result against the rule.
 
+`test/support` holds the generators, and `mix.exs` compiles this directory in the test
+environment only. `Expresso.Test.CSS` makes a value of the CSS `width` property: a length
+in each unit of CSS Values and Units 4, a percentage, a keyword, a custom property and a
+math function such as `calc`, `min`, `max` and `clamp`. The module makes the text of the
+value, because the DSL holds a width as a string.
+
+`config/config.exs` gives each property 500 runs. The generators make many forms, and the
+default of 100 runs does not reach enough of them.
+
 The dependency is present in `dev` and in `test`. `mix format` runs in `dev`, and it reads
 `deps/stream_data/.formatter.exs` through `import_deps`. Therefore the formatter writes no
 parentheses after `check all`.
