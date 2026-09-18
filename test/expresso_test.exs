@@ -158,6 +158,13 @@ defmodule ExpressoTest do
       assert text =~ "second slide"
     end
 
+    test "declares the language of the document" do
+      document =
+        MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+
+      assert document |> Floki.find("html") |> Floki.attribute("lang") == ["en"]
+    end
+
     test "declares the encoding in front of each other element of the head" do
       document =
         MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
