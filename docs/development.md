@@ -82,6 +82,16 @@ gives, because the container has no such toolchain. The workflow of a pull reque
 each command on both pairs of versions, so a pull request gives the result that a session
 cannot.
 
+### Property tests
+
+`stream_data` gives the property tests. Put `use ExUnitProperties` in the test module, and
+then write `property` in place of `test`. `test/expresso/image_element_test.exs` gives an
+example. It makes a random width, and it compares the result against the rule.
+
+The dependency is present in `dev` and in `test`. `mix format` runs in `dev`, and it reads
+`deps/stream_data/.formatter.exs` through `import_deps`. Therefore the formatter writes no
+parentheses after `check all`.
+
 ### The checks of a pull request
 
 `.github/workflows/check.yml` runs `mix check`, `npm run check` and `npm test` for a pull
