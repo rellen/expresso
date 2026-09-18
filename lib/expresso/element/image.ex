@@ -16,13 +16,18 @@ defmodule Expresso.Element.Image do
   takes its natural size, and the theme makes it smaller for a slide that is
   too small.
 
-  Use a length, such as `"900px"`, or a viewport unit, such as `"60vw"`. A
-  viewport unit is a part of the width of the slide, because a slide takes the
-  full width of the screen and of the page.
+  Use a length, such as `"900px"`, or a percentage, such as `"60%"`. A
+  percentage is a part of the width of the slide.
 
-  A percentage is a percentage of the container of the image, and the container
-  takes the natural width of the image. Therefore a percentage below 100 makes
-  the image smaller, and `"100%"` changes nothing.
+  The render function writes a percentage as a viewport unit, so `"60%"`
+  becomes `60vw`. CSS resolves a percentage against the container of the
+  image, and that container takes the natural width of the image. Therefore a
+  percentage in CSS makes an image smaller only, and `100%` changes nothing. A
+  slide takes the full width of the screen and of the page, so a viewport unit
+  gives the meaning that an author expects.
+
+  The function changes a value that is a number and a percent sign only. A
+  value such as `"calc(50% + 10px)"` goes into the document as it is.
   """
 
   use Expresso.Element
@@ -62,7 +67,17 @@ defmodule Expresso.Element.Image do
   # A custom property inherits, so the property goes on the root tag and the
   # `img` element reads it. An `on` entity can then also set the property.
   defp width(nil), do: []
-  defp width(width), do: [{"style", "--image-width: #{width}"}]
+  defp width(width), do: [{"style", "--image-width: #{viewport_unit(width)}"}]
+
+  # A percentage of the slide, and not of the container of the image.
+  @percentage ~r/\A\s*(\d+(?:\.\d+)?)\s*%\s*\z/
+
+  defp viewport_unit(width) do
+    case Regex.run(@percentage, width, capture: :all_but_first) do
+      [number] -> number <> "vw"
+      nil -> width
+    end
+  end
 
   @doc """
   Make the HTML of an image

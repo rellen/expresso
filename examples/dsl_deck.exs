@@ -50,7 +50,7 @@ defmodule DslDeck do
 
     image "examples/logo.png" do
       alt "A square with a gradient"
-      width "60vw"
+      width "60%"
     end
   end
 

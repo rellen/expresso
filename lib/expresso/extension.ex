@@ -53,7 +53,7 @@ defmodule Expresso.Extension do
           alt: [type: :string, doc: "The text of the image for a screen reader."],
           width: [
             type: :string,
-            doc: "The width of the image, as a CSS length, such as 900px or 60vw."
+            doc: "The width of the image, such as 900px or 60%. See docs/architecture.md."
           ]
         ]
   }
@@ -107,5 +107,9 @@ defmodule Expresso.Extension do
     sections: @sections,
     imports: [],
     transformers: [Expresso.Overlay.Transformer],
-    verifiers: [Expresso.Overlay.Verifier, Expresso.Overlay.PropertyVerifier]
+    verifiers: [
+      Expresso.Overlay.Verifier,
+      Expresso.Overlay.PropertyVerifier,
+      Expresso.Overlay.SizeVerifier
+    ]
 end
