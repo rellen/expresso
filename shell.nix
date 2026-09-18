@@ -1,8 +1,8 @@
 { pkgs ? import <nixpkgs> { }, nixpkgs ? <nixpkgs> }:
 let
   inherit (pkgs.lib) optional;
-  beam = pkgs.beam.packages.erlang_28;
-  erlang = pkgs.beam.interpreters.erlang_28;
+  beam = pkgs.beam.packages.erlang_29;
+  erlang = pkgs.beam.interpreters.erlang_29;
   elixir = beam.elixir_1_20;
   elixir-ls = beam.elixir-ls.override { inherit elixir; };
   # Burrito pins the Zig it builds wrappers with; keep this in step with

@@ -16,8 +16,8 @@ handout view for a printer. See `docs/overlays.md`.
 
 ## Install
 
-Expresso needs Erlang 28, Elixir 1.20 and Node 24. The file `.tool-versions` gives the exact
-versions.
+Expresso needs Erlang/OTP 29, Elixir 1.20 and Node 24. The file `.tool-versions` gives the
+exact versions.
 
 The repository gives a Nix shell with each tool:
 

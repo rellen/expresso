@@ -132,9 +132,9 @@ esbuild accepts this form. `tsc` accepts it with `allowImportingTsExtensions`, w
 Node runs a `.ts` file directly, and it has a test runner. Put the tests in
 `assets/test/`, and run them with `node --test assets/test/`. No other tool is necessary.
 
-This works on Node 22.22, which the remote container has, and on Node 24, which
-`.tool-versions` gives. A test of two cases ran on this container with no flag and with no
-build step.
+This works on Node 24, which `.tool-versions` gives. It also worked on Node 22.22, which
+the remote container gave at that time. A test of two cases ran on this container with no
+flag and with no build step.
 
 The tests cover `state.ts`. The Playwright recipe in `docs/development.md` covers `dom.ts`
 and `main.ts`. Add one line to that recipe: make sure that `document.compatMode` is
@@ -157,9 +157,9 @@ Each environment gets Node from its own source, and the tools from `package.json
 
 - The Nix shell gives Node 24. Run `npm install` in the shell. Remove `prettier` from
   `shell.nix`, so that one file gives the version.
-- The remote container gives Node 22. Add `npm install` to
-  `.claude/hooks/session-start.sh`. The container has a global `tsc` from the image of
-  the harness. Do not use it. It is not a part of this repository.
+- The remote container gets Node from `.claude/hooks/session-start.sh`, which also runs
+  `npm install`. The container has a global `tsc` from the image of the harness. Do not
+  use it. It is not a part of this repository.
 
 `mix compile` needs Node in no environment. The type check and the tests need Node, and a
 person runs them before a commit.
