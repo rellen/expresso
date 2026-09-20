@@ -3,6 +3,11 @@ defmodule Expresso.OverlayTest do
 
   alias Expresso.Overlay
 
+  defp spec(term) do
+    {:ok, spec} = Overlay.new(term)
+    spec
+  end
+
   describe "new/1 accepts each form of the table" do
     test "an integer is one step" do
       assert Overlay.new(3) == {:ok, %Overlay{pairs: [{3, 3}]}}
@@ -93,6 +98,30 @@ defmodule Expresso.OverlayTest do
       {:ok, overlay} = Overlay.new([2, from: 5])
 
       assert Overlay.resolve_next(overlay, 7) == {overlay, 7}
+    end
+  end
+
+  describe "relative?/1" do
+    test "is true for a specification with a :next" do
+      assert Overlay.relative?(spec(:next))
+      assert Overlay.relative?(spec([2, from: :next]))
+    end
+
+    test "is false for a specification without a :next" do
+      refute Overlay.relative?(spec(3))
+      refute Overlay.relative?(spec([2, 5..7, from: 9]))
+    end
+  end
+
+  describe "first_step/1" do
+    test "gives the smallest first step" do
+      assert Overlay.first_step(spec([5..7, 2, from: 9])) == 2
+      assert Overlay.first_step(spec(from: 4)) == 4
+    end
+
+    test "ignores a pair that starts with :next" do
+      assert Overlay.first_step(spec([:next, 6])) == 6
+      assert Overlay.first_step(spec(:next)) == nil
     end
   end
 

@@ -58,10 +58,47 @@ defmodule Expresso.Extension do
         ]
   }
 
+  # A list holds items, and an item holds one nested list. Spark cannot nest
+  # two entities inside each other without a limit, so the extension builds
+  # three levels. The item of the deepest list holds no list.
+  @list_levels 3
+
+  @list Enum.reduce(1..@list_levels, nil, fn _level, inner ->
+          item = %Spark.Dsl.Entity{
+            name: :item,
+            target: Expresso.Element.Item,
+            args: [:text],
+            entities: [elements: List.wrap(inner), on: [@on]],
+            schema:
+              @overlay_schema ++
+                [text: [type: :string, required: true, doc: "The text of the item."]]
+          }
+
+          %Spark.Dsl.Entity{
+            name: :list,
+            target: Expresso.Element.List,
+            entities: [elements: [item], on: [@on]],
+            schema:
+              @overlay_schema ++
+                [
+                  ordered: [
+                    type: :boolean,
+                    default: false,
+                    doc: "Number the items. The default is a bullet for each item."
+                  ],
+                  reveal: [
+                    type: :boolean,
+                    default: false,
+                    doc: "Show the items one after the other. See docs/overlays.md."
+                  ]
+                ]
+          }
+        end)
+
   @text_box %Spark.Dsl.Entity{
     name: :text_box,
     target: Expresso.Element.TextBox,
-    entities: [elements: [@text_area, @image], on: [@on]],
+    entities: [elements: [@text_area, @image, @list], on: [@on]],
     schema: @overlay_schema
   }
 
@@ -70,7 +107,7 @@ defmodule Expresso.Extension do
     target: Expresso.Element.Pause
   }
 
-  @slide_elements [elements: [@text_box, @image, @pause]]
+  @slide_elements [elements: [@text_box, @image, @list, @pause]]
 
   @slide %Spark.Dsl.Entity{
     name: :slide,

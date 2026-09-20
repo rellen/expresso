@@ -221,8 +221,8 @@ The DSL gives no template option. A deck from the DSL uses the built-in template
 ## The elements
 
 An element is the content of a slide. `Expresso.Element.TextBox`,
-`Expresso.Element.TextArea` and `Expresso.Element.Image` are the three elements at this
-time.
+`Expresso.Element.TextArea`, `Expresso.Element.Image` and `Expresso.Element.List` with
+`Expresso.Element.Item` are the elements at this time.
 
 An element module has these parts:
 
@@ -276,6 +276,13 @@ The theme does not register `--image-width` with the `@property` at-rule. A regi
 property always has a value, so the fall back to `auto` would not work, and each image
 would take the width zero.
 
+A `list` holds `item` elements, and an item holds text and one optional nested `list`. The
+DSL accepts three levels of lists, because Spark cannot nest two entities inside each
+other without a limit. `Expresso.Extension` builds the three levels with a loop. The
+`ordered` option gives an `ol` element, and the default is a `ul` element. The `reveal`
+option shows the items one after the other, and `docs/overlays.md` gives its rules. The
+text of an item goes into one block element, as in a text area, and it can contain HTML.
+
 The theme makes `.text-area` a flex container. Each element inside a flex container is a
 flex item, and a flex item also holds each run of text between two elements. Therefore
 text with an inline element, such as `<b>`, breaks into more than one line. The render
@@ -287,9 +294,10 @@ custom element that writes text from the deck must do the same.
 `Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a
 top level section. The section holds `slide` entities. A `slide` holds `text_box` and
 `pause` entities, and a `text_box` holds `text_area` and `on` entities. A `text_area`
-holds `on` entities. A `slide` and a `text_box` also hold `image` entities. Each element
-has an `at` option, and a slide has a `steps` option and an `auto_reveal` option.
-`docs/overlays.md` gives the meaning of each.
+holds `on` entities. A `slide` and a `text_box` also hold `image` and `list` entities, and
+a `list` holds `item` entities. Each element has an `at` option, a slide has a `steps`
+option and an `auto_reveal` option, and a list has a `reveal` option. `docs/overlays.md`
+gives the meaning of each.
 
 The extension imports nothing, and it lists three modules:
 

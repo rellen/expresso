@@ -94,6 +94,32 @@ defmodule Expresso.Overlay do
   def from_next, do: %__MODULE__{pairs: [{:next, :max}]}
 
   @doc """
+  Tell whether a specification reads the counter
+
+  A specification with a `:next` is relative, and `resolve_next/2` gives it a
+  step from the counter. A specification without a `:next` is absolute, and it
+  does not move the counter.
+  """
+  @spec relative?(t()) :: boolean()
+  def relative?(%__MODULE__{pairs: pairs}), do: Enum.any?(pairs, &has_next?/1)
+
+  @doc """
+  Give the first step of a specification
+
+  The function gives the smallest first step of the pairs. It ignores a pair
+  that starts with `:next`, and it gives `nil` when each pair does. The
+  `reveal` option of an element reads this step from an absolute
+  specification. See `Expresso.Overlay.Expand`.
+  """
+  @spec first_step(t()) :: pos_integer() | nil
+  def first_step(%__MODULE__{pairs: pairs}) do
+    pairs
+    |> Enum.map(fn {first, _last} -> first end)
+    |> Enum.filter(&is_integer/1)
+    |> Enum.min(fn -> nil end)
+  end
+
+  @doc """
   Replace each `:next` with the value of the counter
 
   Each `:next` in one specification takes the same value. The function
@@ -102,7 +128,7 @@ defmodule Expresso.Overlay do
   """
   @spec resolve_next(t(), pos_integer()) :: {t(), pos_integer()}
   def resolve_next(%__MODULE__{pairs: pairs} = overlay, counter) do
-    if Enum.any?(pairs, &has_next?/1) do
+    if relative?(overlay) do
       resolved =
         Enum.map(pairs, fn {first, last} -> {put(first, counter), put(last, counter)} end)
 

@@ -7,8 +7,8 @@ a small script. You give the document to a browser, and you present from the bro
 
 ## Status
 
-Expresso is at an early stage. It has three elements, `text_box`, `text_area` and `image`,
-and one built-in theme.
+Expresso is at an early stage. It has the elements `text_box`, `text_area`, `image` and
+`list`, and one built-in theme.
 
 Overlays are the steps inside one slide, and the code contains each part of their design.
 A slide takes steps, and an element shows at a set of steps. The document also holds a
@@ -63,10 +63,25 @@ defmodule MyDeck do
       end
     end
   end
+
+  slide "points" do
+    list do
+      reveal true
+      item "The first point"
+
+      item "The second point" do
+        list do
+          ordered true
+          item "A nested item"
+        end
+      end
+    end
+  end
 end
 ```
 
-`auto_reveal` shows each element of the slide one after the other. An `image` reads the
+`auto_reveal` shows each element of the slide one after the other, and `reveal` does the
+same for the items of a list. An `image` reads the
 file and puts the bytes into the document, so the document stays one file. The path is
 relative to the working directory of the command. The `width` option takes a CSS length,
 such as `900px`, or a percentage of the width of the slide, such as `60%`.
