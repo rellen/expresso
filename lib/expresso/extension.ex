@@ -166,8 +166,58 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @math %Spark.Dsl.Entity{
+    name: :math,
+    target: Expresso.Element.Math,
+    args: [:text],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        [text: [type: :string, required: true, doc: "The MathML, from <math> to </math>."]]
+  }
+
+  @part %Spark.Dsl.Entity{
+    name: :part,
+    target: Expresso.Element.Part,
+    args: [:id],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        [id: [type: :string, required: true, doc: "The id of an element of the SVG file."]]
+  }
+
+  @diagram %Spark.Dsl.Entity{
+    name: :diagram,
+    target: Expresso.Element.Diagram,
+    args: [:src],
+    entities: [elements: [@part], on: [@on]],
+    schema:
+      @overlay_schema ++
+        [
+          src: [
+            type: :string,
+            required: true,
+            doc: "The path of the SVG file, from the working directory of the command."
+          ],
+          width: [
+            type: :string,
+            doc: "The width of the diagram, such as 900px or 60%. See docs/architecture.md."
+          ]
+        ]
+  }
+
   # The elements that a text box and a column hold
-  @inner_elements [@text_area, @image, @list, @table, @quotation, @spacer, @code]
+  @inner_elements [
+    @text_area,
+    @image,
+    @list,
+    @table,
+    @quotation,
+    @spacer,
+    @code,
+    @math,
+    @diagram
+  ]
 
   @column %Spark.Dsl.Entity{
     name: :column,

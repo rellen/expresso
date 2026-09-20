@@ -77,7 +77,15 @@ defmodule Expresso.Element.Image do
   # each optional, and a number such as `.5` has no whole part.
   @percentage ~r/\A\s*([+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?)\s*%\s*\z/
 
-  defp viewport_unit(width) do
+  @doc """
+  Write a width in percent as a viewport unit
+
+  A value that is one number and a percent sign becomes the same number in
+  `vw`, and each other value comes back as it is. The moduledoc gives the
+  reason. `Expresso.Element.Diagram` uses the same rule.
+  """
+  @spec viewport_unit(String.t()) :: String.t()
+  def viewport_unit(width) do
     case Regex.run(@percentage, width, capture: :all_but_first) do
       [number] -> number <> "vw"
       nil -> width

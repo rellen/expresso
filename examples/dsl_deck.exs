@@ -155,10 +155,30 @@ defmodule DslDeck do
 
         text_box do
           text_area do
-            text "A column that takes the rest, and shows at step 2."
+            text "A column that takes the rest, and shows at the next step."
           end
         end
       end
+    end
+  end
+
+  slide "math" do
+    heading "Math"
+
+    math ~S"""
+    <math display="block">
+      <mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup>
+    </math>
+    """
+  end
+
+  slide "a diagram" do
+    heading "A diagram"
+
+    diagram "examples/flow.svg" do
+      width "60%"
+      part "arrow", at: [from: 2]
+      part "output", at: [from: 3]
     end
   end
 
