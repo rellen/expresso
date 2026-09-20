@@ -141,13 +141,36 @@ h2 {
 .spacer {
   flex-grow: 1;
 }
+.code {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+}
+.code pre {
+  margin: 0;
+  max-width: 100%;
+  font-size: 0.6rem;
+  line-height: 1.4;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* A hidden line keeps its space, and the block does not move when a group
+   of lines shows. */
+.code .line {
+  display: block;
+}
 .text-box,
 .text-area,
 .image,
 .list,
 .item,
 .table,
-.quotation {
+.quotation,
+.code {
   transform: translate(var(--x), var(--y));
   outline: calc(var(--alert, 0) * 4px) solid currentColor;
   outline-offset: 0.25rem;

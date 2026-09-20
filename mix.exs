@@ -61,6 +61,22 @@ defmodule Expresso.MixProject do
       # the presenter bundle
       {:esbuild, "~> 0.10", runtime: false},
 
+      # the highlighting of a code element. Each lexer package registers its
+      # languages when its application starts.
+      {:makeup, "~> 1.2"},
+      {:makeup_elixir, "~> 1.0"},
+      {:makeup_erlang, "~> 1.1"},
+      {:makeup_gleam, "~> 1.0"},
+      {:makeup_eex, "~> 2.0"},
+      {:makeup_html, "~> 0.2"},
+      {:makeup_css, "~> 0.2"},
+      {:makeup_ts, "~> 0.2"},
+      {:makeup_json, "~> 1.0"},
+      {:makeup_sql, "~> 0.1"},
+      {:makeup_c, "~> 0.1"},
+      {:makeup_rust, "~> 0.3"},
+      {:makeup_diff, "~> 0.1"},
+
       # docs
       {:ex_doc, "~> 0.40", only: :dev, runtime: false},
 

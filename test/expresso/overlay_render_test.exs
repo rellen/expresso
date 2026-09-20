@@ -241,8 +241,8 @@ defmodule Expresso.Overlay.RenderTest do
       assert Floki.attribute(boxes, "data-el") == ["s1-e1", "s1-e3"]
     end
 
-    test "writes the generated rules into a third style element", %{document: document} do
-      [_fonts, _theme, generated] =
+    test "writes the generated rules into a fourth style element", %{document: document} do
+      [_fonts, _theme, _highlight, generated] =
         document |> Floki.find("head style") |> Enum.map(&Floki.text/1)
 
       assert generated =~ "@property --alert"

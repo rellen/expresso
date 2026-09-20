@@ -199,6 +199,9 @@ These rules apply with the option:
 - A closed absolute specification, such as `at 3`, shows the element at one step only.
   The second child then gets the step 4, and the verifier reports it. Write `at from: 3`
   for an element that reveals its children.
+- A `code` element takes a list in the option, such as `reveal [1..3, 4..8]`. Each item
+  is a group of lines, and each group is one child with `at [from: :next]`. A line that
+  is in no group shows at each step. The rules above apply to the groups.
 
 ## Per-step state
 
@@ -754,8 +757,8 @@ are in `test/expresso/overlay_*_test.exs`, and the tests of the presenter are in
 - The `auto_reveal` option, done on 2026-09-17. `Expresso.Overlay.Expand.slide/1` gives the
   implicit specification to each element at the level of the slide. The rule of this
   document changed at the same time, from each element to each element of the slide.
-- The `reveal` option, done on 2026-09-20, with the `list` element and the `table`
-  element. The same function gives
+- The `reveal` option, done on 2026-09-20, with the `list` element, the `table` element
+  and the `code` element. The same function gives
   the implicit specification to each child of the element, and it starts a local counter
   at the first step of an absolute `at` option.
 

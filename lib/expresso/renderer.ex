@@ -42,10 +42,11 @@ defmodule Expresso.Renderer do
   # deck function writes this tree with Floki. Therefore the doctype cannot come
   # from this function.
   #
-  # The two style sheets are files of this repository, and the presenter bundle
-  # comes from files of this repository. The renderer reads them at compile time,
-  # and no input of a user can change them. The generated style block comes from
-  # the deck, and `Expresso.Overlay.Render.style/1` escapes each value of it.
+  # The two style sheets are files of this repository, the rules of the token
+  # classes come from Makeup, and the presenter bundle comes from files of this
+  # repository. The renderer reads them at compile time, and no input of a user
+  # can change them. The generated style block comes from the deck, and
+  # `Expresso.Overlay.Render.style/1` escapes each value of it.
   # The three parts of a slide. The present view and the handout view show the
   # same parts, and each view gives its own container.
   defp slide_parts(assigns) do
@@ -104,6 +105,10 @@ defmodule Expresso.Renderer do
 
           style do
             Phoenix.HTML.raw(style())
+          end
+
+          style do
+            Phoenix.HTML.raw(Expresso.Highlight.stylesheet())
           end
 
           style do

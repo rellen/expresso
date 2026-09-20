@@ -145,10 +145,34 @@ defmodule Expresso.Extension do
     schema: @overlay_schema
   }
 
+  @code %Spark.Dsl.Entity{
+    name: :code,
+    target: Expresso.Element.Code,
+    args: [{:optional, :lang}],
+    entities: [on: [@on]],
+    transform: {Expresso.Element.Code, :build, []},
+    schema:
+      @overlay_schema ++
+        [
+          lang: [
+            type: :string,
+            doc: "The name of the language, such as elixir. See Expresso.Highlight."
+          ],
+          text: [type: :string, required: true, doc: "The source code."],
+          reveal: [
+            type: {:custom, Expresso.Element.Code, :reveal, []},
+            doc: "Line numbers and ranges, one group at each step. See docs/overlays.md."
+          ]
+        ]
+  }
+
   @text_box %Spark.Dsl.Entity{
     name: :text_box,
     target: Expresso.Element.TextBox,
-    entities: [elements: [@text_area, @image, @list, @table, @quotation, @spacer], on: [@on]],
+    entities: [
+      elements: [@text_area, @image, @list, @table, @quotation, @spacer, @code],
+      on: [@on]
+    ],
     schema: @overlay_schema
   }
 
@@ -157,7 +181,9 @@ defmodule Expresso.Extension do
     target: Expresso.Element.Pause
   }
 
-  @slide_elements [elements: [@text_box, @image, @list, @table, @quotation, @spacer, @pause]]
+  @slide_elements [
+    elements: [@text_box, @image, @list, @table, @quotation, @spacer, @code, @pause]
+  ]
 
   @slide %Spark.Dsl.Entity{
     name: :slide,
