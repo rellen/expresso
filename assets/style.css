@@ -177,6 +177,15 @@ h2 {
   min-height: 100vh;
   break-after: page;
 }
+.notes {
+  flex-grow: 0;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-top: 1px dashed currentColor;
+  font-size: 0.5rem;
+  text-align: left;
+  white-space: pre-line;
+}
 .handout-page:last-child {
   break-after: auto;
 }

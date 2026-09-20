@@ -167,6 +167,10 @@ defmodule Expresso.Extension do
     schema: [
       name: [type: :string, doc: "A name for the slide."],
       heading: [type: :string, doc: "The heading that the slide template shows."],
+      notes: [
+        type: :string,
+        doc: "The notes of the speaker. The handout view shows them under each page."
+      ],
       steps: [type: :pos_integer, doc: "The maximum step number of the slide."],
       auto_reveal: [
         type: :boolean,

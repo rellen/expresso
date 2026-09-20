@@ -112,6 +112,7 @@ defmodule DslDeck do
 
   slide "a quotation" do
     heading "A quotation"
+    notes "Say who Mies van der Rohe was.\nThe handout view shows these notes."
 
     quotation "Less is more." do
       by "Ludwig Mies van der Rohe"

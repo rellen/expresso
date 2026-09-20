@@ -7,8 +7,8 @@ defmodule Expresso.Renderer do
   the presenter.
 
   The present view holds one `section` for each slide. The handout view holds one
-  `section` for each step of each slide. `docs/overlays.md` gives the reason for
-  the second view.
+  `section` for each step of each slide, with the notes of the speaker under each
+  page. `docs/overlays.md` gives the reason for the second view.
   """
 
   import Temple
@@ -132,6 +132,16 @@ defmodule Expresso.Renderer do
                       data_step: step,
                       data_slide: slide.metadata.slide_number do
                 c(&slide_parts/1, deck: @deck, slide: slide)
+
+                # The notes of the speaker go under each page of the slide, and
+                # the present view does not show them. The text is not HTML.
+                if notes = slide.metadata[:notes] do
+                  aside class: "notes" do
+                    div do
+                      notes
+                    end
+                  end
+                end
               end
             end
           end

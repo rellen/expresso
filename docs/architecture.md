@@ -314,7 +314,12 @@ holds `on` entities. A `slide` and a `text_box` also hold `image`, `list`, `tabl
 `quotation` and `spacer` entities. A `list` holds `item` entities, and a `table` holds
 `row` entities. Each element has an `at` option, a slide has a `steps` option and an
 `auto_reveal` option, and a list and a table have a `reveal` option. `docs/overlays.md`
-gives the meaning of each.
+gives the meaning of each. A slide also has a `heading` option and a `notes` option, and
+`Expresso.Slide.put_options_in_metadata/1` puts each into the metadata of the slide.
+
+The `notes` option holds the notes of the speaker. The handout view shows them in an
+`aside` element under each page of the slide, and the present view does not show them.
+The text is not HTML, and a line break in the text gives a line break on the page.
 
 The extension imports nothing, and it lists three modules:
 
