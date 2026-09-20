@@ -163,6 +163,22 @@ h2 {
 .code .line {
   display: block;
 }
+.columns {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 1rem;
+  min-width: 0;
+}
+/* A column without a width takes an equal part of the free space. A column
+   with a width sets the two custom properties, and it does not grow. */
+.column {
+  flex: var(--column-grow, 1) 1 var(--column-width, 0%);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 .text-box,
 .text-area,
 .image,
@@ -170,7 +186,9 @@ h2 {
 .item,
 .table,
 .quotation,
-.code {
+.code,
+.columns,
+.column {
   transform: translate(var(--x), var(--y));
   outline: calc(var(--alert, 0) * 4px) solid currentColor;
   outline-offset: 0.25rem;

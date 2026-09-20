@@ -137,6 +137,31 @@ defmodule DslDeck do
     end
   end
 
+  slide "columns" do
+    heading "Columns"
+
+    columns do
+      column do
+        width "40%"
+
+        list do
+          item "A column of 40 percent"
+          item "with a list"
+        end
+      end
+
+      column do
+        at from: :next
+
+        text_box do
+          text_area do
+            text "A column that takes the rest, and shows at step 2."
+          end
+        end
+      end
+    end
+  end
+
   slide "a spacer" do
     heading "A spacer"
 
