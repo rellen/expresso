@@ -130,6 +130,7 @@ html
     title            the name of the deck
     style            assets/fonts.css, with the bytes of each font file in it
     style            assets/style.css
+    style            the rules of the token classes of a code element, from Makeup
     style            the generated rules of the overlays, from Expresso.Overlay.Render
     body           data-view "present"
       div            the present view, class "screen"
@@ -142,6 +143,7 @@ html
         section      one for each step of each slide, class "handout-page",
                      data-step from the step, data-slide from the slide
           div        the same three parts as a slide of the present view
+          aside      the notes of the slide, class "notes", when the slide has notes
       script         priv/static/presenter.js, the presenter bundle
 ```
 
@@ -223,7 +225,8 @@ The DSL gives no template option. A deck from the DSL uses the built-in template
 An element is the content of a slide. `Expresso.Element.TextBox`,
 `Expresso.Element.TextArea`, `Expresso.Element.Image`, `Expresso.Element.List` with
 `Expresso.Element.Item`, `Expresso.Element.Table` with `Expresso.Element.Row`,
-`Expresso.Element.Quotation` and `Expresso.Element.Spacer` are the elements at this time.
+`Expresso.Element.Quotation`, `Expresso.Element.Spacer` and `Expresso.Element.Code` with
+`Expresso.Element.Lines` are the elements at this time.
 
 An element module has these parts:
 
@@ -299,6 +302,27 @@ A `spacer` has no content. The theme gives it `flex-grow: 1`, so it takes the fr
 of its container and pushes the elements after it to the end. Two spacers around an
 element put the element in the middle. Write `spacer()` with parentheses, as for `pause`.
 
+A `code` element shows source code. The entity takes the name of the language as its
+optional first argument, and the `text` option holds the source. `Expresso.Highlight`
+makes one HTML fragment for each line at render time. Makeup lexes the text when a lexer
+package registers the language, and `mix.exs` lists one package for each language:
+Elixir, Erlang, Gleam, EEx and HEEx, HTML, CSS, JavaScript and TypeScript, JSON, SQL, C,
+Rust and diff. Without a lexer for the language, the fragment is the escaped text. The
+rules of the token classes come from a style of Makeup, and the renderer writes them
+into the document in their own `style` element.
+
+The `reveal` option of a code element takes a list of line numbers and of ranges, such
+as `[1..3, 4..8, 10]`. `Expresso.Element.Code.build/1` makes one `Expresso.Element.Lines`
+child for each item, with the specification `[from: :next]`, and the transformer gives
+each group its steps as it does for the items of a list. Each line goes into a `span`
+element, and a hidden line keeps its space. `docs/overlays.md` gives the rules.
+
+`Expresso.Deck.render/1` writes the document with Floki, and Floki drops a text node that
+is only white space. A line of code holds such nodes: an indentation, a space between two
+tokens, a line break. Therefore `Expresso.Highlight` puts each white space token into the
+span of the token before it, and it puts a zero width space into a line that has no other
+character. An element that writes text with significant white space must do the same.
+
 The theme makes `.text-area` a flex container. Each element inside a flex container is a
 flex item, and a flex item also holds each run of text between two elements. Therefore
 text with an inline element, such as `<b>`, breaks into more than one line. The render
@@ -311,10 +335,11 @@ custom element that writes text from the deck must do the same.
 top level section. The section holds `slide` entities. A `slide` holds `text_box` and
 `pause` entities, and a `text_box` holds `text_area` and `on` entities. A `text_area`
 holds `on` entities. A `slide` and a `text_box` also hold `image`, `list`, `table`,
-`quotation` and `spacer` entities. A `list` holds `item` entities, and a `table` holds
-`row` entities. Each element has an `at` option, a slide has a `steps` option and an
-`auto_reveal` option, and a list and a table have a `reveal` option. `docs/overlays.md`
-gives the meaning of each. A slide also has a `heading` option and a `notes` option, and
+`quotation`, `spacer` and `code` entities. A `list` holds `item` entities, and a `table`
+holds `row` entities. Each element has an `at` option, a slide has a `steps` option and
+an `auto_reveal` option, a list and a table have a `reveal` option, and a code element has
+a `reveal` option with a list of lines. `docs/overlays.md` gives the meaning of each. A
+slide also has a `heading` option and a `notes` option, and
 `Expresso.Slide.put_options_in_metadata/1` puts each into the metadata of the slide.
 
 The `notes` option holds the notes of the speaker. The handout view shows them in an

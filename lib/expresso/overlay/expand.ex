@@ -38,7 +38,9 @@ defmodule Expresso.Overlay.Expand do
 
   The `reveal` option of an element, such as a `list` or a `table`, gives the
   same implicit specification to each child of the element that has no `at`
-  option. With a `header` option, the first child keeps `nil`. The children of
+  option. With a `header` option, the first child keeps `nil`. A code element
+  holds a list in the option, and `Expresso.Element.Code.build/1` makes its
+  children with the specification before this function runs. The children of
   an element with an absolute `at` option read a counter that starts at the
   first step of the element, and the counter of the slide does not change.
   Therefore the children show one after the other from the first step of the
@@ -105,7 +107,7 @@ defmodule Expresso.Overlay.Expand do
     children = reveal(element)
 
     {children, counter} =
-      if Map.get(element, :reveal) == true and absolute?(spec) do
+      if reveals?(element) and absolute?(spec) do
         {children, _local} =
           Enum.map_reduce(children, Overlay.first_step(spec), &resolve_element/2)
 
@@ -131,6 +133,16 @@ defmodule Expresso.Overlay.Expand do
   end
 
   defp reveal(element), do: children(element)
+
+  # A list or a table has the value true, and a code element has a list of
+  # line groups. Either reveals its children.
+  defp reveals?(element) do
+    case Map.get(element, :reveal) do
+      true -> true
+      [_ | _] -> true
+      _other -> false
+    end
+  end
 
   defp absolute?(nil), do: false
   defp absolute?(%Overlay{} = spec), do: not Overlay.relative?(spec)

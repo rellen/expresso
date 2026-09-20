@@ -119,6 +119,24 @@ defmodule DslDeck do
     end
   end
 
+  slide "code" do
+    heading "Code"
+
+    code "elixir" do
+      reveal [1..3, 5..7]
+
+      text ~S"""
+      defmodule Greeter do
+        def greet(name), do: "Hello, #{name}!"
+      end
+
+      Greeter.greet("world")
+      |> IO.puts()
+      # The last group shows at step 2.
+      """
+    end
+  end
+
   slide "a spacer" do
     heading "A spacer"
 
