@@ -95,10 +95,40 @@ defmodule Expresso.Extension do
           }
         end)
 
+  @row %Spark.Dsl.Entity{
+    name: :row,
+    target: Expresso.Element.Row,
+    args: [:cells],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        [cells: [type: {:list, :string}, required: true, doc: "The text of each cell."]]
+  }
+
+  @table %Spark.Dsl.Entity{
+    name: :table,
+    target: Expresso.Element.Table,
+    entities: [elements: [@row], on: [@on]],
+    schema:
+      @overlay_schema ++
+        [
+          header: [
+            type: :boolean,
+            default: false,
+            doc: "Make the first row the header of the table."
+          ],
+          reveal: [
+            type: :boolean,
+            default: false,
+            doc: "Show the rows one after the other. See docs/overlays.md."
+          ]
+        ]
+  }
+
   @text_box %Spark.Dsl.Entity{
     name: :text_box,
     target: Expresso.Element.TextBox,
-    entities: [elements: [@text_area, @image, @list], on: [@on]],
+    entities: [elements: [@text_area, @image, @list, @table], on: [@on]],
     schema: @overlay_schema
   }
 
@@ -107,7 +137,7 @@ defmodule Expresso.Extension do
     target: Expresso.Element.Pause
   }
 
-  @slide_elements [elements: [@text_box, @image, @list, @pause]]
+  @slide_elements [elements: [@text_box, @image, @list, @table, @pause]]
 
   @slide %Spark.Dsl.Entity{
     name: :slide,

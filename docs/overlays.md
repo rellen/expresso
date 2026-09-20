@@ -754,7 +754,8 @@ are in `test/expresso/overlay_*_test.exs`, and the tests of the presenter are in
 - The `auto_reveal` option, done on 2026-09-17. `Expresso.Overlay.Expand.slide/1` gives the
   implicit specification to each element at the level of the slide. The rule of this
   document changed at the same time, from each element to each element of the slide.
-- The `reveal` option, done on 2026-09-20, with the `list` element. The same function gives
+- The `reveal` option, done on 2026-09-20, with the `list` element and the `table`
+  element. The same function gives
   the implicit specification to each child of the element, and it starts a local counter
   at the first step of an absolute `at` option.
 

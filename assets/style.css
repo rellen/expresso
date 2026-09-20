@@ -104,11 +104,26 @@ h2 {
 .item .list {
   font-size: 0.85em;
 }
+.table {
+  align-self: center;
+  border-collapse: collapse;
+  text-align: left;
+}
+.table th,
+.table td {
+  padding: 0.2rem 0.75rem;
+  border-bottom: 1px solid currentColor;
+  vertical-align: top;
+}
+.table th {
+  font-weight: 700;
+}
 .text-box,
 .text-area,
 .image,
 .list,
-.item {
+.item,
+.table {
   transform: translate(var(--x), var(--y));
   outline: calc(var(--alert, 0) * 4px) solid currentColor;
   outline-offset: 0.25rem;
