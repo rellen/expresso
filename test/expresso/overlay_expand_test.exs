@@ -148,6 +148,43 @@ defmodule Expresso.Overlay.ExpandTest do
     end
   end
 
+  describe "the reveal option" do
+    defp list(fields), do: struct!(Expresso.Element.List, [reveal: true] ++ fields)
+    defp item, do: %Expresso.Element.Item{}
+
+    test "gives an implicit specification to each child without an at option" do
+      [list] = expand([list(elements: [item(), item(), %{item() | at: spec(1)}])]).elements
+
+      assert Enum.map(list.elements, & &1.steps) == [[1, 2], [2], [1]]
+      assert list.steps == nil
+    end
+
+    test "reads the counter of the slide after the at option and the on entities" do
+      list = list(at: spec(from: :next), on: [%On{at: spec(:next)}], elements: [item(), item()])
+      [list, box] = expand([list, %TextBox{at: spec(:next)}]).elements
+
+      assert list.steps == [1, 2, 3, 4, 5]
+      assert Enum.map(list.on, & &1.steps) == [[2]]
+      assert Enum.map(list.elements, & &1.steps) == [[3, 4, 5], [4, 5]]
+      assert box.steps == [5]
+    end
+
+    test "starts a local counter at the first step of an absolute at option" do
+      list = list(at: spec([3, from: 5]), elements: [item(), item(), item()])
+      [list, box] = expand([list, %TextBox{at: spec(:next)}]).elements
+
+      assert Enum.map(list.elements, & &1.steps) == [[3, 4, 5], [4, 5], [5]]
+      assert box.steps == [1]
+      assert list.steps == [3, 5]
+    end
+
+    test "does nothing without the option" do
+      [list] = expand([list(reveal: false, elements: [item(), item()])]).elements
+
+      assert Enum.map(list.elements, & &1.steps) == [nil, nil]
+    end
+  end
+
   describe "the result" do
     test "removes each pause at the level of the slide" do
       slide = expand([%Pause{}, %TextBox{}, %Pause{}])

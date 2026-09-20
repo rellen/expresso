@@ -162,6 +162,44 @@ These rules apply with the option:
   of the slide can make it larger. A `steps` option that is smaller gives an error from the
   transformer.
 
+### The `reveal` option
+
+`reveal` is a boolean option of an element that holds children of one kind, such as a
+`list` of items or a `table` of rows. Its default value is `false`. With the value `true`,
+the transformer gives `at [from: :next]` to each child that has no `at` option, and the
+children then show one after the other. The option does the work of `auto_reveal` one
+level down, and the two options work together.
+
+```elixir
+slide "points" do
+  list do
+    reveal true
+    item "This item shows at step 1."
+    item "This item shows at step 2."
+    item "This item shows at step 3."
+  end
+end
+```
+
+These rules apply with the option:
+
+- A child with an `at` option keeps it, and a child with an `on` entity reads the counter
+  as each element does.
+- An element with a `header` option, such as a table, keeps its first child without a
+  specification. The header then shows with the element.
+- An element without an `at` option shows at each step, and its children read the counter
+  of the slide. Therefore an element after it continues the sequence.
+- An element with a relative `at` option, such as `at from: :next`, reads the counter
+  first, and its children come after it. The element then shows with no child at its first
+  step.
+- An element with an absolute `at` option, such as `at from: 3`, gives its children a
+  counter that starts at its own first step. The counter of the slide does not change.
+  Therefore no child gets a step at which the element does not show, which is the error
+  of `auto_reveal` under a parent with an absolute specification.
+- A closed absolute specification, such as `at 3`, shows the element at one step only.
+  The second child then gets the step 4, and the verifier reports it. Write `at from: 3`
+  for an element that reveals its children.
+
 ## Per-step state
 
 The `on` entity gives a state to an element for a set of steps. The `on` entity accepts
@@ -716,6 +754,9 @@ are in `test/expresso/overlay_*_test.exs`, and the tests of the presenter are in
 - The `auto_reveal` option, done on 2026-09-17. `Expresso.Overlay.Expand.slide/1` gives the
   implicit specification to each element at the level of the slide. The rule of this
   document changed at the same time, from each element to each element of the slide.
+- The `reveal` option, done on 2026-09-20, with the `list` element. The same function gives
+  the implicit specification to each child of the element, and it starts a local counter
+  at the first step of an absolute `at` option.
 
 ## The decisions
 

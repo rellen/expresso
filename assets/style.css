@@ -91,9 +91,24 @@ h2 {
   max-height: 100%;
   object-fit: contain;
 }
+.list {
+  flex-grow: 1;
+  margin: 0;
+  padding-left: 1.5rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.item {
+  margin: 0.25rem 0;
+}
+.item .list {
+  font-size: 0.85em;
+}
 .text-box,
 .text-area,
-.image {
+.image,
+.list,
+.item {
   transform: translate(var(--x), var(--y));
   outline: calc(var(--alert, 0) * 4px) solid currentColor;
   outline-offset: 0.25rem;

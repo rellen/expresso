@@ -76,4 +76,23 @@ defmodule DslDeck do
       end
     end
   end
+
+  slide "a list" do
+    heading "A list"
+
+    list do
+      reveal true
+      item "The first point"
+
+      item "The second point" do
+        list do
+          ordered true
+          item "A nested item, in a numbered list"
+          item "Another nested item"
+        end
+      end
+
+      item "The third point, with <b>HTML</b>"
+    end
+  end
 end

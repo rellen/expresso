@@ -36,6 +36,14 @@ defmodule Expresso.Overlay.Expand do
   applies the option before the counter walk. It changes no nested element,
   and a nested element without an `at` option keeps `nil`.
 
+  The `reveal` option of an element, such as a `list` or a `table`, gives the
+  same implicit specification to each child of the element that has no `at`
+  option. With a `header` option, the first child keeps `nil`. The children of
+  an element with an absolute `at` option read a counter that starts at the
+  first step of the element, and the counter of the slide does not change.
+  Therefore the children show one after the other from the first step of the
+  element, and no child gets a step at which the element does not show.
+
   The function gives an error when a specification has a step number that is
   more than the maximum.
   """
@@ -85,7 +93,8 @@ defmodule Expresso.Overlay.Expand do
   defp resolve_element(%Pause{} = pause, counter), do: {pause, counter}
 
   defp resolve_element(element, counter) do
-    {at, counter} = resolve_spec(at(element), counter)
+    spec = at(element)
+    {at, counter} = resolve_spec(spec, counter)
 
     {on, counter} =
       Enum.map_reduce(on(element), counter, fn %On{} = on, counter ->
@@ -93,10 +102,38 @@ defmodule Expresso.Overlay.Expand do
         {%On{on | at: at}, counter}
       end)
 
-    {children, counter} = Enum.map_reduce(children(element), counter, &resolve_element/2)
+    children = reveal(element)
+
+    {children, counter} =
+      if Map.get(element, :reveal) == true and absolute?(spec) do
+        {children, _local} =
+          Enum.map_reduce(children, Overlay.first_step(spec), &resolve_element/2)
+
+        {children, counter}
+      else
+        Enum.map_reduce(children, counter, &resolve_element/2)
+      end
 
     {put(element, at, on, children), counter}
   end
+
+  # The implicit specification of the reveal option. It goes on each child of
+  # the element that has no at option. The header of a table is the first
+  # child, and it keeps nil.
+
+  defp reveal(%{reveal: true} = element) do
+    children = children(element)
+
+    {header, rest} =
+      if Map.get(element, :header) == true, do: Enum.split(children, 1), else: {[], children}
+
+    header ++ auto_reveal(rest, true)
+  end
+
+  defp reveal(element), do: children(element)
+
+  defp absolute?(nil), do: false
+  defp absolute?(%Overlay{} = spec), do: not Overlay.relative?(spec)
 
   defp resolve_spec(nil, counter), do: {nil, counter}
   defp resolve_spec(%Overlay{} = spec, counter), do: Overlay.resolve_next(spec, counter)
