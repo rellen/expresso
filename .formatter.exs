@@ -18,6 +18,7 @@ spark_locals_without_parens = [
   list: 0,
   list: 1,
   name: 1,
+  notes: 1,
   on: 1,
   on: 2,
   ordered: 1,

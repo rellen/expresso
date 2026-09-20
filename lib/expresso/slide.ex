@@ -6,6 +6,7 @@ defmodule Expresso.Slide do
   @type t :: %__MODULE__{
           :name => String.t() | nil,
           :heading => String.t() | nil,
+          :notes => String.t() | nil,
           :steps => pos_integer() | nil,
           :auto_reveal => boolean() | nil,
           :metadata => map() | nil,
@@ -15,6 +16,7 @@ defmodule Expresso.Slide do
   defstruct [
     :name,
     :heading,
+    :notes,
     :steps,
     :auto_reveal,
     :metadata,
@@ -42,18 +44,24 @@ defmodule Expresso.Slide do
   @doc """
   Write the options of the DSL into the metadata of the slide
 
-  The `slide` entity puts the `heading` option into the `heading` field. The
-  templates read the heading from the metadata, as they do for a slide from
-  `Expresso.Deck.add_slide/4`. This function puts the heading into the metadata,
-  and it gives the metadata an empty map when the field is `nil`.
+  The `slide` entity puts the `heading` option into the `heading` field, and
+  the `notes` option into the `notes` field. The templates and the renderer
+  read each from the metadata, as they do for a slide from
+  `Expresso.Deck.add_slide/4`. This function puts each option that is not
+  `nil` into the metadata, and it gives the metadata an empty map when the
+  field is `nil`.
   """
   @spec put_options_in_metadata(t()) :: t()
-  def put_options_in_metadata(%__MODULE__{heading: nil} = slide) do
-    %__MODULE__{slide | metadata: slide.metadata || %{}}
-  end
+  def put_options_in_metadata(%__MODULE__{} = slide) do
+    metadata =
+      Enum.reduce([:heading, :notes], slide.metadata || %{}, fn key, metadata ->
+        case Map.fetch!(slide, key) do
+          nil -> metadata
+          value -> Map.put(metadata, key, value)
+        end
+      end)
 
-  def put_options_in_metadata(%__MODULE__{heading: heading, metadata: metadata} = slide) do
-    %__MODULE__{slide | metadata: Map.put(metadata || %{}, :heading, heading)}
+    %__MODULE__{slide | metadata: metadata}
   end
 
   @doc """
