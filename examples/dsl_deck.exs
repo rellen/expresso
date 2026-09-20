@@ -109,4 +109,30 @@ defmodule DslDeck do
       row ["table", "rows of cells"]
     end
   end
+
+  slide "a quotation" do
+    heading "A quotation"
+
+    quotation "Less is more." do
+      by "Ludwig Mies van der Rohe"
+    end
+  end
+
+  slide "a spacer" do
+    heading "A spacer"
+
+    text_box do
+      text_area do
+        text "This text is at the top."
+      end
+    end
+
+    spacer()
+
+    text_box do
+      text_area do
+        text "The spacer pushes this text to the bottom."
+      end
+    end
+  end
 end
