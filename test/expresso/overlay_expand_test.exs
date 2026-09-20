@@ -178,6 +178,14 @@ defmodule Expresso.Overlay.ExpandTest do
       assert list.steps == [3, 5]
     end
 
+    test "keeps the first child without a specification with the header option" do
+      rows = [%Expresso.Element.Row{}, %Expresso.Element.Row{}, %Expresso.Element.Row{}]
+      table = struct!(Expresso.Element.Table, reveal: true, header: true, elements: rows)
+      [table] = expand([table]).elements
+
+      assert Enum.map(table.elements, & &1.steps) == [nil, [1, 2], [2]]
+    end
+
     test "does nothing without the option" do
       [list] = expand([list(reveal: false, elements: [item(), item()])]).elements
 

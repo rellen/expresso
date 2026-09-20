@@ -95,4 +95,18 @@ defmodule DslDeck do
       item "The third point, with <b>HTML</b>"
     end
   end
+
+  slide "a table" do
+    heading "A table"
+
+    table do
+      header true
+      reveal true
+      row ["Element", "Content"]
+      row ["text_area", "text, with HTML"]
+      row ["image", "one file, as a data URI"]
+      row ["list", "items, with nested lists"]
+      row ["table", "rows of cells"]
+    end
+  end
 end

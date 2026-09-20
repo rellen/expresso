@@ -7,8 +7,8 @@ a small script. You give the document to a browser, and you present from the bro
 
 ## Status
 
-Expresso is at an early stage. It has the elements `text_box`, `text_area`, `image` and
-`list`, and one built-in theme.
+Expresso is at an early stage. It has the elements `text_box`, `text_area`, `image`,
+`list` and `table`, and one built-in theme.
 
 Overlays are the steps inside one slide, and the code contains each part of their design.
 A slide takes steps, and an element shows at a set of steps. The document also holds a
