@@ -226,8 +226,9 @@ An element is the content of a slide. `Expresso.Element.TextBox`,
 `Expresso.Element.TextArea`, `Expresso.Element.Image`, `Expresso.Element.List` with
 `Expresso.Element.Item`, `Expresso.Element.Table` with `Expresso.Element.Row`,
 `Expresso.Element.Quotation`, `Expresso.Element.Spacer`, `Expresso.Element.Code` with
-`Expresso.Element.Lines`, and `Expresso.Element.Columns` with `Expresso.Element.Column`
-are the elements at this time.
+`Expresso.Element.Lines`, `Expresso.Element.Columns` with `Expresso.Element.Column`,
+`Expresso.Element.Math`, and `Expresso.Element.Diagram` with `Expresso.Element.Part` are
+the elements at this time.
 
 An element module has these parts:
 
@@ -332,6 +333,34 @@ elements as a text box. The theme makes the element a flex row. A column without
 takes the `at` option and the `on` entity. A column cannot hold a `columns` element,
 because Spark cannot nest two entities inside each other without a limit.
 
+A `math` element takes MathML as its first argument, from the `<math>` tag to the
+`</math>` tag. A browser renders MathML Core without a script and without a font file,
+and each browser of the floor of this project supports it. The text goes into the
+document as it is. Give the `math` tag the attribute `display="block"` for a formula on
+its own line.
+
+A `diagram` shows an SVG file. The `src` option gives the path, as for an image, but the
+render function puts the SVG into the document as an element and not as a data URI.
+Therefore the rules of the theme reach the parts of the diagram. A `part` entity names an
+element of the file by its `id`, and its `at` option and `on` entities give the steps.
+The parts are the children of the diagram, so the transformer and the verifier treat them
+as elements, and the render function writes the overlay attributes of each part on the
+element of the file that has its `id`. A file without that `id` stops the render with a
+message that names the id and the path. The `width` option gives the width of the
+diagram as the option of an image does, through the custom property `--diagram-width`,
+and a diagram without the option takes the width that the file gives.
+
+The document holds one copy of the file for the present view and one for each page of the
+handout view. A browser resolves a reference such as `url(#fill)` to the first element of
+the document with that `id`, and a gradient in a hidden view does not paint. Therefore
+the render function gives each copy its own ids: it puts a number after each `id`, and it
+puts the same number into each `url(#id)` and each `href="#id"` of the copy. The number
+comes from `System.unique_integer/1`, so two renders of one deck give different numbers.
+
+The document passes Floki, and Floki writes each name of an SVG in lowercase, such as
+`viewbox`. A browser reads the lowercase names inside an `svg` element as the names of
+SVG, so the diagram keeps its meaning.
+
 The theme makes `.text-area` a flex container. Each element inside a flex container is a
 flex item, and a flex item also holds each run of text between two elements. Therefore
 text with an inline element, such as `<b>`, breaks into more than one line. The render
@@ -344,12 +373,14 @@ custom element that writes text from the deck must do the same.
 top level section. The section holds `slide` entities. A `slide` holds `text_box` and
 `pause` entities, and a `text_box` holds `text_area` and `on` entities. A `text_area`
 holds `on` entities. A `slide` and a `text_box` also hold `image`, `list`, `table`,
-`quotation`, `spacer`, `code` and `columns` entities. A `list` holds `item` entities, a
-`table` holds `row` entities, and a `columns` element holds `column` entities, which
-hold the elements of a text box. Each element has an `at` option, a slide has a `steps` option and
-an `auto_reveal` option, a list and a table have a `reveal` option, and a code element has
-a `reveal` option with a list of lines. `docs/overlays.md` gives the meaning of each. A
-slide also has a `heading` option and a `notes` option, and
+`quotation`, `spacer`, `code`, `math`, `diagram` and `columns` entities. A `list` holds
+`item` entities, a `table` holds `row` entities, a `diagram` holds `part` entities, and a
+`columns` element holds `column` entities, which hold the elements of a text box.
+
+Each element has an `at` option, a slide has a `steps` option and an `auto_reveal`
+option, a list and a table have a `reveal` option, and a code element has a `reveal`
+option with a list of lines. `docs/overlays.md` gives the meaning of each. A slide also
+has a `heading` option and a `notes` option, and
 `Expresso.Slide.put_options_in_metadata/1` puts each into the metadata of the slide.
 
 The `notes` option holds the notes of the speaker. The handout view shows them in an
