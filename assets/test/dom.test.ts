@@ -105,7 +105,11 @@ test("apply writes the view only for a document with no slide", () => {
 test("apply throws for a slide that the document does not hold", () => {
   fakeDocument([1]);
 
-  assert.throws(() => apply({ slide: 2, step: 1, view: "present" }, { slides: 1, steps: [1] }), {
-    message: "The document has no slide 2",
-  });
+  assert.throws(
+    () =>
+      apply({ slide: 2, step: 1, view: "present" }, { slides: 1, steps: [1] }),
+    {
+      message: "The document has no slide 2",
+    },
+  );
 });

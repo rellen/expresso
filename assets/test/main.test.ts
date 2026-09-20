@@ -25,8 +25,12 @@ let keydown: ((event: { key: string }) => void) | null = null;
 const doc = {
   body,
   getElementsByClassName: (name: string) => (name === "slide" ? slides : []),
-  getElementById: (id: string) => slides.find((slide) => slide.id === id) ?? null,
-  addEventListener: (name: string, listener: (event: { key: string }) => void) => {
+  getElementById: (id: string) =>
+    slides.find((slide) => slide.id === id) ?? null,
+  addEventListener: (
+    name: string,
+    listener: (event: { key: string }) => void,
+  ) => {
     if (name === "keydown") {
       keydown = listener;
     }
