@@ -222,8 +222,8 @@ The DSL gives no template option. A deck from the DSL uses the built-in template
 
 An element is the content of a slide. `Expresso.Element.TextBox`,
 `Expresso.Element.TextArea`, `Expresso.Element.Image`, `Expresso.Element.List` with
-`Expresso.Element.Item`, and `Expresso.Element.Table` with `Expresso.Element.Row` are the
-elements at this time.
+`Expresso.Element.Item`, `Expresso.Element.Table` with `Expresso.Element.Row`,
+`Expresso.Element.Quotation` and `Expresso.Element.Spacer` are the elements at this time.
 
 An element module has these parts:
 
@@ -290,6 +290,15 @@ then puts it into a `thead` element with `th` cells. The `reveal` option shows t
 one after the other, and the header row shows with the table. `docs/overlays.md` gives
 the rules.
 
+A `quotation` takes its text as its first argument, and the `by` option gives the name of
+the source. The renderer writes a `figure` element with a `blockquote` element, and the
+source goes into a `figcaption` element. The entity is not named `quote`, because
+`Kernel.quote/2` has that name, and a call of the DSL would be ambiguous.
+
+A `spacer` has no content. The theme gives it `flex-grow: 1`, so it takes the free space
+of its container and pushes the elements after it to the end. Two spacers around an
+element put the element in the middle. Write `spacer()` with parentheses, as for `pause`.
+
 The theme makes `.text-area` a flex container. Each element inside a flex container is a
 flex item, and a flex item also holds each run of text between two elements. Therefore
 text with an inline element, such as `<b>`, breaks into more than one line. The render
@@ -301,10 +310,11 @@ custom element that writes text from the deck must do the same.
 `Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a
 top level section. The section holds `slide` entities. A `slide` holds `text_box` and
 `pause` entities, and a `text_box` holds `text_area` and `on` entities. A `text_area`
-holds `on` entities. A `slide` and a `text_box` also hold `image`, `list` and `table`
-entities. A `list` holds `item` entities, and a `table` holds `row` entities. Each element
-has an `at` option, a slide has a `steps` option and an `auto_reveal` option, and a list
-and a table have a `reveal` option. `docs/overlays.md` gives the meaning of each.
+holds `on` entities. A `slide` and a `text_box` also hold `image`, `list`, `table`,
+`quotation` and `spacer` entities. A `list` holds `item` entities, and a `table` holds
+`row` entities. Each element has an `at` option, a slide has a `steps` option and an
+`auto_reveal` option, and a list and a table have a `reveal` option. `docs/overlays.md`
+gives the meaning of each.
 
 The extension imports nothing, and it lists three modules:
 

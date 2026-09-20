@@ -118,12 +118,36 @@ h2 {
 .table th {
   font-weight: 700;
 }
+.quotation {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.quotation blockquote {
+  margin: 0;
+  font-style: italic;
+}
+.quotation figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+.quotation figcaption::before {
+  content: "\2014\00a0";
+}
+.spacer {
+  flex-grow: 1;
+}
 .text-box,
 .text-area,
 .image,
 .list,
 .item,
-.table {
+.table,
+.quotation {
   transform: translate(var(--x), var(--y));
   outline: calc(var(--alert, 0) * 4px) solid currentColor;
   outline-offset: 0.25rem;

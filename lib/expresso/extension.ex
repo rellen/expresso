@@ -125,10 +125,30 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @quotation %Spark.Dsl.Entity{
+    name: :quotation,
+    target: Expresso.Element.Quotation,
+    args: [:text],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        [
+          text: [type: :string, required: true, doc: "The text of the quotation."],
+          by: [type: :string, doc: "The name of the source of the quotation."]
+        ]
+  }
+
+  @spacer %Spark.Dsl.Entity{
+    name: :spacer,
+    target: Expresso.Element.Spacer,
+    entities: [on: [@on]],
+    schema: @overlay_schema
+  }
+
   @text_box %Spark.Dsl.Entity{
     name: :text_box,
     target: Expresso.Element.TextBox,
-    entities: [elements: [@text_area, @image, @list, @table], on: [@on]],
+    entities: [elements: [@text_area, @image, @list, @table, @quotation, @spacer], on: [@on]],
     schema: @overlay_schema
   }
 
@@ -137,7 +157,7 @@ defmodule Expresso.Extension do
     target: Expresso.Element.Pause
   }
 
-  @slide_elements [elements: [@text_box, @image, @list, @table, @pause]]
+  @slide_elements [elements: [@text_box, @image, @list, @table, @quotation, @spacer, @pause]]
 
   @slide %Spark.Dsl.Entity{
     name: :slide,
