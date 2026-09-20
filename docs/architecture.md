@@ -225,8 +225,9 @@ The DSL gives no template option. A deck from the DSL uses the built-in template
 An element is the content of a slide. `Expresso.Element.TextBox`,
 `Expresso.Element.TextArea`, `Expresso.Element.Image`, `Expresso.Element.List` with
 `Expresso.Element.Item`, `Expresso.Element.Table` with `Expresso.Element.Row`,
-`Expresso.Element.Quotation`, `Expresso.Element.Spacer` and `Expresso.Element.Code` with
-`Expresso.Element.Lines` are the elements at this time.
+`Expresso.Element.Quotation`, `Expresso.Element.Spacer`, `Expresso.Element.Code` with
+`Expresso.Element.Lines`, and `Expresso.Element.Columns` with `Expresso.Element.Column`
+are the elements at this time.
 
 An element module has these parts:
 
@@ -323,6 +324,14 @@ tokens, a line break. Therefore `Expresso.Highlight` puts each white space token
 span of the token before it, and it puts a zero width space into a line that has no other
 character. An element that writes text with significant white space must do the same.
 
+A `columns` element puts its `column` elements side by side, and a column holds the same
+elements as a text box. The theme makes the element a flex row. A column without a
+`width` option takes an equal part of the free space. A column with the option, such as
+`width "30%"`, takes that width: the render function writes the custom properties
+`--column-width` and `--column-grow` on the column, and the theme reads them. A column
+takes the `at` option and the `on` entity. A column cannot hold a `columns` element,
+because Spark cannot nest two entities inside each other without a limit.
+
 The theme makes `.text-area` a flex container. Each element inside a flex container is a
 flex item, and a flex item also holds each run of text between two elements. Therefore
 text with an inline element, such as `<b>`, breaks into more than one line. The render
@@ -335,8 +344,9 @@ custom element that writes text from the deck must do the same.
 top level section. The section holds `slide` entities. A `slide` holds `text_box` and
 `pause` entities, and a `text_box` holds `text_area` and `on` entities. A `text_area`
 holds `on` entities. A `slide` and a `text_box` also hold `image`, `list`, `table`,
-`quotation`, `spacer` and `code` entities. A `list` holds `item` entities, and a `table`
-holds `row` entities. Each element has an `at` option, a slide has a `steps` option and
+`quotation`, `spacer`, `code` and `columns` entities. A `list` holds `item` entities, a
+`table` holds `row` entities, and a `columns` element holds `column` entities, which
+hold the elements of a text box. Each element has an `at` option, a slide has a `steps` option and
 an `auto_reveal` option, a list and a table have a `reveal` option, and a code element has
 a `reveal` option with a list of lines. `docs/overlays.md` gives the meaning of each. A
 slide also has a `heading` option and a `notes` option, and

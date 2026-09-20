@@ -166,13 +166,36 @@ defmodule Expresso.Extension do
         ]
   }
 
+  # The elements that a text box and a column hold
+  @inner_elements [@text_area, @image, @list, @table, @quotation, @spacer, @code]
+
+  @column %Spark.Dsl.Entity{
+    name: :column,
+    target: Expresso.Element.Column,
+    entities: [elements: @inner_elements, on: [@on]],
+    schema:
+      @overlay_schema ++
+        [
+          width: [
+            type: :string,
+            doc: "The width of the column, such as 30%. The default is an equal part."
+          ]
+        ]
+  }
+
+  # A column cannot hold a columns element, because Spark cannot nest two
+  # entities inside each other without a limit.
+  @columns %Spark.Dsl.Entity{
+    name: :columns,
+    target: Expresso.Element.Columns,
+    entities: [elements: [@column], on: [@on]],
+    schema: @overlay_schema
+  }
+
   @text_box %Spark.Dsl.Entity{
     name: :text_box,
     target: Expresso.Element.TextBox,
-    entities: [
-      elements: [@text_area, @image, @list, @table, @quotation, @spacer, @code],
-      on: [@on]
-    ],
+    entities: [elements: @inner_elements ++ [@columns], on: [@on]],
     schema: @overlay_schema
   }
 
@@ -181,9 +204,7 @@ defmodule Expresso.Extension do
     target: Expresso.Element.Pause
   }
 
-  @slide_elements [
-    elements: [@text_box, @image, @list, @table, @quotation, @spacer, @code, @pause]
-  ]
+  @slide_elements [elements: [@text_box, @columns] ++ @inner_elements ++ [@pause]]
 
   @slide %Spark.Dsl.Entity{
     name: :slide,
