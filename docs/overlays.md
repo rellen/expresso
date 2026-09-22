@@ -201,7 +201,9 @@ These rules apply with the option:
   for an element that reveals its children.
 - A `code` element takes a list in the option, such as `reveal [1..3, 4..8]`. Each item
   is a group of lines, and each group is one child with `at [from: :next]`. A line that
-  is in no group shows at each step. The rules above apply to the groups.
+  is in no group shows at each step. The rules above apply to the groups. A line number
+  that is more than the number of lines of the text gives an error from
+  `Expresso.Element.Code.build/1`, because such a group shows nothing.
 
 ## Per-step state
 

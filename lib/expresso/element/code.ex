@@ -12,7 +12,9 @@ defmodule Expresso.Element.Code do
   specification `[from: :next]`, and the transformer then gives each group
   its steps as it does for the items of a list. A line that is in no group
   shows at each step. A hidden line keeps its space, so the block does not
-  move when a group shows. `docs/overlays.md` gives the rules.
+  move when a group shows. A line number that is more than the number of
+  lines of the text gives an error, because such a group shows nothing.
+  `docs/overlays.md` gives the rules.
   """
 
   use Expresso.Element
@@ -39,18 +41,21 @@ defmodule Expresso.Element.Code do
   Make a code element with text
 
   The options are `lang`, the name of the language, and `reveal`, a list of
-  line numbers and of ranges.
+  line numbers and of ranges. The function raises for a `reveal` option with
+  a line number that the text does not have.
   """
   @spec new(String.t(), keyword()) :: t()
   def new(text, opts \\ []) do
-    {:ok, code} =
-      build(%__MODULE__{
-        text: text,
-        lang: Keyword.get(opts, :lang),
-        reveal: Keyword.get(opts, :reveal)
-      })
+    code = %__MODULE__{
+      text: text,
+      lang: Keyword.get(opts, :lang),
+      reveal: Keyword.get(opts, :reveal)
+    }
 
-    code
+    case build(code) do
+      {:ok, code} -> code
+      {:error, message} -> raise ArgumentError, message
+    end
   end
 
   @doc """
@@ -59,14 +64,38 @@ defmodule Expresso.Element.Code do
   The DSL calls this function after it makes the struct, and `new/2` calls
   it too. It puts one `Expresso.Element.Lines` child into `elements` for each
   item of the option, in order.
+
+  The function gives an error for a line number that is more than the number
+  of lines of the text. Such a group shows nothing, and it takes one step of
+  the slide, so the deck gets a step at which nothing changes.
   """
-  @spec build(t()) :: {:ok, t()}
+  @spec build(t()) :: {:ok, t()} | {:error, String.t()}
   def build(%__MODULE__{reveal: nil} = code), do: {:ok, code}
 
-  def build(%__MODULE__{reveal: reveal} = code) do
-    groups = Enum.map(reveal, &%Lines{numbers: numbers(&1), at: Overlay.from_next()})
+  def build(%__MODULE__{reveal: reveal, text: text} = code) do
+    count = line_count(text)
 
-    {:ok, %__MODULE__{code | elements: groups}}
+    case reveal |> Enum.flat_map(&numbers/1) |> Enum.find(&(&1 > count)) do
+      nil ->
+        groups = Enum.map(reveal, &%Lines{numbers: numbers(&1), at: Overlay.from_next()})
+        {:ok, %__MODULE__{code | elements: groups}}
+
+      line ->
+        {:error,
+         "the reveal option has the line #{line}, and the code element has #{count(count)}"}
+    end
+  end
+
+  defp count(1), do: "1 line"
+  defp count(lines), do: "#{lines} lines"
+
+  # The render function removes one line break at the end of the text, so the
+  # last line is the text after the last line break. This function counts the
+  # lines the same way.
+  defp line_count(nil), do: 0
+
+  defp line_count(text) do
+    text |> String.replace_suffix("\n", "") |> String.split("\n") |> length()
   end
 
   defp numbers(line) when is_integer(line), do: [line]

@@ -317,7 +317,9 @@ The `reveal` option of a code element takes a list of line numbers and of ranges
 as `[1..3, 4..8, 10]`. `Expresso.Element.Code.build/1` makes one `Expresso.Element.Lines`
 child for each item, with the specification `[from: :next]`, and the transformer gives
 each group its steps as it does for the items of a list. Each line goes into a `span`
-element, and a hidden line keeps its space. `docs/overlays.md` gives the rules.
+element, and a hidden line keeps its space. A line number that is more than the number of
+lines of the text gives an error, because such a group shows nothing and it takes one
+step of the slide. `docs/overlays.md` gives the rules.
 
 `Expresso.Deck.render/1` writes the document with Floki, and Floki drops a text node that
 is only white space. A line of code holds such nodes: an indentation, a space between two
