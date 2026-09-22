@@ -66,6 +66,25 @@ defmodule Expresso.Element.CodeTest do
       assert Enum.all?(code.elements, &(&1.at == Overlay.from_next()))
       assert Code.new("a").elements == []
     end
+
+    test "takes a line number to the last line, and a text ends with one line break" do
+      assert [%Lines{numbers: [2]}] = Code.new("a\nb", reveal: [2]).elements
+      assert [%Lines{numbers: [2]}] = Code.new("a\nb\n", reveal: [2]).elements
+      assert [%Lines{numbers: [1, 2, 3]}] = Code.new("a\nb\n\n", reveal: [1..3]).elements
+    end
+
+    test "raises for a line number that the text does not have" do
+      message = "the reveal option has the line 3, and the code element has 2 lines"
+
+      assert_raise ArgumentError, message, fn -> Code.new("a\nb\n", reveal: [1, 3]) end
+      assert_raise ArgumentError, message, fn -> Code.new("a\nb", reveal: [2..3]) end
+
+      assert_raise ArgumentError,
+                   "the reveal option has the line 2, and the code element has 1 line",
+                   fn ->
+                     Code.new("a", reveal: [2])
+                   end
+    end
   end
 
   describe "reveal/1" do
@@ -121,6 +140,26 @@ defmodule Expresso.Element.CodeTest do
 
       error = assert_raise Spark.Error.DslError, fn -> Elixir.Code.compile_string(source) end
       assert Exception.message(error) =~ "line numbers and ranges"
+    end
+
+    test "reports a reveal option with a line that the text does not have" do
+      source = """
+      defmodule Expresso.Element.CodeTest.LongReveal do
+        use Expresso
+
+        slide do
+          code do
+            text "one\ntwo\n"
+            reveal [1, 2..4]
+          end
+        end
+      end
+      """
+
+      error = assert_raise Spark.Error.DslError, fn -> Elixir.Code.compile_string(source) end
+
+      assert Exception.message(error) =~
+               "the reveal option has the line 3, and the code element has 2 lines"
     end
   end
 
