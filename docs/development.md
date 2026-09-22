@@ -202,7 +202,8 @@ Sobelow gives a warning for `Phoenix.HTML.raw/1`. Put a `# sobelow_skip` comment
 function when the input is safe. `Expresso.main/2` and `Expresso.Renderer.render/1` show
 this pattern.
 
-Prettier formats the files in `assets/`. The Nix shell gives Prettier.
+Prettier formats the files in `assets/`. `package.json` pins the version, and
+`npm install` gives the command. Run `npm run format`, which is not one of the checks.
 
 ## Look at a deck
 
