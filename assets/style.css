@@ -296,6 +296,12 @@ body[data-view="handout"]
   .handout-page[data-omit] {
     display: none;
   }
+  /* The speaker view puts its three elements into the handout view. */
+  #speaker-notes,
+  #speaker-position,
+  #speaker-timer {
+    display: none;
+  }
 }
 @media screen {
   body[data-view="present"][data-blank="true"] {
