@@ -49,6 +49,27 @@ defmodule Expresso.E2E.PrintTest do
     end
   end
 
+  # Notes on slide 1, and print_notes false. The speaker view still needs
+  # the notes.
+  defmodule UnprintedNotesDeck do
+    use Expresso
+
+    name "unprinted notes deck"
+    print_notes false
+
+    slide "with notes" do
+      notes "Only for the speaker."
+
+      text_box do
+        text_area(text: "One")
+      end
+    end
+  end
+
+  defp notes_display(page) do
+    js(page, "getComputedStyle(document.querySelector('.handout-page .notes')).display")
+  end
+
   test "a deck with no handout option prints one page for each step", %{
     page: page,
     tmp_dir: tmp_dir
@@ -104,5 +125,30 @@ defmodule Expresso.E2E.PrintTest do
 
     assert js(page, "document.body.dataset.view") == "speaker"
     assert pdf_pages(page) == 3
+  end
+
+  test "the notes print by default", %{page: page, tmp_dir: tmp_dir} do
+    deck =
+      "deck"
+      |> Expresso.Deck.new()
+      |> Expresso.Deck.add_slide("one", %{notes: "For the audience too."})
+
+    page = page |> open(render(deck, tmp_dir)) |> emulate("print")
+
+    assert notes_display(page) == "block"
+  end
+
+  test "print_notes false leaves the notes out of the print, and the speaker view keeps them",
+       %{page: page, tmp_dir: tmp_dir} do
+    url = render(UnprintedNotesDeck, tmp_dir)
+    page = open(page, url)
+
+    assert pdf_pages(page) == 1
+    assert page |> emulate("print") |> notes_display() == "none"
+
+    speaker = page |> emulate("screen") |> open(url <> "?speaker")
+
+    assert js(speaker, "document.getElementById('speaker-notes').textContent") ==
+             "Only for the speaker."
   end
 end
