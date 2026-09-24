@@ -284,3 +284,11 @@ body[data-view="handout"] .handout-page + .handout-page {
     border-top: none;
   }
 }
+@media screen {
+  body[data-blank="true"] {
+    background-color: #000;
+  }
+  body[data-blank="true"] .screen {
+    visibility: hidden;
+  }
+}

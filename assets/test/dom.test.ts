@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { apply, limits } from "../src/dom.ts";
+import type { State, View } from "../src/state.ts";
 
 // `dom.ts` reads the global `document` each time a function runs, so a fake
 // document is enough to test it. Node has no DOM, and a browser is not
@@ -38,6 +39,11 @@ function fakeDocument(maxSteps: number[]): FakeDocument {
   return doc;
 }
 
+// A state with no black screen and no digits.
+function at(slide: number, step: number, view: View = "present"): State {
+  return { slide, step, view, blank: false, digits: "" };
+}
+
 test("limits reads the number of slides and the maximum step of each", () => {
   fakeDocument([1, 3, 2]);
 
@@ -67,7 +73,7 @@ test("limits gives no slide for a document with no slide", () => {
 test("apply shows the slide of the state and hides each other slide", () => {
   const doc = fakeDocument([1, 3, 2]);
 
-  apply({ slide: 2, step: 3, view: "present" }, limits());
+  apply(at(2, 3), limits());
 
   assert.deepEqual(
     doc.slides.map((slide) => slide.style.display),
@@ -78,7 +84,7 @@ test("apply shows the slide of the state and hides each other slide", () => {
 test("apply writes the step of the state on the slide of the state", () => {
   const doc = fakeDocument([1, 3]);
 
-  apply({ slide: 2, step: 3, view: "present" }, limits());
+  apply(at(2, 3), limits());
 
   assert.equal(doc.slides[1].dataset.step, "3");
   assert.equal(doc.slides[0].dataset.step, undefined);
@@ -87,17 +93,17 @@ test("apply writes the step of the state on the slide of the state", () => {
 test("apply writes the view on the body", () => {
   const doc = fakeDocument([1]);
 
-  apply({ slide: 1, step: 1, view: "handout" }, limits());
+  apply(at(1, 1, "handout"), limits());
   assert.equal(doc.body.dataset.view, "handout");
 
-  apply({ slide: 1, step: 1, view: "present" }, limits());
+  apply(at(1, 1), limits());
   assert.equal(doc.body.dataset.view, "present");
 });
 
 test("apply writes the view only for a document with no slide", () => {
   const doc = fakeDocument([]);
 
-  apply({ slide: 1, step: 1, view: "handout" }, limits());
+  apply(at(1, 1, "handout"), limits());
 
   assert.equal(doc.body.dataset.view, "handout");
 });
@@ -105,11 +111,17 @@ test("apply writes the view only for a document with no slide", () => {
 test("apply throws for a slide that the document does not hold", () => {
   fakeDocument([1]);
 
-  assert.throws(
-    () =>
-      apply({ slide: 2, step: 1, view: "present" }, { slides: 1, steps: [1] }),
-    {
-      message: "The document has no slide 2",
-    },
-  );
+  assert.throws(() => apply(at(2, 1), { slides: 1, steps: [1] }), {
+    message: "The document has no slide 2",
+  });
+});
+
+test("apply writes data-blank for a black screen, and removes it after", () => {
+  const doc = fakeDocument([1]);
+
+  apply({ ...at(1, 1), blank: true }, limits());
+  assert.equal(doc.body.dataset.blank, "true");
+
+  apply(at(1, 1), limits());
+  assert.equal("blank" in doc.body.dataset, false);
 });

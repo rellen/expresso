@@ -408,24 +408,42 @@ and `slide "name" do`.
 ## The presenter
 
 The presenter is a TypeScript program under `assets/src/`. `state.ts` holds the number of
-the current slide and the number of the current step. It also holds the function that
-changes them, and it does not touch the document. `dom.ts` reads the document, and it
-applies a state with the inline `style.display` property and the `data-step` attribute.
-`main.ts`
-connects the two. The first slide is slide 1, and the first step is step 1.
-`docs/overlays.md` gives the rules of a step.
+the current slide, the number of the current step, the view, the black screen and the
+digits of a slide number. It also holds the function that changes them, and it does not
+touch the document. `dom.ts` reads the document. It applies a state with the inline
+`style.display` property, the `data-step` attribute, and the `data-view` and `data-blank`
+attributes of the `body`. `main.ts` connects the two, and it writes the fragment of the
+address. The first slide is slide 1, and the first step is step 1. `docs/overlays.md`
+gives the rules of a step.
 
 `Mix.Tasks.Compile.Presenter` bundles these modules with esbuild into one minified script,
 `priv/static/presenter.js`. The compiler runs in front of the Elixir compiler, and Git does
 not hold the bundle. The module is in `mix.exs`, because Mix runs the compilers before it
 compiles `lib/`. `docs/typescript.md` gives the design.
 
-The keys are:
+The keys of the present view are:
 
-- `j` shows the next step, or the first step of the next slide after the last step.
-- `k` shows the previous step, or the last step of the previous slide at the first step.
-- `p` changes between the present view and the handout view.
+- `j`, `ArrowRight`, `ArrowDown`, the space bar and `PageDown` show the next step, or the
+  first step of the next slide after the last step.
+- `k`, `ArrowLeft`, `ArrowUp` and `PageUp` show the previous step, or the last step of the
+  previous slide at the first step.
+- `Home` shows the first slide, and `End` shows step 1 of the last slide.
+- A digit adds to a slide number, and `Enter` then shows step 1 of that slide. A number
+  that is not a slide has no effect. Each other key removes the digits.
+- `b` shows a black screen. The next key shows the slide again, and it does nothing more.
+- `p` changes to the handout view.
 
+The handout view knows only `j`, `k` and `p`. `j` and `k` change the state, and `p` then
+shows that step in the present view. The browser keeps each other key, so the arrow keys
+and the space bar scroll the pages. A key with the Control, Alt or Meta modifier always
+goes to the browser. `main.ts` stops the default operation of a key only when the key
+changes the state.
+
+The fragment of the address holds the slide and the step, such as `#4.2`. `main.ts` reads
+it at load and at each `hashchange` event. It writes the fragment with
+`history.replaceState` after each change, so the history of the browser gets no entry for
+a step. A fragment that gives no slide and step of the deck has no effect. `#4` is step 1
+of slide 4.
 A printer gets the handout view, because a `@media print` block selects it. The key is
 not necessary for a printer. It makes the handout view available on a screen, and a
 screen reader then reads each step of each slide.

@@ -113,12 +113,22 @@ Open the HTML document in a browser. The keys are:
 
 | Key | Action |
 | --- | --- |
-| `j` | Go to the next step, or to the next slide after the last step. |
-| `k` | Go to the previous step, or to the previous slide at the first step. |
+| `j`, `→`, `↓`, `Space`, `Page Down` | Go to the next step, or to the next slide after the last step. |
+| `k`, `←`, `↑`, `Page Up` | Go to the previous step, or to the previous slide at the first step. |
+| `Home` | Go to the first slide. |
+| `End` | Go to step 1 of the last slide. |
+| A number, then `Enter` | Go to step 1 of that slide. For example, `1` `2` `Enter` goes to slide 12. |
+| `b` | Show a black screen. The next key shows the slide again. |
 | `p` | Change between the present view and the handout view. |
 
-The handout view shows one page for each step of each slide. A printer gets this view
-without the key.
+A presentation remote sends `Page Down` and `Page Up`, so a remote operates the deck.
+
+The address of the document holds the slide and the step, for example `deck.html#4.2`
+for step 2 of slide 4. A reload shows the same step, and a link can go to one slide.
+
+The handout view shows one page for each step of each slide. In this view, only `j`, `k`
+and `p` operate, so the other keys scroll the pages. A printer gets this view without the
+key.
 
 ## Make a binary
 

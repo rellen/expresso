@@ -11,10 +11,14 @@
 // for each step of each slide.
 export type View = "present" | "handout";
 
+// `blank` is true while the present view shows a black screen. `digits` holds
+// the digits of a slide number that the presenter types before `Enter`.
 export type State = {
   slide: number;
   step: number;
   view: View;
+  blank: boolean;
+  digits: string;
 };
 
 // `steps` holds the maximum step number of each slide, in slide order. The
@@ -24,11 +28,16 @@ export type Limits = {
   steps: number[];
 };
 
+// The keys that move forward and back in the present view. A presentation
+// remote sends `PageDown` and `PageUp`. The value `" "` is the space bar.
+const FORWARD = ["j", "ArrowRight", "ArrowDown", "PageDown", " "];
+const BACK = ["k", "ArrowLeft", "ArrowUp", "PageUp"];
+
 // The first slide is slide 1, and the first step is step 1.
 // `Expresso.Deck.number_slides/1` gives the same number to the identifier of
 // each section.
 export function initial(): State {
-  return { slide: 1, step: 1, view: "present" };
+  return { slide: 1, step: 1, view: "present", blank: false, digits: "" };
 }
 
 // The maximum step number of a slide. A slide without an entry has one step.
@@ -36,42 +45,140 @@ export function maxStep(slide: number, limits: Limits): number {
   return limits.steps[slide - 1] ?? 1;
 }
 
-// Give the state after one key. An unknown key gives the same state.
+// Give the state after one key. A key that has no function gives the same
+// state, and `main.ts` then lets the browser use the key.
 //
-// `j` moves to the next step, and to the first step of the next slide after
-// the last step. `k` moves to the previous step, and to the last step of the
-// previous slide at the first step. A move past the first slide or past the
-// last slide gives the same state. `p` changes the view, and it keeps the
-// slide and the step.
+// On a black screen, each key shows the slide again, and it does nothing more.
+// The handout view knows only `j`, `k` and `p`. The browser keeps the other
+// keys, so the arrow keys and the space bar scroll the pages.
 export function next(state: State, key: string, limits: Limits): State {
+  if (state.blank) {
+    return { ...state, blank: false };
+  }
+  if (state.view === "handout") {
+    return handout(state, key, limits);
+  }
+  return present(state, key, limits);
+}
+
+// The keys of the handout view. `j` and `k` change the state, and the view
+// shows no change. `p` then shows that slide and step in the present view.
+function handout(state: State, key: string, limits: Limits): State {
   if (key === "j") {
-    if (state.step < maxStep(state.slide, limits)) {
-      return { slide: state.slide, step: state.step + 1, view: state.view };
-    }
-    if (state.slide < limits.slides) {
-      return { slide: state.slide + 1, step: 1, view: state.view };
-    }
-    return state;
+    return forward(state, limits);
   }
-
   if (key === "k") {
-    if (state.step > 1) {
-      return { slide: state.slide, step: state.step - 1, view: state.view };
-    }
-    if (state.slide > 1) {
-      return {
-        slide: state.slide - 1,
-        step: maxStep(state.slide - 1, limits),
-        view: state.view,
-      };
-    }
+    return back(state, limits);
+  }
+  if (key === "p") {
+    return { ...state, view: "present" };
+  }
+  return state;
+}
+
+// The keys of the present view. A digit adds to the slide number, and `Enter`
+// goes to step 1 of that slide. Each other key removes the digits.
+function present(state: State, key: string, limits: Limits): State {
+  if (/^[0-9]$/.test(key)) {
+    return { ...state, digits: state.digits + key };
+  }
+  if (key === "Enter") {
+    return go(state, limits);
+  }
+
+  const cleared = state.digits === "" ? state : { ...state, digits: "" };
+  if (FORWARD.includes(key)) {
+    return forward(cleared, limits);
+  }
+  if (BACK.includes(key)) {
+    return back(cleared, limits);
+  }
+  if (key === "Home") {
+    return move(cleared, 1, limits);
+  }
+  if (key === "End") {
+    return move(cleared, limits.slides, limits);
+  }
+  if (key === "b") {
+    return { ...cleared, blank: true };
+  }
+  if (key === "p") {
+    return { ...cleared, view: "handout" };
+  }
+  return cleared;
+}
+
+// Move to the next step, and to the first step of the next slide after the
+// last step. A move past the last slide gives the same state.
+function forward(state: State, limits: Limits): State {
+  if (state.step < maxStep(state.slide, limits)) {
+    return { ...state, step: state.step + 1 };
+  }
+  if (state.slide < limits.slides) {
+    return { ...state, slide: state.slide + 1, step: 1 };
+  }
+  return state;
+}
+
+// Move to the previous step, and to the last step of the previous slide at
+// the first step. A move past the first slide gives the same state.
+function back(state: State, limits: Limits): State {
+  if (state.step > 1) {
+    return { ...state, step: state.step - 1 };
+  }
+  if (state.slide > 1) {
+    const slide = state.slide - 1;
+    return { ...state, slide, step: maxStep(slide, limits) };
+  }
+  return state;
+}
+
+// Go to step 1 of the slide that the digits give. A number that is not a
+// slide removes the digits, and the slide stays.
+function go(state: State, limits: Limits): State {
+  if (state.digits === "") {
     return state;
   }
+  const cleared = { ...state, digits: "" };
+  return move(cleared, Number(state.digits), limits);
+}
 
-  if (key === "p") {
-    const view: View = state.view === "present" ? "handout" : "present";
-    return { slide: state.slide, step: state.step, view };
+// Go to step 1 of a slide. A slide that the deck does not have, and the
+// current position, give the same state.
+function move(state: State, slide: number, limits: Limits): State {
+  if (slide < 1 || slide > limits.slides) {
+    return state;
   }
+  if (slide === state.slide && state.step === 1) {
+    return state;
+  }
+  return { ...state, slide, step: 1 };
+}
 
-  return state;
+// The fragment of the address for a state, such as `#4.2` for step 2 of
+// slide 4. A reload of the document then shows the same step.
+export function toHash(state: State): string {
+  return `#${state.slide}.${state.step}`;
+}
+
+// Give the state for a fragment of the address. The fragment `#4` is step 1
+// of slide 4. A fragment that gives no slide and step of the deck gives the
+// same state.
+export function fromHash(state: State, hash: string, limits: Limits): State {
+  const match = /^#(\d+)(?:\.(\d+))?$/.exec(hash);
+  if (match === null) {
+    return state;
+  }
+  const slide = Number(match[1]);
+  const step = match[2] === undefined ? 1 : Number(match[2]);
+  if (slide < 1 || slide > limits.slides) {
+    return state;
+  }
+  if (step < 1 || step > maxStep(slide, limits)) {
+    return state;
+  }
+  if (slide === state.slide && step === state.step) {
+    return state;
+  }
+  return { ...state, slide, step, blank: false, digits: "" };
 }

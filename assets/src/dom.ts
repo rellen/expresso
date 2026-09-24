@@ -29,11 +29,17 @@ function slide(number: number): HTMLElement {
 
 // Apply a state to the document. The function writes the view on the `body`,
 // it shows the slide of the state at the step of the state, and it hides each
-// other slide. A deck with no slide gets the view only. The style sheet reads `data-view`, and the generated style
-// block reads `data-step`. These two attributes are the only operations of
-// the presenter on the document. docs/overlays.md gives the CSS contract.
+// other slide. A deck with no slide gets the view only. The style sheet reads
+// `data-view` and `data-blank`, and the generated style block reads
+// `data-step`. These three attributes are the only operations of the presenter
+// on the document. docs/overlays.md gives the CSS contract.
 export function apply(state: State, limits: Limits): void {
   document.body.dataset.view = state.view;
+  if (state.blank) {
+    document.body.dataset.blank = "true";
+  } else {
+    delete document.body.dataset.blank;
+  }
   for (let number = 1; number <= limits.slides; number++) {
     slide(number).style.display = "none";
   }
