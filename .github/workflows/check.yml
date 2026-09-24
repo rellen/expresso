@@ -1,18 +1,23 @@
 # The checks that run for a pull request and for a push to main.
 #
-# Each check runs in its own job, and the jobs run in parallel. The slowest job
-# gives the time of the workflow, and not the sum of the jobs. The list is the
-# list of `CLAUDE.md`, and it covers each tool of `mix check`:
+# The checks run in parallel jobs. The slowest job, which is `dialyzer`, gives
+# the time of the workflow, and not the sum of the jobs. The list is the list of
+# `CLAUDE.md`, and it covers each tool of `mix check`:
 #
 # - format: `mix format --check-formatted`
-# - compile: `mix compile --warnings-as-errors`
-# - credo: `mix credo`
+# - lint: `mix compile --warnings-as-errors`, `mix credo`, `mix sobelow`,
+#   `mix deps.audit`, the check of unused dependencies, `mix docs` and
+#   `mix doctor`
 # - dialyzer: `mix dialyzer`
-# - test: `mix test`
-# - e2e: `mix test --only e2e`, the browser tests
-# - docs: `mix docs` and `mix doctor`
-# - security: `mix sobelow`, `mix deps.audit` and the check of unused dependencies
+# - test: `mix test` and `mix test --only e2e`, the browser tests
 # - presenter: `npm run check` and `npm test`
+#
+# A job compiles the project for one environment, so the tools that need the
+# same build share one job. The tools of `lint` finish long before `dialyzer`,
+# and a job for each tool compiled the project four times more with no gain in
+# time. The unit tests and the browser tests share the build of the test
+# environment in the same way. `format` and `presenter` compile nothing, and
+# they stay alone, so a defect in them shows in a few seconds.
 #
 # The last job needs each other job, and it fails when one of them does not
 # succeed. It has the name of the one job of the earlier workflow, so a branch
@@ -54,25 +59,31 @@ jobs:
           cache: format
       - run: mix format --check-formatted
 
-  compile:
-    name: compile
+  # The first step compiles the project. Each step after it runs also when a
+  # step before it fails, so one run reports each defect, as `mix check` does.
+  # `mix deps.unlock --check-unused` is the check of `unused_deps` in
+  # `mix check`, and `mix docs` is its check of `ex_doc`.
+  lint:
+    name: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-elixir
         with:
-          cache: compile
+          cache: lint
       - run: mix compile --warnings-as-errors
-
-  credo:
-    name: credo
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-elixir
-        with:
-          cache: credo
-      - run: mix credo
+      - if: ${{ !cancelled() }}
+        run: mix credo
+      - if: ${{ !cancelled() }}
+        run: mix sobelow --exit --skip
+      - if: ${{ !cancelled() }}
+        run: mix deps.audit
+      - if: ${{ !cancelled() }}
+        run: mix deps.unlock --check-unused
+      - if: ${{ !cancelled() }}
+        run: mix docs
+      - if: ${{ !cancelled() }}
+        run: mix doctor
 
   dialyzer:
     name: dialyzer
@@ -84,22 +95,13 @@ jobs:
           cache: dialyzer
       - run: mix dialyzer
 
-  test:
-    name: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-elixir
-        with:
-          cache: test
-      - run: mix test
-
   # The browser tests open each deck in the Chromium of the Playwright version of
   # `package-lock.json`. The option `--with-deps` installs the system libraries
   # of that browser, and `--only-shell` installs the headless browser only,
-  # because the tests do not need a window.
-  e2e:
-    name: e2e
+  # because the tests do not need a window. The browser tests run also when a
+  # unit test fails.
+  test:
+    name: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -111,32 +113,10 @@ jobs:
       - run: npx playwright install --with-deps --only-shell chromium
       - uses: ./.github/actions/setup-elixir
         with:
-          cache: e2e
-      - run: mix test --only e2e
-
-  docs:
-    name: docs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-elixir
-        with:
-          cache: docs
-      - run: mix docs
-      - run: mix doctor
-
-  # `mix deps.unlock --check-unused` is the check of `unused_deps` in `mix check`.
-  security:
-    name: security
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-elixir
-        with:
-          cache: security
-      - run: mix sobelow --exit --skip
-      - run: mix deps.audit
-      - run: mix deps.unlock --check-unused
+          cache: test
+      - run: mix test
+      - if: ${{ !cancelled() }}
+        run: mix test --only e2e
 
   # The presenter script needs Node only.
   presenter:
@@ -155,7 +135,7 @@ jobs:
   all:
     name: Erlang/OTP 29, Elixir 1.20, Node 24
     if: always()
-    needs: [format, compile, credo, dialyzer, test, e2e, docs, security, presenter]
+    needs: [format, lint, dialyzer, test, presenter]
     runs-on: ubuntu-latest
     steps:
       - name: Fail when a check does not succeed
