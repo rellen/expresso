@@ -73,6 +73,32 @@ defmodule Expresso.E2E.SpeakerTest do
     assert position(audience) == "1.2"
   end
 
+  test "a click and a swipe in the speaker view move the present view", %{
+    audience: audience,
+    speaker: speaker
+  } do
+    speaker |> click(1000, 360)
+    wait_for(audience, "location.hash === '#1.2'")
+
+    speaker |> swipe({900, 600}, {600, 600})
+    wait_for(audience, "location.hash === '#2.1'")
+
+    speaker |> click(100, 600)
+    wait_for(audience, "location.hash === '#1.2'")
+    assert position(audience) == "1.2"
+  end
+
+  test "f in the speaker view puts only the speaker view in full screen", %{
+    audience: audience,
+    speaker: speaker
+  } do
+    speaker |> press("f")
+
+    wait_for(speaker, "document.fullscreenElement === document.documentElement")
+    assert js(audience, "document.fullscreenElement") == nil
+    assert js(audience, "location.hash") == ""
+  end
+
   test "b in the speaker view gives a black screen to the audience", %{
     audience: audience,
     speaker: speaker
