@@ -277,6 +277,14 @@ body[data-view="handout"]
 body[data-view="handout"][data-every="true"] .handout-page ~ .handout-page {
   border-top: 1px solid currentColor;
 }
+/*
+ * The deck option `print_notes false` leaves the notes out of the handout view
+ * and of the print. The speaker view reads the text of the notes, and a hidden
+ * element still holds its text.
+ */
+body[data-view="handout"][data-print-notes="false"] .notes {
+  display: none;
+}
 @media print {
   @page {
     size: landscape;
@@ -305,6 +313,9 @@ body[data-view="handout"][data-every="true"] .handout-page ~ .handout-page {
   #speaker-notes,
   #speaker-position,
   #speaker-timer {
+    display: none;
+  }
+  body[data-print-notes="false"] .notes {
     display: none;
   }
 }

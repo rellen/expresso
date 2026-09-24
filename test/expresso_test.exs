@@ -65,7 +65,11 @@ defmodule ExpressoTest do
     end
 
     test "writes the options of the deck into the metadata of the deck" do
-      assert Expresso.parse(DslDeck).metadata == %{progress: true, handout: :all}
+      assert Expresso.parse(DslDeck).metadata == %{
+               progress: true,
+               handout: :all,
+               print_notes: true
+             }
     end
 
     test "numbers the slides from 1" do

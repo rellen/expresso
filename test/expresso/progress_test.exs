@@ -35,12 +35,22 @@ defmodule Expresso.ProgressTest do
   end
 
   test "a deck from the DSL shows the progress bar without the option" do
-    assert Expresso.parse(ShownDeck).metadata == %{progress: true, handout: :all}
+    assert Expresso.parse(ShownDeck).metadata == %{
+             progress: true,
+             handout: :all,
+             print_notes: true
+           }
+
     assert progress(Expresso.parse(ShownDeck)) == ["true"]
   end
 
   test "the progress option false hides the progress bar at the start" do
-    assert Expresso.parse(HiddenDeck).metadata == %{progress: false, handout: :all}
+    assert Expresso.parse(HiddenDeck).metadata == %{
+             progress: false,
+             handout: :all,
+             print_notes: true
+           }
+
     assert progress(Expresso.parse(HiddenDeck)) == ["false"]
   end
 

@@ -47,6 +47,15 @@ defmodule Expresso.Renderer do
     end
   end
 
+  # The value of `data-print-notes` on the `body`. The notes stay in the
+  # document with either value, because the speaker view reads them there.
+  defp print_notes(deck) do
+    case deck.metadata do
+      %{print_notes: false} -> "false"
+      _other -> "true"
+    end
+  end
+
   # `Expresso.Deck.render/1` writes the doctype. Floki drops a doctype node, and the
   # deck function writes this tree with Floki. Therefore the doctype cannot come
   # from this function.
@@ -127,7 +136,8 @@ defmodule Expresso.Renderer do
 
         body style: "min-height: 100vh; width: 100%; margin: 0px;",
              data_view: "present",
-             data_progress: progress(@deck) do
+             data_progress: progress(@deck),
+             data_print_notes: print_notes(@deck) do
           div class: "screen" do
             for {slide, index} <- Enum.with_index(@deck.slides) do
               section id: "slide-#{slide.metadata.slide_number}",

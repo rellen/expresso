@@ -23,6 +23,21 @@ defmodule Expresso.NotesTest do
     end
   end
 
+  defmodule UnprintedNotesDeck do
+    use Expresso
+
+    name "unprinted notes deck"
+    print_notes false
+
+    slide "with notes" do
+      notes "Only for the speaker."
+
+      text_box do
+        text_area(text: "A box")
+      end
+    end
+  end
+
   defp document(deck) do
     deck |> Expresso.Deck.render() |> Floki.parse_document!()
   end
@@ -65,5 +80,34 @@ defmodule Expresso.NotesTest do
 
     assert deck |> document() |> Floki.find(".handout-page aside.notes") |> Floki.text() ==
              "From the metadata"
+  end
+
+  defp print_notes(document) do
+    document |> Floki.find("body") |> Floki.attribute("data-print-notes")
+  end
+
+  test "a deck prints the notes without the print_notes option" do
+    assert Expresso.parse(NotesDeck).metadata.print_notes == true
+    assert NotesDeck |> Expresso.parse() |> document() |> print_notes() == ["true"]
+  end
+
+  test "print_notes false marks the body, and the notes stay for the speaker view" do
+    deck = Expresso.parse(UnprintedNotesDeck)
+    document = document(deck)
+
+    assert deck.metadata.print_notes == false
+    assert print_notes(document) == ["false"]
+
+    assert document |> Floki.find(".handout-page aside.notes") |> Floki.text() ==
+             "Only for the speaker."
+  end
+
+  test "a deck from the imperative API takes print_notes from its metadata" do
+    assert "deck" |> Expresso.Deck.new() |> document() |> print_notes() == ["true"]
+
+    assert "deck"
+           |> Expresso.Deck.new(%{print_notes: false})
+           |> document()
+           |> print_notes() == ["false"]
   end
 end
