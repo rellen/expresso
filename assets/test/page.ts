@@ -219,3 +219,13 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
 export function last(window: FakeWindow): unknown {
   return window.received[window.received.length - 1];
 }
+
+// The last message that a fake window got, with no time. The time comes from
+// the clock, so a test reads the position and the black screen only, and it
+// makes sure that the time is a number.
+export function lastPosition(window: FakeWindow): unknown {
+  const message = last(window) as Record<string, unknown>;
+  const { time, ...position } = message;
+  assert.equal(typeof time, "number", "a message with no time");
+  return position;
+}

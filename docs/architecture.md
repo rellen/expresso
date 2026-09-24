@@ -489,6 +489,15 @@ gets the speaker view from `window.open`, and the speaker view gets the present 
 makes the connection again. `BroadcastChannel` is not in this design, because a browser
 can give no shared origin to a document that it opens from a file.
 
+A window sends only the changes of its own keys and of its own address, and each message
+holds the time of the change. A window does not send a position from the other window back,
+and it ignores a message that is older than its own state. At the same time, the speaker
+view takes the state of the present view, so the two windows always end at the same state.
+Both windows read the same clock, so the time orders the changes of both, also after a
+reload. Before this rule, each window sent each position back. Two keys that came faster
+than a message then gave a loop: the echo of the first key came back after the second key,
+and the two windows sent the two positions to each other with no end.
+
 The fragment of the address holds the slide and the step, such as `#4.2`. `main.ts` reads
 it at load and at each `hashchange` event. It writes the fragment with
 `history.replaceState` after each change, so the history of the browser gets no entry for

@@ -82,4 +82,35 @@ defmodule Expresso.E2E.SpeakerTest do
     wait_for(audience, "document.body.dataset.blank === 'true'")
     assert js(audience, "getComputedStyle(document.body).backgroundColor") == "rgb(0, 0, 0)"
   end
+
+  # Two keys in one task reach the present view before the speaker view can
+  # answer the first one. An echo of the first position then came back after
+  # the second key, and the two windows sent the two positions to each other
+  # with no end.
+  test "two keys faster than a message leave both windows at the same step", %{
+    audience: audience,
+    speaker: speaker
+  } do
+    js(audience, """
+    (() => {
+      for (let i = 0; i < 2; i++) {
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "j" }));
+      }
+    })()
+    """)
+
+    wait_for(speaker, "location.hash === '#2.1'")
+
+    count =
+      "window.__writes = 0; history.replaceState = ((write) => (...a) => { window.__writes++; return write(...a); })(history.replaceState.bind(history))"
+
+    js(audience, count)
+    js(speaker, count)
+    Process.sleep(300)
+
+    assert js(audience, "location.hash") == "#2.1"
+    assert js(speaker, "location.hash") == "#2.1"
+    assert js(audience, "window.__writes") == 0
+    assert js(speaker, "window.__writes") == 0
+  end
 end

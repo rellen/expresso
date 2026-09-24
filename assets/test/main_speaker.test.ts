@@ -1,6 +1,6 @@
 import { test, before, mock } from "node:test";
 import assert from "node:assert/strict";
-import { fakePage, fakeWindow, last } from "./page.ts";
+import { fakePage, fakeWindow, lastPosition } from "./page.ts";
 
 // The speaker view of a deck with two slides. Slide 1 has two steps and notes,
 // and slide 2 has one step and no notes. The present view opened this window.
@@ -51,7 +51,7 @@ test("a key moves the speaker view, and the present view gets the change", () =>
   page.press("j");
 
   assert.deepEqual(marked(), ["current 1.2", "next 2.1"]);
-  assert.deepEqual(last(opener), {
+  assert.deepEqual(lastPosition(opener), {
     expresso: "position",
     slide: 1,
     step: 2,
@@ -60,8 +60,10 @@ test("a key moves the speaker view, and the present view gets the change", () =>
 });
 
 test("the last step has no next step, and a slide without notes has no notes", () => {
+  // The clock of the test starts at 0, so a time of one million is after each
+  // change of the speaker view.
   page.receive(
-    { expresso: "position", slide: 2, step: 1, blank: false },
+    { expresso: "position", slide: 2, step: 1, blank: false, time: 1_000_000 },
     opener,
   );
 
@@ -80,7 +82,7 @@ test("p and s have no function in the speaker view", () => {
 test("b gives a black screen to the present view", () => {
   page.press("b");
 
-  assert.deepEqual(last(opener), {
+  assert.deepEqual(lastPosition(opener), {
     expresso: "position",
     slide: 2,
     step: 1,

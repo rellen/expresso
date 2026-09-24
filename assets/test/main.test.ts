@@ -1,6 +1,6 @@
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
-import { fakePage, last } from "./page.ts";
+import { fakePage, lastPosition } from "./page.ts";
 
 // Two slides. Slide 1 has one step, and slide 2 has two steps. The address has
 // no fragment, and the tests run in sequence on the same page.
@@ -10,6 +10,14 @@ const { slides, body } = page;
 before(async () => {
   await import("../src/main.ts");
 });
+
+// A time after each change of the present view. The present view reads the
+// clock, and each call gives a later time.
+let clock = Date.now() + 60_000;
+function later(): number {
+  clock += 1;
+  return clock;
+}
 
 function displays(): string[] {
   return slides.map((slide) => slide.style.display);
@@ -130,7 +138,7 @@ test("each change goes to the speaker view", () => {
   const speaker = page.opened[0].window;
   page.press("k");
 
-  assert.deepEqual(last(speaker), {
+  assert.deepEqual(lastPosition(speaker), {
     expresso: "position",
     slide: 1,
     step: 1,
@@ -140,7 +148,7 @@ test("each change goes to the speaker view", () => {
 
 test("a message from the speaker view moves the present view", () => {
   page.receive(
-    { expresso: "position", slide: 2, step: 2, blank: true },
+    { expresso: "position", slide: 2, step: 2, blank: true, time: later() },
     page.opened[0].window,
   );
 
@@ -149,9 +157,38 @@ test("a message from the speaker view moves the present view", () => {
   assert.equal(body.dataset.blank, "true");
 });
 
+test("a message from the speaker view does not go back to it", () => {
+  const speaker = page.opened[0].window;
+  const count = speaker.received.length;
+  page.receive(
+    { expresso: "position", slide: 1, step: 1, blank: false, time: later() },
+    speaker,
+  );
+
+  assert.equal(slides[0].dataset.step, "1");
+  assert.equal(speaker.received.length, count);
+});
+
+test("a message older than the state of the window has no effect", () => {
+  page.receive(
+    { expresso: "position", slide: 2, step: 2, blank: true, time: later() },
+    page.opened[0].window,
+  );
+  page.receive(
+    { expresso: "position", slide: 1, step: 1, blank: false, time: 1 },
+    page.opened[0].window,
+  );
+
+  assert.deepEqual(displays(), ["none", "flex"]);
+  assert.equal(slides[1].dataset.step, "2");
+});
+
 test("a message from another window has no effect", () => {
   page.press("x");
-  page.receive({ expresso: "position", slide: 1, step: 1, blank: false }, null);
+  page.receive(
+    { expresso: "position", slide: 1, step: 1, blank: false, time: later() },
+    null,
+  );
 
   assert.equal(slides[1].dataset.step, "2");
   assert.deepEqual(displays(), ["none", "flex"]);

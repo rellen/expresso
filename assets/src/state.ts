@@ -338,18 +338,46 @@ export function fromHash(state: State, hash: string, limits: Limits): State {
 }
 
 // The message that one window of the presenter sends to the other window
-// after each change. The speaker view and the present view then show the same
-// step, and the key `b` in either window gives a black screen to the audience.
+// after each change of its own. The speaker view and the present view then show
+// the same step, and the key `b` in either window gives a black screen to the
+// audience.
+//
+// `time` is the time of the change in milliseconds. A window does not send a
+// position from the other window back, and it ignores a message that is older
+// than its own state. Two keys that come faster than a message can then give
+// no loop: before this rule, the echo of the first key came back after the
+// second key, and the two windows sent the two positions to each other with
+// no end.
 export type Message = {
   expresso: "position";
   slide: number;
   step: number;
   blank: boolean;
+  time: number;
 };
 
-export function message(state: State): Message {
+export function message(state: State, time: number): Message {
   const { slide, step, blank } = state;
-  return { expresso: "position", slide, step, blank };
+  return { expresso: "position", slide, step, blank, time };
+}
+
+// The time of a change of this window: the clock, or one more than the time of
+// the state before it, so that the times of one window always increase. The two
+// windows read the same clock, so the time orders the changes of both.
+export function stamp(last: number, now: number): number {
+  return Math.max(now, last + 1);
+}
+
+// Tell if a window takes a message with the time `incoming`, when its own state
+// has the time `own`. A newer message wins. At the same time, the speaker view
+// takes the state of the present view, and the present view keeps its own, so
+// the two windows always end at the same state.
+export function accepts(
+  own: number,
+  incoming: number,
+  speaker: boolean,
+): boolean {
+  return incoming > own || (incoming === own && speaker);
 }
 
 // Tell if data from the other window is a message of the presenter.
@@ -357,12 +385,16 @@ export function isMessage(data: unknown): data is Message {
   if (typeof data !== "object" || data === null) {
     return false;
   }
-  const { expresso, slide, step, blank } = data as Record<string, unknown>;
+  const { expresso, slide, step, blank, time } = data as Record<
+    string,
+    unknown
+  >;
   return (
     expresso === "position" &&
     Number.isInteger(slide) &&
     Number.isInteger(step) &&
-    typeof blank === "boolean"
+    typeof blank === "boolean" &&
+    Number.isFinite(time)
   );
 }
 
