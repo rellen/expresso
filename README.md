@@ -123,10 +123,15 @@ Open the HTML document in a browser. The keys are:
 | `b` | Show a black screen. The next key shows the slide again. |
 | `p` | Change between the present view and the handout view. |
 | `s` | Open the speaker view in a second window. |
+| `f` | Put the deck in full screen, or take it out of full screen. |
 | `g` | Show or hide the progress bar. |
 | `?` | Show the list of the keys of the view. The next key closes it. |
 
 A presentation remote sends `Page Down` and `Page Up`, so a remote operates the deck.
+
+A click or a tap on the right two thirds of the window goes to the next step. A click or a
+tap on the left third goes to the previous step. On a touch screen, swipe left for the next
+step and swipe right for the previous step. A click on a link goes to the link.
 
 The address of the document holds the slide and the step, for example `deck.html#4.2`
 for step 2 of slide 4. A reload shows the same step, and a link can go to one slide.

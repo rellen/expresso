@@ -102,6 +102,62 @@ defmodule Expresso.E2E do
   def keys(page, keys), do: Enum.reduce(keys, page, &press(&2, &1))
 
   @doc """
+  Click the main mouse button at a point of the viewport of a page
+  """
+  @spec click(map(), number(), number()) :: map()
+  def click(page, x, y) do
+    {:ok, _result} = Page.mouse_move(page.guid, timeout: @timeout, x: x, y: y)
+    {:ok, _result} = Page.mouse_down(page.guid, timeout: @timeout)
+    {:ok, _result} = Page.mouse_up(page.guid, timeout: @timeout)
+    page
+  end
+
+  @doc """
+  Tap a point of the viewport of a page with a finger
+
+  The context of the page must have `has_touch: true`.
+  """
+  @spec tap(map(), number(), number()) :: map()
+  def tap(page, x, y) do
+    case PlaywrightEx.send(
+           %{guid: page.guid, method: :touchscreen_tap, params: %{x: x, y: y}},
+           timeout: @timeout
+         ) do
+      %{error: error} -> raise "touchscreen_tap failed: #{inspect(error)}"
+      _response -> page
+    end
+  end
+
+  @doc """
+  Move one finger across a page from one point to another point
+
+  Playwright has a tap but no swipe, so the page gets the touch events from a
+  script. Each point is a tuple `{x, y}` in the viewport.
+  """
+  @spec swipe(map(), {number(), number()}, {number(), number()}) :: map()
+  def swipe(page, {x1, y1}, {x2, y2}) do
+    js(page, """
+    (() => {
+      const target = document.elementFromPoint(#{x1}, #{y1}) ?? document.body;
+      const touch = (x, y) =>
+        new Touch({ identifier: 1, target, clientX: x, clientY: y });
+      const start = touch(#{x1}, #{y1});
+      const end = touch(#{x2}, #{y2});
+      const send = (type, touches, changed) =>
+        target.dispatchEvent(new TouchEvent(type, {
+          bubbles: true, cancelable: true, touches, targetTouches: touches,
+          changedTouches: changed
+        }));
+      send("touchstart", [start], [start]);
+      send("touchmove", [end], [end]);
+      send("touchend", [], [end]);
+    })()
+    """)
+
+    page
+  end
+
+  @doc """
   Give the value of a JavaScript expression in a page
   """
   @spec js(map(), String.t()) :: term()

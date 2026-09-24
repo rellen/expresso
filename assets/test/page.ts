@@ -34,6 +34,21 @@ type Key = {
   metaKey?: boolean;
 };
 
+// A click. The window of the fake page is 1200 pixels wide.
+type Click = {
+  clientX: number;
+  button?: number;
+  ctrlKey?: boolean;
+  altKey?: boolean;
+  metaKey?: boolean;
+  shiftKey?: boolean;
+  // The selector that `closest` of the target finds, as for a click on a link.
+  inside?: string;
+};
+
+// A point on the screen.
+type Point = { x: number; y: number };
+
 type Options = {
   hash?: string;
   search?: string;
@@ -60,6 +75,16 @@ export type FakePage = {
   // Give one key to `main.ts`. The result tells if `main.ts` stopped the
   // default operation of the browser.
   press: (key: string | Key) => boolean;
+  // Give one click to `main.ts`.
+  click: (click: number | Click) => void;
+  // Give a movement of one finger from `start` to `end` to `main.ts`.
+  swipe: (start: Point, end: Point) => void;
+  // The text of the selection of the page.
+  selection: string;
+  // True while the document is in full screen.
+  fullscreen: boolean;
+  // True when the browser refuses full screen.
+  refuses: boolean;
   // Type a fragment into the address bar.
   navigate: (hash: string) => void;
   // Send a message from a window to the page.
@@ -163,7 +188,23 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
       all().find((each) => each.id === id) ?? null,
     createElement: () => element(""),
     addEventListener: listen,
+    get fullscreenElement() {
+      return page.fullscreen ? doc.documentElement : null;
+    },
+    get fullscreenEnabled() {
+      return !page.refuses;
+    },
+    documentElement: {
+      requestFullscreen: async () => {
+        page.fullscreen = true;
+      },
+    },
+    exitFullscreen: async () => {
+      page.fullscreen = false;
+    },
   };
+
+  const touch = (point: Point) => ({ clientX: point.x, clientY: point.y });
 
   const page: FakePage = {
     slides,
@@ -180,6 +221,23 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
       call("keydown", { ...event, preventDefault: () => (stopped = true) });
       return stopped;
     },
+    click: (click) => {
+      const event = typeof click === "number" ? { clientX: click } : click;
+      const target = {
+        closest: (selector: string) =>
+          event.inside !== undefined && selector.includes(event.inside)
+            ? {}
+            : null,
+      };
+      call("click", { button: 0, ...event, target });
+    },
+    swipe: (start, end) => {
+      call("touchstart", { touches: [touch(start)] });
+      call("touchend", { touches: [], changedTouches: [touch(end)] });
+    },
+    selection: "",
+    fullscreen: false,
+    refuses: false,
     navigate: (hash) => {
       location.hash = hash;
       call("hashchange", {});
@@ -194,6 +252,8 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   global.document = doc;
   global.window = {
     addEventListener: listen,
+    innerWidth: 1200,
+    getSelection: () => ({ isCollapsed: page.selection === "" }),
     opener: options.opener ?? null,
     open: (url: string, name: string) => {
       const window = fakeWindow();

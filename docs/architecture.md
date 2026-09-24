@@ -426,8 +426,8 @@ connects the modules, and it writes the fragment of the address. The first slide
 1, and the first step is step 1. `docs/overlays.md` gives the rules of a step.
 
 The unit tests of `assets/test/` test these modules with no browser. The browser tests of
-`test/e2e/` open a rendered deck in Chromium and operate the presenter with its keys.
-`docs/development.md` gives both.
+`test/e2e/` open a rendered deck in Chromium and operate the presenter with its keys, with
+the mouse and with a finger. `docs/development.md` gives both.
 
 `Mix.Tasks.Compile.Presenter` bundles these modules with esbuild into one minified script,
 `priv/static/presenter.js`. The compiler runs in front of the Elixir compiler, and Git does
@@ -446,16 +446,30 @@ The keys of the present view are:
 - `b` shows a black screen. The next key shows the slide again, and it does nothing more.
 - `p` changes to the handout view.
 - `s` opens the speaker view in a second window. A second `s` shows the same window.
+- `f` puts the document in full screen, or takes it out of full screen.
 - `g` shows or hides the progress bar.
 - `?` shows the list of the keys of the view. The next key closes it, and it does
   nothing more.
 
-The table `BINDINGS` in `state.ts` gives each key, its function, the views that know it
-and its text in the list of keys. `next` finds the function of a key in this table, and
-`help.ts` makes the rows of the list from the same table. Therefore the list shows each
-key that operates, and no other key. `dom.ts` writes the rows into the element `help` as
-text, and the style sheet shows it while the `body` has `data-help`. A printer does not
-get the list.
+A click or a tap on the right two thirds of the window shows the next step, and on the left
+third the previous step. A swipe of one finger to the left shows the next step, and to the
+right the previous step. `side` and `swipe` in `state.ts` give these rules, and `point`
+gives the state after them. As a key does, a click first closes a black screen or the list
+of keys. The handout view scrolls with a finger, so there a click or a swipe does no more.
+
+`main.ts` listens for `click`, `touchstart` and `touchend`. A swipe does not give a
+`click`, so one movement does not move two steps. A click goes to the browser when it has
+a modifier, when it is not the main button, when it ends a selection of text, or when it
+is on a link, a button or a form field. `f` calls the full screen functions of the
+browser, and `Escape` of the browser also takes the document out of full screen.
+
+The table `BINDINGS` in `state.ts` gives each key, its function, the views that know it and
+its text in the list of keys. `next` finds the function of a key in this table, and
+`help.ts` makes the rows of the list from the same table. Therefore the list shows each key
+that operates, and no other key. A row with no key gives the text of a click or a swipe in
+the list, and `next` does not find it. `dom.ts` writes the rows into the element `help` as
+text, and the style sheet shows it while the `body` has `data-help`. A printer does not get
+the list.
 
 The progress bar is the element `progress` at the bottom of the present view. The
 renderer writes it into each document with a width of zero. It also writes `data-progress`
