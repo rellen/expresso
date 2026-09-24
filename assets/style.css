@@ -285,10 +285,72 @@ body[data-view="handout"] .handout-page + .handout-page {
   }
 }
 @media screen {
-  body[data-blank="true"] {
+  body[data-view="present"][data-blank="true"] {
     background-color: #000;
   }
-  body[data-blank="true"] .screen {
+  body[data-view="present"][data-blank="true"] .screen {
     visibility: hidden;
+  }
+}
+/* The speaker view is for a screen. A printer gets the handout view. */
+@media screen {
+  body[data-view="speaker"] .screen {
+    display: none;
+  }
+  body[data-view="speaker"] .handout {
+    display: grid;
+    box-sizing: border-box;
+    height: 100vh;
+    padding: 1vh 1vw;
+    gap: 1vh 1vw;
+    grid-template-columns: 60vw 1fr;
+    grid-template-rows: 60vh auto 1fr;
+    grid-template-areas:
+      "current next"
+      "current position"
+      "notes timer";
+    overflow: hidden;
+  }
+  body[data-view="speaker"] .handout-page {
+    display: none;
+  }
+  body[data-view="speaker"] .handout-page[data-speaker] {
+    display: flex;
+    width: 100vw;
+    min-height: 0;
+    height: 100vh;
+    overflow: hidden;
+    outline: 2px solid currentColor;
+  }
+  body[data-view="speaker"] .handout-page[data-speaker="current"] {
+    grid-area: current;
+    zoom: 0.6;
+  }
+  body[data-view="speaker"] .handout-page[data-speaker="next"] {
+    grid-area: next;
+    zoom: 0.37;
+  }
+  body[data-view="speaker"] .handout-page .notes {
+    display: none;
+  }
+  #speaker-notes {
+    grid-area: notes;
+    overflow: auto;
+    font-size: 0.6rem;
+    white-space: pre-line;
+  }
+  #speaker-position {
+    grid-area: position;
+    font-size: 0.5rem;
+  }
+  #speaker-timer {
+    grid-area: timer;
+    font-size: 1.5rem;
+    font-variant-numeric: tabular-nums;
+  }
+  body:not([data-view="speaker"]) #speaker-notes,
+  body:not([data-view="speaker"]) #speaker-position,
+  body:not([data-view="speaker"]) #speaker-timer {
+    display: none;
   }
 }

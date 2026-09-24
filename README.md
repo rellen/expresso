@@ -120,11 +120,19 @@ Open the HTML document in a browser. The keys are:
 | A number, then `Enter` | Go to step 1 of that slide. For example, `1` `2` `Enter` goes to slide 12. |
 | `b` | Show a black screen. The next key shows the slide again. |
 | `p` | Change between the present view and the handout view. |
+| `s` | Open the speaker view in a second window. |
 
 A presentation remote sends `Page Down` and `Page Up`, so a remote operates the deck.
 
 The address of the document holds the slide and the step, for example `deck.html#4.2`
 for step 2 of slide 4. A reload shows the same step, and a link can go to one slide.
+
+The speaker view shows the current step, the next step, the notes of the slide, the
+position and a timer. Put this window on your screen, and put the first window on the
+projector. The keys operate in either window, and the two windows show the same step. `b`
+in the speaker view gives a black screen to the audience. The timer starts at the first
+change of the step, and `r` sets it back to `0:00`. A browser can block the second
+window. Then let the document open windows.
 
 The handout view shows one page for each step of each slide. In this view, only `j`, `k`
 and `p` operate, so the other keys scroll the pages. A printer gets this view without the
