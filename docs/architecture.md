@@ -133,7 +133,7 @@ html
     style            assets/style.css
     style            the rules of the token classes of a code element, from Makeup
     style            the generated rules of the overlays, from Expresso.Overlay.Render
-    body           data-view "present"
+    body           data-view "present", data-progress from the deck
       div            the present view, class "screen"
         section      one for each slide, class "slide", id "slide-<number>",
                      data-step "1", data-max-step from the slide
@@ -146,6 +146,7 @@ html
                      data-omit when the handout option does not select the step
           div        the same three parts as a slide of the present view
           aside      the notes of the slide, class "notes", when the slide has notes
+      div            the progress bar, id "progress"
       script         priv/static/presenter.js, the presenter bundle
 ```
 
