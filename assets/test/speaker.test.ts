@@ -6,7 +6,7 @@ import type { State } from "../src/state.ts";
 const three = { slides: 3, steps: [1, 3, 2] };
 
 function at(slide: number, step: number, blank = false): State {
-  return { slide, step, view: "speaker", blank, digits: "" };
+  return { slide, step, view: "speaker", blank, digits: "", help: false };
 }
 
 test("clock gives minutes and seconds", () => {

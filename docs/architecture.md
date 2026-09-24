@@ -433,10 +433,19 @@ The keys of the present view are:
 - `b` shows a black screen. The next key shows the slide again, and it does nothing more.
 - `p` changes to the handout view.
 - `s` opens the speaker view in a second window. A second `s` shows the same window.
+- `?` shows the list of the keys of the view. The next key closes it, and it does
+  nothing more.
 
-The handout view knows only `j`, `k` and `p`. `j` and `k` change the state, and `p` then
-shows that step in the present view. The browser keeps each other key, so the arrow keys
-and the space bar scroll the pages. A key with the Control, Alt or Meta modifier always
+The table `BINDINGS` in `state.ts` gives each key, its function, the views that know it
+and its text in the list of keys. `next` finds the function of a key in this table, and
+`help.ts` makes the rows of the list from the same table. Therefore the list shows each
+key that operates, and no other key. `dom.ts` writes the rows into the element `help` as
+text, and the style sheet shows it while the `body` has `data-help`. A printer does not
+get the list.
+
+The handout view knows only `j`, `k`, `p` and `?`. `j` and `k` change the state, and `p`
+then shows that step in the present view. The browser keeps each other key, so the arrow
+keys and the space bar scroll the pages. A key with the Control, Alt or Meta modifier always
 goes to the browser. `main.ts` stops the default operation of a key only when the key
 changes the state.
 

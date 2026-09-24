@@ -121,6 +121,7 @@ Open the HTML document in a browser. The keys are:
 | `b` | Show a black screen. The next key shows the slide again. |
 | `p` | Change between the present view and the handout view. |
 | `s` | Open the speaker view in a second window. |
+| `?` | Show the list of the keys of the view. The next key closes it. |
 
 A presentation remote sends `Page Down` and `Page Up`, so a remote operates the deck.
 
@@ -134,9 +135,9 @@ in the speaker view gives a black screen to the audience. The timer starts at th
 change of the step, and `r` sets it back to `0:00`. A browser can block the second
 window. Then let the document open windows.
 
-The handout view shows one page for each step of each slide. In this view, only `j`, `k`
-and `p` operate, so the other keys scroll the pages. A printer gets this view without the
-key.
+The handout view shows one page for each step of each slide. In this view, only `j`, `k`,
+`p` and `?` operate, so the other keys scroll the pages. A printer gets this view without
+the key.
 
 ## Make a binary
 

@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  BINDINGS,
+  binding,
   follow,
   fromHash,
   initial,
@@ -18,7 +20,7 @@ const three = { slides: 3, steps: [1, 3, 2] };
 
 // A state with no black screen and no digits.
 function at(slide: number, step: number, view: View = "present"): State {
-  return { slide, step, view, blank: false, digits: "" };
+  return { slide, step, view, blank: false, digits: "", help: false };
 }
 
 // Give the state after each key, in sequence.
@@ -251,4 +253,42 @@ test("follow gives the same state for the same position or a position not in the
   assert.equal(follow(state, message(at(4, 1)), three), state);
   assert.equal(follow(state, message(at(2, 4)), three), state);
   assert.equal(follow(state, { slide: 1 }, three), state);
+});
+
+test("? opens the list of keys in each view, and removes the digits", () => {
+  for (const view of ["present", "handout", "speaker"] as View[]) {
+    assert.deepEqual(next(at(2, 2, view), "?", three), {
+      ...at(2, 2, view),
+      help: true,
+    });
+  }
+  assert.deepEqual(keys(at(1, 1), ["3", "?"]), { ...at(1, 1), help: true });
+});
+
+test("the next key closes the list of keys, and does nothing more", () => {
+  const open = { ...at(2, 2), help: true };
+  assert.deepEqual(next(open, "j", three), at(2, 2));
+  assert.deepEqual(next(open, "?", three), at(2, 2));
+  assert.deepEqual(next(open, "x", three), at(2, 2));
+});
+
+test("no key has two bindings in one view", () => {
+  for (const view of ["present", "handout", "speaker"] as View[]) {
+    const seen = new Set<string>();
+    for (const each of BINDINGS.filter((b) => b.views.includes(view))) {
+      for (const key of each.keys) {
+        assert.equal(seen.has(key), false, `${view}: ${key}`);
+        seen.add(key);
+      }
+    }
+  }
+});
+
+test("binding finds the key in the view of the state only", () => {
+  assert.equal(binding(at(1, 1), "s")?.action, "speaker");
+  assert.equal(binding(at(1, 1, "speaker"), "s"), undefined);
+  assert.equal(binding(at(1, 1, "speaker"), "r")?.action, "reset");
+  assert.equal(binding(at(1, 1), "r"), undefined);
+  assert.equal(binding(at(1, 1, "handout"), "p")?.action, "present");
+  assert.equal(binding(at(1, 1), "p")?.action, "handout");
 });

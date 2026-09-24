@@ -149,3 +149,28 @@ test("a message from another window has no effect", () => {
   assert.equal(slides[1].dataset.step, "2");
   assert.deepEqual(displays(), ["none", "flex"]);
 });
+
+test("? shows the list of keys of the present view, and the next key closes it", () => {
+  const before = displays();
+  assert.equal(page.press("?"), true);
+
+  assert.equal(body.dataset.help, "true");
+  const panel = page.element("help");
+  assert.ok(panel, "no element help");
+  const names = panel.children.map((row) => row.children[0].textContent);
+  assert.ok(names.includes("s"));
+  assert.ok(names.includes("?"));
+
+  page.press("j");
+  assert.equal("help" in body.dataset, false);
+  assert.deepEqual(displays(), before);
+});
+
+test("s on the list of keys closes it, and opens no window", () => {
+  const count = page.opened.length;
+  page.press("?");
+  page.press("s");
+
+  assert.equal("help" in body.dataset, false);
+  assert.equal(page.opened.length, count);
+});

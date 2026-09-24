@@ -3,6 +3,7 @@
 // `state.ts` does not touch the document, and this module does not decide the
 // next state. `main.ts` connects the two.
 
+import { rows } from "./help.ts";
 import { describe } from "./speaker.ts";
 import { upcoming } from "./state.ts";
 import type { Limits, State } from "./state.ts";
@@ -41,6 +42,12 @@ export function apply(state: State, limits: Limits): void {
     document.body.dataset.blank = "true";
   } else {
     delete document.body.dataset.blank;
+  }
+  if (state.help) {
+    document.body.dataset.help = "true";
+    help(state);
+  } else {
+    delete document.body.dataset.help;
   }
   for (let number = 1; number <= limits.slides; number++) {
     slide(number).style.display = "none";
@@ -94,6 +101,30 @@ export function speakerPanel(): void {
     const element = document.createElement("div");
     element.id = id;
     handout?.appendChild(element);
+  }
+}
+
+// Write the list of keys of the view of the state into the element `help`.
+// The function makes the element at the first call. Each row holds the names
+// of the keys and their function, as text and not as HTML. The style sheet
+// shows the element while the `body` has `data-help`.
+function help(state: State): void {
+  let panel = document.getElementById("help");
+  if (panel === null) {
+    panel = document.createElement("div");
+    panel.id = "help";
+    document.body.appendChild(panel);
+  }
+  panel.replaceChildren();
+  for (const [keys, text] of rows(state.view)) {
+    const row = document.createElement("div");
+    const name = document.createElement("kbd");
+    name.textContent = keys;
+    const function_ = document.createElement("span");
+    function_.textContent = text;
+    row.appendChild(name);
+    row.appendChild(function_);
+    panel.appendChild(row);
   }
 }
 
