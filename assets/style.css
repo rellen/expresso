@@ -245,7 +245,8 @@ h2 {
  * the first. A rule on the page before a break cannot do this, because the
  * last page in the document can be a page that the view does not show.
  */
-.handout-page:not([data-omit]) ~ .handout-page:not([data-omit]) {
+.handout-page:not([data-omit]) ~ .handout-page:not([data-omit]),
+body[data-every="true"] .handout-page ~ .handout-page {
   break-before: page;
 }
 .notes {
@@ -263,13 +264,17 @@ body[data-view="handout"] .screen {
 body[data-view="handout"] .handout {
   display: block;
 }
-/* The handout option of a slide selects its pages. `data-omit` marks the rest. */
-body[data-view="handout"] .handout-page[data-omit] {
+/*
+ * The handout option of a slide selects its pages. `data-omit` marks the rest.
+ * The key `a` writes `data-every="true"`, and each page then shows.
+ */
+body[data-view="handout"]:not([data-every="true"]) .handout-page[data-omit] {
   display: none;
 }
 body[data-view="handout"]
   .handout-page:not([data-omit])
-  ~ .handout-page:not([data-omit]) {
+  ~ .handout-page:not([data-omit]),
+body[data-view="handout"][data-every="true"] .handout-page ~ .handout-page {
   border-top: 1px solid currentColor;
 }
 @media print {
@@ -293,7 +298,7 @@ body[data-view="handout"]
     height: 100vh;
     border-top: none;
   }
-  .handout-page[data-omit] {
+  body:not([data-every="true"]) .handout-page[data-omit] {
     display: none;
   }
   /* The speaker view puts its three elements into the handout view. */

@@ -49,6 +49,7 @@ function at(slide: number, step: number, view: View = "present"): State {
     digits: "",
     help: false,
     progress: true,
+    every: false,
   };
 }
 

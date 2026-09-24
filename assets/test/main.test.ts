@@ -191,3 +191,14 @@ test("the progress bar follows the step, and g hides and shows it", () => {
   page.press("g");
   assert.equal(body.dataset.progress, "true");
 });
+
+test("a in the handout view writes data-every, and a again removes the value", () => {
+  assert.equal(body.dataset.every, "false");
+  page.press("p");
+
+  assert.equal(page.press("a"), true);
+  assert.equal(body.dataset.every, "true");
+  page.press("a");
+  assert.equal(body.dataset.every, "false");
+  page.press("p");
+});

@@ -457,8 +457,8 @@ writes that part as the width of the bar. The style sheet shows the bar in the p
 only, and not on a black screen or on paper. A theme can set `--progress-color` and
 `--progress-height`.
 
-The handout view knows only `j`, `k`, `p` and `?`. `j` and `k` change the state, and `p`
-then shows that step in the present view. The browser keeps each other key, so the arrow
+The handout view knows only `j`, `k`, `p`, `a` and `?`. `j` and `k` change the state, and
+`p` then shows that step in the present view. The browser keeps each other key, so the arrow
 keys and the space bar scroll the pages. A key with the Control, Alt or Meta modifier always
 goes to the browser. `main.ts` stops the default operation of a key only when the key
 changes the state.
@@ -496,7 +496,14 @@ the speaker view shows the page of each step. It writes `data-omit` on each page
 option does not select. The style sheet hides such a page in the handout view and on
 paper, so the handout view on a screen shows the pages that a printer prints.
 
-Each page that shows, except the first, starts a new sheet with `break-before`. A rule of
+The key `a` of the handout view changes the `every` field of the state, and `dom.ts`
+writes it into `data-every` on the `body`. With `data-every="true"`, the style sheet shows
+each page in the handout view and on paper. A print then gets every step, whatever the
+`handout` options select. The field stays in one window, and a print from the speaker
+view gets the selection.
+
+Each page that shows, except the first, starts a new sheet with `break-before`. With
+`data-every="true"`, each page except the first does. A rule of
 `break-after` on the last page cannot do this, because the last page of the document can
 be a page with `data-omit`. The print block also hides the three elements of the speaker
 view, so a print from that window gives the same pages.

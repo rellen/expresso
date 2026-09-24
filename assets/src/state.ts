@@ -15,7 +15,9 @@ export type View = "present" | "handout" | "speaker";
 // `blank` is true while the present view shows a black screen. `digits` holds
 // the digits of a slide number that the presenter types before `Enter`.
 // `help` is true while the view shows the list of its keys. `progress` is
-// true while the present view shows the progress bar.
+// true while the present view shows the progress bar. `every` is true while
+// the handout view, and a print, show every step and not only the steps that
+// the `handout` option of each slide selects.
 export type State = {
   slide: number;
   step: number;
@@ -24,6 +26,7 @@ export type State = {
   digits: string;
   help: boolean;
   progress: boolean;
+  every: boolean;
 };
 
 // `steps` holds the maximum step number of each slide, in slide order. The
@@ -48,6 +51,7 @@ export type Action =
   | "speaker"
   | "reset"
   | "progress"
+  | "every"
   | "help";
 
 // One or more keys, their function, the views that know them, and the text
@@ -66,7 +70,7 @@ const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 // The keys of the presenter. `next` and the list of keys read this table, so
 // the list shows each key that operates, and no other key. A presentation
 // remote sends `PageDown` and `PageUp`. The value `" "` is the space bar. The
-// handout view knows only `j`, `k`, `p` and `?`, so the browser keeps the
+// handout view knows only `j`, `k`, `p`, `a` and `?`, so the browser keeps the
 // other keys, and the arrow keys and the space bar scroll the pages.
 export const BINDINGS: Binding[] = [
   {
@@ -150,6 +154,12 @@ export const BINDINGS: Binding[] = [
     text: "Progress bar on or off",
   },
   {
+    keys: ["a"],
+    action: "every",
+    views: ["handout"],
+    text: "Every step, or the steps of the handout option. A print shows the same.",
+  },
+  {
     keys: ["?"],
     action: "help",
     views: ["present", "handout", "speaker"],
@@ -177,6 +187,7 @@ export function initial(): State {
     digits: "",
     help: false,
     progress: true,
+    every: false,
   };
 }
 
@@ -227,6 +238,8 @@ export function next(state: State, key: string, limits: Limits): State {
       return { ...cleared, help: true };
     case "progress":
       return { ...cleared, progress: !cleared.progress };
+    case "every":
+      return { ...cleared, every: !cleared.every };
     default:
       return cleared;
   }

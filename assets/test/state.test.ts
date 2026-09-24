@@ -29,6 +29,7 @@ function at(slide: number, step: number, view: View = "present"): State {
     digits: "",
     help: false,
     progress: true,
+    every: false,
   };
 }
 
@@ -154,7 +155,7 @@ test("b gives a black screen, and the next key shows the slide again", () => {
   assert.deepEqual(next(blank, "p", three), at(2, 2));
 });
 
-test("the handout view knows only j, k and p", () => {
+test("the handout view does not know the other keys of the present view", () => {
   const state = at(2, 2, "handout");
   for (const key of [
     "ArrowRight",
@@ -327,4 +328,17 @@ test("fraction counts each step of each slide", () => {
 test("fraction gives 0 for a deck of one step or no step", () => {
   assert.equal(fraction(at(1, 1), { slides: 1, steps: [1] }), 0);
   assert.equal(fraction(at(1, 1), { slides: 0, steps: [] }), 0);
+});
+
+test("a in the handout view shows every step, and a again shows the selection", () => {
+  const every = next(at(2, 2, "handout"), "a", three);
+  assert.deepEqual(every, { ...at(2, 2, "handout"), every: true });
+  assert.deepEqual(next(every, "a", three), at(2, 2, "handout"));
+});
+
+test("a has no function in the present view and the speaker view", () => {
+  for (const view of ["present", "speaker"] as View[]) {
+    const state = at(2, 2, view);
+    assert.equal(next(state, "a", three), state, view);
+  }
 });
