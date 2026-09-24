@@ -83,7 +83,9 @@ end
 
 `auto_reveal` shows each element of the slide one after the other, and `reveal` does the
 same for the items of a list. A slide also takes a `notes` option, and the handout view
-shows the notes under each page of the slide. An `image` reads the
+shows the notes under each page of the slide. Write `print_notes false` in the deck to
+leave the notes out of the handout view and of the print. The speaker view still shows
+them. An `image` reads the
 file and puts the bytes into the document, so the document stays one file. The path is
 relative to the working directory of the command. The `width` option takes a CSS length,
 such as `900px`, or a percentage of the width of the slide, such as `60%`.

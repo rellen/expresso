@@ -297,6 +297,12 @@ defmodule Expresso.Extension do
         doc:
           "The steps that the handout view and a printer show for a slide without a handout option."
       ],
+      print_notes: [
+        type: :boolean,
+        default: true,
+        doc:
+          "Print the notes of the speaker under each page. The value false leaves them out of the handout view and of the print."
+      ],
       progress: [
         type: :boolean,
         default: true,

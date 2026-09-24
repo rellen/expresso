@@ -43,8 +43,8 @@ end
 
 `Expresso.parse/1` reads the DSL state of such a module. It returns an `Expresso.Deck`
 struct, and it numbers the slides with `Expresso.Deck.number_slides/1`. The metadata map
-of the deck holds the `progress` option and the `handout` option of the deck. Their
-defaults are `true` and `:all`.
+of the deck holds the `progress` option, the `handout` option and the `print_notes`
+option of the deck. Their defaults are `true`, `:all` and `true`.
 
 The `slide` entity has a `heading` option. An author writes it as a call inside the block
 of the slide, in the form of Spark:
@@ -133,7 +133,7 @@ html
     style            assets/style.css
     style            the rules of the token classes of a code element, from Makeup
     style            the generated rules of the overlays, from Expresso.Overlay.Render
-    body           data-view "present", data-progress from the deck
+    body           data-view "present", data-progress and data-print-notes from the deck
       div            the present view, class "screen"
         section      one for each slide, class "slide", id "slide-<number>",
                      data-step "1", data-max-step from the slide
@@ -391,6 +391,12 @@ has a `heading` option, a `notes` option and a `handout` option, and
 The `notes` option holds the notes of the speaker. The handout view shows them in an
 `aside` element under each page of the slide, and the present view does not show them.
 The text is not HTML, and a line break in the text gives a line break on the page.
+
+The `print_notes` option of the deck leaves the notes out of the handout view and of the
+print. The renderer writes `data-print-notes` on the `body` from the metadata of the
+deck: `false` for `print_notes: false`, and `true` otherwise. The style sheet then hides
+each `aside` in the handout view and on paper. The renderer still writes each `aside`,
+because the speaker view reads the text of the notes from the page of the current step.
 
 The extension imports nothing, and it lists three modules:
 

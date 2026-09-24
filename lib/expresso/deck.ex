@@ -5,6 +5,10 @@ defmodule Expresso.Deck do
   The metadata of a deck can hold `:progress`. The value `false` hides the
   progress bar of the present view at the start, and the key `g` can still
   show it. A deck without the key shows the progress bar.
+
+  The metadata can also hold `:print_notes`. The value `false` leaves the
+  notes of the speaker out of the handout view and of the print. The speaker
+  view still shows them. A deck without the key prints the notes.
   """
 
   @type t :: %__MODULE__{:name => String.t(), :metadata => map(), :slides => list()}
