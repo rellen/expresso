@@ -17,6 +17,7 @@
 
 import { clock } from "./speaker.ts";
 import {
+  accepts,
   binding,
   follow,
   fromHash,
@@ -24,6 +25,7 @@ import {
   isMessage,
   message,
   next,
+  stamp,
   toHash,
 } from "./state.ts";
 import type { State } from "./state.ts";
@@ -52,10 +54,14 @@ function tick(): void {
   text("speaker-timer", clock(elapsed));
 }
 
+// The time of the state of this window. `state.ts` gives the rule of the time.
+let time = 0;
+
 // Apply a new state, and write its fragment. `replaceState` adds no entry to
 // the history, so the back button of the browser does not go through the
-// steps. The other window gets the new position.
-function show(changed: State): void {
+// steps. A change of this window goes to the other window with a new time. A
+// change from the other window does not go back to it.
+function show(changed: State, local = true): void {
   if (changed === state) {
     return;
   }
@@ -63,8 +69,11 @@ function show(changed: State): void {
   state = changed;
   apply(state, deck);
   history.replaceState(null, "", toHash(state));
-  if (partner !== null && !partner.closed) {
-    partner.postMessage(message(state), "*");
+  if (local) {
+    time = stamp(time, Date.now());
+    if (partner !== null && !partner.closed) {
+      partner.postMessage(message(state, time), "*");
+    }
   }
   if (isSpeaker && moved && started === null) {
     started = Date.now();
@@ -132,8 +141,12 @@ window.addEventListener("message", (event: MessageEvent) => {
   if (partner === null && !isSpeaker && isMessage(event.data)) {
     partner = source;
   }
-  if (partner === null || source !== partner) {
+  if (partner === null || source !== partner || !isMessage(event.data)) {
     return;
   }
-  show(follow(state, event.data, deck));
+  if (!accepts(time, event.data.time, isSpeaker)) {
+    return;
+  }
+  time = event.data.time;
+  show(follow(state, event.data, deck), false);
 });

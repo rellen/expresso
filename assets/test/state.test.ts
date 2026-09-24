@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   BINDINGS,
+  accepts,
   binding,
   follow,
   fraction,
@@ -11,6 +12,7 @@ import {
   maxStep,
   message,
   next,
+  stamp,
   toHash,
   upcoming,
 } from "../src/state.ts";
@@ -225,24 +227,28 @@ test("upcoming gives the next step, and null at the end of the deck", () => {
   assert.equal(upcoming(at(3, 2), three), null);
 });
 
-test("message gives the slide, the step and the black screen", () => {
-  assert.deepEqual(message({ ...at(2, 3), blank: true, digits: "4" }), {
+test("message gives the slide, the step, the black screen and the time", () => {
+  assert.deepEqual(message({ ...at(2, 3), blank: true, digits: "4" }, 17), {
     expresso: "position",
     slide: 2,
     step: 3,
     blank: true,
+    time: 17,
   });
 });
 
 test("isMessage accepts only a message of the presenter", () => {
-  assert.equal(isMessage(message(at(1, 1))), true);
+  assert.equal(isMessage(message(at(1, 1), 1)), true);
   const others = [
     null,
     "position",
-    { expresso: "other", slide: 1, step: 1, blank: false },
-    { expresso: "position", slide: "1", step: 1, blank: false },
-    { expresso: "position", slide: 1.5, step: 1, blank: false },
-    { expresso: "position", slide: 1, step: 1 },
+    { expresso: "other", slide: 1, step: 1, blank: false, time: 1 },
+    { expresso: "position", slide: "1", step: 1, blank: false, time: 1 },
+    { expresso: "position", slide: 1.5, step: 1, blank: false, time: 1 },
+    { expresso: "position", slide: 1, step: 1, time: 1 },
+    { expresso: "position", slide: 1, step: 1, blank: false },
+    { expresso: "position", slide: 1, step: 1, blank: false, time: "1" },
+    { expresso: "position", slide: 1, step: 1, blank: false, time: NaN },
   ];
   for (const data of others) {
     assert.equal(isMessage(data), false, JSON.stringify(data));
@@ -250,7 +256,13 @@ test("isMessage accepts only a message of the presenter", () => {
 });
 
 test("follow moves to the position of a message, with its black screen", () => {
-  const data = { expresso: "position", slide: 3, step: 2, blank: true };
+  const data = {
+    expresso: "position",
+    slide: 3,
+    step: 2,
+    blank: true,
+    time: 1,
+  };
   assert.deepEqual(follow(at(1, 1, "speaker"), data, three), {
     ...at(3, 2, "speaker"),
     blank: true,
@@ -259,10 +271,28 @@ test("follow moves to the position of a message, with its black screen", () => {
 
 test("follow gives the same state for the same position or a position not in the deck", () => {
   const state = at(2, 2);
-  assert.equal(follow(state, message(state), three), state);
-  assert.equal(follow(state, message(at(4, 1)), three), state);
-  assert.equal(follow(state, message(at(2, 4)), three), state);
+  assert.equal(follow(state, message(state, 1), three), state);
+  assert.equal(follow(state, message(at(4, 1), 1), three), state);
+  assert.equal(follow(state, message(at(2, 4), 1), three), state);
   assert.equal(follow(state, { slide: 1 }, three), state);
+});
+
+test("stamp gives the clock, or one more than the last time", () => {
+  assert.equal(stamp(0, 500), 500);
+  assert.equal(stamp(500, 500), 501);
+  assert.equal(stamp(900, 500), 901);
+});
+
+test("accepts takes a newer message, and ignores an older one", () => {
+  for (const speaker of [true, false]) {
+    assert.equal(accepts(10, 11, speaker), true);
+    assert.equal(accepts(10, 9, speaker), false);
+  }
+});
+
+test("at the same time, the speaker view takes the message and the present view keeps its state", () => {
+  assert.equal(accepts(10, 10, true), true);
+  assert.equal(accepts(10, 10, false), false);
 });
 
 test("? opens the list of keys in each view, and removes the digits", () => {
