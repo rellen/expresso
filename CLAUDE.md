@@ -66,12 +66,13 @@ needs a change to the other three.
 Do not commit to `main` and do not push to `main`. Make a branch, push the branch, and
 open a pull request. The maintainer merges it.
 
-`.github/workflows/check.yml` runs `mix check`, the two npm commands and the browser tests
-for a pull request. Do not wait for that result. Run the commands in "Build and test"
+`.github/workflows/check.yml` runs each command of "Build and test" for a pull request, in
+parallel jobs. Do not wait for that result. Run the commands in "Build and test"
 before each commit, because the session gives the same versions as the workflow. Tell the
 maintainer in the pull request which commands you ran.
 
-The workflow runs one job, on the versions of `.tool-versions`. This job must pass.
+The jobs run on the versions of `.tool-versions`. The last job, `Erlang/OTP 29, Elixir 1.20,
+Node 24`, needs each other job, and it fails when one of them fails. This job must pass.
 
 ## Commit messages
 

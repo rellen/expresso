@@ -553,8 +553,8 @@ This list gives the work in the order of its value. Take the first item that you
 The list holds no item at this time.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
-it. `.github/workflows/check.yml` runs each check for a pull request, on the versions of
-`.tool-versions`.
+it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on
+the versions of `.tool-versions`.
 
 One question has no answer, and the maintainer decides it. The section "The imperative
 API" of `docs/overlays.md` asks whether `Expresso.Deck.add_slide/4` keeps parity with the
