@@ -4,6 +4,7 @@ import {
   BINDINGS,
   binding,
   follow,
+  fraction,
   fromHash,
   initial,
   isMessage,
@@ -20,7 +21,15 @@ const three = { slides: 3, steps: [1, 3, 2] };
 
 // A state with no black screen and no digits.
 function at(slide: number, step: number, view: View = "present"): State {
-  return { slide, step, view, blank: false, digits: "", help: false };
+  return {
+    slide,
+    step,
+    view,
+    blank: false,
+    digits: "",
+    help: false,
+    progress: true,
+  };
 }
 
 // Give the state after each key, in sequence.
@@ -291,4 +300,31 @@ test("binding finds the key in the view of the state only", () => {
   assert.equal(binding(at(1, 1), "r"), undefined);
   assert.equal(binding(at(1, 1, "handout"), "p")?.action, "present");
   assert.equal(binding(at(1, 1), "p")?.action, "handout");
+});
+
+test("g hides the progress bar in the present view, and g again shows it", () => {
+  const hidden = next(at(2, 2), "g", three);
+  assert.deepEqual(hidden, { ...at(2, 2), progress: false });
+  assert.deepEqual(next(hidden, "g", three), at(2, 2));
+});
+
+test("g has no function in the handout view and the speaker view", () => {
+  for (const view of ["handout", "speaker"] as View[]) {
+    const state = at(2, 2, view);
+    assert.equal(next(state, "g", three), state, view);
+  }
+});
+
+test("fraction counts each step of each slide", () => {
+  // Three slides of 1, 3 and 2 steps give six steps, and five moves.
+  assert.equal(fraction(at(1, 1), three), 0);
+  assert.equal(fraction(at(2, 1), three), 1 / 5);
+  assert.equal(fraction(at(2, 3), three), 3 / 5);
+  assert.equal(fraction(at(3, 1), three), 4 / 5);
+  assert.equal(fraction(at(3, 2), three), 1);
+});
+
+test("fraction gives 0 for a deck of one step or no step", () => {
+  assert.equal(fraction(at(1, 1), { slides: 1, steps: [1] }), 0);
+  assert.equal(fraction(at(1, 1), { slides: 0, steps: [] }), 0);
 });

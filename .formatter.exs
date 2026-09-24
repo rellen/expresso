@@ -38,6 +38,7 @@ spark_locals_without_parens = [
   part: 2,
   pause: 0,
   pause: 1,
+  progress: 1,
   quotation: 1,
   quotation: 2,
   reveal: 1,

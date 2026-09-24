@@ -38,6 +38,15 @@ defmodule Expresso.Renderer do
     @presenter
   end
 
+  # The value of `data-progress` on the `body`. A deck from the imperative API
+  # can have no metadata, and it then shows the progress bar.
+  defp progress(deck) do
+    case deck.metadata do
+      %{progress: false} -> "false"
+      _other -> "true"
+    end
+  end
+
   # `Expresso.Deck.render/1` writes the doctype. Floki drops a doctype node, and the
   # deck function writes this tree with Floki. Therefore the doctype cannot come
   # from this function.
@@ -116,7 +125,9 @@ defmodule Expresso.Renderer do
           end
         end
 
-        body style: "min-height: 100vh; width: 100%; margin: 0px;", data_view: "present" do
+        body style: "min-height: 100vh; width: 100%; margin: 0px;",
+             data_view: "present",
+             data_progress: progress(@deck) do
           div class: "screen" do
             for {slide, index} <- Enum.with_index(@deck.slides) do
               section id: "slide-#{slide.metadata.slide_number}",
@@ -149,6 +160,11 @@ defmodule Expresso.Renderer do
                 end
               end
             end
+          end
+
+          # The progress bar of the present view. The presenter gives it its
+          # width, and the style sheet shows it.
+          div id: "progress", style: "width: 0%;" do
           end
 
           script do

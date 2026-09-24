@@ -42,8 +42,8 @@ end
 ```
 
 `Expresso.parse/1` reads the DSL state of such a module. It returns an `Expresso.Deck`
-struct with an empty metadata map, and it numbers the slides with
-`Expresso.Deck.number_slides/1`.
+struct, and it numbers the slides with `Expresso.Deck.number_slides/1`. The metadata map
+of the deck holds the `progress` option of the deck, and its default is `true`.
 
 The `slide` entity has a `heading` option. An author writes it as a call inside the block
 of the slide, in the form of Spark:
@@ -433,6 +433,7 @@ The keys of the present view are:
 - `b` shows a black screen. The next key shows the slide again, and it does nothing more.
 - `p` changes to the handout view.
 - `s` opens the speaker view in a second window. A second `s` shows the same window.
+- `g` shows or hides the progress bar.
 - `?` shows the list of the keys of the view. The next key closes it, and it does
   nothing more.
 
@@ -442,6 +443,16 @@ and its text in the list of keys. `next` finds the function of a key in this tab
 key that operates, and no other key. `dom.ts` writes the rows into the element `help` as
 text, and the style sheet shows it while the `body` has `data-help`. A printer does not
 get the list.
+
+The progress bar is the element `progress` at the bottom of the present view. The
+renderer writes it into each document with a width of zero. It also writes `data-progress`
+on the `body` from the metadata of the deck: `false` for `progress: false`, and `true`
+otherwise. `main.ts` reads that attribute into the state at load, and `g` changes the
+state. `fraction` in `state.ts` gives the part of the deck before the current step. Each
+step of each slide counts one time, so the bar is full at the last step only. `dom.ts`
+writes that part as the width of the bar. The style sheet shows the bar in the present view
+only, and not on a black screen or on paper. A theme can set `--progress-color` and
+`--progress-height`.
 
 The handout view knows only `j`, `k`, `p` and `?`. `j` and `k` change the state, and `p`
 then shows that step in the present view. The browser keeps each other key, so the arrow

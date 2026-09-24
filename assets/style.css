@@ -387,3 +387,27 @@ body[data-view="handout"] .handout-page + .handout-page {
     font-weight: 700;
   }
 }
+/*
+ * The progress bar of the present view. The presenter gives it its width. A
+ * theme can set `--progress-color` and `--progress-height`. The bar is not on
+ * a black screen, in the other views or on paper.
+ */
+#progress {
+  display: none;
+}
+@media screen {
+  body[data-view="present"][data-progress="true"]:not([data-blank="true"])
+    #progress {
+    display: block;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    height: var(--progress-height, 4px);
+    background-color: var(
+      --progress-color,
+      color-mix(in srgb, currentColor 50%, transparent)
+    );
+    transition: width 0.2s;
+    z-index: 5;
+  }
+}

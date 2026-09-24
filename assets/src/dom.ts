@@ -5,8 +5,14 @@
 
 import { rows } from "./help.ts";
 import { describe } from "./speaker.ts";
-import { upcoming } from "./state.ts";
+import { fraction, upcoming } from "./state.ts";
 import type { Limits, State } from "./state.ts";
+
+// The renderer writes `data-progress="false"` on the `body` for a deck that
+// hides the progress bar at the start. The key `g` can still show it.
+export function showsProgress(): boolean {
+  return document.body.dataset.progress !== "false";
+}
 
 // The renderer gives each slide a `section` with the class `slide`, the
 // identifier `slide-<number>` and the attribute `data-max-step`. The first
@@ -42,6 +48,11 @@ export function apply(state: State, limits: Limits): void {
     document.body.dataset.blank = "true";
   } else {
     delete document.body.dataset.blank;
+  }
+  document.body.dataset.progress = String(state.progress);
+  const bar = document.getElementById("progress");
+  if (bar !== null) {
+    bar.style.width = `${fraction(state, limits) * 100}%`;
   }
   if (state.help) {
     document.body.dataset.help = "true";

@@ -41,7 +41,15 @@ function fakeDocument(maxSteps: number[]): FakeDocument {
 
 // A state with no black screen and no digits.
 function at(slide: number, step: number, view: View = "present"): State {
-  return { slide, step, view, blank: false, digits: "", help: false };
+  return {
+    slide,
+    step,
+    view,
+    blank: false,
+    digits: "",
+    help: false,
+    progress: true,
+  };
 }
 
 test("limits reads the number of slides and the maximum step of each", () => {
