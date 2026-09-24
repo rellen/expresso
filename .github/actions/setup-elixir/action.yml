@@ -4,6 +4,12 @@
 #
 # Each job gives its own name to the cache. A job that compiles nothing, such
 # as the formatter, then does not save a cache with no build for the other jobs.
+#
+# The key holds the commit, so each run saves the build of its commit, and the
+# next run compiles only the files that changed after it. A run with no cache
+# of its commit reads the latest cache of the same `mix.lock`, and then the
+# latest cache of the job. A key with no commit saves one time only, and each
+# later run then compiles each file that changed after that one save.
 
 name: Set up Elixir
 description: Install Erlang and Elixir, read the cache, and get the dependencies.
@@ -30,8 +36,10 @@ runs:
         path: |
           deps
           _build
-        key: mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}
-        restore-keys: mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-
+        key: mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}-${{ github.sha }}
+        restore-keys: |
+          mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}-
+          mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-
 
     # Hex reports an advisory of a dependency in this output, and that output is
     # the more current signal. `docs/development.md` gives an example.
