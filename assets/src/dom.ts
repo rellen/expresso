@@ -50,6 +50,7 @@ export function apply(state: State, limits: Limits): void {
     delete document.body.dataset.blank;
   }
   document.body.dataset.progress = String(state.progress);
+  document.body.dataset.every = String(state.every);
   const bar = document.getElementById("progress");
   if (bar !== null) {
     bar.style.width = `${fraction(state, limits) * 100}%`;

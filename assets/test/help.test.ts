@@ -40,8 +40,8 @@ test("names gives the label of a binding in place of its keys", () => {
   );
 });
 
-test("the handout view lists only j, k, p and ?", () => {
-  assert.deepEqual(keys("handout"), ["j", "k", "p", "?"]);
+test("the handout view lists only j, k, p, a and ?", () => {
+  assert.deepEqual(keys("handout"), ["j", "k", "p", "a", "?"]);
 });
 
 test("the present view lists s, and not r", () => {

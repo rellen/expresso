@@ -628,7 +628,7 @@ and a list with `:last`, such as `[2, :last]`. A `:next` is an error, because no
 runs for this option. A step that the slide does not have is an error, and the option
 does not change the maximum step. The renderer marks each other page with `data-omit`, and
 the style sheet hides it in the handout view and on paper. `Expresso.Handout` gives the
-rules.
+rules. The key `a` of the handout view shows each page again, for a print of every step.
 
 A `data-el` value is unique in one view. The handout view holds the same value as the
 present view. A rule keeps its correct element, because the `data-step` of the `section`
