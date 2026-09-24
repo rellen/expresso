@@ -90,6 +90,7 @@ mix credo
 mix sobelow --exit --skip
 mix deps.audit
 mix test
+mix test --only e2e            # the browser tests, see "The browser tests"
 ```
 
 Each command above passes, and `mix check` passes as a whole. `mix doctor` passes with a
@@ -122,12 +123,41 @@ The dependency is present in `dev` and in `test`. `mix format` runs in `dev`, an
 `deps/stream_data/.formatter.exs` through `import_deps`. Therefore the formatter writes no
 parentheses after `check all`.
 
+### The browser tests
+
+The tests of `test/e2e/` render a deck to an HTML file, open the file in Chromium, and
+operate the presenter as a person does. They press keys, read computed styles, reload the
+page, open the speaker view in a second window, and count the pages of a PDF. They find the
+defects that the unit tests of `assets/test/` cannot find, because those tests use no CSS
+and no browser.
+
+```sh
+mix test --only e2e
+```
+
+`mix test` excludes these tests, because they need Node, the Playwright driver and a
+browser. `playwright_ex` is the Elixir client, and it starts the driver of
+`node_modules/playwright`, which `package.json` pins. `Expresso.E2E` in `test/support/`
+is the case template. It starts one browser for each module and a new context for each
+test, and it gives the helpers, such as `press/2`, `position/1` and `pdf_pages/1`.
+
+The variable `EXPRESSO_CHROMIUM` gives the path of a Chromium executable. A remote session
+has no browser at the path of Playwright, so the hook sets the variable to the Chromium
+of the container. Without the variable, Playwright uses its own browser:
+
+```sh
+npx playwright install --only-shell chromium
+```
+
+The workflow runs that command with `--with-deps`, which also installs the system
+libraries of the browser.
+
 ### The checks of a pull request
 
-`.github/workflows/check.yml` runs `mix check`, `npm run check` and `npm test` for a pull
-request and for a push to `main`. The job `Erlang/OTP 29, Elixir 1.20, Node 24` uses the
-versions of `.tool-versions`, and one job is sufficient because each place gives these
-versions.
+`.github/workflows/check.yml` runs `mix check`, `npm run check`, `npm test` and `mix test
+--only e2e` for a pull request and for a push to `main`. The job `Erlang/OTP 29, Elixir
+1.20, Node 24` uses the versions of `.tool-versions`, and one job is sufficient because
+each place gives these versions.
 
 From 2026-09-17 to 2026-09-18 the workflow ran two jobs, one for the versions of the
 container and one for the versions of `.tool-versions`. The container then took the
@@ -215,20 +245,18 @@ mix expresso examples/demo.exs /tmp/demo.html
 mix expresso examples/dsl_deck.exs /tmp/dsl.html
 ```
 
-A remote container has no display, but it has Chromium and Playwright. Use them to make
-sure that a change to `assets/style.css`, or to the presenter in `assets/src/`, is
-correct. The browser is at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`. This path
-is not the default path of Playwright, so give it to `chromium.launch`.
-
-```sh
-npm install playwright     # with PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-```
+The browser tests cover the behavior of the presenter. Add a test to `test/e2e/` for a
+new behavior. A look at the slides is still necessary after a change to
+`assets/style.css`, because no test reads the layout. A remote container has no display,
+but it has Chromium, and `npm install` gives Playwright. The browser is at
+`/opt/pw-browsers/chromium`. This path is not the default path of Playwright, so give it
+to `chromium.launch`.
 
 ```js
 import { chromium } from "playwright";
 
 const browser = await chromium.launch({
-  executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
+  executablePath: "/opt/pw-browsers/chromium",
 });
 const page = await browser.newPage({ viewport: { width: 1000, height: 620 } });
 await page.goto("file:///tmp/demo.html");
