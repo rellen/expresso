@@ -9,6 +9,11 @@
 // with `?speaker` in the address. Each window sends its position to the other
 // window with `postMessage`. `BroadcastChannel` is not reliable for a document
 // that a browser opens from a file.
+//
+// `?all` in the address shows every step in the handout view and on paper, as
+// the key `a` of the handout view does. A print or a PDF of such an address
+// then gets every step with no key. The speaker view opens with the same
+// address, so it also shows every step.
 
 import { clock } from "./speaker.ts";
 import {
@@ -25,11 +30,13 @@ import type { State } from "./state.ts";
 import { apply, limits, showsProgress, speakerPanel, text } from "./dom.ts";
 
 const deck = limits();
-const isSpeaker = new URLSearchParams(location.search).has("speaker");
+const parameters = new URLSearchParams(location.search);
+const isSpeaker = parameters.has("speaker");
 let state: State = {
   ...initial(),
   view: isSpeaker ? "speaker" : "present",
   progress: showsProgress(),
+  every: parameters.has("all"),
 };
 
 // The other window. The speaker view gets it from `window.opener`, and the

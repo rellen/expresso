@@ -163,6 +163,16 @@ To print every step, press `p` for the handout view, then `a`. The handout view 
 each step of each slide, whatever the `handout` options select, and a print or a PDF from
 that window gets the same pages. Press `a` again for the selection.
 
+`?all` at the end of the address, such as `deck.html?all`, gives the same result with no
+key. A browser with no window can then make the PDF:
+
+```sh
+chromium --headless --print-to-pdf=deck.pdf "file:///path/to/deck.html?all"
+```
+
+The name of the command can be `google-chrome` or `chrome`. Without `?all`, the PDF gets
+the pages that the `handout` options select.
+
 ## Make a binary
 
 Burrito makes a binary for macOS and for Linux, on x86_64 and on aarch64:
