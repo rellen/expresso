@@ -502,6 +502,11 @@ each page in the handout view and on paper. A print then gets every step, whatev
 `handout` options select. The field stays in one window, and a print from the speaker
 view gets the selection.
 
+`?all` in the address gives the field the value `true` at load. A print with no key, such
+as the `--print-to-pdf` option of Chromium with no window, then gets every step. The key
+`a` can still change the field. The speaker view opens with the address of the present
+view, so it keeps `?all`.
+
 Each page that shows, except the first, starts a new sheet with `break-before`. With
 `data-every="true"`, each page except the first does. A rule of
 `break-after` on the last page cannot do this, because the last page of the document can
