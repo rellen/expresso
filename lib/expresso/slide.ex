@@ -8,6 +8,7 @@ defmodule Expresso.Slide do
           :heading => String.t() | nil,
           :notes => String.t() | nil,
           :steps => pos_integer() | nil,
+          :handout => Expresso.Handout.t() | nil,
           :auto_reveal => boolean() | nil,
           :metadata => map() | nil,
           :elements => list()
@@ -18,6 +19,7 @@ defmodule Expresso.Slide do
     :heading,
     :notes,
     :steps,
+    :handout,
     :auto_reveal,
     :metadata,
     :elements,
@@ -54,7 +56,7 @@ defmodule Expresso.Slide do
   @spec put_options_in_metadata(t()) :: t()
   def put_options_in_metadata(%__MODULE__{} = slide) do
     metadata =
-      Enum.reduce([:heading, :notes], slide.metadata || %{}, fn key, metadata ->
+      Enum.reduce([:heading, :notes, :handout], slide.metadata || %{}, fn key, metadata ->
         case Map.fetch!(slide, key) do
           nil -> metadata
           value -> Map.put(metadata, key, value)

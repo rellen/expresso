@@ -620,7 +620,15 @@ two constructions show it:
   a page keeps the proportions of a slide, with the header at the top and the footer at
   the bottom.
 - The attribute `data-view` on the `body`. The presenter writes `handout` into it for the
-  key `p`. A screen reader then reads each step of each slide.
+  key `p`. A screen reader then reads each page of the view.
+
+The `handout` option of a slide selects the steps that get a page, with the forms of an
+absolute specification, such as `3`, `2..4` or `[2, 5]`. It also takes `:all`, `:last`
+and a list with `:last`, such as `[2, :last]`. A `:next` is an error, because no counter
+runs for this option. A step that the slide does not have is an error, and the option
+does not change the maximum step. The renderer marks each other page with `data-omit`, and
+the style sheet hides it in the handout view and on paper. `Expresso.Handout` gives the
+rules.
 
 A `data-el` value is unique in one view. The handout view holds the same value as the
 present view. A rule keeps its correct element, because the `data-step` of the `section`
@@ -767,6 +775,8 @@ are in `test/expresso/overlay_*_test.exs`, and the tests of the presenter are in
   and the `code` element. The same function gives
   the implicit specification to each child of the element, and it starts a local counter
   at the first step of an absolute `at` option.
+- The `handout` option, done on 2026-09-24, for a slide and for the deck. The default
+  keeps a page for each step.
 
 ## The decisions
 

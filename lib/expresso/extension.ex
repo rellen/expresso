@@ -269,6 +269,11 @@ defmodule Expresso.Extension do
         doc: "The notes of the speaker. The handout view shows them under each page."
       ],
       steps: [type: :pos_integer, doc: "The maximum step number of the slide."],
+      handout: [
+        type: {:custom, Expresso.Handout, :new, []},
+        doc:
+          "The steps that the handout view and a printer show, such as [2, :last]. See Expresso.Handout."
+      ],
       auto_reveal: [
         type: :boolean,
         default: false,
@@ -285,6 +290,12 @@ defmodule Expresso.Extension do
       name: [
         type: :string,
         doc: "A unique identifier for this deck."
+      ],
+      handout: [
+        type: {:in, [:all, :last]},
+        default: :all,
+        doc:
+          "The steps that the handout view and a printer show for a slide without a handout option."
       ],
       progress: [
         type: :boolean,

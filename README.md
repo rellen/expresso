@@ -145,6 +145,20 @@ The handout view shows one page for each step of each slide. In this view, only 
 `p` and `?` operate, so the other keys scroll the pages. A printer gets this view without
 the key.
 
+A slide can select the steps that get a page, with the forms of `at`:
+
+```elixir
+slide "overlays" do
+  handout [3, :last]
+  # ...
+end
+```
+
+`handout :last` gives the last step only, and `handout :all` gives each step. `:last` can
+also go in a list, such as `[2, :last]`. Write `handout :last` in the deck to give the last
+step of each slide without the option. The handout view on a screen shows the same pages as
+the paper. The speaker view still shows each step.
+
 ## Make a binary
 
 Burrito makes a binary for macOS and for Linux, on x86_64 and on aarch64:

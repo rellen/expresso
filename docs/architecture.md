@@ -43,7 +43,8 @@ end
 
 `Expresso.parse/1` reads the DSL state of such a module. It returns an `Expresso.Deck`
 struct, and it numbers the slides with `Expresso.Deck.number_slides/1`. The metadata map
-of the deck holds the `progress` option of the deck, and its default is `true`.
+of the deck holds the `progress` option and the `handout` option of the deck. Their
+defaults are `true` and `:all`.
 
 The `slide` entity has a `heading` option. An author writes it as a call inside the block
 of the slide, in the form of Spark:
@@ -141,7 +142,8 @@ html
           div        the footer, from the deck template
       div            the handout view, class "handout"
         section      one for each step of each slide, class "handout-page",
-                     data-step from the step, data-slide from the slide
+                     data-step from the step, data-slide from the slide,
+                     data-omit when the handout option does not select the step
           div        the same three parts as a slide of the present view
           aside      the notes of the slide, class "notes", when the slide has notes
       script         priv/static/presenter.js, the presenter bundle
@@ -382,7 +384,7 @@ holds `on` entities. A `slide` and a `text_box` also hold `image`, `list`, `tabl
 Each element has an `at` option, a slide has a `steps` option and an `auto_reveal`
 option, a list and a table have a `reveal` option, and a code element has a `reveal`
 option with a list of lines. `docs/overlays.md` gives the meaning of each. A slide also
-has a `heading` option and a `notes` option, and
+has a `heading` option, a `notes` option and a `handout` option, and
 `Expresso.Slide.put_options_in_metadata/1` puts each into the metadata of the slide.
 
 The `notes` option holds the notes of the speaker. The handout view shows them in an
@@ -483,7 +485,19 @@ a step. A fragment that gives no slide and step of the deck has no effect. `#4` 
 of slide 4.
 A printer gets the handout view, because a `@media print` block selects it. The key is
 not necessary for a printer. It makes the handout view available on a screen, and a
-screen reader then reads each step of each slide.
+screen reader then reads each page of it.
+
+The `handout` option of a slide selects the steps that get a page in the handout view and
+on paper, such as `handout [2, :last]`. The `handout` option of the deck gives `:all` or
+`:last` to each slide without the option, and its default is `:all`. `Expresso.Handout`
+gives the forms and the steps. The renderer still writes a page for each step, because
+the speaker view shows the page of each step. It writes `data-omit` on each page that the
+option does not select. The style sheet hides such a page in the handout view and on
+paper, so the handout view on a screen shows the pages that a printer prints.
+
+Each page that shows, except the first, starts a new sheet with `break-before`. A rule of
+`break-after` on the last page cannot do this, because the last page of the document can
+be a page with `data-omit`.
 
 A page of the handout view takes the full height of the screen, or of the paper. The
 print block gives the paper a landscape orientation, because a slide is wider than it is
