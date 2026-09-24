@@ -52,6 +52,21 @@ test("the present view lists s, and not r", () => {
   assert.equal(present[0], "j, →, ↓, Page Down, Space");
 });
 
+test("the present view and the speaker view list f, clicks and swipes", () => {
+  for (const view of ["present", "speaker"] as const) {
+    const names = keys(view);
+    assert.ok(names.includes("f"), view);
+    assert.ok(
+      names.includes("Click or tap the right two thirds, or swipe left"),
+      view,
+    );
+    assert.ok(
+      names.includes("Click or tap the left third, or swipe right"),
+      view,
+    );
+  }
+});
+
 test("the speaker view lists r, and not p or s", () => {
   const speaker = keys("speaker");
   assert.ok(speaker.includes("r"));

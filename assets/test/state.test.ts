@@ -12,7 +12,10 @@ import {
   maxStep,
   message,
   next,
+  point,
+  side,
   stamp,
+  swipe,
   toHash,
   upcoming,
 } from "../src/state.ts";
@@ -371,4 +374,62 @@ test("a has no function in the present view and the speaker view", () => {
     const state = at(2, 2, view);
     assert.equal(next(state, "a", three), state, view);
   }
+});
+
+test("side gives back for the left third, and forward for the rest", () => {
+  assert.equal(side(0, 1200), "back");
+  assert.equal(side(399, 1200), "back");
+  assert.equal(side(400, 1200), "forward");
+  assert.equal(side(1199, 1200), "forward");
+});
+
+test("swipe gives forward to the left, back to the right, and nothing else", () => {
+  assert.equal(swipe(-50, 0), "forward");
+  assert.equal(swipe(80, -30), "back");
+  assert.equal(swipe(-49, 0), undefined);
+  assert.equal(swipe(60, 60), undefined);
+  assert.equal(swipe(0, -200), undefined);
+});
+
+test("point moves one step, as j and k do", () => {
+  assert.deepEqual(point(at(1, 1), "forward", three), at(2, 1));
+  assert.deepEqual(point(at(2, 1), "back", three), at(1, 1));
+  assert.deepEqual(point(at(1, 1, "speaker"), "forward", three), {
+    ...at(2, 1),
+    view: "speaker",
+  });
+  assert.deepEqual(point(at(3, 2), "forward", three), at(3, 2));
+});
+
+test("point removes the digits", () => {
+  const typed = { ...at(1, 1), digits: "3" };
+  assert.deepEqual(point(typed, "forward", three), at(2, 1));
+});
+
+test("point closes a black screen or the list of keys, and does nothing more", () => {
+  const blank = { ...at(2, 2), blank: true };
+  assert.deepEqual(point(blank, "forward", three), at(2, 2));
+
+  const help = { ...at(2, 2, "handout"), help: true };
+  assert.deepEqual(point(help, "back", three), at(2, 2, "handout"));
+});
+
+test("point has no other function in the handout view", () => {
+  const handout = at(2, 2, "handout");
+  assert.equal(point(handout, "forward", three), handout);
+  assert.equal(point(handout, "back", three), handout);
+});
+
+test("f is full screen in the present view and the speaker view only", () => {
+  assert.equal(binding(at(1, 1), "f")?.action, "fullscreen");
+  assert.equal(binding(at(1, 1, "speaker"), "f")?.action, "fullscreen");
+  assert.equal(binding(at(1, 1, "handout"), "f"), undefined);
+  assert.deepEqual(next(at(1, 1), "f", three), at(1, 1));
+});
+
+test("no key finds a row of a click or a swipe", () => {
+  for (const row of BINDINGS.filter((each) => each.keys.length === 0)) {
+    assert.ok(row.label, row.text);
+  }
+  assert.equal(binding(at(1, 1), ""), undefined);
 });

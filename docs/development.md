@@ -126,8 +126,9 @@ parentheses after `check all`.
 ### The browser tests
 
 The tests of `test/e2e/` render a deck to an HTML file, open the file in Chromium, and
-operate the presenter as a person does. They press keys, read computed styles, reload the
-page, open the speaker view in a second window, and count the pages of a PDF. They find the
+operate the presenter as a person does. They press keys, click, tap, swipe, read computed
+styles, reload the page, open the speaker view in a second window, and count the pages of a
+PDF. Playwright has no swipe, so a script in the page sends the touch events. They find the
 defects that the unit tests of `assets/test/` cannot find, because those tests use no CSS
 and no browser.
 

@@ -36,8 +36,8 @@ export type Limits = {
   steps: number[];
 };
 
-// The function of a key. `main.ts` does the functions `speaker` and `reset`,
-// because they do not change the state.
+// The function of a key. `main.ts` does the functions `speaker`, `reset` and
+// `fullscreen`, because they do not change the state.
 export type Action =
   | "forward"
   | "back"
@@ -50,12 +50,15 @@ export type Action =
   | "present"
   | "speaker"
   | "reset"
+  | "fullscreen"
   | "progress"
   | "every"
   | "help";
 
 // One or more keys, their function, the views that know them, and the text
-// of the list of keys. `label` replaces the names of the keys in that list.
+// of the list of keys. `label` replaces the names of the keys in that list. A
+// binding with no key is a row for a click, a tap or a swipe: `point` gives
+// its function, and `binding` does not find it.
 export type Binding = {
   keys: string[];
   action: Action;
@@ -148,6 +151,12 @@ export const BINDINGS: Binding[] = [
     text: "Set the timer to 0:00",
   },
   {
+    keys: ["f"],
+    action: "fullscreen",
+    views: SHOWING,
+    text: "Full screen on or off",
+  },
+  {
     keys: ["g"],
     action: "progress",
     views: ["present"],
@@ -158,6 +167,20 @@ export const BINDINGS: Binding[] = [
     action: "every",
     views: ["handout"],
     text: "Every step, or the steps of the handout option. A print shows the same.",
+  },
+  {
+    keys: [],
+    action: "forward",
+    views: SHOWING,
+    text: "Next step",
+    label: "Click or tap the right two thirds, or swipe left",
+  },
+  {
+    keys: [],
+    action: "back",
+    views: SHOWING,
+    text: "Previous step",
+    label: "Click or tap the left third, or swipe right",
   },
   {
     keys: ["?"],
@@ -203,11 +226,9 @@ export function maxStep(slide: number, limits: Limits): number {
 // nothing more. A digit adds to the slide number, and `Enter` goes to step 1
 // of that slide. Each other key removes the digits.
 export function next(state: State, key: string, limits: Limits): State {
-  if (state.blank) {
-    return { ...state, blank: false };
-  }
-  if (state.help) {
-    return { ...state, help: false };
+  const shown = close(state);
+  if (shown !== state) {
+    return shown;
   }
 
   const action = binding(state, key)?.action;
@@ -243,6 +264,55 @@ export function next(state: State, key: string, limits: Limits): State {
     default:
       return cleared;
   }
+}
+
+// The state with no black screen and no list of keys. A state with neither
+// gives the same state.
+function close(state: State): State {
+  if (state.blank) {
+    return { ...state, blank: false };
+  }
+  if (state.help) {
+    return { ...state, help: false };
+  }
+  return state;
+}
+
+// A click, a tap or a swipe moves one step forward or one step back.
+export type Pointer = "forward" | "back";
+
+// The function of a click or a tap at `x` pixels from the left edge of a
+// window of `width` pixels. The left third goes back, because a person
+// clicks to go forward more frequently than to go back.
+export function side(x: number, width: number): Pointer {
+  return x < width / 3 ? "back" : "forward";
+}
+
+// The minimum horizontal distance of a swipe, in pixels.
+export const SWIPE = 50;
+
+// The function of a movement of a finger across the screen. A swipe to the
+// left goes forward, as on a page of a book. A short movement or a movement
+// that is more vertical than horizontal has no function.
+export function swipe(dx: number, dy: number): Pointer | undefined {
+  if (Math.abs(dx) < SWIPE || Math.abs(dx) <= Math.abs(dy)) {
+    return undefined;
+  }
+  return dx < 0 ? "forward" : "back";
+}
+
+// Give the state after a click, a tap or a swipe. As a key does, it first
+// closes a black screen or the list of keys, and it does nothing more. The
+// handout view scrolls with a finger, so there it has no other function.
+export function point(state: State, pointer: Pointer, limits: Limits): State {
+  const shown = close(state);
+  if (shown !== state || state.view === "handout") {
+    return shown;
+  }
+  const cleared = state.digits === "" ? state : { ...state, digits: "" };
+  return pointer === "forward"
+    ? forward(cleared, limits)
+    : back(cleared, limits);
 }
 
 // The part of the deck before the step of the state, from 0 at the first step

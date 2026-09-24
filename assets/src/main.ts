@@ -10,6 +10,15 @@
 // window with `postMessage`. `BroadcastChannel` is not reliable for a document
 // that a browser opens from a file.
 //
+// A click or a tap on the right two thirds of the window goes to the next
+// step, and on the left third to the previous step. A swipe to the left goes
+// to the next step, and a swipe to the right to the previous step. `state.ts`
+// gives these rules. A click on a link, a button or a form field goes to the
+// browser, and so does a click that ends a selection of text.
+//
+// The key `f` puts the document in full screen, or takes it out of full
+// screen. The key `Escape` of the browser also takes it out.
+//
 // `?all` in the address shows every step in the handout view and on paper, as
 // the key `a` of the handout view does. A print or a PDF of such an address
 // then gets every step with no key. The speaker view opens with the same
@@ -25,10 +34,13 @@ import {
   isMessage,
   message,
   next,
+  point,
+  side,
   stamp,
+  swipe,
   toHash,
 } from "./state.ts";
-import type { State } from "./state.ts";
+import type { Pointer, State } from "./state.ts";
 import { apply, limits, showsProgress, speakerPanel, text } from "./dom.ts";
 
 const deck = limits();
@@ -90,6 +102,16 @@ function openSpeaker(): void {
   partner = window.open(address.href, "expresso-speaker");
 }
 
+// Put the document in full screen, or take it out. A browser can refuse, for
+// example in a frame, and the document then stays as it is.
+function fullscreen(): void {
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => undefined);
+  } else if (document.fullscreenEnabled) {
+    document.documentElement.requestFullscreen().catch(() => undefined);
+  }
+}
+
 if (isSpeaker) {
   document.title = `Speaker view: ${document.title}`;
   speakerPanel();
@@ -121,12 +143,80 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
     tick();
     return;
   }
+  if (action === "fullscreen") {
+    event.preventDefault();
+    state = { ...state, digits: "" };
+    fullscreen();
+    return;
+  }
   const changed = next(state, event.key, deck);
   if (changed !== state) {
     event.preventDefault();
     show(changed);
   }
 });
+
+// The elements that use a click themselves.
+const INTERACTIVE =
+  "a, button, input, select, textarea, label, summary, audio, video, iframe, [contenteditable]";
+
+// True for a click that goes to the browser: a click with a modifier or with
+// a button other than the main button, a click on an interactive element, and
+// a click that ends a selection of text.
+function ignores(event: MouseEvent): boolean {
+  if (event.button !== 0) {
+    return true;
+  }
+  if (event.ctrlKey || event.altKey || event.metaKey || event.shiftKey) {
+    return true;
+  }
+  const target = event.target as Element | null;
+  if (target?.closest?.(INTERACTIVE)) {
+    return true;
+  }
+  return window.getSelection?.()?.isCollapsed === false;
+}
+
+function pointed(pointer: Pointer | undefined): void {
+  if (pointer !== undefined) {
+    show(point(state, pointer, deck));
+  }
+}
+
+document.addEventListener("click", (event: MouseEvent) => {
+  if (!ignores(event)) {
+    pointed(side(event.clientX, window.innerWidth));
+  }
+});
+
+// The start of a movement of one finger, or null. A second finger, as for a
+// zoom, stops the swipe.
+let touched: { x: number; y: number } | null = null;
+
+document.addEventListener(
+  "touchstart",
+  (event: TouchEvent) => {
+    const finger = event.touches[0];
+    touched =
+      event.touches.length === 1 && finger !== undefined
+        ? { x: finger.clientX, y: finger.clientY }
+        : null;
+  },
+  { passive: true },
+);
+
+document.addEventListener(
+  "touchend",
+  (event: TouchEvent) => {
+    const finger = event.changedTouches[0];
+    const start = touched;
+    touched = null;
+    if (start !== null && finger !== undefined) {
+      pointed(swipe(finger.clientX - start.x, finger.clientY - start.y));
+    }
+  },
+  { passive: true },
+);
 
 // The presenter can also type a fragment into the address bar.
 window.addEventListener("hashchange", () => {
