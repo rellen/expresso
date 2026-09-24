@@ -12,6 +12,7 @@
 
 import { clock } from "./speaker.ts";
 import {
+  binding,
   follow,
   fromHash,
   initial,
@@ -83,13 +84,16 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.ctrlKey || event.altKey || event.metaKey) {
     return;
   }
-  if (event.key === "s" && state.view === "present" && !state.blank) {
+  // On a black screen or on the list of keys, `next` closes it first.
+  const action =
+    state.blank || state.help ? undefined : binding(state, event.key)?.action;
+  if (action === "speaker") {
     event.preventDefault();
     state = { ...state, digits: "" };
     openSpeaker();
     return;
   }
-  if (event.key === "r" && isSpeaker && !state.blank) {
+  if (action === "reset") {
     event.preventDefault();
     started = null;
     tick();

@@ -14,12 +14,14 @@ export type View = "present" | "handout" | "speaker";
 
 // `blank` is true while the present view shows a black screen. `digits` holds
 // the digits of a slide number that the presenter types before `Enter`.
+// `help` is true while the view shows the list of its keys.
 export type State = {
   slide: number;
   step: number;
   view: View;
   blank: boolean;
   digits: string;
+  help: boolean;
 };
 
 // `steps` holds the maximum step number of each slide, in slide order. The
@@ -29,16 +31,143 @@ export type Limits = {
   steps: number[];
 };
 
-// The keys that move forward and back in the present view. A presentation
-// remote sends `PageDown` and `PageUp`. The value `" "` is the space bar.
-const FORWARD = ["j", "ArrowRight", "ArrowDown", "PageDown", " "];
-const BACK = ["k", "ArrowLeft", "ArrowUp", "PageUp"];
+// The function of a key. `main.ts` does the functions `speaker` and `reset`,
+// because they do not change the state.
+export type Action =
+  | "forward"
+  | "back"
+  | "first"
+  | "last"
+  | "digit"
+  | "go"
+  | "blank"
+  | "handout"
+  | "present"
+  | "speaker"
+  | "reset"
+  | "help";
+
+// One or more keys, their function, the views that know them, and the text
+// of the list of keys. `label` replaces the names of the keys in that list.
+export type Binding = {
+  keys: string[];
+  action: Action;
+  views: View[];
+  text: string;
+  label?: string;
+};
+
+const SHOWING: View[] = ["present", "speaker"];
+const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
+// The keys of the presenter. `next` and the list of keys read this table, so
+// the list shows each key that operates, and no other key. A presentation
+// remote sends `PageDown` and `PageUp`. The value `" "` is the space bar. The
+// handout view knows only `j`, `k`, `p` and `?`, so the browser keeps the
+// other keys, and the arrow keys and the space bar scroll the pages.
+export const BINDINGS: Binding[] = [
+  {
+    keys: ["j", "ArrowRight", "ArrowDown", "PageDown", " "],
+    action: "forward",
+    views: SHOWING,
+    text: "Next step, or the first step of the next slide",
+  },
+  {
+    keys: ["k", "ArrowLeft", "ArrowUp", "PageUp"],
+    action: "back",
+    views: SHOWING,
+    text: "Previous step, or the last step of the previous slide",
+  },
+  {
+    keys: ["j"],
+    action: "forward",
+    views: ["handout"],
+    text: "Next step. The present view then shows it.",
+  },
+  {
+    keys: ["k"],
+    action: "back",
+    views: ["handout"],
+    text: "Previous step. The present view then shows it.",
+  },
+  { keys: ["Home"], action: "first", views: SHOWING, text: "First slide" },
+  {
+    keys: ["End"],
+    action: "last",
+    views: SHOWING,
+    text: "Step 1 of the last slide",
+  },
+  {
+    keys: DIGITS,
+    action: "digit",
+    views: SHOWING,
+    text: "Type a slide number",
+    label: "0 to 9",
+  },
+  {
+    keys: ["Enter"],
+    action: "go",
+    views: SHOWING,
+    text: "Step 1 of the slide that you typed",
+  },
+  {
+    keys: ["b"],
+    action: "blank",
+    views: SHOWING,
+    text: "Black screen. The next key shows the slide again.",
+  },
+  {
+    keys: ["p"],
+    action: "handout",
+    views: ["present"],
+    text: "Handout view",
+  },
+  {
+    keys: ["p"],
+    action: "present",
+    views: ["handout"],
+    text: "Present view",
+  },
+  {
+    keys: ["s"],
+    action: "speaker",
+    views: ["present"],
+    text: "Speaker view, in a second window",
+  },
+  {
+    keys: ["r"],
+    action: "reset",
+    views: ["speaker"],
+    text: "Set the timer to 0:00",
+  },
+  {
+    keys: ["?"],
+    action: "help",
+    views: ["present", "handout", "speaker"],
+    text: "This list of keys. The next key closes it.",
+  },
+];
+
+// The binding of a key in the view of the state, or undefined for a key that
+// the view does not know.
+export function binding(state: State, key: string): Binding | undefined {
+  return BINDINGS.find(
+    (each) => each.views.includes(state.view) && each.keys.includes(key),
+  );
+}
 
 // The first slide is slide 1, and the first step is step 1.
 // `Expresso.Deck.number_slides/1` gives the same number to the identifier of
 // each section.
 export function initial(): State {
-  return { slide: 1, step: 1, view: "present", blank: false, digits: "" };
+  return {
+    slide: 1,
+    step: 1,
+    view: "present",
+    blank: false,
+    digits: "",
+    help: false,
+  };
 }
 
 // The maximum step number of a slide. A slide without an entry has one step.
@@ -49,21 +178,46 @@ export function maxStep(slide: number, limits: Limits): number {
 // Give the state after one key. A key that has no function gives the same
 // state, and `main.ts` then lets the browser use the key.
 //
-// On a black screen, each key shows the slide again, and it does nothing more.
-// The handout view knows only `j`, `k` and `p`. The browser keeps the other
-// keys, so the arrow keys and the space bar scroll the pages. The speaker view
-// knows the keys of the present view, but `p` has no function in it.
+// On a black screen or on the list of keys, each key closes it, and it does
+// nothing more. A digit adds to the slide number, and `Enter` goes to step 1
+// of that slide. Each other key removes the digits.
 export function next(state: State, key: string, limits: Limits): State {
   if (state.blank) {
     return { ...state, blank: false };
   }
-  if (state.view === "handout") {
-    return handout(state, key, limits);
+  if (state.help) {
+    return { ...state, help: false };
   }
-  if (state.view === "speaker" && key === "p") {
-    return state;
+
+  const action = binding(state, key)?.action;
+  if (action === "digit") {
+    return { ...state, digits: state.digits + key };
   }
-  return present(state, key, limits);
+  if (action === "go") {
+    return go(state, limits);
+  }
+
+  const cleared = state.digits === "" ? state : { ...state, digits: "" };
+  switch (action) {
+    case "forward":
+      return forward(cleared, limits);
+    case "back":
+      return back(cleared, limits);
+    case "first":
+      return move(cleared, 1, limits);
+    case "last":
+      return move(cleared, limits.slides, limits);
+    case "blank":
+      return { ...cleared, blank: true };
+    case "handout":
+      return { ...cleared, view: "handout" };
+    case "present":
+      return { ...cleared, view: "present" };
+    case "help":
+      return { ...cleared, help: true };
+    default:
+      return cleared;
+  }
 }
 
 // The step after the step of the state, or null at the last step of the last
@@ -71,53 +225,6 @@ export function next(state: State, key: string, limits: Limits): State {
 export function upcoming(state: State, limits: Limits): State | null {
   const after = forward(state, limits);
   return after === state ? null : after;
-}
-
-// The keys of the handout view. `j` and `k` change the state, and the view
-// shows no change. `p` then shows that slide and step in the present view.
-function handout(state: State, key: string, limits: Limits): State {
-  if (key === "j") {
-    return forward(state, limits);
-  }
-  if (key === "k") {
-    return back(state, limits);
-  }
-  if (key === "p") {
-    return { ...state, view: "present" };
-  }
-  return state;
-}
-
-// The keys of the present view. A digit adds to the slide number, and `Enter`
-// goes to step 1 of that slide. Each other key removes the digits.
-function present(state: State, key: string, limits: Limits): State {
-  if (/^[0-9]$/.test(key)) {
-    return { ...state, digits: state.digits + key };
-  }
-  if (key === "Enter") {
-    return go(state, limits);
-  }
-
-  const cleared = state.digits === "" ? state : { ...state, digits: "" };
-  if (FORWARD.includes(key)) {
-    return forward(cleared, limits);
-  }
-  if (BACK.includes(key)) {
-    return back(cleared, limits);
-  }
-  if (key === "Home") {
-    return move(cleared, 1, limits);
-  }
-  if (key === "End") {
-    return move(cleared, limits.slides, limits);
-  }
-  if (key === "b") {
-    return { ...cleared, blank: true };
-  }
-  if (key === "p") {
-    return { ...cleared, view: "handout" };
-  }
-  return cleared;
 }
 
 // Move to the next step, and to the first step of the next slide after the

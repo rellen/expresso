@@ -108,3 +108,20 @@ test("r sets the timer back to 0:00, and the next change starts it again", () =>
   page.timers[0]();
   assert.equal(text("speaker-timer"), "0:02");
 });
+
+test("? lists r in the speaker view, and r then only closes the list", () => {
+  page.press("?");
+  const panel = page.element("help");
+  assert.ok(panel, "no element help");
+  const names = panel.children.map((row) => row.children[0].textContent);
+  assert.ok(names.includes("r"));
+  assert.ok(!names.includes("s"));
+
+  page.press("k");
+  mock.timers.tick(3_000);
+  page.press("?");
+  page.press("r");
+  page.timers[0]();
+  assert.equal("help" in page.body.dataset, false);
+  assert.notEqual(text("speaker-timer"), "0:00");
+});

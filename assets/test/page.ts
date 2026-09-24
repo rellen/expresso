@@ -16,6 +16,7 @@ export type FakeElement = {
   textContent: string;
   children: FakeElement[];
   appendChild: (child: FakeElement) => void;
+  replaceChildren: () => void;
   querySelector: (selector: string) => FakeElement | null;
 };
 
@@ -45,7 +46,7 @@ type Options = {
 export type FakePage = {
   slides: FakeElement[];
   pages: FakeElement[];
-  body: { dataset: Record<string, string | undefined> };
+  body: FakeElement;
   location: { hash: string; search: string; readonly href: string };
   document: { title: string };
   // The fragments that `history.replaceState` got, in sequence.
@@ -90,6 +91,9 @@ export function element(
     appendChild: (child) => {
       self.children.push(child);
     },
+    replaceChildren: () => {
+      self.children = [];
+    },
     querySelector: (selector) =>
       self.children.find((child) => `.${child.className}` === selector) ?? null,
   };
@@ -117,7 +121,8 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     }
   });
   const pages = [...handout.children];
-  const all = () => [...slides, handout, ...handout.children];
+  const body = element("", "");
+  const all = () => [...slides, handout, ...handout.children, ...body.children];
 
   const listeners: Record<string, (event: unknown) => void> = {};
   const listen = (name: string, listener: (event: unknown) => void) => {
@@ -138,7 +143,7 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   };
   const doc = {
     title: "Deck",
-    body: { dataset: {} as Record<string, string | undefined> },
+    body,
     getElementsByClassName: (name: string) =>
       all().filter((each) => each.className === name),
     getElementById: (id: string) =>
