@@ -15,16 +15,23 @@ function displays(): string[] {
   return slides.map((slide) => slide.style.display);
 }
 
-test("an address with no fragment writes nothing at load", () => {
-  assert.equal(body.dataset.view, undefined);
+test("an address with no fragment shows step 1, and writes no fragment", () => {
+  assert.equal(body.dataset.view, "present");
+  assert.equal(slides[0].dataset.step, "1");
   assert.deepEqual(page.written, []);
 });
 
+test("the progress bar is on and empty at load", () => {
+  assert.equal(body.dataset.progress, "true");
+  assert.equal(page.element("progress")?.style.width, "0%");
+});
+
 test("an unknown key writes nothing, because the state does not change", () => {
+  const count = page.written.length;
   assert.equal(page.press("x"), false);
 
-  assert.equal(body.dataset.view, undefined);
-  assert.equal(slides[0].dataset.step, undefined);
+  assert.equal(page.written.length, count);
+  assert.deepEqual(displays(), ["flex", "none"]);
 });
 
 test("j moves to the next slide after the last step of the first slide", () => {
@@ -173,4 +180,14 @@ test("s on the list of keys closes it, and opens no window", () => {
 
   assert.equal("help" in body.dataset, false);
   assert.equal(page.opened.length, count);
+});
+
+test("the progress bar follows the step, and g hides and shows it", () => {
+  page.navigate("#2.1");
+  assert.equal(page.element("progress")?.style.width, "50%");
+
+  assert.equal(page.press("g"), true);
+  assert.equal(body.dataset.progress, "false");
+  page.press("g");
+  assert.equal(body.dataset.progress, "true");
 });

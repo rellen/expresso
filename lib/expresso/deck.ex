@@ -1,6 +1,10 @@
 defmodule Expresso.Deck do
   @moduledoc """
   A slide deck
+
+  The metadata of a deck can hold `:progress`. The value `false` hides the
+  progress bar of the present view at the start, and the key `g` can still
+  show it. A deck without the key shows the progress bar.
   """
 
   @type t :: %__MODULE__{:name => String.t(), :metadata => map(), :slides => list()}

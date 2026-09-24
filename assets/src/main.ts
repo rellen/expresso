@@ -22,11 +22,15 @@ import {
   toHash,
 } from "./state.ts";
 import type { State } from "./state.ts";
-import { apply, limits, speakerPanel, text } from "./dom.ts";
+import { apply, limits, showsProgress, speakerPanel, text } from "./dom.ts";
 
 const deck = limits();
 const isSpeaker = new URLSearchParams(location.search).has("speaker");
-let state: State = isSpeaker ? { ...initial(), view: "speaker" } : initial();
+let state: State = {
+  ...initial(),
+  view: isSpeaker ? "speaker" : "present",
+  progress: showsProgress(),
+};
 
 // The other window. The speaker view gets it from `window.opener`, and the
 // present view gets it from `window.open`.
@@ -73,10 +77,12 @@ function openSpeaker(): void {
 if (isSpeaker) {
   document.title = `Speaker view: ${document.title}`;
   speakerPanel();
-  apply(state, deck);
   tick();
   setInterval(tick, 250);
 }
+
+// The first application of the state gives the progress bar its width.
+apply(state, deck);
 
 show(fromHash(state, location.hash, deck));
 

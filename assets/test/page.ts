@@ -12,7 +12,7 @@ export type FakeElement = {
   id: string;
   className: string;
   dataset: Record<string, string | undefined>;
-  style: { display: string };
+  style: { display: string; width?: string };
   textContent: string;
   children: FakeElement[];
   appendChild: (child: FakeElement) => void;
@@ -41,6 +41,8 @@ type Options = {
   // The notes of each slide, in slide order. A slide without an entry has no
   // notes.
   notes?: string[];
+  // The value of `data-progress` that the renderer writes on the `body`.
+  progress?: string;
 };
 
 export type FakePage = {
@@ -122,7 +124,18 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   });
   const pages = [...handout.children];
   const body = element("", "");
-  const all = () => [...slides, handout, ...handout.children, ...body.children];
+  if (options.progress !== undefined) {
+    body.dataset.progress = options.progress;
+  }
+  // The renderer writes the progress bar into each document.
+  const progress = element("progress");
+  const all = () => [
+    ...slides,
+    handout,
+    ...handout.children,
+    progress,
+    ...body.children,
+  ];
 
   const listeners: Record<string, (event: unknown) => void> = {};
   const listen = (name: string, listener: (event: unknown) => void) => {

@@ -14,7 +14,8 @@ export type View = "present" | "handout" | "speaker";
 
 // `blank` is true while the present view shows a black screen. `digits` holds
 // the digits of a slide number that the presenter types before `Enter`.
-// `help` is true while the view shows the list of its keys.
+// `help` is true while the view shows the list of its keys. `progress` is
+// true while the present view shows the progress bar.
 export type State = {
   slide: number;
   step: number;
@@ -22,6 +23,7 @@ export type State = {
   blank: boolean;
   digits: string;
   help: boolean;
+  progress: boolean;
 };
 
 // `steps` holds the maximum step number of each slide, in slide order. The
@@ -45,6 +47,7 @@ export type Action =
   | "present"
   | "speaker"
   | "reset"
+  | "progress"
   | "help";
 
 // One or more keys, their function, the views that know them, and the text
@@ -141,6 +144,12 @@ export const BINDINGS: Binding[] = [
     text: "Set the timer to 0:00",
   },
   {
+    keys: ["g"],
+    action: "progress",
+    views: ["present"],
+    text: "Progress bar on or off",
+  },
+  {
     keys: ["?"],
     action: "help",
     views: ["present", "handout", "speaker"],
@@ -167,6 +176,7 @@ export function initial(): State {
     blank: false,
     digits: "",
     help: false,
+    progress: true,
   };
 }
 
@@ -215,9 +225,30 @@ export function next(state: State, key: string, limits: Limits): State {
       return { ...cleared, view: "present" };
     case "help":
       return { ...cleared, help: true };
+    case "progress":
+      return { ...cleared, progress: !cleared.progress };
     default:
       return cleared;
   }
+}
+
+// The part of the deck before the step of the state, from 0 at the first step
+// of the first slide to 1 at the last step of the last slide. Each step of
+// each slide counts one time. A deck of one step or no step gives 0.
+export function fraction(state: State, limits: Limits): number {
+  let total = 0;
+  let before = 0;
+  for (let slide = 1; slide <= limits.slides; slide++) {
+    const steps = maxStep(slide, limits);
+    total += steps;
+    if (slide < state.slide) {
+      before += steps;
+    }
+  }
+  if (total <= 1) {
+    return 0;
+  }
+  return (before + state.step - 1) / (total - 1);
 }
 
 // The step after the step of the state, or null at the last step of the last

@@ -22,6 +22,7 @@ defmodule Expresso do
   @spec parse(module()) :: Expresso.Deck.t()
   def parse(module) do
     name = Spark.Dsl.Extension.get_opt(module, [:deck], :name)
+    progress = Spark.Dsl.Extension.get_opt(module, [:deck], :progress, true)
 
     slides =
       module
@@ -29,7 +30,7 @@ defmodule Expresso do
       |> Enum.map(&Expresso.Slide.put_options_in_metadata/1)
 
     name
-    |> Expresso.Deck.new(%{}, slides)
+    |> Expresso.Deck.new(%{progress: progress}, slides)
     |> Expresso.Deck.number_slides()
   end
 

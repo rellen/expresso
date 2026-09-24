@@ -285,6 +285,12 @@ defmodule Expresso.Extension do
       name: [
         type: :string,
         doc: "A unique identifier for this deck."
+      ],
+      progress: [
+        type: :boolean,
+        default: true,
+        doc:
+          "Show the progress bar in the present view at the start. The key `g` shows or hides it during the talk."
       ]
     ]
   }
