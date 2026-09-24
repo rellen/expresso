@@ -239,7 +239,14 @@ h2 {
   justify-content: stretch;
   width: 100%;
   min-height: 100vh;
-  break-after: page;
+}
+/*
+ * Each page that the handout view shows starts a new sheet of paper, except
+ * the first. A rule on the page before a break cannot do this, because the
+ * last page in the document can be a page that the view does not show.
+ */
+.handout-page:not([data-omit]) ~ .handout-page:not([data-omit]) {
+  break-before: page;
 }
 .notes {
   flex-grow: 0;
@@ -250,16 +257,19 @@ h2 {
   text-align: left;
   white-space: pre-line;
 }
-.handout-page:last-child {
-  break-after: auto;
-}
 body[data-view="handout"] .screen {
   display: none;
 }
 body[data-view="handout"] .handout {
   display: block;
 }
-body[data-view="handout"] .handout-page + .handout-page {
+/* The handout option of a slide selects its pages. `data-omit` marks the rest. */
+body[data-view="handout"] .handout-page[data-omit] {
+  display: none;
+}
+body[data-view="handout"]
+  .handout-page:not([data-omit])
+  ~ .handout-page:not([data-omit]) {
   border-top: 1px solid currentColor;
 }
 @media print {
@@ -282,6 +292,9 @@ body[data-view="handout"] .handout-page + .handout-page {
   .handout-page {
     height: 100vh;
     border-top: none;
+  }
+  .handout-page[data-omit] {
+    display: none;
   }
 }
 @media screen {

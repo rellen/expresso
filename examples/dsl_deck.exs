@@ -23,6 +23,8 @@ defmodule DslDeck do
 
   slide "overlays" do
     heading "Overlays"
+    # The handout view and a printer show step 3 and the last step only.
+    handout [3, :last]
 
     pause()
 

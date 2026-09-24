@@ -18,6 +18,7 @@ spark_locals_without_parens = [
   columns: 1,
   diagram: 1,
   diagram: 2,
+  handout: 1,
   header: 1,
   heading: 1,
   image: 1,

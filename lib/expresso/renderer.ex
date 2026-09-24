@@ -142,11 +142,17 @@ defmodule Expresso.Renderer do
           end
 
           div class: "handout" do
+            # Each step gets a page, because the speaker view shows the page of
+            # each step. A page that the handout option does not select gets
+            # `data-omit`, and the style sheet hides it in the handout view and
+            # on paper.
             for slide <- @deck.slides,
+                printed <- [Expresso.Handout.printed(@deck, slide)],
                 step <- 1..Expresso.Overlay.Render.max_step(slide)//1 do
               section class: "handout-page",
                       data_step: step,
-                      data_slide: slide.metadata.slide_number do
+                      data_slide: slide.metadata.slide_number,
+                      data_omit: step not in printed do
                 c(&slide_parts/1, deck: @deck, slide: slide)
 
                 # The notes of the speaker go under each page of the slide, and

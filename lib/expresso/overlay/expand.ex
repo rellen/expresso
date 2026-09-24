@@ -47,7 +47,8 @@ defmodule Expresso.Overlay.Expand do
   element, and no child gets a step at which the element does not show.
 
   The function gives an error when a specification has a step number that is
-  more than the maximum.
+  more than the maximum. It gives the same error for a step of the `handout`
+  option of the slide. That option does not change the maximum.
   """
   @spec slide(Slide.t()) :: {:ok, Slide.t()} | {:error, String.t()}
   def slide(%Slide{} = slide) do
@@ -55,15 +56,17 @@ defmodule Expresso.Overlay.Expand do
     {elements, _counter} = resolve(elements, 1)
     max = slide.steps || max_step(elements) || 1
 
-    case expand(elements, max) do
-      {:ok, elements} ->
-        metadata = Map.put(slide.metadata || %{}, :max_step, max)
-        {:ok, %Slide{slide | elements: elements, metadata: metadata}}
-
-      {:error, message} ->
-        {:error, message}
+    with {:ok, elements} <- expand(elements, max),
+         {:ok, _steps} <- handout(slide.handout, max) do
+      metadata = Map.put(slide.metadata || %{}, :max_step, max)
+      {:ok, %Slide{slide | elements: elements, metadata: metadata}}
     end
   end
+
+  # The handout option can name a step only after the maximum is known. A step
+  # that the slide does not have is an error, as it is for an element.
+  defp handout(nil, _max), do: {:ok, []}
+  defp handout(handout, max), do: Expresso.Handout.pages(handout, max)
 
   # The implicit specification of the auto_reveal option. It goes on each
   # element at the level of the slide that has no at option. A pause has no at
