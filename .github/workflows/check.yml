@@ -1,15 +1,27 @@
 # The checks that run for a pull request and for a push to main.
 #
-# The job runs `mix check`, which runs the compiler, the formatter, Credo,
-# Dialyzer, Doctor, ExDoc, ExUnit, mix_audit and Sobelow. It then runs the two
-# npm commands, which check the types of the presenter script and run its tests.
-# Last, it runs the browser tests with `mix test --only e2e`. `CLAUDE.md` gives
-# the same list.
+# Each check runs in its own job, and the jobs run in parallel. The slowest job
+# gives the time of the workflow, and not the sum of the jobs. The list is the
+# list of `CLAUDE.md`, and it covers each tool of `mix check`:
 #
-# The job runs on the versions of `.tool-versions`. The Nix shell gives those
+# - format: `mix format --check-formatted`
+# - compile: `mix compile --warnings-as-errors`
+# - credo: `mix credo`
+# - dialyzer: `mix dialyzer`
+# - test: `mix test`
+# - e2e: `mix test --only e2e`, the browser tests
+# - docs: `mix docs` and `mix doctor`
+# - security: `mix sobelow`, `mix deps.audit` and the check of unused dependencies
+# - presenter: `npm run check` and `npm test`
+#
+# The last job needs each other job, and it fails when one of them does not
+# succeed. It has the name of the one job of the earlier workflow, so a branch
+# protection rule that asks for that name still covers each check.
+#
+# The jobs run on the versions of `.tool-versions`. The Nix shell gives those
 # versions, and `.claude/hooks/session-start.sh` gives them to a remote session.
-# Therefore each person, each session and this job give the same result. Keep the
-# four places in agreement.
+# Therefore each person, each session and this workflow give the same result.
+# Keep the four places in agreement.
 
 name: check
 
@@ -32,60 +44,121 @@ env:
   NODE_VERSION: "24.20.0"
 
 jobs:
-  check:
-    name: Erlang/OTP 29, Elixir 1.20, Node 24
+  format:
+    name: format
     runs-on: ubuntu-latest
-
     steps:
-      - name: Read the repository
-        uses: actions/checkout@v4
-
-      - name: Install Erlang and Elixir
-        uses: erlef/setup-beam@v1
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-elixir
         with:
-          otp-version: ${{ env.OTP_VERSION }}
-          elixir-version: ${{ env.ELIXIR_VERSION }}
+          cache: format
+      - run: mix format --check-formatted
 
-      - name: Install Node
-        uses: actions/setup-node@v4
+  compile:
+    name: compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: compile
+      - run: mix compile --warnings-as-errors
+
+  credo:
+    name: credo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: credo
+      - run: mix credo
+
+  dialyzer:
+    name: dialyzer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: dialyzer
+      - run: mix dialyzer
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: test
+      - run: mix test
+
+  # The browser tests open each deck in the Chromium of the Playwright version of
+  # `package-lock.json`. The option `--with-deps` installs the system libraries
+  # of that browser, and `--only-shell` installs the headless browser only,
+  # because the tests do not need a window.
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-
-      # `_build` holds the PLT of Dialyzer, which `mix.exs` puts there. A change
-      # to `mix.lock` gives a new key, and the tools then run against a new build.
-      - name: Read the cache of the dependencies and of the build
-        uses: actions/cache@v4
+      - run: npm ci
+      - run: npx playwright install --with-deps --only-shell chromium
+      - uses: ./.github/actions/setup-elixir
         with:
-          path: |
-            deps
-            _build
-          key: mix-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}
-          restore-keys: mix-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-
+          cache: e2e
+      - run: mix test --only e2e
 
-      - name: Get the dependencies of the presenter script
-        run: npm ci
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: docs
+      - run: mix docs
+      - run: mix doctor
 
-      # Hex reports an advisory of a dependency in this output, and that output
-      # is the more current signal. `docs/development.md` gives an example.
-      - name: Get the dependencies
-        run: mix deps.get
+  # `mix deps.unlock --check-unused` is the check of `unused_deps` in `mix check`.
+  security:
+    name: security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: security
+      - run: mix sobelow --exit --skip
+      - run: mix deps.audit
+      - run: mix deps.unlock --check-unused
 
-      - name: Run mix check
-        run: mix check
+  # The presenter script needs Node only.
+  presenter:
+    name: presenter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
 
-      - name: Check the types of the presenter script
-        run: npm run check
-
-      - name: Run the tests of the presenter script
-        run: npm test
-
-      # The browser tests open each deck in the Chromium of the Playwright version
-      # of `package-lock.json`. The option `--with-deps` installs the system
-      # libraries of that browser, and `--only-shell` installs the headless
-      # browser only, because the tests do not need a window.
-      - name: Install the browser of the browser tests
-        run: npx playwright install --with-deps --only-shell chromium
-
-      - name: Run the browser tests
-        run: mix test --only e2e
+  all:
+    name: Erlang/OTP 29, Elixir 1.20, Node 24
+    if: always()
+    needs: [format, compile, credo, dialyzer, test, e2e, docs, security, presenter]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail when a check does not succeed
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')
+        run: exit 1
+      - run: echo "Each check succeeded."
