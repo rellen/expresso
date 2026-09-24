@@ -154,25 +154,38 @@ libraries of the browser.
 
 ### The checks of a pull request
 
-`.github/workflows/check.yml` runs `mix check`, `npm run check`, `npm test` and `mix test
---only e2e` for a pull request and for a push to `main`. The job `Erlang/OTP 29, Elixir
-1.20, Node 24` uses the versions of `.tool-versions`, and one job is sufficient because
-each place gives these versions.
+`.github/workflows/check.yml` runs the checks for a pull request and for a push to `main`.
+Each check runs in its own job, and the jobs run in parallel, so the slowest job gives the
+time of the workflow. The jobs are `format`, `compile`, `credo`, `dialyzer`, `test`, `e2e`,
+`docs`, `security` and `presenter`. Together they run each tool of `mix check`, the two npm
+commands and the browser tests. The workflow does not run `mix check`, because that
+command runs the tools one after the other in one job.
+
+Each Elixir job uses `.github/actions/setup-elixir`, which installs the versions of
+`.tool-versions`, reads the cache and gets the dependencies. One set of versions is
+sufficient, because each place gives these versions.
+
+The last job, `Erlang/OTP 29, Elixir 1.20, Node 24`, needs each other job. It fails when
+one of them fails, is cancelled or is skipped. It has the name of the one job of the earlier
+workflow.
 
 From 2026-09-17 to 2026-09-18 the workflow ran two jobs, one for the versions of the
 container and one for the versions of `.tool-versions`. The container then took the
 versions of `.tool-versions`, and the second job became the same as the first.
 
 GitHub does not make a job necessary by itself. Add a branch protection rule for `main`
-with this job, or a pull request with a failure can still merge.
+with the last job, or a pull request with a failure can still merge. A rule with that name
+from the earlier workflow still covers each check.
 
 The workflow holds each version in one `env` block, because no action reads
 `.tool-versions`. Keep the workflow and `.tool-versions` in agreement.
 
-The workflow keeps `deps` and `_build` in a cache, and the key holds `mix.lock` and the
-two versions. Therefore a change to `mix.lock` gives a new build. A run with a cache
-compiles the files of the change only. For a result from a full compile, run
-`mix compile --warnings-as-errors --force` on your machine.
+The workflow keeps `deps` and `_build` in a cache for each job. The key holds the name of
+the job, `mix.lock` and the two versions, so a change to `mix.lock` gives a new build. Each
+job has its own cache, because a job that compiles nothing, such as `format`, must not give
+the other jobs a cache with no build. A run with a cache compiles the files of the change
+only. For a result from a full compile, run `mix compile --warnings-as-errors --force` on
+your machine.
 
 Dialyzer comes with the Erlang archive of `builds.hex.pm`, and an apt package is not
 necessary. The first `mix dialyzer` builds a PLT of approximately 570 modules, and this
