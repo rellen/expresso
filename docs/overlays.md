@@ -504,7 +504,8 @@ element, each element is visible before its first step.
 }
 ```
 
-The JavaScript code writes the `data-step` attribute. It does no other operation.
+For an overlay, the JavaScript code writes the `data-step` attribute. It does no other
+operation.
 
 `Expresso.Overlay.Render` writes this contract. `identify/1` gives each element with an
 `on` entity its `data-el` value, in the `el` field of the struct. `attributes/1` makes the
@@ -706,6 +707,9 @@ The rules are:
 - `p` changes between the present view and the handout view. `dom.ts` writes the view
   into the `data-view` attribute of the `body`.
 
+The section "The presenter" of `docs/architecture.md` gives the other keys. These keys
+use the same two moves, or they go to step 1 of a slide.
+
 ### The imperative API
 
 `Expresso.Deck.add_slide/4` and `Expresso.Element.TextBox.new/1` make a deck without the
@@ -803,7 +807,8 @@ version needs this, add an explicit `leave` option. Do not loosen this rule.
 
 The maintainer decided this on 2026-09-13. The `on` entity does not apply a class. It
 writes a custom property, `--<state>: 1`, and the theme owns the appearance. The section
-"The state option" gives the contract. The JavaScript code writes `data-step` only.
+"The state option" gives the contract. For an overlay, the JavaScript code writes
+`data-step` only.
 
 The evidence is in `docs/research/overlay-class-report.md`, which answers the prompt in
 `docs/research/overlay-class-prompt.md`. The findings that gave the decision:

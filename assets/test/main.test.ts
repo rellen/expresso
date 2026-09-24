@@ -1,102 +1,111 @@
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
+import { fakePage } from "./page.ts";
 
-// `main.ts` runs when the module loads. It reads the limits one time, and it
-// gives a function to `addEventListener`. Therefore the fake document goes in
-// front of the import, and the test then calls the function that the module
-// registered. Node runs each test file in its own process, so the one import
-// of this file is enough.
-
-type FakeElement = {
-  id: string;
-  dataset: Record<string, string | undefined>;
-  style: { display: string };
-};
-
-const slides: FakeElement[] = [1, 2].map((max, index) => ({
-  id: `slide-${index + 1}`,
-  dataset: { maxStep: String(max) },
-  style: { display: "none" },
-}));
-
-const body = { dataset: {} as Record<string, string | undefined> };
-let keydown: ((event: { key: string }) => void) | null = null;
-
-const doc = {
-  body,
-  getElementsByClassName: (name: string) => (name === "slide" ? slides : []),
-  getElementById: (id: string) =>
-    slides.find((slide) => slide.id === id) ?? null,
-  addEventListener: (
-    name: string,
-    listener: (event: { key: string }) => void,
-  ) => {
-    if (name === "keydown") {
-      keydown = listener;
-    }
-  },
-};
-
-(globalThis as unknown as { document: unknown }).document = doc;
+// Two slides. Slide 1 has one step, and slide 2 has two steps. The address has
+// no fragment, and the tests run in sequence on the same page.
+const page = fakePage([1, 2]);
+const { slides, body } = page;
 
 before(async () => {
   await import("../src/main.ts");
 });
 
-function press(key: string): void {
-  assert.ok(keydown, "main.ts registered no function for keydown");
-  keydown({ key });
+function displays(): string[] {
+  return slides.map((slide) => slide.style.display);
 }
 
-test("registers a function for keydown", () => {
-  assert.equal(typeof keydown, "function");
+test("an address with no fragment writes nothing at load", () => {
+  assert.equal(body.dataset.view, undefined);
+  assert.deepEqual(page.written, []);
 });
 
 test("an unknown key writes nothing, because the state does not change", () => {
-  press("x");
+  assert.equal(page.press("x"), false);
 
   assert.equal(body.dataset.view, undefined);
   assert.equal(slides[0].dataset.step, undefined);
 });
 
 test("j moves to the next slide after the last step of the first slide", () => {
-  press("j");
+  assert.equal(page.press("j"), true);
 
-  assert.deepEqual(
-    slides.map((slide) => slide.style.display),
-    ["none", "flex"],
-  );
+  assert.deepEqual(displays(), ["none", "flex"]);
   assert.equal(slides[1].dataset.step, "1");
+  assert.equal(page.location.hash, "#2.1");
 });
 
 test("j moves to the next step inside the slide", () => {
-  press("j");
+  page.press("j");
 
   assert.equal(slides[1].dataset.step, "2");
+  assert.equal(page.location.hash, "#2.2");
 });
 
 test("j on the last step of the last slide writes nothing new", () => {
-  press("j");
+  const count = page.written.length;
 
+  assert.equal(page.press("j"), false);
   assert.equal(slides[1].dataset.step, "2");
+  assert.equal(page.written.length, count);
 });
 
 test("k moves back through the steps and the slides", () => {
-  press("k");
+  page.press("k");
   assert.equal(slides[1].dataset.step, "1");
 
-  press("k");
+  page.press("k");
   assert.equal(slides[0].dataset.step, "1");
-  assert.deepEqual(
-    slides.map((slide) => slide.style.display),
-    ["flex", "none"],
-  );
+  assert.deepEqual(displays(), ["flex", "none"]);
+  assert.equal(page.location.hash, "#1.1");
+});
+
+test("a key with Control, Alt or Meta goes to the browser", () => {
+  for (const modifier of ["ctrlKey", "altKey", "metaKey"]) {
+    assert.equal(page.press({ key: "j", [modifier]: true }), false, modifier);
+  }
+  assert.deepEqual(displays(), ["flex", "none"]);
+});
+
+test("the space bar and End move, and the browser does not scroll", () => {
+  assert.equal(page.press(" "), true);
+  assert.deepEqual(displays(), ["none", "flex"]);
+
+  page.press("Home");
+  assert.equal(page.press("End"), true);
+  assert.equal(page.location.hash, "#2.1");
+});
+
+test("digits and Enter go to a slide", () => {
+  page.press("1");
+  page.press("Enter");
+
+  assert.deepEqual(displays(), ["flex", "none"]);
+});
+
+test("b writes data-blank, and the next key removes it", () => {
+  page.press("b");
+  assert.equal(body.dataset.blank, "true");
+
+  page.press("j");
+  assert.equal("blank" in body.dataset, false);
+  assert.deepEqual(displays(), ["flex", "none"]);
+});
+
+test("a new fragment in the address moves to that step", () => {
+  page.navigate("#2.2");
+
+  assert.deepEqual(displays(), ["none", "flex"]);
+  assert.equal(slides[1].dataset.step, "2");
 });
 
 test("p changes the view, and p again changes it back", () => {
-  press("p");
+  page.press("p");
   assert.equal(body.dataset.view, "handout");
 
-  press("p");
+  assert.equal(page.press("ArrowDown"), false);
+  assert.equal(page.press(" "), false);
+
+  page.press("p");
   assert.equal(body.dataset.view, "present");
 });
