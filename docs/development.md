@@ -155,11 +155,24 @@ libraries of the browser.
 ### The checks of a pull request
 
 `.github/workflows/check.yml` runs the checks for a pull request and for a push to `main`.
-Each check runs in its own job, and the jobs run in parallel, so the slowest job gives the
-time of the workflow. The jobs are `format`, `compile`, `credo`, `dialyzer`, `test`, `e2e`,
-`docs`, `security` and `presenter`. Together they run each tool of `mix check`, the two npm
-commands and the browser tests. The workflow does not run `mix check`, because that
-command runs the tools one after the other in one job.
+The checks run in parallel jobs, so the slowest job gives the time of the workflow:
+
+- `format`: the formatter.
+- `lint`: the compiler with warnings as errors, Credo, Sobelow, `mix deps.audit`, the check
+  of unused dependencies, `mix docs` and Doctor.
+- `dialyzer`: Dialyzer. It is the slowest job.
+- `test`: the unit tests and the browser tests.
+- `presenter`: `npm run check` and `npm test`.
+
+Together they run each tool of `mix check`, the two npm commands and the browser tests.
+The workflow does not run `mix check`, because that command runs the tools one after the
+other in one job.
+
+A job compiles the project for one environment. Therefore the tools that need the same
+build share one job, and the project compiles two times for the development environment,
+in `lint` and in `dialyzer`, and one time for the test environment. The tools of `lint`
+finish long before `dialyzer`, so the time of the workflow does not change. A step of
+`lint` or of `test` runs also when a step before it fails, so one run reports each defect.
 
 Each Elixir job uses `.github/actions/setup-elixir`, which installs the versions of
 `.tool-versions`, reads the cache and gets the dependencies. One set of versions is
@@ -181,11 +194,12 @@ The workflow holds each version in one `env` block, because no action reads
 `.tool-versions`. Keep the workflow and `.tool-versions` in agreement.
 
 The workflow keeps `deps` and `_build` in a cache for each job. The key holds the name of
-the job, `mix.lock` and the two versions, so a change to `mix.lock` gives a new build. Each
-job has its own cache, because a job that compiles nothing, such as `format`, must not give
-the other jobs a cache with no build. A run with a cache compiles the files of the change
-only. For a result from a full compile, run `mix compile --warnings-as-errors --force` on
-your machine.
+the job, `mix.lock`, the two versions and the commit. Therefore each run saves the build
+of its commit, and the next run compiles only the files that changed after it. A run with
+no cache of its commit reads the latest cache of the same `mix.lock`, and then the latest
+cache of the job. Each job has its own cache, because a job that compiles nothing, such as
+`format`, must not give the other jobs a cache with no build. For a result from a full
+compile, run `mix compile --warnings-as-errors --force` on your machine.
 
 Dialyzer comes with the Erlang archive of `builds.hex.pm`, and an apt package is not
 necessary. The first `mix dialyzer` builds a PLT of approximately 570 modules, and this

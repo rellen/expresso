@@ -198,8 +198,7 @@ npm run check  # the types of the presenter script
 npm test       # the tests of the presenter script
 ```
 
-`.github/workflows/check.yml` runs the same checks for a pull request, each in its own job,
-in parallel.
+`.github/workflows/check.yml` runs the same checks for a pull request, in parallel jobs.
 
 `CLAUDE.md` gives the conventions for a commit message and for prose.
 `docs/development.md` gives more detail, and it tells you how to get a toolchain in a
