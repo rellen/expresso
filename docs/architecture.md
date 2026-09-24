@@ -497,7 +497,8 @@ paper, so the handout view on a screen shows the pages that a printer prints.
 
 Each page that shows, except the first, starts a new sheet with `break-before`. A rule of
 `break-after` on the last page cannot do this, because the last page of the document can
-be a page with `data-omit`.
+be a page with `data-omit`. The print block also hides the three elements of the speaker
+view, so a print from that window gives the same pages.
 
 A page of the handout view takes the full height of the screen, or of the paper. The
 print block gives the paper a landscape orientation, because a slide is wider than it is
