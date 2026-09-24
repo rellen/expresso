@@ -3,7 +3,8 @@
 # The job runs `mix check`, which runs the compiler, the formatter, Credo,
 # Dialyzer, Doctor, ExDoc, ExUnit, mix_audit and Sobelow. It then runs the two
 # npm commands, which check the types of the presenter script and run its tests.
-# `CLAUDE.md` gives the same list.
+# Last, it runs the browser tests with `mix test --only e2e`. `CLAUDE.md` gives
+# the same list.
 #
 # The job runs on the versions of `.tool-versions`. The Nix shell gives those
 # versions, and `.claude/hooks/session-start.sh` gives them to a remote session.
@@ -78,3 +79,13 @@ jobs:
 
       - name: Run the tests of the presenter script
         run: npm test
+
+      # The browser tests open each deck in the Chromium of the Playwright version
+      # of `package-lock.json`. The option `--with-deps` installs the system
+      # libraries of that browser, and `--only-shell` installs the headless
+      # browser only, because the tests do not need a window.
+      - name: Install the browser of the browser tests
+        run: npx playwright install --with-deps --only-shell chromium
+
+      - name: Run the browser tests
+        run: mix test --only e2e
