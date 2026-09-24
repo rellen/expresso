@@ -3,6 +3,8 @@
 // `state.ts` does not touch the document, and this module does not decide the
 // next state. `main.ts` connects the two.
 
+import { describe } from "./speaker.ts";
+import { upcoming } from "./state.ts";
 import type { Limits, State } from "./state.ts";
 
 // The renderer gives each slide a `section` with the class `slide`, the
@@ -31,8 +33,8 @@ function slide(number: number): HTMLElement {
 // it shows the slide of the state at the step of the state, and it hides each
 // other slide. A deck with no slide gets the view only. The style sheet reads
 // `data-view` and `data-blank`, and the generated style block reads
-// `data-step`. These three attributes are the only operations of the presenter
-// on the document. docs/overlays.md gives the CSS contract.
+// `data-step`. docs/overlays.md gives the CSS contract. The speaker view also
+// writes `data-speaker` on two pages, and the texts of its three elements.
 export function apply(state: State, limits: Limits): void {
   document.body.dataset.view = state.view;
   if (state.blank) {
@@ -51,4 +53,62 @@ export function apply(state: State, limits: Limits): void {
   const current = slide(state.slide);
   current.dataset.step = String(state.step);
   current.style.display = "flex";
+  if (state.view === "speaker") {
+    speaker(state, limits);
+  }
+}
+
+// The speaker view shows two pages of the handout view. The page of the
+// current step gets `data-speaker="current"`, and the page of the next step
+// gets `data-speaker="next"`. The style sheet places the two pages. The notes
+// of the current page go into the element `speaker-notes`, and the position
+// goes into the element `speaker-position`.
+function speaker(state: State, limits: Limits): void {
+  const after = upcoming(state, limits);
+  let notes = "";
+  for (const page of pages()) {
+    const slide = Number(page.dataset.slide);
+    const step = Number(page.dataset.step);
+    if (slide === state.slide && step === state.step) {
+      page.dataset.speaker = "current";
+      notes = page.querySelector(".notes")?.textContent ?? "";
+    } else if (after !== null && slide === after.slide && step === after.step) {
+      page.dataset.speaker = "next";
+    } else {
+      delete page.dataset.speaker;
+    }
+  }
+  text("speaker-notes", notes);
+  text("speaker-position", describe(state, limits));
+}
+
+// Make the elements of the speaker view that the renderer does not write. The
+// elements go into the handout view, because the style sheet places them in
+// the grid of that view. A second call makes no new element.
+export function speakerPanel(): void {
+  if (document.getElementById("speaker-notes") !== null) {
+    return;
+  }
+  const handout = document.getElementsByClassName("handout")[0];
+  for (const id of ["speaker-notes", "speaker-position", "speaker-timer"]) {
+    const element = document.createElement("div");
+    element.id = id;
+    handout?.appendChild(element);
+  }
+}
+
+// Write a text into an element of the speaker view. The text is not HTML.
+export function text(id: string, value: string): void {
+  const element = document.getElementById(id);
+  if (element !== null) {
+    element.textContent = value;
+  }
+}
+
+// The pages of the handout view. The renderer gives each page the class
+// `handout-page` and the attributes `data-slide` and `data-step`.
+function pages(): HTMLElement[] {
+  return Array.from(
+    document.getElementsByClassName("handout-page"),
+  ) as HTMLElement[];
 }

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { fakePage } from "./page.ts";
 
 // The address holds the fragment of step 2 of slide 2 at load.
-const page = fakePage([1, 2], "#2.2");
+const page = fakePage([1, 2], { hash: "#2.2" });
 
 before(async () => {
   await import("../src/main.ts");

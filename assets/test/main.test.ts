@@ -1,6 +1,6 @@
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
-import { fakePage } from "./page.ts";
+import { fakePage, last } from "./page.ts";
 
 // Two slides. Slide 1 has one step, and slide 2 has two steps. The address has
 // no fragment, and the tests run in sequence on the same page.
@@ -108,4 +108,44 @@ test("p changes the view, and p again changes it back", () => {
 
   page.press("p");
   assert.equal(body.dataset.view, "present");
+});
+
+test("s opens the speaker view at the current step, and a second s opens no second window", () => {
+  page.navigate("#2.1");
+  assert.equal(page.press("s"), true);
+
+  assert.equal(page.opened.length, 1);
+  assert.equal(page.opened[0].url, "file:///deck.html?speaker=#2.1");
+  assert.equal(page.opened[0].name, "expresso-speaker");
+});
+
+test("each change goes to the speaker view", () => {
+  const speaker = page.opened[0].window;
+  page.press("k");
+
+  assert.deepEqual(last(speaker), {
+    expresso: "position",
+    slide: 1,
+    step: 1,
+    blank: false,
+  });
+});
+
+test("a message from the speaker view moves the present view", () => {
+  page.receive(
+    { expresso: "position", slide: 2, step: 2, blank: true },
+    page.opened[0].window,
+  );
+
+  assert.deepEqual(displays(), ["none", "flex"]);
+  assert.equal(slides[1].dataset.step, "2");
+  assert.equal(body.dataset.blank, "true");
+});
+
+test("a message from another window has no effect", () => {
+  page.press("x");
+  page.receive({ expresso: "position", slide: 1, step: 1, blank: false }, null);
+
+  assert.equal(slides[1].dataset.step, "2");
+  assert.deepEqual(displays(), ["none", "flex"]);
 });

@@ -8,8 +8,9 @@
 // and the reason for the handout view.
 
 // The present view shows one slide at one step. The handout view shows one page
-// for each step of each slide.
-export type View = "present" | "handout";
+// for each step of each slide. The speaker view shows the current step, the
+// next step and the notes, in a second window.
+export type View = "present" | "handout" | "speaker";
 
 // `blank` is true while the present view shows a black screen. `digits` holds
 // the digits of a slide number that the presenter types before `Enter`.
@@ -50,7 +51,8 @@ export function maxStep(slide: number, limits: Limits): number {
 //
 // On a black screen, each key shows the slide again, and it does nothing more.
 // The handout view knows only `j`, `k` and `p`. The browser keeps the other
-// keys, so the arrow keys and the space bar scroll the pages.
+// keys, so the arrow keys and the space bar scroll the pages. The speaker view
+// knows the keys of the present view, but `p` has no function in it.
 export function next(state: State, key: string, limits: Limits): State {
   if (state.blank) {
     return { ...state, blank: false };
@@ -58,7 +60,17 @@ export function next(state: State, key: string, limits: Limits): State {
   if (state.view === "handout") {
     return handout(state, key, limits);
   }
+  if (state.view === "speaker" && key === "p") {
+    return state;
+  }
   return present(state, key, limits);
+}
+
+// The step after the step of the state, or null at the last step of the last
+// slide. The speaker view shows this step as the next step.
+export function upcoming(state: State, limits: Limits): State | null {
+  const after = forward(state, limits);
+  return after === state ? null : after;
 }
 
 // The keys of the handout view. `j` and `k` change the state, and the view
@@ -171,14 +183,64 @@ export function fromHash(state: State, hash: string, limits: Limits): State {
   }
   const slide = Number(match[1]);
   const step = match[2] === undefined ? 1 : Number(match[2]);
+  return position(state, slide, step, false, limits);
+}
+
+// The message that one window of the presenter sends to the other window
+// after each change. The speaker view and the present view then show the same
+// step, and the key `b` in either window gives a black screen to the audience.
+export type Message = {
+  expresso: "position";
+  slide: number;
+  step: number;
+  blank: boolean;
+};
+
+export function message(state: State): Message {
+  const { slide, step, blank } = state;
+  return { expresso: "position", slide, step, blank };
+}
+
+// Tell if data from the other window is a message of the presenter.
+export function isMessage(data: unknown): data is Message {
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  const { expresso, slide, step, blank } = data as Record<string, unknown>;
+  return (
+    expresso === "position" &&
+    Number.isInteger(slide) &&
+    Number.isInteger(step) &&
+    typeof blank === "boolean"
+  );
+}
+
+// Give the state for a message from the other window. Data that is not a
+// message, or that gives no slide and step of the deck, gives the same state.
+export function follow(state: State, data: unknown, limits: Limits): State {
+  if (!isMessage(data)) {
+    return state;
+  }
+  return position(state, data.slide, data.step, data.blank, limits);
+}
+
+// Go to a slide, a step and a black screen. A slide and step that the deck
+// does not have, and no change, give the same state.
+function position(
+  state: State,
+  slide: number,
+  step: number,
+  blank: boolean,
+  limits: Limits,
+): State {
   if (slide < 1 || slide > limits.slides) {
     return state;
   }
   if (step < 1 || step > maxStep(slide, limits)) {
     return state;
   }
-  if (slide === state.slide && step === state.step) {
+  if (slide === state.slide && step === state.step && blank === state.blank) {
     return state;
   }
-  return { ...state, slide, step, blank: false, digits: "" };
+  return { ...state, slide, step, blank, digits: "" };
 }

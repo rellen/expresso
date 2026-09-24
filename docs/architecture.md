@@ -410,11 +410,11 @@ and `slide "name" do`.
 The presenter is a TypeScript program under `assets/src/`. `state.ts` holds the number of
 the current slide, the number of the current step, the view, the black screen and the
 digits of a slide number. It also holds the function that changes them, and it does not
-touch the document. `dom.ts` reads the document. It applies a state with the inline
-`style.display` property, the `data-step` attribute, and the `data-view` and `data-blank`
-attributes of the `body`. `main.ts` connects the two, and it writes the fragment of the
-address. The first slide is slide 1, and the first step is step 1. `docs/overlays.md`
-gives the rules of a step.
+touch the document. `speaker.ts` makes the texts of the speaker view. `dom.ts` reads the
+document. It applies a state with the inline `style.display` property, the `data-step`
+attribute, and the `data-view` and `data-blank` attributes of the `body`. `main.ts`
+connects the modules, and it writes the fragment of the address. The first slide is slide
+1, and the first step is step 1. `docs/overlays.md` gives the rules of a step.
 
 `Mix.Tasks.Compile.Presenter` bundles these modules with esbuild into one minified script,
 `priv/static/presenter.js`. The compiler runs in front of the Elixir compiler, and Git does
@@ -432,12 +432,29 @@ The keys of the present view are:
   that is not a slide has no effect. Each other key removes the digits.
 - `b` shows a black screen. The next key shows the slide again, and it does nothing more.
 - `p` changes to the handout view.
+- `s` opens the speaker view in a second window. A second `s` shows the same window.
 
 The handout view knows only `j`, `k` and `p`. `j` and `k` change the state, and `p` then
 shows that step in the present view. The browser keeps each other key, so the arrow keys
 and the space bar scroll the pages. A key with the Control, Alt or Meta modifier always
 goes to the browser. `main.ts` stops the default operation of a key only when the key
 changes the state.
+
+The speaker view is the same document in a second window, with `?speaker` in the address.
+It shows two pages of the handout view: the page of the current step and the page of the
+next step. `dom.ts` writes `data-speaker` on these two pages, and the style sheet puts them
+in a grid and scales them with `zoom`. The notes of the current page, the position and a
+timer go into three elements that `dom.ts` makes. The speaker view knows the keys of the
+present view, but `p` and `s` have no function in it. `r` sets the timer back to `0:00`,
+and the timer then starts at the next change of the step.
+
+Each window sends its position to the other window with `postMessage`. The message holds
+the slide, the step and the black screen, so `b` in the speaker view gives a black screen
+to the audience. A window accepts a message only from the other window. The present view
+gets the speaker view from `window.open`, and the speaker view gets the present view from
+`window.opener`. After a reload of the present view, the next message of the speaker view
+makes the connection again. `BroadcastChannel` is not in this design, because a browser
+can give no shared origin to a document that it opens from a file.
 
 The fragment of the address holds the slide and the step, such as `#4.2`. `main.ts` reads
 it at load and at each `hashchange` event. It writes the fragment with

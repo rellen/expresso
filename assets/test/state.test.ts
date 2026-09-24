@@ -1,6 +1,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fromHash, initial, maxStep, next, toHash } from "../src/state.ts";
+import {
+  follow,
+  fromHash,
+  initial,
+  isMessage,
+  maxStep,
+  message,
+  next,
+  toHash,
+  upcoming,
+} from "../src/state.ts";
 import type { State, View } from "../src/state.ts";
 
 // Three slides. Slide 2 has three steps, and slide 3 has two steps.
@@ -188,4 +198,57 @@ test("fromHash for the current position gives the same state", () => {
 test("fromHash removes a black screen and the digits", () => {
   const state = { ...at(1, 1), blank: true, digits: "3" };
   assert.deepEqual(fromHash(state, "#2", three), at(2, 1));
+});
+
+test("the speaker view knows the keys of the present view, but not p", () => {
+  const state = at(2, 2, "speaker");
+  assert.deepEqual(next(state, "j", three), at(2, 3, "speaker"));
+  assert.deepEqual(next(state, "b", three), { ...state, blank: true });
+  assert.equal(next(state, "p", three), state);
+});
+
+test("upcoming gives the next step, and null at the end of the deck", () => {
+  assert.deepEqual(upcoming(at(2, 2), three), at(2, 3));
+  assert.deepEqual(upcoming(at(2, 3), three), at(3, 1));
+  assert.equal(upcoming(at(3, 2), three), null);
+});
+
+test("message gives the slide, the step and the black screen", () => {
+  assert.deepEqual(message({ ...at(2, 3), blank: true, digits: "4" }), {
+    expresso: "position",
+    slide: 2,
+    step: 3,
+    blank: true,
+  });
+});
+
+test("isMessage accepts only a message of the presenter", () => {
+  assert.equal(isMessage(message(at(1, 1))), true);
+  const others = [
+    null,
+    "position",
+    { expresso: "other", slide: 1, step: 1, blank: false },
+    { expresso: "position", slide: "1", step: 1, blank: false },
+    { expresso: "position", slide: 1.5, step: 1, blank: false },
+    { expresso: "position", slide: 1, step: 1 },
+  ];
+  for (const data of others) {
+    assert.equal(isMessage(data), false, JSON.stringify(data));
+  }
+});
+
+test("follow moves to the position of a message, with its black screen", () => {
+  const data = { expresso: "position", slide: 3, step: 2, blank: true };
+  assert.deepEqual(follow(at(1, 1, "speaker"), data, three), {
+    ...at(3, 2, "speaker"),
+    blank: true,
+  });
+});
+
+test("follow gives the same state for the same position or a position not in the deck", () => {
+  const state = at(2, 2);
+  assert.equal(follow(state, message(state), three), state);
+  assert.equal(follow(state, message(at(4, 1)), three), state);
+  assert.equal(follow(state, message(at(2, 4)), three), state);
+  assert.equal(follow(state, { slide: 1 }, three), state);
 });
