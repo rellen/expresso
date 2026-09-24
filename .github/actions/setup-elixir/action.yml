@@ -1,0 +1,40 @@
+# The setup of each Elixir job of `.github/workflows/check.yml`: Erlang and
+# Elixir of `.tool-versions`, the cache of the dependencies and of the build,
+# and `mix deps.get`.
+#
+# Each job gives its own name to the cache. A job that compiles nothing, such
+# as the formatter, then does not save a cache with no build for the other jobs.
+
+name: Set up Elixir
+description: Install Erlang and Elixir, read the cache, and get the dependencies.
+
+inputs:
+  cache:
+    description: The name of the cache of the job.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install Erlang and Elixir
+      uses: erlef/setup-beam@v1
+      with:
+        otp-version: ${{ env.OTP_VERSION }}
+        elixir-version: ${{ env.ELIXIR_VERSION }}
+
+    # `_build` holds the PLT of Dialyzer, which `mix.exs` puts there. A change to
+    # `mix.lock` gives a new key, and the tools then run against a new build.
+    - name: Read the cache of the dependencies and of the build
+      uses: actions/cache@v4
+      with:
+        path: |
+          deps
+          _build
+        key: mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}
+        restore-keys: mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-
+
+    # Hex reports an advisory of a dependency in this output, and that output is
+    # the more current signal. `docs/development.md` gives an example.
+    - name: Get the dependencies
+      shell: bash
+      run: mix deps.get
