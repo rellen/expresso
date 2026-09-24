@@ -101,6 +101,16 @@ if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   } >> "${CLAUDE_ENV_FILE}"
 fi
 
+# The browser tests of `mix test --only e2e` use the Chromium of the container.
+# Playwright does not find it at its own path, so the tests read the path from
+# EXPRESSO_CHROMIUM. `docs/development.md` gives the details.
+if [ -x /opt/pw-browsers/chromium ]; then
+  export EXPRESSO_CHROMIUM="/opt/pw-browsers/chromium"
+  if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+    echo 'export EXPRESSO_CHROMIUM="/opt/pw-browsers/chromium"' >> "${CLAUDE_ENV_FILE}"
+  fi
+fi
+
 cd "${CLAUDE_PROJECT_DIR:-.}"
 
 # An archive of Hex or of rebar from a different OTP release does not load.

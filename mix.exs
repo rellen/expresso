@@ -91,6 +91,10 @@ defmodule Expresso.MixProject do
       # therefore the dependency is present in `dev` too.
       {:stream_data, "~> 1.2", only: [:dev, :test], runtime: false},
 
+      # the browser tests of `mix test --only e2e`. The client drives the
+      # Playwright driver of `package.json`.
+      {:playwright_ex, "~> 0.12", only: :test},
+
       # static analysis
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
       {:doctor, ">= 0.0.0", only: :dev, runtime: false},
