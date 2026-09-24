@@ -36,11 +36,17 @@ mix dialyzer
 mix test
 npm run check
 npm test
+mix test --only e2e
 ```
 
 Each command above passes at this time, and `mix check` passes as a whole. Keep them so. The
 two `npm` commands need Node, and the hook runs `npm install`. `mix compile`
 does not need Node.
+
+`mix test --only e2e` runs the browser tests of `test/e2e/`. They need Node, the Playwright
+driver of `package.json` and Chromium. `mix test` excludes them. In a remote session, the
+hook sets `EXPRESSO_CHROMIUM` to the Chromium of the container. `docs/development.md` gives
+the details.
 
 `mix deps.audit` alone is not sufficient for a vulnerable dependency. Hex reports an
 advisory in the output of `mix deps.get`, and this output is the more current signal. Read
@@ -60,10 +66,10 @@ needs a change to the other three.
 Do not commit to `main` and do not push to `main`. Make a branch, push the branch, and
 open a pull request. The maintainer merges it.
 
-`.github/workflows/check.yml` runs `mix check` and the two npm commands for a pull
-request. Do not wait for that result. Run the commands in "Build and test" before each
-commit, because the session gives the same versions as the workflow. Tell the maintainer in
-the pull request which commands you ran.
+`.github/workflows/check.yml` runs `mix check`, the two npm commands and the browser tests
+for a pull request. Do not wait for that result. Run the commands in "Build and test"
+before each commit, because the session gives the same versions as the workflow. Tell the
+maintainer in the pull request which commands you ran.
 
 The workflow runs one job, on the versions of `.tool-versions`. This job must pass.
 

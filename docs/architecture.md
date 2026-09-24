@@ -425,6 +425,10 @@ attribute, and the `data-view` and `data-blank` attributes of the `body`. `main.
 connects the modules, and it writes the fragment of the address. The first slide is slide
 1, and the first step is step 1. `docs/overlays.md` gives the rules of a step.
 
+The unit tests of `assets/test/` test these modules with no browser. The browser tests of
+`test/e2e/` open a rendered deck in Chromium and operate the presenter with its keys.
+`docs/development.md` gives both.
+
 `Mix.Tasks.Compile.Presenter` bundles these modules with esbuild into one minified script,
 `priv/static/presenter.js`. The compiler runs in front of the Elixir compiler, and Git does
 not hold the bundle. The module is in `mix.exs`, because Mix runs the compilers before it
