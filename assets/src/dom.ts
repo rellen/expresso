@@ -5,6 +5,7 @@
 
 import { rows } from "./help.ts";
 import { describe } from "./speaker.ts";
+import type { Pace } from "./speaker.ts";
 import { columns, fraction, maxStep, mode, upcoming } from "./state.ts";
 import type { Limits, State } from "./state.ts";
 
@@ -41,7 +42,7 @@ function slide(number: number): HTMLElement {
 // other slide. A deck with no slide gets the view only. The style sheet reads
 // `data-view` and `data-blank`, and the generated style block reads
 // `data-step`. docs/overlays.md gives the CSS contract. The speaker view also
-// writes `data-speaker` on two pages, and the texts of its three elements.
+// writes `data-speaker` on two pages, and the texts of its elements.
 // The overview writes `data-overview` on the `body`, and attributes on pages.
 export function apply(state: State, limits: Limits): void {
   document.body.dataset.view = state.view;
@@ -145,7 +146,12 @@ export function speakerPanel(): void {
     return;
   }
   const handout = document.getElementsByClassName("handout")[0];
-  for (const id of ["speaker-notes", "speaker-position", "speaker-timer"]) {
+  for (const id of [
+    "speaker-notes",
+    "speaker-position",
+    "speaker-timer",
+    "speaker-left",
+  ]) {
     const element = document.createElement("div");
     element.id = id;
     handout?.appendChild(element);
@@ -173,6 +179,28 @@ function help(state: State): void {
     row.appendChild(name);
     row.appendChild(function_);
     panel.appendChild(row);
+  }
+}
+
+// The value of `data-duration` on the `body`, which the renderer writes from
+// the deck option `duration`, or undefined.
+export function durationAttribute(): string | undefined {
+  return document.body.dataset.duration;
+}
+
+// Write the time left and the pace into the element `speaker-left`. The style
+// sheet gives the pace its color. A talk with no length gets no text, and the
+// style sheet then hides the element.
+export function timeLeft(value: string, current: Pace | null): void {
+  const element = document.getElementById("speaker-left");
+  if (element === null) {
+    return;
+  }
+  element.textContent = value;
+  if (current === null) {
+    delete element.dataset.pace;
+  } else {
+    element.dataset.pace = current;
   }
 }
 

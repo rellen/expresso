@@ -67,6 +67,8 @@ type Options = {
   notes?: string[];
   // The value of `data-progress` that the renderer writes on the `body`.
   progress?: string;
+  // The value of `data-duration` that the renderer writes on the `body`.
+  duration?: string;
 };
 
 export type FakePage = {
@@ -166,6 +168,9 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   const body = element("", "");
   if (options.progress !== undefined) {
     body.dataset.progress = options.progress;
+  }
+  if (options.duration !== undefined) {
+    body.dataset.duration = options.duration;
   }
   // The renderer writes the progress bar into each document.
   const progress = element("progress");

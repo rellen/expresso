@@ -150,6 +150,15 @@ in the speaker view gives a black screen to the audience. The timer starts at th
 change of the step, and `r` sets it back to `0:00`. A browser can block the second
 window. Then let the document open windows.
 
+Write `duration 20` in the deck to give the talk a length of 20 minutes. The speaker view
+then shows the time left under the timer. The time left turns amber when you are more than
+one minute behind, and red after the end of the time. You are behind when the time used is
+longer than the part of the time for the steps before the current step. Each step gets the
+same part of the time.
+
+The address parameter `?duration=15` replaces the deck option, so one file can give talks of
+different lengths. A theme can set `--pace-behind-color` and `--pace-over-color`.
+
 A thin bar at the bottom of the present view shows the part of the deck that is done.
 Each step of each slide counts one time. Write `progress false` in the deck to hide the
 bar at the start. The key `g` can still show it. A theme can set `--progress-color` and

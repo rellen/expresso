@@ -332,10 +332,11 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   body:not([data-every="true"]) .handout-page[data-omit] {
     display: none;
   }
-  /* The speaker view puts its three elements into the handout view. */
+  /* The speaker view puts its four elements into the handout view. */
   #speaker-notes,
   #speaker-position,
-  #speaker-timer {
+  #speaker-timer,
+  #speaker-left {
     display: none;
   }
   body[data-print-notes="false"] .notes {
@@ -362,11 +363,12 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     padding: 1vh 1vw;
     gap: 1vh 1vw;
     grid-template-columns: 60vw 1fr;
-    grid-template-rows: 60vh auto 1fr;
+    grid-template-rows: 60vh auto auto 1fr;
     grid-template-areas:
       "current next"
       "current position"
-      "notes timer";
+      "notes timer"
+      "notes left";
     overflow: hidden;
   }
   body[data-view="speaker"] .handout-page {
@@ -406,9 +408,30 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     font-size: 1.5rem;
     font-variant-numeric: tabular-nums;
   }
+  /*
+   * The time left of a talk with a length, and its pace. A theme can set
+   * `--pace-behind-color` and `--pace-over-color`. A talk with no length
+   * gives no text, and the element then does not show.
+   */
+  #speaker-left {
+    grid-area: left;
+    align-self: start;
+    font-size: 0.6rem;
+    font-variant-numeric: tabular-nums;
+  }
+  #speaker-left:empty {
+    display: none;
+  }
+  #speaker-left[data-pace="behind"] {
+    color: var(--pace-behind-color, #b45309);
+  }
+  #speaker-left[data-pace="over"] {
+    color: var(--pace-over-color, #c92a2a);
+  }
   body:not([data-view="speaker"]) #speaker-notes,
   body:not([data-view="speaker"]) #speaker-position,
-  body:not([data-view="speaker"]) #speaker-timer {
+  body:not([data-view="speaker"]) #speaker-timer,
+  body:not([data-view="speaker"]) #speaker-left {
     display: none;
   }
 }
@@ -423,6 +446,7 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   body[data-overview="true"] #speaker-notes,
   body[data-overview="true"] #speaker-position,
   body[data-overview="true"] #speaker-timer,
+  body[data-overview="true"] #speaker-left,
   body[data-overview="true"] .handout-page:not([data-thumbnail]),
   body[data-overview="true"] .handout-page .notes {
     display: none;

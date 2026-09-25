@@ -14,6 +14,10 @@ defmodule Expresso.Deck do
   number of each slide and the number of slides, such as `3 / 12`, in a
   corner of the slide. Slide 1 shows no number, because it is usually the
   title slide. A deck without the key shows no number.
+
+  The metadata can also hold `:duration`, the length of the talk in minutes.
+  The speaker view then shows the time left and the pace. A deck without the
+  key, or with `nil`, shows neither.
   """
 
   @type t :: %__MODULE__{:name => String.t(), :metadata => map(), :slides => list()}
