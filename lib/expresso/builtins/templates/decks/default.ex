@@ -28,15 +28,17 @@ defmodule Expresso.Builtins.Templates.Decks.Default do
   end
 
   @doc """
-  Make the footer of a slide, with the number of the slide
+  Make the footer of a slide
+
+  The footer is empty. The deck option `slide_numbers` shows the number of
+  each slide, with each deck template.
   """
   @impl Expresso.Template.Deck
   @spec footer(map()) :: Phoenix.HTML.safe()
-  def footer(assigns) do
+  def footer(_assigns) do
     temple do
       div do
         span class: "footer" do
-          "Footer: slide " <> Integer.to_string(@slide.metadata.slide_number)
         end
       end
     end

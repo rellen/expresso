@@ -43,8 +43,8 @@ end
 
 `Expresso.parse/1` reads the DSL state of such a module. It returns an `Expresso.Deck`
 struct, and it numbers the slides with `Expresso.Deck.number_slides/1`. The metadata map
-of the deck holds the `progress` option, the `handout` option and the `print_notes`
-option of the deck. Their defaults are `true`, `:all` and `true`.
+of the deck holds the `progress`, `handout`, `print_notes` and `slide_numbers` options of
+the deck. Their defaults are `true`, `:all`, `true` and `false`.
 
 The `slide` entity has a `heading` option. An author writes it as a call inside the block
 of the slide, in the form of Spark:
@@ -140,6 +140,7 @@ html
           div        the header, from the deck template
           div        the body, from the slide template
           div        the footer, from the deck template
+            span     the slide number, class "slide-number", with slide_numbers: true
       div            the handout view, class "handout"
         section      one for each step of each slide, class "handout-page",
                      data-step from the step, data-slide from the slide,
@@ -201,7 +202,8 @@ container, each slide takes the height of its content only.
 A template makes the HTML for a part of the document. There are two kinds.
 
 A deck template gives a header and a footer. It implements the `Expresso.Template.Deck`
-behaviour, which has the callbacks `header/1` and `footer/1`.
+behaviour, which has the callbacks `header/1` and `footer/1`. The footer of the default
+deck template is empty. The `slide_numbers` option gives the numbers of the slides.
 
 A slide template gives the body of a slide. It has a `render/1` function.
 
@@ -397,6 +399,14 @@ print. The renderer writes `data-print-notes` on the `body` from the metadata of
 deck: `false` for `print_notes: false`, and `true` otherwise. The style sheet then hides
 each `aside` in the handout view and on paper. The renderer still writes each `aside`,
 because the speaker view reads the text of the notes from the page of the current step.
+
+The `slide_numbers` option of the deck shows the number of each slide and the number of
+slides, such as `3 / 12`. The renderer writes a `span` with the class `slide-number` into
+the row of the footer, after the footer of the deck template, so the number shows with each
+deck template. Slide 1 gets no number, because it is usually the title slide. The default
+deck template gives an empty footer, so a deck does not show two numbers. In the present
+view, the style sheet puts the number in the corner of the window, because a slide there is
+only as wide as its content.
 
 The extension imports nothing, and it lists three modules:
 

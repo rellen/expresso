@@ -56,6 +56,17 @@ defmodule Expresso.Renderer do
     end
   end
 
+  # The text of the number of a slide, such as "3 / 12", or nil. A deck shows
+  # the numbers only with `slide_numbers: true`, and slide 1 shows no number.
+  defp slide_number(deck, slide) do
+    number = slide.metadata.slide_number
+
+    case deck.metadata do
+      %{slide_numbers: true} when number > 1 -> "#{number} / #{length(deck.slides)}"
+      _other -> nil
+    end
+  end
+
   # `Expresso.Deck.render/1` writes the doctype. Floki drops a doctype node, and the
   # deck function writes this tree with Floki. Therefore the doctype cannot come
   # from this function.
@@ -77,9 +88,18 @@ defmodule Expresso.Renderer do
         c(&Expresso.Template.render_slide_template/1, slide: @slide)
       end
 
+      # The number of the slide goes into the row of the footer, so a page of
+      # the handout view shows it above the notes. The style sheet puts it in
+      # the right corner of that row.
       div style:
-            "width: 100%; flex-grow: 0; flex-shrink: 0; display: flex;justify-content: center;" do
+            "width: 100%; flex-grow: 0; flex-shrink: 0; display: flex;justify-content: center; position: relative;" do
         c(&Expresso.Template.render_deck_template(:footer, &1), deck: @deck, slide: @slide)
+
+        if number = slide_number(@deck, @slide) do
+          span class: "slide-number" do
+            number
+          end
+        end
       end
     end
   end

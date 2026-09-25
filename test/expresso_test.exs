@@ -68,7 +68,8 @@ defmodule ExpressoTest do
       assert Expresso.parse(DslDeck).metadata == %{
                progress: true,
                handout: :all,
-               print_notes: true
+               print_notes: true,
+               slide_numbers: false
              }
     end
 
