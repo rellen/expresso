@@ -124,6 +124,7 @@ Open the HTML document in a browser. The keys are:
 | `p` | Change between the present view and the handout view. |
 | `s` | Open the speaker view in a second window. |
 | `f` | Put the deck in full screen, or take it out of full screen. |
+| `o` | Show an overview of the slides. |
 | `g` | Show or hide the progress bar. |
 | `?` | Show the list of the keys of the view. The next key closes it. |
 
@@ -132,6 +133,12 @@ A presentation remote sends `Page Down` and `Page Up`, so a remote operates the 
 A click or a tap on the right two thirds of the window goes to the next step. A click or a
 tap on the left third goes to the previous step. On a touch screen, swipe left for the next
 step and swipe right for the previous step. A click on a link goes to the link.
+
+The overview shows each slide at its last step, in a grid that fits the window. The arrow
+keys, `j`, `k`, `Home` and `End` select a different slide. `Enter` or a click on a slide
+goes to step 1 of that slide. `o` or `Esc` closes the overview, and the step does not
+change. In the speaker view, only the speaker window shows the overview, so the audience
+does not see it.
 
 The address of the document holds the slide and the step, for example `deck.html#4.2`
 for step 2 of slide 4. A reload shows the same step, and a link can go to one slide.

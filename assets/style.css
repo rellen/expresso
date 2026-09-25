@@ -389,6 +389,50 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     display: none;
   }
 }
+/*
+ * The overview of the slides. `o` shows it in the present view or in the
+ * speaker view. It shows the page of the last step of each slide in a grid,
+ * and the presenter gives the number of columns and the zoom. These rules come
+ * after the rules of the speaker view, so they replace its grid.
+ */
+@media screen {
+  body[data-overview="true"] .screen,
+  body[data-overview="true"] #speaker-notes,
+  body[data-overview="true"] #speaker-position,
+  body[data-overview="true"] #speaker-timer,
+  body[data-overview="true"] .handout-page:not([data-thumbnail]),
+  body[data-overview="true"] .handout-page .notes {
+    display: none;
+  }
+  body[data-overview="true"] .handout {
+    display: grid;
+    box-sizing: border-box;
+    height: 100vh;
+    padding: 1vh 1vw;
+    gap: 1vh 1vw;
+    grid-template-columns: repeat(var(--overview-columns, 1), max-content);
+    grid-template-rows: none;
+    grid-template-areas: none;
+    align-content: start;
+    justify-content: center;
+    overflow: hidden;
+  }
+  body[data-overview="true"] .handout-page[data-thumbnail] {
+    display: flex;
+    grid-area: auto;
+    width: 100vw;
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+    zoom: var(--overview-zoom, 1);
+    outline: calc(1px / var(--overview-zoom, 1)) solid currentColor;
+    cursor: pointer;
+  }
+  body[data-overview="true"] .handout-page[data-thumbnail][data-selected] {
+    outline: calc(4px / var(--overview-zoom, 1)) solid
+      var(--overview-color, #e8590c);
+  }
+}
 /* The list of keys. `?` shows it, and the next key closes it. */
 #help {
   display: none;
@@ -425,13 +469,15 @@ body[data-view="handout"][data-print-notes="false"] .notes {
 /*
  * The progress bar of the present view. The presenter gives it its width. A
  * theme can set `--progress-color` and `--progress-height`. The bar is not on
- * a black screen, in the other views or on paper.
+ * a black screen, in the overview, in the other views or on paper.
  */
 #progress {
   display: none;
 }
 @media screen {
-  body[data-view="present"][data-progress="true"]:not([data-blank="true"])
+  body[data-view="present"][data-progress="true"]:not([data-blank="true"]):not(
+      [data-overview="true"]
+    )
     #progress {
     display: block;
     position: fixed;

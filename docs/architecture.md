@@ -447,6 +447,7 @@ The keys of the present view are:
 - `p` changes to the handout view.
 - `s` opens the speaker view in a second window. A second `s` shows the same window.
 - `f` puts the document in full screen, or takes it out of full screen.
+- `o` shows the overview of the slides.
 - `g` shows or hides the progress bar.
 - `?` shows the list of the keys of the view. The next key closes it, and it does
   nothing more.
@@ -478,8 +479,30 @@ otherwise. `main.ts` reads that attribute into the state at load, and `g` change
 state. `fraction` in `state.ts` gives the part of the deck before the current step. Each
 step of each slide counts one time, so the bar is full at the last step only. `dom.ts`
 writes that part as the width of the bar. The style sheet shows the bar in the present view
-only, and not on a black screen or on paper. A theme can set `--progress-color` and
-`--progress-height`.
+only, and not on a black screen, in the overview or on paper. A theme can set
+`--progress-color` and `--progress-height`.
+
+The overview shows the page of the last step of each slide in a grid. The state holds
+`overview` and `selected`, the number of the selected slide. `o` opens the overview, and it
+selects the current slide. While the overview shows, `mode` in `state.ts` gives
+`"overview"`. `binding` then finds only the keys of the rows for that mode, and the list of
+keys of the overview shows only these keys.
+
+`j`, `k`, the arrow keys, `Home` and `End` select a different slide. A key that selects a
+slide outside the deck has no effect. `Enter` and a click on a slide call `choose`, which
+closes the overview and goes to step 1 of the slide. `o` and `Escape` close the overview,
+and the step does not change.
+
+`columns` in `state.ts` gives the number of columns: the square root of the number of
+slides, or the next larger integer. The number of rows is then not more than the number of
+columns. `dom.ts` writes `data-thumbnail` on the page of the last step of each slide, and
+`data-selected` on the page of the selected slide. It also writes `--overview-columns` and
+`--overview-zoom` on the `body`, and the style sheet scales each page with `zoom`. The
+padding and the gaps of the grid are 1vw wide and 1vh high, so the grid of each deck fits in
+the window.
+
+In the speaker view, the overview replaces the grid of the speaker view while it shows. A
+theme can set `--overview-color` for the outline of the selected slide.
 
 The handout view knows only `j`, `k`, `p`, `a` and `?`. `j` and `k` change the state, and
 `p` then shows that step in the present view. The browser keeps each other key, so the arrow
@@ -504,13 +527,17 @@ makes the connection again. `BroadcastChannel` is not in this design, because a 
 can give no shared origin to a document that it opens from a file.
 
 A window sends only the changes of its own keys and of its own address, and each message
-holds the time of the change. A window does not send a position from the other window back,
-and it ignores a message that is older than its own state. At the same time, the speaker
-view takes the state of the present view, so the two windows always end at the same state.
-Both windows read the same clock, so the time orders the changes of both, also after a
-reload. Before this rule, each window sent each position back. Two keys that came faster
-than a message then gave a loop: the echo of the first key came back after the second key,
-and the two windows sent the two positions to each other with no end.
+holds the time of the change. A change of another part of the state, such as the overview or
+the list of keys, sends no message. For this reason, the overview shows only in the window
+that opens it. A window does not send a position from the other window back, and it ignores
+a message that is older than its own state.
+
+At the same time, the speaker view takes the state of the present view, so the two windows
+always end at the same state. Both windows read the same clock, so the time orders the
+changes of both, also after a reload. Before this rule, each window sent each position back.
+Two keys that came faster than a message then gave a loop: the echo of the first key came
+back after the second key, and the two windows sent the two positions to each other with no
+end.
 
 The fragment of the address holds the slide and the step, such as `#4.2`. `main.ts` reads
 it at load and at each `hashchange` event. It writes the fragment with

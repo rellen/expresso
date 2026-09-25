@@ -12,7 +12,13 @@ export type FakeElement = {
   id: string;
   className: string;
   dataset: Record<string, string | undefined>;
-  style: { display: string; width?: string };
+  style: {
+    display: string;
+    width?: string;
+    setProperty: (name: string, value: string) => void;
+    // The custom properties that `setProperty` got.
+    properties: Record<string, string>;
+  };
   textContent: string;
   children: FakeElement[];
   appendChild: (child: FakeElement) => void;
@@ -44,6 +50,9 @@ type Click = {
   shiftKey?: boolean;
   // The selector that `closest` of the target finds, as for a click on a link.
   inside?: string;
+  // The page of the handout view under the click, as for a click on a slide
+  // of the overview.
+  on?: FakeElement;
 };
 
 // A point on the screen.
@@ -112,7 +121,13 @@ export function element(
     id,
     className,
     dataset,
-    style: { display: "none" },
+    style: {
+      display: "none",
+      properties: {},
+      setProperty: (name, value) => {
+        self.style.properties[name] = value;
+      },
+    },
     textContent: "",
     children: [],
     appendChild: (child) => {
@@ -224,10 +239,14 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     click: (click) => {
       const event = typeof click === "number" ? { clientX: click } : click;
       const target = {
-        closest: (selector: string) =>
-          event.inside !== undefined && selector.includes(event.inside)
+        closest: (selector: string) => {
+          if (event.on !== undefined && selector.includes(".handout-page")) {
+            return event.on;
+          }
+          return event.inside !== undefined && selector.includes(event.inside)
             ? {}
-            : null,
+            : null;
+        },
       };
       call("click", { button: 0, ...event, target });
     },

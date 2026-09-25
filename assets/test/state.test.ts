@@ -4,6 +4,8 @@ import {
   BINDINGS,
   accepts,
   binding,
+  choose,
+  columns,
   follow,
   fraction,
   fromHash,
@@ -11,6 +13,7 @@ import {
   isMessage,
   maxStep,
   message,
+  mode,
   next,
   point,
   side,
@@ -35,6 +38,8 @@ function at(slide: number, step: number, view: View = "present"): State {
     help: false,
     progress: true,
     every: false,
+    overview: false,
+    selected: 1,
   };
 }
 
@@ -432,4 +437,99 @@ test("no key finds a row of a click or a swipe", () => {
     assert.ok(row.label, row.text);
   }
   assert.equal(binding(at(1, 1), ""), undefined);
+});
+
+// Seven slides of one step each give three columns.
+const seven = { slides: 7, steps: [1, 1, 1, 1, 1, 1, 1] };
+
+function grid(selected: number, slide = 4): State {
+  return { ...at(slide, 1), overview: true, selected };
+}
+
+test("columns gives a grid with as many rows as columns or fewer", () => {
+  assert.equal(columns(0), 1);
+  assert.equal(columns(1), 1);
+  assert.equal(columns(4), 2);
+  assert.equal(columns(5), 3);
+  assert.equal(columns(13), 4);
+  for (let slides = 1; slides <= 100; slides++) {
+    const width = columns(slides);
+    assert.ok(Math.ceil(slides / width) <= width, String(slides));
+  }
+});
+
+test("o opens the overview at the current slide in the present view and the speaker view", () => {
+  assert.deepEqual(next(at(4, 1), "o", seven), grid(4));
+  assert.deepEqual(next(at(2, 1, "speaker"), "o", seven), {
+    ...grid(2, 2),
+    view: "speaker",
+  });
+  assert.equal(binding(at(1, 1, "handout"), "o"), undefined);
+});
+
+test("mode is the overview while it shows", () => {
+  assert.equal(mode(at(1, 1)), "present");
+  assert.equal(mode(grid(1)), "overview");
+  assert.equal(mode({ ...grid(1), view: "speaker" }), "overview");
+});
+
+test("the keys of the overview select a slide inside the deck", () => {
+  assert.deepEqual(next(grid(4), "ArrowRight", seven), grid(5));
+  assert.deepEqual(next(grid(4), "k", seven), grid(3));
+  assert.deepEqual(next(grid(4), "ArrowDown", seven), grid(7));
+  assert.deepEqual(next(grid(4), "ArrowUp", seven), grid(1));
+  assert.deepEqual(next(grid(4), "End", seven), grid(7));
+  assert.deepEqual(next(grid(4), "Home", seven), grid(1));
+
+  for (const [selected, key] of [
+    [7, "j"],
+    [5, "ArrowDown"],
+    [2, "ArrowUp"],
+    [1, "ArrowLeft"],
+  ] as const) {
+    const state = grid(selected);
+    assert.equal(next(state, key, seven), state, key);
+  }
+});
+
+test("Enter goes to step 1 of the selected slide, and o or Escape keeps the step", () => {
+  const deep = { ...grid(2), slide: 3, step: 2 };
+  const limits = { slides: 7, steps: [1, 1, 3, 1, 1, 1, 1] };
+  assert.deepEqual(next(deep, "Enter", limits), { ...at(2, 1), selected: 2 });
+  assert.deepEqual(next(deep, "o", limits), { ...at(3, 2), selected: 2 });
+  assert.deepEqual(next(deep, "Escape", limits), { ...at(3, 2), selected: 2 });
+});
+
+test("choose goes to step 1 of a slide, and closes the overview", () => {
+  assert.deepEqual(choose(grid(1), 6, seven), { ...at(6, 1), selected: 1 });
+  assert.deepEqual(choose(grid(1), 4, seven), { ...at(4, 1), selected: 1 });
+  assert.deepEqual(choose(grid(1), 9, seven), { ...at(4, 1), selected: 1 });
+});
+
+test("the overview knows ?, and no key of the present view", () => {
+  assert.deepEqual(next(grid(4), "?", seven), { ...grid(4), help: true });
+  for (const key of ["b", "p", "s", "g", "f", "5", "PageDown"]) {
+    const action = binding(grid(4), key)?.action;
+    assert.ok(
+      action === undefined || action === "forward",
+      `${key}: ${action}`,
+    );
+  }
+  const state = grid(4);
+  assert.equal(next(state, "b", seven), state);
+});
+
+test("point does not move the overview", () => {
+  const state = grid(4);
+  assert.equal(point(state, "forward", seven), state);
+  assert.deepEqual(point({ ...grid(4), help: true }, "back", seven), grid(4));
+});
+
+test("a message of the other window keeps the overview", () => {
+  const moved = follow(
+    grid(2),
+    { expresso: "position", slide: 6, step: 1, blank: false, time: 1 },
+    seven,
+  );
+  assert.deepEqual(moved, { ...grid(2, 6) });
 });

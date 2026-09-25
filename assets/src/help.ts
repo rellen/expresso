@@ -2,7 +2,7 @@
 // each function has a unit test.
 
 import { BINDINGS } from "./state.ts";
-import type { Binding, View } from "./state.ts";
+import type { Binding, Mode } from "./state.ts";
 
 // The names that the list of keys shows for the values of `KeyboardEvent.key`.
 // A key that is not in this table shows its value.
@@ -14,6 +14,7 @@ const NAMES: Record<string, string> = {
   ArrowDown: "↓",
   PageDown: "Page Down",
   PageUp: "Page Up",
+  Escape: "Esc",
 };
 
 // The names of the keys of a binding, such as `j, →, ↓, Page Down, Space`.
@@ -24,9 +25,9 @@ export function names(binding: Binding): string {
   return binding.keys.map((key) => NAMES[key] ?? key).join(", ");
 }
 
-// The rows of the list of keys of a view, in the order of the table.
-export function rows(view: View): [string, string][] {
-  return BINDINGS.filter((binding) => binding.views.includes(view)).map(
+// The rows of the list of keys of a mode, in the order of the table.
+export function rows(mode: Mode): [string, string][] {
+  return BINDINGS.filter((binding) => binding.views.includes(mode)).map(
     (binding) => [names(binding), binding.text],
   );
 }

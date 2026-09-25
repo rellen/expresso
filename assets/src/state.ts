@@ -17,7 +17,10 @@ export type View = "present" | "handout" | "speaker";
 // `help` is true while the view shows the list of its keys. `progress` is
 // true while the present view shows the progress bar. `every` is true while
 // the handout view, and a print, show every step and not only the steps that
-// the `handout` option of each slide selects.
+// the `handout` option of each slide selects. `overview` is true while the
+// present view or the speaker view shows a grid of the slides. `selected` is
+// the number of the selected slide in that grid. A message does not hold the
+// overview, so the overview shows only in the window that opens it.
 export type State = {
   slide: number;
   step: number;
@@ -27,7 +30,13 @@ export type State = {
   help: boolean;
   progress: boolean;
   every: boolean;
+  overview: boolean;
+  selected: number;
 };
+
+// The set of keys that operate. The overview has its own set of keys in each
+// view that shows it.
+export type Mode = View | "overview";
 
 // `steps` holds the maximum step number of each slide, in slide order. The
 // entry for slide 1 is at index 0.
@@ -53,6 +62,10 @@ export type Action =
   | "fullscreen"
   | "progress"
   | "every"
+  | "overview"
+  | "up"
+  | "down"
+  | "pick"
   | "help";
 
 // One or more keys, their function, the views that know them, and the text
@@ -62,19 +75,22 @@ export type Action =
 export type Binding = {
   keys: string[];
   action: Action;
-  views: View[];
+  views: Mode[];
   text: string;
   label?: string;
 };
 
-const SHOWING: View[] = ["present", "speaker"];
+const SHOWING: Mode[] = ["present", "speaker"];
+const OVERVIEW: Mode[] = ["overview"];
 const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 // The keys of the presenter. `next` and the list of keys read this table, so
 // the list shows each key that operates, and no other key. A presentation
 // remote sends `PageDown` and `PageUp`. The value `" "` is the space bar. The
 // handout view knows only `j`, `k`, `p`, `a` and `?`, so the browser keeps the
-// other keys, and the arrow keys and the space bar scroll the pages.
+// other keys, and the arrow keys and the space bar scroll the pages. The rows
+// of the overview are last, because the overview uses the same keys with
+// other functions.
 export const BINDINGS: Binding[] = [
   {
     keys: ["j", "ArrowRight", "ArrowDown", "PageDown", " "],
@@ -183,18 +199,86 @@ export const BINDINGS: Binding[] = [
     label: "Click or tap the left third, or swipe right",
   },
   {
+    keys: ["o"],
+    action: "overview",
+    views: SHOWING,
+    text: "Overview of the slides. Only this window shows it.",
+  },
+  {
     keys: ["?"],
     action: "help",
-    views: ["present", "handout", "speaker"],
+    views: ["present", "handout", "speaker", "overview"],
     text: "This list of keys. The next key closes it.",
+  },
+  {
+    keys: ["j", "ArrowRight", "PageDown", " "],
+    action: "forward",
+    views: OVERVIEW,
+    text: "Select the next slide",
+  },
+  {
+    keys: ["k", "ArrowLeft", "PageUp"],
+    action: "back",
+    views: OVERVIEW,
+    text: "Select the previous slide",
+  },
+  {
+    keys: ["ArrowDown"],
+    action: "down",
+    views: OVERVIEW,
+    text: "Select the slide below",
+  },
+  {
+    keys: ["ArrowUp"],
+    action: "up",
+    views: OVERVIEW,
+    text: "Select the slide above",
+  },
+  {
+    keys: ["Home"],
+    action: "first",
+    views: OVERVIEW,
+    text: "Select the first slide",
+  },
+  {
+    keys: ["End"],
+    action: "last",
+    views: OVERVIEW,
+    text: "Select the last slide",
+  },
+  {
+    keys: ["Enter"],
+    action: "pick",
+    views: OVERVIEW,
+    text: "Step 1 of the selected slide",
+  },
+  {
+    keys: [],
+    action: "pick",
+    views: OVERVIEW,
+    text: "Step 1 of that slide",
+    label: "Click or tap a slide",
+  },
+  {
+    keys: ["o", "Escape"],
+    action: "overview",
+    views: OVERVIEW,
+    text: "Close the overview. The step does not change.",
   },
 ];
 
-// The binding of a key in the view of the state, or undefined for a key that
-// the view does not know.
+// The mode of a state. While the overview shows, the mode is the overview.
+// At other times, the mode is the view.
+export function mode(state: State): Mode {
+  return state.overview ? "overview" : state.view;
+}
+
+// The binding of a key in the mode of the state, or undefined for a key that
+// the mode does not know.
 export function binding(state: State, key: string): Binding | undefined {
+  const current = mode(state);
   return BINDINGS.find(
-    (each) => each.views.includes(state.view) && each.keys.includes(key),
+    (each) => each.views.includes(current) && each.keys.includes(key),
   );
 }
 
@@ -211,6 +295,8 @@ export function initial(): State {
     help: false,
     progress: true,
     every: false,
+    overview: false,
+    selected: 1,
   };
 }
 
@@ -232,6 +318,9 @@ export function next(state: State, key: string, limits: Limits): State {
   }
 
   const action = binding(state, key)?.action;
+  if (state.overview) {
+    return overview(state, action, limits);
+  }
   if (action === "digit") {
     return { ...state, digits: state.digits + key };
   }
@@ -261,9 +350,66 @@ export function next(state: State, key: string, limits: Limits): State {
       return { ...cleared, progress: !cleared.progress };
     case "every":
       return { ...cleared, every: !cleared.every };
+    case "overview":
+      return { ...cleared, overview: true, selected: cleared.slide };
     default:
       return cleared;
   }
+}
+
+// The number of columns of the overview: the square root of the number of
+// slides, or the next larger integer. The number of rows is then not more than
+// the number of columns, and each slide fits in the window.
+export function columns(slides: number): number {
+  return Math.max(1, Math.ceil(Math.sqrt(slides)));
+}
+
+// Give the state after a key of the overview. A key selects a different
+// slide. A key that selects a slide outside the deck has no effect. `pick`
+// goes to step 1 of the selected slide. `overview` closes the overview, and
+// the step does not change.
+function overview(
+  state: State,
+  action: Action | undefined,
+  limits: Limits,
+): State {
+  const width = columns(limits.slides);
+  switch (action) {
+    case "forward":
+      return select(state, state.selected + 1, limits);
+    case "back":
+      return select(state, state.selected - 1, limits);
+    case "down":
+      return select(state, state.selected + width, limits);
+    case "up":
+      return select(state, state.selected - width, limits);
+    case "first":
+      return select(state, 1, limits);
+    case "last":
+      return select(state, limits.slides, limits);
+    case "pick":
+      return choose(state, state.selected, limits);
+    case "overview":
+      return { ...state, overview: false };
+    case "help":
+      return { ...state, help: true };
+    default:
+      return state;
+  }
+}
+
+function select(state: State, slide: number, limits: Limits): State {
+  if (slide < 1 || slide > limits.slides || slide === state.selected) {
+    return state;
+  }
+  return { ...state, selected: slide };
+}
+
+// Give the state that closes the overview and goes to step 1 of a slide. A
+// click on a slide of the overview and the key `Enter` use this function. For
+// a number that is not a slide, the function only closes the overview.
+export function choose(state: State, slide: number, limits: Limits): State {
+  return move({ ...state, overview: false }, slide, limits);
 }
 
 // The state with no black screen and no list of keys. A state with neither
@@ -303,10 +449,11 @@ export function swipe(dx: number, dy: number): Pointer | undefined {
 
 // Give the state after a click, a tap or a swipe. As a key does, it first
 // closes a black screen or the list of keys, and it does nothing more. The
-// handout view scrolls with a finger, so there it has no other function.
+// handout view scrolls with a finger, so there it has no other function. In
+// the overview, `choose` gives the function of a click on a slide.
 export function point(state: State, pointer: Pointer, limits: Limits): State {
   const shown = close(state);
-  if (shown !== state || state.view === "handout") {
+  if (shown !== state || state.view === "handout" || state.overview) {
     return shown;
   }
   const cleared = state.digits === "" ? state : { ...state, digits: "" };
