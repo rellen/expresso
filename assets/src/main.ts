@@ -16,6 +16,9 @@
 // gives these rules. A click on a link, a button or a form field goes to the
 // browser, and so does a click that ends a selection of text.
 //
+// The key `o` shows an overview of the slides in this window. A click or a
+// tap on a slide of the overview goes to step 1 of that slide.
+//
 // The key `f` puts the document in full screen, or takes it out of full
 // screen. The key `Escape` of the browser also takes it out.
 //
@@ -28,6 +31,7 @@ import { clock } from "./speaker.ts";
 import {
   accepts,
   binding,
+  choose,
   follow,
   fromHash,
   initial,
@@ -72,16 +76,19 @@ let time = 0;
 // Apply a new state, and write its fragment. `replaceState` adds no entry to
 // the history, so the back button of the browser does not go through the
 // steps. A change of this window goes to the other window with a new time. A
-// change from the other window does not go back to it.
+// change from the other window does not go back to it. A message holds only
+// the position and the black screen. A change to other data, such as the
+// overview, sends no message.
 function show(changed: State, local = true): void {
   if (changed === state) {
     return;
   }
   const moved = changed.slide !== state.slide || changed.step !== state.step;
+  const sent = moved || changed.blank !== state.blank;
   state = changed;
   apply(state, deck);
   history.replaceState(null, "", toHash(state));
-  if (local) {
+  if (local && sent) {
     time = stamp(time, Date.now());
     if (partner !== null && !partner.closed) {
       partner.postMessage(message(state, time), "*");
@@ -183,8 +190,22 @@ function pointed(pointer: Pointer | undefined): void {
   }
 }
 
+// The slide of the overview under a click, or null.
+function thumbnail(event: MouseEvent): number | null {
+  const target = event.target as Element | null;
+  const page = target?.closest?.(".handout-page[data-thumbnail]") as
+    HTMLElement | null | undefined;
+  return page ? Number(page.dataset.slide) : null;
+}
+
 document.addEventListener("click", (event: MouseEvent) => {
-  if (!ignores(event)) {
+  if (ignores(event)) {
+    return;
+  }
+  const slide = state.overview ? thumbnail(event) : null;
+  if (slide !== null && !state.blank && !state.help) {
+    show(choose(state, slide, deck));
+  } else {
     pointed(side(event.clientX, window.innerWidth));
   }
 });

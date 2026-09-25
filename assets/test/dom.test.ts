@@ -50,6 +50,8 @@ function at(slide: number, step: number, view: View = "present"): State {
     help: false,
     progress: true,
     every: false,
+    overview: false,
+    selected: 1,
   };
 }
 

@@ -15,6 +15,8 @@ function at(slide: number, step: number, blank = false): State {
     help: false,
     progress: true,
     every: false,
+    overview: false,
+    selected: 1,
   };
 }
 

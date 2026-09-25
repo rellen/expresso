@@ -5,7 +5,7 @@
 
 import { rows } from "./help.ts";
 import { describe } from "./speaker.ts";
-import { fraction, upcoming } from "./state.ts";
+import { columns, fraction, maxStep, mode, upcoming } from "./state.ts";
 import type { Limits, State } from "./state.ts";
 
 // The renderer writes `data-progress="false"` on the `body` for a deck that
@@ -42,6 +42,7 @@ function slide(number: number): HTMLElement {
 // `data-view` and `data-blank`, and the generated style block reads
 // `data-step`. docs/overlays.md gives the CSS contract. The speaker view also
 // writes `data-speaker` on two pages, and the texts of its three elements.
+// The overview writes `data-overview` on the `body`, and attributes on pages.
 export function apply(state: State, limits: Limits): void {
   document.body.dataset.view = state.view;
   if (state.blank) {
@@ -54,6 +55,12 @@ export function apply(state: State, limits: Limits): void {
   const bar = document.getElementById("progress");
   if (bar !== null) {
     bar.style.width = `${fraction(state, limits) * 100}%`;
+  }
+  if (state.overview) {
+    document.body.dataset.overview = "true";
+    overview(state, limits);
+  } else {
+    delete document.body.dataset.overview;
   }
   if (state.help) {
     document.body.dataset.help = "true";
@@ -101,6 +108,35 @@ function speaker(state: State, limits: Limits): void {
   text("speaker-position", describe(state, limits));
 }
 
+// The overview shows the page of the last step of each slide in a grid. The
+// page of each last step gets `data-thumbnail`, and the page of the selected
+// slide also gets `data-selected`. Each page is as large as the window, and
+// the style sheet scales it with `zoom`. The padding and the gaps of the grid
+// are 1vw wide and 1vh high. The number of rows is not more than the number of
+// columns, so a zoom that fits the width also fits the height.
+function overview(state: State, limits: Limits): void {
+  const width = columns(limits.slides);
+  const style = document.body.style;
+  style.setProperty("--overview-columns", String(width));
+  style.setProperty(
+    "--overview-zoom",
+    String((98 - (width - 1)) / (100 * width)),
+  );
+  for (const page of pages()) {
+    const slide = Number(page.dataset.slide);
+    if (Number(page.dataset.step) === maxStep(slide, limits)) {
+      page.dataset.thumbnail = "";
+    } else {
+      delete page.dataset.thumbnail;
+    }
+    if (slide === state.selected && page.dataset.thumbnail !== undefined) {
+      page.dataset.selected = "";
+    } else {
+      delete page.dataset.selected;
+    }
+  }
+}
+
 // Make the elements of the speaker view that the renderer does not write. The
 // elements go into the handout view, because the style sheet places them in
 // the grid of that view. A second call makes no new element.
@@ -128,7 +164,7 @@ function help(state: State): void {
     document.body.appendChild(panel);
   }
   panel.replaceChildren();
-  for (const [keys, text] of rows(state.view)) {
+  for (const [keys, text] of rows(mode(state))) {
     const row = document.createElement("div");
     const name = document.createElement("kbd");
     name.textContent = keys;
