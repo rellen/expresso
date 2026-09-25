@@ -26,6 +26,7 @@ defmodule Expresso do
     handout = Spark.Dsl.Extension.get_opt(module, [:deck], :handout, :all)
     print_notes = Spark.Dsl.Extension.get_opt(module, [:deck], :print_notes, true)
     slide_numbers = Spark.Dsl.Extension.get_opt(module, [:deck], :slide_numbers, false)
+    duration = Spark.Dsl.Extension.get_opt(module, [:deck], :duration)
 
     slides =
       module
@@ -38,7 +39,8 @@ defmodule Expresso do
         progress: progress,
         handout: handout,
         print_notes: print_notes,
-        slide_numbers: slide_numbers
+        slide_numbers: slide_numbers,
+        duration: duration
       },
       slides
     )

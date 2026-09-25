@@ -43,8 +43,8 @@ end
 
 `Expresso.parse/1` reads the DSL state of such a module. It returns an `Expresso.Deck`
 struct, and it numbers the slides with `Expresso.Deck.number_slides/1`. The metadata map
-of the deck holds the `progress`, `handout`, `print_notes` and `slide_numbers` options of
-the deck. Their defaults are `true`, `:all`, `true` and `false`.
+of the deck holds the `progress`, `handout`, `print_notes`, `slide_numbers` and `duration`
+options of the deck. Their defaults are `true`, `:all`, `true`, `false` and `nil`.
 
 The `slide` entity has a `heading` option. An author writes it as a call inside the block
 of the slide, in the form of Spark:
@@ -133,7 +133,8 @@ html
     style            assets/style.css
     style            the rules of the token classes of a code element, from Makeup
     style            the generated rules of the overlays, from Expresso.Overlay.Render
-    body           data-view "present", data-progress and data-print-notes from the deck
+    body           data-view "present", data-progress, data-print-notes and
+                   data-duration from the deck
       div            the present view, class "screen"
         section      one for each slide, class "slide", id "slide-<number>",
                      data-step "1", data-max-step from the slide
@@ -528,6 +529,19 @@ timer go into three elements that `dom.ts` makes. The speaker view knows the key
 present view, but `p` and `s` have no function in it. `r` sets the timer back to `0:00`,
 and the timer then starts at the next change of the step.
 
+The `duration` option of the deck gives the length of the talk in minutes. The renderer
+writes it as `data-duration` on the `body`, and `?duration=` in the address replaces it.
+`talkLength` in `speaker.ts` reads the two values. `dom.ts` makes a fourth element of the
+speaker view, `speaker-left`, and the speaker view writes the time left into it. `pace`
+gives its value of `data-pace`: `on`, `behind` or `over`. For a talk with no length, the
+element has no text, and the style sheet hides it.
+
+The pace compares the time used with `done` in `state.ts`: the part of the steps before the
+current step. The speaker is `behind` when the time used is more than one minute longer than
+that part of the time. `done` is not `fraction`, because `fraction` is 1 at the last step,
+and the last step also needs its part of the time. The time left goes up to the next full
+second, so the timer and the time left always give the length of the talk.
+
 Each window sends its position to the other window with `postMessage`. The message holds
 the slide, the step and the black screen, so `b` in the speaker view gives a black screen
 to the audience. A window accepts a message only from the other window. The present view
@@ -580,7 +594,7 @@ view, so it keeps `?all`.
 Each page that shows, except the first, starts a new sheet with `break-before`. With
 `data-every="true"`, each page except the first does. A rule of
 `break-after` on the last page cannot do this, because the last page of the document can
-be a page with `data-omit`. The print block also hides the three elements of the speaker
+be a page with `data-omit`. The print block also hides the four elements of the speaker
 view, so a print from that window gives the same pages.
 
 A page of the handout view takes the full height of the screen, or of the paper. The

@@ -69,7 +69,8 @@ defmodule ExpressoTest do
                progress: true,
                handout: :all,
                print_notes: true,
-               slide_numbers: false
+               slide_numbers: false,
+               duration: nil
              }
     end
 

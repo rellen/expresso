@@ -22,16 +22,21 @@
 // The key `f` puts the document in full screen, or takes it out of full
 // screen. The key `Escape` of the browser also takes it out.
 //
+// The deck option `duration` gives the length of the talk in minutes, and
+// `?duration=` in the address replaces it. The speaker view then shows the
+// time left under the timer, and the style sheet gives the pace its color.
+//
 // `?all` in the address shows every step in the handout view and on paper, as
 // the key `a` of the handout view does. A print or a PDF of such an address
 // then gets every step with no key. The speaker view opens with the same
 // address, so it also shows every step.
 
-import { clock } from "./speaker.ts";
+import { clock, left, pace, talkLength } from "./speaker.ts";
 import {
   accepts,
   binding,
   choose,
+  done,
   follow,
   fromHash,
   initial,
@@ -45,7 +50,15 @@ import {
   toHash,
 } from "./state.ts";
 import type { Pointer, State } from "./state.ts";
-import { apply, limits, showsProgress, speakerPanel, text } from "./dom.ts";
+import {
+  apply,
+  durationAttribute,
+  limits,
+  showsProgress,
+  speakerPanel,
+  text,
+  timeLeft,
+} from "./dom.ts";
 
 const deck = limits();
 const parameters = new URLSearchParams(location.search);
@@ -65,9 +78,18 @@ let partner: Window | null = isSpeaker ? window.opener : null;
 // the step. The key `r` sets it back to the start.
 let started: number | null = null;
 
+// The length of the talk, from the deck option `duration` or the address
+// parameter `?duration=`. The speaker view opens with the address of the
+// present view, so it gets the same parameter.
+const total = talkLength(durationAttribute(), parameters.get("duration"));
+
+// Write the timer, and the time left and the pace of a talk with a length.
 function tick(): void {
   const elapsed = started === null ? 0 : Date.now() - started;
   text("speaker-timer", clock(elapsed));
+  if (total !== null) {
+    timeLeft(left(elapsed, total), pace(elapsed, total, done(state, deck)));
+  }
 }
 
 // The time of the state of this window. `state.ts` gives the rule of the time.

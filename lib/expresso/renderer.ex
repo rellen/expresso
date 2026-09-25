@@ -56,6 +56,16 @@ defmodule Expresso.Renderer do
     end
   end
 
+  # The value of `data-duration` on the `body`, or nil. The value is the length
+  # of the talk in minutes. The presenter reads it for the speaker view, and the
+  # address parameter `?duration=` replaces it.
+  defp duration(deck) do
+    case deck.metadata do
+      %{duration: minutes} when is_integer(minutes) and minutes > 0 -> Integer.to_string(minutes)
+      _other -> nil
+    end
+  end
+
   # The text of the number of a slide, such as "3 / 12", or nil. A deck shows
   # the numbers only with `slide_numbers: true`, and slide 1 shows no number.
   defp slide_number(deck, slide) do
@@ -157,7 +167,8 @@ defmodule Expresso.Renderer do
         body style: "min-height: 100vh; width: 100%; margin: 0px;",
              data_view: "present",
              data_progress: progress(@deck),
-             data_print_notes: print_notes(@deck) do
+             data_print_notes: print_notes(@deck),
+             data_duration: duration(@deck) do
           div class: "screen" do
             for {slide, index} <- Enum.with_index(@deck.slides) do
               section id: "slide-#{slide.metadata.slide_number}",

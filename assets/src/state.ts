@@ -466,6 +466,26 @@ export function point(state: State, pointer: Pointer, limits: Limits): State {
 // of the first slide to 1 at the last step of the last slide. Each step of
 // each slide counts one time. A deck of one step or no step gives 0.
 export function fraction(state: State, limits: Limits): number {
+  const [before, total] = count(state, limits);
+  if (total <= 1) {
+    return 0;
+  }
+  return before / (total - 1);
+}
+
+// The part of the deck that is done at the start of the step of the state,
+// from 0 at the first step. Each step of each slide counts one time. The last
+// step also has its part, so the value at the last step is less than 1.
+// `fraction` is 1 there. The speaker view compares this part with the time of
+// the talk. A deck with no step gives 0.
+export function done(state: State, limits: Limits): number {
+  const [before, total] = count(state, limits);
+  return total === 0 ? 0 : before / total;
+}
+
+// The number of steps before the step of the state, and the number of steps
+// of the deck.
+function count(state: State, limits: Limits): [number, number] {
   let total = 0;
   let before = 0;
   for (let slide = 1; slide <= limits.slides; slide++) {
@@ -475,10 +495,7 @@ export function fraction(state: State, limits: Limits): number {
       before += steps;
     }
   }
-  if (total <= 1) {
-    return 0;
-  }
-  return (before + state.step - 1) / (total - 1);
+  return [before + state.step - 1, total];
 }
 
 // The step after the step of the state, or null at the last step of the last

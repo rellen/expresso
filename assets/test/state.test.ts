@@ -6,6 +6,7 @@ import {
   binding,
   choose,
   columns,
+  done,
   follow,
   fraction,
   fromHash,
@@ -532,4 +533,12 @@ test("a message of the other window keeps the overview", () => {
     seven,
   );
   assert.deepEqual(moved, { ...grid(2, 6) });
+});
+
+test("done gives the part of the steps before the current step, with a part for the last step", () => {
+  // Six steps: slide 1 has one, slide 2 has three, and slide 3 has two.
+  assert.equal(done(at(1, 1), three), 0);
+  assert.equal(done(at(2, 2), three), 2 / 6);
+  assert.equal(done(at(3, 2), three), 5 / 6);
+  assert.equal(done(at(1, 1), { slides: 0, steps: [] }), 0);
 });

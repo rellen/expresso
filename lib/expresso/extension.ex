@@ -291,6 +291,11 @@ defmodule Expresso.Extension do
         type: :string,
         doc: "A unique identifier for this deck."
       ],
+      duration: [
+        type: :pos_integer,
+        doc:
+          "The length of the talk in minutes. The speaker view then shows the time left and the pace. The address parameter `?duration=` replaces it."
+      ],
       handout: [
         type: {:in, [:all, :last]},
         default: :all,
