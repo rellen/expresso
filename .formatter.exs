@@ -50,6 +50,7 @@ spark_locals_without_parens = [
   slide: 0,
   slide: 1,
   slide: 2,
+  slide_numbers: 1,
   spacer: 0,
   spacer: 1,
   state: 1,

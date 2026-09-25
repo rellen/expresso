@@ -19,6 +19,29 @@ h2 {
   font-size: 0.5rem;
   font-weight: 400;
 }
+/*
+ * The number of a slide, such as "3 / 12". The deck option `slide_numbers`
+ * writes it into the row of the footer, and a page of the handout view shows
+ * it in the right corner of that row. A theme can set
+ * `--slide-number-color`, `--slide-number-size`, `--slide-number-right` and
+ * `--slide-number-bottom`.
+ */
+.slide-number {
+  position: absolute;
+  right: var(--slide-number-right, 0.5rem);
+  bottom: var(--slide-number-bottom, 0.25rem);
+  font-size: var(--slide-number-size, 0.4rem);
+  color: var(--slide-number-color, currentColor);
+  font-variant-numeric: tabular-nums;
+}
+/*
+ * A slide of the present view is only as wide as its content. The number
+ * then uses the corner of the window. The other slides do not show, so their
+ * numbers do not show.
+ */
+.screen .slide-number {
+  position: fixed;
+}
 .slide-body {
   display: flex;
   flex-direction: column;

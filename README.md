@@ -155,6 +155,12 @@ Each step of each slide counts one time. Write `progress false` in the deck to h
 bar at the start. The key `g` can still show it. A theme can set `--progress-color` and
 `--progress-height`.
 
+Write `slide_numbers true` in the deck to show the number of each slide and the number of
+slides, such as `3 / 12`, in the right corner at the bottom. Slide 1 shows no number,
+because it is usually the title slide. The handout view and the print show the numbers
+too. A theme can set `--slide-number-color`, `--slide-number-size`, `--slide-number-right`
+and `--slide-number-bottom`.
+
 The handout view shows one page for each step of each slide. In this view, only `j`, `k`,
 `p`, `a` and `?` operate, so the other keys scroll the pages. A printer gets this view
 without the key.

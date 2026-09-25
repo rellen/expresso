@@ -308,6 +308,12 @@ defmodule Expresso.Extension do
         default: true,
         doc:
           "Show the progress bar in the present view at the start. The key `g` shows or hides it during the talk."
+      ],
+      slide_numbers: [
+        type: :boolean,
+        default: false,
+        doc:
+          "Show the number of each slide and the number of slides, such as 3 / 12, in a corner of the slide. Slide 1 shows no number."
       ]
     ]
   }

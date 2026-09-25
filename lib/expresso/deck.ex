@@ -9,6 +9,11 @@ defmodule Expresso.Deck do
   The metadata can also hold `:print_notes`. The value `false` leaves the
   notes of the speaker out of the handout view and of the print. The speaker
   view still shows them. A deck without the key prints the notes.
+
+  The metadata can also hold `:slide_numbers`. The value `true` shows the
+  number of each slide and the number of slides, such as `3 / 12`, in a
+  corner of the slide. Slide 1 shows no number, because it is usually the
+  title slide. A deck without the key shows no number.
   """
 
   @type t :: %__MODULE__{:name => String.t(), :metadata => map(), :slides => list()}
