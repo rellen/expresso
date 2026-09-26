@@ -46,25 +46,26 @@ defmodule Expresso.Overlay.EffectVerifier do
   defp check_slide(slide, :ok, effects, module) do
     path = [:deck, :slide] ++ List.wrap(slide.name)
 
-    case check([slide.effect | tree(slide.elements || [])], effects, module, path) do
+    case check([slide.effect | element_effects(slide.elements || [])], effects, module, path) do
       :ok -> {:cont, :ok}
       error -> {:halt, error}
     end
   end
 
-  # The names of the style sheets are strings, so a style sheet makes no atom.
   defp check(values, effects, module, path) do
-    case Enum.find(values, &(&1 != nil and Atom.to_string(&1) not in effects)) do
+    case Enum.find(values, &without_rule?(&1, effects)) do
       nil -> :ok
       effect -> {:error, error(module, path, message(effect))}
     end
   end
 
-  # The effect of each element of a slide, and of each child.
-  defp tree(elements) do
+  defp without_rule?(nil, _effects), do: false
+  defp without_rule?(effect, effects), do: Atom.to_string(effect) not in effects
+
+  defp element_effects(elements) do
     Enum.flat_map(elements, fn
       %Pause{} -> []
-      element -> [Map.get(element, :effect) | tree(Map.get(element, :elements) || [])]
+      element -> [Map.get(element, :effect) | element_effects(Map.get(element, :elements) || [])]
     end)
   end
 

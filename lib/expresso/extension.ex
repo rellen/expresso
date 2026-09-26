@@ -9,9 +9,7 @@ defmodule Expresso.Extension do
   # The overlay specification of an element. Each element entity merges this
   # schema into its own. `docs/overlays.md` gives the forms.
   # The ways in which an element shows and hides at the steps of its `at`
-  # option. The slide and the deck take the same values. The type is an atom,
-  # because the css option of the deck can give more effects.
-  # `Expresso.Overlay.EffectVerifier` makes sure that each effect has a rule.
+  # option. The slide and the deck take the same values.
   @effects [:fade, :grow, :fly_up, :fly_down, :fly_left, :fly_right, :wipe, :blur]
 
   # The time and the easing of the animations of an element. A speed is a

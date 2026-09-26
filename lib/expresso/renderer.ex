@@ -34,8 +34,6 @@ defmodule Expresso.Renderer do
     @style
   end
 
-  # The CSS of the deck, or `nil` for a deck without it. A file that the
-  # renderer cannot read stops the render, as the file of a diagram does.
   defp deck_css(deck) do
     case Expresso.Css.resolve((deck.metadata || %{})[:css]) do
       {:ok, ""} -> nil
@@ -110,9 +108,7 @@ defmodule Expresso.Renderer do
   # classes come from Makeup, and the presenter bundle comes from files of this
   # repository. The renderer reads them at compile time, and no input of a user
   # can change them. The generated style block comes from the deck, and
-  # `Expresso.Overlay.Render.style/1` escapes each value of it. The CSS of the
-  # deck comes last, so a rule of the deck replaces a rule of the theme.
-  # `Expresso.Css.escape/1` makes sure that it cannot close its element.
+  # `Expresso.Overlay.Render.style/1` escapes each value of it.
   # The three parts of a slide. The present view and the handout view show the
   # same parts, and each view gives its own container.
   defp slide_parts(assigns) do
