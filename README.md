@@ -154,6 +154,8 @@ Open the HTML document in a browser.
 
 A presentation remote sends `Page Down` and `Page Up`, so a remote operates the deck.
 
+![Three steps forward, one step back, a black screen, and the last slide](https://raw.githubusercontent.com/rellen/expresso/media/present-keys.gif)
+
 ### The mouse and the touch screen
 
 A click or a tap on the right two thirds of the window goes to the next step. A click or a
@@ -167,11 +169,15 @@ keys, `j`, `k`, `Home` and `End` select a different slide. `Enter` or a click on
 goes to step 1 of that slide. `o` or `Esc` closes the overview, and the step does not
 change. In the speaker view, only the speaker window shows the overview.
 
+![The overview opens, the selection moves two slides, and Enter goes to that slide](https://raw.githubusercontent.com/rellen/expresso/media/present-overview.gif)
+
 ### The transitions
 
 A change of slide in the present view fades the old slide out and the new slide in. The
 `transition` option of the deck or of a slide changes the kind. A move back plays the same
 kind in reverse. A change of the step keeps the animations of the overlays.
+
+![The second slide pushes the first slide out to the left, and a move back brings it in](https://raw.githubusercontent.com/rellen/expresso/media/transition-slide.gif)
 
 The transitions need the View Transitions API of the browser. A browser without it, and a
 reader who asks for reduced motion, get an instant change. The speaker view has no
@@ -189,6 +195,8 @@ position and a timer. Put this window on your screen, and put the first window o
 projector. The keys operate in either window, and the two windows show the same step. `b`
 in the speaker view gives a black screen to the audience.
 
+![The speaker view: the current step, the next step, the notes, the position, the timer and the time left](https://raw.githubusercontent.com/rellen/expresso/media/present-speaker.png)
+
 The timer starts at the first change of the step, and `r` sets it back to `0:00`. A
 browser can block the second window. Then let the document open windows.
 
@@ -204,11 +212,15 @@ the part of the time for the steps before the current step.
 The address parameter `?duration=15` replaces the deck option, so one file can give talks
 of different lengths.
 
+![The timer runs, the time left turns amber behind the pace, and red after the end](https://raw.githubusercontent.com/rellen/expresso/media/present-pace.gif)
+
 ### The progress bar
 
 A thin bar at the bottom of the present view shows the part of the deck that is done. Each
 step of each slide counts one time. Write `progress false` in the deck to hide the bar at
 the start. The key `g` can still show it.
+
+![The bar at the bottom grows with each step](https://raw.githubusercontent.com/rellen/expresso/media/present-progress.gif)
 
 ### The slide numbers
 
@@ -217,11 +229,15 @@ bottom then shows the number of the slide and the number of slides, such as `3 /
 Slide 1 shows no number, because it is usually the title slide. The handout view and the
 print show the numbers too.
 
+![Slide 3 of 6, with the number in the right corner at the bottom](https://raw.githubusercontent.com/rellen/expresso/media/present-slide-numbers.png)
+
 ### The handout view
 
 The handout view shows one page for each step of each slide. In this view, only `j`, `k`,
 `p`, `a` and `?` operate, so the other keys scroll the pages. A printer gets this view
 without the key.
+
+![The handout view: one page for each step, with the notes under each page](https://raw.githubusercontent.com/rellen/expresso/media/present-handout.png)
 
 A slide can select the steps that get a page, with the forms of `at`:
 
@@ -303,8 +319,6 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 
 - [Add transitions between slides](docs/how-to/add-transitions.md)
 - [Animate elements in a slide](docs/how-to/animate-elements.md)
-
-![A slide transition, then a move back](https://raw.githubusercontent.com/rellen/expresso/media/transition-slide.gif)
 
 Reference pages describe each value of an option:
 
