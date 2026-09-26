@@ -526,6 +526,7 @@ section[data-step="3"] [data-on~="3"] {
   visibility: visible;
   transition-delay: 0s;
   --shown: 1;
+  animation-name: var(--enter-animation);
 }
 ```
 
@@ -702,6 +703,19 @@ The effect `wipe` does not fade. The theme sets `opacity: 1` for it, and a clip 
 element from left to right. `visibility` hides the element when the clip is closed. The
 clip is 1rem larger than the element on each side, so it does not cut the outline of
 `alert` or the marker of an item.
+
+An effect can also play `@keyframes`. The reveal rule sets `animation-name` to
+`--enter-animation`, and the base rule of a hidden element sets it to `--exit-animation`.
+The change of the name starts the animation. The theme registers both properties as
+`none | <custom-ident>` with the initial value `none`, so they do not inherit, and the
+theme gives no keyframes.
+
+The `css` option of the deck gives more effects. `Expresso.Overlay.EffectVerifier` reads
+the style sheet with `Expresso.Css.scan/1`, and a rule for `[data-effect="bounce"]` makes
+the effect `:bounce` valid. An effect without a rule in the theme or in the style sheet is
+an error at compile time. `Expresso.Overlay.PropertyVerifier` joins the names of the style
+sheet to the names of the theme in the same way, so a state that the style sheet reads
+gives no warning.
 
 A diagram part with an effect that moves or grows it goes into the wrapper that the
 section "The CSS contract" describes. The lines of a code element take the effect of the

@@ -34,6 +34,10 @@ defmodule Expresso.Deck do
   number of milliseconds, and the easing is `:ease_in_out`, `:ease_out`,
   `:linear` or `:spring`. They follow the same rules as `:effect`. A deck
   without the keys uses the time and the easing of the theme.
+
+  The metadata can also hold `:css`, a style sheet or the path of a file that
+  holds one. `Expresso.Css.resolve/1` gives the rules. The renderer puts the
+  style sheet into the document after the theme.
   """
 
   @type t :: %__MODULE__{:name => String.t(), :metadata => map(), :slides => list()}

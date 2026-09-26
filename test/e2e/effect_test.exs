@@ -12,25 +12,25 @@ defmodule Expresso.E2E.EffectTest do
     slide "one" do
       text_box do
         at 2
-        effect(:grow)
+        effect :grow
         text_area(text: "Grow")
       end
 
       text_box do
         at 2
-        effect(:fly_up)
+        effect :fly_up
         text_area(text: "Fly up")
       end
 
       text_box do
         at 2
-        effect(:wipe)
+        effect :wipe
         text_area(text: "Wipe")
       end
 
       text_box do
         at 2
-        effect(:blur)
+        effect :blur
         text_area(text: "Blur")
       end
     end

@@ -256,6 +256,7 @@ Reference pages describe each value of an option:
 
 - [The transition option](docs/reference/transition-option.md)
 - [The overlay options](docs/reference/overlay-options.md)
+- [The css option](docs/reference/css-option.md)
 
 Explanations give the design and its reasons:
 

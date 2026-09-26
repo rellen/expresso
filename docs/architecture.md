@@ -44,8 +44,9 @@ end
 `Expresso.parse/1` reads the DSL state of such a module. It returns an `Expresso.Deck`
 struct, and it numbers the slides with `Expresso.Deck.number_slides/1`. The metadata map
 of the deck holds the `progress`, `handout`, `print_notes`, `slide_numbers`, `duration`,
-`transition`, `effect`, `speed` and `easing` options of the deck. Their defaults are
-`true`, `:all`, `true`, `false`, `nil`, `:fade`, `:fade`, `nil` and `nil`.
+`transition`, `effect`, `speed`, `easing` and `css` options of the deck. Their defaults
+are `true`, `:all`, `true`, `false`, `nil`, `:fade`, `:fade`, `nil`, `nil` and `nil`. The
+renderer puts the style sheet of `css` into the document after the theme.
 
 The `slide` entity has a `heading` option. An author writes it as a call inside the block
 of the slide, in the form of Spark:
@@ -181,9 +182,10 @@ bundle under `assets/src/`, is an `@external_resource` of the module. Therefore 
 one of these files starts a new compile of `Expresso.Renderer`. Elixir compares the content
 of an external resource, and not its time, so a `touch` does not start a compile.
 
-`Expresso.Theme` reads `assets/style.css` in the same way. It gives the names of the custom
-properties of the theme to `Expresso.Overlay.PropertyVerifier`, and `docs/overlays.md`
-gives the warnings of that verifier.
+`Expresso.Theme` reads `assets/style.css` in the same way, with `Expresso.Css.scan/1`. It
+gives the names of the custom properties and of the effects of the theme to
+`Expresso.Overlay.PropertyVerifier` and to `Expresso.Overlay.EffectVerifier`, and
+`docs/overlays.md` gives the rules of those verifiers.
 
 The renderer writes an inline `style` attribute on each `section` of the present view.
 The first slide gets `display: flex`, and each other slide gets `display: none`. A
@@ -416,13 +418,15 @@ deck template gives an empty footer, so a deck does not show two numbers. In the
 view, the style sheet puts the number in the corner of the window, because a slide there is
 only as wide as its content.
 
-The extension imports nothing, and it lists three modules:
+The extension imports nothing, and it lists five modules:
 
 - `Expresso.Overlay.Transformer` expands the overlay specifications of each slide at
   compile time.
 - `Expresso.Overlay.Verifier` reports a specification that breaks a rule.
-- `Expresso.Overlay.PropertyVerifier` gives a warning for a custom property that the theme
-  does not use.
+- `Expresso.Overlay.PropertyVerifier` gives a warning for a custom property that neither
+  the theme nor the CSS of the deck uses.
+- `Expresso.Overlay.EffectVerifier` reads the `css` option of the deck, and it gives an
+  error for an effect without a rule in the theme or in that style sheet.
 - `Expresso.Overlay.SizeVerifier` gives a warning for a slide of very many steps.
 
 After the transformer, each element and each `on` entity holds its step numbers in the

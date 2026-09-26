@@ -13,14 +13,14 @@ defmodule Expresso.E2E.TimingTest do
     slide "one" do
       text_box do
         at 2
-        speed(:slow)
-        easing(:spring)
+        speed :slow
+        easing :spring
         text_area(text: "Slow")
       end
 
       text_box do
         at 2
-        speed(450)
+        speed 450
         text_area(text: "450 ms")
       end
 

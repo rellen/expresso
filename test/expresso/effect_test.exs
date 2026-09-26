@@ -1,6 +1,8 @@
 defmodule Expresso.EffectTest do
   use ExUnit.Case, async: true
 
+  import Spark.Test, only: [dsl_errors: 1]
+
   alias Expresso.Deck
   alias Expresso.Element.{Item, List, Part, TextBox}
   alias Expresso.Overlay.Render
@@ -12,7 +14,7 @@ defmodule Expresso.EffectTest do
     use Expresso
 
     name "effect deck"
-    effect(:grow)
+    effect :grow
 
     slide "one" do
       text_box do
@@ -22,23 +24,23 @@ defmodule Expresso.EffectTest do
 
       text_box do
         at 2
-        effect(:blur)
+        effect :blur
         text_area(text: "Blurs")
       end
 
       list do
         reveal true
-        effect(:fly_up)
+        effect :fly_up
         item "Flies up"
 
         item "Fades" do
-          effect(:fade)
+          effect :fade
         end
       end
     end
 
     slide "two" do
-      effect(:wipe)
+      effect :wipe
 
       text_box do
         at 2
@@ -73,14 +75,22 @@ defmodule Expresso.EffectTest do
       assert effects(document, "#slide-2 .text-box") == ["wipe"]
     end
 
-    test "refuses an effect that it does not know" do
-      assert_raise Spark.Error.DslError, ~r/effect/, fn ->
-        defmodule SpinDeck do
-          use Expresso
+    test "refuses an effect without a rule in the theme or in the CSS of the deck" do
+      errors =
+        dsl_errors do
+          defmodule Elixir.Expresso.EffectTest.SpinDeck do
+            use Expresso
 
-          effect(:spin)
+            effect :spin
+          end
         end
-      end
+
+      assert [{Expresso.EffectTest.SpinDeck, [error]}] = errors
+
+      assert Exception.message(error) =~
+               ~s(the effect :spin has no rule in the theme or in the CSS of the deck)
+
+      assert Exception.message(error) =~ ~s([data-effect="spin"])
     end
   end
 

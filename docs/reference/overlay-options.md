@@ -52,6 +52,8 @@ At the last step of the element, the same effect runs in the other direction. An
 with `:grow` then gets smaller, and an element with `:fly_up` moves down. An element
 without an `at` option shows at each step, so its effect has no result.
 
+The `css` option of the deck can give more effects. See [The css option](css-option.md).
+
 ![Five boxes, each with a different effect](https://raw.githubusercontent.com/rellen/expresso/media/overlay-effects.gif)
 
 ![The items of a list fly up one after the other, and the last item flies out after a step back](https://raw.githubusercontent.com/rellen/expresso/media/overlay-effect-list.gif)
