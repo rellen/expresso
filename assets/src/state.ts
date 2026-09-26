@@ -398,8 +398,18 @@ export function next(state: State, key: string, limits: Limits): State {
       return { ...cleared, every: !cleared.every };
     case "overview":
       return { ...cleared, overview: true, selected: cleared.slide };
-    default:
+    case "speaker":
+    case "reset":
+    case "fullscreen":
+    case "up":
+    case "down":
+    case "pick":
+    case undefined:
       return cleared;
+    default: {
+      const unknown: never = action;
+      return unknown;
+    }
   }
 }
 
@@ -439,8 +449,22 @@ function overview(
       return { ...state, overview: false };
     case "help":
       return { ...state, help: true };
-    default:
+    case "digit":
+    case "go":
+    case "blank":
+    case "handout":
+    case "present":
+    case "speaker":
+    case "reset":
+    case "fullscreen":
+    case "progress":
+    case "every":
+    case undefined:
       return state;
+    default: {
+      const unknown: never = action;
+      return unknown;
+    }
   }
 }
 
