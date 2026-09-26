@@ -43,10 +43,22 @@ end
 
 `Expresso.parse/1` reads the DSL state of such a module. It returns an `Expresso.Deck`
 struct, and it numbers the slides with `Expresso.Deck.number_slides/1`. The metadata map
-of the deck holds the `progress`, `handout`, `print_notes`, `slide_numbers`, `duration`,
-`transition`, `effect`, `speed`, `easing` and `css` options of the deck. Their defaults
-are `true`, `:all`, `true`, `false`, `nil`, `:fade`, `:fade`, `nil`, `nil` and `nil`. The
-renderer puts the style sheet of `css` into the document after the theme.
+of the deck holds the options of the deck:
+
+| Option | Default |
+| --- | --- |
+| `progress` | `true` |
+| `handout` | `:all` |
+| `print_notes` | `true` |
+| `slide_numbers` | `false` |
+| `duration` | `nil` |
+| `transition` | `:fade` |
+| `effect` | `:fade` |
+| `speed` | `nil` |
+| `easing` | `nil` |
+| `css` | `nil` |
+
+The renderer puts the style sheet of `css` into the document after the theme.
 
 The `slide` entity has a `heading` option. An author writes it as a call inside the block
 of the slide, in the form of Spark:
@@ -167,14 +179,16 @@ names a file under `assets/fonts/`. `Expresso.Font` reads that stylesheet at com
 and it replaces the path of each `url()` with a data URI of the file.
 
 Therefore a browser needs no network for the font. A document with a `@import` of a font
-service looks correct on the machine of the author, and it loses the font at a conference
-with no network. It also gives the address of each person who reads the deck to that
+service looks correct on the machine of the author. At a conference with no network, it
+loses the font. It also gives the address of each person who reads the deck to that
 service.
 
 Atkinson Hyperlegible is the font, and the Braille Institute of America gives it under the
 SIL Open Font License, Version 1.1. `assets/fonts/OFL.txt` holds that license, and the
 license permits this use. The eight files take approximately 110 kilobytes, and the data
 URIs take approximately 147 kilobytes of the document.
+
+### The style sheets and the bundle
 
 The renderer holds the two style sheets and the presenter bundle in module attributes.
 It reads them with `File.read!/1` at compile time. Each style sheet, and each source of the
@@ -183,9 +197,11 @@ one of these files starts a new compile of `Expresso.Renderer`. Elixir compares 
 of an external resource, and not its time, so a `touch` does not start a compile.
 
 `Expresso.Theme` reads `assets/style.css` in the same way, with `Expresso.Css.scan/1`. It
-gives the names of the custom properties and of the effects of the theme to
-`Expresso.Overlay.PropertyVerifier` and to `Expresso.Overlay.EffectVerifier`, and
+gives the names of the custom properties and of the effects of the theme to two verifiers,
+`Expresso.Overlay.PropertyVerifier` and `Expresso.Overlay.EffectVerifier`.
 `docs/overlays.md` gives the rules of those verifiers.
+
+### The style of a slide
 
 The renderer writes an inline `style` attribute on each `section` of the present view.
 The first slide gets `display: flex`, and each other slide gets `display: none`. A
@@ -232,13 +248,21 @@ The DSL gives no template option. A deck from the DSL uses the built-in template
 
 ## The elements
 
-An element is the content of a slide. `Expresso.Element.TextBox`,
-`Expresso.Element.TextArea`, `Expresso.Element.Image`, `Expresso.Element.List` with
-`Expresso.Element.Item`, `Expresso.Element.Table` with `Expresso.Element.Row`,
-`Expresso.Element.Quotation`, `Expresso.Element.Spacer`, `Expresso.Element.Code` with
-`Expresso.Element.Lines`, `Expresso.Element.Columns` with `Expresso.Element.Column`,
-`Expresso.Element.Math`, and `Expresso.Element.Diagram` with `Expresso.Element.Part` are
-the elements at this time.
+An element is the content of a slide. These are the elements at this time:
+
+- `Expresso.Element.TextBox`
+- `Expresso.Element.TextArea`
+- `Expresso.Element.Image`
+- `Expresso.Element.List`, with `Expresso.Element.Item`
+- `Expresso.Element.Table`, with `Expresso.Element.Row`
+- `Expresso.Element.Quotation`
+- `Expresso.Element.Spacer`
+- `Expresso.Element.Code`, with `Expresso.Element.Lines`
+- `Expresso.Element.Columns`, with `Expresso.Element.Column`
+- `Expresso.Element.Math`
+- `Expresso.Element.Diagram`, with `Expresso.Element.Part`
+
+### The parts of an element module
 
 An element module has these parts:
 
@@ -254,8 +278,18 @@ An element module has these parts:
 `module.get_assigns/1` and `module.render/1`. There is no `@behaviour` for an element, and
 the compiler does not make sure that a module has the two functions.
 
+### The text box and the text area
+
 A `text_box` contains other elements. A `text_area` contains text. The renderer writes the
 text with `Phoenix.HTML.raw/1`, so the text can contain HTML.
+
+The theme makes `.text-area` a flex container. Each element inside a flex container is a
+flex item, and a flex item also holds each run of text between two elements. Therefore
+text with an inline element, such as `<b>`, breaks into more than one line. The render
+function of a text area puts the text in one block element, which is one flex item. A
+custom element that writes text from the deck must do the same.
+
+### The image
 
 An `image` shows an image file. The document of a deck is one file, so the image cannot be
 a second file. `Expresso.Image` reads the file at render time, and it makes a data URI from
@@ -292,6 +326,8 @@ The theme does not register `--image-width` with the `@property` at-rule. A regi
 property always has a value, so the fall back to `auto` would not work, and each image
 would take the width zero.
 
+### The list
+
 A `list` holds `item` elements, and an item holds text and one optional nested `list`. The
 DSL accepts three levels of lists, because Spark cannot nest two entities inside each
 other without a limit. `Expresso.Extension` builds the three levels with a loop. The
@@ -299,51 +335,76 @@ other without a limit. `Expresso.Extension` builds the three levels with a loop.
 option shows the items one after the other, and `docs/overlays.md` gives its rules. The
 text of an item goes into one block element, as in a text area, and it can contain HTML.
 
+### The table
+
 A `table` holds `row` elements, and a row takes a list of strings as its cells. Each cell
 can contain HTML. The `header` option makes the first row the header, and the renderer
 then puts it into a `thead` element with `th` cells. The `reveal` option shows the rows
 one after the other, and the header row shows with the table. `docs/overlays.md` gives
 the rules.
 
+### The quotation
+
 A `quotation` takes its text as its first argument, and the `by` option gives the name of
 the source. The renderer writes a `figure` element with a `blockquote` element, and the
 source goes into a `figcaption` element. The entity is not named `quote`, because
 `Kernel.SpecialForms.quote/2` has that name, and a call of the DSL would be ambiguous.
 
+### The spacer
+
 A `spacer` has no content. The theme gives it `flex-grow: 1`, so it takes the free space
 of its container and pushes the elements after it to the end. Two spacers around an
 element put the element in the middle. Write `spacer()` with parentheses, as for `pause`.
 
+### The code
+
 A `code` element shows source code. The entity takes the name of the language as its
 optional first argument, and the `text` option holds the source. `Expresso.Highlight`
-makes one HTML fragment for each line at render time. Makeup lexes the text when a lexer
-package registers the language, and `mix.exs` lists one package for each language:
-Elixir, Erlang, Gleam, EEx and HEEx, HTML, CSS, JavaScript and TypeScript, JSON, SQL, C,
-Rust and diff. Without a lexer for the language, the fragment is the escaped text. The
-rules of the token classes come from a style of Makeup, and the renderer writes them
-into the document in their own `style` element.
+makes one HTML fragment for each line at render time.
+
+Makeup lexes the text when a lexer package registers the language. `mix.exs` lists one
+package for each of these languages:
+
+- Elixir, Erlang and Gleam
+- EEx and HEEx
+- HTML and CSS
+- JavaScript and TypeScript
+- JSON
+- SQL
+- C and Rust
+- diff
+
+Without a lexer for the language, the fragment is the escaped text. The rules of the token
+classes come from a style of Makeup, and the renderer writes them into the document in
+their own `style` element.
 
 The `reveal` option of a code element takes a list of line numbers and of ranges, such
 as `[1..3, 4..8, 10]`. `Expresso.Element.Code.build/1` makes one `Expresso.Element.Lines`
-child for each item, with the specification `[from: :next]`, and the transformer gives
-each group its steps as it does for the items of a list. Each line goes into a `span`
-element, and a hidden line keeps its space. A line number that is more than the number of
-lines of the text gives an error, because such a group shows nothing and it takes one
-step of the slide. `docs/overlays.md` gives the rules.
+child for each item, with the specification `[from: :next]`. The transformer then gives
+each group its steps, as it does for the items of a list. Each line goes into a `span`
+element, and a hidden line keeps its space. `docs/overlays.md` gives the rules.
+
+A line number that is more than the number of lines of the text gives an error. Such a
+group shows nothing, and it takes one step of the slide.
 
 `Expresso.Deck.render/1` writes the document with Floki, and Floki drops a text node that
 is only white space. A line of code holds such nodes: an indentation, a space between two
 tokens, a line break. Therefore `Expresso.Highlight` puts each white space token into the
-span of the token before it, and it puts a zero width space into a line that has no other
-character. An element that writes text with significant white space must do the same.
+span of the token before it. A line that has no other character gets a zero width space.
+An element that writes text with significant white space must do the same.
+
+### The columns
 
 A `columns` element puts its `column` elements side by side, and a column holds the same
 elements as a text box. The theme makes the element a flex row. A column without a
 `width` option takes an equal part of the free space. A column with the option, such as
-`width "30%"`, takes that width: the render function writes the custom properties
-`--column-width` and `--column-grow` on the column, and the theme reads them. A column
-takes the `at` option and the `on` entity. A column cannot hold a `columns` element,
-because Spark cannot nest two entities inside each other without a limit.
+`width "30%"`, takes that width. The render function writes the custom properties
+`--column-width` and `--column-grow` on the column, and the theme reads them.
+
+A column takes the `at` option and the `on` entity. A column cannot hold a `columns`
+element, because Spark cannot nest two entities inside each other without a limit.
+
+### The math
 
 A `math` element takes MathML as its first argument, from the `<math>` tag to the
 `</math>` tag. A browser renders MathML Core without a script and without a font file,
@@ -351,26 +412,30 @@ and each browser of the floor of this project supports it. The text goes into th
 document as it is. Give the `math` tag the attribute `display="block"` for a formula on
 its own line.
 
-A `diagram` shows an SVG file. The `src` option gives the path, as for an image, but the
-render function puts the SVG into the document as an element and not as a data URI.
-Therefore the rules of the theme reach the parts of the diagram. A `part` entity names an
-element of the file by its `id`, and its `at` option and `on` entities give the steps. The
-parts are the children of the diagram, so the transformer and the verifier treat them as
-elements, and the render function writes the overlay attributes of each part on the element
-of the file that has its `id`. A file without that `id` stops the render with a message that
-names the id and the path.
+### The diagram
 
-A part with an `on` entity, or with an effect that moves or grows it, goes into a wrapper, a
-`g` element with the class `diagram-part`, and the wrapper gets the attributes. The theme
-moves and outlines the wrapper, so the part keeps its own `transform` attribute. The `width`
-option gives the width of the diagram as the option of an image does, through the custom
-property `--diagram-width`, and a diagram without the option takes the width that the file
-gives.
+A `diagram` shows an SVG file. The `src` option gives the path, as for an image. The
+render function puts the SVG into the document as an element, and not as a data URI.
+Therefore the rules of the theme reach the parts of the diagram.
+
+A `part` entity names an element of the file by its `id`, and its `at` option and `on`
+entities give the steps. The parts are the children of the diagram, so the transformer
+and the verifier treat them as elements. The render function writes the overlay
+attributes of each part on the element of the file that has its `id`. A file without
+that `id` stops the render with a message that names the id and the path.
+
+A part with an `on` entity, or with an effect that moves or grows it, goes into a wrapper.
+The wrapper is a `g` element with the class `diagram-part`, and it gets the attributes.
+The theme moves and outlines the wrapper, so the part keeps its own `transform` attribute.
+
+The `width` option gives the width of the diagram, as the option of an image does. The
+render function writes it into the custom property `--diagram-width`. A diagram without
+the option takes the width that the file gives.
 
 The document holds one copy of the file for the present view and one for each page of the
 handout view. A browser resolves a reference such as `url(#fill)` to the first element of
-the document with that `id`, and a gradient in a hidden view does not paint. Therefore
-the render function gives each copy its own ids: it puts a number after each `id`, and it
+the document with that `id`. A gradient in a hidden view then does not paint. Therefore
+the render function gives each copy its own ids. It puts a number after each `id`, and it
 puts the same number into each `url(#id)` and each `href="#id"` of the copy. The number
 comes from `System.unique_integer/1`, so two renders of one deck give different numbers.
 
@@ -378,27 +443,39 @@ The document passes Floki, and Floki writes each name of an SVG in lowercase, su
 `viewbox`. A browser reads the lowercase names inside an `svg` element as the names of
 SVG, so the diagram keeps its meaning.
 
-The theme makes `.text-area` a flex container. Each element inside a flex container is a
-flex item, and a flex item also holds each run of text between two elements. Therefore
-text with an inline element, such as `<b>`, breaks into more than one line. The render
-function of a text area puts the text in one block element, which is one flex item. A
-custom element that writes text from the deck must do the same.
-
 ## The DSL
 
 `Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a
-top level section. The section holds `slide` entities. A `slide` holds `text_box` and
-`pause` entities, and a `text_box` holds `text_area` and `on` entities. A `text_area`
-holds `on` entities. A `slide` and a `text_box` also hold `image`, `list`, `table`,
-`quotation`, `spacer`, `code`, `math`, `diagram` and `columns` entities. A `list` holds
-`item` entities, a `table` holds `row` entities, a `diagram` holds `part` entities, and a
-`columns` element holds `column` entities, which hold the elements of a text box.
+top level section. The section holds `slide` entities.
 
-Each element has an `at` option, a slide has a `steps` option and an `auto_reveal`
-option, a list and a table have a `reveal` option, and a code element has a `reveal`
-option with a list of lines. `docs/overlays.md` gives the meaning of each. A slide also
-has a `heading` option, a `notes` option and a `handout` option, and
+### The entities
+
+- A `slide` holds `text_box` and `pause` entities. It also holds `image`, `list`, `table`,
+  `quotation`, `spacer`, `code`, `math`, `diagram` and `columns` entities.
+- A `text_box` holds `text_area` and `on` entities, and each element entity of a slide
+  except `text_box` and `pause`.
+- A `text_area` holds `on` entities.
+- A `list` holds `item` entities.
+- A `table` holds `row` entities.
+- A `diagram` holds `part` entities.
+- A `columns` element holds `column` entities, which hold the elements of a text box.
+
+The `slide` entity takes an optional name as its first argument. The DSL accepts `slide do`
+and `slide "name" do`.
+
+### The options of the overlays
+
+`docs/overlays.md` gives the meaning of each of these options:
+
+- Each element has an `at` option.
+- A slide has a `steps` option and an `auto_reveal` option.
+- A list and a table have a `reveal` option.
+- A code element has a `reveal` option with a list of lines.
+
+A slide also has a `heading` option, a `notes` option and a `handout` option, and
 `Expresso.Slide.put_options_in_metadata/1` puts each into the metadata of the slide.
+
+### The notes
 
 The `notes` option holds the notes of the speaker. The handout view shows them in an
 `aside` element under each page of the slide, and the present view does not show them.
@@ -410,13 +487,18 @@ deck: `false` for `print_notes: false`, and `true` otherwise. The style sheet th
 each `aside` in the handout view and on paper. The renderer still writes each `aside`,
 because the speaker view reads the text of the notes from the page of the current step.
 
+### The slide numbers
+
 The `slide_numbers` option of the deck shows the number of each slide and the number of
 slides, such as `3 / 12`. The renderer writes a `span` with the class `slide-number` into
-the row of the footer, after the footer of the deck template, so the number shows with each
-deck template. Slide 1 gets no number, because it is usually the title slide. The default
-deck template gives an empty footer, so a deck does not show two numbers. In the present
-view, the style sheet puts the number in the corner of the window, because a slide there is
-only as wide as its content.
+the row of the footer, after the footer of the deck template. The number therefore shows
+with each deck template. Slide 1 gets no number, because it is usually the title slide.
+The default deck template gives an empty footer, so a deck does not show two numbers.
+
+In the present view, the style sheet puts the number in the corner of the window. A slide
+there is only as wide as its content.
+
+### The transformer and the verifiers
 
 The extension imports nothing, and it lists five modules:
 
@@ -425,27 +507,29 @@ The extension imports nothing, and it lists five modules:
 - `Expresso.Overlay.Verifier` reports a specification that breaks a rule.
 - `Expresso.Overlay.PropertyVerifier` gives a warning for a custom property that neither
   the theme nor the CSS of the deck uses.
-- `Expresso.Overlay.EffectVerifier` reads the `css` option of the deck, and it gives an
-  error for an effect without a rule in the theme or in that style sheet.
+- `Expresso.Overlay.EffectVerifier` reads the `css` option of the deck. It gives an error
+  for an effect without a rule in the theme or in that style sheet.
 - `Expresso.Overlay.SizeVerifier` gives a warning for a slide of very many steps.
 
 After the transformer, each element and each `on` entity holds its step numbers in the
 `steps` field. The metadata of the slide holds the maximum step number in `max_step`.
 `docs/overlays.md` gives the rules.
 
-The `slide` entity takes an optional name as its first argument. The DSL accepts `slide do`
-and `slide "name" do`.
-
 ## The presenter
 
-The presenter is a TypeScript program under `assets/src/`. `state.ts` holds the number of
-the current slide, the number of the current step, the view, the black screen and the
-digits of a slide number. It also holds the function that changes them, and it does not
-touch the document. `speaker.ts` makes the texts of the speaker view. `dom.ts` reads the
-document. It applies a state with the inline `style.display` property, the `data-step`
-attribute, and the `data-view` and `data-blank` attributes of the `body`. `main.ts`
-connects the modules, and it writes the fragment of the address. The first slide is slide
-1, and the first step is step 1. `docs/overlays.md` gives the rules of a step.
+The presenter is a TypeScript program under `assets/src/`. It has four modules:
+
+- `state.ts` holds the state: the current slide, the current step, the view, the black
+  screen and the digits of a slide number. It also holds the function that changes the
+  state, and it does not touch the document.
+- `speaker.ts` makes the texts of the speaker view.
+- `dom.ts` reads the document. It applies a state with the inline `style.display`
+  property, the `data-step` attribute, and the `data-view` and `data-blank` attributes of
+  the `body`.
+- `main.ts` connects the modules, and it writes the fragment of the address.
+
+The first slide is slide 1, and the first step is step 1. `docs/overlays.md` gives the
+rules of a step.
 
 The unit tests of `assets/test/` test these modules with no browser. The browser tests of
 `test/e2e/` open a rendered deck in Chromium and operate the presenter with its keys, with
@@ -455,6 +539,8 @@ the mouse and with a finger. `docs/development.md` gives both.
 `priv/static/presenter.js`. The compiler runs in front of the Elixir compiler, and Git does
 not hold the bundle. The module is in `mix.exs`, because Mix runs the compilers before it
 compiles `lib/`. `docs/typescript.md` gives the design.
+
+### The keys
 
 The keys of the present view are:
 
@@ -474,6 +560,11 @@ The keys of the present view are:
 - `?` shows the list of the keys of the view. The next key closes it, and it does
   nothing more.
 
+`f` calls the full screen functions of the browser, and `Escape` of the browser also takes
+the document out of full screen.
+
+### The mouse and the touch screen
+
 A click or a tap on the right two thirds of the window shows the next step, and on the left
 third the previous step. A swipe of one finger to the left shows the next step, and to the
 right the previous step. `side` and `swipe` in `state.ts` give these rules, and `point`
@@ -481,10 +572,15 @@ gives the state after them. As a key does, a click first closes a black screen o
 of keys. The handout view scrolls with a finger, so there a click or a swipe does no more.
 
 `main.ts` listens for `click`, `touchstart` and `touchend`. A swipe does not give a
-`click`, so one movement does not move two steps. A click goes to the browser when it has
-a modifier, when it is not the main button, when it ends a selection of text, or when it
-is on a link, a button or a form field. `f` calls the full screen functions of the
-browser, and `Escape` of the browser also takes the document out of full screen.
+`click`, so one movement does not move two steps. A click goes to the browser in these
+cases:
+
+- it has a modifier;
+- it is not the main button;
+- it ends a selection of text;
+- it is on a link, a button or a form field.
+
+### The list of keys
 
 The table `BINDINGS` in `state.ts` gives each key, its function, the views that know it and
 its text in the list of keys. `next` finds the function of a key in this table, and
@@ -494,15 +590,21 @@ the list, and `next` does not find it. `dom.ts` writes the rows into the element
 text, and the style sheet shows it while the `body` has `data-help`. A printer does not get
 the list.
 
+### The progress bar
+
 The progress bar is the element `progress` at the bottom of the present view. The
 renderer writes it into each document with a width of zero. It also writes `data-progress`
 on the `body` from the metadata of the deck: `false` for `progress: false`, and `true`
 otherwise. `main.ts` reads that attribute into the state at load, and `g` changes the
-state. `fraction` in `state.ts` gives the part of the deck before the current step. Each
-step of each slide counts one time, so the bar is full at the last step only. `dom.ts`
-writes that part as the width of the bar. The style sheet shows the bar in the present view
-only, and not on a black screen, in the overview or on paper. A theme can set
-`--progress-color` and `--progress-height`.
+state.
+
+`fraction` in `state.ts` gives the part of the deck before the current step. Each step of
+each slide counts one time, so the bar is full at the last step only. `dom.ts` writes that
+part as the width of the bar. The style sheet shows the bar in the present view only, and
+not on a black screen, in the overview or on paper. A theme can set `--progress-color` and
+`--progress-height`.
+
+### The transitions
 
 The `transition` option of the deck gives the transition from one slide to the next in the
 present view: `:fade`, `:slide`, `:zoom` or `:none`. The default is `:fade`. A slide can
@@ -530,6 +632,8 @@ style sheet gives each kind its keyframes on the pseudo-elements
 `::view-transition-old(slide)` and `::view-transition-new(slide)`. `fade` uses the
 animations of the browser. A theme can set `--transition-dur`.
 
+### The overview
+
 The overview shows the page of the last step of each slide in a grid. The state holds
 `overview` and `selected`, the number of the selected slide. `o` opens the overview, and it
 selects the current slide. While the overview shows, `mode` in `state.ts` gives
@@ -552,11 +656,15 @@ the window.
 In the speaker view, the overview replaces the grid of the speaker view while it shows. A
 theme can set `--overview-color` for the outline of the selected slide.
 
+### The handout view
+
 The handout view knows only `j`, `k`, `p`, `a` and `?`. `j` and `k` change the state, and
 `p` then shows that step in the present view. The browser keeps each other key, so the arrow
 keys and the space bar scroll the pages. A key with the Control, Alt or Meta modifier always
 goes to the browser. `main.ts` stops the default operation of a key only when the key
 changes the state.
+
+### The speaker view
 
 The speaker view is the same document in a second window, with `?speaker` in the address.
 It shows two pages of the handout view: the page of the current step and the page of the
@@ -579,6 +687,8 @@ that part of the time. `done` is not `fraction`, because `fraction` is 1 at the 
 and the last step also needs its part of the time. The time left goes up to the next full
 second, so the timer and the time left always give the length of the talk.
 
+### The messages between the windows
+
 Each window sends its position to the other window with `postMessage`. The message holds
 the slide, the step and the black screen, so `b` in the speaker view gives a black screen
 to the audience. A window accepts a message only from the other window. The present view
@@ -595,17 +705,23 @@ a message that is older than its own state.
 
 At the same time, the speaker view takes the state of the present view, so the two windows
 always end at the same state. Both windows read the same clock, so the time orders the
-changes of both, also after a reload. Before this rule, each window sent each position back.
-Two keys that came faster than a message then gave a loop: the echo of the first key came
-back after the second key, and the two windows sent the two positions to each other with no
-end.
+changes of both, also after a reload.
+
+Before this rule, each window sent each position back. Two keys that came faster than a
+message then gave a loop. The echo of the first key came back after the second key. The
+two windows then sent the two positions to each other with no end.
+
+### The address
 
 The fragment of the address holds the slide and the step, such as `#4.2`. `main.ts` reads
 it at load and at each `hashchange` event. It writes the fragment with
 `history.replaceState` after each change, so the history of the browser gets no entry for
 a step. A fragment that gives no slide and step of the deck has no effect. `#4` is step 1
 of slide 4.
-A printer gets the handout view, because a `@media print` block selects it. The key is
+
+### The print
+
+A printer gets the handout view, because a `@media print` block selects it. The key `p` is
 not necessary for a printer. It makes the handout view available on a screen, and a
 screen reader then reads each page of it.
 
@@ -614,8 +730,10 @@ on paper, such as `handout [2, :last]`. The `handout` option of the deck gives `
 `:last` to each slide without the option, and its default is `:all`. `Expresso.Handout`
 gives the forms and the steps. The renderer still writes a page for each step, because
 the speaker view shows the page of each step. It writes `data-omit` on each page that the
-option does not select. The style sheet hides such a page in the handout view and on
-paper, so the handout view on a screen shows the pages that a printer prints.
+option does not select.
+
+The style sheet hides such a page in the handout view and on paper. The handout view on a
+screen therefore shows the pages that a printer prints.
 
 The key `a` of the handout view changes the `every` field of the state, and `dom.ts`
 writes it into `data-every` on the `body`. With `data-every="true"`, the style sheet shows
@@ -629,10 +747,10 @@ as the `--print-to-pdf` option of Chromium with no window, then gets every step.
 view, so it keeps `?all`.
 
 Each page that shows, except the first, starts a new sheet with `break-before`. With
-`data-every="true"`, each page except the first does. A rule of
-`break-after` on the last page cannot do this, because the last page of the document can
-be a page with `data-omit`. The print block also hides the four elements of the speaker
-view, so a print from that window gives the same pages.
+`data-every="true"`, each page except the first does. A rule of `break-after` on the last
+page cannot do this, because the last page of the document can be a page with
+`data-omit`. The print block also hides the four elements of the speaker view, so a print
+from that window gives the same pages.
 
 A page of the handout view takes the full height of the screen, or of the paper. The
 print block gives the paper a landscape orientation, because a slide is wider than it is
@@ -642,9 +760,9 @@ high. Therefore each page keeps the proportions of a slide.
 
 The repository gives a Nix shell. `flake.nix` and `shell.nix` give Erlang/OTP 29, Elixir
 1.20, Node 24 and Zig 0.16. Zig is a dependency of Burrito. `package.json` gives Prettier
-and the other tools of the presenter script. The `.tool-versions`
-file gives the same versions for a different tool manager, and
-`.claude/hooks/session-start.sh` gives them to a remote session.
+and the other tools of the presenter script. The `.tool-versions` file gives the same
+versions for a different tool manager, and `.claude/hooks/session-start.sh` gives them to
+a remote session.
 
 The commands are:
 
