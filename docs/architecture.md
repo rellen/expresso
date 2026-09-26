@@ -355,8 +355,10 @@ Therefore the rules of the theme reach the parts of the diagram. A `part` entity
 element of the file by its `id`, and its `at` option and `on` entities give the steps.
 The parts are the children of the diagram, so the transformer and the verifier treat them
 as elements, and the render function writes the overlay attributes of each part on the
-element of the file that has its `id`. A file without that `id` stops the render with a
-message that names the id and the path. The `width` option gives the width of the
+element of the file that has its `id`. A part with an `on` entity goes into a wrapper, a
+`g` element with the class `diagram-part`, and the wrapper gets the attributes. The theme
+moves and outlines the wrapper, so the part keeps its own `transform` attribute. A file
+without that `id` stops the render with a message that names the id and the path. The `width` option gives the width of the
 diagram as the option of an image does, through the custom property `--diagram-width`,
 and a diagram without the option takes the width that the file gives.
 

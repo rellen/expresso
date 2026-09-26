@@ -22,6 +22,23 @@ defmodule Expresso.E2E.PropertiesTest do
         item "second"
       end
     end
+
+    # The row and the part move and get the outline at step 2.
+    slide "two" do
+      table do
+        row ["a", "b"]
+
+        row ["c", "d"] do
+          on 2, state: :alert, set: [x: "40px"]
+        end
+      end
+
+      diagram "test/fixtures/flow.svg" do
+        part "output" do
+          on 2, state: :alert, set: [scale: 2]
+        end
+      end
+    end
   end
 
   setup %{page: page, tmp_dir: tmp_dir} do
@@ -75,5 +92,39 @@ defmodule Expresso.E2E.PropertiesTest do
 
     page |> press("k")
     assert styles(page)["items"] == ["opacity(1)", "none"]
+  end
+
+  # The transform and the outline of the row and of the wrapper of the part,
+  # and the box of the part on the screen.
+  defp row_and_part(page) do
+    js(page, """
+    (() => {
+      const row = document.querySelector(".screen .row[data-el]");
+      const part = document.querySelector(".screen .diagram-part");
+      const box = part.getBoundingClientRect();
+      return {
+        row: [getComputedStyle(row).transform, getComputedStyle(row).outlineWidth],
+        part: [getComputedStyle(part).transform, getComputedStyle(part).outlineWidth],
+        width: Math.round(box.width)
+      };
+    })()
+    """)
+  end
+
+  test "a table row and a diagram part move, change size and get the outline", %{page: page} do
+    page |> press("End")
+    start = row_and_part(page)
+
+    assert start["row"] == ["matrix(1, 0, 0, 1, 0, 0)", "0px"]
+    assert start["part"] == ["matrix(1, 0, 0, 1, 0, 0)", "0px"]
+
+    page |> press("j")
+    moved = row_and_part(page)
+
+    assert moved["row"] == ["matrix(1, 0, 0, 1, 40, 0)", "4px"]
+    assert moved["part"] == ["matrix(2, 0, 0, 2, 0, 0)", "2px"]
+
+    # The part grows around its center, and its box on the screen doubles.
+    assert_in_delta moved["width"], start["width"] * 2, 2
   end
 end

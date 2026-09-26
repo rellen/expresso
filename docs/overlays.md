@@ -545,9 +545,24 @@ operation.
 two attributes of one element, and the render function of the element puts them on its
 root tag. `style/1` makes the generated style block. The base rule and the registration
 of `--x`, `--y`, `--scale`, `--rotate` and `--opacity` are in `assets/style.css`, because
-the theme owns them. The base rule
-also sets `visibility: hidden`, and the reveal rule sets `visibility: visible`, so a
-hidden element is not in the accessibility tree.
+the theme owns them. The base rule also sets `visibility: hidden`, and the reveal rule sets
+`visibility: visible`, so a hidden element is not in the accessibility tree.
+
+The rule of the theme that reads the properties applies to each type of element, to a
+table row and to a diagram part.
+
+A diagram part with an `on` entity goes into a wrapper, a `g` element with the class
+`diagram-part`. The theme cannot put its `transform` on the element of the file, because
+the property replaces a `transform` attribute of the file, and the part then moves. The
+wrapper has no such attribute. It also uses its own box and its center for a turn and a
+change of size, and not the origin of the SVG. A `g` element is valid only in an `svg`,
+a `g` or an `a` element, so a part in a different parent, such as a `tspan`, keeps no
+wrapper. That part can fade, dim and change its color, and it cannot move.
+
+A length in a diagram is in the units of the file, and the diagram usually shows larger
+than the file. Therefore the outline of a part is 2 units wide, at 2 units from the part.
+The SVG of a diagram shows its content outside its box, so a part that moves or turns
+does not lose an edge.
 
 The transition of `visibility` has a delay of the duration of the fade, so an element stays
 visible until the end of its fade out. The reveal rule sets each delay to zero, so the

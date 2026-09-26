@@ -150,6 +150,71 @@ Examples.OverlayColor
 
 ![The first text turns red at step 2, and the second box fades to 30% at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-color.gif)
 
+## Animate a row of a table
+
+Write an `on` entity in the row, with a `do` block after the cells. A row takes the same
+options as an element, so it can get the outline, move, grow and turn.
+
+```elixir
+defmodule Examples.OverlayRow do
+  use Expresso
+
+  slide "rows" do
+    heading "Table rows"
+
+    table do
+      header true
+      row ["Step", "Effect"]
+      row ["1", "A plain row"]
+
+      row ["2", "An outline at step 2"] do
+        on 2, state: :alert
+      end
+
+      row ["3", "A move at step 3"] do
+        on [from: 3], set: [x: "60px"]
+      end
+    end
+  end
+end
+
+Examples.OverlayRow
+```
+
+![The third row gets an outline at step 2, and the last row moves at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-row.gif)
+
+## Animate a part of a diagram
+
+Write an `on` entity in the `part` entity. The part gets the outline, moves, grows or
+turns, and the other parts of the diagram stay in place. A part turns and grows around
+its own center. The values of `x` and `y` are in the units of the SVG file.
+
+```elixir
+defmodule Examples.OverlayDiagram do
+  use Expresso
+
+  slide "diagram" do
+    heading "Diagram parts"
+
+    diagram "examples/flow.svg" do
+      width "70%"
+
+      part "input" do
+        on 2, state: :alert
+      end
+
+      part "output" do
+        on [from: 3], set: [scale: 1.3, rotate: "10deg"]
+      end
+    end
+  end
+end
+
+Examples.OverlayDiagram
+```
+
+![The first box gets an outline at step 2, and the last box grows and turns at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-diagram.gif)
+
 ## Show a list one item at a time
 
 Write `reveal true` in the list. Each item shows at its own step. A table takes the same
