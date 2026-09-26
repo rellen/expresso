@@ -17,6 +17,10 @@
 # and the guides of `docs/` show them from there. The branch holds the GIFs of
 # the last push only, so the history of main holds no GIF.
 #
+# After a push to main, the job `pages` also puts the site of `mix docs` on
+# GitHub Pages, at https://rellen.github.io/expresso/. The job `lint` makes the
+# site, so the site and the checks come from one build.
+#
 # A job compiles the project for one environment, so the tools that need the
 # same build share one job. The tools of `lint` finish long before `dialyzer`,
 # and a job for each tool compiled the project four times more with no gain in
@@ -89,6 +93,12 @@ jobs:
         run: mix docs
       - if: ${{ !cancelled() }}
         run: mix doctor
+      # The site of `mix docs`, for the job `pages`. The step runs only when each
+      # step before it succeeded.
+      - if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: doc
 
   dialyzer:
     name: dialyzer
@@ -177,6 +187,31 @@ jobs:
           git add .
           git commit --quiet --message "docs: record the GIFs of the examples of ${GITHUB_SHA}"
           git push --force --quiet "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" media
+
+  # Put the site of `mix docs` of a push to main on GitHub Pages. The job
+  # `lint` made the site. `configure-pages` turns Pages on for the repository
+  # when it is off, with GitHub Actions as the source. A deployment does not
+  # stop for a new push, so two deployments do not run at the same time.
+  pages:
+    name: pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [lint]
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/configure-pages@v6
+        with:
+          enablement: true
+      - id: deployment
+        uses: actions/deploy-pages@v5
 
   all:
     name: Erlang/OTP 29, Elixir 1.20, Node 24

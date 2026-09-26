@@ -243,7 +243,8 @@ container that has no Nix.
 
 ## Documents
 
-`mix docs` makes the documentation with ExDoc. It groups the documents by their type.
+`mix docs` makes the documentation with ExDoc, and https://rellen.github.io/expresso/
+shows the result of the last push to `main`. ExDoc groups the documents by their type.
 
 How-to guides give the steps of one task, with the code of a deck and a recording of it:
 

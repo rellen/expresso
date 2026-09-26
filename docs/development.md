@@ -189,6 +189,18 @@ The last job, `Erlang/OTP 29, Elixir 1.20, Node 24`, needs each other job. It fa
 one of them fails, is cancelled or is skipped. It has the name of the one job of the earlier
 workflow.
 
+After a push to `main`, two more jobs run. `media` puts the GIFs of the guides on the
+branch `media`, and "Record the GIFs of the guides" gives the details. `pages` puts the
+site of `mix docs` on GitHub Pages, at https://rellen.github.io/expresso/. The job `lint`
+makes the site, and it uploads the directory `doc/` when each of its steps succeeded.
+Therefore the site and the checks come from one build, and a defect in `lint` keeps the
+old site. The site is public, as the repository is. GitHub gives a private site to an
+organization on GitHub Enterprise Cloud only.
+
+The first run of `pages` turns Pages on for the repository, with GitHub Actions as the
+source. When that step fails, turn Pages on by hand in the settings of the repository,
+under "Pages", with the source "GitHub Actions".
+
 From 2026-09-17 to 2026-09-18 the workflow ran two jobs, one for the versions of the
 container and one for the versions of `.tool-versions`. The container then took the
 versions of `.tool-versions`, and the second job became the same as the first.
@@ -281,9 +293,10 @@ npm run format   # prettier
 
 `fast-check` gives the property tests. It is a development dependency, and the bundle does
 not import it. "Property tests" above tells how `stream_data` does the same for the Elixir
-code. Each property of the presenter script gets `RUNS`, which is 500, as `config/config.exs` gives each property
-of `stream_data`. The generators make many forms, such as a state after 0 to 60 keys,
-clicks and messages, and 100 runs do not reach enough of them.
+code. Each property of the presenter script gets `RUNS`, which is 500, as
+`config/config.exs` gives each property of `stream_data`. The generators make many forms,
+such as a state after 0 to 60 keys, clicks and messages, and 100 runs do not reach enough of
+them.
 
 When a property fails, `fast-check` gives a `seed` and a `path`. Give both to `fc.assert`
 as parameters to get the same value again.
@@ -415,6 +428,10 @@ Read the computed style, and do not read the attribute. A defect in a style attr
 no error. The browser drops the declaration, and the page looks almost correct.
 
 ## Documents
+
+`mix docs` makes the site of the documents in `doc/`, and https://rellen.github.io/expresso/
+shows the site of the last push to `main`. `mix.exs` gives ExDoc the list of the documents
+and their groups.
 
 - `docs/architecture.md` — how the code makes an HTML document from a deck.
 - `docs/overlays.md` — the design for overlays, and its open decisions.
