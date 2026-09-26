@@ -114,6 +114,60 @@ defmodule Expresso.EntryPointsTest do
     end
   end
 
+  describe "Expresso.BurritoEntryPoint.run/1" do
+    alias Expresso.BurritoEntryPoint
+
+    @tag :tmp_dir
+    test "gives the exit status 0 and writes the HTML to the output path", %{tmp_dir: dir} do
+      input = write_script(dir)
+      output = Path.join(dir, "deck.html")
+
+      assert BurritoEntryPoint.run([input, output]) == 0
+      assert File.read!(output) =~ "a deck from a script"
+    end
+
+    @tag :tmp_dir
+    test "writes the HTML to the standard output with one argument", %{tmp_dir: dir} do
+      input = write_script(dir)
+
+      output = capture_io(fn -> assert BurritoEntryPoint.run([input]) == 0 end)
+
+      assert output =~ "<!DOCTYPE html>"
+    end
+
+    test "gives the exit status 1 and writes the usage text with no argument" do
+      output = capture_io(fn -> assert BurritoEntryPoint.run([]) == 1 end)
+
+      assert output =~ "Usage:"
+    end
+
+    test "gives the exit status 1 for an input path that is not present" do
+      output = capture_io(fn -> assert BurritoEntryPoint.run(["no/such/deck.exs"]) == 1 end)
+
+      assert output =~ "Couldn't find input file"
+    end
+
+    @tag :tmp_dir
+    test "gives the exit status 1 for a script that returns a different value", %{tmp_dir: dir} do
+      input = write_script(dir, "number.exs", "42\n")
+
+      output = capture_io(fn -> assert BurritoEntryPoint.run([input]) == 1 end)
+
+      assert output =~ "must return an Expresso.Deck struct"
+    end
+
+    @tag :tmp_dir
+    test "gives the exit status 1 and writes an exception to the standard error",
+         %{tmp_dir: dir} do
+      input = write_script(dir, "raise.exs", ~s[raise "the deck is not complete"\n])
+
+      error = capture_io(:stderr, fn -> assert BurritoEntryPoint.run([input]) == 1 end)
+
+      assert error =~ "RuntimeError"
+      assert error =~ "the deck is not complete"
+    end
+  end
+
   describe "Expresso.Example" do
     test "parses and renders" do
       html = Expresso.Example |> Expresso.parse() |> Expresso.Deck.render()
