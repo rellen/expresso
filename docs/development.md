@@ -150,8 +150,9 @@ of the container. Without the variable, Playwright uses its own browser:
 npx playwright install --only-shell chromium
 ```
 
-The workflow runs that command with `--with-deps`, which also installs the system
-libraries of the browser.
+The workflow runs the same command in `.github/actions/setup-playwright`, and a cache
+keeps the browser from one run to the next. The runner image already has each system
+library of the headless browser, so the workflow does not use `--with-deps`.
 
 ### The checks of a pull request
 

@@ -101,21 +101,15 @@ jobs:
       - run: mix dialyzer
 
   # The browser tests open each deck in the Chromium of the Playwright version of
-  # `package-lock.json`. The option `--with-deps` installs the system libraries
-  # of that browser, and `--only-shell` installs the headless browser only,
-  # because the tests do not need a window. The browser tests run also when a
-  # unit test fails.
+  # `package-lock.json`. `.github/actions/setup-playwright` installs Node, the
+  # packages and the headless browser, from a cache when it can. The browser
+  # tests run also when a unit test fails.
   test:
     name: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps --only-shell chromium
+      - uses: ./.github/actions/setup-playwright
       - uses: ./.github/actions/setup-elixir
         with:
           cache: test
@@ -145,12 +139,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps --only-shell chromium
+      - uses: ./.github/actions/setup-playwright
       - uses: ./.github/actions/setup-elixir
         with:
           cache: gifs

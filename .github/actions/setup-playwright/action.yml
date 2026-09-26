@@ -1,0 +1,43 @@
+# The setup of each job of `.github/workflows/check.yml` that opens a browser:
+# Node of `.tool-versions`, the packages of `package-lock.json`, and the
+# headless Chromium of the Playwright version of that file.
+#
+# The cache holds the browser, and its key holds the version of Playwright.
+# With a hit, `playwright install` finds the browser and downloads nothing.
+#
+# The step installs no system package. The option `--with-deps` ran `apt-get`
+# for about 13 seconds in each job, and it only added fonts and an upgrade of
+# `xvfb`: the runner image already has each library of the headless browser.
+# If a new runner image lacks a library, the browser does not start, and each
+# browser test fails. Then add `--with-deps` to the install again.
+
+name: Set up Playwright
+description: Install Node, the npm packages and the headless Chromium of Playwright.
+
+runs:
+  using: composite
+  steps:
+    - name: Install Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+
+    - name: Install the npm packages
+      shell: bash
+      run: npm ci
+
+    - name: Read the version of Playwright
+      id: version
+      shell: bash
+      run: echo "playwright=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+
+    - name: Read the cache of the browser
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ steps.version.outputs.playwright }}
+
+    - name: Install the headless Chromium
+      shell: bash
+      run: npx playwright install --only-shell chromium
