@@ -5,6 +5,8 @@ import {
   accepts,
   binding,
   choose,
+  columns,
+  done,
   follow,
   fraction,
   fromHash,
@@ -16,6 +18,9 @@ import {
   next,
   point,
   side,
+  stamp,
+  swipe,
+  toHash,
   transition,
   upcoming,
 } from "../src/state.ts";
@@ -178,6 +183,10 @@ test("the handout view does not know the other keys of the present view", () => 
   }
 });
 
+test("toHash gives the slide and the step", () => {
+  assert.equal(toHash(at(4, 2)), "#4.2");
+});
+
 test("fromHash reads a slide and a step, and a slide alone is step 1", () => {
   assert.deepEqual(fromHash(at(1, 1), "#2.3", three), at(2, 3));
   assert.deepEqual(fromHash(at(1, 1), "#3", three), at(3, 1));
@@ -203,6 +212,11 @@ test("fromHash gives the same state for a fragment that the deck does not have",
   ]) {
     assert.equal(fromHash(state, hash, three), state, hash);
   }
+});
+
+test("fromHash for the current position gives the same state", () => {
+  const state = at(2, 2);
+  assert.equal(fromHash(state, "#2.2", three), state);
 });
 
 test("fromHash removes a black screen and the digits", () => {
@@ -273,6 +287,12 @@ test("follow gives the same state for the same position or a position not in the
   assert.equal(follow(state, { slide: 1 }, three), state);
 });
 
+test("stamp gives the clock, or one more than the last time", () => {
+  assert.equal(stamp(0, 500), 500);
+  assert.equal(stamp(500, 500), 501);
+  assert.equal(stamp(900, 500), 901);
+});
+
 test("accepts takes a newer message, and ignores an older one", () => {
   for (const speaker of [true, false]) {
     assert.equal(accepts(10, 11, speaker), true);
@@ -336,6 +356,15 @@ test("g has no function in the handout view and the speaker view", () => {
   }
 });
 
+test("fraction counts each step of each slide", () => {
+  // Three slides of 1, 3 and 2 steps give six steps, and five moves.
+  assert.equal(fraction(at(1, 1), three), 0);
+  assert.equal(fraction(at(2, 1), three), 1 / 5);
+  assert.equal(fraction(at(2, 3), three), 3 / 5);
+  assert.equal(fraction(at(3, 1), three), 4 / 5);
+  assert.equal(fraction(at(3, 2), three), 1);
+});
+
 test("fraction gives 0 for a deck of one step or no step", () => {
   assert.equal(fraction(at(1, 1), { slides: 1, steps: [1] }), 0);
   assert.equal(fraction(at(1, 1), { slides: 0, steps: [] }), 0);
@@ -359,6 +388,14 @@ test("side gives back for the left third, and forward for the rest", () => {
   assert.equal(side(399, 1200), "back");
   assert.equal(side(400, 1200), "forward");
   assert.equal(side(1199, 1200), "forward");
+});
+
+test("swipe gives forward to the left, back to the right, and nothing else", () => {
+  assert.equal(swipe(-50, 0), "forward");
+  assert.equal(swipe(80, -30), "back");
+  assert.equal(swipe(-49, 0), undefined);
+  assert.equal(swipe(60, 60), undefined);
+  assert.equal(swipe(0, -200), undefined);
 });
 
 test("point moves one step, as j and k do", () => {
@@ -410,6 +447,18 @@ const seven = { slides: 7, steps: [1, 1, 1, 1, 1, 1, 1] };
 function grid(selected: number, slide = 4): State {
   return { ...at(slide, 1), overview: true, selected };
 }
+
+test("columns gives a grid with as many rows as columns or fewer", () => {
+  assert.equal(columns(0), 1);
+  assert.equal(columns(1), 1);
+  assert.equal(columns(4), 2);
+  assert.equal(columns(5), 3);
+  assert.equal(columns(13), 4);
+  for (let slides = 1; slides <= 100; slides++) {
+    const width = columns(slides);
+    assert.ok(Math.ceil(slides / width) <= width, String(slides));
+  }
+});
 
 test("o opens the overview at the current slide in the present view and the speaker view", () => {
   assert.deepEqual(next(at(4, 1), "o", seven), grid(4));
@@ -485,6 +534,14 @@ test("a message of the other window keeps the overview", () => {
     seven,
   );
   assert.deepEqual(moved, { ...grid(2, 6) });
+});
+
+test("done gives the part of the steps before the current step, with a part for the last step", () => {
+  // Six steps: slide 1 has one, slide 2 has three, and slide 3 has two.
+  assert.equal(done(at(1, 1), three), 0);
+  assert.equal(done(at(2, 2), three), 2 / 6);
+  assert.equal(done(at(3, 2), three), 5 / 6);
+  assert.equal(done(at(1, 1), { slides: 0, steps: [] }), 0);
 });
 
 // Four slides: the kinds of slides 2 to 4 are slide, none and zoom.
