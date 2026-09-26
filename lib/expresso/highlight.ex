@@ -65,6 +65,7 @@ defmodule Expresso.Highlight do
       {:ok, {lexer, options}} ->
         (text <> "\n")
         |> lexer.lex(options)
+        |> Enum.map(&flatten_value/1)
         |> Makeup.Lexer.split_into_lines()
         |> Enum.drop(-1)
         |> Enum.map(&line/1)
@@ -76,6 +77,13 @@ defmodule Expresso.Highlight do
 
   # A character that keeps a line box, and that Floki does not drop
   @zero_width_space "\u200B"
+
+  defp flatten_value({type, meta, value}), do: {type, meta, text_of(value)}
+
+  defp text_of(value) when is_binary(value), do: value
+  defp text_of(char) when is_integer(char), do: <<char::utf8>>
+  defp text_of({_type, _meta, value}), do: text_of(value)
+  defp text_of(values) when is_list(values), do: Enum.map_join(values, &text_of/1)
 
   defp plain(text), do: text |> visible() |> Kernel.<>("\n") |> escape()
 
