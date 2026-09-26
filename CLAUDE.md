@@ -37,6 +37,8 @@ mix test
 npm run check
 npm test
 mix test --only e2e
+BURRITO_TARGET=linux_x86 MIX_ENV=prod mix release expresso_cli_app --overwrite
+EXPRESSO_BINARY=burrito_out/expresso_cli_app_linux_x86 mix test --only release
 ```
 
 Each command above passes at this time, and `mix check` passes as a whole. Keep them so. The
@@ -48,11 +50,15 @@ driver of `package.json` and Chromium. `mix test` excludes them. In a remote ses
 hook sets `EXPRESSO_CHROMIUM` to the Chromium of the container. `docs/development.md` gives
 the details.
 
+`mix test --only release` runs the tests of `test/release/`. They run the binary that
+Burrito makes, and `EXPRESSO_BINARY` gives its path. `mix release` needs Zig, and the hook
+installs it. `mix test` excludes these tests. `docs/development.md` gives the details.
+
 `mix deps.audit` alone is not sufficient for a vulnerable dependency. Hex reports an
 advisory in the output of `mix deps.get`, and this output is the more current signal. Read
 it. `docs/development.md` gives an example.
 
-These results come from Erlang/OTP 29.1, Elixir 1.20.4 and Node 24.20.0, which
+These results come from Erlang/OTP 29.1, Elixir 1.20.4, Node 24.20.0 and Zig 0.16.0, which
 `.tool-versions` gives. The hook installs these versions, the Nix shell gives them, and the
 workflow uses them. Therefore a command in a session gives the same result as a command on
 a machine.

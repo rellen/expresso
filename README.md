@@ -289,10 +289,16 @@ Burrito makes a binary for macOS and for Linux, on x86_64 and on aarch64:
 mix release expresso_cli_app
 ```
 
-The binary takes the same two paths as the mix task.
+The binary takes the same two paths as the mix task. It gives the exit status 0 when it
+writes the HTML, and 1 for an error.
 
-This command needs Zig 0.16.0 and `xz` on the path. The Nix shell gives both. A container
-of a remote Claude Code session has `xz`, but it has no Zig, and the command gives an error.
+This command needs Zig 0.16.0 and `xz` on the path. The Nix shell gives both, and the hook
+of a remote Claude Code session gives both.
+
+The first run of a binary installs its release on the computer, in a directory that has
+the version of the release. A later binary of the same version runs that installed release,
+and not its own. Therefore change the version in `mix.exs` for each binary that you give
+to other persons. `<binary> maintenance uninstall` removes the installed release.
 
 ## Develop
 

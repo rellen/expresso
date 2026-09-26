@@ -5,7 +5,8 @@ deck in a browser.
 
 ## The toolchain
 
-The versions are in `.tool-versions`: Elixir 1.20.4, Erlang/OTP 29.1 and Node 24.20.0.
+The versions are in `.tool-versions`: Elixir 1.20.4, Erlang/OTP 29.1, Node 24.20.0 and
+Zig 0.16.0. Burrito needs Zig for the binary, and no other command needs it.
 
 Four places give a toolchain, and each place gives these versions:
 
@@ -46,8 +47,10 @@ The hook does these operations:
    same builds in the workflow.
 2. Download the Elixir build for OTP 29 from `builds.hex.pm`, and put it in `/opt/elixir`.
 3. Download the Node build from `nodejs.org`, and put it in `/opt/node`.
-4. Write `PATH`, `ELIXIR_ERL_OPTIONS` and `LANG` into `$CLAUDE_ENV_FILE`.
-5. `mix local.hex`, `mix local.rebar`, `mix deps.get`, `mix compile` and `npm install`.
+4. Download the Zig build from `ziglang.org`, and put it in `/opt/zig`. A failed download
+   gives a warning, and the hook continues, because only the binary needs Zig.
+5. Write `PATH`, `ELIXIR_ERL_OPTIONS` and `LANG` into `$CLAUDE_ENV_FILE`.
+6. `mix local.hex`, `mix local.rebar`, `mix deps.get`, `mix compile` and `npm install`.
 
 The hook takes a version from an archive and not from an apt package, because the apt
 packages are older. The apt package of Erlang gives OTP 25, the apt package of Elixir gives
@@ -64,15 +67,10 @@ packages are older. The apt package of Erlang gives OTP 25, the apt package of E
 - An archive of Hex or of rebar from a different OTP release does not load. Therefore the
   hook writes each archive again with `--force`.
 
-The hook does not install Zig. Therefore `mix release expresso_cli_app` gives the error
-"You MUST have `zig` and `xz` installed to use Burrito" in a remote container. Make a
-release on your machine, where the Nix shell gives Zig 0.16.0.
-
-One result of this limit is that `Expresso.BurritoEntryPoint` runs in a remote session
-without a test. The module calls `Expresso.main/2` only when `Burrito.Util` reads the
-environment variable `__BURRITO`, and the launcher of Burrito writes this variable. See
-`deps/burrito/src/erlang_launcher.zig`. Make sure that a binary reads its arguments after
-you change this module.
+Burrito needs Zig and `xz`. The container gives `xz`, and the hook gives Zig. Without Zig,
+`mix release expresso_cli_app` gives the error "You MUST have `zig` and `xz` installed to
+use Burrito". The Zig build takes approximately 400 MB of disk. "The release tests" below
+gives the commands that make the binary and test it.
 
 To run the hook again by hand:
 
@@ -91,6 +89,7 @@ mix sobelow --exit --skip
 mix deps.audit
 mix test
 mix test --only e2e            # the browser tests, see "The browser tests"
+mix test --only release        # the tests of the binary, see "The release tests"
 ```
 
 Each command above passes, and `mix check` passes as a whole. `mix doctor` passes with a
@@ -100,8 +99,9 @@ modules, so the functions that `use Spark.Dsl` and `use Temple.Component` write 
 count. Each public function that a person writes needs a `@doc` and a `@spec`, and each
 struct needs a `@type t`.
 
-Each result above comes from Erlang/OTP 29.1 and Elixir 1.20.4, which `.tool-versions`
-gives. The Nix shell, a remote session and the workflow each give these versions.
+Each result above comes from Erlang/OTP 29.1, Elixir 1.20.4 and Zig 0.16.0, which
+`.tool-versions` gives. The Nix shell, a remote session and the workflow each give these
+versions.
 Therefore a result in a session is a result for each person and for the workflow.
 
 ### Property tests
@@ -159,6 +159,45 @@ The workflow runs the same command in `.github/actions/setup-playwright`, and a 
 keeps the browser from one run to the next. The runner image already has each system
 library of the headless browser, so the workflow does not use `--with-deps`.
 
+### The release tests
+
+The tests of `test/release/` run the binary that Burrito makes, as a person does. They read
+the exit status, the standard output and the output file. They find the defects that the
+unit tests cannot find, because those tests do not start a binary.
+
+```sh
+BURRITO_TARGET=linux_x86 MIX_ENV=prod mix release expresso_cli_app --overwrite
+EXPRESSO_BINARY=burrito_out/expresso_cli_app_linux_x86 mix test --only release
+```
+
+`mix test` excludes these tests, because they need the binary, and the binary needs Zig.
+`EXPRESSO_BINARY` gives the path of the binary. `BURRITO_TARGET` makes one binary and not
+four, so the build takes less time. On a Mac, use the target `macos_arm` or `macos_x86`,
+and the binary of that target. `--overwrite` replaces an earlier release, because
+`mix release` otherwise asks a question.
+
+In a remote session, the first build takes approximately five minutes, and a build after it
+takes approximately one minute. The tests take less than 15 seconds.
+
+The tests run the binary with `timeout` of GNU coreutils. A binary that does not halt then
+gives the exit status 124, and the run of the tests does not stop. Linux gives `timeout`. On
+macOS, the Nix shell gives it, because the standard environment of Nix holds coreutils.
+
+A binary installs its release in a directory that has the name and the version of the
+release. When that directory is present, the binary does not install the release again.
+Therefore a new binary of the same version runs the release of an earlier binary. The tests
+give the binary a new home directory for each run, so they always test the new release.
+
+The launcher of Burrito starts the VM with `-s elixir start_cli`. After the boot, the CLI of
+Elixir runs the first argument as a script, and then it halts the VM.
+`Expresso.BurritoEntryPoint` runs the command in `start/2`, and it halts the VM before the
+CLI of Elixir starts.
+
+Before 2026-09-26, the entry point rendered the deck in a task, and it did not wait for it.
+The CLI of Elixir then ran each deck a second time, and it gave the exit status. A deck that
+took a long time to render gave no file and the exit status 0. The tests of `test/release/`
+find this defect.
+
 ### The checks of a pull request
 
 `.github/workflows/check.yml` runs the checks for a pull request and for a push to `main`.
@@ -170,14 +209,18 @@ The checks run in parallel jobs, so the slowest job gives the time of the workfl
 - `dialyzer`: Dialyzer. It is the slowest job.
 - `test`: the unit tests and the browser tests.
 - `presenter`: `npm run check` and `npm test`.
+- `release`: the binary for Linux on x86_64, and the release tests. `mlugg/setup-zig`
+  installs Zig from a mirror, and it keeps the cache of Zig from one run to the next.
 
-Together they run each tool of `mix check`, the two npm commands and the browser tests.
+Together they run each tool of `mix check`, the two npm commands, the browser tests and
+the release tests.
 The workflow does not run `mix check`, because that command runs the tools one after the
 other in one job.
 
 A job compiles the project for one environment. Therefore the tools that need the same
 build share one job, and the project compiles two times for the development environment,
-in `lint` and in `dialyzer`, and one time for the test environment. The tools of `lint`
+in `lint` and in `dialyzer`. It compiles two times for the test environment, in `test` and
+in `release`, and one time for the production environment, in `release`. The tools of `lint`
 finish long before `dialyzer`, so the time of the workflow does not change. A step of
 `lint` or of `test` runs also when a step before it fails, so one run reports each defect.
 
