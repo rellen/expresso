@@ -41,6 +41,87 @@ Examples.OverlayAt
 
 ![The second box fades in at step 2, and the third box at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-at.gif)
 
+## Show an element in a different way
+
+Write the `effect` option in the element, next to the `at` option. `:grow` makes the
+element larger, `:fly_up` moves it up to its place, `:wipe` opens it from left to right,
+and `:blur` makes it sharp. At the end of its steps, the element hides with the same
+effect in the other direction.
+
+```elixir
+defmodule Examples.OverlayEffects do
+  use Expresso
+
+  slide "effects" do
+    heading "Effects"
+
+    text_box do
+      at from: 2
+      effect(:grow)
+      text_area(text: "Grow at step 2")
+    end
+
+    text_box do
+      at from: 3
+      effect(:fly_up)
+      text_area(text: "Fly up at step 3")
+    end
+
+    text_box do
+      at from: 4
+      effect(:fly_left)
+      text_area(text: "Fly left at step 4")
+    end
+
+    text_box do
+      at from: 5
+      effect(:wipe)
+      text_area(text: "Wipe at step 5")
+    end
+
+    text_box do
+      at from: 6
+      effect(:blur)
+      text_area(text: "Blur at step 6")
+    end
+  end
+end
+
+Examples.OverlayEffects
+```
+
+![Each box shows at its step with its own effect](https://raw.githubusercontent.com/rellen/expresso/media/overlay-effects.gif)
+
+## Give the same effect to a group of elements
+
+Write the `effect` option in the parent. Each child without its own `effect` option uses
+the effect of the parent. A slide and the deck take the option too, and an element uses
+the nearest value. This deck flies each item of the list in, and a step back flies the
+last item out.
+
+```elixir
+defmodule Examples.OverlayEffectList do
+  use Expresso
+
+  slide "effect list" do
+    heading "A list that flies in"
+
+    # The items take the effect of the list.
+    list do
+      reveal true
+      effect(:fly_up)
+      item "The first point"
+      item "The second point"
+      item "The third point"
+    end
+  end
+end
+
+Examples.OverlayEffectList
+```
+
+![The items fly up one after the other, and the last item flies out after a step back](https://raw.githubusercontent.com/rellen/expresso/media/overlay-effect-list.gif)
+
 ## Highlight an element at a step
 
 Write an `on` entity with `state: :alert` in the element. The theme draws an outline around

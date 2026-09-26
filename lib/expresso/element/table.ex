@@ -24,6 +24,7 @@ defmodule Expresso.Element.Table do
     :at,
     :steps,
     :el,
+    :effect,
     header: false,
     reveal: false,
     dim: false,

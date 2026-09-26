@@ -17,7 +17,7 @@ defmodule Expresso.Element.Columns do
   @typedoc "The struct of a columns element"
   @type t :: %__MODULE__{}
 
-  defstruct [:at, :steps, :el, on: [], elements: [], __spark_metadata__: nil]
+  defstruct [:at, :steps, :el, :effect, on: [], elements: [], __spark_metadata__: nil]
 
   @doc """
   Make a columns element from columns

@@ -512,6 +512,8 @@ The renderer writes these attributes:
   number of the slide.
 - Each element with an `on` entity gets a `data-el` attribute. The value is unique in the
   document.
+- Each element with an overlay and an effect that is not a fade gets a `data-effect`
+  attribute, such as `data-effect="fly-up"`. The section "Effects" gives the rules.
 
 The JavaScript code reads `data-max-step`. Without this attribute the code cannot know when
 a slide reaches its last step, and it cannot move to the next slide.
@@ -521,6 +523,9 @@ A rule for step 3 looks like this:
 ```css
 section[data-step="3"] [data-on~="3"] {
   opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+  --shown: 1;
 }
 ```
 
@@ -551,13 +556,14 @@ the theme owns them. The base rule also sets `visibility: hidden`, and the revea
 The rule of the theme that reads the properties applies to each type of element, to a
 table row and to a diagram part.
 
-A diagram part with an `on` entity goes into a wrapper, a `g` element with the class
-`diagram-part`. The theme cannot put its `transform` on the element of the file, because
-the property replaces a `transform` attribute of the file, and the part then moves. The
-wrapper has no such attribute. It also uses its own box and its center for a turn and a
-change of size, and not the origin of the SVG. A `g` element is valid only in an `svg`,
-a `g` or an `a` element, so a part in a different parent, such as a `tspan`, keeps no
-wrapper. That part can fade, dim and change its color, and it cannot move.
+A diagram part with an `on` entity, or with an effect that moves or grows it, goes into a
+wrapper, a `g` element with the class `diagram-part`. The theme cannot put its `transform`
+on the element of the file, because the property replaces a `transform` attribute of the
+file, and the part then moves. The wrapper has no such attribute. It also uses its own box
+and its center for a turn and a change of size, and not the origin of the SVG. A `g` element
+is valid only in an `svg`, a `g` or an `a` element, so a part in a different parent, such as
+a `tspan`, keeps no wrapper. That part can fade, dim and change its color, and it cannot
+move.
 
 A length in a diagram is in the units of the file, and the diagram usually shows larger
 than the file. Therefore the outline of a part is 2 units wide, at 2 units from the part.
@@ -654,6 +660,52 @@ The `@property` at-rule became available in all major browsers in July 2024. Chr
 Safari 16.4 and Firefox 128 support it. The floor of this design is that date, and not
 the Chrome version. A construction that each engine gave before July 2024 is inside the
 floor. `color-mix()` is an example: Chrome 111, Safari 16.2 and Firefox 113 support it.
+
+### Effects
+
+The `effect` option gives the way in which an element shows and hides at the steps of
+its `at` option. The values are `:fade`, `:grow`, `:fly_up`, `:fly_down`, `:fly_left`,
+`:fly_right`, `:wipe` and `:blur`, and `:fade` is the default. An element, a slide and the
+deck take the option. `Expresso.Overlay.Render.identify/1` gives each element the nearest
+value: its own value, then the value of the nearest parent, then the slide, then the deck.
+Therefore a list with `reveal true` and an effect gives the effect to each item.
+
+The renderer writes the effect as the `data-effect` attribute, with hyphens, as the
+values of the theme have. The reveal rule of a step also sets `--shown: 1`, and a hidden
+element keeps the initial value 0. The theme registers `--shown`, so the renderer does
+not register it. An effect then needs no rule for each step:
+
+```css
+[data-effect="grow"] {
+  --enter-scale: 0.8;
+}
+
+.text-box {
+  transform: scale(
+    calc(var(--scale) * (1 - (1 - var(--shown)) * (1 - var(--enter-scale))))
+  );
+}
+```
+
+A hidden element with `grow` has 80% of its size, and a shown element has its size. The
+transition of `transform` runs between the two values in each direction. Therefore the
+exit of an element is its effect in the other direction, and a step back looks like a
+rewind. The effect `fly_up` and the other flights move the element by 1rem with
+`--enter-x` and `--enter-y`, and `blur` gives a blur of 0.2rem with `--enter-blur`. Each
+of these also fades.
+
+The properties `--enter-x`, `--enter-y`, `--enter-scale` and `--enter-blur` do not inherit.
+A child of an element with an effect has no step of its own, and its `--shown` is 0. A
+child that inherits `--enter-scale` then keeps 80% of its size at each step.
+
+The effect `wipe` does not fade. The theme sets `opacity: 1` for it, and a clip opens the
+element from left to right. `visibility` hides the element when the clip is closed. The
+clip is 1rem larger than the element on each side, so it does not cut the outline of
+`alert` or the marker of an item.
+
+A diagram part with an effect that moves or grows it goes into the wrapper that the
+section "The CSS contract" describes. The lines of a code element take the effect of the
+element.
 
 ### Duration and easing
 

@@ -16,8 +16,9 @@ defmodule Expresso.Element.Diagram do
   its `id`. A file without that `id` stops the render with a message that
   names the id and the path.
 
-  A part with an `on` entity goes into a wrapper, a `g` element with the class
-  `diagram-part`, and the wrapper gets the overlay attributes. The theme moves,
+  A part with an `on` entity, or with an effect that moves or grows it, goes
+  into a wrapper, a `g` element with the class `diagram-part`, and the wrapper
+  gets the overlay attributes. The theme moves,
   turns and outlines the wrapper, so the part keeps its own `transform`
   attribute, and a turn goes around the center of the part. A `g` element is
   valid only in an `svg`, a `g` or an `a` element. A part in a different
@@ -48,7 +49,17 @@ defmodule Expresso.Element.Diagram do
   @typedoc "The struct of a diagram"
   @type t :: %__MODULE__{}
 
-  defstruct [:src, :width, :at, :steps, :el, on: [], elements: [], __spark_metadata__: nil]
+  defstruct [
+    :src,
+    :width,
+    :at,
+    :steps,
+    :el,
+    :effect,
+    on: [],
+    elements: [],
+    __spark_metadata__: nil
+  ]
 
   @doc """
   Make a diagram with a path, with parts and with a width
@@ -97,11 +108,12 @@ defmodule Expresso.Element.Diagram do
     |> number_ids(tree)
   end
 
-  # The overlay attributes of a part. A part with an `on` entity has an
-  # identity, and it goes into a wrapper with the class `diagram-part`, so the
-  # theme can move it. The class has a prefix, so it does not match a class of
-  # the file.
-  defp part_attributes(%Expresso.Element.Part{el: nil} = part) do
+  # The overlay attributes of a part. A part with an `on` entity, or with an
+  # effect that moves or grows it, goes into a wrapper with the class
+  # `diagram-part`, so the theme can move it. The class has a prefix, so it
+  # does not match a class of the file.
+  defp part_attributes(%Expresso.Element.Part{el: nil, effect: effect} = part)
+       when effect in [nil, :fade, :wipe, :blur] do
     {:attributes, Expresso.Overlay.Render.attributes(part)}
   end
 

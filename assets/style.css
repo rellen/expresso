@@ -205,6 +205,38 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   initial-value: 1;
 }
 /*
+ * The effect of an element with steps. The reveal rule of a step sets
+ * `--shown: 1`, and a hidden element keeps 0. An effect gives the offset, the
+ * size or the blur of the hidden element, and the element rule below moves
+ * the element from those values to its place. The properties do not inherit,
+ * so a child of an element with an effect keeps its place.
+ */
+@property --shown {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+@property --enter-x {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --enter-y {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --enter-scale {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+@property --enter-blur {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+/*
  * The base rule of an element with an overlay. The rule of its transitions
  * comes after the rule of the elements, below.
  */
@@ -344,6 +376,7 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .item,
 .table,
 .row,
+.line,
 .diagram-part,
 .quotation,
 .code,
@@ -351,7 +384,12 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .column,
 .math,
 .diagram {
-  transform: translate(var(--x), var(--y)) rotate(var(--rotate)) scale(var(--scale));
+  transform: translate(
+      calc(var(--x) + (1 - var(--shown)) * var(--enter-x)),
+      calc(var(--y) + (1 - var(--shown)) * var(--enter-y))
+    )
+    rotate(var(--rotate))
+    scale(calc(var(--scale) * (1 - (1 - var(--shown)) * (1 - var(--enter-scale)))));
   outline: calc(var(--alert, 0) * 4px) solid currentColor;
   outline-offset: 0.25rem;
   transition:
@@ -376,23 +414,59 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   outline-offset: 2px;
 }
 /*
- * The properties of an element with an `on` entity. Only such an element has
- * the `data-el` attribute, so an element without an `on` entity gets no filter
- * and keeps the color of its parent.
+ * The effects of `at`. A hidden element with `grow` has 80% of its size, an
+ * element with `fly-up` is 1rem below its place, and an element with `blur`
+ * has a blur of 0.2rem. Each also fades. At the last step of the element, the
+ * same change runs in the other direction.
+ *
+ * `wipe` does not fade. A clip opens the element from left to right, and
+ * `visibility` hides it when the clip is closed. The clip is 1rem larger than
+ * the element, so it does not cut the outline of `alert`, the marker of an
+ * item or a letter that is wider than its box.
+ */
+[data-effect="grow"] {
+  --enter-scale: 0.8;
+}
+[data-effect="fly-up"] {
+  --enter-y: 1rem;
+}
+[data-effect="fly-down"] {
+  --enter-y: -1rem;
+}
+[data-effect="fly-left"] {
+  --enter-x: 1rem;
+}
+[data-effect="fly-right"] {
+  --enter-x: -1rem;
+}
+[data-effect="blur"] {
+  --enter-blur: 0.2rem;
+}
+[data-on][data-effect="wipe"] {
+  opacity: 1;
+  clip-path: inset(-1rem calc((1 - var(--shown)) * (100% + 2rem) - 1rem) -1rem -1rem);
+}
+/*
+ * The properties of an element with an `on` entity or with an effect. Only
+ * such an element has the `data-el` or the `data-effect` attribute, so a
+ * different element gets no filter and keeps the color of its parent.
  *
  * `--opacity` and the state `dim` change a filter, and not `opacity`. The
  * reveal rule of a step sets `opacity: 1`, so a change of `opacity` stays
  * hidden. The filter multiplies the two values, and the fade of `at` then
  * works as before. A theme can set `--dim-opacity`, and 0.4 is the default.
+ * The blur of the effect `blur` is in the same filter.
  *
  * `--color` has no registration, so it has no initial value. Without the
  * property, the element gets the color of its parent, as an element without
  * the rule does.
  */
+[data-el],
+[data-effect] {
+  filter: blur(calc((1 - var(--shown)) * var(--enter-blur)))
+    opacity(calc(var(--opacity) * (1 - var(--dim, 0) * (1 - var(--dim-opacity, 0.4)))));
+}
 [data-el] {
-  filter: opacity(
-    calc(var(--opacity) * (1 - var(--dim, 0) * (1 - var(--dim-opacity, 0.4))))
-  );
   color: var(--color, inherit);
   transition:
     opacity var(--dur) var(--ease),
@@ -420,7 +494,8 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
     visibility 0s linear var(--dur),
     transform var(--dur) var(--ease),
     outline-width var(--dur) var(--ease),
-    filter var(--dur) var(--ease);
+    filter var(--dur) var(--ease),
+    clip-path var(--dur) var(--ease);
 }
 /*
  * `color` inherits. A child with its own transition of `color` starts a new
@@ -434,6 +509,7 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
     transform var(--dur) var(--ease),
     outline-width var(--dur) var(--ease),
     filter var(--dur) var(--ease),
+    clip-path var(--dur) var(--ease),
     color var(--dur) var(--ease);
 }
 .screen {

@@ -71,7 +71,8 @@ defmodule ExpressoTest do
                print_notes: true,
                slide_numbers: false,
                duration: nil,
-               transition: :fade
+               transition: :fade,
+               effect: :fade
              }
     end
 

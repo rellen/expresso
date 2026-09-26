@@ -31,27 +31,40 @@ defmodule Expresso.Overlay.Render do
   position counts each element of the slide in document order, and a parent
   comes before its children. Therefore the value is stable between two renders
   of the same deck. An element without an `on` entity keeps `nil`.
+
+  The function also writes the effect of each element into its `effect`
+  field. The effect is the nearest value of these: the `effect` field of the
+  element, the field of the nearest parent with a value, the `:effect` key of
+  the metadata of the slide, and the key of the metadata of the deck. The
+  default is `:fade`. A list with `reveal true` and an effect therefore gives
+  the effect to each item.
   """
   @spec identify(Deck.t()) :: Deck.t()
-  def identify(%Deck{slides: slides} = deck) do
-    %Deck{deck | slides: Enum.map(slides, &identify_slide/1)}
+  def identify(%Deck{slides: slides, metadata: metadata} = deck) do
+    effect = (metadata || %{})[:effect] || :fade
+    %Deck{deck | slides: Enum.map(slides, &identify_slide(&1, effect))}
   end
 
-  defp identify_slide(%Slide{elements: elements, metadata: metadata} = slide) do
+  defp identify_slide(%Slide{elements: elements, metadata: metadata} = slide, effect) do
     prefix = "s#{metadata.slide_number}"
-    {elements, _position} = identify_elements(elements || [], prefix, 1)
+    effect = metadata[:effect] || effect
+    {elements, _position} = identify_elements(elements || [], prefix, 1, effect)
     %Slide{slide | elements: elements}
   end
 
-  defp identify_elements(elements, prefix, position) do
+  defp identify_elements(elements, prefix, position, effect) do
     Enum.map_reduce(elements, position, fn
       %Pause{} = pause, position ->
         {pause, position}
 
       element, position ->
         el = if on(element) == [], do: nil, else: "#{prefix}-e#{position}"
-        {children, position} = identify_elements(children(element), prefix, position + 1)
-        {struct(element, el: el, elements: children), position}
+        effect = Map.get(element, :effect) || effect
+
+        {children, position} =
+          identify_elements(children(element), prefix, position + 1, effect)
+
+        {struct(element, el: el, effect: effect, elements: children), position}
     end)
   end
 
@@ -59,16 +72,17 @@ defmodule Expresso.Overlay.Render do
   Make the overlay attributes of one element
 
   An element with step numbers gets `data-on`, with a space between each
-  number. An element with an identity gets `data-el`. The function gives an
-  empty list for an element without either, and the render function of the
-  element puts the list into its root tag.
+  number, and `data-effect` for an effect that is not `:fade`, such as
+  `data-effect="fly-up"`. An element with an identity gets `data-el`. The
+  function gives an empty list for an element without either, and the render
+  function of the element puts the list into its root tag.
   """
   @spec attributes(struct()) :: [{String.t(), String.t()}]
   def attributes(element) do
     on =
       case Map.get(element, :steps) do
         nil -> []
-        steps -> [{"data-on", Enum.join(steps, " ")}]
+        steps -> [{"data-on", Enum.join(steps, " ")} | effect(Map.get(element, :effect))]
       end
 
     el =
@@ -80,6 +94,14 @@ defmodule Expresso.Overlay.Render do
     on ++ el
   end
 
+  # The fade is the rule of the theme for each element with steps, so it needs
+  # no attribute. The value uses hyphens, as the other values of the theme do.
+  defp effect(effect) when effect in [nil, :fade], do: []
+
+  defp effect(effect) do
+    [{"data-effect", effect |> Atom.to_string() |> String.replace("_", "-")}]
+  end
+
   @doc """
   Make the generated style block of a deck
 
@@ -88,7 +110,8 @@ defmodule Expresso.Overlay.Render do
   - One `@property` rule for each state of the deck. It registers the custom
     property as a number with the initial value 0.
   - One rule for each step number to the maximum step number of the deck. It
-    shows each element with that number in its `data-on` attribute.
+    shows each element with that number in its `data-on` attribute, and it
+    sets `--shown: 1`. The theme reads that property for an effect.
   - One rule for each `on` entity, in document order. It sets the custom
     properties of the entity on the element, at each step of the entity.
 
@@ -117,7 +140,7 @@ defmodule Expresso.Overlay.Render do
 
     for step <- 1..max//1 do
       "section[data-step=\"#{step}\"] [data-on~=\"#{step}\"] " <>
-        "{ opacity: 1; visibility: visible; transition-delay: 0s; }"
+        "{ opacity: 1; visibility: visible; transition-delay: 0s; --shown: 1; }"
     end
   end
 
