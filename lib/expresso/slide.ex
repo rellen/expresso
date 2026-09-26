@@ -10,6 +10,7 @@ defmodule Expresso.Slide do
           :steps => pos_integer() | nil,
           :handout => Expresso.Handout.t() | nil,
           :auto_reveal => boolean() | nil,
+          :transition => :none | :fade | :slide | :zoom | nil,
           :metadata => map() | nil,
           :elements => list()
         }
@@ -21,6 +22,7 @@ defmodule Expresso.Slide do
     :steps,
     :handout,
     :auto_reveal,
+    :transition,
     :metadata,
     :elements,
     __spark_metadata__: nil
@@ -43,6 +45,10 @@ defmodule Expresso.Slide do
     %{name: name, metadata: metadata, elements: elements}
   end
 
+  # The options of a slide that the metadata holds, for the templates, the
+  # handout view and the renderer.
+  @metadata_options [:heading, :notes, :handout, :transition]
+
   @doc """
   Write the options of the DSL into the metadata of the slide
 
@@ -56,7 +62,7 @@ defmodule Expresso.Slide do
   @spec put_options_in_metadata(t()) :: t()
   def put_options_in_metadata(%__MODULE__{} = slide) do
     metadata =
-      Enum.reduce([:heading, :notes, :handout], slide.metadata || %{}, fn key, metadata ->
+      Enum.reduce(@metadata_options, slide.metadata || %{}, fn key, metadata ->
         case Map.fetch!(slide, key) do
           nil -> metadata
           value -> Map.put(metadata, key, value)

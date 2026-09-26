@@ -140,6 +140,16 @@ goes to step 1 of that slide. `o` or `Esc` closes the overview, and the step doe
 change. In the speaker view, only the speaker window shows the overview, so the audience
 does not see it.
 
+A change of slide in the present view fades the old slide out and the new slide in. Write
+`transition :slide`, `transition :zoom` or `transition :none` in the deck to change the kind
+for each slide. Write the same option in a slide to change only the move into that slide. A
+move back plays the same kind in reverse. A change of the step keeps the animations of the
+overlays.
+
+The transitions need the View Transitions API of the browser. A browser without it, and a
+reader who asks for reduced motion, get an instant change. The speaker view has no
+transitions. A theme can set `--transition-dur`.
+
 The address of the document holds the slide and the step, for example `deck.html#4.2`
 for step 2 of slide 4. A reload shows the same step, and a link can go to one slide.
 

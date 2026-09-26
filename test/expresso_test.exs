@@ -70,7 +70,8 @@ defmodule ExpressoTest do
                handout: :all,
                print_notes: true,
                slide_numbers: false,
-               duration: nil
+               duration: nil,
+               transition: :fade
              }
     end
 

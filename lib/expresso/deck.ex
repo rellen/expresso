@@ -18,6 +18,11 @@ defmodule Expresso.Deck do
   The metadata can also hold `:duration`, the length of the talk in minutes.
   The speaker view then shows the time left and the pace. A deck without the
   key, or with `nil`, shows neither.
+
+  The metadata can also hold `:transition`, the transition from one slide to
+  the next in the present view: `:fade`, `:slide`, `:zoom` or `:none`. The
+  metadata of a slide can hold `:transition` too, and it replaces the value of
+  the deck for the move into that slide. A deck without the key fades.
   """
 
   @type t :: %__MODULE__{:name => String.t(), :metadata => map(), :slides => list()}

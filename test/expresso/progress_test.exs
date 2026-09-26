@@ -40,7 +40,8 @@ defmodule Expresso.ProgressTest do
              handout: :all,
              print_notes: true,
              slide_numbers: false,
-             duration: nil
+             duration: nil,
+             transition: :fade
            }
 
     assert progress(Expresso.parse(ShownDeck)) == ["true"]
@@ -52,7 +53,8 @@ defmodule Expresso.ProgressTest do
              handout: :all,
              print_notes: true,
              slide_numbers: false,
-             duration: nil
+             duration: nil,
+             transition: :fade
            }
 
     assert progress(Expresso.parse(HiddenDeck)) == ["false"]

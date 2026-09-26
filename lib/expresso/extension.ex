@@ -278,6 +278,11 @@ defmodule Expresso.Extension do
         type: :boolean,
         default: false,
         doc: "Show each element of the slide one after the other. See docs/overlays.md."
+      ],
+      transition: [
+        type: {:in, [:none, :fade, :slide, :zoom]},
+        doc:
+          "The transition between the slide before and this slide, in the two directions. The default is the transition of the deck."
       ]
     ]
   }
@@ -290,6 +295,12 @@ defmodule Expresso.Extension do
       name: [
         type: :string,
         doc: "A unique identifier for this deck."
+      ],
+      transition: [
+        type: {:in, [:none, :fade, :slide, :zoom]},
+        default: :fade,
+        doc:
+          "The transition from one slide to the next in the present view: :fade, :slide, :zoom or :none. A slide can replace it."
       ],
       duration: [
         type: :pos_integer,

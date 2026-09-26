@@ -6,8 +6,8 @@
 import { rows } from "./help.ts";
 import { describe } from "./speaker.ts";
 import type { Pace } from "./speaker.ts";
-import { columns, fraction, maxStep, mode, upcoming } from "./state.ts";
-import type { Limits, State } from "./state.ts";
+import { KINDS, columns, fraction, maxStep, mode, upcoming } from "./state.ts";
+import type { Kind, Limits, State, Transition } from "./state.ts";
 
 // The renderer writes `data-progress="false"` on the `body` for a deck that
 // hides the progress bar at the start. The key `g` can still show it.
@@ -25,6 +25,39 @@ export function limits(): Limits {
     steps.push(Number(slide(number).dataset.maxStep) || 1);
   }
   return { slides: count, steps };
+}
+
+// The kind of the transition into each slide, in slide order. The renderer
+// writes it as `data-transition` on each slide. A value that is not a kind
+// gives `fade`.
+export function kinds(limits: Limits): Kind[] {
+  const all: Kind[] = [];
+  for (let number = 1; number <= limits.slides; number++) {
+    const value = slide(number).dataset.transition as Kind | undefined;
+    all.push(value !== undefined && KINDS.includes(value) ? value : "fade");
+  }
+  return all;
+}
+
+// Run a change of the document as a transition, or run it at once. The
+// browser needs the View Transitions API, and the reader must not ask for
+// reduced motion. The kind and the direction go on the `html` element, and
+// the style sheet gives each kind its animation.
+export function animate(change: Transition | null, update: () => void): void {
+  const reduced = window.matchMedia?.(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  if (
+    change === null ||
+    reduced === true ||
+    typeof document.startViewTransition !== "function"
+  ) {
+    update();
+    return;
+  }
+  document.documentElement.dataset.transition = change.kind;
+  document.documentElement.dataset.direction = change.direction;
+  document.startViewTransition(update);
 }
 
 // Read a slide by its number. A missing slide is a defect of the renderer, so
