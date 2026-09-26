@@ -1,5 +1,6 @@
 defmodule Expresso.CssTest do
   use ExUnit.Case, async: true
+  use ExUnitProperties
 
   import Spark.Test, only: [dsl_errors: 1, dsl_warnings: 1, refute_dsl_warnings: 1]
 
@@ -59,22 +60,76 @@ defmodule Expresso.CssTest do
     end
   end
 
-  test "escape/1 writes <\\/ for </, so the style sheet cannot close its element" do
-    assert Css.escape("a { } /* </style> */") == "a { } /* <\\/style> */"
-  end
+  describe "the properties" do
+    defp name do
+      map(
+        list_of(string(?a..?z, min_length: 1, max_length: 5), min_length: 1, max_length: 3),
+        &Enum.join(&1, "-")
+      )
+    end
 
-  test "scan/1 gives the names of a style sheet" do
-    names =
-      Css.scan("""
-      @property --size { syntax: "<length>"; inherits: false; initial-value: 0px; }
-      [data-effect="fly-far"] { --size: 2rem; --count: 3; }
-      .x { width: var(--size); }
-      """)
+    defp fragment,
+      do: member_of(["<", "/", "\\", "</", "<\\/", "style>", "a { }", " ", "\n", "*"])
 
-    assert names.used == MapSet.new(["size", "count"])
-    assert names.declared == MapSet.new(["size"])
-    assert names.registered == %{"size" => "<length>"}
-    assert names.effects == MapSet.new(["fly_far"])
+    defp text, do: map(list_of(fragment(), max_length: 12), &Enum.join/1)
+
+    defp declaration do
+      map(
+        {name(),
+         one_of([map(integer(0..9), &Integer.to_string/1), member_of(["2rem", "red", "300ms"])])},
+        fn {name, value} ->
+          {name, value}
+        end
+      )
+    end
+
+    defp number?(value), do: value =~ ~r/^\d+$/
+
+    property "escape/1 leaves no </, and its result can be read back" do
+      check all css <- text() do
+        escaped = Css.escape(css)
+
+        refute escaped =~ "</"
+        assert String.replace(escaped, "<\\/", "</") == String.replace(css, "<\\/", "</")
+      end
+    end
+
+    property "resolve/1 gives a style sheet with a brace or a line break as it is" do
+      check all css <- text(), marker <- member_of(["{", "\n"]) do
+        assert Css.resolve(css <> marker) == {:ok, css <> marker}
+      end
+    end
+
+    property "scan/1 finds each effect, use, declaration and registration of a style sheet" do
+      check all effects <- list_of(name(), max_length: 3),
+                declarations <- list_of(declaration(), max_length: 4),
+                reads <- list_of(name(), max_length: 3),
+                registered <-
+                  list_of({name(), member_of(["<length>", "<number>", "<color>"])}, max_length: 2) do
+        css =
+          Enum.map_join(effects, "\n", &~s([data-effect="#{&1}"] { opacity: 1; })) <>
+            "\n.x { " <>
+            Enum.map_join(declarations, " ", fn {name, value} -> "--#{name}: #{value};" end) <>
+            " width: " <>
+            Enum.map_join(reads, " ", &"var(--#{&1})") <>
+            "; }\n" <>
+            Enum.map_join(registered, "\n", fn {name, syntax} ->
+              ~s(@property --#{name} { syntax: "#{syntax}"; inherits: false; })
+            end)
+
+        names = Css.scan(css)
+
+        property_names =
+          Enum.map(declarations, &elem(&1, 0)) ++ reads ++ Enum.map(registered, &elem(&1, 0))
+
+        assert names.effects == MapSet.new(effects, &String.replace(&1, "-", "_"))
+        assert names.used == MapSet.new(property_names)
+        assert names.registered == Map.new(registered)
+
+        assert names.declared ==
+                 MapSet.new(for {name, value} <- declarations, not number?(value), do: name)
+      end
+    end
   end
 
   describe "the DSL" do
