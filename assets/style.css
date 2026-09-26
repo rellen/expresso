@@ -94,12 +94,13 @@ h2 {
   inherits: false;
   initial-value: 0px;
 }
+/*
+ * The base rule of an element with an overlay. The rule of its transitions
+ * comes after the rule of the elements, below.
+ */
 [data-on] {
   opacity: 0;
   visibility: hidden;
-  transition:
-    opacity var(--dur) var(--ease),
-    visibility 0s linear var(--dur);
 }
 .image {
   flex-grow: 1;
@@ -238,6 +239,25 @@ h2 {
   transform: translate(var(--x), var(--y));
   outline: calc(var(--alert, 0) * 4px) solid currentColor;
   outline-offset: 0.25rem;
+  transition:
+    opacity var(--dur) var(--ease),
+    transform var(--dur) var(--ease),
+    outline-width var(--dur) var(--ease);
+}
+/*
+ * An element with an overlay keeps `visible` until the end of its fade out,
+ * so the delay of `visibility` is the duration of the fade. The reveal rule of
+ * a step sets each delay to zero, so the element is visible from the start of
+ * its fade in.
+ *
+ * Only an element with an overlay has this transition of `visibility`. A child
+ * of such an element gets `visibility` from its parent. With its own delayed
+ * transition, the child then stayed hidden until the end of the fade in of
+ * its parent, and the element showed at once after the fade. This rule comes
+ * after the rule of the elements, and it has the same specificity, so it
+ * replaces the list of transitions of an element with an overlay.
+ */
+[data-on] {
   transition:
     opacity var(--dur) var(--ease),
     visibility 0s linear var(--dur),

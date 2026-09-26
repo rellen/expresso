@@ -515,6 +515,14 @@ of `--x` and `--y` are in `assets/style.css`, because the theme owns them. The b
 also sets `visibility: hidden`, and the reveal rule sets `visibility: visible`, so a
 hidden element is not in the accessibility tree.
 
+The transition of `visibility` has a delay of the duration of the fade, so an element stays
+visible until the end of its fade out. The reveal rule sets each delay to zero, so the
+element is visible from the start of its fade in. Only an element with `data-on` has this
+transition. A child of such an element gets `visibility` from its parent. Before 2026-09-26,
+the rule of each element, such as `.text-area`, also had the delayed transition. The child
+then stayed hidden until the end of the fade in of its parent, and the element showed at
+once after the fade.
+
 ### The identity of an element
 
 The `data-on` attribute is not sufficient for the `on` entity. Two elements can show at
