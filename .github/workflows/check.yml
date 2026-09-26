@@ -13,6 +13,8 @@
 # - presenter: `npm run check` and `npm test`
 # - gifs: `mix expresso.gifs`, the GIFs and the stills of the example decks
 #   of the guides and of the README
+# - release: `mix release expresso_cli_app` for Linux on x86_64, and
+#   `mix test --only release`, the tests of that binary
 #
 # After a push to main, the job `media` puts the GIFs on the branch `media`,
 # and the guides of `docs/` show them from there. The branch holds the GIFs of
@@ -57,6 +59,7 @@ env:
   OTP_VERSION: "29.1"
   ELIXIR_VERSION: "1.20.4-otp-29"
   NODE_VERSION: "24.20.0"
+  ZIG_VERSION: "0.16.0"
 
 jobs:
   format:
@@ -161,6 +164,33 @@ jobs:
           path: gifs/
           if-no-files-found: error
 
+  # The binary that Burrito makes, for Linux on x86_64. Burrito needs Zig and xz,
+  # and the runner gives xz. The tests of `test/release/` run the binary as a
+  # person does. The release uses the build of prod, and the tests use the build
+  # of test, so the job compiles the project two times. The binary holds the
+  # release, and the release takes approximately 80 MB. Therefore the job
+  # removes the release after the build, and the cache does not keep it.
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: release
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+      - run: |
+          mix release expresso_cli_app --overwrite
+          rm -rf _build/prod/rel
+        env:
+          MIX_ENV: prod
+          BURRITO_TARGET: linux_x86
+      - run: mix test --only release
+        env:
+          EXPRESSO_BINARY: burrito_out/expresso_cli_app_linux_x86
+
   # Put the GIFs of a push to main on the branch `media`, as one commit with no
   # parent. The push replaces the branch, so the branch holds the GIFs of the
   # last push to main only. This job is the only job that can write to the
@@ -216,7 +246,7 @@ jobs:
   all:
     name: Erlang/OTP 29, Elixir 1.20, Node 24
     if: always()
-    needs: [format, lint, dialyzer, test, presenter, gifs]
+    needs: [format, lint, dialyzer, test, presenter, gifs, release]
     runs-on: ubuntu-latest
     steps:
       - name: Fail when a check does not succeed
