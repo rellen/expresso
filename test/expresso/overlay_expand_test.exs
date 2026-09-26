@@ -1,8 +1,10 @@
 defmodule Expresso.Overlay.ExpandTest do
   use ExUnit.Case, async: true
+  use ExUnitProperties
 
-  alias Expresso.Element.{On, Pause, TextArea, TextBox}
+  alias Expresso.Element.{Item, On, Pause, TextArea, TextBox}
   alias Expresso.Overlay
+  alias Expresso.Test.Overlay, as: Gen
   alias Expresso.Overlay.Expand
   alias Expresso.Slide
 
@@ -200,29 +202,12 @@ defmodule Expresso.Overlay.ExpandTest do
     defp dims(element),
       do: Enum.map(element.elements, &for(%On{state: :dim} = on <- &1.on, do: on.steps))
 
-    test "dims each child from the first step of the next child" do
-      [list] = expand([dim_list([item(), item(), item()])]).elements
-
-      assert dims(list) == [[[2, 3]], [[3]], []]
-      assert [%On{at: at} | _] = hd(list.elements).on
-      assert at == spec([2, 3])
-    end
-
     test "adds the state after the on entities of the child" do
       child = %{item() | on: [%On{at: spec(1), set: [x: "1px"]}]}
       [list] = expand([dim_list([child, item()])]).elements
 
       assert [%On{set: [x: "1px"], steps: [1]}, %On{state: :dim, steps: [2]}] =
                hd(list.elements).on
-    end
-
-    test "dims a child only at its own steps" do
-      [list] =
-        expand([
-          dim_list([%{item() | at: spec(1..2)}, %{item() | at: spec(2)}, %{item() | at: spec(3)}])
-        ]).elements
-
-      assert dims(list) == [[[2]], [], []]
     end
 
     test "does not dim or count a child without steps" do
@@ -241,12 +226,6 @@ defmodule Expresso.Overlay.ExpandTest do
       [code] = expand([code]).elements
 
       assert dims(code) == [[[2]], []]
-    end
-
-    test "does nothing without the option" do
-      [list] = expand([list(elements: [item(), item()])]).elements
-
-      assert dims(list) == [[], []]
     end
   end
 
@@ -277,6 +256,109 @@ defmodule Expresso.Overlay.ExpandTest do
       slide = %Slide{steps: 2, elements: [%TextBox{on: [%On{at: spec(1..3)}]}]}
 
       assert {:error, "the step 3 is more than the maximum step 2"} = Expand.slide(slide)
+    end
+  end
+
+  describe "the properties of the expansion" do
+    defp maybe_spec, do: one_of([constant(nil), map(Gen.spec(), &spec/1)])
+
+    defp open_spec do
+      one_of([constant(nil), map(Gen.step(), &spec(from: &1)), constant(spec(from: :next))])
+    end
+
+    defp area, do: map(maybe_spec(), &%TextArea{at: &1})
+
+    defp box do
+      map({maybe_spec(), list_of(area(), max_length: 3)}, fn {at, areas} ->
+        %TextBox{at: at, elements: areas}
+      end)
+    end
+
+    defp items(at), do: list_of(map(at, &%Item{at: &1}), max_length: 4)
+
+    defp revealed_list(at \\ maybe_spec(), item_at \\ constant(nil)) do
+      map({at, items(item_at), boolean(), boolean()}, fn {at, items, reveal, dim} ->
+        struct!(Expresso.Element.List, at: at, reveal: reveal, dim: dim, elements: items)
+      end)
+    end
+
+    defp element, do: one_of([area(), box(), revealed_list(), constant(%Pause{})])
+
+    defp slide_elements, do: list_of(element(), max_length: 6)
+
+    defp flatten(elements) do
+      Enum.flat_map(elements, fn
+        %Pause{} -> []
+        element -> [element | flatten(Map.get(element, :elements) || [])]
+      end)
+    end
+
+    defp all_steps(elements) do
+      Enum.flat_map(flatten(elements), fn element ->
+        [element.steps | Enum.map(element.on || [], & &1.steps)]
+      end)
+      |> Enum.reject(&is_nil/1)
+    end
+
+    defp first([first | _steps]), do: first
+    defp first(_steps), do: nil
+
+    property "each step is in 1..max, and the maximum is the largest step" do
+      check all elements <- slide_elements(), auto_reveal <- boolean() do
+        slide = expand(elements, auto_reveal: auto_reveal)
+        steps = all_steps(slide.elements)
+        max = slide.metadata.max_step
+
+        assert Enum.all?(steps, &(&1 == Enum.sort(Enum.uniq(&1))))
+        assert Enum.all?(List.flatten(steps), &(&1 in 1..max))
+        assert max == Enum.max(List.flatten(steps), fn -> 1 end)
+        refute Enum.any?(slide.elements, &match?(%Pause{}, &1))
+      end
+    end
+
+    property "auto_reveal shows each element of the slide from a later step" do
+      check all elements <-
+                  list_of(one_of([map(constant(nil), &%TextArea{at: &1}), constant(%Pause{})]),
+                    max_length: 8
+                  ) do
+        slide = expand(elements, auto_reveal: true)
+        firsts = Enum.map(slide.elements, &first(&1.steps))
+
+        assert firsts == Enum.sort(Enum.uniq(firsts))
+        assert Enum.all?(slide.elements, &(List.last(&1.steps) == slide.metadata.max_step))
+      end
+    end
+
+    property "reveal shows each child from a later step, and only at the steps of the element" do
+      check all list <- revealed_list(open_spec()) do
+        [list] = expand([%{list | reveal: true}]).elements
+        firsts = Enum.map(list.elements, &first(&1.steps))
+
+        assert firsts == Enum.sort(Enum.uniq(firsts))
+
+        for item <- list.elements, list.steps != nil do
+          assert item.steps -- list.steps == []
+        end
+      end
+    end
+
+    property "dim dims a child from the first step of a later child, at its own steps" do
+      check all list <- revealed_list(constant(nil), maybe_spec()) do
+        [list] = expand([%{list | dim: true}]).elements
+        firsts = for item <- list.elements, item.steps not in [nil, []], do: first(item.steps)
+
+        for item <- list.elements do
+          own = first(item.steps)
+          later = Enum.filter(firsts, &(own != nil and &1 > own))
+
+          expected =
+            if later == [], do: [], else: Enum.filter(item.steps, &(&1 >= Enum.min(later)))
+
+          dims = for %On{state: :dim, steps: steps} <- item.on, do: steps
+
+          assert dims == if(expected == [], do: [], else: [expected])
+        end
+      end
     end
   end
 end
