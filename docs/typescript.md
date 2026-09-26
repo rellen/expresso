@@ -1,7 +1,7 @@
 # TypeScript for the presenter script
 
 This document gives a plan for the presenter script in TypeScript. The code does not
-contain this plan yet. The document ends with four decisions.
+contain this plan yet. The document ends with five decisions.
 
 ## The constraint
 
@@ -216,7 +216,8 @@ passes the checks.
 
 ## The decisions
 
-The maintainer accepted each proposal below on 2026-09-13. The decisions are settled.
+The maintainer accepted proposals 1 to 4 on 2026-09-13, and proposal 5 later. The decisions
+are settled.
 A later change needs a new decision, and this document then records it.
 
 ### 1. Where does the bundle step run?
@@ -257,3 +258,64 @@ a reason appears.
 
 The decision is to do this conversion before the overlay code. In `docs/architecture.md`,
 this conversion is item 2 of "Open work", and the overlay code is item 3.
+
+### 5. Does the bundle take a runtime dependency from npm?
+
+The maintainer asked if the script can use fp-ts or Effect. The proposal is no. The
+reasons are:
+
+- `mix compile` runs esbuild, and it needs no Node. A runtime import from `node_modules`
+  stops this. The jobs `lint` and `dialyzer` of `.github/workflows/check.yml` run
+  `mix compile` with no `npm ci`.
+- The renderer writes the bundle into each deck, and each deck is one HTML file. Thus each
+  byte of the bundle goes into each deck.
+- `state.ts` is already a functional core. `next` is a pure function, and each change
+  makes a new object. An invalid input gives the same state.
+- fp-ts gets only maintenance, because its author went to Effect. Effect 4 is a release
+  candidate (`4.0.0-rc.117`), and the `latest` tag of Effect is `3.22.2`.
+
+A trial bundled a small sample of each library with the flags of the esbuild profile in
+`config/config.exs`. The gzipped size comes from `gzip -9n`. These are the sizes, in
+bytes:
+
+| Sample                                       | Minified | Gzipped |
+| -------------------------------------------- | -------- | ------- |
+| The presenter bundle at commit `d14ca3f`     | 12,924   | 4,445   |
+| fp-ts 2.16.11: `Option`, `Either` and `pipe` | 3,992    | 1,406   |
+| neverthrow 8.2.0: `Result`                   | 7,009    | 2,200   |
+| effect 3.22.2: `Option` and `Either`         | 9,672    | 3,656   |
+| effect 3.22.2: `Micro.runFork`               | 18,553   | 6,952   |
+| effect 4.0.0-rc.117: `Effect.runFork`        | 25,819   | 9,306   |
+| effect 3.22.2: `Effect.runFork`              | 142,420  | 47,222  |
+
+The libraries give two useful things: the properties of the functional style, and strict
+types. The project gets both at no cost to the bundle:
+
+- `fast-check` is a development dependency, and it tests the properties of `state.ts` and
+  `speaker.ts`.
+- `assets/tsconfig.json` has more strict options, and the types of `state.ts` are
+  readonly.
+- The switches of the actions are exhaustive, so a new action is an error of the type
+  check.
+
+With `strict`, the types `T | undefined` and `T | null` do the work of an `Option`,
+because the compiler makes each caller handle the missing value. A `Result` is useful when
+a function must tell its caller why it failed. A survey of `assets/src/` found no such
+function:
+
+- `fromHash`, `follow`, `choose`, `move`, `go`, `position` and `select` give the same state
+  for an invalid input.
+- `binding`, `swipe` and `durationAttribute` give `undefined`, and `transition`,
+  `upcoming`, `talkLength` and `thumbnail` give `null`. No caller needs a reason.
+- `limits` in `dom.ts` reads `data-max-step` with `Number(...) || 1`. The renderer writes
+  this attribute.
+- `slide` in `dom.ts` throws an error for a missing slide. A missing slide is a defect of
+  the renderer, so the error is correct.
+- `fullscreen` in `main.ts` ignores a refusal of the browser. The key has no other effect.
+
+When a function needs a `Result`, add a small local type in `assets/src/result.ts`, and no
+dependency.
+
+The decision is no runtime dependency from npm. The merge of the pull request that adds
+this decision accepts the proposal. After that change, the bundle is 13,268 bytes
+minified and 4,554 bytes gzipped.
