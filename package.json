@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@types/node": "24.13.6",
+    "fast-check": "4.10.2",
     "gifenc": "1.0.3",
     "playwright": "1.63.0",
     "pngjs": "7.0.0",
