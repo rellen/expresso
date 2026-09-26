@@ -211,6 +211,67 @@ Examples.OverlayEasing
 
 ![Four boxes move at step 2, each with its own easing](https://raw.githubusercontent.com/rellen/expresso/media/overlay-easing.gif)
 
+## Add your own effects and states
+
+Write the `css` option in the deck, with a style sheet or with the path of a CSS file. A
+rule for `[data-effect="bounce"]` gives the effect `:bounce`. It can play `@keyframes`
+with `--enter-animation`, or move the element with the properties of the theme, such as
+`--enter-y`. A new state, such as `:mark`, is a custom property that a rule of the deck
+reads.
+
+```elixir
+defmodule Examples.OverlayCustom do
+  use Expresso
+
+  css ~S"""
+  @keyframes bounce {
+    0% { transform: scale(0.3); }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+
+  [data-effect="bounce"] {
+    --enter-animation: bounce;
+  }
+
+  [data-effect="drop"] {
+    --enter-y: -3rem;
+  }
+
+  .text-box {
+    background: color-mix(in srgb, #ffe066 calc(var(--mark, 0) * 100%), transparent);
+  }
+  """
+
+  slide "custom" do
+    heading "The CSS of a deck"
+
+    text_box do
+      at from: 2
+      effect :bounce
+      text_area(text: "Bounce at step 2")
+    end
+
+    text_box do
+      at from: 3
+      effect :drop
+      text_area(text: "Drop at step 3")
+    end
+
+    text_box do
+      on 4, state: :mark
+      text_area(text: "A marker at step 4")
+    end
+  end
+end
+
+Examples.OverlayCustom
+```
+
+![A box bounces in at step 2, a box drops in at step 3, and a marker shows at step 4](https://raw.githubusercontent.com/rellen/expresso/media/overlay-custom.gif)
+
+For each property of the theme, see [The css option](../reference/css-option.md).
+
 ## Highlight an element at a step
 
 Write an `on` entity with `state: :alert` in the element. The theme draws an outline around

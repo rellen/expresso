@@ -28,7 +28,7 @@ defmodule Expresso.Overlay.PropertiesTest do
 
     assert message ==
              "deck -> slide -> s: the set key `blur` writes the custom property `--blur`, " <>
-               "and the theme does not use that property"
+               "and neither the theme nor the CSS of the deck uses that property"
   end
 
   test "reports a state that the theme does not use" do

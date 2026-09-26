@@ -140,7 +140,9 @@ defmodule Expresso.Overlay.Render do
     property as a number with the initial value 0.
   - One rule for each step number to the maximum step number of the deck. It
     shows each element with that number in its `data-on` attribute, and it
-    sets `--shown: 1`. The theme reads that property for an effect.
+    sets `--shown: 1`. The theme reads that property for an effect. It also
+    plays the `--enter-animation` of the effect, and the theme plays the
+    `--exit-animation` of a hidden element.
   - One rule for each `on` entity, in document order. It sets the custom
     properties of the entity on the element, at each step of the entity.
   - One rule for each speed in milliseconds of the deck, such as
@@ -192,7 +194,8 @@ defmodule Expresso.Overlay.Render do
 
     for step <- 1..max//1 do
       "section[data-step=\"#{step}\"] [data-on~=\"#{step}\"] " <>
-        "{ opacity: 1; visibility: visible; transition-delay: 0s; --shown: 1; }"
+        "{ opacity: 1; visibility: visible; transition-delay: 0s; --shown: 1; " <>
+        "animation-name: var(--enter-animation); }"
     end
   end
 

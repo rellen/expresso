@@ -30,6 +30,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/animate-elements.md",
         "docs/reference/transition-option.md",
         "docs/reference/overlay-options.md",
+        "docs/reference/css-option.md",
         "docs/overlays.md",
         "docs/architecture.md",
         "docs/development.md",

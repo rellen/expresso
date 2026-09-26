@@ -273,12 +273,38 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   initial-value: 0px;
 }
 /*
+ * The `@keyframes` of an effect. The reveal rule of a step plays
+ * `--enter-animation`, and a hidden element plays `--exit-animation`. The
+ * change of `animation-name` starts the animation. The theme gives no
+ * keyframes. The `css` option of a deck can give them, for example:
+ *
+ *   @keyframes bounce { 60% { transform: scale(1.1); } }
+ *   [data-effect="bounce"] { --enter-animation: bounce; }
+ *
+ * A transition wins over an animation for the same property, so keyframes
+ * that change `opacity` have no effect during the fade. Keyframes that change
+ * `transform` play in full.
+ */
+@property --enter-animation {
+  syntax: "none | <custom-ident>";
+  inherits: false;
+  initial-value: none;
+}
+@property --exit-animation {
+  syntax: "none | <custom-ident>";
+  inherits: false;
+  initial-value: none;
+}
+/*
  * The base rule of an element with an overlay. The rule of its transitions
  * comes after the rule of the elements, below.
  */
 [data-on] {
   opacity: 0;
   visibility: hidden;
+  animation-name: var(--exit-animation);
+  animation-duration: var(--dur);
+  animation-timing-function: var(--ease);
 }
 .image {
   flex-grow: 1;

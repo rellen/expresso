@@ -9,7 +9,9 @@ defmodule Expresso.Extension do
   # The overlay specification of an element. Each element entity merges this
   # schema into its own. `docs/overlays.md` gives the forms.
   # The ways in which an element shows and hides at the steps of its `at`
-  # option. The slide and the deck take the same values.
+  # option. The slide and the deck take the same values. The type is an atom,
+  # because the css option of the deck can give more effects.
+  # `Expresso.Overlay.EffectVerifier` makes sure that each effect has a rule.
   @effects [:fade, :grow, :fly_up, :fly_down, :fly_left, :fly_right, :wipe, :blur]
 
   # The time and the easing of the animations of an element. A speed is a
@@ -23,9 +25,9 @@ defmodule Expresso.Extension do
       doc: "The steps that show the element. See docs/overlays.md."
     ],
     effect: [
-      type: {:in, @effects},
+      type: :atom,
       doc:
-        "How the element shows and hides: #{Enum.map_join(@effects, ", ", &inspect/1)}. The default is the effect of the nearest parent, of the slide or of the deck."
+        "How the element shows and hides: #{Enum.map_join(@effects, ", ", &inspect/1)}, or an effect of the css option of the deck. The default is the effect of the nearest parent, of the slide or of the deck."
     ],
     speed: [
       type: @speed,
@@ -324,7 +326,7 @@ defmodule Expresso.Extension do
           "The transition between the slide before and this slide, in the two directions. The default is the transition of the deck."
       ],
       effect: [
-        type: {:in, @effects},
+        type: :atom,
         doc:
           "How each element with an at option shows and hides. An element or its parent can replace it. The default is the effect of the deck."
       ],
@@ -350,8 +352,13 @@ defmodule Expresso.Extension do
         type: :string,
         doc: "A unique identifier for this deck."
       ],
+      css: [
+        type: :string,
+        doc:
+          "A style sheet, or the path of a file that holds one. The document puts it after the theme, so it can replace each rule of the theme and give new effects and states. See docs/reference/css-option.md."
+      ],
       effect: [
-        type: {:in, @effects},
+        type: :atom,
         default: :fade,
         doc:
           "How each element with an at option shows and hides. A slide, an element or its parent can replace it."
@@ -413,6 +420,7 @@ defmodule Expresso.Extension do
     verifiers: [
       Expresso.Overlay.Verifier,
       Expresso.Overlay.PropertyVerifier,
+      Expresso.Overlay.EffectVerifier,
       Expresso.Overlay.SizeVerifier
     ]
 end

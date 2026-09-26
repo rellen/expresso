@@ -11,21 +11,21 @@ defmodule Expresso.TimingTest do
     use Expresso
 
     name "timing deck"
-    speed(:slow)
+    speed :slow
 
     slide "one" do
-      easing(:spring)
+      easing :spring
 
       text_box do
         at 2
-        speed(:fast)
+        speed :fast
         text_area(text: "Fast")
       end
 
       text_box do
         at 2
-        speed(450)
-        easing(:linear)
+        speed 450
+        easing :linear
         text_area(text: "450 ms")
       end
 

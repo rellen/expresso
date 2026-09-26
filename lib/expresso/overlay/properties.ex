@@ -21,7 +21,9 @@ defmodule Expresso.Overlay.Properties do
   @doc """
   Give a warning for each custom property of a slide that is a defect
 
-  The function reports these conditions:
+  The names come from the theme and from the CSS of the deck, which
+  `Expresso.Css.merge/2` joins. The default is the theme alone. The function
+  reports these conditions:
 
   - The `state` option, or a key of the `set` option, names a property that
     the theme does not use. The renderer writes the property, and no rule of
@@ -36,49 +38,50 @@ defmodule Expresso.Overlay.Properties do
   the `on` entity when Spark has it. A module of a test has no debug
   information, and Spark then gives `nil`.
   """
-  @spec slide(Slide.t()) :: [warning()]
-  def slide(%Slide{} = slide) do
+  @spec slide(Slide.t(), Expresso.Css.names()) :: [warning()]
+  def slide(%Slide{} = slide, names \\ Theme.names()) do
     path = Enum.join([:deck, :slide | List.wrap(slide.name)], " -> ")
 
-    elements(slide.elements || [], path)
+    elements(slide.elements || [], {path, names})
   end
 
-  defp elements(elements, path), do: Enum.flat_map(elements, &element(&1, path))
+  defp elements(elements, context), do: Enum.flat_map(elements, &element(&1, context))
 
-  defp element(%Pause{}, _path), do: []
+  defp element(%Pause{}, _context), do: []
 
-  defp element(element, path) do
+  defp element(element, context) do
     on = Map.get(element, :on) || []
     children = Map.get(element, :elements) || []
 
-    Enum.flat_map(on, &entity(&1, path)) ++ elements(children, path)
+    Enum.flat_map(on, &entity(&1, context)) ++ elements(children, context)
   end
 
-  defp entity(%On{state: state, set: set} = on, path) do
-    states = if state, do: state(state, on, path), else: []
+  defp entity(%On{state: state, set: set} = on, context) do
+    states = if state, do: state(state, on, context), else: []
 
-    states ++ Enum.flat_map(set || [], fn {key, _value} -> set(key, on, path) end)
+    states ++ Enum.flat_map(set || [], fn {key, _value} -> set(key, on, context) end)
   end
 
-  defp state(state, on, path) do
-    syntax = Theme.syntax(state)
+  defp state(state, on, {path, names}) do
+    name = Atom.to_string(state)
+    syntax = Map.get(names.registered, name)
 
     cond do
-      not Theme.uses?(state) -> [unused(path, "the state", state, on)]
-      Theme.declares?(state) -> [declared(path, state, on)]
+      name not in names.used -> [unused(path, "the state", state, on)]
+      name in names.declared -> [declared(path, state, on)]
       syntax in [nil, "<number>"] -> []
       true -> [collision(path, state, syntax, on)]
     end
   end
 
-  defp set(key, on, path) do
-    if Theme.uses?(key), do: [], else: [unused(path, "the set key", key, on)]
+  defp set(key, on, {path, names}) do
+    if Atom.to_string(key) in names.used, do: [], else: [unused(path, "the set key", key, on)]
   end
 
   defp unused(path, kind, name, on) do
     message(
       "#{path}: #{kind} `#{name}` writes the custom property `--#{name}`, " <>
-        "and the theme does not use that property",
+        "and neither the theme nor the CSS of the deck uses that property",
       on
     )
   end

@@ -31,6 +31,7 @@ defmodule Expresso do
     effect = Spark.Dsl.Extension.get_opt(module, [:deck], :effect, :fade)
     speed = Spark.Dsl.Extension.get_opt(module, [:deck], :speed)
     easing = Spark.Dsl.Extension.get_opt(module, [:deck], :easing)
+    css = Spark.Dsl.Extension.get_opt(module, [:deck], :css)
 
     slides =
       module
@@ -48,7 +49,8 @@ defmodule Expresso do
         transition: transition,
         effect: effect,
         speed: speed,
-        easing: easing
+        easing: easing,
+        css: css
       },
       slides
     )
