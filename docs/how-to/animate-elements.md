@@ -185,9 +185,15 @@ Examples.OverlayRow
 
 ## Animate a part of a diagram
 
-Write an `on` entity in the `part` entity. The part gets the outline, moves, grows or
-turns, and the other parts of the diagram stay in place. A part turns and grows around
-its own center. The values of `x` and `y` are in the units of the SVG file.
+Give each part an `id` in the SVG file, and write a `part` entity with that `id` in the
+diagram. An `on` entity in the part moves, turns or grows it, and the other parts stay in
+place. A part turns and grows around its own center. The values of `x` and `y` are in the
+units of the SVG file.
+
+An arrow can stay on the box that it points to. Move the box, and then turn and grow the
+arrow to the new position of the box. The turn and the growth go around the center of the
+arrow, so also move the arrow by half of the move of the box. The start of the arrow then
+stays in place. A part with an `at` option, such as the box C, shows from that step.
 
 ```elixir
 defmodule Examples.OverlayDiagram do
@@ -196,16 +202,21 @@ defmodule Examples.OverlayDiagram do
   slide "diagram" do
     heading "Diagram parts"
 
-    diagram "examples/flow.svg" do
+    diagram "examples/animations/branch.svg" do
       width "70%"
 
-      part "input" do
-        on 2, state: :alert
+      part "b" do
+        on [from: 2], set: [y: "-40px"]
       end
 
-      part "output" do
-        on [from: 3], set: [scale: 1.3, rotate: "10deg"]
+      # The arrow turns and grows around its center. The move keeps its start
+      # at box A, and its tip follows box B.
+      part "arrow-b" do
+        on [from: 2], set: [y: "-20px", rotate: "-19.5deg", scale: 1.061]
       end
+
+      part "arrow-c", at: [from: 3]
+      part "c", at: [from: 3]
     end
   end
 end
@@ -213,7 +224,7 @@ end
 Examples.OverlayDiagram
 ```
 
-![The first box gets an outline at step 2, and the last box grows and turns at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-diagram.gif)
+![Box B moves up, and its arrow turns and grows with it. Box C and its arrow then fade in](https://raw.githubusercontent.com/rellen/expresso/media/overlay-diagram.gif)
 
 ## Show a list one item at a time
 

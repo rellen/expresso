@@ -4,16 +4,21 @@ defmodule Examples.OverlayDiagram do
   slide "diagram" do
     heading "Diagram parts"
 
-    diagram "examples/flow.svg" do
+    diagram "examples/animations/branch.svg" do
       width "70%"
 
-      part "input" do
-        on 2, state: :alert
+      part "b" do
+        on [from: 2], set: [y: "-40px"]
       end
 
-      part "output" do
-        on [from: 3], set: [scale: 1.3, rotate: "10deg"]
+      # The arrow turns and grows around its center. The move keeps its start
+      # at box A, and its tip follows box B.
+      part "arrow-b" do
+        on [from: 2], set: [y: "-20px", rotate: "-19.5deg", scale: 1.061]
       end
+
+      part "arrow-c", at: [from: 3]
+      part "c", at: [from: 3]
     end
   end
 end

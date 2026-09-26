@@ -67,7 +67,7 @@ then moves, changes its size and turns together. Code keeps the colors of its sy
 
 ![A table row with an outline at step 2, and a row that moves at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-row.gif)
 
-![A diagram part with an outline at step 2, and a part that grows and turns at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-diagram.gif)
+![A diagram box that moves up with its arrow at step 2, and a new box and arrow at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-diagram.gif)
 
 ## `reveal`
 
