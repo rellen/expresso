@@ -686,13 +686,18 @@ export function accepts(
 
 // Tell if data from the other window is a message of the presenter.
 export function isMessage(data: unknown): data is Message {
-  if (typeof data !== "object" || data === null) {
+  if (
+    typeof data !== "object" ||
+    data === null ||
+    !("expresso" in data) ||
+    !("slide" in data) ||
+    !("step" in data) ||
+    !("blank" in data) ||
+    !("time" in data)
+  ) {
     return false;
   }
-  const { expresso, slide, step, blank, time } = data as Record<
-    string,
-    unknown
-  >;
+  const { expresso, slide, step, blank, time } = data;
   return (
     expresso === "position" &&
     Number.isInteger(slide) &&
