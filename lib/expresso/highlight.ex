@@ -59,10 +59,14 @@ defmodule Expresso.Highlight do
     Enum.each(@lexers, &Application.ensure_all_started/1)
 
     case Makeup.Registry.fetch_lexer_by_name(language) do
+      # `Makeup.Lexer.split_into_lines/1` gives the tokens of a last line with
+      # no line break in reverse order. The text therefore gets a line break
+      # at its end, and the function drops the empty line after that break.
       {:ok, {lexer, options}} ->
-        text
+        (text <> "\n")
         |> lexer.lex(options)
         |> Makeup.Lexer.split_into_lines()
+        |> Enum.drop(-1)
         |> Enum.map(&line/1)
 
       :error ->
