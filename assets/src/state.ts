@@ -288,6 +288,11 @@ export type Kind = "none" | "fade" | "slide" | "zoom";
 
 export const KINDS: readonly Kind[] = ["none", "fade", "slide", "zoom"];
 
+// Tell if a value is a kind of transition.
+export function isKind(value: string | undefined): value is Kind {
+  return KINDS.some((kind) => kind === value);
+}
+
 // A move to a slide with a higher number goes forward. `slide` and `zoom`
 // use the direction, and `fade` does not.
 export type Transition = { kind: Kind; direction: "forward" | "back" };

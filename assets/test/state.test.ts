@@ -10,6 +10,7 @@ import {
   follow,
   fraction,
   fromHash,
+  isKind,
   initial,
   isMessage,
   maxStep,
@@ -604,5 +605,14 @@ test("a black screen, the overview and the list of keys have no transition", () 
       null,
       key,
     );
+  }
+});
+
+test("isKind tells if a value is a kind of transition", () => {
+  for (const kind of ["none", "fade", "slide", "zoom"]) {
+    assert.equal(isKind(kind), true, kind);
+  }
+  for (const value of [undefined, "", "Fade", "wipe", "fade "]) {
+    assert.equal(isKind(value), false, String(value));
   }
 });

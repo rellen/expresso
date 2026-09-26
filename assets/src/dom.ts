@@ -6,7 +6,7 @@
 import { rows } from "./help.ts";
 import { describe } from "./speaker.ts";
 import type { Pace } from "./speaker.ts";
-import { KINDS, columns, fraction, maxStep, mode, upcoming } from "./state.ts";
+import { columns, fraction, isKind, maxStep, mode, upcoming } from "./state.ts";
 import type { Kind, Limits, State, Transition } from "./state.ts";
 
 // The renderer writes `data-progress="false"` on the `body` for a deck that
@@ -33,8 +33,8 @@ export function limits(): Limits {
 export function kinds(limits: Limits): Kind[] {
   const all: Kind[] = [];
   for (let number = 1; number <= limits.slides; number++) {
-    const value = slide(number).dataset.transition as Kind | undefined;
-    all.push(value !== undefined && KINDS.includes(value) ? value : "fade");
+    const value = slide(number).dataset.transition;
+    all.push(isKind(value) ? value : "fade");
   }
   return all;
 }
