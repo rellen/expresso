@@ -9,6 +9,7 @@ const example: Example = {
   address: "",
   actions: ["j", { advance: 90_000 }],
   still: false,
+  height: 720,
 };
 
 test("isAdvance tells a move of the clock from a key", () => {

@@ -237,7 +237,7 @@ The handout view shows one page for each step of each slide. In this view, only 
 `p`, `a` and `?` operate, so the other keys scroll the pages. A printer gets this view
 without the key.
 
-![The handout view: one page for each step, with the notes under each page](https://raw.githubusercontent.com/rellen/expresso/media/present-handout.png)
+![The handout view: three pages, one for each step, with the notes under each page](https://raw.githubusercontent.com/rellen/expresso/media/present-handout.png)
 
 A slide can select the steps that get a page, with the forms of `at`:
 
