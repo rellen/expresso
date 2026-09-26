@@ -128,11 +128,6 @@ The dependency is present in `dev` and in `test`. `mix format` runs in `dev`, an
 `deps/stream_data/.formatter.exs` through `import_deps`. Therefore the formatter writes no
 parentheses after `check all`.
 
-`fast-check` gives the property tests of the presenter script.
-`assets/test/state.property.test.ts` gives an example. When a property fails, `fast-check`
-gives a `seed` and a `path`. Give both to `fc.assert` as parameters to get the same value
-again.
-
 ### The browser tests
 
 The tests of `test/e2e/` render a deck to an HTML file, open the file in Chromium, and
@@ -260,7 +255,10 @@ the Chromium of the container, and that Chromium can be older than the new versi
 - `assets/src/state.ts` — the state of the presenter and the function that changes it.
 - `assets/src/dom.ts` — the code that reads the document and writes to it.
 - `assets/src/main.ts` — the entry, which esbuild bundles.
-- `assets/test/state.test.ts` — the tests of the state.
+- `assets/test/state.test.ts` — the example tests of the state.
+- `assets/test/state_property.test.ts` and `assets/test/speaker_property.test.ts` — the
+  property tests of the state and of the texts of the speaker view.
+- `assets/test/property.ts` — the generators of the property tests, and `RUNS`.
 - `assets/tsconfig.json` — the options of the type check.
 - `package.json` — the tools, with a pinned version of each.
 - `config/config.exs` — the esbuild profile.
@@ -279,6 +277,15 @@ npm run check    # tsc, the type check
 npm test         # node --test, which runs a .ts file directly
 npm run format   # prettier
 ```
+
+`fast-check` gives the property tests. It is a development dependency, and the bundle does
+not import it. "Property tests" above tells how `stream_data` does the same for the Elixir
+code. Each property of the presenter script gets `RUNS`, which is 500, as `config/config.exs` gives each property
+of `stream_data`. The generators make many forms, such as a state after 0 to 60 keys,
+clicks and messages, and 100 runs do not reach enough of them.
+
+When a property fails, `fast-check` gives a `seed` and a `path`. Give both to `fc.assert`
+as parameters to get the same value again.
 
 Node runs the test files with no build step. Node 24 reads a `.ts` file
 directly when the file uses only erasable syntax, and `erasableSyntaxOnly` in
