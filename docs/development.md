@@ -197,9 +197,10 @@ Therefore the site and the checks come from one build, and a defect in `lint` ke
 old site. The site is public, as the repository is. GitHub gives a private site to an
 organization on GitHub Enterprise Cloud only.
 
-The first run of `pages` turns Pages on for the repository, with GitHub Actions as the
-source. When that step fails, turn Pages on by hand in the settings of the repository,
-under "Pages", with the source "GitHub Actions".
+The repository must have Pages on, with GitHub Actions as the source. Turn it on in the
+settings of the repository, under "Pages". The token of a workflow cannot turn it on: the
+first run of `pages` tried, and GitHub refused with "Resource not accessible by
+integration". A run of `pages` without the site fails at `configure-pages`.
 
 From 2026-09-17 to 2026-09-18 the workflow ran two jobs, one for the versions of the
 container and one for the versions of `.tool-versions`. The container then took the
