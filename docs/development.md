@@ -114,7 +114,12 @@ example. It makes a random width, and it compares the result against the rule.
 environment only. `Expresso.Test.CSS` makes a value of the CSS `width` property: a length
 in each unit of CSS Values and Units 4, a percentage, a keyword, a custom property and a
 math function such as `calc`, `min`, `max` and `clamp`. The module makes the text of the
-value, because the DSL holds a width as a string.
+value, because the DSL holds a width as a string. `Expresso.Test.Overlay` makes an overlay
+specification of each form of `docs/overlays.md`, and a term that `Expresso.Overlay.new/1`
+refuses.
+
+A property that fails gives the smallest value that it found, and the seed of the run. Run
+`mix test --seed <seed> <file>:<line>` to get the same values again.
 
 `config/config.exs` gives each property 500 runs. The generators make many forms, and the
 default of 100 runs does not reach enough of them.
@@ -122,6 +127,11 @@ default of 100 runs does not reach enough of them.
 The dependency is present in `dev` and in `test`. `mix format` runs in `dev`, and it reads
 `deps/stream_data/.formatter.exs` through `import_deps`. Therefore the formatter writes no
 parentheses after `check all`.
+
+`fast-check` gives the property tests of the presenter script.
+`assets/test/state.property.test.ts` gives an example. When a property fails, `fast-check`
+gives a `seed` and a `path`. Give both to `fc.assert` as parameters to get the same value
+again.
 
 ### The browser tests
 
