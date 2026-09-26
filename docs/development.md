@@ -189,12 +189,12 @@ The last job, `Erlang/OTP 29, Elixir 1.20, Node 24`, needs each other job. It fa
 one of them fails, is cancelled or is skipped. It has the name of the one job of the earlier
 workflow.
 
-After a push to `main`, two more jobs run. `media` puts the GIFs of the guides on the
-branch `media`, and "Record the GIFs of the guides" gives the details. `pages` puts the
-site of `mix docs` on GitHub Pages, at https://rellen.github.io/expresso/. The job `lint`
-makes the site, and it uploads the directory `doc/` when each of its steps succeeded.
-Therefore the site and the checks come from one build, and a defect in `lint` keeps the
-old site. The site is public, as the repository is. GitHub gives a private site to an
+After a push to `main`, two more jobs run. `media` puts the GIFs of the guides on the branch
+`media`, and "Record the GIFs and the stills of the examples" gives the details. `pages`
+puts the site of `mix docs` on GitHub Pages, at https://rellen.github.io/expresso/. The job
+`lint` makes the site, and it uploads the directory `doc/` when each of its steps succeeded.
+Therefore the site and the checks come from one build, and a defect in `lint` keeps the old
+site. The site is public, as the repository is. GitHub gives a private site to an
 organization on GitHub Enterprise Cloud only.
 
 The repository must have Pages on, with GitHub Actions as the source. Turn it on in the
@@ -335,10 +335,11 @@ this pattern.
 Prettier formats the files in `assets/`. `package.json` pins the version, and
 `npm install` gives the command. Run `npm run format`, which is not one of the checks.
 
-## Record the GIFs of the guides
+## Record the GIFs and the stills of the examples
 
 The how-to guides and the reference pages show a GIF of each example deck of
-`examples/animations/`. `mix expresso.gifs` records them:
+`examples/animations/`. "Present a deck" in `README.md` shows a GIF or a still of each
+example deck of `examples/presenter/`. `mix expresso.gifs` records them:
 
 ```sh
 mix expresso.gifs                        # each example, into _build/gifs
@@ -346,25 +347,38 @@ mix expresso.gifs /tmp/gifs overlay-at   # one example, into /tmp/gifs
 ```
 
 The task renders each example deck to an HTML file. It then runs the recorder
-`assets/gifs/record.ts` with Node, and it gives the recorder a manifest with the HTML files
-and the keys of each example. `npm run gifs -- <manifest> <output>` runs only the recorder.
-The list of the examples, with their keys, is in `Mix.Tasks.Expresso.Gifs`.
+`assets/gifs/record.ts` with Node, and it gives the recorder a manifest with the HTML file,
+the address and the actions of each example. `npm run gifs -- <manifest> <output>` runs
+only the recorder. The list of the examples is in `Mix.Tasks.Expresso.Gifs`. An example
+has:
 
-The recorder opens each document in Chromium, presses the keys, and takes a screenshot of
+- a name, which gives the name of the file;
+- a deck file;
+- an address after the path of the HTML file, such as `?speaker#2.1`, for a view or a
+  position;
+- actions, which are keys, or a move of the clock of the page, such as
+  `{:advance, 90_000}`, for the timer of the speaker view;
+- `still: true` for a PNG of the page after the actions, in place of a GIF.
+
+The recorder opens each document in Chromium, does the actions, and takes a screenshot of
 each frame. After a key, it pauses each animation of the page, and it moves the animations
-to the time of each frame. The frames therefore do not depend on the speed of the computer.
-The recorder encodes the frames with `gifenc`, a JavaScript package, so it needs no program
-such as ffmpeg.
+to the time of each frame. The clock of the page is fixed, and a move of the clock sets it
+to a later time. The frames therefore do not depend on the speed or the time of the
+computer. The recorder encodes the frames with `gifenc`, a JavaScript package, so it needs
+no program such as ffmpeg. A still is the last frame, as a PNG.
 
-The job `gifs` of the workflow records the GIFs for each pull request, and the artifact
+The job `gifs` of the workflow records the files for each pull request, and the artifact
 `gifs` holds them. After a push to main, the job `media` replaces the branch `media` with
-one commit of the new GIFs. The guides show each GIF from that branch, so the history of
-main holds no GIF.
+one commit of the new files. The guides and the README show each file from that branch, so
+the history of main holds no GIF.
 
-To add an example, write a deck in `examples/animations/`, and add it with its keys to the
-list of the task. Then show its code and its GIF in a guide.
-`test/expresso/examples_test.exs` makes sure that a how-to guide shows the code of each deck
-as it is in the file, and that the guides show each GIF.
+To add an example of a guide, write a deck in `examples/animations/`, and add it with its
+keys to the list of the task. Then show its code and its GIF in a guide. To add an example
+of the README, write a deck in `examples/presenter/`, or use one of the decks there, and
+add the example to the list. Then show its file in the README.
+`test/expresso/examples_test.exs` makes sure that a how-to guide shows the code of each
+deck of the guides as it is in the file, that the guides show each of their files, and
+that the README shows each of its files.
 
 ## Look at a deck
 
