@@ -10,7 +10,9 @@ defmodule Expresso.Element.Table do
   step. The transformer gives `at [from: :next]` to each row that has no `at`
   option, as it does for the items of a list. With the `header` option, the
   header row keeps no specification, and it shows with the table.
-  `docs/overlays.md` gives the rules.
+
+  The `dim` option gives each row the state `dim` from the first step of a
+  later row. The header row does not dim. `docs/overlays.md` gives the rules.
   """
 
   use Expresso.Element
@@ -24,6 +26,7 @@ defmodule Expresso.Element.Table do
     :el,
     header: false,
     reveal: false,
+    dim: false,
     on: [],
     elements: [],
     __spark_metadata__: nil
@@ -32,14 +35,15 @@ defmodule Expresso.Element.Table do
   @doc """
   Make a table from rows
 
-  The options are `header` and `reveal`, and each takes a boolean.
+  The options are `header`, `reveal` and `dim`, and each takes a boolean.
   """
   @spec new([Expresso.Element.Row.t()], keyword()) :: t()
   def new(rows, opts \\ []) do
     %__MODULE__{
       elements: rows,
       header: Keyword.get(opts, :header, false),
-      reveal: Keyword.get(opts, :reveal, false)
+      reveal: Keyword.get(opts, :reveal, false),
+      dim: Keyword.get(opts, :dim, false)
     }
   end
 

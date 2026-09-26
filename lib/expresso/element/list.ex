@@ -10,7 +10,10 @@ defmodule Expresso.Element.List do
   step. The transformer gives `at [from: :next]` to each item that has no `at`
   option, as the `auto_reveal` option of a slide does for its elements. A list
   with an absolute `at` option starts its items at its own first step, so no
-  item gets a step at which the list does not show. `docs/overlays.md` gives
+  item gets a step at which the list does not show.
+
+  The `dim` option gives each item the state `dim` from the first step of a
+  later item, so the newest item has the attention. `docs/overlays.md` gives
   the rules.
   """
 
@@ -25,6 +28,7 @@ defmodule Expresso.Element.List do
     :el,
     ordered: false,
     reveal: false,
+    dim: false,
     on: [],
     elements: [],
     __spark_metadata__: nil
@@ -33,14 +37,15 @@ defmodule Expresso.Element.List do
   @doc """
   Make a list from items
 
-  The options are `ordered` and `reveal`, and each takes a boolean.
+  The options are `ordered`, `reveal` and `dim`, and each takes a boolean.
   """
   @spec new([Expresso.Element.Item.t()], keyword()) :: t()
   def new(items, opts \\ []) do
     %__MODULE__{
       elements: items,
       ordered: Keyword.get(opts, :ordered, false),
-      reveal: Keyword.get(opts, :reveal, false)
+      reveal: Keyword.get(opts, :reveal, false),
+      dim: Keyword.get(opts, :dim, false)
     }
   end
 

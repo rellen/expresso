@@ -46,6 +46,11 @@ defmodule Expresso.Overlay.Expand do
   Therefore the children show one after the other from the first step of the
   element, and no child gets a step at which the element does not show.
 
+  The `dim` option of a list, a table or a code element gives each child the
+  state `dim` from the first step of a later child. The function adds an `on`
+  entity with the state after the expansion, with the steps of the child from
+  that step. A child without steps does not dim.
+
   The function gives an error when a specification has a step number that is
   more than the maximum. It gives the same error for a step of the `handout`
   option of the slide. That option does not change the maximum.
@@ -192,8 +197,42 @@ defmodule Expresso.Overlay.Expand do
     with {:ok, steps} <- expand_spec(at(element), max),
          {:ok, on} <- expand_on(on(element), max),
          {:ok, children} <- expand(children(element), max) do
-      element = put(element, at(element), on, children)
+      element = put(element, at(element), on, dim(element, children))
       {:ok, %{element | steps: steps}}
+    end
+  end
+
+  # The dim option. A child dims from the first step of a later child, which
+  # is the smallest first step that is more than its own first step. The state
+  # applies only at the steps of the child, so the child shows at each step of
+  # its on entity. A child without steps never dims, and a later child does
+  # not wait for it. The on entity goes after the on entities of the child.
+
+  defp dim(%{dim: true}, children) do
+    firsts = for %{steps: [first | _]} <- children, uniq: true, do: first
+
+    Enum.map(children, fn
+      %{steps: [first | _] = steps} = child ->
+        case Enum.filter(firsts, &(&1 > first)) do
+          [] -> child
+          later -> dim_child(child, steps, Enum.min(later))
+        end
+
+      child ->
+        child
+    end)
+  end
+
+  defp dim(_element, children), do: children
+
+  defp dim_child(child, steps, from) do
+    case Enum.filter(steps, &(&1 >= from)) do
+      [] ->
+        child
+
+      steps ->
+        {:ok, at} = Overlay.new(steps)
+        %{child | on: on(child) ++ [%On{at: at, state: :dim, steps: steps}]}
     end
   end
 

@@ -14,7 +14,10 @@ defmodule Expresso.Element.Code do
   shows at each step. A hidden line keeps its space, so the block does not
   move when a group shows. A line number that is more than the number of
   lines of the text gives an error, because such a group shows nothing.
-  `docs/overlays.md` gives the rules.
+
+  The `dim` option gives each group the state `dim` from the first step of a
+  later group. A line that is in no group does not dim. `docs/overlays.md`
+  gives the rules.
   """
 
   use Expresso.Element
@@ -32,6 +35,7 @@ defmodule Expresso.Element.Code do
     :at,
     :steps,
     :el,
+    dim: false,
     on: [],
     elements: [],
     __spark_metadata__: nil
@@ -40,16 +44,17 @@ defmodule Expresso.Element.Code do
   @doc """
   Make a code element with text
 
-  The options are `lang`, the name of the language, and `reveal`, a list of
-  line numbers and of ranges. The function raises for a `reveal` option with
-  a line number that the text does not have.
+  The options are `lang`, the name of the language, `reveal`, a list of line
+  numbers and of ranges, and `dim`, a boolean. The function raises for a
+  `reveal` option with a line number that the text does not have.
   """
   @spec new(String.t(), keyword()) :: t()
   def new(text, opts \\ []) do
     code = %__MODULE__{
       text: text,
       lang: Keyword.get(opts, :lang),
-      reveal: Keyword.get(opts, :reveal)
+      reveal: Keyword.get(opts, :reveal),
+      dim: Keyword.get(opts, :dim, false)
     }
 
     case build(code) do

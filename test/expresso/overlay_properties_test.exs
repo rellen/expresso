@@ -24,10 +24,10 @@ defmodule Expresso.Overlay.PropertiesTest do
   end
 
   test "reports a set key that the theme does not use" do
-    [message] = warnings([%TextBox{on: [%On{set: [dim: 0.3]}]}])
+    [message] = warnings([%TextBox{on: [%On{set: [blur: 0.3]}]}])
 
     assert message ==
-             "deck -> slide -> s: the set key `dim` writes the custom property `--dim`, " <>
+             "deck -> slide -> s: the set key `blur` writes the custom property `--blur`, " <>
                "and the theme does not use that property"
   end
 
@@ -55,7 +55,7 @@ defmodule Expresso.Overlay.PropertiesTest do
 
   test "reads each on entity of each element, and each child element" do
     box = %TextBox{
-      on: [%On{state: :glow}, %On{set: [dim: 1]}],
+      on: [%On{state: :glow}, %On{set: [blur: 1]}],
       elements: [%TextArea{on: [%On{set: [blur: 1]}]}]
     }
 

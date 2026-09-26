@@ -10,16 +10,21 @@ defmodule Expresso.ThemeTest do
     test "is true for a property that the theme registers" do
       assert Theme.uses?(:x)
       assert Theme.uses?(:y)
+      assert Theme.uses?(:scale)
+      assert Theme.uses?(:rotate)
+      assert Theme.uses?(:opacity)
     end
 
     test "is true for a property that the theme reads and does not register" do
       assert Theme.uses?(:alert)
+      assert Theme.uses?(:dim)
+      assert Theme.uses?(:color)
       assert Theme.uses?(:dur)
       assert Theme.uses?(:ease)
     end
 
     test "is false for a property that the theme does not name" do
-      refute Theme.uses?(:dim)
+      refute Theme.uses?(:blur)
       refute Theme.uses?(:glow)
     end
   end
@@ -41,11 +46,15 @@ defmodule Expresso.ThemeTest do
     test "gives the descriptor of a property that the theme registers" do
       assert Theme.syntax(:x) == "<length>"
       assert Theme.syntax(:y) == "<length>"
+      assert Theme.syntax(:scale) == "<number>"
+      assert Theme.syntax(:rotate) == "<angle>"
+      assert Theme.syntax(:opacity) == "<number>"
     end
 
     test "gives nil for a property that the theme does not register" do
       assert Theme.syntax(:alert) == nil
       assert Theme.syntax(:dim) == nil
+      assert Theme.syntax(:color) == nil
     end
   end
 end

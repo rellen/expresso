@@ -205,6 +205,36 @@ These rules apply with the option:
   that is more than the number of lines of the text gives an error from
   `Expresso.Element.Code.build/1`, because such a group shows nothing.
 
+### The dim option
+
+A `list`, a `table` or a `code` element also takes `dim true`. Each child then gets the
+state `dim` from the first step of a later child. The earlier items stay on the slide, and
+the newest item has the attention of the audience.
+
+```elixir
+list do
+  reveal true
+  dim true
+  item "This item dims at step 2."
+  item "This item dims at step 3."
+  item "This item does not dim."
+end
+```
+
+These rules apply with the option:
+
+- A later child is a child with a first step that is more than the first step of the
+  child. The state starts at the smallest such step.
+- The state applies only at the steps of the child. A child that does not show at that
+  step does not dim.
+- A child without steps, such as the header of a table, does not dim, and it is not a
+  later child.
+- The transformer adds one `on` entity with the state to the child, after the `on`
+  entities of the child. The renderer then writes it as it writes each `on` entity.
+
+The option does not need `reveal`. It reads the steps of the children, and a child with an
+`at` option has steps too.
+
 ## Per-step state
 
 The `on` entity gives a state to an element for a set of steps. The `on` entity accepts
@@ -213,8 +243,11 @@ the same specification forms as the `at` option.
 The `on` entity can change two things only:
 
 - `state` names a state of the theme. The compiler maps the state `alert` to the custom
-  property `--alert`, and it sets the property to `1` on those steps.
+  property `--alert`, and it sets the property to `1` on those steps. The theme of this
+  project has the states `alert` and `dim`.
 - `set` writes custom properties. The compiler maps the key `x` to the property `--x`.
+  The theme of this project reads the keys `x`, `y`, `scale`, `rotate`, `opacity` and
+  `color`.
 
 ```elixir
 text_box do
@@ -511,7 +544,8 @@ operation.
 `on` entity its `data-el` value, in the `el` field of the struct. `attributes/1` makes the
 two attributes of one element, and the render function of the element puts them on its
 root tag. `style/1` makes the generated style block. The base rule and the registration
-of `--x` and `--y` are in `assets/style.css`, because the theme owns them. The base rule
+of `--x`, `--y`, `--scale`, `--rotate` and `--opacity` are in `assets/style.css`, because
+the theme owns them. The base rule
 also sets `visibility: hidden`, and the reveal rule sets `visibility: visible`, so a
 hidden element is not in the accessibility tree.
 
@@ -589,6 +623,17 @@ The element reads the property in a base rule:
   transition: transform var(--dur) var(--ease);
 }
 ```
+
+The theme does not register `--color`. A registration needs an initial value, and no
+color value means "the color of the parent". The theme reads `var(--color, inherit)`, and
+the transition is on `color`, which CSS calculates as a color. Only an element with an `on`
+entity has this rule and this transition. A child with its own transition of an inherited
+property starts a new transition at each frame of its parent, and it arrives late.
+
+`--opacity` and the state `dim` change `filter: opacity(...)`, and not `opacity`. The
+reveal rule of a step sets `opacity: 1`, and that rule has a higher specificity than the
+rule of the theme. The filter multiplies the two values, so the fade of `at` works as
+before. A theme can set `--dim-opacity`, and the default is 0.4.
 
 The `@property` at-rule became available in all major browsers in July 2024. Chrome 85,
 Safari 16.4 and Firefox 128 support it. The floor of this design is that date, and not

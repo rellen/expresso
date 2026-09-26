@@ -36,14 +36,29 @@ step specification.
 | Option | Effect |
 | --- | --- |
 | `state: :alert` | The theme draws an outline around the element. |
+| `state: :dim` | The element shows at 40% of its opacity. |
 | `set: [x: "-300px", y: "0px"]` | The element moves by that distance. |
+| `set: [scale: 1.5]` | The element changes its size by that factor. |
+| `set: [rotate: "-8deg"]` | The element turns by that angle. |
+| `set: [opacity: 0.3]` | The element shows at that opacity, from 0 to 1. |
+| `set: [color: "#c92a2a"]` | The text of the element changes to that color. |
 
 The theme owns the custom properties that `set` writes. The compiler gives a warning for a
-key that the theme does not use. The theme of this project uses `x` and `y`.
+key that the theme does not use. The theme of this project uses `x`, `y`, `scale`,
+`rotate`, `opacity` and `color`.
+
+Two `on` entities can apply at the same step, and each writes its own keys. The element
+then moves, changes its size and turns together. Code keeps the colors of its syntax, and
+`color` changes only the text without a syntax color. A theme can change the level of
+`dim` with the custom property `--dim-opacity`.
 
 ![The alert state at step 2](https://raw.githubusercontent.com/rellen/expresso/media/overlay-alert.gif)
 
 ![The move of a box at step 2](https://raw.githubusercontent.com/rellen/expresso/media/overlay-move.gif)
+
+![A box that grows at step 2 and turns at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-scale.gif)
+
+![Text that turns red at step 2, and a box that fades to 30% at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-color.gif)
 
 ## `reveal`
 
@@ -56,6 +71,18 @@ key that the theme does not use. The theme of this project uses `x` and `y`.
 ![The items of a list, one at each step](https://raw.githubusercontent.com/rellen/expresso/media/overlay-list.gif)
 
 ![Two groups of lines of code](https://raw.githubusercontent.com/rellen/expresso/media/overlay-code.gif)
+
+## `dim`
+
+`dim true` on a `list`, a `table` or a `code` element gives each child the state `dim` from
+the first step of a later child. The newest child then shows in full, and the earlier
+children show at 40%. The option reads the steps of the children, so it works with
+`reveal` and with an `at` option on each child. A child without steps, such as the header
+of a table, does not dim.
+
+![The earlier items of a list dim](https://raw.githubusercontent.com/rellen/expresso/media/overlay-dim.gif)
+
+![The earlier groups of lines of code dim](https://raw.githubusercontent.com/rellen/expresso/media/overlay-dim-code.gif)
 
 ## `auto_reveal`
 

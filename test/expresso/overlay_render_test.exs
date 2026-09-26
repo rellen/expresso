@@ -44,6 +44,25 @@ defmodule Expresso.Overlay.RenderTest do
     end
   end
 
+  defmodule DimDeck do
+    use Expresso
+
+    slide "dim" do
+      list do
+        reveal true
+        dim true
+        item "first"
+        item "second"
+      end
+
+      code "elixir" do
+        reveal [1, 2]
+        dim true
+        text "a = 1\nb = 2\n"
+      end
+    end
+  end
+
   defp deck(slides) do
     slides
     |> Enum.with_index(1)
@@ -250,6 +269,34 @@ defmodule Expresso.Overlay.RenderTest do
       refute generated =~ ~s(section[data-step="4"])
       assert generated =~ ~s(section[data-step="2"] [data-el="s1-e1"] { --alert: 1; })
       assert generated =~ ~s(section[data-step="3"] [data-el="s1-e3"] { --x: 400px; --y: 100px; })
+    end
+  end
+
+  describe "the dim option" do
+    setup do
+      html = DimDeck |> Expresso.parse() |> Expresso.Deck.render()
+      {:ok, document: Floki.parse_document!(html)}
+    end
+
+    test "writes the state dim for each earlier item and group", %{document: document} do
+      [_fonts, _theme, _highlight, generated] =
+        document |> Floki.find("head style") |> Enum.map(&Floki.text/1)
+
+      assert generated =~ "@property --dim"
+
+      assert generated =~
+               ~s(section[data-step="2"] [data-el="s1-e2"], ) <>
+                 ~s(section[data-step="3"] [data-el="s1-e2"], ) <>
+                 ~s(section[data-step="4"] [data-el="s1-e2"] { --dim: 1; })
+
+      assert generated =~ ~s(section[data-step="4"] [data-el="s1-e5"] { --dim: 1; })
+    end
+
+    test "writes data-el on the lines of a group that dims", %{document: document} do
+      lines = Floki.find(document, "#slide-1 .code .line")
+
+      assert Floki.attribute(lines, "data-el") == ["s1-e5"]
+      assert Floki.attribute(lines, "data-on") == ["3 4", "4"]
     end
   end
 end

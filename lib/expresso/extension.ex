@@ -90,6 +90,11 @@ defmodule Expresso.Extension do
                     type: :boolean,
                     default: false,
                     doc: "Show the items one after the other. See docs/overlays.md."
+                  ],
+                  dim: [
+                    type: :boolean,
+                    default: false,
+                    doc: "Dim each child when a later child shows. See docs/overlays.md."
                   ]
                 ]
           }
@@ -121,6 +126,11 @@ defmodule Expresso.Extension do
             type: :boolean,
             default: false,
             doc: "Show the rows one after the other. See docs/overlays.md."
+          ],
+          dim: [
+            type: :boolean,
+            default: false,
+            doc: "Dim each child when a later child shows. See docs/overlays.md."
           ]
         ]
   }
@@ -162,6 +172,11 @@ defmodule Expresso.Extension do
           reveal: [
             type: {:custom, Expresso.Element.Code, :reveal, []},
             doc: "Line numbers and ranges, one group at each step. See docs/overlays.md."
+          ],
+          dim: [
+            type: :boolean,
+            default: false,
+            doc: "Dim each group of lines when a later group shows. See docs/overlays.md."
           ]
         ]
   }
