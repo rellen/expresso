@@ -5,9 +5,9 @@ defmodule Expresso.Test.Overlay do
   `item/0` makes one item of each form of `docs/overlays.md`: an integer, a
   range, `:next`, `from: n` and `from: :next`. `spec/0` makes a specification,
   which is one item or a list of items, and `relative_spec/0` makes one with a
-  `:next`. `invalid/0` makes a term that
-  `Expresso.Overlay.new/1` refuses. The steps stay small, so a maximum step
-  from `max/0` is sometimes less than a step and sometimes more.
+  `:next`. `invalid/0` makes a term that `Expresso.Overlay.new/1` refuses. The
+  steps stay small, so a maximum step from `max/0` is sometimes less than a
+  step and sometimes more.
   """
 
   import StreamData
