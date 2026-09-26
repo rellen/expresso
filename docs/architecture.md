@@ -133,6 +133,12 @@ Two entry points call `Expresso.main/2`:
 - `Mix.Tasks.Expresso`, for the command `mix expresso <input> [output]`.
 - `Expresso.BurritoEntryPoint`, for the binary that Burrito makes.
 
+The launcher of Burrito starts the VM with `-s elixir start_cli`. After the boot, the CLI of
+Elixir runs the first argument as a script, and then it halts the VM. Therefore
+`Expresso.BurritoEntryPoint.start/2` runs the command before it returns, and it halts the
+VM. `Expresso.BurritoEntryPoint.run/1` gives the exit status: 0 for `:ok`, and 1 for an
+error tuple or an exception. The CLI of Elixir then does not start.
+
 ## The document
 
 `Expresso.Deck.render/1` writes one HTML document with this structure. Each part below
@@ -775,6 +781,8 @@ The commands are:
 - `mix release expresso_cli_app` makes a binary with Burrito. The targets are macOS and
   Linux, for x86_64 and for aarch64. Burrito needs Zig 0.16.0 and `xz` on the path.
   `shell.nix` pins the Zig version, and `mix.exs` must agree with it.
+- `mix test --only release` runs the binary, and `EXPRESSO_BINARY` gives its path.
+  `docs/development.md` gives the commands.
 
 ## Open work
 
