@@ -84,6 +84,101 @@ h2 {
     --dur: 0s;
   }
 }
+/*
+ * The transition from one slide to the next in the present view. The
+ * presenter writes `data-transition` and `data-direction` on the `html`
+ * element, and it runs the change as a view transition. Only the slide area
+ * takes part, so the progress bar does not move with the slide. A theme can
+ * set `--transition-dur`.
+ */
+:root {
+  --transition-dur: 400ms;
+  view-transition-name: none;
+}
+@media screen {
+  body[data-view="present"] .screen {
+    view-transition-name: slide;
+  }
+}
+::view-transition-old(slide),
+::view-transition-new(slide) {
+  animation-duration: var(--transition-dur);
+  animation-timing-function: var(--ease);
+}
+html[data-transition="slide"]::view-transition-old(slide) {
+  animation-name: expresso-out-left;
+}
+html[data-transition="slide"]::view-transition-new(slide) {
+  animation-name: expresso-in-right;
+}
+html[data-transition="slide"][data-direction="back"]::view-transition-old(
+    slide
+  ) {
+  animation-name: expresso-out-right;
+}
+html[data-transition="slide"][data-direction="back"]::view-transition-new(
+    slide
+  ) {
+  animation-name: expresso-in-left;
+}
+html[data-transition="zoom"]::view-transition-old(slide) {
+  animation-name: expresso-fade-out;
+}
+html[data-transition="zoom"]::view-transition-new(slide) {
+  animation-name: expresso-grow;
+}
+html[data-transition="zoom"][data-direction="back"]::view-transition-old(
+    slide
+  ) {
+  animation-name: expresso-shrink;
+}
+html[data-transition="zoom"][data-direction="back"]::view-transition-new(
+    slide
+  ) {
+  animation-name: expresso-fade-in;
+}
+@keyframes expresso-out-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes expresso-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes expresso-out-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes expresso-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes expresso-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes expresso-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes expresso-shrink {
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+@keyframes expresso-grow {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
 @property --x {
   syntax: "<length>";
   inherits: false;

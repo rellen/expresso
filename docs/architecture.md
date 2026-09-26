@@ -43,8 +43,9 @@ end
 
 `Expresso.parse/1` reads the DSL state of such a module. It returns an `Expresso.Deck`
 struct, and it numbers the slides with `Expresso.Deck.number_slides/1`. The metadata map
-of the deck holds the `progress`, `handout`, `print_notes`, `slide_numbers` and `duration`
-options of the deck. Their defaults are `true`, `:all`, `true`, `false` and `nil`.
+of the deck holds the `progress`, `handout`, `print_notes`, `slide_numbers`, `duration`
+and `transition` options of the deck. Their defaults are `true`, `:all`, `true`, `false`,
+`nil` and `:fade`.
 
 The `slide` entity has a `heading` option. An author writes it as a call inside the block
 of the slide, in the form of Spark:
@@ -137,7 +138,8 @@ html
                    data-duration from the deck
       div            the present view, class "screen"
         section      one for each slide, class "slide", id "slide-<number>",
-                     data-step "1", data-max-step from the slide
+                     data-step "1", data-max-step from the slide,
+                     data-transition from the slide or the deck
           div        the header, from the deck template
           div        the body, from the slide template
           div        the footer, from the deck template
@@ -492,6 +494,32 @@ step of each slide counts one time, so the bar is full at the last step only. `d
 writes that part as the width of the bar. The style sheet shows the bar in the present view
 only, and not on a black screen, in the overview or on paper. A theme can set
 `--progress-color` and `--progress-height`.
+
+The `transition` option of the deck gives the transition from one slide to the next in the
+present view: `:fade`, `:slide`, `:zoom` or `:none`. The default is `:fade`. A slide can
+have the same option, and `Expresso.Slide.put_options_in_metadata/1` puts it into the
+metadata of the slide. The renderer writes the kind of each slide as `data-transition` on
+its `section` of the present view. The slide option comes first, then the deck option, then
+`fade`.
+
+`transition` in `state.ts` decides if a change of state has a transition. Only a move to a
+different slide in the present view has one. A change of the step, a black screen, the
+overview and the list of keys have none. A transition belongs to the border between two
+slides, so the slide with the higher number gives the kind in the two directions. A move
+forward uses the kind of the next slide. A move back uses the kind of the slide that it
+leaves, and the direction `back` plays it in reverse.
+
+`animate` in `dom.ts` writes `data-transition` and `data-direction` on the `html` element,
+and it applies the new state inside `document.startViewTransition`. The browser runs the
+update later, so the update reads the state of that time. A browser without the API, and a
+reader who asks for reduced motion, get the update at once. The browser tests ask for
+reduced motion, so a key in them changes the page at once.
+
+Only the element `screen` of the present view has a `view-transition-name`, and the root has
+none. Therefore the progress bar and the other fixed parts do not move with the slide. The
+style sheet gives each kind its keyframes on the pseudo-elements
+`::view-transition-old(slide)` and `::view-transition-new(slide)`. `fade` uses the
+animations of the browser. A theme can set `--transition-dur`.
 
 The overview shows the page of the last step of each slide in a grid. The state holds
 `overview` and `selected`, the number of the selected slide. `o` opens the overview, and it

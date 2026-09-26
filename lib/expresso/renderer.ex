@@ -66,6 +66,21 @@ defmodule Expresso.Renderer do
     end
   end
 
+  # The value of `data-transition` on a slide of the present view. The value is
+  # the transition of the slide, or else the transition of the deck. The
+  # presenter reads it for the moves between this slide and the slide before.
+  # A deck without the key fades.
+  @transitions [:none, :fade, :slide, :zoom]
+
+  defp transition(deck, slide) do
+    Enum.find(
+      [slide.metadata[:transition], (deck.metadata || %{})[:transition]],
+      :fade,
+      &(&1 in @transitions)
+    )
+    |> Atom.to_string()
+  end
+
   # The text of the number of a slide, such as "3 / 12", or nil. A deck shows
   # the numbers only with `slide_numbers: true`, and slide 1 shows no number.
   defp slide_number(deck, slide) do
@@ -175,6 +190,7 @@ defmodule Expresso.Renderer do
                       class: "slide",
                       data_step: 1,
                       data_max_step: Expresso.Overlay.Render.max_step(slide),
+                      data_transition: transition(@deck, slide),
                       style:
                         "height: 100%; display: #{if index == 0, do: "flex", else: "none"}; flex-direction: column; justify-content: stretch" do
                 c(&slide_parts/1, deck: @deck, slide: slide)

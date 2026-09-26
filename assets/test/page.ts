@@ -69,6 +69,11 @@ type Options = {
   progress?: string;
   // The value of `data-duration` that the renderer writes on the `body`.
   duration?: string;
+  // The value of `data-transition` that the renderer writes on each slide, in
+  // slide order. A slide without an entry has no attribute.
+  transitions?: string[];
+  // True for a browser with the View Transitions API.
+  viewTransitions?: boolean;
 };
 
 export type FakePage = {
@@ -96,6 +101,10 @@ export type FakePage = {
   fullscreen: boolean;
   // True when the browser refuses full screen.
   refuses: boolean;
+  // The kind and the direction of each view transition, in sequence.
+  transitions: string[];
+  // True when the reader asks for reduced motion.
+  reduced: boolean;
   // Type a fragment into the address bar.
   navigate: (hash: string) => void;
   // Send a message from a window to the page.
@@ -146,7 +155,10 @@ export function element(
 
 export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   const slides = maxSteps.map((max, index) =>
-    element(`slide-${index + 1}`, "slide", { maxStep: String(max) }),
+    element(`slide-${index + 1}`, "slide", {
+      maxStep: String(max),
+      transition: options.transitions?.[index],
+    }),
   );
   const handout = element("", "handout");
   maxSteps.forEach((max, index) => {
@@ -215,10 +227,20 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
       return !page.refuses;
     },
     documentElement: {
+      dataset: {} as Record<string, string | undefined>,
       requestFullscreen: async () => {
         page.fullscreen = true;
       },
     },
+    // The fake browser runs the update at once, and it keeps the kind and
+    // the direction that the `html` element had at the start.
+    startViewTransition: options.viewTransitions
+      ? (update: () => void) => {
+          const { transition, direction } = doc.documentElement.dataset;
+          page.transitions.push(`${transition} ${direction}`);
+          update();
+        }
+      : undefined,
     exitFullscreen: async () => {
       page.fullscreen = false;
     },
@@ -262,6 +284,8 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     selection: "",
     fullscreen: false,
     refuses: false,
+    transitions: [],
+    reduced: false,
     navigate: (hash) => {
       location.hash = hash;
       call("hashchange", {});
@@ -278,6 +302,9 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     addEventListener: listen,
     innerWidth: 1200,
     getSelection: () => ({ isCollapsed: page.selection === "" }),
+    matchMedia: (query: string) => ({
+      matches: query.includes("reduce") && page.reduced,
+    }),
     opener: options.opener ?? null,
     open: (url: string, name: string) => {
       const window = fakeWindow();

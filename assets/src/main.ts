@@ -26,6 +26,12 @@
 // `?duration=` in the address replaces it. The speaker view then shows the
 // time left under the timer, and the style sheet gives the pace its color.
 //
+// A move to a different slide in the present view runs a transition of the
+// slide: `fade`, `slide` or `zoom`. The option of the slide or of the deck
+// gives the kind, and `state.ts` gives the rules. A browser without the View
+// Transitions API, and a reader who asks for reduced motion, get no
+// transition.
+//
 // `?all` in the address shows every step in the handout view and on paper, as
 // the key `a` of the handout view does. A print or a PDF of such an address
 // then gets every step with no key. The speaker view opens with the same
@@ -48,11 +54,14 @@ import {
   stamp,
   swipe,
   toHash,
+  transition,
 } from "./state.ts";
 import type { Pointer, State } from "./state.ts";
 import {
+  animate,
   apply,
   durationAttribute,
+  kinds,
   limits,
   showsProgress,
   speakerPanel,
@@ -61,6 +70,7 @@ import {
 } from "./dom.ts";
 
 const deck = limits();
+const slideKinds = kinds(deck);
 const parameters = new URLSearchParams(location.search);
 const isSpeaker = parameters.has("speaker");
 let state: State = {
@@ -107,8 +117,11 @@ function show(changed: State, local = true): void {
   }
   const moved = changed.slide !== state.slide || changed.step !== state.step;
   const sent = moved || changed.blank !== state.blank;
+  const change = transition(state, changed, slideKinds);
   state = changed;
-  apply(state, deck);
+  // The browser runs the update of a transition later. The update then reads
+  // the state of that time, so a fast second key does not show an old state.
+  animate(change, () => apply(state, deck));
   history.replaceState(null, "", toHash(state));
   if (local && sent) {
     time = stamp(time, Date.now());

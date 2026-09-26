@@ -282,6 +282,47 @@ export function binding(state: State, key: string): Binding | undefined {
   );
 }
 
+// The transition from one slide to the next in the present view. The renderer
+// writes one kind on each slide, from the option of the slide or of the deck.
+export type Kind = "none" | "fade" | "slide" | "zoom";
+
+export const KINDS: Kind[] = ["none", "fade", "slide", "zoom"];
+
+// A move to a slide with a higher number goes forward. `slide` and `zoom`
+// use the direction, and `fade` does not.
+export type Transition = { kind: Kind; direction: "forward" | "back" };
+
+// Give the transition of a change of state, or null for no transition. Only
+// a move to a different slide in the present view has a transition. A change
+// of the step keeps the transitions of the overlays. A black screen, the
+// overview and the list of keys have no transition.
+//
+// A transition belongs to the border between two slides. A move forward uses
+// the kind of the slide that it goes to. A move back uses the kind of the
+// slide that it leaves, and the style sheet plays it in reverse. For this
+// reason, the kind of the slide with the higher number gives the kind, in the
+// two directions. The kind `none` gives no transition. `kinds` holds the kind of
+// each slide, in slide order, and a slide without a kind fades.
+export function transition(
+  before: State,
+  after: State,
+  kinds: Kind[],
+): Transition | null {
+  const quiet = (state: State) =>
+    state.view !== "present" || state.blank || state.overview || state.help;
+  if (before.slide === after.slide || quiet(before) || quiet(after)) {
+    return null;
+  }
+  const kind = kinds[Math.max(before.slide, after.slide) - 1] ?? "fade";
+  if (kind === "none") {
+    return null;
+  }
+  return {
+    kind,
+    direction: after.slide > before.slide ? "forward" : "back",
+  };
+}
+
 // The first slide is slide 1, and the first step is step 1.
 // `Expresso.Deck.number_slides/1` gives the same number to the identifier of
 // each section.

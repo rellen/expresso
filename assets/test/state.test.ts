@@ -21,6 +21,7 @@ import {
   stamp,
   swipe,
   toHash,
+  transition,
   upcoming,
 } from "../src/state.ts";
 import type { State, View } from "../src/state.ts";
@@ -541,4 +542,67 @@ test("done gives the part of the steps before the current step, with a part for 
   assert.equal(done(at(2, 2), three), 2 / 6);
   assert.equal(done(at(3, 2), three), 5 / 6);
   assert.equal(done(at(1, 1), { slides: 0, steps: [] }), 0);
+});
+
+// Four slides: the kinds of slides 2 to 4 are slide, none and zoom.
+const kinds = ["fade", "slide", "none", "zoom"] as const;
+const four = { slides: 4, steps: [1, 2, 1, 1] };
+
+test("a move forward uses the kind of the slide that it goes to", () => {
+  assert.deepEqual(transition(at(1, 1), at(2, 1), [...kinds]), {
+    kind: "slide",
+    direction: "forward",
+  });
+  assert.deepEqual(transition(at(3, 1), at(4, 1), [...kinds]), {
+    kind: "zoom",
+    direction: "forward",
+  });
+});
+
+test("a move back uses the kind of the slide that it leaves", () => {
+  assert.deepEqual(transition(at(2, 2), at(1, 1), [...kinds]), {
+    kind: "slide",
+    direction: "back",
+  });
+  // Home from slide 4 to slide 1 uses the kind of slide 4.
+  assert.deepEqual(transition(at(4, 1), at(1, 1), [...kinds]), {
+    kind: "zoom",
+    direction: "back",
+  });
+});
+
+test("the kind none gives no transition in the two directions", () => {
+  assert.equal(transition(at(2, 2), at(3, 1), [...kinds]), null);
+  assert.equal(transition(at(3, 1), at(2, 2), [...kinds]), null);
+});
+
+test("a slide without a kind fades", () => {
+  assert.deepEqual(transition(at(1, 1), at(2, 1), []), {
+    kind: "fade",
+    direction: "forward",
+  });
+});
+
+test("a change of the step has no transition", () => {
+  assert.equal(transition(at(2, 1), at(2, 2), [...kinds]), null);
+  assert.equal(next(at(2, 1), "j", four).slide, 2);
+});
+
+test("only the present view has a transition", () => {
+  for (const view of ["speaker", "handout"] as const) {
+    assert.equal(transition(at(1, 1, view), at(2, 1, view), [...kinds]), null);
+  }
+  assert.equal(transition(at(1, 1, "handout"), at(2, 1), [...kinds]), null);
+});
+
+test("a black screen, the overview and the list of keys have no transition", () => {
+  for (const key of ["blank", "overview", "help"] as const) {
+    const quiet = { ...at(1, 1), [key]: true };
+    assert.equal(transition(quiet, at(2, 1), [...kinds]), null, key);
+    assert.equal(
+      transition(at(1, 1), { ...at(2, 1), [key]: true }, [...kinds]),
+      null,
+      key,
+    );
+  }
 });

@@ -79,6 +79,7 @@ defmodule Expresso.E2E.PointerTest do
       Browser.new_context(browser.guid,
         timeout: 10_000,
         viewport: %{width: 1280, height: 720},
+        reduced_motion: "reduce",
         has_touch: true
       )
 
