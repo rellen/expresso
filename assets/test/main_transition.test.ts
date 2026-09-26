@@ -1,6 +1,7 @@
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
 import { fakePage } from "./page.ts";
+import { nth } from "./nth.ts";
 
 // Four slides. Slide 2 has two steps. The renderer gives the kinds fade,
 // slide, none and zoom, and the browser has the View Transitions API.
@@ -34,7 +35,7 @@ test("a change of the step runs no transition", () => {
   page.press("j");
 
   assert.deepEqual(page.transitions, ["slide forward"]);
-  assert.equal(slides[1].dataset.step, "2");
+  assert.equal(nth(slides, 1).dataset.step, "2");
 });
 
 test("the kind none shows the slide with no transition", () => {
