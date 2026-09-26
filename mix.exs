@@ -24,6 +24,8 @@ defmodule Expresso.MixProject do
   defp docs do
     [
       main: "readme",
+      source_url: "https://github.com/rellen/expresso",
+      homepage_url: "https://rellen.github.io/expresso/",
       extras: [
         "README.md",
         "docs/how-to/add-transitions.md",
