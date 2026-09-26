@@ -13,7 +13,18 @@ defmodule Expresso.Element.Quotation do
   @typedoc "The struct of a quotation"
   @type t :: %__MODULE__{}
 
-  defstruct [:text, :by, :at, :steps, :el, :effect, on: [], __spark_metadata__: nil]
+  defstruct [
+    :text,
+    :by,
+    :at,
+    :steps,
+    :el,
+    :effect,
+    :speed,
+    :easing,
+    on: [],
+    __spark_metadata__: nil
+  ]
 
   @doc """
   Make a quotation with text, and with the name of the source

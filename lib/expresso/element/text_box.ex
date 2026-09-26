@@ -8,7 +8,17 @@ defmodule Expresso.Element.TextBox do
   @typedoc "The struct of a text box"
   @type t :: %__MODULE__{}
 
-  defstruct [:elements, :at, :steps, :el, :effect, on: [], __spark_metadata__: nil]
+  defstruct [
+    :elements,
+    :at,
+    :steps,
+    :el,
+    :effect,
+    :speed,
+    :easing,
+    on: [],
+    __spark_metadata__: nil
+  ]
 
   @doc """
   Make a text box with text

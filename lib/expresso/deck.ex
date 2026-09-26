@@ -28,6 +28,12 @@ defmodule Expresso.Deck do
   shows and hides, such as `:grow`. The metadata of a slide and the `effect`
   field of an element can hold it too, and the nearest value applies. A deck
   without the key fades. `Expresso.Overlay.Render.identify/1` gives the rules.
+
+  The metadata can also hold `:speed` and `:easing`, the time and the easing
+  of each animation in a slide. The speed is `:fast`, `:normal`, `:slow` or a
+  number of milliseconds, and the easing is `:ease_in_out`, `:ease_out`,
+  `:linear` or `:spring`. They follow the same rules as `:effect`. A deck
+  without the keys uses the time and the easing of the theme.
   """
 
   @type t :: %__MODULE__{:name => String.t(), :metadata => map(), :slides => list()}

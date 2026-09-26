@@ -40,7 +40,9 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "overlay-row", deck: "overlay_row.exs", keys: ["j", "j"]},
     %{name: "overlay-diagram", deck: "overlay_diagram.exs", keys: ["j", "j"]},
     %{name: "overlay-effects", deck: "overlay_effects.exs", keys: ["j", "j", "j", "j", "j"]},
-    %{name: "overlay-effect-list", deck: "overlay_effect_list.exs", keys: ["j", "j", "k"]}
+    %{name: "overlay-effect-list", deck: "overlay_effect_list.exs", keys: ["j", "j", "k"]},
+    %{name: "overlay-speed", deck: "overlay_speed.exs", keys: ["j"]},
+    %{name: "overlay-easing", deck: "overlay_easing.exs", keys: ["j"]}
   ]
 
   @directory "examples/animations"

@@ -11,7 +11,18 @@ defmodule Expresso.Element.Item do
   @typedoc "The struct of an item"
   @type t :: %__MODULE__{}
 
-  defstruct [:text, :at, :steps, :el, :effect, on: [], elements: [], __spark_metadata__: nil]
+  defstruct [
+    :text,
+    :at,
+    :steps,
+    :el,
+    :effect,
+    :speed,
+    :easing,
+    on: [],
+    elements: [],
+    __spark_metadata__: nil
+  ]
 
   @doc """
   Make an item with text, and with nested lists

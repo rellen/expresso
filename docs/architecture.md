@@ -44,8 +44,8 @@ end
 `Expresso.parse/1` reads the DSL state of such a module. It returns an `Expresso.Deck`
 struct, and it numbers the slides with `Expresso.Deck.number_slides/1`. The metadata map
 of the deck holds the `progress`, `handout`, `print_notes`, `slide_numbers`, `duration`,
-`transition` and `effect` options of the deck. Their defaults are `true`, `:all`, `true`,
-`false`, `nil`, `:fade` and `:fade`.
+`transition`, `effect`, `speed` and `easing` options of the deck. Their defaults are
+`true`, `:all`, `true`, `false`, `nil`, `:fade`, `:fade`, `nil` and `nil`.
 
 The `slide` entity has a `heading` option. An author writes it as a call inside the block
 of the slide, in the form of Spark:
@@ -352,15 +352,18 @@ its own line.
 A `diagram` shows an SVG file. The `src` option gives the path, as for an image, but the
 render function puts the SVG into the document as an element and not as a data URI.
 Therefore the rules of the theme reach the parts of the diagram. A `part` entity names an
-element of the file by its `id`, and its `at` option and `on` entities give the steps.
-The parts are the children of the diagram, so the transformer and the verifier treat them
-as elements, and the render function writes the overlay attributes of each part on the
-element of the file that has its `id`. A part with an `on` entity goes into a wrapper, a
+element of the file by its `id`, and its `at` option and `on` entities give the steps. The
+parts are the children of the diagram, so the transformer and the verifier treat them as
+elements, and the render function writes the overlay attributes of each part on the element
+of the file that has its `id`. A file without that `id` stops the render with a message that
+names the id and the path.
+
+A part with an `on` entity, or with an effect that moves or grows it, goes into a wrapper, a
 `g` element with the class `diagram-part`, and the wrapper gets the attributes. The theme
-moves and outlines the wrapper, so the part keeps its own `transform` attribute. A file
-without that `id` stops the render with a message that names the id and the path. The `width` option gives the width of the
-diagram as the option of an image does, through the custom property `--diagram-width`,
-and a diagram without the option takes the width that the file gives.
+moves and outlines the wrapper, so the part keeps its own `transform` attribute. The `width`
+option gives the width of the diagram as the option of an image does, through the custom
+property `--diagram-width`, and a diagram without the option takes the width that the file
+gives.
 
 The document holds one copy of the file for the present view and one for each page of the
 handout view. A browser resolves a reference such as `url(#fill)` to the first element of

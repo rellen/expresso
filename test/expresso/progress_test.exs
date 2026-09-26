@@ -42,7 +42,9 @@ defmodule Expresso.ProgressTest do
              slide_numbers: false,
              duration: nil,
              transition: :fade,
-             effect: :fade
+             effect: :fade,
+             speed: nil,
+             easing: nil
            }
 
     assert progress(Expresso.parse(ShownDeck)) == ["true"]
@@ -56,7 +58,9 @@ defmodule Expresso.ProgressTest do
              slide_numbers: false,
              duration: nil,
              transition: :fade,
-             effect: :fade
+             effect: :fade,
+             speed: nil,
+             easing: nil
            }
 
     assert progress(Expresso.parse(HiddenDeck)) == ["false"]

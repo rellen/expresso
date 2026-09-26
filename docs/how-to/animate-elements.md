@@ -122,6 +122,95 @@ Examples.OverlayEffectList
 
 ![The items fly up one after the other, and the last item flies out after a step back](https://raw.githubusercontent.com/rellen/expresso/media/overlay-effect-list.gif)
 
+## Change the speed of an animation
+
+Write the `speed` option in the element: `:fast`, `:slow` or a number of milliseconds. The
+option applies to each animation of the element, such as its effect and the changes of its
+`on` entities. A slide and the deck take the option too.
+
+```elixir
+defmodule Examples.OverlaySpeed do
+  use Expresso
+
+  slide "speed" do
+    heading "Speed"
+
+    text_box do
+      speed(:fast)
+      on 2, set: [x: "300px"]
+      text_area(text: "speed :fast")
+    end
+
+    text_box do
+      on 2, set: [x: "300px"]
+      text_area(text: "The default")
+    end
+
+    text_box do
+      speed(:slow)
+      on 2, set: [x: "300px"]
+      text_area(text: "speed :slow")
+    end
+
+    text_box do
+      speed(1200)
+      on 2, set: [x: "300px"]
+      text_area(text: "speed 1200")
+    end
+  end
+end
+
+Examples.OverlaySpeed
+```
+
+![Four boxes move at step 2, each with its own speed](https://raw.githubusercontent.com/rellen/expresso/media/overlay-speed.gif)
+
+## Change the easing of an animation
+
+Write the `easing` option in the element: `:ease_in_out`, `:ease_out`, `:linear` or
+`:spring`. This slide gives one second to each element with `speed 1000`, so the
+difference is clear.
+
+```elixir
+defmodule Examples.OverlayEasing do
+  use Expresso
+
+  # The slide gives each element one second, so the easings are clear.
+  slide "easing" do
+    heading "Easing"
+    speed(1000)
+
+    text_box do
+      easing(:ease_in_out)
+      on 2, set: [x: "300px"]
+      text_area(text: "easing :ease_in_out")
+    end
+
+    text_box do
+      easing(:ease_out)
+      on 2, set: [x: "300px"]
+      text_area(text: "easing :ease_out")
+    end
+
+    text_box do
+      easing(:linear)
+      on 2, set: [x: "300px"]
+      text_area(text: "easing :linear")
+    end
+
+    text_box do
+      easing(:spring)
+      on 2, set: [x: "300px"]
+      text_area(text: "easing :spring")
+    end
+  end
+end
+
+Examples.OverlayEasing
+```
+
+![Four boxes move at step 2, each with its own easing](https://raw.githubusercontent.com/rellen/expresso/media/overlay-easing.gif)
+
 ## Highlight an element at a step
 
 Write an `on` entity with `state: :alert` in the element. The theme draws an outline around

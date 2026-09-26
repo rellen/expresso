@@ -12,6 +12,11 @@ defmodule Expresso.Extension do
   # option. The slide and the deck take the same values.
   @effects [:fade, :grow, :fly_up, :fly_down, :fly_left, :fly_right, :wipe, :blur]
 
+  # The time and the easing of the animations of an element. A speed is a
+  # preset of the theme or a number of milliseconds.
+  @speed {:or, [{:in, [:fast, :normal, :slow]}, :pos_integer]}
+  @easings [:ease_in_out, :ease_out, :linear, :spring]
+
   @overlay_schema [
     at: [
       type: {:custom, Expresso.Overlay, :new, []},
@@ -21,6 +26,16 @@ defmodule Expresso.Extension do
       type: {:in, @effects},
       doc:
         "How the element shows and hides: #{Enum.map_join(@effects, ", ", &inspect/1)}. The default is the effect of the nearest parent, of the slide or of the deck."
+    ],
+    speed: [
+      type: @speed,
+      doc:
+        "The time of each animation of the element: :fast, :normal, :slow or a number of milliseconds. The default is the speed of the nearest parent, of the slide or of the deck."
+    ],
+    easing: [
+      type: {:in, @easings},
+      doc:
+        "The easing of each animation of the element: #{Enum.map_join(@easings, ", ", &inspect/1)}. The default is the easing of the nearest parent, of the slide or of the deck."
     ]
   ]
 
@@ -312,6 +327,16 @@ defmodule Expresso.Extension do
         type: {:in, @effects},
         doc:
           "How each element with an at option shows and hides. An element or its parent can replace it. The default is the effect of the deck."
+      ],
+      speed: [
+        type: @speed,
+        doc:
+          "The time of each animation of the slide. An element or its parent can replace it. The default is the speed of the deck."
+      ],
+      easing: [
+        type: {:in, @easings},
+        doc:
+          "The easing of each animation of the slide. An element or its parent can replace it. The default is the easing of the deck."
       ]
     ]
   }
@@ -330,6 +355,16 @@ defmodule Expresso.Extension do
         default: :fade,
         doc:
           "How each element with an at option shows and hides. A slide, an element or its parent can replace it."
+      ],
+      speed: [
+        type: @speed,
+        doc:
+          "The time of each animation in a slide: :fast, :normal, :slow or a number of milliseconds. A slide, an element or its parent can replace it. Without the option, the theme gives 300 ms. The transition between slides keeps its own time."
+      ],
+      easing: [
+        type: {:in, @easings},
+        doc:
+          "The easing of each animation in a slide: #{Enum.map_join(@easings, ", ", &inspect/1)}. A slide, an element or its parent can replace it. Without the option, the theme gives :ease_in_out."
       ],
       transition: [
         type: {:in, [:none, :fade, :slide, :zoom]},
