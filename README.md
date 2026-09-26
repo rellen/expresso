@@ -243,9 +243,28 @@ container that has no Nix.
 
 ## Documents
 
+`mix docs` makes the documentation with ExDoc. It groups the documents by their type.
+
+How-to guides give the steps of one task, with the code of a deck and a recording of it:
+
+- [Add transitions between slides](docs/how-to/add-transitions.md)
+- [Animate elements in a slide](docs/how-to/animate-elements.md)
+
+![A slide transition, then a move back](https://raw.githubusercontent.com/rellen/expresso/media/transition-slide.gif)
+
+Reference pages describe each value of an option:
+
+- [The transition option](docs/reference/transition-option.md)
+- [The overlay options](docs/reference/overlay-options.md)
+
+Explanations give the design and its reasons:
+
 - `docs/architecture.md` — how the code makes an HTML document from a deck.
-- `docs/development.md` — the toolchain, the checks and a browser.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide.
+
+For a contributor:
+
+- `docs/development.md` — the toolchain, the checks and a browser.
 - `docs/typescript.md` — the plan for the presenter script in TypeScript.
 
 ## License

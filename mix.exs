@@ -11,7 +11,36 @@ defmodule Expresso.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       releases: releases(),
-      dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix]]
+      dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix]],
+      docs: docs()
+    ]
+  end
+
+  # The pages of `mix docs`. The groups follow Diataxis: a how-to guide gives
+  # the steps of one task, a reference page describes each option, and an
+  # explanation gives the design and its reasons. The GIFs of the guides come
+  # from `mix expresso.gifs`, and the workflow publishes them to the branch
+  # `media`. See `docs/development.md`.
+  defp docs do
+    [
+      main: "readme",
+      extras: [
+        "README.md",
+        "docs/how-to/add-transitions.md",
+        "docs/how-to/animate-elements.md",
+        "docs/reference/transition-option.md",
+        "docs/reference/overlay-options.md",
+        "docs/overlays.md",
+        "docs/architecture.md",
+        "docs/development.md",
+        "docs/typescript.md"
+      ],
+      groups_for_extras: [
+        "How-to guides": ~r"docs/how-to/",
+        Reference: ~r"docs/reference/",
+        Explanation: ["docs/overlays.md", "docs/architecture.md"],
+        Contributing: ["docs/development.md", "docs/typescript.md"]
+      ]
     ]
   end
 

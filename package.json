@@ -5,11 +5,14 @@
   "scripts": {
     "check": "tsc -p assets",
     "test": "node --test \"assets/test/**/*.test.ts\"",
-    "format": "prettier --write assets"
+    "format": "prettier --write assets",
+    "gifs": "node assets/gifs/record.ts"
   },
   "devDependencies": {
     "@types/node": "24.13.5",
+    "gifenc": "1.0.3",
     "playwright": "1.63.0",
+    "pngjs": "7.0.0",
     "prettier": "3.9.8",
     "typescript": "7.0.2"
   }

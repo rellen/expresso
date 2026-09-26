@@ -306,7 +306,7 @@ the rules.
 A `quotation` takes its text as its first argument, and the `by` option gives the name of
 the source. The renderer writes a `figure` element with a `blockquote` element, and the
 source goes into a `figcaption` element. The entity is not named `quote`, because
-`Kernel.quote/2` has that name, and a call of the DSL would be ambiguous.
+`Kernel.SpecialForms.quote/2` has that name, and a call of the DSL would be ambiguous.
 
 A `spacer` has no content. The theme gives it `flex-grow: 1`, so it takes the free space
 of its container and pushes the elements after it to the end. Two spacers around an
