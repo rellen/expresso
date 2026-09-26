@@ -7,20 +7,18 @@ a small script. You give the document to a browser, and you present from the bro
 
 ## Status
 
-Expresso is at an early stage. It has the elements `text_box`, `text_area`, `image`,
-`list`, `table`, `quotation`, `spacer`, `code`, `columns`, `math` and `diagram`, and one
-built-in theme.
+Expresso is at an early stage. It has one built-in theme and these elements: `text_box`,
+`text_area`, `image`, `list`, `table`, `quotation`, `spacer`, `code`, `columns`, `math` and
+`diagram`.
 
-Overlays are the steps inside one slide, and the code contains each part of their design.
-A slide takes steps, and an element shows at a set of steps. The document also holds a
-handout view for a printer. See `docs/overlays.md`.
+Overlays are the steps inside one slide. A slide takes steps, and an element shows at a set
+of steps. The document also holds a handout view for a printer. `docs/overlays.md` gives
+the design.
 
 ## Install
 
 Expresso needs Erlang/OTP 29, Elixir 1.20 and Node 24. The file `.tool-versions` gives the
-exact versions.
-
-The repository gives a Nix shell with each tool:
+exact versions. The repository gives a Nix shell with each tool:
 
 ```sh
 nix develop      # or: direnv allow, after you copy .envrc.example to .envrc
@@ -29,9 +27,11 @@ mix deps.get
 
 ## Make a deck
 
-Write a script in one of two styles.
+Write a script in one of two styles, and then render it.
 
-With the DSL, declare a module:
+### With the DSL
+
+Declare a module:
 
 ```elixir
 # my_deck.exs
@@ -81,16 +81,20 @@ defmodule MyDeck do
 end
 ```
 
-`auto_reveal` shows each element of the slide one after the other, and `reveal` does the
-same for the items of a list. A slide also takes a `notes` option, and the handout view
-shows the notes under each page of the slide. Write `print_notes false` in the deck to
-leave the notes out of the handout view and of the print. The speaker view still shows
-them. An `image` reads the
-file and puts the bytes into the document, so the document stays one file. The path is
-relative to the working directory of the command. The `width` option takes a CSS length,
-such as `900px`, or a percentage of the width of the slide, such as `60%`.
+Some notes on this example:
 
-With the functions, build a deck and return it. The heading goes into the metadata:
+- `auto_reveal` shows each element of the slide one after the other.
+- `reveal` does the same for the items of a list.
+- An `image` reads the file and puts the bytes into the document. The document stays one
+  file. The path is relative to the working directory of the command.
+- `width` takes a CSS length, such as `900px`, or a percentage of the width of the slide,
+  such as `60%`.
+- A slide also takes a `notes` option. The handout view shows the notes under each page of
+  the slide, and the speaker view shows them too.
+
+### With the functions
+
+Build a deck and return it. The heading goes into the metadata:
 
 ```elixir
 # my_deck.exs
@@ -100,7 +104,7 @@ Expresso.Deck.new("my deck")
 ])
 ```
 
-Then make the HTML document:
+### Render the document
 
 ```sh
 mix expresso my_deck.exs my_deck.html
@@ -109,9 +113,29 @@ mix expresso my_deck.exs my_deck.html
 The second path is optional. Without it, the task writes the HTML to the standard output.
 Without the first path, the task writes the usage text.
 
+### The options of a deck
+
+Write an option in the deck to apply it to each slide:
+
+| Option | Effect |
+| --- | --- |
+| `transition :slide` | The kind of the move into each slide: `:fade`, `:slide`, `:zoom` or `:none`. The default is `:fade`. |
+| `duration 20` | The length of the talk in minutes. The speaker view then shows the time left. |
+| `progress false` | Hide the progress bar at the start. |
+| `slide_numbers true` | Show the number of each slide, such as `3 / 12`. |
+| `handout :last` | The pages of the handout view: `:last` or `:all`. |
+| `print_notes false` | Leave the notes out of the handout view and of the print. |
+| `css "deck.css"` | A style sheet, or the path of one. It applies after the theme. |
+| `effect`, `speed`, `easing` | The animation of each overlay. See `docs/how-to/animate-elements.md`. |
+
+A slide takes `transition`, `handout`, `effect`, `speed` and `easing` too. An option of a
+slide replaces the option of the deck for that slide.
+
 ## Present a deck
 
-Open the HTML document in a browser. The keys are:
+Open the HTML document in a browser.
+
+### The keys
 
 | Key | Action |
 | --- | --- |
@@ -130,55 +154,70 @@ Open the HTML document in a browser. The keys are:
 
 A presentation remote sends `Page Down` and `Page Up`, so a remote operates the deck.
 
+### The mouse and the touch screen
+
 A click or a tap on the right two thirds of the window goes to the next step. A click or a
 tap on the left third goes to the previous step. On a touch screen, swipe left for the next
-step and swipe right for the previous step. A click on a link goes to the link.
+step, and swipe right for the previous step. A click on a link goes to the link.
+
+### The overview
 
 The overview shows each slide at its last step, in a grid that fits the window. The arrow
 keys, `j`, `k`, `Home` and `End` select a different slide. `Enter` or a click on a slide
 goes to step 1 of that slide. `o` or `Esc` closes the overview, and the step does not
-change. In the speaker view, only the speaker window shows the overview, so the audience
-does not see it.
+change. In the speaker view, only the speaker window shows the overview.
 
-A change of slide in the present view fades the old slide out and the new slide in. Write
-`transition :slide`, `transition :zoom` or `transition :none` in the deck to change the kind
-for each slide. Write the same option in a slide to change only the move into that slide. A
-move back plays the same kind in reverse. A change of the step keeps the animations of the
-overlays.
+### The transitions
+
+A change of slide in the present view fades the old slide out and the new slide in. The
+`transition` option of the deck or of a slide changes the kind. A move back plays the same
+kind in reverse. A change of the step keeps the animations of the overlays.
 
 The transitions need the View Transitions API of the browser. A browser without it, and a
 reader who asks for reduced motion, get an instant change. The speaker view has no
-transitions. A theme can set `--transition-dur`.
+transitions.
 
-The address of the document holds the slide and the step, for example `deck.html#4.2`
-for step 2 of slide 4. A reload shows the same step, and a link can go to one slide.
+### The address
+
+The address of the document holds the slide and the step. For example, `deck.html#4.2` is
+step 2 of slide 4. A reload shows the same step, and a link can go to one slide.
+
+### The speaker view
 
 The speaker view shows the current step, the next step, the notes of the slide, the
 position and a timer. Put this window on your screen, and put the first window on the
 projector. The keys operate in either window, and the two windows show the same step. `b`
-in the speaker view gives a black screen to the audience. The timer starts at the first
-change of the step, and `r` sets it back to `0:00`. A browser can block the second
-window. Then let the document open windows.
+in the speaker view gives a black screen to the audience.
+
+The timer starts at the first change of the step, and `r` sets it back to `0:00`. A
+browser can block the second window. Then let the document open windows.
+
+### The time of the talk
 
 Write `duration 20` in the deck to give the talk a length of 20 minutes. The speaker view
 then shows the time left under the timer. The time left turns amber when you are more than
-one minute behind, and red after the end of the time. You are behind when the time used is
-longer than the part of the time for the steps before the current step. Each step gets the
-same part of the time.
+one minute behind, and red after the end of the time.
 
-The address parameter `?duration=15` replaces the deck option, so one file can give talks of
-different lengths. A theme can set `--pace-behind-color` and `--pace-over-color`.
+Each step gets the same part of the time. You are behind when the time used is longer than
+the part of the time for the steps before the current step.
 
-A thin bar at the bottom of the present view shows the part of the deck that is done.
-Each step of each slide counts one time. Write `progress false` in the deck to hide the
-bar at the start. The key `g` can still show it. A theme can set `--progress-color` and
-`--progress-height`.
+The address parameter `?duration=15` replaces the deck option, so one file can give talks
+of different lengths.
 
-Write `slide_numbers true` in the deck to show the number of each slide and the number of
-slides, such as `3 / 12`, in the right corner at the bottom. Slide 1 shows no number,
-because it is usually the title slide. The handout view and the print show the numbers
-too. A theme can set `--slide-number-color`, `--slide-number-size`, `--slide-number-right`
-and `--slide-number-bottom`.
+### The progress bar
+
+A thin bar at the bottom of the present view shows the part of the deck that is done. Each
+step of each slide counts one time. Write `progress false` in the deck to hide the bar at
+the start. The key `g` can still show it.
+
+### The slide numbers
+
+Write `slide_numbers true` in the deck to show the slide numbers. The right corner at the
+bottom then shows the number of the slide and the number of slides, such as `3 / 12`.
+Slide 1 shows no number, because it is usually the title slide. The handout view and the
+print show the numbers too.
+
+### The handout view
 
 The handout view shows one page for each step of each slide. In this view, only `j`, `k`,
 `p`, `a` and `?` operate, so the other keys scroll the pages. A printer gets this view
@@ -198,9 +237,11 @@ also go in a list, such as `[2, :last]`. Write `handout :last` in the deck to gi
 step of each slide without the option. The handout view on a screen shows the same pages as
 the paper. The speaker view still shows each step.
 
+### The print
+
 To print every step, press `p` for the handout view, then `a`. The handout view then shows
-each step of each slide, whatever the `handout` options select, and a print or a PDF from
-that window gets the same pages. Press `a` again for the selection.
+each step of each slide, whatever the `handout` options select. A print or a PDF from that
+window gets the same pages. Press `a` again for the selection.
 
 `?all` at the end of the address, such as `deck.html?all`, gives the same result with no
 key. A browser with no window can then make the PDF:
@@ -212,6 +253,18 @@ chromium --headless --print-to-pdf=deck.pdf "file:///path/to/deck.html?all"
 The name of the command can be `google-chrome` or `chrome`. Without `?all`, the PDF gets
 the pages that the `handout` options select.
 
+### The custom properties of a theme
+
+A theme can set these custom properties:
+
+| Property | Effect |
+| --- | --- |
+| `--transition-dur` | The length of a transition. |
+| `--pace-behind-color`, `--pace-over-color` | The colors of the time left. |
+| `--progress-color`, `--progress-height` | The color and the height of the progress bar. |
+| `--slide-number-color`, `--slide-number-size` | The color and the size of the slide number. |
+| `--slide-number-right`, `--slide-number-bottom` | The position of the slide number. |
+
 ## Make a binary
 
 Burrito makes a binary for macOS and for Linux, on x86_64 and on aarch64:
@@ -222,8 +275,8 @@ mix release expresso_cli_app
 
 The binary takes the same two paths as the mix task.
 
-This command needs Zig 0.16.0 and `xz` on the path. The Nix shell gives both. A container of
-a remote Claude Code session has `xz`, but it has no Zig, and the command gives an error.
+This command needs Zig 0.16.0 and `xz` on the path. The Nix shell gives both. A container
+of a remote Claude Code session has `xz`, but it has no Zig, and the command gives an error.
 
 ## Develop
 
