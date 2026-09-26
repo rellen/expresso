@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { apply, limits } from "../src/dom.ts";
 import type { State, View } from "../src/state.ts";
+import { nth } from "./nth.ts";
 
 // `dom.ts` reads the global `document` each time a function runs, so a fake
 // document is enough to test it. Node has no DOM, and a browser is not
@@ -63,14 +64,14 @@ test("limits reads the number of slides and the maximum step of each", () => {
 
 test("limits gives one step for a slide with no data-max-step", () => {
   const doc = fakeDocument([1, 1]);
-  doc.slides[1].dataset.maxStep = undefined;
+  nth(doc.slides, 1).dataset.maxStep = undefined;
 
   assert.deepEqual(limits(), { slides: 2, steps: [1, 1] });
 });
 
 test("limits gives one step for a data-max-step that is not a number", () => {
   const doc = fakeDocument([1]);
-  doc.slides[0].dataset.maxStep = "many";
+  nth(doc.slides, 0).dataset.maxStep = "many";
 
   assert.deepEqual(limits(), { slides: 1, steps: [1] });
 });
@@ -97,8 +98,8 @@ test("apply writes the step of the state on the slide of the state", () => {
 
   apply(at(2, 3), limits());
 
-  assert.equal(doc.slides[1].dataset.step, "3");
-  assert.equal(doc.slides[0].dataset.step, undefined);
+  assert.equal(nth(doc.slides, 1).dataset.step, "3");
+  assert.equal(nth(doc.slides, 0).dataset.step, undefined);
 });
 
 test("apply writes the view on the body", () => {

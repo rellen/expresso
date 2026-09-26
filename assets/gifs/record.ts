@@ -136,9 +136,10 @@ mkdirSync(output, { recursive: true });
 
 // The GIF is 800 by 450 pixels. The slides have the layout of a window of
 // 1280 by 720 pixels, and the scale of 0.625 makes each frame smaller.
-const browser = await chromium.launch({
-  executablePath: process.env.EXPRESSO_CHROMIUM || undefined,
-});
+const chromiumPath = process.env.EXPRESSO_CHROMIUM;
+const browser = await chromium.launch(
+  chromiumPath ? { executablePath: chromiumPath } : {},
+);
 const context = await browser.newContext({
   viewport: { width: 1280, height: 720 },
   deviceScaleFactor: 0.625,

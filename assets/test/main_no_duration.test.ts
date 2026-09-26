@@ -1,6 +1,7 @@
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
 import { fakePage, fakeWindow } from "./page.ts";
+import { nth } from "./nth.ts";
 
 // The speaker view of a deck with no duration and an address with no
 // parameter.
@@ -15,7 +16,7 @@ before(async () => {
 
 test("a talk with no length gives no time left and no pace", () => {
   page.press("j");
-  page.timers[0]();
+  nth(page.timers, 0)();
 
   const element = page.element("speaker-left");
   assert.equal(element?.textContent, "");

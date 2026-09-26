@@ -259,6 +259,7 @@ the Chromium of the container, and that Chromium can be older than the new versi
 - `assets/test/state_property.test.ts` and `assets/test/speaker_property.test.ts` — the
   property tests of the state and of the texts of the speaker view.
 - `assets/test/property.ts` — the generators of the property tests, and `RUNS`.
+- `assets/test/nth.ts` — the item at an index, for the tests.
 - `assets/tsconfig.json` — the options of the type check.
 - `package.json` — the tools, with a pinned version of each.
 - `config/config.exs` — the esbuild profile.
@@ -290,6 +291,22 @@ as parameters to get the same value again.
 Node runs the test files with no build step. Node 24 reads a `.ts` file
 directly when the file uses only erasable syntax, and `erasableSyntaxOnly` in
 `tsconfig.json` makes the compiler refuse other syntax.
+
+`assets/tsconfig.json` has more options than the plan of `docs/typescript.md` gives.
+`isolatedModules` and `verbatimModuleSyntax` refuse syntax that esbuild cannot compile one
+file at a time. These options refuse code that is unused, unreachable or incomplete:
+
+- `noImplicitReturns`
+- `noFallthroughCasesInSwitch`
+- `noUnusedLocals`
+- `noUnusedParameters`
+- `allowUnreachableCode: false`
+- `allowUnusedLabels: false`
+
+`noUncheckedIndexedAccess` gives each index access the type `T | undefined`. A test uses
+`nth` of `assets/test/nth.ts`, which stops the test for a missing item.
+`exactOptionalPropertyTypes` refuses `undefined` for an optional property. The options do
+not change the bundle.
 
 A call of the DSL has no parentheses. `.formatter.exs` holds the list
 `spark_locals_without_parens`, and `mix format` then adds none. After a change to an

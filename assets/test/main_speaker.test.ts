@@ -1,6 +1,7 @@
 import { test, before, mock } from "node:test";
 import assert from "node:assert/strict";
 import { fakePage, fakeWindow, lastPosition } from "./page.ts";
+import { nth } from "./nth.ts";
 
 // The speaker view of a deck with two slides. Slide 1 has two steps and notes,
 // and slide 2 has one step and no notes. The present view opened this window.
@@ -42,7 +43,7 @@ test("the speaker view shows the current step, the next step and the notes", () 
 
 test("the timer waits for the first change of the step", () => {
   mock.timers.tick(5000);
-  page.timers[0]();
+  nth(page.timers, 0)();
 
   assert.equal(text("speaker-timer"), "0:00");
 });
@@ -94,7 +95,7 @@ test("b gives a black screen to the present view", () => {
 
 test("the timer counts from the first change of the step", () => {
   mock.timers.tick(61_000);
-  page.timers[0]();
+  nth(page.timers, 0)();
 
   assert.equal(text("speaker-timer"), "1:01");
 });
@@ -102,12 +103,12 @@ test("the timer counts from the first change of the step", () => {
 test("r sets the timer back to 0:00, and the next change starts it again", () => {
   assert.equal(page.press("r"), true);
   mock.timers.tick(10_000);
-  page.timers[0]();
+  nth(page.timers, 0)();
   assert.equal(text("speaker-timer"), "0:00");
 
   page.press("k");
   mock.timers.tick(2_000);
-  page.timers[0]();
+  nth(page.timers, 0)();
   assert.equal(text("speaker-timer"), "0:02");
 });
 
@@ -115,7 +116,7 @@ test("? lists r in the speaker view, and r then only closes the list", () => {
   page.press("?");
   const panel = page.element("help");
   assert.ok(panel, "no element help");
-  const names = panel.children.map((row) => row.children[0].textContent);
+  const names = panel.children.map((row) => nth(row.children, 0).textContent);
   assert.ok(names.includes("r"));
   assert.ok(!names.includes("s"));
 
@@ -123,7 +124,7 @@ test("? lists r in the speaker view, and r then only closes the list", () => {
   mock.timers.tick(3_000);
   page.press("?");
   page.press("r");
-  page.timers[0]();
+  nth(page.timers, 0)();
   assert.equal("help" in page.body.dataset, false);
   assert.notEqual(text("speaker-timer"), "0:00");
 });

@@ -1,6 +1,7 @@
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
 import { fakePage, lastPosition } from "./page.ts";
+import { nth } from "./nth.ts";
 
 // Two slides. Slide 1 has one step, and slide 2 has two steps. The address has
 // no fragment, and the tests run in sequence on the same page.
@@ -25,7 +26,7 @@ function displays(): string[] {
 
 test("an address with no fragment shows step 1, and writes no fragment", () => {
   assert.equal(body.dataset.view, "present");
-  assert.equal(slides[0].dataset.step, "1");
+  assert.equal(nth(slides, 0).dataset.step, "1");
   assert.deepEqual(page.written, []);
 });
 
@@ -46,14 +47,14 @@ test("j moves to the next slide after the last step of the first slide", () => {
   assert.equal(page.press("j"), true);
 
   assert.deepEqual(displays(), ["none", "flex"]);
-  assert.equal(slides[1].dataset.step, "1");
+  assert.equal(nth(slides, 1).dataset.step, "1");
   assert.equal(page.location.hash, "#2.1");
 });
 
 test("j moves to the next step inside the slide", () => {
   page.press("j");
 
-  assert.equal(slides[1].dataset.step, "2");
+  assert.equal(nth(slides, 1).dataset.step, "2");
   assert.equal(page.location.hash, "#2.2");
 });
 
@@ -61,16 +62,16 @@ test("j on the last step of the last slide writes nothing new", () => {
   const count = page.written.length;
 
   assert.equal(page.press("j"), false);
-  assert.equal(slides[1].dataset.step, "2");
+  assert.equal(nth(slides, 1).dataset.step, "2");
   assert.equal(page.written.length, count);
 });
 
 test("k moves back through the steps and the slides", () => {
   page.press("k");
-  assert.equal(slides[1].dataset.step, "1");
+  assert.equal(nth(slides, 1).dataset.step, "1");
 
   page.press("k");
-  assert.equal(slides[0].dataset.step, "1");
+  assert.equal(nth(slides, 0).dataset.step, "1");
   assert.deepEqual(displays(), ["flex", "none"]);
   assert.equal(page.location.hash, "#1.1");
 });
@@ -111,7 +112,7 @@ test("a new fragment in the address moves to that step", () => {
   page.navigate("#2.2");
 
   assert.deepEqual(displays(), ["none", "flex"]);
-  assert.equal(slides[1].dataset.step, "2");
+  assert.equal(nth(slides, 1).dataset.step, "2");
 });
 
 test("p changes the view, and p again changes it back", () => {
@@ -130,12 +131,12 @@ test("s opens the speaker view at the current step, and a second s opens no seco
   assert.equal(page.press("s"), true);
 
   assert.equal(page.opened.length, 1);
-  assert.equal(page.opened[0].url, "file:///deck.html?speaker=#2.1");
-  assert.equal(page.opened[0].name, "expresso-speaker");
+  assert.equal(nth(page.opened, 0).url, "file:///deck.html?speaker=#2.1");
+  assert.equal(nth(page.opened, 0).name, "expresso-speaker");
 });
 
 test("each change goes to the speaker view", () => {
-  const speaker = page.opened[0].window;
+  const speaker = nth(page.opened, 0).window;
   page.press("k");
 
   assert.deepEqual(lastPosition(speaker), {
@@ -149,38 +150,38 @@ test("each change goes to the speaker view", () => {
 test("a message from the speaker view moves the present view", () => {
   page.receive(
     { expresso: "position", slide: 2, step: 2, blank: true, time: later() },
-    page.opened[0].window,
+    nth(page.opened, 0).window,
   );
 
   assert.deepEqual(displays(), ["none", "flex"]);
-  assert.equal(slides[1].dataset.step, "2");
+  assert.equal(nth(slides, 1).dataset.step, "2");
   assert.equal(body.dataset.blank, "true");
 });
 
 test("a message from the speaker view does not go back to it", () => {
-  const speaker = page.opened[0].window;
+  const speaker = nth(page.opened, 0).window;
   const count = speaker.received.length;
   page.receive(
     { expresso: "position", slide: 1, step: 1, blank: false, time: later() },
     speaker,
   );
 
-  assert.equal(slides[0].dataset.step, "1");
+  assert.equal(nth(slides, 0).dataset.step, "1");
   assert.equal(speaker.received.length, count);
 });
 
 test("a message older than the state of the window has no effect", () => {
   page.receive(
     { expresso: "position", slide: 2, step: 2, blank: true, time: later() },
-    page.opened[0].window,
+    nth(page.opened, 0).window,
   );
   page.receive(
     { expresso: "position", slide: 1, step: 1, blank: false, time: 1 },
-    page.opened[0].window,
+    nth(page.opened, 0).window,
   );
 
   assert.deepEqual(displays(), ["none", "flex"]);
-  assert.equal(slides[1].dataset.step, "2");
+  assert.equal(nth(slides, 1).dataset.step, "2");
 });
 
 test("a message from another window has no effect", () => {
@@ -190,7 +191,7 @@ test("a message from another window has no effect", () => {
     null,
   );
 
-  assert.equal(slides[1].dataset.step, "2");
+  assert.equal(nth(slides, 1).dataset.step, "2");
   assert.deepEqual(displays(), ["none", "flex"]);
 });
 
@@ -201,7 +202,7 @@ test("? shows the list of keys of the present view, and the next key closes it",
   assert.equal(body.dataset.help, "true");
   const panel = page.element("help");
   assert.ok(panel, "no element help");
-  const names = panel.children.map((row) => row.children[0].textContent);
+  const names = panel.children.map((row) => nth(row.children, 0).textContent);
   assert.ok(names.includes("s"));
   assert.ok(names.includes("?"));
 

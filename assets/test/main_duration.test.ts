@@ -1,6 +1,7 @@
 import { test, before, mock } from "node:test";
 import assert from "node:assert/strict";
 import { fakePage, fakeWindow } from "./page.ts";
+import { nth } from "./nth.ts";
 
 // The speaker view of four slides of one step each. The deck gives a talk of
 // 20 minutes, and the address gives 10 minutes, so the talk has 10 minutes.
@@ -19,14 +20,14 @@ before(async () => {
   await import("../src/main.ts");
 });
 
-function left(): { text?: string; pace?: string } {
+function left(): { text: string | undefined; pace: string | undefined } {
   const element = page.element("speaker-left");
   return { text: element?.textContent, pace: element?.dataset.pace };
 }
 
 function tick(milliseconds: number): void {
   mock.timers.tick(milliseconds);
-  page.timers[0]();
+  nth(page.timers, 0)();
 }
 
 test("the speaker view shows the whole time of the address before the start", () => {
