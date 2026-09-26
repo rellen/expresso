@@ -132,8 +132,40 @@ after the other.
 element by itself. An element after it reads the new value with `:next`. Write the
 parentheses, because Elixir reads a bare `pause` as a variable.
 
-## Timing
+## `speed`
 
-Each animation of an overlay lasts `--dur`, 300 ms in the theme of this project, with the
-easing `--ease`. A reader who asks for reduced motion gets no animation, and each change is
-instant.
+The time of each animation of an element: its effect, the changes of its `on` entities
+and the state `dim`.
+
+| Value | Time |
+| --- | --- |
+| `:fast` | 150 ms |
+| `:normal` | 300 ms, the time of the theme without the option |
+| `:slow` | 600 ms |
+| a number, such as `1200` | That number of milliseconds |
+
+![Four boxes that move with different speeds](https://raw.githubusercontent.com/rellen/expresso/media/overlay-speed.gif)
+
+## `easing`
+
+The change of the speed during each animation of an element.
+
+| Value | Easing |
+| --- | --- |
+| `:ease_in_out` | A slow start and a slow end. This is the easing of the theme without the option. |
+| `:ease_out` | A fast start and a slow end. |
+| `:linear` | The same speed from the start to the end. |
+| `:spring` | A small overshoot at the end, as a spring. |
+
+![Four boxes that move with different easings](https://raw.githubusercontent.com/rellen/expresso/media/overlay-easing.gif)
+
+## The rules of `speed` and `easing`
+
+An element, a slide and the deck take both options. An element uses the nearest value, as
+for `effect`: its own value, then the value of the nearest parent, then the slide, then
+the deck. A child of an element also animates with the time and the easing of that
+element.
+
+The options do not change the transition between slides. The transition option has its
+own time. A reader who asks for reduced motion gets no animation, and each change is
+instant. The same is true on paper.

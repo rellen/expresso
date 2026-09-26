@@ -56,6 +56,8 @@ defmodule Expresso.Element.Diagram do
     :steps,
     :el,
     :effect,
+    :speed,
+    :easing,
     on: [],
     elements: [],
     __spark_metadata__: nil

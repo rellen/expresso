@@ -53,4 +53,5 @@ The next slide shows at once.
 - The browser must have the View Transitions API. A browser without it shows the next slide at
   once.
 - A reader who asks for reduced motion gets no transition.
-- A theme can set `--transition-dur`. The default is 400 ms.
+- A theme can set `--transition-dur`. The default is 400 ms. The `speed` option of the
+  overlays does not change it.

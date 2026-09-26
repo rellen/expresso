@@ -709,15 +709,38 @@ element.
 
 ### Duration and easing
 
-The duration and the easing function are properties of the element or of the theme. The
-`on` entity does not set them. The DSL gives the state. The theme gives the movement.
+The theme gives each animation the time `--dur` and the easing `--ease`, 300 ms and
+`ease-in-out`. The `on` entity does not set them. The `speed` and `easing` options set
+them for an element, a slide or the deck, and an element uses the nearest value, as for
+`effect`.
+
+The renderer writes the values on each element that has steps or an identity, such as
+`data-speed="slow"` and `data-easing="spring"`. The theme gives the presets:
+
+```css
+[data-speed="slow"] {
+  --speed: 600ms;
+}
+
+[data-speed] {
+  --dur: calc(var(--speed) * var(--motion));
+}
+```
+
+A speed in milliseconds has no preset. The generated style block holds one rule for each
+such speed of the deck, such as `[data-speed="450"] { --speed: 450ms; }`. `--dur` and
+`--ease` inherit, so a child animates with the values of its parent.
+
+`--motion` is 1, and it is 0 for a reader who asks for reduced motion and on paper. An
+element with a speed then has no animation, as an element without one. The options do not
+change `--transition-dur`, the time of the transition between slides.
 
 ## Accessibility
 
 The design needs these constructions:
 
 - A `prefers-reduced-motion` block that sets each duration to zero. `assets/style.css`
-  has this block, and it sets `--dur` to zero.
+  has this block, and it sets `--dur` and `--motion` to zero.
 - A handout view for a screen reader and for a printer. The code does not have this view.
 
 The handout view is not a simple override of the base rule. An override that shows each

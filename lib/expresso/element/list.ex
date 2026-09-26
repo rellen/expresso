@@ -27,6 +27,8 @@ defmodule Expresso.Element.List do
     :steps,
     :el,
     :effect,
+    :speed,
+    :easing,
     ordered: false,
     reveal: false,
     dim: false,

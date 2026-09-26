@@ -25,6 +25,8 @@ defmodule Expresso.Element.Table do
     :steps,
     :el,
     :effect,
+    :speed,
+    :easing,
     header: false,
     reveal: false,
     dim: false,

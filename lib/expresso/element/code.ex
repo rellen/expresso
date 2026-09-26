@@ -36,6 +36,8 @@ defmodule Expresso.Element.Code do
     :steps,
     :el,
     :effect,
+    :speed,
+    :easing,
     dim: false,
     on: [],
     elements: [],
