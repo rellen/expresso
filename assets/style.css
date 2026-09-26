@@ -328,11 +328,14 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   align-items: center;
   min-height: 0;
 }
+/* A part can move, turn or get an outline beyond the box of the file, so the
+   SVG does not cut its content at the edge of the box. */
 .diagram svg {
   width: var(--diagram-width, auto);
   max-width: 100%;
   max-height: 100%;
   height: auto;
+  overflow: visible;
 }
 .text-box,
 .text-area,
@@ -340,6 +343,8 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .list,
 .item,
 .table,
+.row,
+.diagram-part,
 .quotation,
 .code,
 .columns,
@@ -353,6 +358,22 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
     opacity var(--dur) var(--ease),
     transform var(--dur) var(--ease),
     outline-width var(--dur) var(--ease);
+}
+/*
+ * The wrapper of a diagram part with an `on` entity. An SVG element turns and
+ * changes its size around the origin of the SVG, so the wrapper uses its own
+ * box and its center. The wrapper has no `transform` attribute, so the rule
+ * of the theme does not replace a transform of the file.
+ *
+ * A length in an SVG is in the units of the file, and the diagram usually
+ * shows larger than the file. Therefore the outline of a part is thinner and
+ * closer than the outline of an element.
+ */
+.diagram-part {
+  transform-box: fill-box;
+  transform-origin: center;
+  outline-width: calc(var(--alert, 0) * 2px);
+  outline-offset: 2px;
 }
 /*
  * The properties of an element with an `on` entity. Only such an element has

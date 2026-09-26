@@ -43,6 +43,11 @@ step specification.
 | `set: [opacity: 0.3]` | The element shows at that opacity, from 0 to 1. |
 | `set: [color: "#c92a2a"]` | The text of the element changes to that color. |
 
+An `on` entity can be in each element, in an item of a list, in a row of a table and in
+a part of a diagram. In a diagram, `x` and `y` are in the units of the SVG file. A part
+inside a `text` element of the file, such as a `tspan`, can fade, dim and change its
+color, and it cannot move or get an outline.
+
 The theme owns the custom properties that `set` writes. The compiler gives a warning for a
 key that the theme does not use. The theme of this project uses `x`, `y`, `scale`,
 `rotate`, `opacity` and `color`.
@@ -59,6 +64,10 @@ then moves, changes its size and turns together. Code keeps the colors of its sy
 ![A box that grows at step 2 and turns at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-scale.gif)
 
 ![Text that turns red at step 2, and a box that fades to 30% at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-color.gif)
+
+![A table row with an outline at step 2, and a row that moves at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-row.gif)
+
+![A diagram part with an outline at step 2, and a part that grows and turns at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-diagram.gif)
 
 ## `reveal`
 

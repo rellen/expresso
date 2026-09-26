@@ -71,13 +71,24 @@ defmodule Expresso.Element.DiagramTest do
                ["2"]
 
       [output] = Floki.find(document, "#slide-1 .diagram rect[id^='output-']")
-      assert Floki.attribute([output], "data-on") == ["3"]
-      assert Floki.attribute([output], "data-el") == ["s1-e3"]
+      assert Floki.attribute([output], "data-on") == []
+      assert Floki.attribute([output], "data-el") == []
 
       assert document
              |> Floki.find("#slide-1 .diagram rect[id^='input-']")
              |> Floki.attribute("data-on") ==
                []
+    end
+
+    test "puts a part with an on entity into a wrapper with the attributes", %{
+      document: document
+    } do
+      [wrapper] = Floki.find(document, "#slide-1 .diagram svg > g.diagram-part")
+
+      assert Floki.attribute([wrapper], "data-on") == ["3"]
+      assert Floki.attribute([wrapper], "data-el") == ["s1-e3"]
+      assert [{"rect", _attrs, _children}] = Floki.children(wrapper)
+      assert [_] = Floki.find([wrapper], "rect[id^='output-']")
     end
 
     test "writes the overlay attributes of the diagram on the root tag", %{document: document} do
@@ -112,6 +123,37 @@ defmodule Expresso.Element.DiagramTest do
                ["--diagram-width: 60vw"]
 
       assert document |> Floki.find("#slide-1 .diagram") |> Floki.attribute("style") == []
+    end
+
+    @tag :tmp_dir
+    test "keeps the transform of a part in the wrapper, and wraps no part of a text", %{
+      tmp_dir: tmp_dir
+    } do
+      src = Path.join(tmp_dir, "parts.svg")
+
+      File.write!(src, """
+      <svg viewBox="0 0 10 10">
+        <g id="turned" transform="rotate(30)"><rect width="2" height="2"/></g>
+        <text><tspan id="word">a</tspan></text>
+      </svg>
+      """)
+
+      parts = [
+        %Part{id: "turned", el: "s1-e2", steps: [1]},
+        %Part{id: "word", el: "s1-e3", steps: [1]}
+      ]
+
+      svg = Diagram.get_assigns(Diagram.new(src, parts)).svg |> Floki.parse_fragment!()
+
+      [wrapper] = Floki.find(svg, "g.diagram-part")
+      assert Floki.attribute([wrapper], "transform") == []
+      assert Floki.attribute([wrapper], "data-el") == ["s1-e2"]
+      assert [turned] = Floki.find([wrapper], "g[id^='turned-']")
+      assert Floki.attribute([turned], "transform") == ["rotate(30)"]
+
+      [word] = Floki.find(svg, "text > tspan[id^='word-']")
+      assert Floki.attribute([word], "data-el") == ["s1-e3"]
+      assert Floki.attribute([word], "data-on") == ["1"]
     end
 
     test "raises for an id that the file does not hold" do
