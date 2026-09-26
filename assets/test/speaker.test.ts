@@ -63,7 +63,7 @@ test("talkLength takes the address parameter first", () => {
 });
 
 test("talkLength ignores a value that is not a positive number", () => {
-  for (const value of ["", "abc", "0", "-5", "Infinity"]) {
+  for (const value of ["", "abc", "0", "-5", "Infinity", "1e305"]) {
     assert.equal(talkLength(value, null), null, value);
     assert.equal(talkLength("20", value), 20 * 60_000, value);
   }
