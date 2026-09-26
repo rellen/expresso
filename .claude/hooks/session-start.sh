@@ -19,6 +19,7 @@ fi
 OTP_VERSION="29.1"
 ELIXIR_VERSION="1.20.4"
 NODE_VERSION="24.20.0"
+ZIG_VERSION="0.16.0"
 
 # The OTP release of the Elixir build. Elixir publishes one build for each OTP
 # release, and the build must agree with the Erlang archive.
@@ -27,6 +28,7 @@ OTP_RELEASE="29"
 OTP_DIR="/opt/otp"
 ELIXIR_DIR="/opt/elixir"
 NODE_DIR="/opt/node"
+ZIG_DIR="/opt/zig"
 
 # The Erlang archive and the Node archive are builds for one target. A container
 # of a different target needs different archives, and the versions above then
@@ -87,6 +89,24 @@ fi
 
 export PATH="${NODE_DIR}/bin:${PATH}"
 
+# Zig. Burrito needs it for `mix release expresso_cli_app`, and the tests of
+# `mix test --only release` run that binary. The other commands do not need Zig.
+# Therefore a failed download gives a warning, and the hook continues.
+if [ "$("${ZIG_DIR}/zig" version 2>/dev/null || true)" != "${ZIG_VERSION}" ]; then
+  tmp_dir="$(mktemp -d)"
+  if curl -sSfL -o "${tmp_dir}/zig.tar.xz" \
+    "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz"; then
+    rm -rf "${ZIG_DIR}"
+    mkdir -p "${ZIG_DIR}"
+    tar -xJf "${tmp_dir}/zig.tar.xz" --strip-components=1 -C "${ZIG_DIR}"
+  else
+    echo "The hook did not get Zig ${ZIG_VERSION}. The release tests need it." >&2
+  fi
+  rm -rf "${tmp_dir}"
+fi
+
+export PATH="${ZIG_DIR}:${PATH}"
+
 # The container gives a latin1 name encoding, and Elixir expects utf8. The
 # language gives the tools a utf8 output.
 export ELIXIR_ERL_OPTIONS="+fnu"
@@ -95,7 +115,7 @@ export LANG="C.UTF-8"
 # Keep the tools on the path for each command of the session.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   {
-    echo "export PATH=\"${OTP_DIR}/bin:${ELIXIR_DIR}/bin:${NODE_DIR}/bin:\$PATH\""
+    echo "export PATH=\"${OTP_DIR}/bin:${ELIXIR_DIR}/bin:${NODE_DIR}/bin:${ZIG_DIR}:\$PATH\""
     echo 'export ELIXIR_ERL_OPTIONS="+fnu"'
     echo 'export LANG="C.UTF-8"'
   } >> "${CLAUDE_ENV_FILE}"
@@ -124,4 +144,4 @@ mix compile
 # type check and the tests do. package.json pins each version.
 npm install --no-audit --no-fund
 
-echo "Expresso: $(elixir --version | tail -1), $(node --version) is ready."
+echo "Expresso: $(elixir --version | tail -1), $(node --version), Zig $(zig version 2>/dev/null || echo "missing") is ready."
