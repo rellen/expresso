@@ -25,7 +25,7 @@ defmodule Expresso.Overlay.PropertyVerifier do
   @impl Verifier
   @spec verify(map()) :: :ok | {:warn, [Properties.warning()]}
   def verify(dsl_state) do
-    names = names(Verifier.get_option(dsl_state, [:deck], :css))
+    names = theme_and_deck_names(Verifier.get_option(dsl_state, [:deck], :css))
 
     warnings =
       dsl_state
@@ -35,13 +35,10 @@ defmodule Expresso.Overlay.PropertyVerifier do
     if warnings == [], do: :ok, else: {:warn, warnings}
   end
 
-  # The names of the theme and of the CSS of the deck. A file that the
-  # verifier cannot read gives the theme alone, and
-  # `Expresso.Overlay.EffectVerifier` reports the file.
-  defp names(css) do
+  defp theme_and_deck_names(css) do
     case Expresso.Css.resolve(css) do
       {:ok, css} -> Expresso.Css.merge(Theme.names(), Expresso.Css.scan(css))
-      {:error, _message} -> Theme.names()
+      {:error, _reported_by_effect_verifier} -> Theme.names()
     end
   end
 end

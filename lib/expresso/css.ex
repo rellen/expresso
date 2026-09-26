@@ -41,7 +41,6 @@ defmodule Expresso.Css do
   @spec inline?(String.t()) :: boolean()
   def inline?(css), do: String.contains?(css, ["{", "\n"])
 
-  # The path comes from the deck, and `Code.eval_file/1` runs the deck.
   # sobelow_skip ["Traversal.FileModule"]
   defp read(path) do
     case File.read(path) do
@@ -77,8 +76,8 @@ defmodule Expresso.Css do
   def scan(css) do
     %{
       used: used(css),
-      declared: declared(css),
-      registered: registered(css),
+      declared: non_number_declarations(css),
+      registered: property_syntaxes(css),
       effects: effects(css)
     }
   end
@@ -100,10 +99,7 @@ defmodule Expresso.Css do
     ~r/--([\w-]+)/ |> Regex.scan(css, capture: :all_but_first) |> List.flatten() |> MapSet.new()
   end
 
-  # A number, such as `--alert: 0`, stays valid for a state, so this set does
-  # not hold it. The name of an `@property` rule comes before a brace, and not
-  # before a colon, so this set holds the declarations only.
-  defp declared(css) do
+  defp non_number_declarations(css) do
     for [name, value] <-
           Regex.scan(~r/--([\w-]+)\s*:\s*([^;}]*)/, css, capture: :all_but_first),
         not Regex.match?(~r/^-?\d+(\.\d+)?$/, String.trim(value)),
@@ -111,9 +107,7 @@ defmodule Expresso.Css do
         do: name
   end
 
-  # A rule without a `syntax` descriptor is not valid, and the browser ignores
-  # it.
-  defp registered(css) do
+  defp property_syntaxes(css) do
     for [name, body] <-
           Regex.scan(~r/@property\s+--([\w-]+)\s*\{([^}]*)\}/, css, capture: :all_but_first),
         descriptor = Regex.run(~r/syntax:\s*"([^"]*)"/, body, capture: :all_but_first),
