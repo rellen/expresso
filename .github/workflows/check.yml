@@ -189,9 +189,10 @@ jobs:
           git push --force --quiet "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" media
 
   # Put the site of `mix docs` of a push to main on GitHub Pages. The job
-  # `lint` made the site. `configure-pages` turns Pages on for the repository
-  # when it is off, with GitHub Actions as the source. A deployment does not
-  # stop for a new push, so two deployments do not run at the same time.
+  # `lint` made the site. The repository must have Pages on, with GitHub
+  # Actions as the source: the token of a workflow cannot turn it on. A
+  # deployment does not stop for a new push, so two deployments do not run at
+  # the same time.
   pages:
     name: pages
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -208,8 +209,6 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/configure-pages@v6
-        with:
-          enablement: true
       - id: deployment
         uses: actions/deploy-pages@v5
 
