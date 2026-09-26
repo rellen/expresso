@@ -451,7 +451,9 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
       calc(var(--y) + (1 - var(--shown)) * var(--enter-y))
     )
     rotate(var(--rotate))
-    scale(calc(var(--scale) * (1 - (1 - var(--shown)) * (1 - var(--enter-scale)))));
+    scale(
+      calc(var(--scale) * (1 - (1 - var(--shown)) * (1 - var(--enter-scale))))
+    );
   outline: calc(var(--alert, 0) * 4px) solid currentColor;
   outline-offset: 0.25rem;
   transition:
@@ -506,7 +508,9 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 }
 [data-on][data-effect="wipe"] {
   opacity: 1;
-  clip-path: inset(-1rem calc((1 - var(--shown)) * (100% + 2rem) - 1rem) -1rem -1rem);
+  clip-path: inset(
+    -1rem calc((1 - var(--shown)) * (100% + 2rem) - 1rem) -1rem -1rem
+  );
 }
 /*
  * The properties of an element with an `on` entity or with an effect. Only
@@ -526,7 +530,9 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 [data-el],
 [data-effect] {
   filter: blur(calc((1 - var(--shown)) * var(--enter-blur)))
-    opacity(calc(var(--opacity) * (1 - var(--dim, 0) * (1 - var(--dim-opacity, 0.4)))));
+    opacity(
+      calc(var(--opacity) * (1 - var(--dim, 0) * (1 - var(--dim-opacity, 0.4))))
+    );
 }
 [data-el] {
   color: var(--color, inherit);
