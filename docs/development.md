@@ -263,6 +263,37 @@ this pattern.
 Prettier formats the files in `assets/`. `package.json` pins the version, and
 `npm install` gives the command. Run `npm run format`, which is not one of the checks.
 
+## Record the GIFs of the guides
+
+The how-to guides and the reference pages show a GIF of each example deck of
+`examples/animations/`. `mix expresso.gifs` records them:
+
+```sh
+mix expresso.gifs                        # each example, into _build/gifs
+mix expresso.gifs /tmp/gifs overlay-at   # one example, into /tmp/gifs
+```
+
+The task renders each example deck to an HTML file. It then runs the recorder
+`assets/gifs/record.ts` with Node, and it gives the recorder a manifest with the HTML files
+and the keys of each example. `npm run gifs -- <manifest> <output>` runs only the recorder.
+The list of the examples, with their keys, is in `Mix.Tasks.Expresso.Gifs`.
+
+The recorder opens each document in Chromium, presses the keys, and takes a screenshot of
+each frame. After a key, it pauses each animation of the page, and it moves the animations
+to the time of each frame. The frames therefore do not depend on the speed of the computer.
+The recorder encodes the frames with `gifenc`, a JavaScript package, so it needs no program
+such as ffmpeg.
+
+The job `gifs` of the workflow records the GIFs for each pull request, and the artifact
+`gifs` holds them. After a push to main, the job `media` replaces the branch `media` with
+one commit of the new GIFs. The guides show each GIF from that branch, so the history of
+main holds no GIF.
+
+To add an example, write a deck in `examples/animations/`, and add it with its keys to the
+list of the task. Then show its code and its GIF in a guide.
+`test/expresso/examples_test.exs` makes sure that a how-to guide shows the code of each deck
+as it is in the file, and that the guides show each GIF.
+
 ## Look at a deck
 
 Make an HTML document, and then open it. `examples/demo.exs` uses the functions, and

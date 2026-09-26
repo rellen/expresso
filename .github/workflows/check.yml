@@ -11,6 +11,11 @@
 # - dialyzer: `mix dialyzer`
 # - test: `mix test` and `mix test --only e2e`, the browser tests
 # - presenter: `npm run check` and `npm test`
+# - gifs: `mix expresso.gifs`, the GIFs of the example decks of the guides
+#
+# After a push to main, the job `media` puts the GIFs on the branch `media`,
+# and the guides of `docs/` show them from there. The branch holds the GIFs of
+# the last push only, so the history of main holds no GIF.
 #
 # A job compiles the project for one environment, so the tools that need the
 # same build share one job. The tools of `lint` finish long before `dialyzer`,
@@ -132,10 +137,62 @@ jobs:
       - run: npm run check
       - run: npm test
 
+  # The GIFs of the example decks. The job records them for each pull request
+  # too, so an example that does not render fails the check. The artifact
+  # `gifs` holds them, and a person can look at them before a merge.
+  gifs:
+    name: gifs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps --only-shell chromium
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: gifs
+      - run: mix expresso.gifs gifs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gifs
+          path: gifs/
+          if-no-files-found: error
+
+  # Put the GIFs of a push to main on the branch `media`, as one commit with no
+  # parent. The push replaces the branch, so the branch holds the GIFs of the
+  # last push to main only. This job is the only job that can write to the
+  # repository.
+  media:
+    name: media
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [gifs]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: gifs
+          path: gifs
+      - name: Replace the branch media with the GIFs
+        working-directory: gifs
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git init --quiet --initial-branch=media
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit --quiet --message "docs: record the GIFs of the examples of ${GITHUB_SHA}"
+          git push --force --quiet "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" media
+
   all:
     name: Erlang/OTP 29, Elixir 1.20, Node 24
     if: always()
-    needs: [format, lint, dialyzer, test, presenter]
+    needs: [format, lint, dialyzer, test, presenter, gifs]
     runs-on: ubuntu-latest
     steps:
       - name: Fail when a check does not succeed
