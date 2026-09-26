@@ -1,10 +1,11 @@
 defmodule Expresso.EffectTest do
   use ExUnit.Case, async: true
+  use ExUnitProperties
 
   import Spark.Test, only: [dsl_errors: 1]
 
   alias Expresso.Deck
-  alias Expresso.Element.{Item, List, Part, TextBox}
+  alias Expresso.Element.{Item, List, Part, TextArea, TextBox}
   alias Expresso.Overlay.Render
   alias Expresso.Slide
 
@@ -95,7 +96,7 @@ defmodule Expresso.EffectTest do
   end
 
   describe "identify/1" do
-    defp slide(elements, metadata \\ %{}) do
+    defp slide(elements, metadata) do
       %Slide{elements: elements, metadata: Map.put(metadata, :slide_number, 1)}
     end
 
@@ -106,22 +107,56 @@ defmodule Expresso.EffectTest do
       slides
     end
 
-    test "gives each element the effect of the deck, and :fade without one" do
-      [%Slide{elements: [box]}] = identify([slide([%TextBox{}])], %{effect: :grow})
-      assert box.effect == :grow
+    defp maybe(values), do: one_of([constant(nil), member_of(values)])
 
-      [%Slide{elements: [box]}] = identify([slide([%TextBox{}])], %{})
-      assert box.effect == :fade
+    defp timing do
+      fixed_map(%{
+        effect: maybe([:fade, :grow, :wipe, :fly_up]),
+        speed: maybe([:fast, :slow, 450]),
+        easing: maybe([:linear, :spring])
+      })
     end
 
-    test "prefers the slide to the deck, a parent to the slide, and the element to each" do
-      list = %List{effect: :fly_left, elements: [%Item{}, %Item{effect: :blur}]}
+    defp tree(0), do: map(timing(), &struct!(TextArea, &1))
 
-      [%Slide{elements: [box, list]}] =
-        identify([slide([%TextBox{}, list], %{effect: :wipe})], %{effect: :grow})
+    defp tree(depth) do
+      one_of([
+        tree(0),
+        map({timing(), list_of(tree(depth - 1), max_length: 3)}, fn {timing, children} ->
+          struct!(TextBox, Map.put(timing, :elements, children))
+        end),
+        map({timing(), list_of(map(timing(), &struct!(Item, &1)), max_length: 3)}, fn {timing,
+                                                                                       items} ->
+          struct!(List, Map.put(timing, :elements, items))
+        end)
+      ])
+    end
 
-      assert box.effect == :wipe
-      assert Enum.map(list.elements, & &1.effect) == [:fly_left, :blur]
+    defp nearest(elements, inherited) do
+      Enum.map(elements, fn element ->
+        values = Map.new(inherited, fn {key, value} -> {key, Map.get(element, key) || value} end)
+        {values, nearest(Map.get(element, :elements) || [], values)}
+      end)
+    end
+
+    defp resolved(elements) do
+      Enum.map(elements, fn element ->
+        values = Map.take(element, [:effect, :speed, :easing])
+        {values, resolved(Map.get(element, :elements) || [])}
+      end)
+    end
+
+    property "gives each element its own value, else the nearest parent, the slide, the deck" do
+      check all elements <- list_of(tree(2), max_length: 4),
+                slide_values <- timing(),
+                deck_values <- timing() do
+        [%Slide{elements: identified}] = identify([slide(elements, slide_values)], deck_values)
+
+        deck = Map.update!(deck_values, :effect, &(&1 || :fade))
+        slide = Map.new(deck, fn {key, value} -> {key, slide_values[key] || value} end)
+
+        assert resolved(identified) == nearest(elements, slide)
+      end
     end
   end
 
