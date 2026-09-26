@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import fc from "fast-check";
 import { hold, times } from "../gifs/frames.ts";
 
 test("times gives one frame each 40 ms, and a last frame at the end", () => {
@@ -20,4 +21,27 @@ test("times takes a number of frames per second", () => {
 
 test("the last key of an example holds its frame longer", () => {
   assert.ok(hold(true) > hold(false));
+});
+
+test("times rise, end at the end of the animation, and skip no frame", () => {
+  fc.assert(
+    fc.property(
+      fc.integer({ min: 1, max: 5000 }),
+      fc.integer({ min: 1, max: 60 }),
+      (end, fps) => {
+        const all = times(end, fps);
+        const step = 1000 / fps;
+
+        assert.ok(all.length >= 1);
+        assert.equal(all[all.length - 1], end);
+        assert.ok(all[0]! > 0);
+        for (let index = 1; index < all.length; index++) {
+          const gap = all[index]! - all[index - 1]!;
+          assert.ok(gap > 0, `${all[index - 1]} then ${all[index]}`);
+          assert.ok(gap <= Math.ceil(step) + 1);
+        }
+      },
+    ),
+    { numRuns: 2000 },
+  );
 });

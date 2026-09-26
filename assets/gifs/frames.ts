@@ -14,7 +14,7 @@ export function times(end: number, fps: number = FPS): number[] {
   }
   const step = 1000 / fps;
   const all: number[] = [];
-  for (let time = step; time < end; time += step) {
+  for (let time = step; Math.round(time) < end; time += step) {
     all.push(Math.round(time));
   }
   all.push(end);
