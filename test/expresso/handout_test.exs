@@ -1,7 +1,10 @@
 defmodule Expresso.HandoutTest do
   use ExUnit.Case, async: true
+  use ExUnitProperties
 
   alias Expresso.Handout
+  alias Expresso.Overlay
+  alias Expresso.Test.Overlay, as: Gen
 
   defmodule SelectedDeck do
     use Expresso
@@ -72,8 +75,8 @@ defmodule Expresso.HandoutTest do
       end
     end
 
-    test "rejects :next, because no counter runs for the option" do
-      for term <- [:next, [from: :next], [2, :next]] do
+    property "rejects :next, because no counter runs for the option" do
+      check all term <- Gen.relative_spec() do
         assert {:error, message} = Handout.new(term)
         assert message =~ "cannot hold :next"
       end
@@ -93,17 +96,28 @@ defmodule Expresso.HandoutTest do
       Handout.pages(handout, max)
     end
 
-    test "gives each step for :all and the last step for :last" do
-      assert pages_of(:all, 4) == {:ok, [1, 2, 3, 4]}
-      assert pages_of(:last, 4) == {:ok, [4]}
+    property "gives each step for :all and the last step for :last" do
+      check all max <- Gen.max() do
+        assert pages_of(:all, max) == {:ok, Enum.to_list(1..max)}
+        assert pages_of(:last, max) == {:ok, [max]}
+      end
     end
 
-    test "gives the steps of a specification in order, with :last and no repeat" do
-      assert pages_of([3, 1], 4) == {:ok, [1, 3]}
-      assert pages_of([2, :last], 4) == {:ok, [2, 4]}
-      assert pages_of([4, :last], 4) == {:ok, [4]}
-      assert pages_of([from: 3], 5) == {:ok, [3, 4, 5]}
-      assert pages_of(2..3, 5) == {:ok, [2, 3]}
+    property "gives the steps of the specification and the last step, in order, or an error" do
+      check all term <- Gen.absolute_spec(), last <- boolean(), max <- Gen.max() do
+        {:ok, overlay} = Overlay.new(term)
+        term = if last, do: List.wrap(term) ++ [:last], else: term
+
+        case Overlay.steps(overlay, max) do
+          {:ok, steps} ->
+            expected = if last, do: Enum.uniq(Enum.sort([max | steps])), else: steps
+            assert pages_of(term, max) == {:ok, expected}
+
+          {:error, _message} ->
+            assert {:error, message} = pages_of(term, max)
+            assert message =~ "the handout option has a step of no page"
+        end
+      end
     end
 
     test "gives an error for a step that the slide does not have" do
