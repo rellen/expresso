@@ -1,7 +1,9 @@
 defmodule Expresso.OverlayTest do
   use ExUnit.Case, async: true
+  use ExUnitProperties
 
   alias Expresso.Overlay
+  alias Expresso.Test.Overlay, as: Gen
 
   defp spec(term) do
     {:ok, spec} = Overlay.new(term)
@@ -81,94 +83,118 @@ defmodule Expresso.OverlayTest do
     end
   end
 
-  describe "resolve_next/2" do
-    test "replaces :next with the counter and increments the counter one time" do
-      {:ok, overlay} = Overlay.new(from: :next)
-
-      assert Overlay.resolve_next(overlay, 3) == {%Overlay{pairs: [{3, :max}]}, 4}
+  describe "the properties of a specification" do
+    defp resolve(term, counter) do
+      {:ok, spec} = Overlay.new(term)
+      Overlay.resolve_next(spec, counter)
     end
 
-    test "gives the same value to each :next of one specification" do
-      {:ok, overlay} = Overlay.new([:next, from: :next])
+    defp next?(item), do: item in [:next, {:from, :next}]
 
-      assert Overlay.resolve_next(overlay, 2) == {%Overlay{pairs: [{2, 2}, {2, :max}]}, 3}
+    defp model(term, counter, max) do
+      term
+      |> List.wrap()
+      |> Enum.flat_map(fn
+        step when is_integer(step) -> [step]
+        first..last//1 -> Enum.to_list(first..last//1)
+        {:from, :next} -> Enum.to_list(counter..max//1)
+        {:from, step} -> Enum.to_list(step..max//1)
+        :next -> [counter]
+      end)
+      |> Enum.uniq()
+      |> Enum.sort()
     end
 
-    test "leaves the counter alone without a :next" do
-      {:ok, overlay} = Overlay.new([2, from: 5])
-
-      assert Overlay.resolve_next(overlay, 7) == {overlay, 7}
-    end
-  end
-
-  describe "relative?/1" do
-    test "is true for a specification with a :next" do
-      assert Overlay.relative?(spec(:next))
-      assert Overlay.relative?(spec([2, from: :next]))
+    defp explicit(term, counter) do
+      Enum.flat_map(List.wrap(term), fn
+        step when is_integer(step) -> [step]
+        first..last//1 -> [first, last]
+        {:from, :next} -> [counter]
+        {:from, step} -> [step]
+        :next -> [counter]
+      end)
     end
 
-    test "is false for a specification without a :next" do
-      refute Overlay.relative?(spec(3))
-      refute Overlay.relative?(spec([2, 5..7, from: 9]))
-    end
-  end
-
-  describe "first_step/1" do
-    test "gives the smallest first step" do
-      assert Overlay.first_step(spec([5..7, 2, from: 9])) == 2
-      assert Overlay.first_step(spec(from: 4)) == 4
+    property "new/1 accepts each form, with one pair for each item" do
+      check all term <- Gen.spec() do
+        assert {:ok, %Overlay{pairs: pairs}} = Overlay.new(term)
+        assert length(pairs) == length(List.wrap(term))
+      end
     end
 
-    test "ignores a pair that starts with :next" do
-      assert Overlay.first_step(spec([:next, 6])) == 6
-      assert Overlay.first_step(spec(:next)) == nil
-    end
-  end
-
-  describe "max_step/1" do
-    test "gives the largest explicit step" do
-      {:ok, overlay} = Overlay.new([2, 5..7, from: 9])
-      assert Overlay.max_step(overlay) == 9
+    property "new/1 refuses each other term with a message" do
+      check all term <- Gen.invalid() do
+        assert {:error, message} = Overlay.new(term)
+        assert is_binary(message) and message != ""
+      end
     end
 
-    test "ignores :max and gives nil with no explicit step" do
-      {:ok, overlay} = Overlay.new(from: :next)
-      assert Overlay.max_step(overlay) == nil
-    end
-  end
-
-  describe "steps/2" do
-    test "enumerates a closed specification" do
-      {:ok, overlay} = Overlay.new([2, 5..7])
-      assert Overlay.steps(overlay, 9) == {:ok, [2, 5, 6, 7]}
+    property "a specification is relative when it holds :next" do
+      check all term <- Gen.spec() do
+        assert Overlay.relative?(spec(term)) == Enum.any?(List.wrap(term), &next?/1)
+      end
     end
 
-    test "runs an open range to the maximum" do
-      {:ok, overlay} = Overlay.new(from: 2)
-      assert Overlay.steps(overlay, 4) == {:ok, [2, 3, 4]}
+    property "resolve_next/2 moves the counter one time for a relative specification" do
+      check all term <- Gen.spec(), counter <- Gen.step() do
+        {resolved, next} = resolve(term, counter)
+        relative? = Enum.any?(List.wrap(term), &next?/1)
+
+        assert next == if(relative?, do: counter + 1, else: counter)
+        refute Overlay.relative?(resolved)
+      end
     end
 
-    test "gives each step one time, in order" do
-      {:ok, overlay} = Overlay.new([3, 1..4, 2])
-      assert Overlay.steps(overlay, 4) == {:ok, [1, 2, 3, 4]}
+    property "first_step/1 is the smallest explicit first step" do
+      check all term <- Gen.spec() do
+        firsts =
+          for item <- List.wrap(term), not next?(item) do
+            case item do
+              first.._last//1 -> first
+              {:from, step} -> step
+              step -> step
+            end
+          end
+
+        assert Overlay.first_step(spec(term)) == Enum.min(firsts, fn -> nil end)
+      end
     end
 
-    test "gives an error for a step more than the maximum" do
-      {:ok, overlay} = Overlay.new([2, from: 5])
-      assert {:error, message} = Overlay.steps(overlay, 3)
-      assert message =~ "the step 5 is more than the maximum step 3"
+    property "max_step/1 is the largest explicit step after resolve_next/2" do
+      check all term <- Gen.spec(), counter <- Gen.step() do
+        {resolved, _next} = resolve(term, counter)
+
+        assert Overlay.max_step(resolved) == Enum.max(explicit(term, counter), fn -> nil end)
+      end
     end
 
-    test "gives an error for a :next that nothing resolved" do
-      {:ok, overlay} = Overlay.new(:next)
-      assert {:error, message} = Overlay.steps(overlay, 3)
+    property "steps/2 gives the union of the items, in order, within the maximum" do
+      check all term <- Gen.spec(), counter <- Gen.step(), max <- Gen.max() do
+        {resolved, _next} = resolve(term, counter)
+        too_large = Enum.filter(explicit(term, counter), &(&1 > max))
+
+        case Overlay.steps(resolved, max) do
+          {:ok, steps} ->
+            assert too_large == []
+            assert steps == model(term, counter, max)
+            assert Enum.all?(steps, &(&1 in 1..max))
+
+          {:error, message} ->
+            assert too_large != []
+            assert message =~ "is more than the maximum step #{max}"
+        end
+      end
+    end
+
+    property "steps/2 refuses a specification with an unresolved :next" do
+      check all term <- Gen.relative_spec(), max <- Gen.max() do
+        assert {:error, _message} = Overlay.steps(spec(term), max)
+      end
+    end
+
+    test "steps/2 names the :next when it is the first defect" do
+      assert {:error, message} = Overlay.steps(spec(:next), 3)
       assert message =~ "holds :next"
-    end
-
-    test "resolves :next and then :max in order" do
-      {:ok, overlay} = Overlay.new(from: :next)
-      {overlay, 3} = Overlay.resolve_next(overlay, 2)
-      assert Overlay.steps(overlay, 5) == {:ok, [2, 3, 4, 5]}
     end
   end
 end
