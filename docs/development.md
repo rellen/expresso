@@ -220,6 +220,29 @@ advisories, and the copy was not old.
 Read the output of `mix deps.get` for a line that ends with `VULNERABLE!`. The session
 start hook runs this command, so this line is in the output of the hook. Use both signals.
 
+## Dependency updates
+
+`.github/dependabot.yml` tells Dependabot to open pull requests each week for three kinds
+of dependency:
+
+- The GitHub Actions of `.github/workflows/` and `.github/actions/`. One pull request
+  holds each new version.
+- The packages of `package.json`. One pull request holds the minor and the patch versions,
+  and each major version gets its own pull request.
+- The packages of `mix.exs` and `mix.lock`, with the same groups as npm.
+
+Each commit message obeys Conventional Commits. The prefix is `ci:` for an action, and
+`build(deps):` or `build(deps-dev):` for a package.
+
+Dependabot does not open a major version of `@types/node`. That version follows the
+Node.js of `.tool-versions`, and a change of the toolchain changes its four places
+together. Dependabot does not change the toolchain.
+
+The workflow runs each check for a pull request of Dependabot, as for each pull request.
+Read the breaking changes of a major version before a merge. A new version of Playwright
+also needs a new browser. The workflow installs it. A session with `EXPRESSO_CHROMIUM` uses
+the Chromium of the container, and that Chromium can be older than the new version needs.
+
 ## The presenter script
 
 `docs/typescript.md` gives the design. The parts are:

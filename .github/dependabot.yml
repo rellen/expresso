@@ -1,0 +1,58 @@
+# Dependabot opens a pull request each week for the new versions of the
+# dependencies. `docs/development.md` gives the rules, in "Dependency updates".
+#
+# Each commit message obeys Conventional Commits, as `CLAUDE.md` tells: `ci:`
+# for an action, and `build(deps):` or `build(deps-dev):` for a package.
+
+version: 2
+
+updates:
+  # The actions of the workflow and of the composite actions. One pull request
+  # holds each new version, because the actions work together in each job.
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/*
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: ci
+
+  # The packages of `package.json`. One pull request holds the minor and the
+  # patch versions, and each major version gets its own pull request.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # The major version follows the Node.js of `.tool-versions`. A change of
+      # the toolchain changes four places together.
+      - dependency-name: "@types/node"
+        update-types:
+          - version-update:semver-major
+    commit-message:
+      prefix: build
+      include: scope
+
+  # The packages of `mix.exs` and `mix.lock`, with the same groups as npm.
+  - package-ecosystem: mix
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      mix:
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: build
+      include: scope
