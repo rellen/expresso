@@ -20,15 +20,17 @@ export function clock(milliseconds: number): string {
 // The length of the talk in milliseconds, or null for a talk with no length.
 // The address parameter `?duration=` replaces the attribute `data-duration`
 // of the `body`. Each value is a number of minutes. A value that is not a
-// positive number has no effect.
+// positive number has no effect. A value such as `1e305` also has no effect,
+// because its length in milliseconds is not a finite number.
 export function talkLength(
   attribute: string | undefined,
   parameter: string | null,
 ): number | null {
   for (const value of [parameter, attribute]) {
     const minutes = value === null || value === undefined ? NaN : Number(value);
-    if (value !== "" && Number.isFinite(minutes) && minutes > 0) {
-      return minutes * 60_000;
+    const length = minutes * 60_000;
+    if (value !== "" && Number.isFinite(length) && length > 0) {
+      return length;
     }
   }
   return null;

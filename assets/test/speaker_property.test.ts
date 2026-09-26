@@ -74,6 +74,27 @@ test("after the end of the talk, left gives the time after the end", () => {
   );
 });
 
+test("talkLength gives null or a positive, finite length, and the address parameter replaces the attribute", () => {
+  fc.assert(
+    fc.property(
+      fc.option(value, { nil: undefined }),
+      fc.option(value, { nil: null }),
+      (attribute, parameter) => {
+        const length = talkLength(attribute, parameter);
+        assert.ok(
+          length === null || (length > 0 && Number.isFinite(length)),
+          String(length),
+        );
+        const fromParameter = talkLength(undefined, parameter);
+        if (fromParameter !== null) {
+          assert.equal(length, fromParameter);
+        }
+      },
+    ),
+    { numRuns: RUNS },
+  );
+});
+
 test("a later time or fewer steps done never give a better pace", () => {
   const rank: Record<Pace, number> = { on: 0, behind: 1, over: 2 };
   const time = fc.integer({ min: 0, max: 7200 * 1000 });
