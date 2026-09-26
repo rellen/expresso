@@ -8,10 +8,19 @@ defmodule Expresso.Extension do
 
   # The overlay specification of an element. Each element entity merges this
   # schema into its own. `docs/overlays.md` gives the forms.
+  # The ways in which an element shows and hides at the steps of its `at`
+  # option. The slide and the deck take the same values.
+  @effects [:fade, :grow, :fly_up, :fly_down, :fly_left, :fly_right, :wipe, :blur]
+
   @overlay_schema [
     at: [
       type: {:custom, Expresso.Overlay, :new, []},
       doc: "The steps that show the element. See docs/overlays.md."
+    ],
+    effect: [
+      type: {:in, @effects},
+      doc:
+        "How the element shows and hides: #{Enum.map_join(@effects, ", ", &inspect/1)}. The default is the effect of the nearest parent, of the slide or of the deck."
     ]
   ]
 
@@ -298,6 +307,11 @@ defmodule Expresso.Extension do
         type: {:in, [:none, :fade, :slide, :zoom]},
         doc:
           "The transition between the slide before and this slide, in the two directions. The default is the transition of the deck."
+      ],
+      effect: [
+        type: {:in, @effects},
+        doc:
+          "How each element with an at option shows and hides. An element or its parent can replace it. The default is the effect of the deck."
       ]
     ]
   }
@@ -310,6 +324,12 @@ defmodule Expresso.Extension do
       name: [
         type: :string,
         doc: "A unique identifier for this deck."
+      ],
+      effect: [
+        type: {:in, @effects},
+        default: :fade,
+        doc:
+          "How each element with an at option shows and hides. A slide, an element or its parent can replace it."
       ],
       transition: [
         type: {:in, [:none, :fade, :slide, :zoom]},

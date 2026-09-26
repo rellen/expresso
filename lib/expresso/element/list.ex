@@ -26,6 +26,7 @@ defmodule Expresso.Element.List do
     :at,
     :steps,
     :el,
+    :effect,
     ordered: false,
     reveal: false,
     dim: false,

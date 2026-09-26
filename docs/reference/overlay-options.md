@@ -28,6 +28,34 @@ shows at each step. A child shows only at the steps of its parent.
 
 ![Elements that fade in at steps 2 and 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-at.gif)
 
+## `effect`
+
+The way in which an element shows and hides at the steps of its `at` option.
+
+| Value | Effect |
+| --- | --- |
+| `:fade` | The element fades in and out. This is the default. |
+| `:grow` | The element fades in from 80% of its size to its size. |
+| `:fly_up` | The element fades in and moves up by 1rem to its place. |
+| `:fly_down` | The element fades in and moves down by 1rem to its place. |
+| `:fly_left` | The element fades in and moves left by 1rem to its place. |
+| `:fly_right` | The element fades in and moves right by 1rem to its place. |
+| `:wipe` | A clip opens the element from left to right. The element does not fade. |
+| `:blur` | The element fades in from a blur of 0.2rem to sharp. |
+
+An element, a slide and the deck take the option. An element uses the nearest value: its
+own value, then the value of the nearest parent, then the slide, then the deck. A list
+with `reveal true` and `effect :fly_up` therefore flies each item in. An item with
+`effect :fade` in that list fades.
+
+At the last step of the element, the same effect runs in the other direction. An element
+with `:grow` then gets smaller, and an element with `:fly_up` moves down. An element
+without an `at` option shows at each step, so its effect has no result.
+
+![Five boxes, each with a different effect](https://raw.githubusercontent.com/rellen/expresso/media/overlay-effects.gif)
+
+![The items of a list fly up one after the other, and the last item flies out after a step back](https://raw.githubusercontent.com/rellen/expresso/media/overlay-effect-list.gif)
+
 ## `on`
 
 An entity in an element that changes the element at a set of steps. The first argument is a

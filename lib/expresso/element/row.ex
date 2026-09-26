@@ -11,7 +11,7 @@ defmodule Expresso.Element.Row do
   @typedoc "The struct of a row"
   @type t :: %__MODULE__{}
 
-  defstruct [:at, :steps, :el, cells: [], on: [], __spark_metadata__: nil]
+  defstruct [:at, :steps, :el, :effect, cells: [], on: [], __spark_metadata__: nil]
 
   @doc """
   Make a row from cells

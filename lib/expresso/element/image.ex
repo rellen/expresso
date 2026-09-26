@@ -38,7 +38,7 @@ defmodule Expresso.Element.Image do
   @typedoc "The struct of an image"
   @type t :: %__MODULE__{}
 
-  defstruct [:src, :alt, :width, :at, :steps, :el, on: [], __spark_metadata__: nil]
+  defstruct [:src, :alt, :width, :at, :steps, :el, :effect, on: [], __spark_metadata__: nil]
 
   @doc """
   Make an image with a path, with text for a screen reader and with a width

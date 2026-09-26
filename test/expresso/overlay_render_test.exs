@@ -153,7 +153,7 @@ defmodule Expresso.Overlay.RenderTest do
                [{"1", "1"}, {"2", "2"}, {"3", "3"}, {"4", "4"}]
 
       assert style =~
-               ~s([data-on~="1"] { opacity: 1; visibility: visible; transition-delay: 0s; })
+               ~s([data-on~="1"] { opacity: 1; visibility: visible; transition-delay: 0s; --shown: 1; })
     end
 
     test "writes one rule for each on entity, in document order, with a selector for each step" do

@@ -12,7 +12,7 @@ defmodule Expresso.Element.Spacer do
   @typedoc "The struct of a spacer"
   @type t :: %__MODULE__{}
 
-  defstruct [:at, :steps, :el, on: [], __spark_metadata__: nil]
+  defstruct [:at, :steps, :el, :effect, on: [], __spark_metadata__: nil]
 
   @doc """
   Make a spacer

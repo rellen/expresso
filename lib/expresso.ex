@@ -28,6 +28,7 @@ defmodule Expresso do
     slide_numbers = Spark.Dsl.Extension.get_opt(module, [:deck], :slide_numbers, false)
     duration = Spark.Dsl.Extension.get_opt(module, [:deck], :duration)
     transition = Spark.Dsl.Extension.get_opt(module, [:deck], :transition, :fade)
+    effect = Spark.Dsl.Extension.get_opt(module, [:deck], :effect, :fade)
 
     slides =
       module
@@ -42,7 +43,8 @@ defmodule Expresso do
         print_notes: print_notes,
         slide_numbers: slide_numbers,
         duration: duration,
-        transition: transition
+        transition: transition,
+        effect: effect
       },
       slides
     )

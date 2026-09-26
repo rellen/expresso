@@ -13,7 +13,7 @@ defmodule Expresso.Element.Column do
   @typedoc "The struct of a column"
   @type t :: %__MODULE__{}
 
-  defstruct [:width, :at, :steps, :el, on: [], elements: [], __spark_metadata__: nil]
+  defstruct [:width, :at, :steps, :el, :effect, on: [], elements: [], __spark_metadata__: nil]
 
   @doc """
   Make a column from elements, with an optional width

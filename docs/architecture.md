@@ -43,9 +43,9 @@ end
 
 `Expresso.parse/1` reads the DSL state of such a module. It returns an `Expresso.Deck`
 struct, and it numbers the slides with `Expresso.Deck.number_slides/1`. The metadata map
-of the deck holds the `progress`, `handout`, `print_notes`, `slide_numbers`, `duration`
-and `transition` options of the deck. Their defaults are `true`, `:all`, `true`, `false`,
-`nil` and `:fade`.
+of the deck holds the `progress`, `handout`, `print_notes`, `slide_numbers`, `duration`,
+`transition` and `effect` options of the deck. Their defaults are `true`, `:all`, `true`,
+`false`, `nil`, `:fade` and `:fade`.
 
 The `slide` entity has a `heading` option. An author writes it as a call inside the block
 of the slide, in the form of Spark:

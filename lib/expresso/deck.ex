@@ -23,6 +23,11 @@ defmodule Expresso.Deck do
   the next in the present view: `:fade`, `:slide`, `:zoom` or `:none`. The
   metadata of a slide can hold `:transition` too, and it replaces the value of
   the deck for the move into that slide. A deck without the key fades.
+
+  The metadata can also hold `:effect`, the way in which an element with steps
+  shows and hides, such as `:grow`. The metadata of a slide and the `effect`
+  field of an element can hold it too, and the nearest value applies. A deck
+  without the key fades. `Expresso.Overlay.Render.identify/1` gives the rules.
   """
 
   @type t :: %__MODULE__{:name => String.t(), :metadata => map(), :slides => list()}

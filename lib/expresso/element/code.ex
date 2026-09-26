@@ -35,6 +35,7 @@ defmodule Expresso.Element.Code do
     :at,
     :steps,
     :el,
+    :effect,
     dim: false,
     on: [],
     elements: [],

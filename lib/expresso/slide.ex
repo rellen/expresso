@@ -11,6 +11,7 @@ defmodule Expresso.Slide do
           :handout => Expresso.Handout.t() | nil,
           :auto_reveal => boolean() | nil,
           :transition => :none | :fade | :slide | :zoom | nil,
+          :effect => atom() | nil,
           :metadata => map() | nil,
           :elements => list()
         }
@@ -23,6 +24,7 @@ defmodule Expresso.Slide do
     :handout,
     :auto_reveal,
     :transition,
+    :effect,
     :metadata,
     :elements,
     __spark_metadata__: nil
@@ -47,7 +49,7 @@ defmodule Expresso.Slide do
 
   # The options of a slide that the metadata holds, for the templates, the
   # handout view and the renderer.
-  @metadata_options [:heading, :notes, :handout, :transition]
+  @metadata_options [:heading, :notes, :handout, :transition, :effect]
 
   @doc """
   Write the options of the DSL into the metadata of the slide

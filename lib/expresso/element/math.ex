@@ -16,7 +16,7 @@ defmodule Expresso.Element.Math do
   @typedoc "The struct of a math element"
   @type t :: %__MODULE__{}
 
-  defstruct [:text, :at, :steps, :el, on: [], __spark_metadata__: nil]
+  defstruct [:text, :at, :steps, :el, :effect, on: [], __spark_metadata__: nil]
 
   @doc """
   Make a math element with MathML

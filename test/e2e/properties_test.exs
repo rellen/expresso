@@ -68,9 +68,9 @@ defmodule Expresso.E2E.PropertiesTest do
   } do
     assert styles(page) == %{
              "transform" => "matrix(1, 0, 0, 1, 0, 0)",
-             "filter" => "opacity(1)",
+             "filter" => "blur(0px) opacity(1)",
              "color" => "rgb(0, 0, 0)",
-             "items" => ["opacity(1)", "none"]
+             "items" => ["blur(0px) opacity(1)", "none"]
            }
   end
 
@@ -80,7 +80,7 @@ defmodule Expresso.E2E.PropertiesTest do
 
     # A turn of 90 degrees and a scale of 1.5 give this matrix.
     assert style["transform"] == "matrix(0, 1.5, -1.5, 0, 0, 0)"
-    assert style["filter"] == "opacity(0.5)"
+    assert style["filter"] == "blur(0px) opacity(0.5)"
     assert style["color"] == "rgb(200, 0, 0)"
   end
 
@@ -88,10 +88,10 @@ defmodule Expresso.E2E.PropertiesTest do
     page: page
   } do
     page |> press("j")
-    assert styles(page)["items"] == ["opacity(0.4)", "none"]
+    assert styles(page)["items"] == ["blur(0px) opacity(0.4)", "none"]
 
     page |> press("k")
-    assert styles(page)["items"] == ["opacity(1)", "none"]
+    assert styles(page)["items"] == ["blur(0px) opacity(1)", "none"]
   end
 
   # The transform and the outline of the row and of the wrapper of the part,
