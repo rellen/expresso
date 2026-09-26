@@ -21,7 +21,7 @@ export type View = "present" | "handout" | "speaker";
 // present view or the speaker view shows a grid of the slides. `selected` is
 // the number of the selected slide in that grid. A message does not hold the
 // overview, so the overview shows only in the window that opens it.
-export type State = {
+export type State = Readonly<{
   slide: number;
   step: number;
   view: View;
@@ -32,7 +32,7 @@ export type State = {
   every: boolean;
   overview: boolean;
   selected: number;
-};
+}>;
 
 // The set of keys that operate. The overview has its own set of keys in each
 // view that shows it.
@@ -41,8 +41,8 @@ export type Mode = View | "overview";
 // `steps` holds the maximum step number of each slide, in slide order. The
 // entry for slide 1 is at index 0.
 export type Limits = {
-  slides: number;
-  steps: number[];
+  readonly slides: number;
+  readonly steps: readonly number[];
 };
 
 // The function of a key. `main.ts` does the functions `speaker`, `reset` and
@@ -73,15 +73,15 @@ export type Action =
 // binding with no key is a row for a click, a tap or a swipe: `point` gives
 // its function, and `binding` does not find it.
 export type Binding = {
-  keys: string[];
-  action: Action;
-  views: Mode[];
+  readonly keys: readonly string[];
+  readonly action: Action;
+  readonly views: readonly Mode[];
   text: string;
   label?: string;
 };
 
-const SHOWING: Mode[] = ["present", "speaker"];
-const OVERVIEW: Mode[] = ["overview"];
+const SHOWING: readonly Mode[] = ["present", "speaker"];
+const OVERVIEW: readonly Mode[] = ["overview"];
 const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 // The keys of the presenter. `next` and the list of keys read this table, so
@@ -91,7 +91,7 @@ const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 // other keys, and the arrow keys and the space bar scroll the pages. The rows
 // of the overview are last, because the overview uses the same keys with
 // other functions.
-export const BINDINGS: Binding[] = [
+export const BINDINGS: readonly Binding[] = [
   {
     keys: ["j", "ArrowRight", "ArrowDown", "PageDown", " "],
     action: "forward",
@@ -286,7 +286,7 @@ export function binding(state: State, key: string): Binding | undefined {
 // writes one kind on each slide, from the option of the slide or of the deck.
 export type Kind = "none" | "fade" | "slide" | "zoom";
 
-export const KINDS: Kind[] = ["none", "fade", "slide", "zoom"];
+export const KINDS: readonly Kind[] = ["none", "fade", "slide", "zoom"];
 
 // A move to a slide with a higher number goes forward. `slide` and `zoom`
 // use the direction, and `fade` does not.
