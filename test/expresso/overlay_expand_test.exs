@@ -193,6 +193,63 @@ defmodule Expresso.Overlay.ExpandTest do
     end
   end
 
+  describe "the dim option" do
+    defp dim_list(elements),
+      do: struct!(Expresso.Element.List, reveal: true, dim: true, elements: elements)
+
+    defp dims(element),
+      do: Enum.map(element.elements, &for(%On{state: :dim} = on <- &1.on, do: on.steps))
+
+    test "dims each child from the first step of the next child" do
+      [list] = expand([dim_list([item(), item(), item()])]).elements
+
+      assert dims(list) == [[[2, 3]], [[3]], []]
+      assert [%On{at: at} | _] = hd(list.elements).on
+      assert at == spec([2, 3])
+    end
+
+    test "adds the state after the on entities of the child" do
+      child = %{item() | on: [%On{at: spec(1), set: [x: "1px"]}]}
+      [list] = expand([dim_list([child, item()])]).elements
+
+      assert [%On{set: [x: "1px"], steps: [1]}, %On{state: :dim, steps: [2]}] =
+               hd(list.elements).on
+    end
+
+    test "dims a child only at its own steps" do
+      [list] =
+        expand([
+          dim_list([%{item() | at: spec(1..2)}, %{item() | at: spec(2)}, %{item() | at: spec(3)}])
+        ]).elements
+
+      assert dims(list) == [[[2]], [], []]
+    end
+
+    test "does not dim or count a child without steps" do
+      rows = [%Expresso.Element.Row{}, %Expresso.Element.Row{}, %Expresso.Element.Row{}]
+
+      table =
+        struct!(Expresso.Element.Table, reveal: true, header: true, dim: true, elements: rows)
+
+      [table] = expand([table]).elements
+
+      assert dims(table) == [[], [[2]], []]
+    end
+
+    test "dims each group of lines of a code element" do
+      code = Expresso.Element.Code.new("a\nb\nc\n", reveal: [1, 2..3], dim: true)
+      [code] = expand([code]).elements
+
+      assert dims(code) == [[[2]], []]
+    end
+
+    test "does nothing without the option" do
+      [list] = expand([list(elements: [item(), item()])]).elements
+
+      assert dims(list) == [[], []]
+    end
+  end
+
   describe "the result" do
     test "removes each pause at the level of the slide" do
       slide = expand([%Pause{}, %TextBox{}, %Pause{}])

@@ -189,6 +189,21 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   inherits: false;
   initial-value: 0px;
 }
+@property --scale {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+@property --rotate {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@property --opacity {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
 /*
  * The base rule of an element with an overlay. The rule of its transitions
  * comes after the rule of the elements, below.
@@ -331,13 +346,39 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .column,
 .math,
 .diagram {
-  transform: translate(var(--x), var(--y));
+  transform: translate(var(--x), var(--y)) rotate(var(--rotate)) scale(var(--scale));
   outline: calc(var(--alert, 0) * 4px) solid currentColor;
   outline-offset: 0.25rem;
   transition:
     opacity var(--dur) var(--ease),
     transform var(--dur) var(--ease),
     outline-width var(--dur) var(--ease);
+}
+/*
+ * The properties of an element with an `on` entity. Only such an element has
+ * the `data-el` attribute, so an element without an `on` entity gets no filter
+ * and keeps the color of its parent.
+ *
+ * `--opacity` and the state `dim` change a filter, and not `opacity`. The
+ * reveal rule of a step sets `opacity: 1`, so a change of `opacity` stays
+ * hidden. The filter multiplies the two values, and the fade of `at` then
+ * works as before. A theme can set `--dim-opacity`, and 0.4 is the default.
+ *
+ * `--color` has no registration, so it has no initial value. Without the
+ * property, the element gets the color of its parent, as an element without
+ * the rule does.
+ */
+[data-el] {
+  filter: opacity(
+    calc(var(--opacity) * (1 - var(--dim, 0) * (1 - var(--dim-opacity, 0.4))))
+  );
+  color: var(--color, inherit);
+  transition:
+    opacity var(--dur) var(--ease),
+    transform var(--dur) var(--ease),
+    outline-width var(--dur) var(--ease),
+    filter var(--dur) var(--ease),
+    color var(--dur) var(--ease);
 }
 /*
  * An element with an overlay keeps `visible` until the end of its fade out,
@@ -357,7 +398,22 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
     opacity var(--dur) var(--ease),
     visibility 0s linear var(--dur),
     transform var(--dur) var(--ease),
-    outline-width var(--dur) var(--ease);
+    outline-width var(--dur) var(--ease),
+    filter var(--dur) var(--ease);
+}
+/*
+ * `color` inherits. A child with its own transition of `color` starts a new
+ * transition at each frame of the transition of its parent, and it arrives
+ * late. Therefore only an element with an `on` entity has the transition.
+ */
+[data-on][data-el] {
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility 0s linear var(--dur),
+    transform var(--dur) var(--ease),
+    outline-width var(--dur) var(--ease),
+    filter var(--dur) var(--ease),
+    color var(--dur) var(--ease);
 }
 .screen {
   height: 100vh;

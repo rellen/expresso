@@ -290,7 +290,7 @@ defmodule Expresso.OverlayDslTest do
             slide "unused" do
               text_box do
                 at 1
-                on 1, set: [x: "400px", dim: 0.3]
+                on 1, set: [x: "400px", blur: 0.3]
               end
             end
           end
@@ -298,7 +298,7 @@ defmodule Expresso.OverlayDslTest do
 
       assert [{Expresso.OverlayDslTest.UnusedKey, [{message, _location}]}] = warnings
       assert message =~ "deck -> slide -> unused"
-      assert message =~ "the set key `dim` writes the custom property `--dim`"
+      assert message =~ "the set key `blur` writes the custom property `--blur`"
     end
 
     test "gives a warning for a state that the theme does not use" do
