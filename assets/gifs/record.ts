@@ -1,9 +1,10 @@
-// Record a GIF of each example deck.
+// Record a GIF or a PNG of each example deck.
 //
 // `mix expresso.gifs` renders each example deck to an HTML file, and it writes
-// a manifest with the name, the HTML file and the keys of each example. This
-// script reads the manifest, opens each HTML file in Chromium, presses the
-// keys, and writes one GIF for each example:
+// a manifest with the name, the HTML file, the address and the actions of
+// each example. This script reads the manifest, opens each HTML file in
+// Chromium, does the actions, and writes one GIF for each example, or one PNG
+// for a still:
 //
 //     node assets/gifs/record.ts <manifest.json> <output directory>
 //
@@ -11,8 +12,10 @@
 // script stops the clock of the animations of the page with the DevTools
 // protocol. After a key, it moves each animation to the time of each frame,
 // and it takes a screenshot of each frame. The time of the computer then has
-// no effect on the frames. The environment variable `EXPRESSO_CHROMIUM` gives
-// the path of a Chromium executable, as it does for the browser tests.
+// no effect on the frames. The clock of the page is also fixed, and an action
+// can move it, so the timer of the speaker view shows the same time on each
+// run. The environment variable `EXPRESSO_CHROMIUM` gives the path of a
+// Chromium executable, as it does for the browser tests.
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -22,9 +25,13 @@ import type { Page } from "playwright";
 import gifenc from "gifenc";
 import pngjs from "pngjs";
 import { FPS, START, hold, times } from "./frames.ts";
+import { isAdvance, output } from "./manifest.ts";
+import type { Example } from "./manifest.ts";
 
-type Example = { name: string; html: string; actions: string[] };
 type Frame = { png: Buffer; delay: number };
+
+// The time of the clock of the page at the start of each example.
+const EPOCH = Date.UTC(2026, 0, 1, 9, 0, 0);
 
 async function shot(page: Page): Promise<Buffer> {
   return page.screenshot({ type: "png" });
@@ -89,18 +96,44 @@ async function finish(page: Page): Promise<void> {
   await page.waitForFunction(() => document.getAnimations().length === 0);
 }
 
+// The text of the timer of the speaker view.
+async function timer(page: Page): Promise<string | null> {
+  return page.evaluate(
+    () => document.getElementById("speaker-timer")?.textContent ?? null,
+  );
+}
+
+// Move the clock of the page, and wait until the timer of the speaker view
+// shows the new time. The timer reads the clock one time each second.
+async function advance(page: Page, now: number): Promise<void> {
+  const before = await timer(page);
+  await page.clock.setFixedTime(now);
+  await page.waitForFunction(
+    (before) =>
+      document.getElementById("speaker-timer")?.textContent !== before,
+    before,
+  );
+}
+
 async function record(page: Page, example: Example): Promise<Frame[]> {
-  await page.goto(pathToFileURL(example.html).href);
+  let now = EPOCH;
+  await page.clock.setFixedTime(now);
+  await page.goto(pathToFileURL(example.html).href + example.address);
   await page.evaluate(() => document.fonts.ready);
 
   const frames: Frame[] = [{ png: await shot(page), delay: START }];
-  for (const [index, key] of example.actions.entries()) {
-    await page.keyboard.press(key);
-    for (const time of times(await started(page))) {
-      await seek(page, time);
-      frames.push({ png: await shot(page), delay: 1000 / FPS });
+  for (const [index, action] of example.actions.entries()) {
+    if (isAdvance(action)) {
+      now += action.advance;
+      await advance(page, now);
+    } else {
+      await page.keyboard.press(action);
+      for (const time of times(await started(page))) {
+        await seek(page, time);
+        frames.push({ png: await shot(page), delay: 1000 / FPS });
+      }
+      await finish(page);
     }
-    await finish(page);
     const last = index === example.actions.length - 1;
     frames.push({ png: await shot(page), delay: hold(last) });
   }
@@ -125,14 +158,14 @@ function encode(frames: Frame[]): Uint8Array {
   return gif.bytes();
 }
 
-const [manifest, output] = process.argv.slice(2);
-if (manifest === undefined || output === undefined) {
+const [manifest, outputDirectory] = process.argv.slice(2);
+if (manifest === undefined || outputDirectory === undefined) {
   console.error("Usage: node assets/gifs/record.ts <manifest.json> <output>");
   process.exit(2);
 }
 
 const examples: Example[] = JSON.parse(readFileSync(manifest, "utf8"));
-mkdirSync(output, { recursive: true });
+mkdirSync(outputDirectory, { recursive: true });
 
 // The GIF is 800 by 450 pixels. The slides have the layout of a window of
 // 1280 by 720 pixels, and the scale of 0.625 makes each frame smaller.
@@ -146,12 +179,18 @@ const context = await browser.newContext({
   reducedMotion: "no-preference",
 });
 
+// A still is the last frame, which shows the page after each action.
 for (const example of examples) {
   const page = await context.newPage();
   const frames = await record(page, example);
-  const path = join(output, `${example.name}.gif`);
-  writeFileSync(path, encode(frames));
-  console.log(`${path}: ${frames.length} frames`);
+  const path = join(outputDirectory, output(example));
+  if (example.still) {
+    writeFileSync(path, frames[frames.length - 1]!.png);
+    console.log(`${path}: a still`);
+  } else {
+    writeFileSync(path, encode(frames));
+    console.log(`${path}: ${frames.length} frames`);
+  }
   await page.close();
 }
 

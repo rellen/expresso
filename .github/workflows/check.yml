@@ -11,7 +11,8 @@
 # - dialyzer: `mix dialyzer`
 # - test: `mix test` and `mix test --only e2e`, the browser tests
 # - presenter: `npm run check` and `npm test`
-# - gifs: `mix expresso.gifs`, the GIFs of the example decks of the guides
+# - gifs: `mix expresso.gifs`, the GIFs and the stills of the example decks
+#   of the guides and of the README
 #
 # After a push to main, the job `media` puts the GIFs on the branch `media`,
 # and the guides of `docs/` show them from there. The branch holds the GIFs of

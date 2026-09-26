@@ -3,44 +3,61 @@ defmodule Expresso.ExamplesTest do
 
   alias Mix.Tasks.Expresso.Gifs
 
-  # The pages that show the examples and their GIFs.
+  # The pages that show the examples of the guides and their GIFs.
   @guides Path.wildcard("docs/{how-to,reference}/*.md")
   @media "https://raw.githubusercontent.com/rellen/expresso/media/"
 
   defp guides, do: Enum.map_join(@guides, "\n", &File.read!/1)
 
+  defp of(page), do: Enum.filter(Gifs.examples(), &(&1.page == page))
+
+  # The files of the media branch that a text shows.
+  defp shown(text) do
+    ~r{#{Regex.escape(@media)}([\w-]+\.(?:gif|png))}
+    |> Regex.scan(text, capture: :all_but_first)
+    |> List.flatten()
+    |> Enum.uniq()
+    |> Enum.sort()
+  end
+
   test "each example deck gives a deck" do
-    for example <- Gifs.examples() do
-      {value, _bindings} = Code.eval_file(example.deck)
-      assert {:ok, %Expresso.Deck{}} = Expresso.to_deck(value), example.deck
+    for deck <- Gifs.examples() |> Enum.map(& &1.deck) |> Enum.uniq() do
+      {value, _bindings} = Code.eval_file(deck)
+      assert {:ok, %Expresso.Deck{}} = Expresso.to_deck(value), deck
     end
   end
 
-  test "each example deck is in the directory of the examples, and the list holds each one" do
-    listed = Enum.map(Gifs.examples(), & &1.deck) |> Enum.sort()
+  test "each example deck is in a directory of the examples, and the list holds each one" do
+    listed = Gifs.examples() |> Enum.map(& &1.deck) |> Enum.uniq() |> Enum.sort()
 
-    assert listed == Enum.sort(Path.wildcard("examples/animations/*.exs"))
+    assert listed == Enum.sort(Path.wildcard("examples/{animations,presenter}/*.exs"))
   end
 
-  test "a how-to guide shows the code of each example deck, as it is in the file" do
+  test "each example of the guides is in examples/animations, and each of the README in examples/presenter" do
+    for example <- of(:guides), do: assert(example.deck =~ ~r{^examples/animations/})
+    for example <- of(:readme), do: assert(example.deck =~ ~r{^examples/presenter/})
+  end
+
+  test "a how-to guide shows the code of each example deck of the guides, as it is in the file" do
     how_to = Enum.map_join(Path.wildcard("docs/how-to/*.md"), "\n", &File.read!/1)
 
-    for example <- Gifs.examples() do
+    for example <- of(:guides) do
       code = example.deck |> File.read!() |> String.trim_trailing()
       assert how_to =~ "```elixir\n" <> code <> "\n```", example.deck
     end
   end
 
-  test "the guides show each GIF, and no GIF that the task does not record" do
-    names = Enum.map(Gifs.examples(), & &1.name)
+  test "the guides show each GIF of the guides, and no file that the task does not record" do
+    assert shown(guides()) == of(:guides) |> Enum.map(&Gifs.file/1) |> Enum.sort()
+  end
 
-    shown =
-      ~r{#{Regex.escape(@media)}([\w-]+)\.gif}
-      |> Regex.scan(guides(), capture: :all_but_first)
-      |> List.flatten()
-      |> Enum.uniq()
+  test "the README shows each file of its examples, and no file that the task does not record" do
+    shown = shown(File.read!("README.md"))
+    readme = of(:readme) |> Enum.map(&Gifs.file/1) |> Enum.sort()
+    all = Gifs.examples() |> Enum.map(&Gifs.file/1)
 
-    assert Enum.sort(shown) == Enum.sort(names)
+    assert readme -- shown == []
+    assert shown -- all == []
   end
 
   test "each guide is an extra of ExDoc" do
