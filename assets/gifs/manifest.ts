@@ -8,13 +8,15 @@ export type Action = string | { advance: number };
 
 // `address` is the query and the fragment after the path of the HTML file,
 // such as `?speaker#2.1`. A still gives one PNG after the actions, and an
-// example that is not a still gives a GIF of each action.
+// example that is not a still gives a GIF of each action. `height` is the
+// height of the picture, in the layout of a window of 1280 by 720 pixels.
 export type Example = {
   name: string;
   html: string;
   address: string;
   actions: Action[];
   still: boolean;
+  height: number;
 };
 
 export function isAdvance(action: Action): action is { advance: number } {

@@ -30,7 +30,9 @@ defmodule Mix.Tasks.Expresso.Gifs do
 
   An action is a key, or `{:advance, milliseconds}`, which moves the clock of
   the page. The speaker view then shows a later time. A still gives one PNG
-  after the actions, and each other example gives a GIF of each action.
+  after the actions, and each other example gives a GIF of each action. The
+  height is the height of the picture, in the layout of a window of 1280 by
+  720 pixels. A still of the handout view can then show several pages.
   """
   @type example :: %{
           name: String.t(),
@@ -38,6 +40,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
           address: String.t(),
           actions: [String.t() | {:advance, pos_integer()}],
           still: boolean(),
+          height: pos_integer(),
           page: :guides | :readme
         }
 
@@ -92,10 +95,10 @@ defmodule Mix.Tasks.Expresso.Gifs do
     },
     %{name: "present-progress", deck: "short.exs", actions: ["j", "j", "j"]},
     %{name: "present-slide-numbers", deck: "tour.exs", address: "#3", still: true},
-    %{name: "present-handout", deck: "tour.exs", actions: ["p"], still: true}
+    %{name: "present-handout", deck: "tour.exs", actions: ["p"], still: true, height: 2160}
   ]
 
-  @defaults %{address: "", actions: [], still: false}
+  @defaults %{address: "", actions: [], still: false, height: 720}
 
   @doc """
   Give each example, with the path of its deck file
@@ -145,7 +148,8 @@ defmodule Mix.Tasks.Expresso.Gifs do
           html: Map.fetch!(rendered, example.deck),
           address: example.address,
           actions: Enum.map(example.actions, &action/1),
-          still: example.still
+          still: example.still,
+          height: example.height
         }
       end
 

@@ -358,7 +358,9 @@ has:
   position;
 - actions, which are keys, or a move of the clock of the page, such as
   `{:advance, 90_000}`, for the timer of the speaker view;
-- `still: true` for a PNG of the page after the actions, in place of a GIF.
+- `still: true` for a PNG of the page after the actions, in place of a GIF;
+- a height of the picture, in the layout of a window of 1280 by 720 pixels, so a still of
+  the handout view can show several pages.
 
 The recorder opens each document in Chromium, does the actions, and takes a screenshot of
 each frame. After a key, it pauses each animation of the page, and it moves the animations

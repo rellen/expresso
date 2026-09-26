@@ -33,8 +33,15 @@ type Frame = { png: Buffer; delay: number };
 // The time of the clock of the page at the start of each example.
 const EPOCH = Date.UTC(2026, 0, 1, 9, 0, 0);
 
-async function shot(page: Page): Promise<Buffer> {
-  return page.screenshot({ type: "png" });
+// The picture of the page, from its top. A height that is more than the
+// height of the window reaches below the window, so a still of the handout
+// view shows several pages.
+async function shot(page: Page, height: number): Promise<Buffer> {
+  return page.screenshot({
+    type: "png",
+    fullPage: true,
+    clip: { x: 0, y: 0, width: 1280, height },
+  });
 }
 
 // Wait for the animations of a key, pause them, and give the time of the
@@ -121,7 +128,8 @@ async function record(page: Page, example: Example): Promise<Frame[]> {
   await page.goto(pathToFileURL(example.html).href + example.address);
   await page.evaluate(() => document.fonts.ready);
 
-  const frames: Frame[] = [{ png: await shot(page), delay: START }];
+  const { height } = example;
+  const frames: Frame[] = [{ png: await shot(page, height), delay: START }];
   for (const [index, action] of example.actions.entries()) {
     if (isAdvance(action)) {
       now += action.advance;
@@ -130,12 +138,12 @@ async function record(page: Page, example: Example): Promise<Frame[]> {
       await page.keyboard.press(action);
       for (const time of times(await started(page))) {
         await seek(page, time);
-        frames.push({ png: await shot(page), delay: 1000 / FPS });
+        frames.push({ png: await shot(page, height), delay: 1000 / FPS });
       }
       await finish(page);
     }
     const last = index === example.actions.length - 1;
-    frames.push({ png: await shot(page), delay: hold(last) });
+    frames.push({ png: await shot(page, height), delay: hold(last) });
   }
   return frames;
 }
@@ -168,7 +176,8 @@ const examples: Example[] = JSON.parse(readFileSync(manifest, "utf8"));
 mkdirSync(outputDirectory, { recursive: true });
 
 // The GIF is 800 by 450 pixels. The slides have the layout of a window of
-// 1280 by 720 pixels, and the scale of 0.625 makes each frame smaller.
+// 1280 by 720 pixels, and the scale of 0.625 makes each frame smaller. A
+// still can be taller than the window, and `shot` gives its height.
 const chromiumPath = process.env.EXPRESSO_CHROMIUM;
 const browser = await chromium.launch(
   chromiumPath ? { executablePath: chromiumPath } : {},
