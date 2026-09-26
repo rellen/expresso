@@ -248,7 +248,5 @@ export function text(id: string, value: string): void {
 // The pages of the handout view. The renderer gives each page the class
 // `handout-page` and the attributes `data-slide` and `data-step`.
 function pages(): HTMLElement[] {
-  return Array.from(
-    document.getElementsByClassName("handout-page"),
-  ) as HTMLElement[];
+  return Array.from(document.querySelectorAll<HTMLElement>(".handout-page"));
 }

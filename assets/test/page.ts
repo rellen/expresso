@@ -216,6 +216,9 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     body,
     getElementsByClassName: (name: string) =>
       all().filter((each) => each.className === name),
+    // Only a selector of one class, such as `.handout-page`.
+    querySelectorAll: (selector: string) =>
+      all().filter((each) => `.${each.className}` === selector),
     getElementById: (id: string) =>
       all().find((each) => each.id === id) ?? null,
     createElement: () => element(""),
