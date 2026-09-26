@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 160" width="300" height="160">
+  <g id="a">
+    <rect x="10" y="60" width="80" height="40" rx="4" fill="#4a90d9"/>
+    <text x="50" y="86" text-anchor="middle" font-size="18" fill="#fff">A</text>
+  </g>
+  <g id="arrow-b">
+    <line x1="95" y1="80" x2="195" y2="80" stroke="currentColor" stroke-width="4"/>
+    <polygon points="195,72 208,80 195,88" fill="currentColor"/>
+  </g>
+  <g id="b">
+    <rect x="210" y="60" width="80" height="40" rx="4" fill="#d94a4a"/>
+    <text x="250" y="86" text-anchor="middle" font-size="18" fill="#fff">B</text>
+  </g>
+  <g id="arrow-c">
+    <line x1="95" y1="80" x2="195.75" y2="115.66" stroke="currentColor" stroke-width="4"/>
+    <polygon points="193.08,123.2 208,120 198.41,108.12" fill="currentColor"/>
+  </g>
+  <g id="c">
+    <rect x="210" y="100" width="80" height="40" rx="4" fill="#3aa55d"/>
+    <text x="250" y="126" text-anchor="middle" font-size="18" fill="#fff">C</text>
+  </g>
+</svg>
