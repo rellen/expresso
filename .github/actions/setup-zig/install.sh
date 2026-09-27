@@ -73,24 +73,36 @@ sha256_of() {
   fi
 }
 
-# Download the archive from one address, and make sure of its SHA-256.
+# Download the archive from one address, and make sure of its SHA-256. The
+# arguments after the address go to curl.
 fetch() {
-  curl -sSfL --max-time 300 -o "${tmp_dir}/${file}" "$1" &&
-    [ "$(sha256_of "${tmp_dir}/${file}")" = "${sha256}" ]
+  local url="$1"
+  shift
+  if ! curl -sSfL --connect-timeout 15 --max-time 600 "$@" -o "${tmp_dir}/${file}" "${url}"; then
+    echo "The download from ${url} failed." >&2
+    return 1
+  fi
+  if [ "$(sha256_of "${tmp_dir}/${file}")" != "${sha256}" ]; then
+    echo "The archive from ${url} has a different SHA-256." >&2
+    return 1
+  fi
 }
 
+# A mirror that gives less than 500 KB/s for 20 seconds fails, and the script
+# tries the next mirror. On 2026-09-27, a mirror took 5 minutes for the 55 MB of
+# Zig 0.16.0, and another mirror took 21 seconds.
 found=""
 while IFS= read -r mirror; do
   echo "Trying ${mirror}"
   # The mirrors ask each client to give its name in the parameter `source`.
-  if fetch "${mirror}/${file}?source=github-rellen-expresso"; then
+  if fetch "${mirror}/${file}?source=github-rellen-expresso" --speed-limit 500000 --speed-time 20; then
     found="${mirror}"
     break
   fi
-  echo "The mirror ${mirror} did not give ${file} with the correct SHA-256." >&2
 done < <(printf '%s\n' "${mirrors}" | awk 'BEGIN { srand() } NF { print rand() "\t" $0 }' |
   sort -n | cut -f 2-)
 
+# The last source has no limit of speed, so that a slow network still gives Zig.
 if [ -z "${found}" ]; then
   echo "Each mirror failed. Trying ziglang.org." >&2
   if ! fetch "https://ziglang.org/download/${version}/${file}"; then
