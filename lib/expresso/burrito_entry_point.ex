@@ -13,6 +13,8 @@ defmodule Expresso.BurritoEntryPoint do
 
   use Application
 
+  alias Expresso.CommandLine
+
   @doc """
   Start the application, and run the command line in a Burrito binary
 
@@ -46,7 +48,9 @@ defmodule Expresso.BurritoEntryPoint do
   `program` to the standard error, and the exit status is 1. With `--help` or
   `-h` in any position, the function writes the help text with the name
   `program` to the standard output, and the exit status is 0. It then does not
-  read the other arguments.
+  read the other arguments. For a different argument that starts with `-`, the
+  function writes the message and the usage text to the standard error, and the
+  exit status is 1. `Expresso.CommandLine.parse/1` reads the arguments.
 
   The exit status is 0 when `Expresso.main/2` returns `:ok`, and 1 when it
   returns an error tuple. `Expresso.main/2` writes the message of an error tuple
@@ -57,21 +61,27 @@ defmodule Expresso.BurritoEntryPoint do
   def run(args, program \\ "expresso")
 
   def run([], program) do
-    IO.puts(:stderr, usage(program))
+    IO.puts(:stderr, CommandLine.usage(program))
     1
   end
 
   def run(args, program) do
-    if Enum.any?(args, &(&1 in ["--help", "-h"])) do
-      IO.write(help(program))
-      0
-    else
-      render(args)
+    case CommandLine.parse(args) do
+      :help ->
+        IO.write(help(program))
+        0
+
+      {:error, message} ->
+        IO.puts(:stderr, [message, ?\n, CommandLine.usage(program)])
+        1
+
+      {:paths, input_path, output_path} ->
+        render(input_path, output_path)
     end
   end
 
-  defp render(args) do
-    case Expresso.main(Enum.at(args, 0), Enum.at(args, 1)) do
+  defp render(input_path, output_path) do
+    case Expresso.main(input_path, output_path) do
       :ok -> 0
       {:error, _message} -> 1
     end
@@ -81,11 +91,9 @@ defmodule Expresso.BurritoEntryPoint do
       1
   end
 
-  defp usage(program), do: "Usage: #{program} <input> [output]"
-
   defp help(program) do
     """
-    #{usage(program)}
+    #{CommandLine.usage(program)}
 
     Make one HTML document from a deck.
 

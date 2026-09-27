@@ -159,6 +159,14 @@ defmodule Expresso.BinaryTest do
     assert standard_output(context, ["no/such/deck.exs"]) == {"", 1}
   end
 
+  test "gives the exit status 1 for an unknown option", context do
+    assert {output, 1} = run(context, ["--version"])
+    assert output =~ "Unknown option: --version\n"
+    assert output =~ "Usage: #{Path.basename(context.binary)} <input> [output]\n"
+
+    assert standard_output(context, ["--version"]) == {"", 1}
+  end
+
   test "gives the exit status 1 for an output path that it cannot write",
        %{tmp_dir: dir} = context do
     output_path = Path.join([dir, "no", "such", "deck.html"])

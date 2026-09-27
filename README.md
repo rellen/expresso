@@ -113,7 +113,9 @@ mix expresso my_deck.exs my_deck.html
 The second path is optional. Without it, the task writes the HTML to the standard output.
 Without the first path, the task writes the usage text. The task writes the usage text and
 each error message to the standard error, and the exit status is then 1. `mix help expresso`
-or `mix expresso --help` gives the help of the task.
+or `mix expresso --help` gives the help of the task. A different option, such as
+`--version`, is an error. A path that starts with `-` needs a directory in front of it, such
+as `./-deck.exs`.
 
 ### The options of a deck
 
@@ -295,7 +297,8 @@ The binary takes the same two paths as the mix task. It gives the exit status 0 
 writes the HTML, and 1 for an error. Without the first path, it writes its usage text with
 the file name of the binary, such as `Usage: expresso_cli_app_linux_x86 <input> [output]`.
 It writes the usage text and each error message to the standard error. With `--help` or
-`-h`, it writes a help text to the standard output, and the exit status is 0.
+`-h`, it writes a help text to the standard output, and the exit status is 0. A different
+option is an error, as for the mix task.
 
 This command needs Zig 0.16.0 and `xz` on the path. The Nix shell gives both, and the hook
 of a remote Claude Code session gives both.

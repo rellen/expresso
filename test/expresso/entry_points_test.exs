@@ -149,6 +149,16 @@ defmodule Expresso.EntryPointsTest do
       assert error =~ "Couldn't find input file"
     end
 
+    test "exits with the status 1, and writes the message and the usage text, for an unknown option" do
+      {output, error} =
+        with_output(fn ->
+          assert catch_exit(Mix.Tasks.Expresso.run(["deck.exs", "--version"])) == {:shutdown, 1}
+        end)
+
+      assert output == ""
+      assert error == "Unknown option: --version\nUsage: mix expresso <input> [output]\n"
+    end
+
     test "writes the help of the task for --help and -h" do
       for flag <- ["--help", "-h"] do
         output = capture_io(fn -> Mix.Tasks.Expresso.run(["no/such/deck.exs", flag]) end)
@@ -233,6 +243,18 @@ defmodule Expresso.EntryPointsTest do
 
       assert output == ""
       assert error =~ "Couldn't find input file"
+    end
+
+    test "gives the exit status 1, and writes the message and the usage text, for an unknown option" do
+      {output, error} =
+        with_output(fn ->
+          assert BurritoEntryPoint.run(["-x", "deck.exs"], "expresso_cli_app_linux_x86") == 1
+        end)
+
+      assert output == ""
+
+      assert error ==
+               "Unknown option: -x\nUsage: expresso_cli_app_linux_x86 <input> [output]\n"
     end
 
     @tag :tmp_dir

@@ -18,21 +18,32 @@ defmodule Mix.Tasks.Expresso do
   ## Options
 
     * `-h`, `--help` - show this help
+
+  A different argument that starts with `-` is an error. A path that starts
+  with `-` needs a directory in front of it, such as `./-deck.exs`.
   """
 
   use Mix.Task
 
+  alias Expresso.CommandLine
+
   @doc false
   @impl Mix.Task
   def run(args) do
-    # `Mix.Tasks.Help.run/1` runs `deps.loadpaths` again, and that task changes
-    # the working directory of the VM for a moment. In `mix test`, a different
-    # test then does not find its files. Therefore the task writes the text of
-    # `mix help expresso` itself.
-    if Enum.any?(args, &(&1 in ["--help", "-h"])) do
-      IO.write(@moduledoc)
-    else
-      render(Enum.at(args, 0), Enum.at(args, 1))
+    case CommandLine.parse(args) do
+      # `Mix.Tasks.Help.run/1` runs `deps.loadpaths` again, and that task
+      # changes the working directory of the VM for a moment. In `mix test`, a
+      # different test then does not find its files. Therefore the task writes
+      # the text of `mix help expresso` itself.
+      :help ->
+        IO.write(@moduledoc)
+
+      {:error, message} ->
+        IO.puts(:stderr, [message, ?\n, CommandLine.usage("mix expresso")])
+        exit({:shutdown, 1})
+
+      {:paths, input_path, output_path} ->
+        render(input_path, output_path)
     end
   end
 
