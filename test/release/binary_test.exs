@@ -47,6 +47,13 @@ defmodule Expresso.BinaryTest do
     )
   end
 
+  # The standard output of a run, without the standard error. `run/3` cannot
+  # discard the standard error, so the shell sends it to /dev/null.
+  defp standard_output(context, args) do
+    command = [context.timeout_command, @timeout, context.binary | args]
+    System.cmd("sh", ["-c", ~s(exec "$@" 2>/dev/null), "sh" | command], env: context.env)
+  end
+
   defp write_script(dir, name, source) do
     path = Path.join(dir, name)
     File.write!(path, source)
@@ -129,6 +136,8 @@ defmodule Expresso.BinaryTest do
     assert {output, 1} = run(context, [])
     assert output =~ "Usage: #{Path.basename(context.binary)} <input> [output]\n"
     refute output =~ "mix expresso"
+
+    assert standard_output(context, []) == {"", 1}
   end
 
   test "gives the exit status 0 and writes the help text for --help", context do
@@ -146,6 +155,16 @@ defmodule Expresso.BinaryTest do
   test "gives the exit status 1 for an input path that is not present", context do
     assert {output, 1} = run(context, ["no/such/deck.exs"])
     assert output =~ "Couldn't find input file"
+
+    assert standard_output(context, ["no/such/deck.exs"]) == {"", 1}
+  end
+
+  test "gives the exit status 1 for an output path that it cannot write",
+       %{tmp_dir: dir} = context do
+    output_path = Path.join([dir, "no", "such", "deck.html"])
+
+    assert {output, 1} = run(context, ["examples/dsl_deck.exs", output_path])
+    assert output =~ "Couldn't write output file: no such file or directory"
   end
 
   test "gives the exit status 1 for a script that returns a different value",

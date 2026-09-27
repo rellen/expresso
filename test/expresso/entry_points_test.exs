@@ -12,6 +12,9 @@ defmodule Expresso.EntryPointsTest do
   ])
   """
 
+  # The standard output and the standard error of a function.
+  defp with_output(fun), do: with_io(:stderr, fn -> capture_io(fun) end)
+
   defp write_script(dir, name \\ "deck.exs", source \\ @script) do
     path = Path.join(dir, name)
     File.write!(path, source)
@@ -43,25 +46,44 @@ defmodule Expresso.EntryPointsTest do
       assert output =~ "some text"
     end
 
-    test "writes the usage text without an input path" do
-      output = capture_io(fn -> assert {:error, _message} = Expresso.main(nil) end)
+    test "writes the usage text to the standard error without an input path" do
+      {output, error} = with_output(fn -> assert {:error, _message} = Expresso.main(nil) end)
 
-      assert output =~ "Usage: mix expresso <input> [output]"
+      assert output == ""
+      assert error =~ "Usage: mix expresso <input> [output]"
     end
 
-    test "writes a message for an input path that is not present" do
-      output = capture_io(fn -> assert {:error, _} = Expresso.main("no/such/deck.exs") end)
+    test "writes a message to the standard error for an input path that is not present" do
+      {output, error} =
+        with_output(fn -> assert {:error, _} = Expresso.main("no/such/deck.exs") end)
 
-      assert output =~ "Couldn't find input file"
+      assert output == ""
+      assert error =~ "Couldn't find input file"
     end
 
     @tag :tmp_dir
-    test "writes a message for a script that returns a different value", %{tmp_dir: dir} do
+    test "writes a message to the standard error for a script of a different value",
+         %{tmp_dir: dir} do
       input = write_script(dir, "number.exs", "42\n")
 
-      output = capture_io(fn -> assert {:error, _} = Expresso.main(input) end)
+      {output, error} = with_output(fn -> assert {:error, _} = Expresso.main(input) end)
 
-      assert output =~ "must return an Expresso.Deck struct"
+      assert output == ""
+      assert error =~ "must return an Expresso.Deck struct"
+    end
+
+    @tag :tmp_dir
+    test "gives an error for an output path that it cannot write", %{tmp_dir: dir} do
+      input = write_script(dir)
+      output = Path.join([dir, "no", "such", "deck.html"])
+
+      error =
+        capture_io(:stderr, fn ->
+          assert Expresso.main(input, output) ==
+                   {:error, "Couldn't write output file: no such file or directory"}
+        end)
+
+      assert error =~ "Couldn't write output file: no such file or directory"
     end
 
     @tag :tmp_dir
@@ -109,8 +131,38 @@ defmodule Expresso.EntryPointsTest do
       assert capture_io(fn -> Mix.Tasks.Expresso.run([input]) end) =~ "<!DOCTYPE html>"
     end
 
-    test "writes the usage text with no argument" do
-      assert capture_io(fn -> Mix.Tasks.Expresso.run([]) end) =~ "Usage: mix expresso"
+    test "exits with the status 1, and writes the usage text to the standard error" do
+      error =
+        capture_io(:stderr, fn ->
+          assert catch_exit(Mix.Tasks.Expresso.run([])) == {:shutdown, 1}
+        end)
+
+      assert error =~ "Usage: mix expresso"
+    end
+
+    test "exits with the status 1 for an input path that is not present" do
+      error =
+        capture_io(:stderr, fn ->
+          assert catch_exit(Mix.Tasks.Expresso.run(["no/such/deck.exs"])) == {:shutdown, 1}
+        end)
+
+      assert error =~ "Couldn't find input file"
+    end
+
+    test "writes the help of the task for --help and -h" do
+      for flag <- ["--help", "-h"] do
+        output = capture_io(fn -> Mix.Tasks.Expresso.run(["no/such/deck.exs", flag]) end)
+
+        # `mix check` turns on ANSI, and the help then has no backtick. This
+        # text is the same with and without ANSI.
+        assert output =~ "mix expresso <input> [output]"
+        assert output =~ "show this help"
+        refute output =~ "Couldn't find input file"
+      end
+    end
+
+    test "has a short description, so mix help lists the task" do
+      assert Mix.Task.shortdoc(Mix.Tasks.Expresso) == "Make one HTML document from a deck"
     end
   end
 
@@ -135,17 +187,20 @@ defmodule Expresso.EntryPointsTest do
       assert output =~ "<!DOCTYPE html>"
     end
 
-    test "gives the exit status 1 and writes the usage text with no argument" do
-      output = capture_io(fn -> assert BurritoEntryPoint.run([]) == 1 end)
+    test "gives the exit status 1 and writes the usage text to the standard error" do
+      {output, error} = with_output(fn -> assert BurritoEntryPoint.run([]) == 1 end)
 
-      assert output == "Usage: expresso <input> [output]\n"
+      assert output == ""
+      assert error == "Usage: expresso <input> [output]\n"
     end
 
     test "writes the name of the binary in the usage text" do
-      output =
-        capture_io(fn -> assert BurritoEntryPoint.run([], "expresso_cli_app_linux_x86") == 1 end)
+      error =
+        capture_io(:stderr, fn ->
+          assert BurritoEntryPoint.run([], "expresso_cli_app_linux_x86") == 1
+        end)
 
-      assert output == "Usage: expresso_cli_app_linux_x86 <input> [output]\n"
+      assert error == "Usage: expresso_cli_app_linux_x86 <input> [output]\n"
     end
 
     test "gives the exit status 0 and writes the help text for --help" do
@@ -175,18 +230,30 @@ defmodule Expresso.EntryPointsTest do
     end
 
     test "gives the exit status 1 for an input path that is not present" do
-      output = capture_io(fn -> assert BurritoEntryPoint.run(["no/such/deck.exs"]) == 1 end)
+      {output, error} =
+        with_output(fn -> assert BurritoEntryPoint.run(["no/such/deck.exs"]) == 1 end)
 
-      assert output =~ "Couldn't find input file"
+      assert output == ""
+      assert error =~ "Couldn't find input file"
     end
 
     @tag :tmp_dir
     test "gives the exit status 1 for a script that returns a different value", %{tmp_dir: dir} do
       input = write_script(dir, "number.exs", "42\n")
 
-      output = capture_io(fn -> assert BurritoEntryPoint.run([input]) == 1 end)
+      error = capture_io(:stderr, fn -> assert BurritoEntryPoint.run([input]) == 1 end)
 
-      assert output =~ "must return an Expresso.Deck struct"
+      assert error =~ "must return an Expresso.Deck struct"
+    end
+
+    @tag :tmp_dir
+    test "gives the exit status 1 for an output path that it cannot write", %{tmp_dir: dir} do
+      input = write_script(dir)
+      output = Path.join([dir, "no", "such", "deck.html"])
+
+      error = capture_io(:stderr, fn -> assert BurritoEntryPoint.run([input, output]) == 1 end)
+
+      assert error =~ "Couldn't write output file"
     end
 
     @tag :tmp_dir

@@ -105,47 +105,52 @@ defmodule Expresso do
   The function writes the HTML to `output_path`. With `nil` as the output path,
   the function writes the HTML to the standard output.
 
-  With `nil` as the input path, the function writes the usage text and returns an
-  error tuple. The mix task gives `nil` when the command has no argument.
+  With `nil` as the input path, the function writes the usage text to the
+  standard error and returns an error tuple. The mix task gives `nil` when the
+  command has no argument.
+
+  For each other error, the function writes the message to the standard error
+  and returns an error tuple. The standard output then holds no text. A failed
+  write of the output file is an error too.
   """
   @spec main(Path.t() | nil, Path.t() | nil) :: :ok | {:error, String.t()}
   def main(input_path, output_path \\ nil)
 
-  def main(nil, _output_path) do
-    message = "Usage: mix expresso <input> [output]"
-    IO.puts(message)
-    {:error, message}
-  end
+  def main(nil, _output_path), do: error("Usage: mix expresso <input> [output]")
 
   def main(input_path, output_path) do
-    result =
-      case File.stat(input_path) do
-        {:ok, _stat} ->
-          {value, _bindings} = evaluate_deck_file(input_path)
-
-          case to_deck(value) do
-            {:ok, deck} -> {:ok, Expresso.Deck.render(deck)}
-            {:error, _message} = error -> error
-          end
-
-        _ ->
-          {:error, "Couldn't find input file"}
-      end
-
-    case result do
-      {:ok, rendered} ->
-        if output_path == nil do
-          IO.puts(rendered)
-        else
-          write_to_file(rendered, output_path)
-        end
-
-        :ok
-
-      {:error, msg} = err ->
-        IO.puts(msg)
-        err
+    with {:ok, rendered} <- render_file(input_path),
+         :ok <- output(rendered, output_path) do
+      :ok
+    else
+      {:error, message} -> error(message)
     end
+  end
+
+  defp render_file(input_path) do
+    case File.stat(input_path) do
+      {:ok, _stat} ->
+        {value, _bindings} = evaluate_deck_file(input_path)
+
+        with {:ok, deck} <- to_deck(value), do: {:ok, Expresso.Deck.render(deck)}
+
+      _ ->
+        {:error, "Couldn't find input file"}
+    end
+  end
+
+  defp output(rendered, nil), do: IO.puts(rendered)
+
+  defp output(rendered, output_path) do
+    case write_to_file(rendered, output_path) do
+      :ok -> :ok
+      {:error, reason} -> {:error, "Couldn't write output file: #{:file.format_error(reason)}"}
+    end
+  end
+
+  defp error(message) do
+    IO.puts(:stderr, message)
+    {:error, message}
   end
 
   # sobelow_skip ["RCE"]
