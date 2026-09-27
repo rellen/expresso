@@ -79,4 +79,26 @@ defmodule Expresso.HighlightTest do
   test "keeps the order of the tokens of the last line" do
     assert texts("x = 1\n|> IO.puts()", "elixir") == ["x = 1\n", "|> IO.puts()\n"]
   end
+
+  defp group_prefixes(html) do
+    ~r/data-group-id="(\d+)-\d+"/
+    |> Regex.scan(html, capture: :all_but_first)
+    |> List.flatten()
+    |> Enum.uniq()
+  end
+
+  property "gives the same HTML for each render of the same text, for each language" do
+    check all text <- source(), language <- member_of(@languages), max_runs: 300 do
+      assert Expresso.Highlight.lines(text, language) == Expresso.Highlight.lines(text, language)
+    end
+  end
+
+  test "gives the group ids of each text a prefix of that text" do
+    first = Enum.join(Expresso.Highlight.lines("f(1)\ng([2])", "elixir"))
+    second = Enum.join(Expresso.Highlight.lines("h(3)", "elixir"))
+
+    assert [prefix] = group_prefixes(first)
+    assert [other] = group_prefixes(second)
+    assert prefix != other
+  end
 end

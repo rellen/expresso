@@ -53,10 +53,6 @@ defmodule Expresso.BinaryTest do
     path
   end
 
-  # Makeup gives each code block a random prefix for its group ids. Two renders of
-  # the same deck then give different ids, and the other bytes are equal.
-  defp normalize(html), do: String.replace(html, ~r/data-group-id="\d+-/, ~s(data-group-id="))
-
   # A part of each document at the first byte that is different, or nil for two
   # equal documents. A failure then shows a short part, and not two documents.
   defp difference(left, right) do
@@ -70,6 +66,8 @@ defmodule Expresso.BinaryTest do
     end
   end
 
+  # The deck has a code block, so the group ids of Makeup are a part of the
+  # comparison.
   test "writes the same HTML as Expresso.main/2", %{tmp_dir: dir} = context do
     expected = Path.join(dir, "expected.html")
     actual = Path.join(dir, "actual.html")
@@ -77,7 +75,9 @@ defmodule Expresso.BinaryTest do
     assert Expresso.main("examples/dsl_deck.exs", expected) == :ok
     assert {_output, 0} = run(context, ["examples/dsl_deck.exs", actual])
 
-    assert difference(normalize(File.read!(actual)), normalize(File.read!(expected))) == nil
+    html = File.read!(actual)
+    assert html =~ "data-group-id="
+    assert difference(html, File.read!(expected)) == nil
   end
 
   test "writes the HTML to the standard output with one argument", context do

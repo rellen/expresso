@@ -386,6 +386,12 @@ Without a lexer for the language, the fragment is the escaped text. The rules of
 classes come from a style of Makeup, and the renderer writes them into the document in
 their own `style` element.
 
+A lexer gives each pair of delimiters, such as `(` and `)`, a `data-group-id`. Without the
+option `group_prefix`, the id starts with a random prefix, and two renders of one deck are
+not equal. `Expresso.Highlight` gives the prefix `:erlang.phash2/1` of the text and the
+language. This hash is the same on each computer and each ERTS version. Therefore a deck
+gives the same HTML on each render, also from the binary that Burrito makes.
+
 The `reveal` option of a code element takes a list of line numbers and of ranges, such
 as `[1..3, 4..8, 10]`. `Expresso.Element.Code.build/1` makes one `Expresso.Element.Lines`
 child for each item, with the specification `[from: :next]`. The transformer then gives

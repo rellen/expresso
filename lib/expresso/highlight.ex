@@ -64,7 +64,7 @@ defmodule Expresso.Highlight do
       # at its end, and the function drops the empty line after that break.
       {:ok, {lexer, options}} ->
         (text <> "\n")
-        |> lexer.lex(options)
+        |> lexer.lex(Keyword.put(options, :group_prefix, group_prefix(text, language)))
         |> Enum.map(&flatten_value/1)
         |> Makeup.Lexer.split_into_lines()
         |> Enum.drop(-1)
@@ -74,6 +74,13 @@ defmodule Expresso.Highlight do
         lines(text, nil)
     end
   end
+
+  # A lexer gives each pair of delimiters, such as `(` and `)`, a group id in
+  # `data-group-id`. The id starts with a prefix, and without the option the
+  # lexer makes a random prefix. Then two renders of the same deck are not
+  # equal. The hash of the text and the language gives the same prefix on each
+  # computer and each ERTS version, and a different prefix for a different text.
+  defp group_prefix(text, language), do: Integer.to_string(:erlang.phash2({text, language}))
 
   # A character that keeps a line box, and that Floki does not drop
   @zero_width_space "\u200B"
