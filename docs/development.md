@@ -346,10 +346,14 @@ GitHub gave a warning for each job that used it.
 1. Get the list of the community mirrors from ziglang.org. When ziglang.org does not
    answer, use the copy of the list in the script.
 2. Try the mirrors in a random order. The Zig project asks automated systems to use the
-   mirrors, and the random order divides the requests between them.
+   mirrors, and the random order divides the requests between them. When a mirror gives
+   less than 500 KB/s for 20 seconds, try the next mirror.
 3. Make sure that the SHA-256 of the archive agrees with the sum in the script. When a
    mirror gives a different archive, try the next mirror.
-4. Try ziglang.org only when each mirror fails.
+4. Try ziglang.org only when each mirror fails. This download has no limit of speed.
+
+In the first run of the workflow, one mirror took 5 minutes for the 55 MB of Zig, before
+the limit of speed. Another mirror took 21 seconds.
 
 The script holds the SHA-256 of Zig 0.16.0 for Linux and macOS, on x86_64 and on aarch64.
 After a change to the version of Zig, add the new sums from
