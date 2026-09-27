@@ -777,7 +777,8 @@ The commands are:
 - `mix check` runs the curated tools of `ex_check`. These include the compiler, the
   formatter, Credo, Doctor, Dialyzer, Sobelow, MixAudit and ExUnit. `.check.exs` gives the
   configuration. It makes a compiler warning an error, and it lets Sobelow read the skip
-  comments.
+  comments. It also runs the browser tests, and it makes the binary for the target of the
+  computer and runs the release tests.
 - `mix release expresso_cli_app` makes a binary with Burrito. The targets are macOS and
   Linux, for x86_64 and for aarch64. Burrito needs Zig 0.16.0 and `xz` on the path.
   `shell.nix` pins the Zig version, and `mix.exs` must agree with it.

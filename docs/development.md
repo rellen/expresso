@@ -81,7 +81,7 @@ CLAUDE_CODE_REMOTE=true CLAUDE_PROJECT_DIR="$PWD" ./.claude/hooks/session-start.
 ## The checks
 
 ```sh
-mix check                      # each tool below, and ex_doc and unused_deps
+mix check                      # each tool below, Dialyzer, Doctor, ex_doc and unused_deps
 mix compile --warnings-as-errors
 mix format --check-formatted
 mix credo
@@ -103,6 +103,17 @@ Each result above comes from Erlang/OTP 29.1, Elixir 1.20.4 and Zig 0.16.0, whic
 `.tool-versions` gives. The Nix shell, a remote session and the workflow each give these
 versions.
 Therefore a result in a session is a result for each person and for the workflow.
+
+`mix check` also runs the browser tests and the release tests. Before the release tests,
+it makes the binary for the target of the computer: `macos_arm`, `macos_x86`, `linux_x86`
+or `linux_arm`. `.check.exs` finds the target. Therefore `mix check` needs Node, the
+Chromium of Playwright, Zig, `xz` and `timeout`. It does not run the two `npm` commands.
+
+The browser tests start after the unit tests, and the release tests start after the
+browser tests and a release that succeeded. `.check.exs` gives `retry: false`, so each run
+of `mix check` runs each tool. In the retry mode, a run after a failure runs only the
+failed tools. A failed tool with a dependency that does not run is then skipped, and a
+skipped tool does not fail the run.
 
 ### Property tests
 
@@ -173,15 +184,22 @@ EXPRESSO_BINARY=burrito_out/expresso_cli_app_linux_x86 mix test --only release
 `mix test` excludes these tests, because they need the binary, and the binary needs Zig.
 `EXPRESSO_BINARY` gives the path of the binary. `BURRITO_TARGET` makes one binary and not
 four, so the build takes less time. On a Mac, use the target `macos_arm` or `macos_x86`,
-and the binary of that target. `--overwrite` replaces an earlier release, because
-`mix release` otherwise asks a question.
+and the binary of that target. `mix check` finds the target of the computer. `--overwrite`
+replaces an earlier release, because `mix release` otherwise asks a question.
 
 In a remote session, the first build takes approximately five minutes, and a build after it
 takes approximately one minute. The tests take less than 15 seconds.
 
 The tests run the binary with `timeout` of GNU coreutils. A binary that does not halt then
-gives the exit status 124, and the run of the tests does not stop. Linux gives `timeout`. On
-macOS, the Nix shell gives it, because the standard environment of Nix holds coreutils.
+gives the exit status 124, and the run of the tests does not stop. Linux gives `timeout`,
+and `shell.nix` gives coreutils, also on macOS. Homebrew gives the command as `gtimeout`,
+and the tests accept both names.
+
+Burrito puts a precompiled ERTS in the binary, and it downloads the ERTS for the exact OTP
+version of the computer. On 2026-09-27, its source had OTP 29.0.5 and 29.1 for Linux and
+macOS, and it did not have 29.1.1. The `flake.lock` of the repository gives 29.0.5. After
+`nix flake update`, nixpkgs gave 29.1.1, and `mix release` then gets a 404. Keep the lock,
+or wait until the source has the new version.
 
 A binary installs its release in a directory that has the name and the version of the
 release. When that directory is present, the binary does not install the release again.
@@ -211,11 +229,13 @@ The checks run in parallel jobs, so the slowest job gives the time of the workfl
 - `presenter`: `npm run check` and `npm test`.
 - `release`: the binary for Linux on x86_64, and the release tests. `mlugg/setup-zig`
   installs Zig from a mirror, and it keeps the cache of Zig from one run to the next.
+- `macos`: `mix check` on an arm64 runner with macOS. It makes the binary for `macos_arm`.
+  Homebrew gives `xz`, and GNU coreutils of Homebrew gives `gtimeout`.
 
 Together they run each tool of `mix check`, the two npm commands, the browser tests and
 the release tests.
-The workflow does not run `mix check`, because that command runs the tools one after the
-other in one job.
+The Linux jobs do not run `mix check`, because that command runs the tools one after the
+other in one job. The job `macos` runs `mix check`, so each tool also runs on a Mac.
 
 A job compiles the project for one environment. Therefore the tools that need the same
 build share one job, and the project compiles two times for the development environment,

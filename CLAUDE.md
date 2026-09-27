@@ -45,6 +45,10 @@ Each command above passes at this time, and `mix check` passes as a whole. Keep 
 two `npm` commands need Node, and the hook runs `npm install`. `mix compile`
 does not need Node.
 
+`mix check` runs each command above, except the two `npm` commands. It runs the formatter
+with `--check-formatted`. It makes the binary for the target of the computer, and it runs
+the release tests with that binary. `.check.exs` gives the tools.
+
 `mix test --only e2e` runs the browser tests of `test/e2e/`. They need Node, the Playwright
 driver of `package.json` and Chromium. `mix test` excludes them. In a remote session, the
 hook sets `EXPRESSO_CHROMIUM` to the Chromium of the container. `docs/development.md` gives
