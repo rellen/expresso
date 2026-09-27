@@ -153,10 +153,8 @@ defmodule Expresso.EntryPointsTest do
       for flag <- ["--help", "-h"] do
         output = capture_io(fn -> Mix.Tasks.Expresso.run(["no/such/deck.exs", flag]) end)
 
-        # `mix check` turns on ANSI, and the help then has no backtick. This
-        # text is the same with and without ANSI.
         assert output =~ "mix expresso <input> [output]"
-        assert output =~ "show this help"
+        assert output =~ "`-h`, `--help` - show this help"
         refute output =~ "Couldn't find input file"
       end
     end

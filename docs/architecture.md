@@ -143,8 +143,12 @@ Two entry points call `Expresso.main/2`:
 
 A mix task that returns gives the exit status 0. Therefore `Mix.Tasks.Expresso` exits with
 `exit({:shutdown, 1})` for an error tuple, and Mix then gives the exit status 1. For
-`--help` or `-h` in any position, the task calls `mix help expresso`, which writes the
-`@moduledoc` of the task.
+`--help` or `-h` in any position, the task writes its `@moduledoc`, which is also the text
+of `mix help expresso`.
+
+The task does not call `Mix.Tasks.Help.run/1`. That function runs `deps.loadpaths` again,
+and `deps.loadpaths` changes the working directory of the VM for a moment. In `mix test`,
+the tests that run at the same time then do not find their files.
 
 The launcher of Burrito starts the VM with `-s elixir start_cli`. After the boot, the CLI of
 Elixir runs the first argument as a script, and then it halts the VM. Therefore
