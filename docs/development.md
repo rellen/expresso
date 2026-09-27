@@ -256,6 +256,12 @@ from the earlier workflow still covers each check.
 The workflow holds each version in one `env` block, because no action reads
 `.tool-versions`. Keep the workflow and `.tool-versions` in agreement.
 
+`.github/actions/setup-elixir` gives `setup-beam` the option `version-type: strict`, so
+the action installs each version as it is. Without the option, the action read 29.1 as the
+latest 29.1.x. After the release of OTP 29.1.1 on 2026-09-22, the jobs then ran on 29.1.1,
+and each other place gave 29.1. Burrito found no ERTS for 29.1.1, and the job `release`
+failed.
+
 The workflow keeps `deps` and `_build` in a cache for each job. The key holds the name of
 the job, `mix.lock`, the two versions and the commit. Therefore each run saves the build
 of its commit, and the next run compiles only the files that changed after it. A run with

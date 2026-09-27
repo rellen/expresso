@@ -22,11 +22,15 @@ inputs:
 runs:
   using: composite
   steps:
+    # `strict` takes each version as it is. Without it, the action reads 29.1 as
+    # the latest 29.1.x, and the jobs ran on OTP 29.1.1 after its release. Burrito
+    # then found no ERTS for 29.1.1, and each place must give the same versions.
     - name: Install Erlang and Elixir
       uses: erlef/setup-beam@v1
       with:
         otp-version: ${{ env.OTP_VERSION }}
         elixir-version: ${{ env.ELIXIR_VERSION }}
+        version-type: strict
 
     # `_build` holds the PLT of Dialyzer, which `mix.exs` puts there. A change to
     # `mix.lock` gives a new key, and the tools then run against a new build.
