@@ -59,8 +59,9 @@ The hook does these operations:
    same builds in the workflow.
 2. Download the Elixir build for OTP 29 from `builds.hex.pm`, and put it in `/opt/elixir`.
 3. Download the Node build from `nodejs.org`, and put it in `/opt/node`.
-4. Download the Zig build from `ziglang.org`, and put it in `/opt/zig`. A failed download
-   gives a warning, and the hook continues, because only the binary needs Zig.
+4. Put Zig in `/opt/zig` with `.github/actions/setup-zig/install.sh`, the script of the
+   workflow. It downloads Zig from a community mirror, and it makes sure of the SHA-256.
+   A failure gives a warning, and the hook continues, because only the binary needs Zig.
 5. Write `PATH`, `ELIXIR_ERL_OPTIONS` and `LANG` into `$CLAUDE_ENV_FILE`.
 6. `mix local.hex`, `mix local.rebar`, `mix deps.get`, `mix compile` and `npm install`.
 

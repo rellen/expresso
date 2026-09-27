@@ -92,17 +92,15 @@ export PATH="${NODE_DIR}/bin:${PATH}"
 # Zig. Burrito needs it for `mix release expresso_cli_app`, and the tests of
 # `mix test --only release` run that binary. The other commands do not need Zig.
 # Therefore a failed download gives a warning, and the hook continues.
+#
+# The script of the workflow installs Zig. It downloads Zig from a community
+# mirror, and it makes sure of the SHA-256. `docs/development.md` tells more in
+# "Zig in the workflow".
+repository="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 if [ "$("${ZIG_DIR}/zig" version 2>/dev/null || true)" != "${ZIG_VERSION}" ]; then
-  tmp_dir="$(mktemp -d)"
-  if curl -sSfL -o "${tmp_dir}/zig.tar.xz" \
-    "https://ziglang.org/download/${ZIG_VERSION}/zig-x86_64-linux-${ZIG_VERSION}.tar.xz"; then
-    rm -rf "${ZIG_DIR}"
-    mkdir -p "${ZIG_DIR}"
-    tar -xJf "${tmp_dir}/zig.tar.xz" --strip-components=1 -C "${ZIG_DIR}"
-  else
+  if ! "${repository}/.github/actions/setup-zig/install.sh" "${ZIG_VERSION}" "${ZIG_DIR}"; then
     echo "The hook did not get Zig ${ZIG_VERSION}. The release tests need it." >&2
   fi
-  rm -rf "${tmp_dir}"
 fi
 
 export PATH="${ZIG_DIR}:${PATH}"
