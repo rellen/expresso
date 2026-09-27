@@ -255,22 +255,26 @@ The checks run in parallel jobs, so the slowest job gives the time of the workfl
 - `dialyzer`: Dialyzer. It is the slowest job.
 - `test`: the unit tests and the browser tests.
 - `presenter`: `npm run check` and `npm test`.
-- `release`: the binary for Linux on x86_64, and the release tests.
+- `release`: the binary for Linux and the release tests, in two jobs. The job
+  `release (linux_x86)` runs on x86_64, and the job `release (linux_arm)` runs on an arm64
+  runner. Each job makes the binary for its own architecture, so it can run the binary.
   `.github/actions/setup-zig` installs Zig, as "Zig in the workflow" below tells.
 - `macos`: `mix check` on an arm64 runner with macOS. It makes the binary for `macos_arm`.
   Homebrew gives `xz`, and GNU coreutils of Homebrew gives `gtimeout`.
 
 Together they run each tool of `mix check`, the two npm commands, the browser tests and
-the release tests.
+the release tests. They make and test the binary for `linux_x86`, `linux_arm` and
+`macos_arm`. No job makes the binary for `macos_x86`.
 The Linux jobs do not run `mix check`, because that command runs the tools one after the
 other in one job. The job `macos` runs `mix check`, so each tool also runs on a Mac.
 
 A job compiles the project for one environment. Therefore the tools that need the same
 build share one job, and the project compiles two times for the development environment,
-in `lint` and in `dialyzer`. It compiles two times for the test environment, in `test` and
-in `release`, and one time for the production environment, in `release`. The tools of `lint`
-finish long before `dialyzer`, so the time of the workflow does not change. A step of
-`lint` or of `test` runs also when a step before it fails, so one run reports each defect.
+in `lint` and in `dialyzer`. It compiles three times for the test environment, in `test` and
+in the two `release` jobs, and two times for the production environment, in the two
+`release` jobs. The tools of `lint` finish long before `dialyzer`, so the time of the
+workflow does not change. A step of `lint` or of `test` runs also when a step before it
+fails, so one run reports each defect.
 
 Each Elixir job uses `.github/actions/setup-elixir`, which installs the versions of
 `.tool-versions`, reads the cache and gets the dependencies. One set of versions is

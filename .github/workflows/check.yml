@@ -13,8 +13,8 @@
 # - presenter: `npm run check` and `npm test`
 # - gifs: `mix expresso.gifs`, the GIFs and the stills of the example decks
 #   of the guides and of the README
-# - release: `mix release expresso_cli_app` for Linux on x86_64, and
-#   `mix test --only release`, the tests of that binary
+# - release: `mix release expresso_cli_app` for Linux on x86_64 and on
+#   aarch64, and `mix test --only release`, the tests of each binary
 # - macos: `mix check` on macOS, which also runs the browser tests and the
 #   release tests
 #
@@ -166,20 +166,34 @@ jobs:
           path: gifs/
           if-no-files-found: error
 
-  # The binary that Burrito makes, for Linux on x86_64. Burrito needs Zig and xz,
-  # and the runner gives xz. The tests of `test/release/` run the binary as a
-  # person does. The release uses the build of prod, and the tests use the build
-  # of test, so the job compiles the project two times. The binary holds the
-  # release, and the release takes approximately 80 MB. Therefore the job
-  # removes the release after the build, and the cache does not keep it.
+  # The binary that Burrito makes, for Linux on x86_64 and on aarch64. Each
+  # target has a job on a runner of its architecture, so the job can run the
+  # binary. Burrito needs Zig and xz, and the runner gives xz. The tests of
+  # `test/release/` run the binary as a person does. The release uses the build
+  # of prod, and the tests use the build of test, so a job compiles the project
+  # two times. The binary holds the release, and the release takes approximately
+  # 80 MB. Therefore the job removes the release after the build, and the cache
+  # does not keep it.
+  #
+  # Each target has its own cache. The two jobs run at the same time, and with
+  # one key only one of them can save its cache. The macOS job makes the binary
+  # of `macos_arm`, and no job makes the binary of `macos_x86`.
   release:
-    name: release
-    runs-on: ubuntu-latest
+    name: release (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux_x86
+            runner: ubuntu-latest
+          - target: linux_arm
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-elixir
         with:
-          cache: release
+          cache: release-${{ matrix.target }}
       - uses: ./.github/actions/setup-zig
         with:
           version: ${{ env.ZIG_VERSION }}
@@ -188,10 +202,10 @@ jobs:
           rm -rf _build/prod/rel
         env:
           MIX_ENV: prod
-          BURRITO_TARGET: linux_x86
+          BURRITO_TARGET: ${{ matrix.target }}
       - run: mix test --only release
         env:
-          EXPRESSO_BINARY: burrito_out/expresso_cli_app_linux_x86
+          EXPRESSO_BINARY: burrito_out/expresso_cli_app_${{ matrix.target }}
 
   # `mix check` on macOS, on an arm64 runner. The other jobs run on Linux, so
   # this job makes sure that each tool of `mix check` runs on a Mac. `.check.exs`
