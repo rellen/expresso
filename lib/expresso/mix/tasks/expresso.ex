@@ -25,8 +25,12 @@ defmodule Mix.Tasks.Expresso do
   @doc false
   @impl Mix.Task
   def run(args) do
+    # `Mix.Tasks.Help.run/1` runs `deps.loadpaths` again, and that task changes
+    # the working directory of the VM for a moment. In `mix test`, a different
+    # test then does not find its files. Therefore the task writes the text of
+    # `mix help expresso` itself.
     if Enum.any?(args, &(&1 in ["--help", "-h"])) do
-      Mix.Tasks.Help.run(["expresso"])
+      IO.write(@moduledoc)
     else
       render(Enum.at(args, 0), Enum.at(args, 1))
     end
