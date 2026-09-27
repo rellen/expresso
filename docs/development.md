@@ -254,8 +254,8 @@ The checks run in parallel jobs, so the slowest job gives the time of the workfl
 - `dialyzer`: Dialyzer. It is the slowest job.
 - `test`: the unit tests and the browser tests.
 - `presenter`: `npm run check` and `npm test`.
-- `release`: the binary for Linux on x86_64, and the release tests. `mlugg/setup-zig`
-  installs Zig from a mirror, and it keeps the cache of Zig from one run to the next.
+- `release`: the binary for Linux on x86_64, and the release tests.
+  `.github/actions/setup-zig` installs Zig, as "Zig in the workflow" below tells.
 - `macos`: `mix check` on an arm64 runner with macOS. It makes the binary for `macos_arm`.
   Homebrew gives `xz`, and GNU coreutils of Homebrew gives `gtimeout`.
 
@@ -333,6 +333,34 @@ advisories, and the copy was not old.
 
 Read the output of `mix deps.get` for a line that ends with `VULNERABLE!`. The session
 start hook runs this command, so this line is in the output of the hook. Use both signals.
+
+### Zig in the workflow
+
+The jobs `release` and `macos` get Zig from `.github/actions/setup-zig`. This action uses
+the shell and `actions/cache`, and it has no code of its own for Node.js. The jobs used
+`mlugg/setup-zig` before. Its last release, v2.2.1 of 2026-01-19, targets Node.js 20, and
+GitHub gave a warning for each job that used it.
+
+`.github/actions/setup-zig/install.sh` does these steps:
+
+1. Get the list of the community mirrors from ziglang.org. When ziglang.org does not
+   answer, use the copy of the list in the script.
+2. Try the mirrors in a random order. The Zig project asks automated systems to use the
+   mirrors, and the random order divides the requests between them.
+3. Make sure that the SHA-256 of the archive agrees with the sum in the script. When a
+   mirror gives a different archive, try the next mirror.
+4. Try ziglang.org only when each mirror fails.
+
+The script holds the SHA-256 of Zig 0.16.0 for Linux and macOS, on x86_64 and on aarch64.
+After a change to the version of Zig, add the new sums from
+https://ziglang.org/download/index.json. Without them, the job stops with a message. The
+script also runs on a Linux or macOS computer:
+`.github/actions/setup-zig/install.sh 0.16.0 /tmp/zig`.
+
+The cache of GitHub keeps the installed Zig, so a run with a hit downloads nothing. It also
+keeps the build cache of Zig. In this container, the build of the binary took 142 seconds
+with an empty build cache, and 47 seconds with the cache of an earlier build. A build cache
+of more than 1 GB goes, and the job starts a new one.
 
 ## Dependency updates
 

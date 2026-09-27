@@ -1,0 +1,81 @@
+# The setup of Zig for each job of `.github/workflows/check.yml` that makes the
+# binary with Burrito.
+#
+# The jobs used mlugg/setup-zig before. That action targets Node.js 20, and
+# GitHub gives a warning for each job that uses it. This action has no code of
+# its own for Node.js: it uses the shell and actions/cache.
+#
+# `install.sh` downloads Zig from a community mirror, as mlugg/setup-zig did,
+# and it makes sure of the SHA-256. The cache of GitHub keeps the installed
+# Zig, so a run with a hit downloads nothing.
+#
+# Zig keeps the build of the wrapper of Burrito in its own cache. The cache of
+# GitHub keeps that directory too, as mlugg/setup-zig did, so the next run
+# compiles less. Each run saves it with a new key, and a later run reads the
+# latest one.
+
+name: Set up Zig
+description: Install Zig from a community mirror, and keep Zig and its build cache in the cache.
+
+inputs:
+  version:
+    description: The version of Zig, which must agree with `.tool-versions`.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Read the cache of Zig
+      id: zig
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.tool_cache }}/zig/${{ inputs.version }}
+        key: zig-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}
+
+    - name: Install Zig
+      if: steps.zig.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        ZIG_DIR: ${{ runner.tool_cache }}/zig/${{ inputs.version }}
+      run: '"${GITHUB_ACTION_PATH}/install.sh" "${VERSION}" "${ZIG_DIR}"'
+
+    # Burrito calls `zig build` in `deps/burrito`. Without these variables, Zig
+    # keeps its local cache in `deps`, and the cache of the dependencies grows.
+    - name: Put Zig on the path
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        ZIG_DIR: ${{ runner.tool_cache }}/zig/${{ inputs.version }}
+        ZIG_CACHE: ${{ runner.temp }}/zig-cache
+      run: |
+        installed="$("${ZIG_DIR}/zig" version)"
+        if [ "${installed}" != "${VERSION}" ]; then
+          echo "The cache gave Zig ${installed}, and the job needs Zig ${VERSION}." >&2
+          exit 1
+        fi
+        echo "${ZIG_DIR}" >> "${GITHUB_PATH}"
+        echo "ZIG_GLOBAL_CACHE_DIR=${ZIG_CACHE}" >> "${GITHUB_ENV}"
+        echo "ZIG_LOCAL_CACHE_DIR=${ZIG_CACHE}" >> "${GITHUB_ENV}"
+
+    - name: Read the build cache of Zig
+      uses: actions/cache@v6
+      with:
+        path: ${{ runner.temp }}/zig-cache
+        key: zig-cache-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: |
+          zig-cache-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}-
+
+    # Zig does not remove old entries from its build cache, and a build of new
+    # code adds entries. A build cache of more than 1 GB goes, and the job starts
+    # a new one. mlugg/setup-zig did the same at 2 GB. On 2026-09-27, one build of
+    # the binary gave a cache of 147 MB.
+    - name: Limit the size of the build cache of Zig
+      shell: bash
+      env:
+        ZIG_CACHE: ${{ runner.temp }}/zig-cache
+      run: |
+        if [ -d "${ZIG_CACHE}" ] && [ "$(du -sk "${ZIG_CACHE}" | cut -f 1)" -gt 1048576 ]; then
+          echo "The build cache of Zig is larger than 1 GB, and the job removes it."
+          rm -rf "${ZIG_CACHE}"
+        fi
