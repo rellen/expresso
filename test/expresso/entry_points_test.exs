@@ -148,6 +148,32 @@ defmodule Expresso.EntryPointsTest do
       assert output == "Usage: expresso_cli_app_linux_x86 <input> [output]\n"
     end
 
+    test "gives the exit status 0 and writes the help text for --help" do
+      output =
+        capture_io(fn ->
+          assert BurritoEntryPoint.run(["--help"], "expresso_cli_app_linux_x86") == 0
+        end)
+
+      assert String.starts_with?(output, "Usage: expresso_cli_app_linux_x86 <input> [output]\n")
+      assert output =~ "Make one HTML document from a deck."
+      assert output =~ "-h, --help"
+    end
+
+    test "gives the exit status 0 and writes the help text for -h" do
+      output = capture_io(fn -> assert BurritoEntryPoint.run(["-h"]) == 0 end)
+
+      assert String.starts_with?(output, "Usage: expresso <input> [output]\n")
+      assert output =~ "-h, --help"
+    end
+
+    test "writes the help text, and reads no path, for --help after a path" do
+      output =
+        capture_io(fn -> assert BurritoEntryPoint.run(["no/such/deck.exs", "--help"]) == 0 end)
+
+      assert String.starts_with?(output, "Usage: expresso <input> [output]\n")
+      refute output =~ "Couldn't find input file"
+    end
+
     test "gives the exit status 1 for an input path that is not present" do
       output = capture_io(fn -> assert BurritoEntryPoint.run(["no/such/deck.exs"]) == 1 end)
 
