@@ -15,6 +15,8 @@
 #   of the guides and of the README
 # - release: `mix release expresso_cli_app` for Linux on x86_64, and
 #   `mix test --only release`, the tests of that binary
+# - macos: `mix check` on macOS, which also runs the browser tests and the
+#   release tests
 #
 # After a push to main, the job `media` puts the GIFs on the branch `media`,
 # and the guides of `docs/` show them from there. The branch holds the GIFs of
@@ -191,6 +193,29 @@ jobs:
         env:
           EXPRESSO_BINARY: burrito_out/expresso_cli_app_linux_x86
 
+  # `mix check` on macOS, on an arm64 runner. The other jobs run on Linux, so
+  # this job makes sure that each tool of `mix check` runs on a Mac. `.check.exs`
+  # makes the binary of the target `macos_arm`. Homebrew gives xz for Burrito,
+  # and it gives `gtimeout` of GNU coreutils for the release tests. The job
+  # removes the release after the run, so the cache does not keep it.
+  macos:
+    name: macos
+    runs-on: macos-latest
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-playwright
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: macos
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+      - run: brew install xz coreutils
+      - run: mix check
+      - run: rm -rf _build/prod/rel
+
   # Put the GIFs of a push to main on the branch `media`, as one commit with no
   # parent. The push replaces the branch, so the branch holds the GIFs of the
   # last push to main only. This job is the only job that can write to the
@@ -246,7 +271,7 @@ jobs:
   all:
     name: Erlang/OTP 29, Elixir 1.20, Node 24
     if: always()
-    needs: [format, lint, dialyzer, test, presenter, gifs, release]
+    needs: [format, lint, dialyzer, test, presenter, gifs, release, macos]
     runs-on: ubuntu-latest
     steps:
       - name: Fail when a check does not succeed
