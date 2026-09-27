@@ -22,7 +22,11 @@ defmodule Expresso.BinaryTest do
       end
 
     if not File.regular?(binary), do: raise("#{binary} is not a file")
-    if !System.find_executable("timeout"), do: raise("the tests need timeout on the path")
+
+    # GNU coreutils gives `timeout`. Homebrew on macOS gives it as `gtimeout`.
+    timeout =
+      System.find_executable("timeout") || System.find_executable("gtimeout") ||
+        raise "the tests need timeout or gtimeout of GNU coreutils on the path"
 
     # A binary installs its release in a directory that has the name of the
     # release and of its version. When that directory is present, the binary does
@@ -33,11 +37,11 @@ defmodule Expresso.BinaryTest do
     File.mkdir_p!(home)
     on_exit(fn -> File.rm_rf!(home) end)
 
-    %{binary: binary, env: [{"HOME", home}, {"XDG_DATA_HOME", home}]}
+    %{binary: binary, timeout_command: timeout, env: [{"HOME", home}, {"XDG_DATA_HOME", home}]}
   end
 
   defp run(context, args, opts \\ []) do
-    System.cmd("timeout", [@timeout, context.binary | args],
+    System.cmd(context.timeout_command, [@timeout, context.binary | args],
       env: context.env,
       stderr_to_stdout: Keyword.get(opts, :stderr_to_stdout, true)
     )
