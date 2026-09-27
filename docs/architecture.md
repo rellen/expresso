@@ -765,10 +765,11 @@ high. Therefore each page keeps the proportions of a slide.
 ## The build
 
 The repository gives a Nix shell. `flake.nix` and `shell.nix` give Erlang/OTP 29, Elixir
-1.20, Node 24 and Zig 0.16. Zig is a dependency of Burrito. `package.json` gives Prettier
-and the other tools of the presenter script. The `.tool-versions` file gives the same
-versions for a different tool manager, and `.claude/hooks/session-start.sh` gives them to
-a remote session.
+1.20, Node 24 and Zig 0.16. `flake.nix` pins `nixpkgs` to one commit, so the shell gives
+the versions of `.tool-versions`. Zig is a dependency of Burrito. `package.json` gives
+Prettier and the other tools of the presenter script. The `.tool-versions` file gives the
+same versions for a different tool manager, and `.claude/hooks/session-start.sh` gives them
+to a remote session.
 
 The commands are:
 
