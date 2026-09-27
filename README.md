@@ -303,7 +303,8 @@ to other persons. `<binary> maintenance uninstall` removes the installed release
 ## Develop
 
 ```sh
-mix check      # the compiler, the formatter, Credo, Dialyzer, Sobelow and the tests
+mix check      # the compiler, the formatter, Credo, Dialyzer, Sobelow, the tests,
+               # the browser tests, the binary and its tests
 mix test
 mix format
 npm run check  # the types of the presenter script
