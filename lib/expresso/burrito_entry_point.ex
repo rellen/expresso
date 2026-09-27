@@ -43,7 +43,9 @@ defmodule Expresso.BurritoEntryPoint do
 
   The first argument is the input path, and the second argument is the output
   path. With no argument, the function writes the usage text with the name
-  `program`, and the exit status is 1.
+  `program`, and the exit status is 1. With `--help` or `-h` in any position,
+  the function writes the help text with the name `program`, and the exit status
+  is 0. It then does not read the other arguments.
 
   The exit status is 0 when `Expresso.main/2` returns `:ok`, and 1 when it
   returns an error tuple. For an exception, an exit or a throw, the function
@@ -53,11 +55,20 @@ defmodule Expresso.BurritoEntryPoint do
   def run(args, program \\ "expresso")
 
   def run([], program) do
-    IO.puts("Usage: #{program} <input> [output]")
+    IO.puts(usage(program))
     1
   end
 
-  def run(args, _program) do
+  def run(args, program) do
+    if Enum.any?(args, &(&1 in ["--help", "-h"])) do
+      IO.write(help(program))
+      0
+    else
+      render(args)
+    end
+  end
+
+  defp render(args) do
     case Expresso.main(Enum.at(args, 0), Enum.at(args, 1)) do
       :ok -> 0
       {:error, _message} -> 1
@@ -66,5 +77,25 @@ defmodule Expresso.BurritoEntryPoint do
     kind, reason ->
       IO.puts(:stderr, Exception.format(kind, reason, __STACKTRACE__))
       1
+  end
+
+  defp usage(program), do: "Usage: #{program} <input> [output]"
+
+  defp help(program) do
+    """
+    #{usage(program)}
+
+    Make one HTML document from a deck.
+
+    Arguments:
+      <input>     The Elixir script of the deck.
+      [output]    The file for the HTML. Without it, the HTML goes to the
+                  standard output.
+
+    Options:
+      -h, --help  Show this help.
+
+    The exit status is 0 when the command writes the HTML, and 1 for an error.
+    """
   end
 end

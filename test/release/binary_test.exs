@@ -131,6 +131,18 @@ defmodule Expresso.BinaryTest do
     refute output =~ "mix expresso"
   end
 
+  test "gives the exit status 0 and writes the help text for --help", context do
+    assert {output, 0} = run(context, ["--help"])
+    assert output =~ "Usage: #{Path.basename(context.binary)} <input> [output]\n"
+    assert output =~ "-h, --help"
+  end
+
+  test "gives the exit status 0 and reads no path for -h after a path", context do
+    assert {output, 0} = run(context, ["no/such/deck.exs", "-h"])
+    assert output =~ "Usage: #{Path.basename(context.binary)} <input> [output]\n"
+    refute output =~ "Couldn't find input file"
+  end
+
   test "gives the exit status 1 for an input path that is not present", context do
     assert {output, 1} = run(context, ["no/such/deck.exs"])
     assert output =~ "Couldn't find input file"
