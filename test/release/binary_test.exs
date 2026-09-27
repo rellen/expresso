@@ -127,7 +127,8 @@ defmodule Expresso.BinaryTest do
 
   test "gives the exit status 1 and writes the usage text with no argument", context do
     assert {output, 1} = run(context, [])
-    assert output =~ "Usage:"
+    assert output =~ "Usage: #{Path.basename(context.binary)} <input> [output]\n"
+    refute output =~ "mix expresso"
   end
 
   test "gives the exit status 1 for an input path that is not present", context do

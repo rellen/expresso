@@ -8,7 +8,7 @@ defmodule Expresso.BurritoEntryPoint do
   The launcher of Burrito starts the VM with `-s elixir start_cli`. After the boot,
   the CLI of Elixir runs the first argument as a script, and then it halts the VM.
   Therefore `start/2` runs the command before it returns, and it halts the VM with
-  the exit status of `run/1`. The CLI of Elixir then does not start.
+  the exit status of `run/2`. The CLI of Elixir then does not start.
   """
 
   use Application
@@ -17,28 +17,47 @@ defmodule Expresso.BurritoEntryPoint do
   Start the application, and run the command line in a Burrito binary
 
   In a Burrito binary, the function does not return. It halts the VM with the
-  exit status of `run/1`.
+  exit status of `run/2`.
   """
   @impl Application
   @spec start(Application.start_type(), term()) :: {:ok, pid()} | {:error, term()}
   def start(_, _) do
     if Burrito.Util.running_standalone?() do
-      Burrito.Util.Args.get_arguments() |> run() |> System.halt()
+      Burrito.Util.Args.get_arguments() |> run(program()) |> System.halt()
     end
 
     Supervisor.start_link([], strategy: :one_for_one)
+  end
+
+  # The file name of the binary. The launcher of Burrito gives the path of the
+  # binary, so the usage text names the file that the person ran.
+  defp program do
+    case Burrito.Util.Args.get_bin_path() do
+      :not_in_burrito -> "expresso"
+      path -> Path.basename(path)
+    end
   end
 
   @doc """
   Run the command line of the binary, and give its exit status
 
   The first argument is the input path, and the second argument is the output
-  path. The exit status is 0 when `Expresso.main/2` returns `:ok`, and 1 when it
+  path. With no argument, the function writes the usage text with the name
+  `program`, and the exit status is 1.
+
+  The exit status is 0 when `Expresso.main/2` returns `:ok`, and 1 when it
   returns an error tuple. For an exception, an exit or a throw, the function
   writes the message to the standard error, and the exit status is 1.
   """
-  @spec run([String.t()]) :: 0 | 1
-  def run(args) do
+  @spec run([String.t()], String.t()) :: 0 | 1
+  def run(args, program \\ "expresso")
+
+  def run([], program) do
+    IO.puts("Usage: #{program} <input> [output]")
+    1
+  end
+
+  def run(args, _program) do
     case Expresso.main(Enum.at(args, 0), Enum.at(args, 1)) do
       :ok -> 0
       {:error, _message} -> 1
