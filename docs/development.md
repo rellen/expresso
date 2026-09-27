@@ -10,7 +10,7 @@ Zig 0.16.0. Burrito needs Zig for the binary, and no other command needs it.
 
 Four places give a toolchain, and each place gives these versions:
 
-- `shell.nix`, which the Nix shell reads on your machine.
+- `flake.nix` and `shell.nix`, which the Nix shell reads on your machine.
 - `.tool-versions`, which asdf and mise read.
 - `.claude/hooks/session-start.sh`, which a remote Claude Code session runs.
 - `.github/workflows/check.yml`, which GitHub runs for a pull request.
@@ -23,16 +23,28 @@ change the other three.
 Use the Nix shell. It gives each tool, and it gives Zig for a Burrito release.
 
 ```sh
-nix flake update # nixpkgs follows master, and the lockfile can be old
 nix develop      # or: direnv allow, after you copy .envrc.example to .envrc
 mix deps.get
 ```
 
-`flake.nix` follows `nixpkgs` master, and `flake.lock` holds one commit of master.
-Therefore `nix develop` gives the versions of that commit, and not always the versions of
-`.tool-versions`. Run `nix flake update` to get the newest commit. On 2026-09-18, master
-gave Erlang/OTP 29.1, Elixir 1.20.4 and Node 24.20.0, which are the versions of
-`.tool-versions`.
+`flake.nix` pins `nixpkgs` to one commit, `b6c98e9e6633`. This commit is the release
+`nixpkgs-26.11pre1078010` of the channel `nixpkgs-unstable`, of 2026-09-22. It gives
+Erlang/OTP 29.1, Elixir 1.20.4, Node 24.20.0 and Zig 0.16.0 on Linux and on macOS, which
+are the versions of `.tool-versions`. `nix flake update` does not move the pin.
+
+Hydra built the channel release, so `cache.nixos.org` gives each tool of the shell. The
+exception is `elixir-ls`, because `shell.nix` builds it with Elixir 1.20. On 2026-09-27,
+`nix develop` on Linux built the shell. The shell made the binary with Burrito, and the
+release tests passed.
+
+To move the pin, do these steps:
+
+1. Find a release of `nixpkgs-unstable` that gives the versions of `.tool-versions`.
+   https://nix-releases.s3.amazonaws.com/?delimiter=/&prefix=nixpkgs/ lists each release,
+   and the name of a release ends with the first 12 characters of its commit.
+2. Make sure that Burrito has an ERTS for its OTP version. "The release tests" below gives
+   the reason.
+3. Put the commit in `flake.nix`, and run `nix flake lock`.
 
 ### In a Claude Code session on the web
 
@@ -196,10 +208,11 @@ and `shell.nix` gives coreutils, also on macOS. Homebrew gives the command as `g
 and the tests accept both names.
 
 Burrito puts a precompiled ERTS in the binary, and it downloads the ERTS for the exact OTP
-version of the computer. On 2026-09-27, its source had OTP 29.0.5 and 29.1 for Linux and
-macOS, and it did not have 29.1.1. The `flake.lock` of the repository gives 29.0.5. After
-`nix flake update`, nixpkgs gave 29.1.1, and `mix release` then gets a 404. Keep the lock,
-or wait until the source has the new version.
+version of the computer. Its source is `https://beam-machine-universal.b-cdn.net`. For Linux
+on x86_64, the file is `OTP-<v>/linux/x86_64/any/otp_<v>_linux_any_x86_64.tar.gz`. On
+2026-09-27, the source had OTP 29.0.5 and 29.1 for Linux and macOS, and it did not have
+29.1.1. For an OTP version with no ERTS, `mix release` gets a 404. The pin of `flake.nix`
+and `version-type: strict` of the workflow keep OTP at 29.1.
 
 A binary installs its release in a directory that has the name and the version of the
 release. When that directory is present, the binary does not install the release again.
