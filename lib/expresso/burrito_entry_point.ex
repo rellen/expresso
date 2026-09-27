@@ -43,19 +43,21 @@ defmodule Expresso.BurritoEntryPoint do
 
   The first argument is the input path, and the second argument is the output
   path. With no argument, the function writes the usage text with the name
-  `program`, and the exit status is 1. With `--help` or `-h` in any position,
-  the function writes the help text with the name `program`, and the exit status
-  is 0. It then does not read the other arguments.
+  `program` to the standard error, and the exit status is 1. With `--help` or
+  `-h` in any position, the function writes the help text with the name
+  `program` to the standard output, and the exit status is 0. It then does not
+  read the other arguments.
 
   The exit status is 0 when `Expresso.main/2` returns `:ok`, and 1 when it
-  returns an error tuple. For an exception, an exit or a throw, the function
+  returns an error tuple. `Expresso.main/2` writes the message of an error tuple
+  to the standard error. For an exception, an exit or a throw, the function
   writes the message to the standard error, and the exit status is 1.
   """
   @spec run([String.t()], String.t()) :: 0 | 1
   def run(args, program \\ "expresso")
 
   def run([], program) do
-    IO.puts(usage(program))
+    IO.puts(:stderr, usage(program))
     1
   end
 

@@ -340,19 +340,19 @@ defmodule ExpressoTest do
   describe "main/2" do
     import ExUnit.CaptureIO
 
-    test "writes the usage text when the input path is nil" do
-      output = capture_io(fn -> assert {:error, _message} = Expresso.main(nil, nil) end)
+    test "writes the usage text to the standard error when the input path is nil" do
+      error = capture_io(:stderr, fn -> assert {:error, _message} = Expresso.main(nil, nil) end)
 
-      assert output =~ "Usage: mix expresso <input> [output]"
+      assert error =~ "Usage: mix expresso <input> [output]"
     end
 
     test "gives an error when the input file is not present" do
-      output =
-        capture_io(fn ->
+      error =
+        capture_io(:stderr, fn ->
           assert {:error, _message} = Expresso.main("test/no_such_deck.exs", nil)
         end)
 
-      assert output =~ "Couldn't find input file"
+      assert error =~ "Couldn't find input file"
     end
 
     test "writes the HTML to the output path" do

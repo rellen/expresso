@@ -91,9 +91,14 @@ writes the heading container only when the metadata contains a heading.
 4. `Expresso.Deck.render/1` makes the HTML.
 5. The function writes the HTML to the output file, or to the standard output.
 
+When a step fails, the function writes the message to the standard error and returns an
+error tuple. The standard output then holds no text. A failed write of the output file is
+also an error.
+
 The function has a clause for `nil` in front of these steps. `Mix.Tasks.Expresso` reads
 the input path with `Enum.at/2`, which gives `nil` for a command with no argument. The
-clause writes the usage text of the mix task and returns an error tuple.
+clause writes the usage text of the mix task to the standard error and returns an error
+tuple.
 `Expresso.BurritoEntryPoint` does not call the function for a command with no argument. It
 writes its own usage text, with the file name of the binary. It also does not call the
 function for a command with `--help` or `-h` in any position. It then writes its help text.
@@ -135,6 +140,11 @@ Two entry points call `Expresso.main/2`:
 
 - `Mix.Tasks.Expresso`, for the command `mix expresso <input> [output]`.
 - `Expresso.BurritoEntryPoint`, for the binary that Burrito makes.
+
+A mix task that returns gives the exit status 0. Therefore `Mix.Tasks.Expresso` exits with
+`exit({:shutdown, 1})` for an error tuple, and Mix then gives the exit status 1. For
+`--help` or `-h` in any position, the task calls `mix help expresso`, which writes the
+`@moduledoc` of the task.
 
 The launcher of Burrito starts the VM with `-s elixir start_cli`. After the boot, the CLI of
 Elixir runs the first argument as a script, and then it halts the VM. Therefore
