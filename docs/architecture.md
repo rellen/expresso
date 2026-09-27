@@ -96,9 +96,9 @@ error tuple. The standard output then holds no text. A failed write of the outpu
 also an error.
 
 The function has a clause for `nil` in front of these steps. `Mix.Tasks.Expresso` reads
-the input path with `Enum.at/2`, which gives `nil` for a command with no argument. The
-clause writes the usage text of the mix task to the standard error and returns an error
-tuple.
+the input path with `Expresso.CommandLine.parse/1`, which gives `nil` for a command with no
+argument. The clause writes the usage text of the mix task to the standard error and
+returns an error tuple.
 `Expresso.BurritoEntryPoint` does not call the function for a command with no argument. It
 writes its own usage text, with the file name of the binary. It also does not call the
 function for a command with `--help` or `-h` in any position. It then writes its help text.
@@ -140,6 +140,12 @@ Two entry points call `Expresso.main/2`:
 
 - `Mix.Tasks.Expresso`, for the command `mix expresso <input> [output]`.
 - `Expresso.BurritoEntryPoint`, for the binary that Burrito makes.
+
+`Expresso.CommandLine.parse/1` reads the arguments of both entry points, so the two commands
+agree. It gives `:help` for `--help` or `-h` in any position. A different argument that
+starts with `-` is an unknown option. The entry point then writes `Unknown option:` and the
+usage text to the standard error, and the exit status is 1. The argument `-` alone is a
+path. A path that starts with `-` needs a directory in front of it, such as `./-deck.exs`.
 
 A mix task that returns gives the exit status 0. Therefore `Mix.Tasks.Expresso` exits with
 `exit({:shutdown, 1})` for an error tuple, and Mix then gives the exit status 1. For

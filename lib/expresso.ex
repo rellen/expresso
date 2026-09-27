@@ -116,7 +116,7 @@ defmodule Expresso do
   @spec main(Path.t() | nil, Path.t() | nil) :: :ok | {:error, String.t()}
   def main(input_path, output_path \\ nil)
 
-  def main(nil, _output_path), do: error("Usage: mix expresso <input> [output]")
+  def main(nil, _output_path), do: error(Expresso.CommandLine.usage("mix expresso"))
 
   def main(input_path, output_path) do
     with {:ok, rendered} <- render_file(input_path),
