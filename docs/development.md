@@ -219,6 +219,20 @@ release. When that directory is present, the binary does not install the release
 Therefore a new binary of the same version runs the release of an earlier binary. The tests
 give the binary a new home directory for each run, so they always test the new release.
 
+To run a new binary by hand, make it without `MIX_ENV=prod`. Use the target of your
+computer:
+
+```sh
+BURRITO_TARGET=linux_x86 mix release expresso_cli_app --overwrite
+```
+
+Burrito uses an installed release again only in a binary of the environment `prod`. See
+`is_prod` in `deps/burrito/lib/steps/build/pack_and_build.ex`. A binary of a different
+environment installs its release at each start, so it always runs the new code. On a remote
+container, this start took approximately 7 seconds, and the start of an installed release
+took approximately 0.3 seconds. The binary also writes many lines that start with `debug:`
+to the standard error, and the standard output holds only the output of Expresso.
+
 The launcher of Burrito starts the VM with `-s elixir start_cli`. After the boot, the CLI of
 Elixir runs the first argument as a script, and then it halts the VM.
 `Expresso.BurritoEntryPoint` runs the command in `start/2`, and it halts the VM before the
