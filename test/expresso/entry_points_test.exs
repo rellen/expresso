@@ -114,7 +114,7 @@ defmodule Expresso.EntryPointsTest do
     end
   end
 
-  describe "Expresso.BurritoEntryPoint.run/1" do
+  describe "Expresso.BurritoEntryPoint.run/2" do
     alias Expresso.BurritoEntryPoint
 
     @tag :tmp_dir
@@ -138,7 +138,14 @@ defmodule Expresso.EntryPointsTest do
     test "gives the exit status 1 and writes the usage text with no argument" do
       output = capture_io(fn -> assert BurritoEntryPoint.run([]) == 1 end)
 
-      assert output =~ "Usage:"
+      assert output == "Usage: expresso <input> [output]\n"
+    end
+
+    test "writes the name of the binary in the usage text" do
+      output =
+        capture_io(fn -> assert BurritoEntryPoint.run([], "expresso_cli_app_linux_x86") == 1 end)
+
+      assert output == "Usage: expresso_cli_app_linux_x86 <input> [output]\n"
     end
 
     test "gives the exit status 1 for an input path that is not present" do
