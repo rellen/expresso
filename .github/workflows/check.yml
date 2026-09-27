@@ -180,7 +180,7 @@ jobs:
       - uses: ./.github/actions/setup-elixir
         with:
           cache: release
-      - uses: mlugg/setup-zig@v2
+      - uses: ./.github/actions/setup-zig
         with:
           version: ${{ env.ZIG_VERSION }}
       - run: |
@@ -209,7 +209,7 @@ jobs:
       - uses: ./.github/actions/setup-elixir
         with:
           cache: macos
-      - uses: mlugg/setup-zig@v2
+      - uses: ./.github/actions/setup-zig
         with:
           version: ${{ env.ZIG_VERSION }}
       - run: brew install xz coreutils
