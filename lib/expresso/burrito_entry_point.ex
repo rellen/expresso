@@ -25,6 +25,9 @@ defmodule Expresso.BurritoEntryPoint do
   @spec start(Application.start_type(), term()) :: {:ok, pid()} | {:error, term()}
   def start(_, _) do
     if Burrito.Util.running_standalone?() do
+      # Without the handler, only a closed standard output waits for ever, so a
+      # failure to install it does not stop the command.
+      _ = Expresso.SignalHandler.install()
       Burrito.Util.Args.get_arguments() |> run(program()) |> System.halt()
     end
 
@@ -56,6 +59,11 @@ defmodule Expresso.BurritoEntryPoint do
   returns an error tuple. `Expresso.main/2` writes the message of an error tuple
   to the standard error. For an exception, an exit or a throw, the function
   writes the message to the standard error, and the exit status is 1.
+
+  When the standard output closes before all the HTML is written, as for
+  `| head`, the function writes no message, and the exit status is 0. In the
+  binary, the launcher of Burrito stops the VM first: `Expresso.SignalHandler`
+  tells how.
   """
   @spec run([String.t()], String.t()) :: 0 | 1
   def run(args, program \\ "expresso")
@@ -83,6 +91,7 @@ defmodule Expresso.BurritoEntryPoint do
   defp render(input_path, output_path) do
     case Expresso.main(input_path, output_path) do
       :ok -> 0
+      {:error, :closed} -> 0
       {:error, _message} -> 1
     end
   catch

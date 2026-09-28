@@ -163,6 +163,19 @@ VM. `Expresso.BurritoEntryPoint.run/2` gives the exit status: 0 for `:ok` and fo
 text, and 1 for an error tuple, an exception or no argument. The CLI of Elixir then does
 not start.
 
+The standard output can close before the command writes all the HTML, as for `| head`:
+
+- In `mix expresso`, the writer of the VM gets `epipe` and stops. `IO.puts/1` then raises
+  `:terminated`, and `Expresso.main/2` returns `{:error, :closed}`. The task stops with no
+  message and the exit status 0. A filter of the logger drops the report of OTP about the
+  writer, because the logger cannot write that report to the standard output either.
+- In the binary, the launcher of Burrito 1.6 passes the standard output of the VM through a
+  pipe. When the reader stops, the launcher stops the read of that pipe, and it sends
+  SIGTERM to the VM. The default handler of OTP then stops the VM in order, and that stop
+  waits for ever, because each write to the standard output waits. `Expresso.SignalHandler`
+  halts the VM at once for SIGTERM, with the exit status 0. The moduledoc of that module
+  tells why the status is 0.
+
 ## The document
 
 `Expresso.Deck.render/1` writes one HTML document with this structure. Each part below
