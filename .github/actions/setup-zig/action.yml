@@ -13,9 +13,14 @@
 # GitHub keeps that directory too, so the next run compiles less. The key holds
 # `mix.lock`, and a job saves the cache only when no cache has its key.
 # Therefore the jobs save it one time for each version of the lockfile.
+#
+# Burrito downloads the ERTS of the target, and on Linux a musl runtime. It
+# keeps them in its own download cache, and the cache of GitHub keeps that
+# directory too. Erlang gives the path of the directory, so a job runs
+# `.github/actions/setup-elixir` before this action.
 
 name: Set up Zig
-description: Install Zig from a community mirror, and keep Zig and its build cache in the cache.
+description: Install Zig from a community mirror, and keep Zig, its build cache and the downloads of Burrito in the cache.
 
 inputs:
   version:
@@ -85,3 +90,22 @@ runs:
           echo "The build cache of Zig is larger than 1 GB, and the job removes it."
           rm -rf "${ZIG_CACHE}"
         fi
+
+    # Burrito finds its download cache with `:filename.basedir(:user_cache, _)`:
+    # `~/.cache/burrito_file_cache` on Linux, and
+    # `~/Library/Caches/burrito_file_cache` on macOS. On 2026-09-28, the cache
+    # held 59 MB of ERTS and 650 KB of musl for linux_x86. The key holds the
+    # version of Erlang and `mix.lock`, which gives the version of Burrito, so
+    # a job saves the cache one time for each version of the two.
+    - name: Read the path of the download cache of Burrito
+      id: burrito
+      shell: bash
+      run: |
+        path="$(erl -noshell -eval 'io:format("~s", [filename:basedir(user_cache, "burrito_file_cache")]), halt().')"
+        echo "path=${path}" >> "${GITHUB_OUTPUT}"
+
+    - name: Read the download cache of Burrito
+      uses: actions/cache@v6
+      with:
+        path: ${{ steps.burrito.outputs.path }}
+        key: burrito-${{ runner.os }}-${{ runner.arch }}-${{ env.OTP_VERSION }}-${{ hashFiles('mix.lock') }}

@@ -418,6 +418,14 @@ Each build adds its payload to the cache, and one run saved 405 MB for `linux_x8
 234 MB for `macos_arm`. The build of the wrapper changes only with Burrito, so one save
 keeps most of the gain.
 
+Burrito downloads the ERTS of the target from the CDN `beam-machine-universal.b-cdn.net`,
+and on Linux also a musl runtime. It keeps them in its own download cache:
+`~/.cache/burrito_file_cache` on Linux and `~/Library/Caches/burrito_file_cache` on macOS.
+The action also keeps this directory in the cache of GitHub, with a key that holds the
+version of Erlang and `mix.lock`. Therefore a run with a hit downloads nothing, and a
+problem with the CDN cannot stop that run. The action asks Erlang for the path, so a job
+runs `.github/actions/setup-elixir` first.
+
 ## Dependency updates
 
 `.github/dependabot.yml` tells Dependabot to open pull requests each week for three kinds
