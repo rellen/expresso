@@ -32,6 +32,7 @@ mix compile --warnings-as-errors
 mix format
 mix credo
 mix sobelow --exit --skip
+mix hex.audit
 mix dialyzer
 mix test
 npm run check
@@ -58,9 +59,9 @@ the details.
 Burrito makes, and `EXPRESSO_BINARY` gives its path. `mix release` needs Zig, and the hook
 installs it. `mix test` excludes these tests. `docs/development.md` gives the details.
 
-`mix deps.audit` alone is not sufficient for a vulnerable dependency. Hex reports an
-advisory in the output of `mix deps.get`, and this output is the more current signal. Read
-it. `docs/development.md` gives an example.
+`mix hex.audit` fails for a dependency with a security advisory or a retirement on Hex.
+`mix deps.get` writes a warning for the same advisory, and the session start hook runs it,
+so read its output. `docs/development.md` tells how to act on an advisory.
 
 These results come from Erlang/OTP 29.1, Elixir 1.20.4, Node 24.20.0 and Zig 0.16.0, which
 `.tool-versions` gives. The hook installs these versions, the Nix shell gives them, and the

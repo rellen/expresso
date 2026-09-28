@@ -1,0 +1,41 @@
+# The audit of the dependencies of main, each day.
+#
+# `.github/workflows/check.yml` runs `mix hex.audit` for each pull request and
+# each push to main. Hex can publish an advisory after a merge, and then no
+# check runs until the next pull request. This workflow runs the audit on main
+# each day, so a new advisory fails a run. GitHub sends an email for a failed
+# scheduled run to the person who last changed the schedule. A person can also
+# start the workflow from the tab "Actions".
+#
+# `mix hex.audit` fails for a dependency with a security advisory or a
+# retirement. `docs/development.md` tells how to act on a failure.
+
+name: audit
+
+on:
+  schedule:
+    # Each day at 08:07 UTC. A minute that is not 0 avoids the busy start of
+    # each hour.
+    - cron: "7 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hex:
+    name: mix hex.audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # `.github/actions/setup-elixir` reads the versions from the environment.
+      # This step takes them from `.tool-versions`, so the versions stay in the
+      # four places that `docs/development.md` names.
+      - name: Read the versions of .tool-versions
+        run: |
+          echo "OTP_VERSION=$(awk '$1 == "erlang" { print $2 }' .tool-versions)" >> "$GITHUB_ENV"
+          echo "ELIXIR_VERSION=$(awk '$1 == "elixir" { print $2 }' .tool-versions)" >> "$GITHUB_ENV"
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: audit
+      - run: mix hex.audit

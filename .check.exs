@@ -21,6 +21,9 @@ burrito_target =
     {:compiler, "mix compile --warnings-as-errors"},
     {:sobelow, "mix sobelow --exit --skip"},
 
+    # The security advisories and the retirements of the dependencies on Hex.
+    {:hex_audit, "mix hex.audit"},
+
     # The browser tests. They start after the unit tests, so fewer tools use the
     # processor while a browser test waits for the page.
     {:e2e, "mix test --only e2e", deps: [:ex_unit]},

@@ -6,7 +6,7 @@
 #
 # - format: `mix format --check-formatted`
 # - lint: `mix compile --warnings-as-errors`, `mix credo`, `mix sobelow`,
-#   `mix deps.audit`, the check of unused dependencies, `mix docs` and
+#   `mix hex.audit`, the check of unused dependencies, `mix docs` and
 #   `mix doctor`
 # - dialyzer: `mix dialyzer`
 # - test: `mix test` and `mix test --only e2e`, the browser tests
@@ -17,6 +17,9 @@
 #   aarch64, and `mix test --only release`, the tests of each binary
 # - macos: `mix check` on macOS, which also runs the browser tests and the
 #   release tests
+#
+# `.github/workflows/audit.yml` also runs `mix hex.audit` on main each day, so
+# an advisory that Hex publishes after a merge fails a run of main.
 #
 # After a push to main, the job `media` puts the GIFs on the branch `media`,
 # and the guides of `docs/` show them from there. The branch holds the GIFs of
@@ -77,7 +80,8 @@ jobs:
   # The first step compiles the project. Each step after it runs also when a
   # step before it fails, so one run reports each defect, as `mix check` does.
   # `mix deps.unlock --check-unused` is the check of `unused_deps` in
-  # `mix check`, and `mix docs` is its check of `ex_doc`.
+  # `mix check`, and `mix docs` is its check of `ex_doc`. `mix hex.audit` fails
+  # for a dependency with a security advisory or a retirement on Hex.
   lint:
     name: lint
     runs-on: ubuntu-latest
@@ -92,7 +96,7 @@ jobs:
       - if: ${{ !cancelled() }}
         run: mix sobelow --exit --skip
       - if: ${{ !cancelled() }}
-        run: mix deps.audit
+        run: mix hex.audit
       - if: ${{ !cancelled() }}
         run: mix deps.unlock --check-unused
       - if: ${{ !cancelled() }}
