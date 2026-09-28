@@ -17,8 +17,9 @@ defmodule Expresso.CommandLine do
   The function returns `:help` for `--help` or `-h` in any position, and then
   `:version` for `--version` in any position. For a different argument that
   starts with `-`, it returns an error tuple with the message. The argument `-`
-  alone is a path. A third path is an error too. Otherwise, the function returns
-  the input path and the output path. A missing path is `nil`.
+  alone is a path: `Expresso.main/2` reads it as the standard input or the
+  standard output. A third path is an error too. Otherwise, the function
+  returns the input path and the output path. A missing path is `nil`.
 
   A path that starts with `-` needs a directory in front of it, such as
   `./-deck.exs`.

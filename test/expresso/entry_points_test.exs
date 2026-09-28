@@ -56,6 +56,33 @@ defmodule Expresso.EntryPointsTest do
       assert html =~ "some text"
     end
 
+    test "reads the script from the standard input for -" do
+      output = capture_io(@script, fn -> assert Expresso.main("-") == :ok end)
+
+      assert output =~ "<!DOCTYPE html>"
+      assert output =~ "a deck from a script"
+    end
+
+    @tag :tmp_dir
+    test "writes the HTML to the standard output for - as the output path", %{tmp_dir: dir} do
+      input = write_script(dir)
+
+      output = capture_io(fn -> assert Expresso.main(input, "-") == :ok end)
+
+      assert output =~ "<!DOCTYPE html>"
+      refute File.exists?("-")
+    end
+
+    test "gives an error for an empty standard input" do
+      {output, error} =
+        with_io(:stderr, fn ->
+          capture_io("", fn -> assert {:error, _message} = Expresso.main("-") end)
+        end)
+
+      assert output == ""
+      assert error =~ "must return an Expresso.Deck struct"
+    end
+
     @tag :tmp_dir
     test "writes the HTML to the standard output without an output path", %{tmp_dir: dir} do
       input = write_script(dir)

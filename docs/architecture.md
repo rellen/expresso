@@ -91,6 +91,10 @@ writes the heading container only when the metadata contains a heading.
 4. `Expresso.Deck.render/1` makes the HTML.
 5. The function writes the HTML to the output file, or to the standard output.
 
+With `-` as the input path, the function reads the script from the standard input with
+`IO.read/2`, and `Code.eval_string/3` evaluates it in place of steps 1 and 2. With `-` as
+the output path, step 5 writes to the standard output.
+
 When a step fails, the function writes the message to the standard error and returns an
 error tuple. The standard output then holds no text. A failed write of the output file is
 also an error.
@@ -147,8 +151,9 @@ agree. It gives `:help` for `--help` or `-h` in any position, and then `:version
 from the version of `mix.exs` at compile time. A different argument that starts with `-` is
 an unknown option. The entry point then writes `Unknown option:` and the usage text to the
 standard error, and the exit status is 1. A third path gives `Unexpected argument:` in the
-same way. The argument `-` alone is a path. A path that starts with `-` needs a directory in
-front of it, such as `./-deck.exs`.
+same way. The argument `-` alone is a path, and `Expresso.main/2` reads it as the standard
+input or the standard output. A path that starts with `-` needs a directory in front of it,
+such as `./-deck.exs`.
 
 A mix task that returns gives the exit status 0. Therefore `Mix.Tasks.Expresso` exits with
 `exit({:shutdown, 1})` for an error tuple, and Mix then gives the exit status 1. For

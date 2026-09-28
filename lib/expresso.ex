@@ -102,8 +102,9 @@ defmodule Expresso do
   @doc """
   Make an HTML document from an input script
 
-  The function writes the HTML to `output_path`. With `nil` as the output path,
-  the function writes the HTML to the standard output.
+  The function writes the HTML to `output_path`. With `nil` or `-` as the output
+  path, the function writes the HTML to the standard output. With `-` as the
+  input path, the function reads the script from the standard input.
 
   With `nil` as the input path, the function writes the usage text to the
   standard error and returns an error tuple. The mix task gives `nil` when the
@@ -122,7 +123,7 @@ defmodule Expresso do
   def main(nil, _output_path), do: error(Expresso.CommandLine.usage("mix expresso"))
 
   def main(input_path, output_path) do
-    with {:ok, rendered} <- render_file(input_path),
+    with {:ok, rendered} <- render_input(input_path),
          :ok <- output(rendered, output_path) do
       :ok
     else
@@ -131,16 +132,29 @@ defmodule Expresso do
     end
   end
 
-  defp render_file(input_path) do
-    case File.stat(input_path) do
-      {:ok, _stat} ->
-        {value, _bindings} = evaluate_deck_file(input_path)
+  defp render_input("-") do
+    case IO.read(:stdio, :eof) do
+      {:error, reason} ->
+        {:error, "Couldn't read the standard input: #{:file.format_error(reason)}"}
 
-        with {:ok, deck} <- to_deck(value), do: {:ok, Expresso.Deck.render(deck)}
+      # Empty input gives `:eof`, and an empty script gives `nil`.
+      :eof ->
+        render_value(evaluate_deck_source(""))
 
-      _ ->
-        {:error, "Couldn't find input file"}
+      source ->
+        render_value(evaluate_deck_source(source))
     end
+  end
+
+  defp render_input(input_path) do
+    case File.stat(input_path) do
+      {:ok, _stat} -> render_value(evaluate_deck_file(input_path))
+      _ -> {:error, "Couldn't find input file"}
+    end
+  end
+
+  defp render_value({value, _bindings}) do
+    with {:ok, deck} <- to_deck(value), do: {:ok, Expresso.Deck.render(deck)}
   end
 
   # When the reader of the standard output stops, as `| head` does, the writer
@@ -154,6 +168,8 @@ defmodule Expresso do
         do: {:error, :closed},
         else: reraise(error, __STACKTRACE__)
   end
+
+  defp output(rendered, "-"), do: output(rendered, nil)
 
   defp output(rendered, output_path) do
     case write_to_file(rendered, output_path) do
@@ -195,6 +211,13 @@ defmodule Expresso do
   # sobelow_skip ["RCE"]
   defp evaluate_deck_file(input_path) do
     Code.eval_file(input_path)
+  end
+
+  # The script of the standard input. A warning or an error of the compiler
+  # names the file "stdin".
+  # sobelow_skip ["RCE"]
+  defp evaluate_deck_source(source) do
+    Code.eval_string(source, [], file: "stdin")
   end
 
   # sobelow_skip ["Traversal"]
