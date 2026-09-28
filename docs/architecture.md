@@ -142,8 +142,10 @@ Two entry points call `Expresso.main/2`:
 - `Expresso.BurritoEntryPoint`, for the binary that Burrito makes.
 
 `Expresso.CommandLine.parse/1` reads the arguments of both entry points, so the two commands
-agree. It gives `:help` for `--help` or `-h` in any position. A different argument that
-starts with `-` is an unknown option. The entry point then writes `Unknown option:` and the
+agree. It gives `:help` for `--help` or `-h` in any position, and then `:version` for
+`--version` in any position. `Expresso.CommandLine.version/0` gives the text of `--version`,
+from the version of `mix.exs` at compile time. A different argument that starts with `-` is
+an unknown option. The entry point then writes `Unknown option:` and the
 usage text to the standard error, and the exit status is 1. The argument `-` alone is a
 path. A path that starts with `-` needs a directory in front of it, such as `./-deck.exs`.
 

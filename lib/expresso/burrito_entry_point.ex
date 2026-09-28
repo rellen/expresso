@@ -51,7 +51,8 @@ defmodule Expresso.BurritoEntryPoint do
   `program` to the standard error, and the exit status is 1. With `--help` or
   `-h` in any position, the function writes the help text with the name
   `program` to the standard output, and the exit status is 0. It then does not
-  read the other arguments. For a different argument that starts with `-`, the
+  read the other arguments. `--version` in any position writes the version of
+  Expresso in the same way. For a different argument that starts with `-`, the
   function writes the message and the usage text to the standard error, and the
   exit status is 1. `Expresso.CommandLine.parse/1` reads the arguments.
 
@@ -77,6 +78,10 @@ defmodule Expresso.BurritoEntryPoint do
     case CommandLine.parse(args) do
       :help ->
         IO.write(help(program))
+        0
+
+      :version ->
+        IO.puts(CommandLine.version())
         0
 
       {:error, message} ->
@@ -112,7 +117,8 @@ defmodule Expresso.BurritoEntryPoint do
                   standard output.
 
     Options:
-      -h, --help  Show this help.
+      -h, --help     Show this help.
+          --version  Show the version of Expresso.
 
     The exit status is 0 when the command writes the HTML, and 1 for an error.
     """

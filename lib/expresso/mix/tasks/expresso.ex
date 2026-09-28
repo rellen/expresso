@@ -20,6 +20,7 @@ defmodule Mix.Tasks.Expresso do
   ## Options
 
     * `-h`, `--help` - show this help
+    * `--version` - show the version of Expresso
 
   A different argument that starts with `-` is an error. A path that starts
   with `-` needs a directory in front of it, such as `./-deck.exs`.
@@ -39,6 +40,9 @@ defmodule Mix.Tasks.Expresso do
       # the text of `mix help expresso` itself.
       :help ->
         IO.write(@moduledoc)
+
+      :version ->
+        IO.puts(CommandLine.version())
 
       {:error, message} ->
         IO.puts(:stderr, [message, ?\n, CommandLine.usage("mix expresso")])
