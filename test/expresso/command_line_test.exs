@@ -18,18 +18,29 @@ defmodule Expresso.CommandLineTest do
       end
     end
 
-    test "gives :help before an unknown option" do
+    test "gives :help before --version and before an unknown option" do
       assert CommandLine.parse(["--version", "--help"]) == :help
+      assert CommandLine.parse(["--verbose", "-h"]) == :help
+    end
+
+    test "gives :version for --version in any position, before an unknown option" do
+      for args <- [["--version"], ["deck.exs", "--version"], ["--verbose", "--version"]] do
+        assert CommandLine.parse(args) == :version
+      end
     end
 
     test "gives an error for a different argument that starts with -" do
-      assert CommandLine.parse(["--version"]) == {:error, "Unknown option: --version"}
+      assert CommandLine.parse(["--verbose"]) == {:error, "Unknown option: --verbose"}
       assert CommandLine.parse(["deck.exs", "-x"]) == {:error, "Unknown option: -x"}
       assert CommandLine.parse(["deck.exs", "deck.html", "--"]) == {:error, "Unknown option: --"}
     end
 
     test "gives the first unknown option" do
       assert CommandLine.parse(["-a", "-b"]) == {:error, "Unknown option: -a"}
+    end
+
+    test "gives the name and the version of mix.exs for version/0" do
+      assert CommandLine.version() == "Expresso #{Mix.Project.config()[:version]}"
     end
 
     test "reads - alone and a path with a directory in front of - as paths" do

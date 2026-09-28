@@ -140,6 +140,11 @@ defmodule Expresso.BinaryTest do
     assert standard_output(context, []) == {"", 1}
   end
 
+  test "gives the exit status 0 and writes the version for --version", context do
+    assert standard_output(context, ["--version"]) ==
+             {"Expresso #{Mix.Project.config()[:version]}\n", 0}
+  end
+
   test "gives the exit status 0 and writes the help text for --help", context do
     assert {output, 0} = run(context, ["--help"])
     assert output =~ "Usage: #{Path.basename(context.binary)} <input> [output]\n"
@@ -174,11 +179,11 @@ defmodule Expresso.BinaryTest do
   end
 
   test "gives the exit status 1 for an unknown option", context do
-    assert {output, 1} = run(context, ["--version"])
-    assert output =~ "Unknown option: --version\n"
+    assert {output, 1} = run(context, ["--verbose"])
+    assert output =~ "Unknown option: --verbose\n"
     assert output =~ "Usage: #{Path.basename(context.binary)} <input> [output]\n"
 
-    assert standard_output(context, ["--version"]) == {"", 1}
+    assert standard_output(context, ["--verbose"]) == {"", 1}
   end
 
   test "gives the exit status 1 for an output path that it cannot write",

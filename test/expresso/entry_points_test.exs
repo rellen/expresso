@@ -185,11 +185,11 @@ defmodule Expresso.EntryPointsTest do
     test "exits with the status 1, and writes the message and the usage text, for an unknown option" do
       {output, error} =
         with_output(fn ->
-          assert catch_exit(Mix.Tasks.Expresso.run(["deck.exs", "--version"])) == {:shutdown, 1}
+          assert catch_exit(Mix.Tasks.Expresso.run(["deck.exs", "--verbose"])) == {:shutdown, 1}
         end)
 
       assert output == ""
-      assert error == "Unknown option: --version\nUsage: mix expresso <input> [output]\n"
+      assert error == "Unknown option: --verbose\nUsage: mix expresso <input> [output]\n"
     end
 
     test "writes the help of the task for --help and -h" do
@@ -200,6 +200,12 @@ defmodule Expresso.EntryPointsTest do
         assert output =~ "`-h`, `--help` - show this help"
         refute output =~ "Couldn't find input file"
       end
+    end
+
+    test "writes the version for --version" do
+      output = capture_io(fn -> assert Mix.Tasks.Expresso.run(["--version"]) == :ok end)
+
+      assert output == "Expresso #{Mix.Project.config()[:version]}\n"
     end
 
     test "has a short description, so mix help lists the task" do
@@ -265,6 +271,14 @@ defmodule Expresso.EntryPointsTest do
       assert String.starts_with?(output, "Usage: expresso_cli_app_linux_x86 <input> [output]\n")
       assert output =~ "Make one HTML document from a deck."
       assert output =~ "-h, --help"
+    end
+
+    test "gives the exit status 0 and writes the version for --version" do
+      {output, error} =
+        with_output(fn -> assert BurritoEntryPoint.run(["deck.exs", "--version"]) == 0 end)
+
+      assert output == "Expresso #{Mix.Project.config()[:version]}\n"
+      assert error == ""
     end
 
     test "gives the exit status 0 and writes the help text for -h" do
