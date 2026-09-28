@@ -94,6 +94,17 @@ defmodule Expresso.BinaryTest do
     assert difference(output, expected) == nil
   end
 
+  # The launcher of Burrito passes the standard input to the VM without a
+  # change, and it passes the standard output through a pipe.
+  test "reads the standard input and writes the standard output for - -", context do
+    expected = capture_io(fn -> assert Expresso.main("examples/demo.exs") == :ok end)
+    command = [context.timeout_command, @timeout, context.binary, "-", "-"]
+    script = ~s(exec "$@" < examples/demo.exs 2>/dev/null)
+
+    assert {output, 0} = System.cmd("sh", ["-c", script, "sh" | command], env: context.env)
+    assert difference(output, expected) == nil
+  end
+
   # The launcher of Burrito starts the CLI of Elixir, and that CLI runs its first
   # argument as a script. The entry point must halt the VM before this occurs.
   test "evaluates the script one time", %{tmp_dir: dir} = context do

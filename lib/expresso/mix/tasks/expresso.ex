@@ -6,11 +6,12 @@ defmodule Mix.Tasks.Expresso do
 
       $ mix expresso <input> [output]
 
-  `<input>` is the Elixir script of the deck. The script returns an
-  `Expresso.Deck` struct, or a module that uses the DSL of `Expresso`.
+  `<input>` is the Elixir script of the deck, or `-` for the standard input.
+  The script returns an `Expresso.Deck` struct, or a module that uses the DSL
+  of `Expresso`.
 
-  `[output]` is the file for the HTML. Without it, the task writes the HTML to
-  the standard output.
+  `[output]` is the file for the HTML, or `-` for the standard output. Without
+  it, the task writes the HTML to the standard output.
 
   The task writes the usage text and each error message to the standard error.
   For an error, the exit status is 1. When the standard output closes before

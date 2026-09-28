@@ -47,15 +47,15 @@ defmodule Expresso.BurritoEntryPoint do
   Run the command line of the binary, and give its exit status
 
   The first argument is the input path, and the second argument is the output
-  path. With no argument, the function writes the usage text with the name
-  `program` to the standard error, and the exit status is 1. With `--help` or
-  `-h` in any position, the function writes the help text with the name
-  `program` to the standard output, and the exit status is 0. It then does not
-  read the other arguments. `--version` in any position writes the version of
-  Expresso in the same way. For a different argument that starts with `-`, and
-  for a third path, the function writes the message and the usage text to the
-  standard error, and the exit status is 1. `Expresso.CommandLine.parse/1` reads
-  the arguments.
+  path. `-` gives the standard input or the standard output. With no argument,
+  the function writes the usage text with the name `program` to the standard
+  error, and the exit status is 1. With `--help` or `-h` in any position, the
+  function writes the help text with the name `program` to the standard output,
+  and the exit status is 0. It then does not read the other arguments.
+  `--version` in any position writes the version of Expresso in the same way.
+  For a different argument that starts with `-`, and for a third path, the
+  function writes the message and the usage text to the standard error, and the
+  exit status is 1. `Expresso.CommandLine.parse/1` reads the arguments.
 
   The exit status is 0 when `Expresso.main/2` returns `:ok`, and 1 when it
   returns an error tuple. `Expresso.main/2` writes the message of an error tuple
@@ -113,9 +113,9 @@ defmodule Expresso.BurritoEntryPoint do
     Make one HTML document from a deck.
 
     Arguments:
-      <input>     The Elixir script of the deck.
-      [output]    The file for the HTML. Without it, the HTML goes to the
-                  standard output.
+      <input>     The Elixir script of the deck, or - for the standard input.
+      [output]    The file for the HTML, or - for the standard output. Without
+                  it, the HTML goes to the standard output.
 
     Options:
       -h, --help     Show this help.

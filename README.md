@@ -111,6 +111,8 @@ mix expresso my_deck.exs my_deck.html
 ```
 
 The second path is optional. Without it, the task writes the HTML to the standard output.
+`-` as the first path reads the script from the standard input, and `-` as the second path
+writes the HTML to the standard output, such as `cat my_deck.exs | mix expresso - -`.
 Without the first path, the task writes the usage text. The task writes the usage text and
 each error message to the standard error, and the exit status is then 1. `mix help expresso`
 or `mix expresso --help` gives the help of the task, and `--version` gives the version of
