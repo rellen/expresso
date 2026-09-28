@@ -39,6 +39,19 @@ defmodule Expresso.CommandLineTest do
       assert CommandLine.parse(["-a", "-b"]) == {:error, "Unknown option: -a"}
     end
 
+    test "gives an error for a third path" do
+      assert CommandLine.parse(["deck.exs", "deck.html", "notes.html"]) ==
+               {:error, "Unexpected argument: notes.html"}
+
+      assert CommandLine.parse(["a.exs", "b.html", "c", "d"]) ==
+               {:error, "Unexpected argument: c"}
+    end
+
+    test "gives an unknown option before a third path" do
+      assert CommandLine.parse(["a.exs", "b.html", "c", "-x"]) ==
+               {:error, "Unknown option: -x"}
+    end
+
     test "gives the name and the version of mix.exs for version/0" do
       assert CommandLine.version() == "Expresso #{Mix.Project.config()[:version]}"
     end

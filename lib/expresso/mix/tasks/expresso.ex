@@ -22,8 +22,9 @@ defmodule Mix.Tasks.Expresso do
     * `-h`, `--help` - show this help
     * `--version` - show the version of Expresso
 
-  A different argument that starts with `-` is an error. A path that starts
-  with `-` needs a directory in front of it, such as `./-deck.exs`.
+  A different argument that starts with `-` is an error, and so is a third
+  path. A path that starts with `-` needs a directory in front of it, such as
+  `./-deck.exs`.
   """
 
   use Mix.Task

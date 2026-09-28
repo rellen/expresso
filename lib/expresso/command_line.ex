@@ -17,8 +17,8 @@ defmodule Expresso.CommandLine do
   The function returns `:help` for `--help` or `-h` in any position, and then
   `:version` for `--version` in any position. For a different argument that
   starts with `-`, it returns an error tuple with the message. The argument `-`
-  alone is a path. Otherwise, the function returns the input path and the
-  output path. A missing path is `nil`.
+  alone is a path. A third path is an error too. Otherwise, the function returns
+  the input path and the output path. A missing path is `nil`.
 
   A path that starts with `-` needs a directory in front of it, such as
   `./-deck.exs`.
@@ -34,6 +34,9 @@ defmodule Expresso.CommandLine do
 
       iex> Expresso.CommandLine.parse(["--verbose"])
       {:error, "Unknown option: --verbose"}
+
+      iex> Expresso.CommandLine.parse(["deck.exs", "deck.html", "notes.html"])
+      {:error, "Unexpected argument: notes.html"}
   """
   @spec parse([String.t()]) ::
           :help
@@ -45,6 +48,7 @@ defmodule Expresso.CommandLine do
       Enum.any?(args, &(&1 in ["--help", "-h"])) -> :help
       "--version" in args -> :version
       option = Enum.find(args, &option?/1) -> {:error, "Unknown option: #{option}"}
+      length(args) > 2 -> {:error, "Unexpected argument: #{Enum.at(args, 2)}"}
       true -> {:paths, Enum.at(args, 0), Enum.at(args, 1)}
     end
   end

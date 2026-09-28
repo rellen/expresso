@@ -52,9 +52,10 @@ defmodule Expresso.BurritoEntryPoint do
   `-h` in any position, the function writes the help text with the name
   `program` to the standard output, and the exit status is 0. It then does not
   read the other arguments. `--version` in any position writes the version of
-  Expresso in the same way. For a different argument that starts with `-`, the
-  function writes the message and the usage text to the standard error, and the
-  exit status is 1. `Expresso.CommandLine.parse/1` reads the arguments.
+  Expresso in the same way. For a different argument that starts with `-`, and
+  for a third path, the function writes the message and the usage text to the
+  standard error, and the exit status is 1. `Expresso.CommandLine.parse/1` reads
+  the arguments.
 
   The exit status is 0 when `Expresso.main/2` returns `:ok`, and 1 when it
   returns an error tuple. `Expresso.main/2` writes the message of an error tuple

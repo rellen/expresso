@@ -145,9 +145,10 @@ Two entry points call `Expresso.main/2`:
 agree. It gives `:help` for `--help` or `-h` in any position, and then `:version` for
 `--version` in any position. `Expresso.CommandLine.version/0` gives the text of `--version`,
 from the version of `mix.exs` at compile time. A different argument that starts with `-` is
-an unknown option. The entry point then writes `Unknown option:` and the
-usage text to the standard error, and the exit status is 1. The argument `-` alone is a
-path. A path that starts with `-` needs a directory in front of it, such as `./-deck.exs`.
+an unknown option. The entry point then writes `Unknown option:` and the usage text to the
+standard error, and the exit status is 1. A third path gives `Unexpected argument:` in the
+same way. The argument `-` alone is a path. A path that starts with `-` needs a directory in
+front of it, such as `./-deck.exs`.
 
 A mix task that returns gives the exit status 0. Therefore `Mix.Tasks.Expresso` exits with
 `exit({:shutdown, 1})` for an error tuple, and Mix then gives the exit status 1. For
