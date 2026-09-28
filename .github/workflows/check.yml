@@ -29,6 +29,10 @@
 # GitHub Pages, at https://rellen.github.io/expresso/. The job `lint` makes the
 # site, so the site and the checks come from one build.
 #
+# `media` and `pages` start only when the last job succeeded. A push to main
+# with a failed check therefore changes neither the GIFs nor the site. The site
+# shows the GIFs of the branch `media`, so the two stay in agreement.
+#
 # A job compiles the project for one environment, so the tools that need the
 # same build share one job. The tools of `lint` finish long before `dialyzer`,
 # and a job for each tool compiled the project four times more with no gain in
@@ -237,11 +241,12 @@ jobs:
   # Put the GIFs of a push to main on the branch `media`, as one commit with no
   # parent. The push replaces the branch, so the branch holds the GIFs of the
   # last push to main only. This job is the only job that can write to the
-  # repository.
+  # repository. It needs the last job, so it starts only when each check
+  # succeeded. The artifact `gifs` stays available to each job of the run.
   media:
     name: media
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [gifs]
+    needs: [all]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -263,14 +268,15 @@ jobs:
           git push --force --quiet "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" media
 
   # Put the site of `mix docs` of a push to main on GitHub Pages. The job
-  # `lint` made the site. The repository must have Pages on, with GitHub
+  # `lint` made the site. This job needs the last job, so it starts only when
+  # each check succeeded. The repository must have Pages on, with GitHub
   # Actions as the source: the token of a workflow cannot turn it on. A
   # deployment does not stop for a new push, so two deployments do not run at
   # the same time.
   pages:
     name: pages
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [lint]
+    needs: [all]
     runs-on: ubuntu-latest
     permissions:
       pages: write

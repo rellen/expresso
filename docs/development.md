@@ -288,9 +288,13 @@ After a push to `main`, two more jobs run. `media` puts the GIFs of the guides o
 `media`, and "Record the GIFs and the stills of the examples" gives the details. `pages`
 puts the site of `mix docs` on GitHub Pages, at https://rellen.github.io/expresso/. The job
 `lint` makes the site, and it uploads the directory `doc/` when each of its steps succeeded.
-Therefore the site and the checks come from one build, and a defect in `lint` keeps the old
-site. The site is public, as the repository is. GitHub gives a private site to an
-organization on GitHub Enterprise Cloud only.
+Therefore the site and the checks come from one build. The site is public, as the repository
+is. GitHub gives a private site to an organization on GitHub Enterprise Cloud only.
+
+`media` and `pages` need the last job, so they start only when each check succeeded. A push
+to `main` with a failed check keeps the old GIFs and the old site. The site shows the GIFs
+of the branch `media`, so the two stay in agreement. A new push to `main` cancels the run
+of the push before it, and then only the new run changes the GIFs and the site.
 
 The repository must have Pages on, with GitHub Actions as the source. Turn it on in the
 settings of the repository, under "Pages". The token of a workflow cannot turn it on: the
@@ -521,8 +525,8 @@ no program such as ffmpeg. A still is the last frame, as a PNG.
 
 The job `gifs` of the workflow records the files for each pull request, and the artifact
 `gifs` holds them. After a push to main, the job `media` replaces the branch `media` with
-one commit of the new files. The guides and the README show each file from that branch, so
-the history of main holds no GIF.
+one commit of the new files, when each check succeeded. The guides and the README show each
+file from that branch, so the history of main holds no GIF.
 
 To add an example of a guide, write a deck in `examples/animations/`, and add it with its
 keys to the list of the task. Then show its code and its GIF in a guide. To add an example
