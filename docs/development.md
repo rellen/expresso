@@ -247,12 +247,12 @@ find this defect.
 ### The checks of a pull request
 
 `.github/workflows/check.yml` runs the checks for a pull request and for a push to `main`.
-The checks run in parallel jobs, so the slowest job gives the time of the workflow:
+The Linux jobs run in parallel, so the slowest of them gives their time:
 
 - `format`: the formatter.
 - `lint`: the compiler with warnings as errors, Credo, Sobelow, `mix hex.audit`, the check
   of unused dependencies, `mix docs` and Doctor.
-- `dialyzer`: Dialyzer. It is the slowest job.
+- `dialyzer`: Dialyzer.
 - `test`: the unit tests and the browser tests.
 - `presenter`: `npm run check` and `npm test`.
 - `release`: the binary for Linux and the release tests, in two jobs. The job
@@ -260,13 +260,19 @@ The checks run in parallel jobs, so the slowest job gives the time of the workfl
   runner. Each job makes the binary for its own architecture, so it can run the binary.
   `.github/actions/setup-zig` installs Zig, as "Zig in the workflow" below tells.
 - `macos`: `mix check` on an arm64 runner with macOS. It makes the binary for `macos_arm`.
-  Homebrew gives `xz`, and GNU coreutils of Homebrew gives `gtimeout`.
+  Homebrew gives `xz`, and GNU coreutils of Homebrew gives `gtimeout`. It starts only when
+  each Linux job succeeded.
 
 Together they run each tool of `mix check`, the two npm commands, the browser tests and
 the release tests. They make and test the binary for `linux_x86`, `linux_arm` and
 `macos_arm`. No job makes the binary for `macos_x86`.
 The Linux jobs do not run `mix check`, because that command runs the tools one after the
 other in one job. The job `macos` runs `mix check`, so each tool also runs on a Mac.
+
+The job `macos` needs each Linux job. A macOS runner costs more than a Linux runner, and
+most defects also show on Linux. Therefore `macos` starts only when each Linux job
+succeeded. When a Linux job fails, GitHub skips `macos`, and the last job fails. The time
+of the workflow is the time of the slowest Linux job, plus the time of `macos`.
 
 A job compiles the project for one environment. Therefore the tools that need the same
 build share one job, and the project compiles two times for the development environment,
