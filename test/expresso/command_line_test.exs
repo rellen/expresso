@@ -61,4 +61,65 @@ defmodule Expresso.CommandLineTest do
       assert CommandLine.parse(["./-deck.exs"]) == {:paths, "./-deck.exs", nil}
     end
   end
+
+  describe "parse/1 with --watch" do
+    test "gives the paths and the port 4100 in any order of the arguments" do
+      for args <- [
+            ["deck.exs", "--watch"],
+            ["--watch", "deck.exs"]
+          ] do
+        assert CommandLine.parse(args) == {:watch, "deck.exs", nil, 4100}
+      end
+
+      assert CommandLine.parse(["--watch", "deck.exs", "deck.html"]) ==
+               {:watch, "deck.exs", "deck.html", 4100}
+    end
+
+    test "reads the port in two forms" do
+      assert CommandLine.parse(["deck.exs", "--watch", "--port", "4200"]) ==
+               {:watch, "deck.exs", nil, 4200}
+
+      assert CommandLine.parse(["--port=4200", "deck.exs", "--watch"]) ==
+               {:watch, "deck.exs", nil, 4200}
+    end
+
+    test "gives an error for a port that is not a number from 1 to 65535" do
+      for value <- ["0", "65536", "-1", "http", "4200x", ""] do
+        assert CommandLine.parse(["deck.exs", "--watch", "--port=" <> value]) ==
+                 {:error, "Invalid port: #{value}"}
+      end
+
+      assert CommandLine.parse(["deck.exs", "--watch", "--port", "deck.html"]) ==
+               {:error, "Invalid port: deck.html"}
+    end
+
+    test "gives an error for --port with no value" do
+      assert CommandLine.parse(["deck.exs", "--watch", "--port"]) ==
+               {:error, "--port needs a number"}
+    end
+
+    test "gives an error for --port without --watch" do
+      assert CommandLine.parse(["deck.exs", "--port", "4200"]) == {:error, "--port needs --watch"}
+    end
+
+    test "gives an error without an input file, and for the standard input or output" do
+      assert CommandLine.parse(["--watch"]) == {:error, "--watch needs an input file"}
+      assert CommandLine.parse(["-", "--watch"]) == {:error, "--watch needs an input file"}
+
+      assert CommandLine.parse(["deck.exs", "-", "--watch"]) ==
+               {:error, "--watch cannot write to the standard output"}
+    end
+
+    test "gives :help and :version before the watch options" do
+      assert CommandLine.parse(["--watch", "--port", "x", "-h"]) == :help
+      assert CommandLine.parse(["--watch", "--version"]) == :version
+    end
+
+    test "gives an unknown option and a third path before the watch mode" do
+      assert CommandLine.parse(["deck.exs", "--watch", "-x"]) == {:error, "Unknown option: -x"}
+
+      assert CommandLine.parse(["a.exs", "b.html", "c", "--watch"]) ==
+               {:error, "Unexpected argument: c"}
+    end
+  end
 end

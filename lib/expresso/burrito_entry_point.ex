@@ -53,6 +53,8 @@ defmodule Expresso.BurritoEntryPoint do
   function writes the help text with the name `program` to the standard output,
   and the exit status is 0. It then does not read the other arguments.
   `--version` in any position writes the version of Expresso in the same way.
+  `--watch` runs `Expresso.Watch.run/3`, which returns only for an error, and
+  the exit status is then 1.
   For a different argument that starts with `-`, and for a third path, the
   function writes the message and the usage text to the standard error, and the
   exit status is 1. `Expresso.CommandLine.parse/1` reads the arguments.
@@ -91,6 +93,11 @@ defmodule Expresso.BurritoEntryPoint do
 
       {:paths, input_path, output_path} ->
         render(input_path, output_path)
+
+      # The watch mode returns only for an error, and it writes the message.
+      {:watch, input_path, output_path, port} ->
+        {:error, _message} = Expresso.Watch.run(input_path, output_path, port: port)
+        1
     end
   end
 
@@ -118,8 +125,13 @@ defmodule Expresso.BurritoEntryPoint do
                   it, the HTML goes to the standard output.
 
     Options:
-      -h, --help     Show this help.
-          --version  Show the version of Expresso.
+          --watch        Serve the deck at http://127.0.0.1:4100/, and render it
+                         again after each change to a file of the deck. The page
+                         reloads on the same step. With [output], also write the
+                         file after each render. Stop with Ctrl-C.
+          --port <port>  The port of --watch. The default is 4100.
+      -h, --help         Show this help.
+          --version      Show the version of Expresso.
 
     The exit status is 0 when the command writes the HTML, and 1 for an error.
     """

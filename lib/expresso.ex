@@ -132,6 +132,22 @@ defmodule Expresso do
     end
   end
 
+  @doc """
+  Make the HTML document of an input file, and give it
+
+  The function gives `{:ok, html}`, or `{:error, message}` for a file that it
+  cannot find or render. An exception, an exit or a throw of the script also
+  gives an error tuple, so the function does not raise. The function writes
+  nothing. `Expresso.Watch` renders the deck with this function after each
+  change.
+  """
+  @spec render_file(Path.t()) :: {:ok, String.t()} | {:error, String.t()}
+  def render_file(input_path) do
+    render_input(input_path)
+  catch
+    kind, reason -> {:error, Exception.format_banner(kind, reason, __STACKTRACE__)}
+  end
+
   defp render_input("-") do
     case IO.read(:stdio, :eof) do
       {:error, reason} ->

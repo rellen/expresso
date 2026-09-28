@@ -121,6 +121,26 @@ path that starts with `-` needs a directory in front of it, such as `./-deck.exs
 reader of the standard output stops, as `| head` does, the task stops with no message, and
 the exit status is 0.
 
+### Watch a deck
+
+Give `--watch` to serve the document while you write the deck:
+
+```sh
+mix expresso my_deck.exs --watch
+```
+
+Open `http://127.0.0.1:4100/` in a browser. After each change to the deck file, or to an
+image, a diagram or a style sheet of the deck, the task renders the deck again. The page
+then reloads, and it shows the same step. The speaker view reloads too.
+
+- `--port 4200` gives a different port.
+- An output path, such as `my_deck.html`, also gets the document after each render.
+- A render that fails writes its message to the terminal, and the page keeps the last
+  document.
+- Stop the task with Ctrl-C.
+
+The binary takes the same options.
+
 ### The options of a deck
 
 Write an option in the deck to apply it to each slide:

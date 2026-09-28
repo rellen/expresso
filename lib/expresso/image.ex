@@ -79,6 +79,8 @@ defmodule Expresso.Image do
   # that the author asks for.
   # sobelow_skip ["Traversal.FileModule"]
   defp read(path) do
+    Expresso.Watch.Files.track(path)
+
     case File.read(path) do
       {:ok, bytes} ->
         {:ok, bytes}

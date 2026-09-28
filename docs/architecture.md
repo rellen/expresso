@@ -155,6 +155,10 @@ same way. The argument `-` alone is a path, and `Expresso.main/2` reads it as th
 input or the standard output. A path that starts with `-` needs a directory in front of it,
 such as `./-deck.exs`.
 
+With `--watch`, the function gives `{:watch, input, output, port}`, and each entry point
+calls `Expresso.Watch.run/3` in place of `Expresso.main/2`. "The watch mode" below gives
+the details.
+
 A mix task that returns gives the exit status 0. Therefore `Mix.Tasks.Expresso` exits with
 `exit({:shutdown, 1})` for an error tuple, and Mix then gives the exit status 1. For
 `--help` or `-h` in any position, the task writes its `@moduledoc`, which is also the text
@@ -183,6 +187,94 @@ The standard output can close before the command writes all the HTML, as for `| 
   waits for ever, because each write to the standard output waits. `Expresso.SignalHandler`
   halts the VM at once for SIGTERM, with the exit status 0. The moduledoc of that module
   tells why the status is 0.
+
+## The watch mode
+
+`mix expresso deck.exs --watch` serves the document at `http://127.0.0.1:4100/`. It renders
+the deck again after each change to a file of the deck, and the page then reloads on the
+same step. `--port` gives a different port. The binary takes the same options.
+`Expresso.Watch.run/3` does these steps:
+
+1. `Expresso.Watch.Server.start/1` starts the web server.
+2. `Expresso.render_file/1` makes the HTML. It gives an error tuple for each failure, and
+   it does not raise, so a deck with an error does not stop the watch mode.
+   `Expresso.Watch.Files.tracking/1` records each file that the render reads.
+3. After a render that succeeds, `Expresso.Watch.Server.publish/2` serves the new
+   document, and the page reloads. With an output path, the function also writes that
+   file.
+4. After a render that fails, the function writes the message to the standard error. The
+   page keeps the last document that succeeded, and the output file stays as it is.
+5. Two times each second, `Expresso.Watch.Files.snapshot/1` records the state of each file
+   of the deck. When `Expresso.Watch.Files.changed?/2` finds a change, the function goes
+   back to step 2.
+
+The files of the deck are these files:
+
+- The deck file.
+- Each image, diagram and style sheet that the last render read. `Expresso.Image`,
+  `Expresso.Element.Diagram` and `Expresso.Css` give each path to
+  `Expresso.Watch.Files.track/1`. That function records nothing outside the watch mode.
+- The custom templates of `./priv/templates/`. See "The templates".
+
+The watch mode does not see a file that the script of the deck reads by itself, for
+example with `File.read!/1` or `Code.require_file/1`. After a failed render, the watch mode
+also keeps the files of the renders before it, because a failed render stops before it
+reads each file.
+
+Each render evaluates the deck file again, so a deck module gets a new definition each
+time. The watch mode sets the option `ignore_module_conflict` of the compiler for the
+render only, so the compiler does not warn about the new definition.
+
+### The contract and the parts that can change
+
+A person sees these parts of the watch mode, and a later version must keep them:
+
+- The options `--watch` and `--port`.
+- The address `http://127.0.0.1:<port>/`, and a page that reloads on the same step.
+- The output file after each render that succeeds.
+- The messages on the standard output and on the standard error.
+
+Two parts are internal, and a later version can replace each one:
+
+- `Expresso.Watch.Files` finds the changes. It reads the file system two times each
+  second. A replacement can use the events of the operating system, for example with the
+  package `file_system`. On Linux, that package needs `inotifywait` of `inotify-tools`.
+  A replacement must then read the file system when `inotifywait` is not present, so a
+  person never installs a program for the watch mode.
+- `Expresso.Watch.Server` serves the page and makes it reload. The script in the page asks
+  the server for the number of the last render two times each second. A replacement can
+  push the reload over a WebSocket, for example with Bandit. The module owns the server
+  and the script, so the two always change together. The path `/version` is not a part
+  of the contract.
+
+The first version reads the file system and uses `:httpd` because the two need no
+dependency. They also work in the same way on each operating system and in the binary.
+A deck has a small number of files, so a snapshot two times each second costs little.
+The cost is a delay of 500 milliseconds or less before each render and each reload.
+
+### The server
+
+The server is `:httpd` of the `inets` application of OTP. `mix.exs` puts `:inets` in
+`extra_applications`, so the release of the binary holds it. The server listens on
+127.0.0.1 only, so a different computer cannot read the deck. It serves a private
+directory in the temporary directory of the system, and that directory holds two files:
+
+- `index.html` is the last document that succeeded, with the script of the reload in front
+  of the last `</body>`.
+- `version` holds the number of that render.
+
+`Expresso.Watch.Server.publish/2` writes the document first, and then the number. Each
+write goes to a temporary file, and a rename then replaces the file, so the server never
+sends a part of a file. The output file of the command does not get the script.
+
+The address holds the slide and the step, so a reload shows the same step. The speaker
+view opens the same address, so it gets the script and reloads too. `window.opener` stays
+after a reload, and the present view finds the speaker view again from its next message.
+See "The messages between the windows".
+
+Ctrl-C halts the VM at once, so the private directory stays in the temporary directory of
+the system. It holds one document, and the system removes it with its other temporary
+files.
 
 ## The document
 
