@@ -99,7 +99,7 @@ mix compile --warnings-as-errors
 mix format --check-formatted
 mix credo
 mix sobelow --exit --skip
-mix deps.audit
+mix hex.audit                  # the advisories and the retirements of the dependencies
 mix test
 mix test --only e2e            # the browser tests, see "The browser tests"
 mix test --only release        # the tests of the binary, see "The release tests"
@@ -250,7 +250,7 @@ find this defect.
 The checks run in parallel jobs, so the slowest job gives the time of the workflow:
 
 - `format`: the formatter.
-- `lint`: the compiler with warnings as errors, Credo, Sobelow, `mix deps.audit`, the check
+- `lint`: the compiler with warnings as errors, Credo, Sobelow, `mix hex.audit`, the check
   of unused dependencies, `mix docs` and Doctor.
 - `dialyzer`: Dialyzer. It is the slowest job.
 - `test`: the unit tests and the browser tests.
@@ -327,17 +327,34 @@ necessary. The first `mix dialyzer` builds a PLT of approximately 570 modules, a
 operation takes approximately two minutes. The PLT stays in `_build`, so each
 `mix dialyzer` after the first takes a few seconds. Dialyzer reports no error at this time.
 
-`mix deps.audit` alone is not sufficient for a vulnerable dependency. It reads an advisory
-source that does not contain each advisory.
+### The audit of the dependencies
 
-In September 2026, Hex reported two advisories for mint 1.9.3 in the output of
-`mix deps.get`. The advisories are EEF-CVE-2026-82728 and EEF-CVE-2026-82729.
-`mix deps.audit` gave "No vulnerabilities found" for the same lockfile. A new copy of its
-advisory source gave the same result. Therefore the source does not contain these
-advisories, and the copy was not old.
+`mix hex.audit` fails for a dependency with a security advisory or a retirement on Hex.
+Hex 2.5 added the advisories to this task, and they come from the same source as the
+warnings of `mix deps.get`. The job `lint` runs it for each pull request.
 
-Read the output of `mix deps.get` for a line that ends with `VULNERABLE!`. The session
-start hook runs this command, so this line is in the output of the hook. Use both signals.
+Hex can publish an advisory after a merge. Therefore `.github/workflows/audit.yml` also
+runs `mix hex.audit` on `main` each day, at 08:07 UTC. GitHub sends an email for a failed
+scheduled run to the person who last changed the schedule. The workflow reads the versions
+of Erlang and Elixir from `.tool-versions`, so it adds no place for a version.
+
+Until September 2026, the project used `mix deps.audit` of the package `mix_audit`. Its
+advisory source did not contain each advisory. Two times in that month, `mix deps.get`
+reported advisories for mint, and `mix deps.audit` gave "No vulnerabilities found" for the
+same lockfile. `mix hex.audit` reported the second group, so the project removed
+`mix_audit`.
+
+For an advisory, do these steps:
+
+1. Read the advisory, and find the fixed version on its page.
+2. Update the dependency with `mix deps.update <name>`, and run the checks.
+3. If no fixed version exists, or the advisory does not apply, add its ID to
+   `hex: [ignore_advisories: [...]]` in `project/0` of `mix.exs`. Give the reason in a
+   comment. `mix help hex.audit` gives the form.
+
+The job `lint` and the daily workflow use `mix deps.get --check-locked`. It fails when
+`mix.lock` does not agree with `mix.exs`. Run `mix deps.get` on your machine, and commit
+the new lockfile.
 
 ### Zig in the workflow
 

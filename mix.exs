@@ -26,6 +26,9 @@ defmodule Expresso.MixProject do
       main: "readme",
       source_url: "https://github.com/rellen/expresso",
       homepage_url: "https://rellen.github.io/expresso/",
+      # `docs/architecture.md` names this function of Mix, which has no
+      # documentation. ExDoc then writes the name with no link.
+      skip_code_autolink_to: ["Mix.Tasks.Help.run/1"],
       extras: [
         "README.md",
         "docs/how-to/add-transitions.md",
@@ -130,7 +133,6 @@ defmodule Expresso.MixProject do
       # static analysis
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
       {:doctor, ">= 0.0.0", only: :dev, runtime: false},
-      {:mix_audit, ">= 0.0.0", only: :dev, runtime: false},
       {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
       {:sobelow, ">= 0.0.0", only: :dev, runtime: false}
     ]
