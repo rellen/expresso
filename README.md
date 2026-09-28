@@ -114,9 +114,10 @@ The second path is optional. Without it, the task writes the HTML to the standar
 Without the first path, the task writes the usage text. The task writes the usage text and
 each error message to the standard error, and the exit status is then 1. `mix help expresso`
 or `mix expresso --help` gives the help of the task, and `--version` gives the version of
-Expresso. A different option, such as `--verbose`, is an error. A path that starts with `-`
-needs a directory in front of it, such as `./-deck.exs`. When the reader of the standard
-output stops, as `| head` does, the task stops with no message, and the exit status is 0.
+Expresso. A different option, such as `--verbose`, is an error, and so is a third path. A
+path that starts with `-` needs a directory in front of it, such as `./-deck.exs`. When the
+reader of the standard output stops, as `| head` does, the task stops with no message, and
+the exit status is 0.
 
 ### The options of a deck
 

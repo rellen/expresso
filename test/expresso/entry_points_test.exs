@@ -182,6 +182,17 @@ defmodule Expresso.EntryPointsTest do
       assert error =~ "Couldn't find input file"
     end
 
+    test "exits with the status 1, and writes the message and the usage text, for a third path" do
+      {output, error} =
+        with_output(fn ->
+          assert catch_exit(Mix.Tasks.Expresso.run(["a.exs", "b.html", "c.html"])) ==
+                   {:shutdown, 1}
+        end)
+
+      assert output == ""
+      assert error == "Unexpected argument: c.html\nUsage: mix expresso <input> [output]\n"
+    end
+
     test "exits with the status 1, and writes the message and the usage text, for an unknown option" do
       {output, error} =
         with_output(fn ->
@@ -302,6 +313,22 @@ defmodule Expresso.EntryPointsTest do
 
       assert output == ""
       assert error =~ "Couldn't find input file"
+    end
+
+    test "gives the exit status 1, and writes the message and the usage text, for a third path" do
+      {output, error} =
+        with_output(fn ->
+          assert BurritoEntryPoint.run(
+                   ["a.exs", "b.html", "c.html"],
+                   "expresso_cli_app_linux_x86"
+                 ) ==
+                   1
+        end)
+
+      assert output == ""
+
+      assert error ==
+               "Unexpected argument: c.html\nUsage: expresso_cli_app_linux_x86 <input> [output]\n"
     end
 
     test "gives the exit status 1, and writes the message and the usage text, for an unknown option" do
