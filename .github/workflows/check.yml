@@ -7,16 +7,16 @@
 #
 # - format: `mix format --check-formatted`
 # - lint: `mix compile --warnings-as-errors`, `mix credo`, `mix sobelow`,
-#   `mix hex.audit`, the check of unused dependencies, `mix docs` and
-#   `mix doctor`
-# - dialyzer: `mix dialyzer`
+#   `mix hex.audit`, the check of unused dependencies, `mix docs`,
+#   `mix doctor` and `mix dialyzer`
 # - test: `mix test` and `mix test --only e2e`, the browser tests
 # - presenter: `npm run check` and `npm test`
 # - gifs: `mix expresso.gifs`, the GIFs and the stills of the example decks
 #   of the guides and of the README
 # - binary: `mix release expresso_cli_app` for Linux on x86_64 and on
 #   aarch64, and `mix test --only release`, the tests of each binary
-# - macos: `mix check` on macOS, which also runs the browser tests and the
+# - macos: the tools of `mix check` that can give a different result on
+#   macOS: the compiler, the unit tests, the browser tests, the binary and the
 #   release tests
 #
 # `.github/workflows/audit.yml` also runs `mix hex.audit` on main each day, so
@@ -35,9 +35,10 @@
 # shows the GIFs of the branch `media`, so the two stay in agreement.
 #
 # A job compiles the project for one environment, so the tools that need the
-# same build share one job. The tools of `lint` finish long before `dialyzer`,
-# and a job for each tool compiled the project four times more with no gain in
-# time. The unit tests and the browser tests share the build of the test
+# same build share one job. `lint` also runs Dialyzer, which needs the same
+# build. With the PLT in the cache, Dialyzer takes approximately 30 seconds,
+# and `lint` still finishes before the slowest job. The unit tests and the
+# browser tests share the build of the test
 # environment in the same way. `format` and `presenter` compile nothing, and
 # they stay alone, so a defect in them shows in a few seconds.
 #
@@ -86,7 +87,8 @@ jobs:
   # step before it fails, so one run reports each defect, as `mix check` does.
   # `mix deps.unlock --check-unused` is the check of `unused_deps` in
   # `mix check`, and `mix docs` is its check of `ex_doc`. `mix hex.audit` fails
-  # for a dependency with a security advisory or a retirement on Hex.
+  # for a dependency with a security advisory or a retirement on Hex. The cache
+  # of the job holds the PLT of Dialyzer, in `_build`.
   lint:
     name: lint
     runs-on: ubuntu-latest
@@ -108,22 +110,14 @@ jobs:
         run: mix docs
       - if: ${{ !cancelled() }}
         run: mix doctor
+      - if: ${{ !cancelled() }}
+        run: mix dialyzer
       # The site of `mix docs`, for the job `pages`. The step runs only when each
       # step before it succeeded.
       - if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v5
         with:
           path: doc
-
-  dialyzer:
-    name: dialyzer
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-elixir
-        with:
-          cache: dialyzer
-      - run: mix dialyzer
 
   # The browser tests open each deck in the Chromium of the Playwright version of
   # `package-lock.json`. `.github/actions/setup-playwright` installs Node, the
@@ -217,11 +211,14 @@ jobs:
         env:
           EXPRESSO_BINARY: burrito_out/expresso_cli_app_${{ matrix.target }}
 
-  # `mix check` on macOS, on an arm64 runner. The other jobs run on Linux, so
-  # this job makes sure that each tool of `mix check` runs on a Mac. `.check.exs`
-  # makes the binary of the target `macos_arm`. Homebrew gives xz for Burrito,
-  # and it gives `gtimeout` of GNU coreutils for the release tests. The job
-  # removes the release after the run, so the cache does not keep it.
+  # `mix check` on macOS, on an arm64 runner, for the tools that can give a
+  # different result on a Mac: the compiler, the unit tests, the browser tests,
+  # the binary and the release tests. The Linux jobs already ran the other
+  # tools, such as Credo and Dialyzer, and their result does not depend on the
+  # platform. `.check.exs` makes the binary of the target `macos_arm`. Homebrew
+  # gives xz for Burrito, and it gives `gtimeout` of GNU coreutils for the
+  # release tests. The job removes the release after the run, so the cache does
+  # not keep it.
   #
   # A macOS runner costs more than a Linux runner, and most defects also show
   # on Linux. Therefore this job needs each Linux job, and it starts only when
@@ -229,7 +226,7 @@ jobs:
   # the last job fails.
   macos:
     name: macos
-    needs: [format, lint, dialyzer, test, presenter, gifs, binary]
+    needs: [format, lint, test, presenter, gifs, binary]
     runs-on: macos-latest
     env:
       HOMEBREW_NO_AUTO_UPDATE: "1"
@@ -243,7 +240,7 @@ jobs:
         with:
           version: ${{ env.ZIG_VERSION }}
       - run: brew install xz coreutils
-      - run: mix check
+      - run: mix check --only compiler --only ex_unit --only e2e --only release --only release_tests
       - run: rm -rf _build/prod/rel
 
   # Put the GIFs of a push to main on the branch `media`, as one commit with no
@@ -303,7 +300,7 @@ jobs:
   all:
     name: Erlang/OTP 29, Elixir 1.20, Node 24
     if: always()
-    needs: [format, lint, dialyzer, test, presenter, gifs, binary, macos]
+    needs: [format, lint, test, presenter, gifs, binary, macos]
     runs-on: ubuntu-latest
     steps:
       - name: Fail when a check does not succeed

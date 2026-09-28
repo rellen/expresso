@@ -10,9 +10,9 @@
 # Zig, so a run with a hit downloads nothing.
 #
 # Zig keeps the build of the wrapper of Burrito in its own cache. The cache of
-# GitHub keeps that directory too, as mlugg/setup-zig did, so the next run
-# compiles less. Each run saves it with a new key, and a later run reads the
-# latest one.
+# GitHub keeps that directory too, so the next run compiles less. The key holds
+# `mix.lock`, and a job saves the cache only when no cache has its key.
+# Therefore the jobs save it one time for each version of the lockfile.
 
 name: Set up Zig
 description: Install Zig from a community mirror, and keep Zig and its build cache in the cache.
@@ -58,13 +58,19 @@ runs:
         echo "ZIG_GLOBAL_CACHE_DIR=${ZIG_CACHE}" >> "${GITHUB_ENV}"
         echo "ZIG_LOCAL_CACHE_DIR=${ZIG_CACHE}" >> "${GITHUB_ENV}"
 
+    # Each build of the binary adds the payload of its release to the build
+    # cache, and the wrapper changes only with Burrito. A key for each run saved
+    # the cache in each run, and the cache grew by each payload: on 2026-09-28,
+    # one run saved 405 MB for linux_x86 and 234 MB for macos_arm. A key for each
+    # lockfile saves the build of the wrapper, with one payload. The prefix
+    # `zig-build` does not read the large caches of the key for each run.
     - name: Read the build cache of Zig
       uses: actions/cache@v6
       with:
         path: ${{ runner.temp }}/zig-cache
-        key: zig-cache-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+        key: zig-build-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}-${{ hashFiles('mix.lock') }}
         restore-keys: |
-          zig-cache-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}-
+          zig-build-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}-
 
     # Zig does not remove old entries from its build cache, and a build of new
     # code adds entries. A build cache of more than 1 GB goes, and the job starts
