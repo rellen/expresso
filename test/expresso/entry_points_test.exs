@@ -15,6 +15,26 @@ defmodule Expresso.EntryPointsTest do
   # The standard output and the standard error of a function.
   defp with_output(fun), do: with_io(:stderr, fn -> capture_io(fun) end)
 
+  # Run a function with a standard output that is closed, as for `| head`. The
+  # group leader of the process is a device that stopped, so a write to the
+  # standard output raises `:terminated`, as it does in `mix expresso`.
+  defp with_closed_stdout(fun) do
+    {:ok, device} = StringIO.open("")
+    ref = Process.monitor(device)
+    {:ok, _contents} = StringIO.close(device)
+
+    receive do
+      {:DOWN, ^ref, :process, ^device, _reason} -> :ok
+    end
+
+    fn ->
+      Process.group_leader(self(), device)
+      fun.()
+    end
+    |> Task.async()
+    |> Task.await()
+  end
+
   defp write_script(dir, name \\ "deck.exs", source \\ @script) do
     path = Path.join(dir, name)
     File.write!(path, source)
@@ -59,6 +79,19 @@ defmodule Expresso.EntryPointsTest do
 
       assert output == ""
       assert error =~ "Couldn't find input file"
+    end
+
+    @tag :tmp_dir
+    test "gives {:error, :closed} and no message for a closed standard output",
+         %{tmp_dir: dir} do
+      input = write_script(dir)
+
+      error =
+        capture_io(:stderr, fn ->
+          assert with_closed_stdout(fn -> Expresso.main(input) end) == {:error, :closed}
+        end)
+
+      assert error == ""
     end
 
     @tag :tmp_dir
@@ -171,6 +204,18 @@ defmodule Expresso.EntryPointsTest do
 
     test "has a short description, so mix help lists the task" do
       assert Mix.Task.shortdoc(Mix.Tasks.Expresso) == "Make one HTML document from a deck"
+    end
+
+    @tag :tmp_dir
+    test "stops with no message and no exit for a closed standard output", %{tmp_dir: dir} do
+      input = write_script(dir)
+
+      error =
+        capture_io(:stderr, fn ->
+          assert with_closed_stdout(fn -> Mix.Tasks.Expresso.run([input]) end) == :ok
+        end)
+
+      assert error == ""
     end
   end
 
@@ -285,6 +330,53 @@ defmodule Expresso.EntryPointsTest do
 
       assert error =~ "RuntimeError"
       assert error =~ "the deck is not complete"
+    end
+
+    @tag :tmp_dir
+    test "gives the exit status 0 and no message for a closed standard output",
+         %{tmp_dir: dir} do
+      input = write_script(dir)
+
+      error =
+        capture_io(:stderr, fn ->
+          assert with_closed_stdout(fn -> BurritoEntryPoint.run([input]) end) == 0
+        end)
+
+      assert error == ""
+    end
+  end
+
+  describe "Expresso.closed_stdout_filter/2" do
+    test "drops the report of OTP for a closed standard output" do
+      event = %{
+        level: :error,
+        meta: %{mfa: {:user_drv, :server, 3}},
+        msg: {~c"Writer crashed (~p)", [:epipe]}
+      }
+
+      assert Expresso.closed_stdout_filter(event, []) == :stop
+    end
+
+    test "keeps each other report" do
+      events = [
+        %{meta: %{mfa: {:user_drv, :server, 3}}, msg: {~c"Writer crashed (~p)", [:eio]}},
+        %{meta: %{mfa: {:user_drv, :server, 3}}, msg: {~c"Reader crashed (~p)", [:epipe]}},
+        %{meta: %{mfa: {:some_module, :run, 1}}, msg: {~c"Writer crashed (~p)", [:epipe]}},
+        %{meta: %{}, msg: {:string, "a message"}}
+      ]
+
+      for event <- events do
+        assert Expresso.closed_stdout_filter(event, []) == :ignore
+      end
+    end
+  end
+
+  describe "Expresso.SignalHandler" do
+    # A test cannot send SIGTERM, because the handler halts the VM. The release
+    # tests send it through the launcher of Burrito.
+    test "gives each other signal to the handler of OTP" do
+      assert Expresso.SignalHandler.handle_event(:sighup, :state) == {:ok, :state}
+      assert Expresso.SignalHandler.handle_event(:sigusr2, :state) == {:ok, :state}
     end
   end
 

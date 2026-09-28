@@ -112,8 +112,11 @@ defmodule Expresso do
   For each other error, the function writes the message to the standard error
   and returns an error tuple. The standard output then holds no text. A failed
   write of the output file is an error too.
+
+  When the standard output closes before the function writes all the HTML, as
+  for `| head`, the function returns `{:error, :closed}` and writes no message.
   """
-  @spec main(Path.t() | nil, Path.t() | nil) :: :ok | {:error, String.t()}
+  @spec main(Path.t() | nil, Path.t() | nil) :: :ok | {:error, String.t() | :closed}
   def main(input_path, output_path \\ nil)
 
   def main(nil, _output_path), do: error(Expresso.CommandLine.usage("mix expresso"))
@@ -123,6 +126,7 @@ defmodule Expresso do
          :ok <- output(rendered, output_path) do
       :ok
     else
+      {:error, :closed} = closed -> closed
       {:error, message} -> error(message)
     end
   end
@@ -139,7 +143,17 @@ defmodule Expresso do
     end
   end
 
-  defp output(rendered, nil), do: IO.puts(rendered)
+  # When the reader of the standard output stops, as `| head` does, the writer
+  # of the VM gets `epipe` and stops. `IO.puts/1` then raises `:terminated`.
+  defp output(rendered, nil) do
+    ignore_closed_stdout_report()
+    IO.puts(rendered)
+  rescue
+    error in ErlangError ->
+      if error.original == :terminated,
+        do: {:error, :closed},
+        else: reraise(error, __STACKTRACE__)
+  end
 
   defp output(rendered, output_path) do
     case write_to_file(rendered, output_path) do
@@ -152,6 +166,31 @@ defmodule Expresso do
     IO.puts(:stderr, message)
     {:error, message}
   end
+
+  # In `mix expresso`, OTP logs "Writer crashed (epipe)" when the reader of the
+  # standard output stops. The default handler of the logger then fails to
+  # write to the standard output, and it writes a second message. This filter
+  # drops that one report, so a closed standard output gives no message. The
+  # binary does not come here for a closed pipe: `Expresso.SignalHandler` tells
+  # why.
+  defp ignore_closed_stdout_report do
+    filter = {&__MODULE__.closed_stdout_filter/2, []}
+
+    case :logger.add_primary_filter(:expresso_closed_stdout, filter) do
+      :ok -> :ok
+      {:error, {:already_exist, :expresso_closed_stdout}} -> :ok
+    end
+  end
+
+  @doc false
+  @spec closed_stdout_filter(:logger.log_event(), term()) :: :logger.filter_return()
+  def closed_stdout_filter(
+        %{meta: %{mfa: {:user_drv, _, _}}, msg: {~c"Writer crashed (~p)", [:epipe]}},
+        _extra
+      ),
+      do: :stop
+
+  def closed_stdout_filter(_event, _extra), do: :ignore
 
   # sobelow_skip ["RCE"]
   defp evaluate_deck_file(input_path) do

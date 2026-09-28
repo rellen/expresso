@@ -159,6 +159,20 @@ defmodule Expresso.BinaryTest do
     assert standard_output(context, ["no/such/deck.exs"]) == {"", 1}
   end
 
+  # The launcher of Burrito stops the VM with SIGTERM when the reader of the
+  # standard output stops. Before `Expresso.SignalHandler`, the binary then
+  # waited for ever, and `timeout` gave 124. `true` reads nothing, and the deck
+  # is larger than the buffer of a pipe, so a write always fails.
+  test "stops at once, with the exit status 0 and no message, for a closed pipe", context do
+    command = [context.timeout_command, @timeout, context.binary, "examples/dsl_deck.exs"]
+    script = ~s({ "$@"; echo "exit status: $?" >&2; } | true)
+
+    assert System.cmd("sh", ["-c", script, "sh" | command],
+             env: context.env,
+             stderr_to_stdout: true
+           ) == {"exit status: 0\n", 0}
+  end
+
   test "gives the exit status 1 for an unknown option", context do
     assert {output, 1} = run(context, ["--version"])
     assert output =~ "Unknown option: --version\n"
