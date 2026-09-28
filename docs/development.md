@@ -251,8 +251,7 @@ The Linux jobs run in parallel, so the slowest of them gives their time:
 
 - `format`: the formatter.
 - `lint`: the compiler with warnings as errors, Credo, Sobelow, `mix hex.audit`, the check
-  of unused dependencies, `mix docs` and Doctor.
-- `dialyzer`: Dialyzer.
+  of unused dependencies, `mix docs`, Doctor and Dialyzer.
 - `test`: the unit tests and the browser tests.
 - `presenter`: `npm run check` and `npm test`.
 - `binary`: the binary for Linux and the release tests, in two jobs. The job
@@ -260,15 +259,24 @@ The Linux jobs run in parallel, so the slowest of them gives their time:
   runner. Each job makes the binary for its own architecture, so it can run the binary.
   Neither job publishes the binary. `.github/actions/setup-zig` installs Zig, as "Zig in
   the workflow" below tells.
-- `macos`: `mix check` on an arm64 runner with macOS. It makes the binary for `macos_arm`.
-  Homebrew gives `xz`, and GNU coreutils of Homebrew gives `gtimeout`. It starts only when
-  each Linux job succeeded.
+- `macos`: five tools of `mix check` on an arm64 runner with macOS. It makes the binary for
+  `macos_arm`. Homebrew gives `xz`, and GNU coreutils of Homebrew gives `gtimeout`. It
+  starts only when each Linux job succeeded.
 
 Together they run each tool of `mix check`, the two npm commands, the browser tests and
 the release tests. They make and test the binary for `linux_x86`, `linux_arm` and
 `macos_arm`. No job makes the binary for `macos_x86`.
 The Linux jobs do not run `mix check`, because that command runs the tools one after the
-other in one job. The job `macos` runs `mix check`, so each tool also runs on a Mac.
+other in one job. The job `macos` runs only the tools that can give a different result on a
+Mac:
+
+```sh
+mix check --only compiler --only ex_unit --only e2e --only release --only release_tests
+```
+
+The Linux jobs already ran the other tools, such as Credo and Dialyzer, and their result
+does not depend on the platform. Therefore the workflow does not show that each tool of
+`mix check` runs on a Mac. Run `mix check` on a Mac to find that out.
 
 The job `macos` needs each Linux job. A macOS runner costs more than a Linux runner, and
 most defects also show on Linux. Therefore `macos` starts only when each Linux job
@@ -277,11 +285,15 @@ of the workflow is the time of the slowest Linux job, plus the time of `macos`.
 
 A job compiles the project for one environment. Therefore the tools that need the same
 build share one job, and the project compiles two times for the development environment,
-in `lint` and in `dialyzer`. It compiles three times for the test environment, in `test` and
-in the two `binary` jobs, and two times for the production environment, in the two
-`binary` jobs. The tools of `lint` finish long before `dialyzer`, so the time of the
-workflow does not change. A step of `lint` or of `test` runs also when a step before it
-fails, so one run reports each defect.
+in `lint` and in `gifs`. It compiles three times for the test environment, in `test` and in
+the two `binary` jobs, and two times for the production environment, in the two `binary`
+jobs. A step of `lint` or of `test` runs also when a step before it fails, so one run
+reports each defect.
+
+`lint` also runs Dialyzer, because Dialyzer needs the same build. The cache of `lint` holds
+the PLT. With the PLT, Dialyzer takes approximately 30 seconds, and `lint` still finishes
+before the slowest Linux job. Until 2026-09-28, Dialyzer had its own job, which compiled
+the project again for the development environment.
 
 Each Elixir job uses `.github/actions/setup-elixir`, which installs the versions of
 `.tool-versions`, reads the cache and gets the dependencies. One set of versions is
@@ -398,6 +410,13 @@ The cache of GitHub keeps the installed Zig, so a run with a hit downloads nothi
 keeps the build cache of Zig. In this container, the build of the binary took 142 seconds
 with an empty build cache, and 47 seconds with the cache of an earlier build. A build cache
 of more than 1 GB goes, and the job starts a new one.
+
+The key of the build cache holds `mix.lock`, and a job saves the build cache only when no
+cache has its key. Therefore the jobs save it one time for each version of the lockfile.
+Until 2026-09-28, the key held the number of the run, so each run saved the build cache.
+Each build adds its payload to the cache, and one run saved 405 MB for `linux_x86` and
+234 MB for `macos_arm`. The build of the wrapper changes only with Burrito, so one save
+keeps most of the gain.
 
 ## Dependency updates
 

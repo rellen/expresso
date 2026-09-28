@@ -265,8 +265,8 @@ The maintainer asked if the script can use fp-ts or Effect. The proposal is no. 
 reasons are:
 
 - `mix compile` runs esbuild, and it needs no Node. A runtime import from `node_modules`
-  stops this. The jobs `lint` and `dialyzer` of `.github/workflows/check.yml` run
-  `mix compile` with no `npm ci`.
+  stops this. The job `lint` of `.github/workflows/check.yml` runs `mix compile` with no
+  `npm ci`.
 - The renderer writes the bundle into each deck, and each deck is one HTML file. Thus each
   byte of the bundle goes into each deck.
 - `state.ts` is already a functional core. `next` is a pure function, and each change
