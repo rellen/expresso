@@ -255,10 +255,11 @@ The Linux jobs run in parallel, so the slowest of them gives their time:
 - `dialyzer`: Dialyzer.
 - `test`: the unit tests and the browser tests.
 - `presenter`: `npm run check` and `npm test`.
-- `release`: the binary for Linux and the release tests, in two jobs. The job
-  `release (linux_x86)` runs on x86_64, and the job `release (linux_arm)` runs on an arm64
+- `binary`: the binary for Linux and the release tests, in two jobs. The job
+  `binary (linux_x86)` runs on x86_64, and the job `binary (linux_arm)` runs on an arm64
   runner. Each job makes the binary for its own architecture, so it can run the binary.
-  `.github/actions/setup-zig` installs Zig, as "Zig in the workflow" below tells.
+  Neither job publishes the binary. `.github/actions/setup-zig` installs Zig, as "Zig in
+  the workflow" below tells.
 - `macos`: `mix check` on an arm64 runner with macOS. It makes the binary for `macos_arm`.
   Homebrew gives `xz`, and GNU coreutils of Homebrew gives `gtimeout`. It starts only when
   each Linux job succeeded.
@@ -277,8 +278,8 @@ of the workflow is the time of the slowest Linux job, plus the time of `macos`.
 A job compiles the project for one environment. Therefore the tools that need the same
 build share one job, and the project compiles two times for the development environment,
 in `lint` and in `dialyzer`. It compiles three times for the test environment, in `test` and
-in the two `release` jobs, and two times for the production environment, in the two
-`release` jobs. The tools of `lint` finish long before `dialyzer`, so the time of the
+in the two `binary` jobs, and two times for the production environment, in the two
+`binary` jobs. The tools of `lint` finish long before `dialyzer`, so the time of the
 workflow does not change. A step of `lint` or of `test` runs also when a step before it
 fails, so one run reports each defect.
 
@@ -321,8 +322,8 @@ The workflow holds each version in one `env` block, because no action reads
 `.github/actions/setup-elixir` gives `setup-beam` the option `version-type: strict`, so
 the action installs each version as it is. Without the option, the action read 29.1 as the
 latest 29.1.x. After the release of OTP 29.1.1 on 2026-09-22, the jobs then ran on 29.1.1,
-and each other place gave 29.1. Burrito found no ERTS for 29.1.1, and the job `release`
-failed.
+and each other place gave 29.1. Burrito found no ERTS for 29.1.1, and the job `release`,
+now `binary`, failed.
 
 The workflow keeps `deps` and `_build` in a cache for each job. The key holds the name of
 the job, `mix.lock`, the two versions and the commit. Therefore each run saves the build
@@ -368,7 +369,7 @@ the new lockfile.
 
 ### Zig in the workflow
 
-The jobs `release` and `macos` get Zig from `.github/actions/setup-zig`. This action uses
+The jobs `binary` and `macos` get Zig from `.github/actions/setup-zig`. This action uses
 the shell and `actions/cache`, and it has no code of its own for Node.js. The jobs used
 `mlugg/setup-zig` before. Its last release, v2.2.1 of 2026-01-19, targets Node.js 20, and
 GitHub gave a warning for each job that used it.

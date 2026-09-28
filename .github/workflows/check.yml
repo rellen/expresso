@@ -14,7 +14,7 @@
 # - presenter: `npm run check` and `npm test`
 # - gifs: `mix expresso.gifs`, the GIFs and the stills of the example decks
 #   of the guides and of the README
-# - release: `mix release expresso_cli_app` for Linux on x86_64 and on
+# - binary: `mix release expresso_cli_app` for Linux on x86_64 and on
 #   aarch64, and `mix test --only release`, the tests of each binary
 # - macos: `mix check` on macOS, which also runs the browser tests and the
 #   release tests
@@ -182,13 +182,14 @@ jobs:
   # of prod, and the tests use the build of test, so a job compiles the project
   # two times. The binary holds the release, and the release takes approximately
   # 80 MB. Therefore the job removes the release after the build, and the cache
-  # does not keep it.
+  # does not keep it. The job does not publish the binary: the runner discards
+  # it after the tests.
   #
   # Each target has its own cache. The two jobs run at the same time, and with
   # one key only one of them can save its cache. The macOS job makes the binary
   # of `macos_arm`, and no job makes the binary of `macos_x86`.
-  release:
-    name: release (${{ matrix.target }})
+  binary:
+    name: binary (${{ matrix.target }})
     strategy:
       fail-fast: false
       matrix:
@@ -202,7 +203,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-elixir
         with:
-          cache: release-${{ matrix.target }}
+          cache: binary-${{ matrix.target }}
       - uses: ./.github/actions/setup-zig
         with:
           version: ${{ env.ZIG_VERSION }}
@@ -228,7 +229,7 @@ jobs:
   # the last job fails.
   macos:
     name: macos
-    needs: [format, lint, dialyzer, test, presenter, gifs, release]
+    needs: [format, lint, dialyzer, test, presenter, gifs, binary]
     runs-on: macos-latest
     env:
       HOMEBREW_NO_AUTO_UPDATE: "1"
@@ -302,7 +303,7 @@ jobs:
   all:
     name: Erlang/OTP 29, Elixir 1.20, Node 24
     if: always()
-    needs: [format, lint, dialyzer, test, presenter, gifs, release, macos]
+    needs: [format, lint, dialyzer, test, presenter, gifs, binary, macos]
     runs-on: ubuntu-latest
     steps:
       - name: Fail when a check does not succeed
