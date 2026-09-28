@@ -580,6 +580,13 @@ mix expresso examples/demo.exs /tmp/demo.html
 mix expresso examples/dsl_deck.exs /tmp/dsl.html
 ```
 
+Give `--watch` to render the deck again after each change, and to reload the page. Then
+open `http://127.0.0.1:4100/`:
+
+```sh
+mix expresso examples/dsl_deck.exs --watch
+```
+
 The browser tests cover the behavior of the presenter. Add a test to `test/e2e/` for a
 new behavior. A look at the slides is still necessary after a change to
 `assets/style.css`, because no test reads the layout. A remote container has no display,

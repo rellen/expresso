@@ -221,4 +221,72 @@ defmodule Expresso.BinaryTest do
     assert output =~ "RuntimeError"
     assert output =~ "the deck is not complete"
   end
+
+  # The binary runs under `timeout`, which sends a SIGTERM on to the binary
+  # and then gives the exit status 143 itself. The test therefore reads that
+  # the command stops, and that the port closes. The request uses `:gen_tcp`
+  # and not `:httpc`, because `:httpc` changes the monotonic counter of the VM,
+  # and the first test reads that counter in the ids of a diagram.
+  test "serves the deck with --watch, and stops for SIGTERM", context do
+    {:ok, socket} = :gen_tcp.listen(0, ip: {127, 0, 0, 1})
+    {:ok, port} = :inet.port(socket)
+    :gen_tcp.close(socket)
+
+    binary =
+      Port.open({:spawn_executable, context.timeout_command}, [
+        :binary,
+        :exit_status,
+        :stderr_to_stdout,
+        args: [
+          @timeout,
+          context.binary,
+          "examples/dsl_deck.exs",
+          "--watch",
+          "--port",
+          Integer.to_string(port)
+        ],
+        env: Enum.map(context.env, fn {key, value} -> {~c"#{key}", ~c"#{value}"} end)
+      ])
+
+    output = read_until(binary, "Rendered", "")
+    assert output =~ "Serving examples/dsl_deck.exs at http://127.0.0.1:#{port}/"
+
+    assert get(port, "/") =~ ~r{\AHTTP/1\.[01] 200 .*<!DOCTYPE html>.*const version = "1"}s
+    assert get(port, "/version") =~ ~r{\r\n\r\n1\z}
+
+    {:os_pid, pid} = Port.info(binary, :os_pid)
+    System.cmd("kill", ["-TERM", Integer.to_string(pid)])
+    assert_receive {^binary, {:exit_status, _status}}, 10_000
+    assert {:error, :econnrefused} = :gen_tcp.connect({127, 0, 0, 1}, port, [])
+  end
+
+  # A request with HTTP/1.0, so the server closes the connection after the
+  # answer.
+  defp get(port, path) do
+    {:ok, socket} = :gen_tcp.connect({127, 0, 0, 1}, port, [:binary, active: false])
+    :ok = :gen_tcp.send(socket, "GET #{path} HTTP/1.0\r\nHost: 127.0.0.1\r\n\r\n")
+    answer = receive_all(socket, "")
+    :gen_tcp.close(socket)
+    answer
+  end
+
+  defp receive_all(socket, answer) do
+    case :gen_tcp.recv(socket, 0, 10_000) do
+      {:ok, data} -> receive_all(socket, answer <> data)
+      {:error, :closed} -> answer
+    end
+  end
+
+  defp read_until(binary, text, output) do
+    if output =~ text do
+      output
+    else
+      receive do
+        {^binary, {:data, data}} -> read_until(binary, text, output <> data)
+        {^binary, {:exit_status, status}} -> flunk("exit status #{status}: #{output}")
+      after
+        30_000 -> flunk("no #{text} in: #{output}")
+      end
+    end
+  end
 end
