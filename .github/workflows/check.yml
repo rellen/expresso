@@ -1,7 +1,8 @@
 # The checks that run for a pull request and for a push to main.
 #
-# The checks run in parallel jobs. The slowest job, which is `dialyzer`, gives
-# the time of the workflow, and not the sum of the jobs. The list is the list of
+# The Linux checks run in parallel jobs, so the slowest of them gives their
+# time, and not the sum of the jobs. The job `macos` starts when each Linux job
+# succeeded, because a macOS runner costs more. The list is the list of
 # `CLAUDE.md`, and it covers each tool of `mix check`:
 #
 # - format: `mix format --check-formatted`
@@ -220,8 +221,14 @@ jobs:
   # makes the binary of the target `macos_arm`. Homebrew gives xz for Burrito,
   # and it gives `gtimeout` of GNU coreutils for the release tests. The job
   # removes the release after the run, so the cache does not keep it.
+  #
+  # A macOS runner costs more than a Linux runner, and most defects also show
+  # on Linux. Therefore this job needs each Linux job, and it starts only when
+  # each of them succeeded. When a Linux job fails, GitHub skips this job, and
+  # the last job fails.
   macos:
     name: macos
+    needs: [format, lint, dialyzer, test, presenter, gifs, release]
     runs-on: macos-latest
     env:
       HOMEBREW_NO_AUTO_UPDATE: "1"
