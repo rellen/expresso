@@ -1,5 +1,9 @@
 defmodule Expresso.EntryPointsTest do
-  use ExUnit.Case, async: true
+  # Some tests assert that the standard error gets no text. `capture_io/2`
+  # captures the standard error of the VM, and an async test of a different
+  # module can write to it at the same time, as the test of a port in use in
+  # `Expresso.CommandLineTest` does. Therefore these tests run alone.
+  use ExUnit.Case, async: false
 
   import ExUnit.CaptureIO
 
