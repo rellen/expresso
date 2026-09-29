@@ -262,13 +262,15 @@ The server is `:httpd` from the `inets` application of OTP. `mix.exs` puts `:ine
 `extra_applications`, so the release of the binary holds it. The server listens on
 127.0.0.1 only, so a different computer cannot read the deck.
 
-A web page in the browser of the user can still try DNS rebinding: its host name first
-points to its own server, and then to 127.0.0.1. The requests of that page then go to the
-watch server, but they name the host of the page in the `Host` header.
-`Expresso.Watch.Host` runs in front of the other modules of `:httpd`. It passes a request
-only for `127.0.0.1` or `localhost`, with any port, and it answers each other request with
-the status 403. The port does not count, because a tunnel can give the server a different
-port.
+But a web page that the user opens can try DNS rebinding. The page's host name first
+points to the page's own server, and then to 127.0.0.1. The browser then sends the page's
+requests to the watch server, but each request still has the page's host name in its
+`Host` header.
+
+`Expresso.Watch.Host` is the first module in the `:httpd` module list. It passes a request
+only when the `Host` header is `127.0.0.1` or `localhost`, and it answers each other
+request with the status 403. The port is not part of the check, because a tunnel can use a
+different port.
 
 The server serves a private directory in the temporary directory of the system, and that
 directory holds two files:

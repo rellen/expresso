@@ -11,9 +11,8 @@ defmodule Expresso.Watch.HostTest do
     %{port: server.port}
   end
 
-  # A request with HTTP/1.0 and the lines of `headers`, so the test sets the
-  # `Host` header itself, and the server closes the connection after the
-  # answer.
+  # Send a raw request, so that the test controls the `Host` header. HTTP/1.0
+  # makes the server close the connection after the answer.
   defp get(port, headers) do
     {:ok, socket} = :gen_tcp.connect({127, 0, 0, 1}, port, [:binary, active: false])
     :ok = :gen_tcp.send(socket, ["GET /version HTTP/1.0\r\n", headers, "\r\n"])

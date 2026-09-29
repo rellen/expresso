@@ -4,8 +4,8 @@ defmodule Expresso.Watch.Server do
 
   The server is `:httpd` from the `inets` application of OTP, so it needs no
   dependency. It listens on 127.0.0.1 only, so no other computer can read the
-  deck. `Expresso.Watch.Host` also refuses a request that names a different
-  host, so a web page cannot read the deck with DNS rebinding.
+  deck. `Expresso.Watch.Host` also refuses a request for a different host
+  name, so a web page cannot read the deck with DNS rebinding.
 
   The server serves a private directory in the temporary directory of the
   system, and that directory holds two files:
@@ -96,9 +96,12 @@ defmodule Expresso.Watch.Server do
     :ok
   end
 
-  # `Expresso.Watch.Host` refuses a request for a different host, before each
-  # other module. `mod_alias` gives the directory index, `mod_get` sends a
-  # file, and `mod_head` answers a HEAD request.
+  # The modules run in this order:
+  #
+  #   * `Expresso.Watch.Host` refuses a request for a different host name.
+  #   * `mod_alias` gives the directory index.
+  #   * `mod_get` sends a file.
+  #   * `mod_head` answers a HEAD request.
   defp config(directory, port) do
     [
       port: port,
