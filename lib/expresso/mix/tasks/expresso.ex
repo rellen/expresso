@@ -43,43 +43,19 @@ defmodule Mix.Tasks.Expresso do
 
   use Mix.Task
 
-  alias Expresso.CommandLine
-
   @doc false
   @impl Mix.Task
   def run(args) do
-    case CommandLine.parse(args) do
-      # `Mix.Tasks.Help.run/1` runs `deps.loadpaths` again, and that task
-      # changes the working directory of the VM for a moment. In `mix test`, a
-      # different test then does not find its files. Therefore the task writes
-      # the text of `mix help expresso` itself.
-      :help ->
-        IO.write(@moduledoc)
-
-      :version ->
-        IO.puts(CommandLine.version())
-
-      {:error, message} ->
-        IO.puts(:stderr, [message, ?\n, CommandLine.usage("mix expresso")])
-        exit({:shutdown, 1})
-
-      {:paths, input_path, output_path} ->
-        render(input_path, output_path)
-
-      # The watch mode returns only for an error, and it writes the message.
-      {:watch, input_path, output_path, port} ->
-        {:error, _message} = Expresso.Watch.run(input_path, output_path, port: port)
-        exit({:shutdown, 1})
-    end
-  end
-
-  # `Expresso.main/2` writes the message of an error. A mix task that returns
-  # gives the exit status 0, so the task exits with the status 1.
-  defp render(input_path, output_path) do
-    case Expresso.main(input_path, output_path) do
-      :ok -> :ok
-      {:error, :closed} -> :ok
-      {:error, _message} -> exit({:shutdown, 1})
+    # `Mix.Tasks.Help.run/1` runs `deps.loadpaths` again, and that task changes
+    # the working directory of the VM for a moment. In `mix test`, a different
+    # test then does not find its files. Therefore the task gives the text of
+    # `mix help expresso` itself.
+    #
+    # A mix task that returns gives the exit status 0, so the task exits with
+    # the status 1 for an error.
+    case Expresso.CommandLine.run(args, "mix expresso", @moduledoc) do
+      0 -> :ok
+      1 -> exit({:shutdown, 1})
     end
   end
 end

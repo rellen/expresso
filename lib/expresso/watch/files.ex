@@ -3,10 +3,8 @@ defmodule Expresso.Watch.Files do
   The files of a deck in the watch mode, and their changes
 
   A render reads the deck file, and it can read more files: an image, a
-  diagram and a style sheet. `Expresso.Image`, `Expresso.Element.Diagram` and
-  `Expresso.Css` call `track/1` for each file that they read. `tracking/1`
-  collects these paths for one render, so the watch mode knows the files of the
-  deck.
+  diagram and a style sheet. `Expresso.Watch` renders the deck in
+  `Expresso.DeckFile.tracking/1`, so it knows these files.
 
   `snapshot/1` records the state of each file, and `changed?/2` compares two
   snapshots. The watch mode takes a snapshot two times each second. The size
@@ -20,48 +18,11 @@ defmodule Expresso.Watch.Files do
   does not use the events of the operating system.
   """
 
-  @key {__MODULE__, :read}
-
   # A file that changed in this number of seconds gets a digest of its bytes.
   @recent 2
 
   @typedoc "The state of each file of a deck"
   @type snapshot :: %{Path.t() => {integer(), non_neg_integer(), binary() | nil} | :missing}
-
-  @doc """
-  Record that a render reads the file at `path`
-
-  The function does nothing outside `tracking/1`, so a render outside the
-  watch mode records nothing.
-  """
-  @spec track(Path.t()) :: :ok
-  def track(path) do
-    case Process.get(@key) do
-      nil -> :ok
-      paths -> Process.put(@key, [path | paths])
-    end
-
-    :ok
-  end
-
-  @doc """
-  Run a function, and give its result with each path that it gave to `track/1`
-
-  The paths come in the order of the first read, and each path comes one
-  time. An exception, an exit or a throw of the function goes on to the
-  caller.
-  """
-  @spec tracking((-> result)) :: {result, [Path.t()]} when result: var
-  def tracking(function) do
-    previous = Process.put(@key, [])
-
-    try do
-      result = function.()
-      {result, @key |> Process.get() |> Enum.reverse() |> Enum.uniq()}
-    after
-      if previous == nil, do: Process.delete(@key), else: Process.put(@key, previous)
-    end
-  end
 
   @doc """
   Tell whether a file changed from one snapshot to the next

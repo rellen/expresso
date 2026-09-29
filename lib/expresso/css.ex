@@ -41,11 +41,8 @@ defmodule Expresso.Css do
   @spec inline?(String.t()) :: boolean()
   def inline?(css), do: String.contains?(css, ["{", "\n"])
 
-  # sobelow_skip ["Traversal.FileModule"]
   defp read(path) do
-    Expresso.Watch.Files.track(path)
-
-    case File.read(path) do
+    case Expresso.DeckFile.read(path) do
       {:ok, css} -> {:ok, css}
       {:error, reason} -> {:error, "cannot read the CSS file \"#{path}\": #{reason}"}
     end

@@ -72,16 +72,8 @@ defmodule Expresso.Image do
     end
   end
 
-  # The path comes from the deck, and the person who runs the command wrote the
-  # deck. `Expresso.main/2` already evaluates that deck with `Code.eval_file/1`,
-  # so the deck has the rights of that person. A path of the deck is not the
-  # input of a different user, and the traversal of a directory is the behavior
-  # that the author asks for.
-  # sobelow_skip ["Traversal.FileModule"]
   defp read(path) do
-    Expresso.Watch.Files.track(path)
-
-    case File.read(path) do
+    case Expresso.DeckFile.read(path) do
       {:ok, bytes} ->
         {:ok, bytes}
 

@@ -3,8 +3,8 @@ defmodule Expresso.CommandLine do
   The arguments of the command line of `mix expresso` and of the binary
 
   The two commands take the same arguments: an input path, an optional output
-  path, `--watch`, `--port`, `--help` or `-h`, and `--version`. This module
-  reads them, so the two commands agree.
+  path, `--watch`, `--port`, `--help` or `-h`, and `--version`. `parse/1` reads
+  them, and `run/3` runs them, so the two commands agree.
   """
 
   # The version of `mix.exs`. The binary has no `Mix`, so the value comes in at
@@ -109,6 +109,61 @@ defmodule Expresso.CommandLine do
 
   defp watch(_input, "-", _port), do: {:error, "--watch cannot write to the standard output"}
   defp watch(input, output, port), do: {:watch, input, output, port}
+
+  @doc """
+  Run a command line, and give its exit status
+
+  `Mix.Tasks.Expresso` and `Expresso.BurritoEntryPoint` both call this
+  function. `program` is the name of the command in the usage text, and `help`
+  is the text of `--help`.
+
+    * `--help` or `-h` writes `help` to the standard output, and `--version`
+      writes the version. The exit status is 0.
+    * An error of `parse/1` writes the message and the usage text to the
+      standard error. The exit status is 1.
+    * A command with no input path writes the usage text to the standard
+      error. The exit status is 1.
+    * The paths go to `Expresso.main/2`. The exit status is 0 for `:ok` and for
+      a standard output that closed, and 1 for an error. `Expresso.main/2`
+      writes the message of an error.
+    * `--watch` runs `Expresso.Watch.run/3`, which returns only for an error.
+      The exit status is then 1.
+
+  The function does not catch an exception of the deck. The binary catches
+  it, and Mix writes it for the mix task.
+  """
+  @spec run([String.t()], String.t(), String.t()) :: 0 | 1
+  def run(args, program, help) do
+    case parse(args) do
+      :help ->
+        IO.write(help)
+        0
+
+      :version ->
+        IO.puts(version())
+        0
+
+      {:error, message} ->
+        IO.puts(:stderr, [message, ?\n, usage(program)])
+        1
+
+      {:paths, nil, _output_path} ->
+        IO.puts(:stderr, usage(program))
+        1
+
+      {:paths, input_path, output_path} ->
+        input_path |> Expresso.main(output_path) |> status()
+
+      # The watch mode returns only for an error, and it writes the message.
+      {:watch, input_path, output_path, port} ->
+        {:error, _message} = Expresso.Watch.run(input_path, output_path, port: port)
+        1
+    end
+  end
+
+  defp status(:ok), do: 0
+  defp status({:error, :closed}), do: 0
+  defp status({:error, _message}), do: 1
 
   @doc """
   The usage text of a command with the name `program`

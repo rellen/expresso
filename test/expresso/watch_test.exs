@@ -149,33 +149,6 @@ defmodule Expresso.WatchTest do
   end
 
   describe "Expresso.Watch.Files" do
-    test "tracking/1 gives each path of track/1 one time, in the order of the first read" do
-      assert Files.tracking(fn ->
-               Files.track("a.png")
-               Files.track("b.css")
-               Files.track("a.png")
-               :result
-             end) == {:result, ["a.png", "b.css"]}
-    end
-
-    test "track/1 records nothing outside tracking/1" do
-      assert Files.track("a.png") == :ok
-      assert Files.tracking(fn -> :result end) == {:result, []}
-    end
-
-    test "the readers of images and style sheets record their files", %{tmp_dir: dir} do
-      css = Path.join(dir, "deck.css")
-      File.write!(css, ".slide { color: red; }")
-
-      {{:ok, _css}, read} =
-        Files.tracking(fn ->
-          Expresso.Image.data_uri!("test/fixtures/dot.png")
-          Expresso.Css.resolve(css)
-        end)
-
-      assert read == ["test/fixtures/dot.png", css]
-    end
-
     test "changed?/2 compares the time, the size and two digests", %{tmp_dir: dir} do
       path = Path.join(dir, "deck.exs")
       File.write!(path, "one")
