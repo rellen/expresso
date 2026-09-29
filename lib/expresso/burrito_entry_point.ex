@@ -46,67 +46,18 @@ defmodule Expresso.BurritoEntryPoint do
   @doc """
   Run the command line of the binary, and give its exit status
 
-  The first argument is the input path, and the second argument is the output
-  path. `-` gives the standard input or the standard output. With no argument,
-  the function writes the usage text with the name `program` to the standard
-  error, and the exit status is 1. With `--help` or `-h` in any position, the
-  function writes the help text with the name `program` to the standard output,
-  and the exit status is 0. It then does not read the other arguments.
-  `--version` in any position writes the version of Expresso in the same way.
-  `--watch` runs `Expresso.Watch.run/3`, which returns only for an error, and
-  the exit status is then 1.
-  For a different argument that starts with `-`, and for a third path, the
-  function writes the message and the usage text to the standard error, and the
-  exit status is 1. `Expresso.CommandLine.parse/1` reads the arguments.
-
-  The exit status is 0 when `Expresso.main/2` returns `:ok`, and 1 when it
-  returns an error tuple. `Expresso.main/2` writes the message of an error tuple
-  to the standard error. For an exception, an exit or a throw, the function
-  writes the message to the standard error, and the exit status is 1.
+  `Expresso.CommandLine.run/3` runs the arguments, with the name `program` in
+  the usage text and the help text of the binary. This function also catches
+  an exception, an exit or a throw of the deck. It then writes the message to
+  the standard error, and the exit status is 1.
 
   When the standard output closes before all the HTML is written, as for
-  `| head`, the function writes no message, and the exit status is 0. In the
-  binary, the launcher of Burrito stops the VM first: `Expresso.SignalHandler`
-  tells how.
+  `| head`, the exit status is 0. In the binary, the launcher of Burrito stops
+  the VM first: `Expresso.SignalHandler` tells how.
   """
   @spec run([String.t()], String.t()) :: 0 | 1
-  def run(args, program \\ "expresso")
-
-  def run([], program) do
-    IO.puts(:stderr, CommandLine.usage(program))
-    1
-  end
-
-  def run(args, program) do
-    case CommandLine.parse(args) do
-      :help ->
-        IO.write(help(program))
-        0
-
-      :version ->
-        IO.puts(CommandLine.version())
-        0
-
-      {:error, message} ->
-        IO.puts(:stderr, [message, ?\n, CommandLine.usage(program)])
-        1
-
-      {:paths, input_path, output_path} ->
-        render(input_path, output_path)
-
-      # The watch mode returns only for an error, and it writes the message.
-      {:watch, input_path, output_path, port} ->
-        {:error, _message} = Expresso.Watch.run(input_path, output_path, port: port)
-        1
-    end
-  end
-
-  defp render(input_path, output_path) do
-    case Expresso.main(input_path, output_path) do
-      :ok -> 0
-      {:error, :closed} -> 0
-      {:error, _message} -> 1
-    end
+  def run(args, program \\ "expresso") do
+    CommandLine.run(args, program, help(program))
   catch
     kind, reason ->
       IO.puts(:stderr, Exception.format(kind, reason, __STACKTRACE__))

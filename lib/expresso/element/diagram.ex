@@ -164,12 +164,8 @@ defmodule Expresso.Element.Diagram do
     end)
   end
 
-  # The path comes from the deck, and `Code.eval_file/1` runs the deck.
-  # sobelow_skip ["Traversal.FileModule"]
   defp read(src) do
-    Expresso.Watch.Files.track(src)
-
-    case File.read(src) do
+    case Expresso.DeckFile.read(src) do
       {:ok, bytes} -> bytes
       {:error, reason} -> raise ArgumentError, "cannot read the diagram \"#{src}\": #{reason}"
     end

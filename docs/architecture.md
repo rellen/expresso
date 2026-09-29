@@ -99,13 +99,11 @@ When a step fails, the function writes the message to the standard error and ret
 error tuple. The standard output then holds no text. A failed write of the output file is
 also an error.
 
-The function has a clause for `nil` in front of these steps. `Mix.Tasks.Expresso` reads
-the input path with `Expresso.CommandLine.parse/1`, which gives `nil` for a command with no
-argument. The clause writes the usage text of the mix task to the standard error and
-returns an error tuple.
-`Expresso.BurritoEntryPoint` does not call the function for a command with no argument. It
-writes its own usage text, with the file name of the binary. It also does not call the
-function for a command with `--help` or `-h` in any position. It then writes its help text.
+The function has a clause for `nil` in front of these steps. The clause writes the usage
+text of the mix task to the standard error and returns an error tuple. The two commands do
+not call the function for a command with no argument: `Expresso.CommandLine.run/3` writes
+the usage text with the name of the command, and it also writes the help text for `--help`
+or `-h` in any position.
 
 `Expresso.to_deck/1` accepts three values:
 
@@ -140,29 +138,37 @@ Step 5 is necessary because Floki drops a doctype node. Therefore the renderer c
 write the doctype, and the deck function adds it after step 4. Without the doctype a
 browser uses the quirks mode, and the layout is not correct.
 
-Two entry points call `Expresso.main/2`:
+Two entry points run a command line:
 
 - `Mix.Tasks.Expresso`, for the command `mix expresso <input> [output]`.
 - `Expresso.BurritoEntryPoint`, for the binary that Burrito makes.
 
-`Expresso.CommandLine.parse/1` reads the arguments of both entry points, so the two commands
-agree. It gives `:help` for `--help` or `-h` in any position, and then `:version` for
-`--version` in any position. `Expresso.CommandLine.version/0` gives the text of `--version`,
-from the version of `mix.exs` at compile time. A different argument that starts with `-` is
-an unknown option. The entry point then writes `Unknown option:` and the usage text to the
-standard error, and the exit status is 1. A third path gives `Unexpected argument:` in the
-same way. The argument `-` alone is a path, and `Expresso.main/2` reads it as the standard
-input or the standard output. A path that starts with `-` needs a directory in front of it,
-such as `./-deck.exs`.
+Each entry point calls `Expresso.CommandLine.run/3` with the name of the command and its
+help text, so the two commands agree. That function reads the arguments with
+`Expresso.CommandLine.parse/1`, it runs them, and it gives the exit status. The mix task
+turns the status 1 into `exit({:shutdown, 1})`, and the binary halts the VM with the
+status. The binary also catches an exception of the deck, and it writes the message.
 
-With `--watch`, the function gives `{:watch, input, output, port}`, and each entry point
-calls `Expresso.Watch.run/3` in place of `Expresso.main/2`. "The watch mode" below gives
-the details.
+`Expresso.CommandLine.parse/1` gives `:help` for `--help` or `-h` in any position, and then
+`:version` for `--version` in any position. `Expresso.CommandLine.version/0` gives the text
+of `--version`, from the version of `mix.exs` at compile time. A different argument that
+starts with `-` is an unknown option. `Expresso.CommandLine.run/3` then writes
+`Unknown option:` and the usage text to the standard error, and the exit status is 1. A
+third path gives `Unexpected argument:` in the same way. The argument `-` alone is a path,
+and `Expresso.main/2` reads it as the standard input or the standard output. A path that
+starts with `-` needs a directory in front of it, such as `./-deck.exs`.
+
+The parser is not `OptionParser` of Elixir. That module reads `--` as the end of the
+options, `--no-watch` and `--watch=true` as forms of `--watch`, and `-1` as a path. Each of
+these arguments starts with `-`, so the command gives each one as an unknown option.
+
+With `--watch`, `Expresso.CommandLine.parse/1` gives `{:watch, input, output, port}`, and
+`Expresso.CommandLine.run/3` calls `Expresso.Watch.run/3` in place of `Expresso.main/2`.
+"The watch mode" below gives the details.
 
 A mix task that returns gives the exit status 0. Therefore `Mix.Tasks.Expresso` exits with
-`exit({:shutdown, 1})` for an error tuple, and Mix then gives the exit status 1. For
-`--help` or `-h` in any position, the task writes its `@moduledoc`, which is also the text
-of `mix help expresso`.
+`exit({:shutdown, 1})` for the status 1, and Mix then gives the exit status 1. The help text
+of the task is its `@moduledoc`, which is also the text of `mix help expresso`.
 
 The task does not call `Mix.Tasks.Help.run/1`. That function runs `deps.loadpaths` again,
 and `deps.loadpaths` changes the working directory of the VM for a moment. In `mix test`,
@@ -198,7 +204,7 @@ same step. `--port` gives a different port. The binary takes the same options.
 1. `Expresso.Watch.Server.start/1` starts the web server.
 2. `Expresso.render_file/1` makes the HTML. It gives an error tuple for each failure, and
    it does not raise, so a deck with an error does not stop the watch mode.
-   `Expresso.Watch.Files.tracking/1` records each file that the render reads.
+   `Expresso.DeckFile.tracking/1` records each file that the render reads.
 3. After a render that succeeds, `Expresso.Watch.Server.publish/2` serves the new
    document, and the page reloads. With an output path, the function also writes that
    file.
@@ -212,8 +218,9 @@ The files of the deck are these files:
 
 - The deck file.
 - Each image, diagram and style sheet that the last render read. `Expresso.Image`,
-  `Expresso.Element.Diagram` and `Expresso.Css` give each path to
-  `Expresso.Watch.Files.track/1`. That function records nothing outside the watch mode.
+  `Expresso.Element.Diagram` and `Expresso.Css` read each of them with
+  `Expresso.DeckFile.read/1`, which records the path only inside
+  `Expresso.DeckFile.tracking/1`. The three modules know nothing about the watch mode.
 - The custom templates of `./priv/templates/`. See "The templates".
 
 The watch mode does not see a file that the script of the deck reads by itself, for

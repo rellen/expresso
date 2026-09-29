@@ -122,4 +122,38 @@ defmodule Expresso.CommandLineTest do
                {:error, "Unexpected argument: c"}
     end
   end
+
+  describe "parse/1 and the forms of OptionParser" do
+    test "gives each argument that starts with - as an unknown option" do
+      for arg <- ["-1", "--no-watch", "--watch=true", "--"] do
+        assert CommandLine.parse(["deck.exs", arg]) == {:error, "Unknown option: #{arg}"}
+      end
+    end
+  end
+
+  describe "run/3" do
+    import ExUnit.CaptureIO
+
+    test "gives the exit status 1 when the watch mode stops for a port in use" do
+      {:ok, socket} = :gen_tcp.listen(0, ip: {127, 0, 0, 1})
+      {:ok, port} = :inet.port(socket)
+
+      error =
+        capture_io(:stderr, fn ->
+          assert CommandLine.run(
+                   ["deck.exs", "--watch", "--port", Integer.to_string(port)],
+                   "expresso",
+                   "help"
+                 ) == 1
+        end)
+
+      assert error =~ "Port #{port} is in use."
+      :gen_tcp.close(socket)
+    end
+
+    test "writes the help text that the entry point gives" do
+      assert capture_io(fn -> assert CommandLine.run(["-h"], "expresso", "the help") == 0 end) ==
+               "the help"
+    end
+  end
 end

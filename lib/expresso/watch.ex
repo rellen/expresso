@@ -24,6 +24,7 @@ defmodule Expresso.Watch do
   Ctrl-C.
   """
 
+  alias Expresso.DeckFile
   alias Expresso.Watch.{Files, Server}
 
   # The time between two snapshots of the files, in milliseconds.
@@ -92,7 +93,7 @@ defmodule Expresso.Watch do
   defp render(state) do
     before = Files.snapshot(watched(state.files))
     started = System.monotonic_time(:millisecond)
-    {result, read} = Files.tracking(fn -> evaluate(state.input) end)
+    {result, read} = DeckFile.tracking(fn -> evaluate(state.input) end)
     milliseconds = System.monotonic_time(:millisecond) - started
 
     state =
