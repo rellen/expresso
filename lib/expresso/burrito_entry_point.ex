@@ -2,13 +2,15 @@ defmodule Expresso.BurritoEntryPoint do
   @moduledoc """
   The entry point of the binary that Burrito makes
 
-  It reads the arguments of the command line and calls `Expresso.main/2`. It does
-  this operation in a Burrito binary only.
+  In a Burrito binary, `start/2` runs the command line with `run/2`, and then
+  it halts the VM with the exit status. `run/2` calls
+  `Expresso.CommandLine.run/3`, so the binary and `mix expresso` take the same
+  arguments. Outside a Burrito binary, the module only starts the application.
 
-  The launcher of Burrito starts the VM with `-s elixir start_cli`. After the boot,
-  the CLI of Elixir runs the first argument as a script, and then it halts the VM.
-  Therefore `start/2` runs the command before it returns, and it halts the VM with
-  the exit status of `run/2`. The CLI of Elixir then does not start.
+  The launcher of Burrito starts the VM with `-s elixir start_cli`. After the
+  boot, the CLI of Elixir runs the first argument as a script, and then it
+  halts the VM. Therefore `start/2` runs the command before it returns, and the
+  CLI of Elixir does not start.
   """
 
   use Application
@@ -35,7 +37,7 @@ defmodule Expresso.BurritoEntryPoint do
   end
 
   # The file name of the binary. The launcher of Burrito gives the path of the
-  # binary, so the usage text names the file that the person ran.
+  # binary, so the usage text names the file that the user ran.
   defp program do
     case Burrito.Util.Args.get_bin_path() do
       :not_in_burrito -> "expresso"
@@ -44,11 +46,11 @@ defmodule Expresso.BurritoEntryPoint do
   end
 
   @doc """
-  Run the command line of the binary, and give its exit status
+  Run the command line of the binary, and return its exit status
 
-  `Expresso.CommandLine.run/3` runs the arguments, with the name `program` in
-  the usage text and the help text of the binary. This function also catches
-  an exception, an exit or a throw of the deck. It then writes the message to
+  `Expresso.CommandLine.run/3` runs the arguments, with `program` in the usage
+  text and with the help text of the binary. This function also catches an
+  exception, an exit or a throw from the deck. It then writes the message to
   the standard error, and the exit status is 1.
 
   When the standard output closes before all the HTML is written, as for
@@ -80,7 +82,7 @@ defmodule Expresso.BurritoEntryPoint do
                          again after each change to a file of the deck. The page
                          reloads on the same step. With [output], also write the
                          file after each render. Stop with Ctrl-C.
-          --port <port>  The port of --watch. The default is 4100.
+          --port <port>  The port for --watch. The default is 4100.
       -h, --help         Show this help.
           --version      Show the version of Expresso.
 

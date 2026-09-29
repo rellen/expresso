@@ -123,8 +123,11 @@ defmodule Expresso.CommandLineTest do
     end
   end
 
-  describe "parse/1 and the forms of OptionParser" do
-    test "gives each argument that starts with - as an unknown option" do
+  # `OptionParser` reads these four arguments in a different way, so these
+  # tests keep the rule of the command: each argument that starts with `-` is
+  # an option. See "The two commands" in `docs/architecture.md`.
+  describe "parse/1 with the argument forms of OptionParser" do
+    test "gives each form as an unknown option" do
       for arg <- ["-1", "--no-watch", "--watch=true", "--"] do
         assert CommandLine.parse(["deck.exs", arg]) == {:error, "Unknown option: #{arg}"}
       end
@@ -134,7 +137,7 @@ defmodule Expresso.CommandLineTest do
   describe "run/3" do
     import ExUnit.CaptureIO
 
-    test "gives the exit status 1 when the watch mode stops for a port in use" do
+    test "returns the exit status 1 when the watch mode stops for a port in use" do
       {:ok, socket} = :gen_tcp.listen(0, ip: {127, 0, 0, 1})
       {:ok, port} = :inet.port(socket)
 

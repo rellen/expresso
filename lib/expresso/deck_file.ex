@@ -1,19 +1,18 @@
 defmodule Expresso.DeckFile do
   @moduledoc """
-  The reader of the files that a deck names
+  Reads the files that a deck names, and records their paths for the watch mode
 
-  A deck can name files other than the deck file: an image, a diagram and a
-  style sheet. `Expresso.Image`, `Expresso.Element.Diagram` and `Expresso.Css`
-  read each of them with `read/1`, and each module makes its own message for an
-  error.
+  A deck can name an image, a diagram or a style sheet. `Expresso.Image`,
+  `Expresso.Element.Diagram` and `Expresso.Css` read each of these files with
+  `read/1`, and each module writes its own error message.
 
-  `tracking/1` runs a function, and it gives each path that `read/1` read in
-  that function. `Expresso.Watch` renders the deck in `tracking/1`, so it knows
-  the files of the deck. Outside `tracking/1`, `read/1` records nothing, so the
-  three modules know nothing about the watch mode.
+  `Expresso.Watch` renders a deck inside `track/1`. That function returns each
+  path that `read/1` read during the render, so the watch mode knows which
+  files to watch. Outside `track/1`, `read/1` records nothing. Thus the three
+  modules need no code for the watch mode.
 
-  The paths are in the dictionary of the process that renders, so two renders
-  in two processes do not mix their paths.
+  `track/1` keeps the paths in the process dictionary. Two renders in two
+  processes therefore keep their paths apart.
   """
 
   @key {__MODULE__, :paths}
@@ -22,29 +21,28 @@ defmodule Expresso.DeckFile do
   Read a file that a deck names
 
   The path is relative to the working directory of the command. The function
-  gives the result of `File.read/1`.
+  returns the result of `File.read/1`.
   """
-  # The path comes from the deck, and the person who runs the command wrote the
-  # deck. `Expresso.main/2` already evaluates that deck with `Code.eval_file/1`,
-  # so the deck has the rights of that person. A path of the deck is not the
-  # input of a different user, and the traversal of a directory is the behavior
-  # that the author asks for.
-  # sobelow_skip ["Traversal.FileModule"]
   @spec read(Path.t()) :: {:ok, binary()} | {:error, File.posix()}
+  # The person who runs the command wrote the deck, and `Expresso.main/2`
+  # evaluates the deck with `Code.eval_file/1`. The deck thus has the rights of
+  # that person. A path in the deck is not input from a different user, and the
+  # author can name a file in any directory.
+  # sobelow_skip ["Traversal.FileModule"]
   def read(path) do
     record(path)
     File.read(path)
   end
 
   @doc """
-  Run a function, and give its result with each path that `read/1` read in it
+  Run a function, and return its result with each path that `read/1` read
 
-  The paths come in the order of the first read, and each path comes one
-  time. A read that fails counts too, because the file can appear later. An
-  exception, an exit or a throw of the function goes on to the caller.
+  The paths are in the order of their first read, and each path is in the list
+  one time. A read that failed is in the list too, because the file can appear
+  later. An exception, an exit or a throw goes on to the caller.
   """
-  @spec tracking((-> result)) :: {result, [Path.t()]} when result: var
-  def tracking(function) do
+  @spec track((-> result)) :: {result, [Path.t()]} when result: var
+  def track(function) do
     previous = Process.put(@key, [])
 
     try do
