@@ -4,8 +4,10 @@ This document gives the result of an investigation on 2026-09-29. The question i
 how can the presenter use less TypeScript, and how can more of its logic go into Elixir?
 
 The investigation read each module of `assets/src/`, the renderer and the style sheet. It
-did not build a prototype. The line counts below come from the repository at commit
-`0b22e7f`. The estimates of the result are estimates, and the text marks each one.
+did not build a prototype. A second investigation on the same day examined the command
+variant in more depth, and the section "The interpreter" gives its result. The line counts
+below come from the repository at commit `0b22e7f`. The estimates of the result are
+estimates, and the text marks each one.
 
 ## The answer
 
@@ -25,8 +27,11 @@ clock, the second window and the transitions. The decisions of `docs/typescript.
 change.
 
 A variant of part 2 takes the idea of the JS commands of Phoenix LiveView. The section
-"The command variant" gives it. Gleam, Elixir in WebAssembly and a server do not agree
-with the constraints, and the section "The options that do not agree" tells why.
+"The command variant" gives it. The section "The interpreter" takes the variant further:
+Elixir writes a small program for each deck, and a general interpreter in TypeScript runs
+it. The tests of the behavior then go to Elixir. Gleam, Elixir in WebAssembly and a server
+do not agree with the constraints, and the section "The options that do not agree" tells
+why.
 
 ## The presenter today
 
@@ -250,7 +255,207 @@ The interpreter in TypeScript knows approximately ten commands:
   and a browser test is slower.
 - **The document holds the state.** The object `State` goes away, and the attributes of
   the `body` are the only copy of the position and the flags. LiveView does the same, but
-  a unit test of a state in the DOM is more difficult than a unit test of an object.
+  a unit test of a state in the DOM is more difficult than a unit test of an object. The
+  section "The interpreter" replaces this design with an object for the state.
+
+## The interpreter
+
+A second investigation on the same day examined the command variant in more depth. It
+compared each rule of `state.ts` and `main.ts` with the command model. It did not build a
+prototype, so the result is a design on paper. Four findings change the design above.
+
+### 1. Elixir writes a program for each deck
+
+In the design above, Elixir writes one table of keys. A better design treats Elixir as a
+compiler. At render time, Elixir writes a small program for this deck into the document.
+The TypeScript is then a general interpreter, and it runs the program that the document
+holds.
+
+The program is specific to one deck, so Elixir does most of the arithmetic, and the
+program holds the results as numbers:
+
+| Today, in TypeScript | In the program of a deck |
+| --- | --- |
+| `ArrowDown` in the overview adds `columns(slides)` | `["select", 4]`, because the deck has 4 columns |
+| `End` goes to step 1 of the last slide | `["goto", 37]` |
+| `Home` goes to the first slide | `["goto", 0]` |
+| A typed number and `Enter` find the slide | A table from each slide to its index, in the JSON. The built-in function `go_typed` reads it. |
+
+This makes the rule "no condition and no variable" possible. The browser seldom calculates
+a value, because Elixir calculated it for the deck.
+
+### 2. An object holds the state
+
+This finding replaces the design above, where the attributes of the `body` hold the state.
+LiveView can keep a state in the DOM, because the server holds the true state. A deck
+opens from the disk and has no server. Three parts of the presenter also need named
+fields:
+
+- The messages between the two windows send the position and the black screen.
+- The fragment `#4.2` of the address holds the position.
+- A test must compare the state before an event with the state after it.
+
+Therefore Elixir declares the fields of the state, the fields that go to the other window,
+and the attribute that shows each field:
+
+```elixir
+state index: 0, view: :present, blank: false, help: false, digits: "",
+      overview: false, selected: 1, progress: true, every: false
+
+sync [:index, :blank]
+
+project body: [view: "data-view", blank: "data-blank", every: "data-every"],
+        vars: ["--fraction": {:entry, :fraction}]
+```
+
+`{:entry, :fraction}` is a value of the current entry of the list of steps. The style
+sheet then gives the progress bar a width of `calc(var(--fraction) * 100%)`.
+
+For each event, the interpreter does these steps:
+
+1. It finds the first mode whose condition the state matches.
+2. It finds the commands of the event in that mode.
+3. It applies the commands to the state, one after the other.
+4. It compares the new state with the old state. With no change, it stops.
+5. It writes each changed field to the document, in a transition when the rule of the
+   transitions gives one.
+6. It calls `preventDefault`.
+
+Step 4 keeps a rule of the handout view. A key that changes nothing goes to the browser, so
+the arrow keys still scroll the pages.
+
+### 3. Each rule of today fits the model
+
+The rules need three mechanisms:
+
+- **The condition of a mode.** A condition compares fields of the state with values. The
+  first mode that matches is the mode of the event.
+- **Commands that stop at the ends of the deck.** A move past the first step or the last
+  step gives no change.
+- **Approximately six built-in functions in TypeScript.** They do the work that needs the
+  clock, a second window or the address.
+
+This definition gives the present view:
+
+```elixir
+mode :present, when: [view: :present], each: clear(:digits) do
+  key ~w(j ArrowRight ArrowDown PageDown Space), step(+1), "Next step"
+  key ~w(k ArrowLeft ArrowUp PageUp), step(-1), "Previous step"
+  key ~w(0 1 2 3 4 5 6 7 8 9), digit(), "Type a slide number", each: false
+  key "Enter", go_typed(), "Step 1 of the slide that you typed"
+  key "End", goto(last_slide()), "Step 1 of the last slide"
+  click :left_third, step(-1), "Previous step"
+  swipe :right, step(-1), "Previous step"
+end
+```
+
+`last_slide()` returns the index of step 1 of the last slide. Elixir calculates it at
+render time for each deck. The renderer writes this JSON from the definitions:
+
+```json
+{"modes": [
+  {"when": {"blank": true}, "any": [["set", "blank", false]]},
+  {"when": {"help": true}, "any": [["set", "help", false]]},
+  {"when": {"overview": true},
+   "keys": {"ArrowDown": [["select", 4]],
+            "Enter": [["goto_slide", "selected"], ["set", "overview", false]]}},
+  {"when": {"view": "present"},
+   "keys": {"j": [["clear", "digits"], ["step", 1]],
+            "End": [["clear", "digits"], ["goto", 37]]},
+   "click": {"left_third": [["clear", "digits"], ["step", -1]]},
+   "other": [["clear", "digits"]]}
+]}
+```
+
+The table below gives each rule of today and its place in the model.
+
+| The rule of today | The model |
+| --- | --- |
+| Each key or click closes a black screen or the list of keys, and it does no more. | The modes `when: [blank: true]` and `when: [help: true]` come first, and each has an `any` list. |
+| The overview has its own keys, and `?` operates in it. | A mode `when: [overview: true]` comes after the mode of the list of keys. |
+| `j` and `k` move one step, and do nothing at the ends of the deck. | `step(+1)` and `step(-1)` stop at the ends. The state does not change, so the key goes to the browser. |
+| Each key except a digit removes the typed digits. | Elixir adds `clear(:digits)` to each binding of the mode, and it adds an `other` list for a key with no binding. |
+| `Enter` with no digits goes to the browser. | The built-in function `go_typed` returns the same state. |
+| The overview opens with the current slide selected. | `assign(:selected, {:entry, :slide})` |
+| `Enter` and a click on a page of the overview go to step 1 of the slide. | `[goto_slide(:selected), set(:overview, false)]`. The click version is an attribute on each page of the overview, as `phx-click` is. |
+| A click on the left third goes back, and a swipe moves one step. | The events `click :left_third` and `swipe :left`. The distances are parameters of the event, and not conditions. |
+| A click with a modifier, on a link or at the end of a selection goes to the browser. | A fixed filter in the source of the click events. |
+| `s`, `f` and `r` | The built-in functions `open_speaker`, `fullscreen` and `reset_timer`. |
+| The fragment of the address, and the messages between the windows | Built-in functions on the declared fields. The protocol of `stamp` and `accepts` does not change. |
+| The transitions | A part of step 5, with the kind of each slide from the list of steps. |
+| The speaker view adds ", black screen" to the position. | The style sheet: `body[data-blank] #speaker-position::after { content: ", black screen" }`. |
+| The speaker view marks the current page and the next page. | The renderer writes `data-index` on each page. A general `mark` projection writes `data-speaker="current"` on the page whose `data-index` is `index`, and `next` on the page after it. |
+
+The comparison also found an inconsistency in the code today. The keys `s` and `f` remove
+the typed digits, but the key `r` does not. In the program, the JSON shows the commands of
+each key, so the maintainer can see this and decide the correct behavior.
+
+The subtle parts are the digits and the rule for `preventDefault`. Step 2 of the prototype
+below tests them first.
+
+### 4. Two interpreters and one set of tests
+
+Elixir also gets a reference interpreter. It applies the same commands to a map, and it
+needs approximately 150 lines of pure functions. This is an estimate. The tests then
+change as follows:
+
+1. The tests of the behavior go to ExUnit and StreamData. Most of the 217 TypeScript tests
+   examine `next`, and each becomes a test of the program in Elixir.
+2. Elixir writes fixtures: random sequences of events, and the state that each sequence
+   gives.
+3. `npm test` runs the TypeScript interpreter on the same fixtures. A difference between
+   the two interpreters makes the test fail.
+4. The browser tests of `test/e2e/` do not change.
+
+The program and the interpreter are always in the same HTML file. Therefore the format
+between them needs no version: each document holds the interpreter that agrees with its
+program.
+
+### What moves
+
+These numbers are estimates. The prototype measures them.
+
+| Part | Today | After |
+| --- | --- | --- |
+| TypeScript | 1398 lines, all specific to the presenter | 400 to 550 lines of general code. It holds the state, approximately 12 commands, the modes, the sources of events and the projections. It also holds the built-in functions for the clock, the windows and the transitions. |
+| Elixir | No part of this logic | The definition of the presenter (approximately 200 lines), the compiler of the program (approximately 200) and the reference interpreter (approximately 150) |
+| The tests of the behavior | 217 tests for `node --test` | Most in ExUnit, and a TypeScript suite that compares the two interpreters with the fixtures |
+
+The TypeScript estimate is smaller than the estimate of the command variant above. The
+projections and the program for each deck also remove most of `dom.ts`.
+
+### The new risks
+
+- **Two interpreters must agree.** The fixtures keep them equal. That work stays small only
+  while the set of commands stays small. This is one more reason for the rule "no
+  condition and no variable".
+- **The behavior is data, and data is more difficult to debug.** Add a parameter `?trace`
+  to the address. With it, the interpreter writes each list of commands to the console,
+  with the state before and after it.
+- **A command on an element can break the print.** An element command can show content
+  outside the model of the steps. The handout view and the print then do not show that
+  content, and `docs/overlays.md` says that the handout shows each step. Two rules can
+  prevent this:
+  - An element command can only go to a different slide or step.
+  - An element declares each state that a command can give it, and the print shows each
+    declared state.
+
+### The prototype
+
+Do the steps in this sequence. Each step gives a measurement, and the work can stop after
+each step:
+
+1. **The list of the steps.** This is part 1 of the proposal. The other steps need it, and
+   it has value alone.
+2. **The model in Elixir only.** Write the definition of the presenter as plain data, and
+   the reference interpreter. Move the approximately 95 tests of `state.test.ts` and
+   `state_property.test.ts` to ExUnit. The browser does not change. This step costs the
+   least, and it answers the main question: a rule that does not fit the model shows here.
+3. **The interpreter in TypeScript.** The fixtures from Elixir drive its tests. It replaces
+   `next`, `BINDINGS` and `help.ts`, and the browser tests do not change. Measure the
+   bytes and the lines.
+4. **The Spark DSL and its verifiers.** Then add the first public feature: `goto(slide: n)`
+   on an element.
 
 ## The options that do not agree
 
@@ -277,9 +482,8 @@ Do each part in its own pull request, in this sequence:
 
 1. Part 1, the list of the steps. Part 2 and the command variant need it.
 2. Part 3, the parts that do not change. It is small and it needs no other part.
-3. Part 2, or the command variant. Try the command variant on the present view only
-   first. Measure the lines, the size of a document and the number of tests that move,
-   and then decide.
+3. Part 2, or the interpreter. For the interpreter, do steps 2 to 4 of "The prototype".
+   Step 2 changes no code in the browser, and it shows if each rule fits the model.
 4. Part 4, if the maintainer wants it.
 
 ## The decisions
@@ -289,14 +493,20 @@ The maintainer decides each of these. None of them is settled.
 1. Does Elixir own the table of keys?
 2. Which method keeps the actions equal: (a), the check at load, or (b), the generated
    file?
-3. Part 2 or the command variant?
+3. Part 2, the command variant or the interpreter?
 4. In the command variant, what holds the state? The attributes of the `body` can hold
-   it. Or TypeScript can keep the object `State` and write the attributes from it.
+   it. Or TypeScript can keep the object `State` and write the attributes from it. The
+   section "The interpreter" recommends the object.
 5. In the command variant, is the set of commands closed, or can an extension add a
    command?
 6. In the command variant, can a deck or an element hold a command? If yes, the commands
    become a public API.
 7. Does the GIF recorder move to Elixir?
+8. Is the definition of the presenter a Spark DSL or a plain module? A plain module is
+   sufficient for step 2 of the prototype, and the DSL can come at step 4.
+9. Can an element command only go to a slide or a step? Or can an element declare its
+   own states, which the print then shows?
+10. Does the key `r` remove the typed digits, as `s` and `f` do?
 
 ## The sources
 
