@@ -1,20 +1,22 @@
 defmodule Expresso.Watch.Host do
   @moduledoc """
-  Refuses a request to the watch server that names a different host
+  Refuses a request for a host other than 127.0.0.1 or localhost
 
   The watch server listens on 127.0.0.1 only, so no other computer can
-  connect. A web page in the browser of the user can still try DNS
-  rebinding. The host name of that page first points to its own server, and
-  then to 127.0.0.1. The browser then sends the requests of the page to the
-  watch server, and the page can read the deck.
+  connect. But a web page that the user opens can try DNS rebinding:
 
-  Each of those requests names the host of the page in its `Host` header. This
-  module passes a request only for the host `127.0.0.1` or `localhost`, with
-  any port. For each other request, and for a request with no `Host` header,
-  the server answers with the status 403.
+  1. The page's host name points to the page's own server.
+  2. The host name then changes to point to 127.0.0.1.
+  3. The browser now sends the page's requests to the watch server, and the
+     page can read the deck.
 
-  `Expresso.Watch.Server` gives this module to `:httpd` in front of the other
-  modules, and `:httpd` calls `do/1` for each request.
+  Each such request still has the page's host name in its `Host` header. This
+  module passes a request only when that header is `127.0.0.1` or
+  `localhost`, with any port. The server answers each other request, and a
+  request with no `Host` header, with the status 403.
+
+  `Expresso.Watch.Server` puts this module first in the `:httpd` module list,
+  and `:httpd` calls `do/1` for each request.
   """
 
   require Record
@@ -29,8 +31,7 @@ defmodule Expresso.Watch.Host do
   Pass a request with an allowed `Host` header to the next module
 
   `:httpd` calls this function with its `mod` record. The function returns
-  `{:proceed, data}` for an allowed host, and a response with the status 403
-  for each other request.
+  `{:proceed, data}` for an allowed host, and a 403 response otherwise.
   """
   @spec unquote(:do)(tuple()) :: {:proceed, list()} | {:break, [{:response, {403, charlist()}}]}
   def unquote(:do)(request) do
@@ -44,7 +45,7 @@ defmodule Expresso.Watch.Host do
   @doc """
   Tell whether the value of a `Host` header names this computer
 
-  The port does not count, because a tunnel can give the server a different
+  The port is not part of the check, because a tunnel can use a different
   port.
 
       iex> Expresso.Watch.Host.allowed?("127.0.0.1:4100")
