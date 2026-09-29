@@ -28,7 +28,7 @@ mix deps.get
 ```
 
 `flake.nix` pins `nixpkgs` to one commit, `b6c98e9e6633`. This commit is the release
-`nixpkgs-26.11pre1078010` of the channel `nixpkgs-unstable`, of 2026-09-22. It gives
+`nixpkgs-26.11pre1078010` of the channel `nixpkgs-unstable`, from 2026-09-22. It gives
 Erlang/OTP 29.1, Elixir 1.20.4, Node 24.20.0 and Zig 0.16.0 on Linux and on macOS, which
 are the versions of `.tool-versions`. `nix flake update` does not move the pin.
 
@@ -52,7 +52,7 @@ A remote container has no Elixir, and it has no Nix. The hook
 `.claude/hooks/session-start.sh` installs a toolchain at the start of each remote session.
 The hook does nothing on your machine, where the Nix shell gives the tools.
 
-The hook does these operations:
+The hook does these steps:
 
 1. Download the Erlang build for Ubuntu 24.04 from `builds.hex.pm`, and put it in
    `/opt/otp`. The archive holds dialyzer, which `mix check` needs. `setup-beam` reads the
@@ -107,15 +107,14 @@ mix test --only release        # the tests of the binary, see "The release tests
 
 Each command above passes, and `mix check` passes as a whole. `mix doctor` passes with a
 doc coverage, a spec coverage and a moduledoc coverage of 100 percent. Doctor reads the
-source and not the compiled
-modules, so the functions that `use Spark.Dsl` and `use Temple.Component` write do not
-count. Each public function that a person writes needs a `@doc` and a `@spec`, and each
-struct needs a `@type t`.
+source and not the compiled modules, so the functions that `use Spark.Dsl` and
+`use Temple.Component` write do not count. Each public function that you write needs a
+`@doc` and a `@spec`, and each struct needs a `@type t`.
 
 Each result above comes from Erlang/OTP 29.1, Elixir 1.20.4 and Zig 0.16.0, which
 `.tool-versions` gives. The Nix shell, a remote session and the workflow each give these
-versions.
-Therefore a result in a session is a result for each person and for the workflow.
+versions. Therefore a check that passes in a session also passes on your machine and in the
+workflow.
 
 `mix check` also runs the browser tests and the release tests. Before the release tests,
 it makes the binary for the target of the computer: `macos_arm`, `macos_x86`, `linux_x86`
@@ -155,7 +154,7 @@ parentheses after `check all`.
 ### The browser tests
 
 The tests of `test/e2e/` render a deck to an HTML file, open the file in Chromium, and
-operate the presenter as a person does. They press keys, click, tap, swipe, read computed
+operate the presenter as a user does. They press keys, click, tap, swipe, read computed
 styles, reload the page, open the speaker view in a second window, and count the pages of a
 PDF. Playwright has no swipe, so a script in the page sends the touch events. They find the
 defects that the unit tests of `assets/test/` cannot find, because those tests use no CSS
@@ -185,7 +184,7 @@ library of the headless browser, so the workflow does not use `--with-deps`.
 
 ### The release tests
 
-The tests of `test/release/` run the binary that Burrito makes, as a person does. They read
+The tests of `test/release/` run the binary that Burrito makes, as a user does. They read
 the exit status, the standard output and the output file. They find the defects that the
 unit tests cannot find, because those tests do not start a binary.
 
@@ -203,7 +202,7 @@ replaces an earlier release, because `mix release` otherwise asks a question.
 In a remote session, the first build takes approximately five minutes, and a build after it
 takes approximately one minute. The tests take less than 15 seconds.
 
-The tests run the binary with `timeout` of GNU coreutils. A binary that does not halt then
+The tests run the binary with `timeout` from GNU coreutils. A binary that does not halt then
 gives the exit status 124, and the run of the tests does not stop. Linux gives `timeout`,
 and `shell.nix` gives coreutils, also on macOS. Homebrew gives the command as `gtimeout`,
 and the tests accept both names.
@@ -260,12 +259,13 @@ The Linux jobs run in parallel, so the slowest of them gives their time:
   Neither job publishes the binary. `.github/actions/setup-zig` installs Zig, as "Zig in
   the workflow" below tells.
 - `macos`: five tools of `mix check` on an arm64 runner with macOS. It makes the binary for
-  `macos_arm`. Homebrew gives `xz`, and GNU coreutils of Homebrew gives `gtimeout`. It
-  starts only when each Linux job succeeded.
+  `macos_arm`. Homebrew gives `xz`, and the Homebrew package of GNU coreutils gives
+  `gtimeout`. The job starts only when each Linux job succeeded.
 
 Together they run each tool of `mix check`, the two npm commands, the browser tests and
 the release tests. They make and test the binary for `linux_x86`, `linux_arm` and
 `macos_arm`. No job makes the binary for `macos_x86`.
+
 The Linux jobs do not run `mix check`, because that command runs the tools one after the
 other in one job. The job `macos` runs only the tools that can give a different result on a
 Mac:
@@ -361,7 +361,7 @@ runs `mix hex.audit` on `main` each day, at 08:07 UTC. GitHub sends an email for
 scheduled run to the person who last changed the schedule. The workflow reads the versions
 of Erlang and Elixir from `.tool-versions`, so it adds no place for a version.
 
-Until September 2026, the project used `mix deps.audit` of the package `mix_audit`. Its
+Until September 2026, the project used `mix deps.audit` from the package `mix_audit`. Its
 advisory source did not contain each advisory. Two times in that month, `mix deps.get`
 reported advisories for mint, and `mix deps.audit` gave "No vulnerabilities found" for the
 same lockfile. `mix hex.audit` reported the second group, so the project removed
@@ -395,10 +395,10 @@ GitHub gave a warning for each job that used it.
    less than 500 KB/s for 20 seconds, try the next mirror.
 3. Make sure that the SHA-256 of the archive agrees with the sum in the script. When a
    mirror gives a different archive, try the next mirror.
-4. Try ziglang.org only when each mirror fails. This download has no limit of speed.
+4. Try ziglang.org only when each mirror fails. This download has no speed limit.
 
 In the first run of the workflow, one mirror took 5 minutes for the 55 MB of Zig, before
-the limit of speed. Another mirror took 21 seconds.
+the speed limit. Another mirror took 21 seconds.
 
 The script holds the SHA-256 of Zig 0.16.0 for Linux and macOS, on x86_64 and on aarch64.
 After a change to the version of Zig, add the new sums from
@@ -458,7 +458,7 @@ the Chromium of the container, and that Chromium can be older than the new versi
 - `assets/src/main.ts` — the entry, which esbuild bundles.
 - `assets/test/state.test.ts` — the example tests of the state.
 - `assets/test/state_property.test.ts` and `assets/test/speaker_property.test.ts` — the
-  property tests of the state and of the texts of the speaker view.
+  property tests of the state and of the speaker view texts.
 - `assets/test/property.ts` — the generators of the property tests, and `RUNS`.
 - `assets/test/nth.ts` — the item at an index, for the tests.
 - `assets/tsconfig.json` — the options of the type check.
@@ -516,9 +516,9 @@ entity or an option of the DSL, run `mix spark.formatter --extensions Expresso.E
 to make the list again. The task needs the `sourceror` package, which is a development
 dependency. The formatter removes no parentheses, so write a new call without them.
 
-Sobelow gives a warning for `Phoenix.HTML.raw/1`. Put a `# sobelow_skip` comment above the
-function when the input is safe. `Expresso.main/2` and `Expresso.Renderer.render/1` show
-this pattern.
+Sobelow gives a warning for `Phoenix.HTML.raw/1`. When the input is safe, put a
+`# sobelow_skip` comment above the function, with the reason in a comment above it.
+`Expresso.Renderer.render/1` and `Expresso.Element.Diagram.render/1` show this pattern.
 
 Prettier formats the files in `assets/`. `package.json` pins the version, and
 `npm install` gives the command. Run `npm run format`, which is not one of the checks.
@@ -580,8 +580,8 @@ mix expresso examples/demo.exs /tmp/demo.html
 mix expresso examples/dsl_deck.exs /tmp/dsl.html
 ```
 
-Give `--watch` to render the deck again after each change, and to reload the page. Then
-open `http://127.0.0.1:4100/`:
+With `--watch`, the task renders the deck again after each change, and the page reloads.
+Open `http://127.0.0.1:4100/`:
 
 ```sh
 mix expresso examples/dsl_deck.exs --watch
@@ -646,4 +646,4 @@ shows the site of the last push to `main`. `mix.exs` gives ExDoc the list of the
 and their groups.
 
 - `docs/architecture.md` — how the code makes an HTML document from a deck.
-- `docs/overlays.md` — the design for overlays, and its open decisions.
+- `docs/overlays.md` — the design for overlays, and its decisions.
