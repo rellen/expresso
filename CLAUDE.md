@@ -185,3 +185,41 @@ are `struct`, `macro`, `dependency`, `lockfile`, `compile` and `release`.
 - Write no more than six sentences in a paragraph.
 - Write about one topic in one paragraph.
 - Use a vertical list when the material is complex.
+
+### Mannered prose
+
+Mannered prose puts a metaphor or a flourish where a direct statement can go. The reader
+must then find the meaning of the phrase, and the metaphor can bring a meaning that the
+writer did not intend.
+
+Say what you mean. When a literal phrase is available, use it.
+
+| Do not write | Write |
+| --- | --- |
+| a dial worth turning | a parameter to change |
+| this check earns its keep | this check finds real defects |
+| the watch mode sits on top of the renderer | the watch mode calls the renderer |
+| `parse/1` gives a tuple | `parse/1` returns a tuple |
+| the time of the change of the file | the time when the file changed |
+| a person, the person who runs the command | you, the user, the presenter |
+
+- Use `returns` for the result of a function. Use `gives` only for a thing that the user or
+  a tool supplies, such as an option.
+- Do not put an `of` phrase after an `of` phrase. Change the second phrase to a verb or to
+  a possessive.
+- Name the actor. Write `you` in an instruction, `the user` for a user of Expresso, and
+  `the presenter` for the user who gives the presentation.
+
+### Formatting
+
+Write for two readers: a developer who uses Expresso to make a deck, and a developer who
+works on the code of Expresso. Put the fact that the reader needs first.
+
+- Start a `@moduledoc`, a `@doc` or a section with one sentence that tells its purpose.
+- Use a numbered list for steps that occur in sequence.
+- Use a bulleted list for three or more items that have no sequence.
+- Use a table to compare items on the same attributes.
+- Use a code block for a command or an example that the reader can copy.
+- Put a file name, a command, an option and an identifier in backticks.
+- Use a heading for each topic that a reader can look for.
+- Use bold text only for a term at the point where you define it.
