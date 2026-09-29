@@ -260,8 +260,18 @@ The cost is a delay of 500 milliseconds or less before each render and each relo
 
 The server is `:httpd` from the `inets` application of OTP. `mix.exs` puts `:inets` in
 `extra_applications`, so the release of the binary holds it. The server listens on
-127.0.0.1 only, so a different computer cannot read the deck. It serves a private
-directory in the temporary directory of the system, and that directory holds two files:
+127.0.0.1 only, so a different computer cannot read the deck.
+
+A web page in the browser of the user can still try DNS rebinding: its host name first
+points to its own server, and then to 127.0.0.1. The requests of that page then go to the
+watch server, but they name the host of the page in the `Host` header.
+`Expresso.Watch.Host` runs in front of the other modules of `:httpd`. It passes a request
+only for `127.0.0.1` or `localhost`, with any port, and it answers each other request with
+the status 403. The port does not count, because a tunnel can give the server a different
+port.
+
+The server serves a private directory in the temporary directory of the system, and that
+directory holds two files:
 
 - `index.html` is the last good document, with the reload script in front of the last
   `</body>`.
