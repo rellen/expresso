@@ -515,8 +515,9 @@ The renderer writes these attributes:
 - Each element with an overlay and an effect that is not a fade gets a `data-effect`
   attribute, such as `data-effect="fly-up"`. The section "Effects" gives the rules.
 
-The JavaScript code reads `data-max-step`. Without this attribute the code cannot know when
-a slide reaches its last step, and it cannot move to the next slide.
+The list of the steps also gives the maximum step number of each slide, and the JavaScript
+code reads the list. The attribute stays for the style sheet of a theme and for the tests.
+The section "The list of the steps" of `docs/architecture.md` gives the list.
 
 A rule for step 3 looks like this:
 
@@ -855,16 +856,15 @@ from the imperative API has no `max_step` in its metadata, and its maximum is 1.
 
 ### The JavaScript code
 
-The presenter is in `assets/src/`. `state.ts` holds the number of the current slide and
-the number of the current step, and the first of each is 1. `dom.ts` shows and hides a
-slide with the inline `style.display` property, and it writes the step number into the
-`data-step` attribute of the current `section`. Each rule below has a test in
+The presenter is in `assets/src/`. `state.ts` holds the index of the current step in the
+list of the steps, which gives each step of each slide in sequence. `dom.ts` shows and
+hides a slide with the inline `style.display` property, and it writes the step number into
+the `data-step` attribute of the current `section`. Each rule below has a test in
 `assets/test/state.test.ts`.
 
 The rules are:
 
-- The limits hold the maximum step number of each slide. `dom.ts` reads each from the
-  `data-max-step` attribute of the `section`.
+- `Expresso.Steps` makes the list, and the renderer writes it into the document as JSON.
 - `j` moves to the next step first. It moves to the first step of the next slide only
   after the last step.
 - `k` moves to the previous step first. At the first step, it moves to the last step of

@@ -10,7 +10,7 @@ const page = fakePage([1, 1, 1, 1], {
   search: "?speaker&duration=10",
   hash: "#1.1",
   opener: fakeWindow(),
-  duration: "20",
+  duration: 20,
 });
 
 // The clock of the timer starts at 0, and each test moves it by hand.

@@ -3,11 +3,13 @@
 // `state.ts` does not touch the document, and this module does not decide the
 // next state. `main.ts` connects the two.
 
+import { parse } from "./deck.ts";
+import type { Deck } from "./deck.ts";
 import { rows } from "./help.ts";
-import { describe } from "./speaker.ts";
+import { position } from "./speaker.ts";
 import type { Pace } from "./speaker.ts";
-import { columns, fraction, isKind, maxStep, mode, upcoming } from "./state.ts";
-import type { Kind, Limits, State, Transition } from "./state.ts";
+import { columns, current, mode, upcoming } from "./state.ts";
+import type { State, Transition } from "./state.ts";
 
 // The renderer writes `data-progress="false"` on the `body` for a deck that
 // hides the progress bar at the start. The key `g` can still show it.
@@ -15,28 +17,15 @@ export function showsProgress(): boolean {
   return document.body.dataset.progress !== "false";
 }
 
-// The renderer gives each slide a `section` with the class `slide`, the
-// identifier `slide-<number>` and the attribute `data-max-step`. The first
-// slide is slide 1.
-export function limits(): Limits {
-  const count = document.getElementsByClassName("slide").length;
-  const steps: number[] = [];
-  for (let number = 1; number <= count; number++) {
-    steps.push(Number(slide(number).dataset.maxStep) || 1);
+// Read the list of the steps from the element `expresso-deck`, where the
+// renderer writes it as JSON. A document with no list is a defect of the
+// renderer, so an error here is correct.
+export function deck(): Deck {
+  const element = document.getElementById("expresso-deck");
+  if (element === null) {
+    throw new Error("The document has no list of the steps");
   }
-  return { slides: count, steps };
-}
-
-// The kind of the transition into each slide, in slide order. The renderer
-// writes it as `data-transition` on each slide. A value that is not a kind
-// gives `fade`.
-export function kinds(limits: Limits): Kind[] {
-  const all: Kind[] = [];
-  for (let number = 1; number <= limits.slides; number++) {
-    const value = slide(number).dataset.transition;
-    all.push(isKind(value) ? value : "fade");
-  }
-  return all;
+  return parse(element.textContent ?? "");
 }
 
 // Run a change of the document as a transition, or run it at once. The
@@ -71,13 +60,13 @@ function slide(number: number): HTMLElement {
 }
 
 // Apply a state to the document. The function writes the view on the `body`,
-// it shows the slide of the state at the step of the state, and it hides each
+// it shows the slide of the current step at that step, and it hides each
 // other slide. A deck with no slide gets the view only. The style sheet reads
 // `data-view` and `data-blank`, and the generated style block reads
 // `data-step`. docs/overlays.md gives the CSS contract. The speaker view also
 // writes `data-speaker` on two pages, and the texts of its elements.
 // The overview writes `data-overview` on the `body`, and attributes on pages.
-export function apply(state: State, limits: Limits): void {
+export function apply(state: State, deck: Deck): void {
   document.body.dataset.view = state.view;
   if (state.blank) {
     document.body.dataset.blank = "true";
@@ -88,11 +77,11 @@ export function apply(state: State, limits: Limits): void {
   document.body.dataset.every = String(state.every);
   const bar = document.getElementById("progress");
   if (bar !== null) {
-    bar.style.width = `${fraction(state, limits) * 100}%`;
+    bar.style.width = `${(current(state, deck)?.fraction ?? 0) * 100}%`;
   }
   if (state.overview) {
     document.body.dataset.overview = "true";
-    overview(state, limits);
+    overview(state, deck);
   } else {
     delete document.body.dataset.overview;
   }
@@ -102,19 +91,20 @@ export function apply(state: State, limits: Limits): void {
   } else {
     delete document.body.dataset.help;
   }
-  for (let number = 1; number <= limits.slides; number++) {
+  for (let number = 1; number <= deck.slides.length; number++) {
     slide(number).style.display = "none";
   }
   // A deck can hold no slide. The view still changes, and the function must
   // not read a slide that the document does not have.
-  if (limits.slides === 0) {
+  const entry = current(state, deck);
+  if (entry === undefined) {
     return;
   }
-  const current = slide(state.slide);
-  current.dataset.step = String(state.step);
-  current.style.display = "flex";
+  const shown = slide(entry.slide);
+  shown.dataset.step = String(entry.step);
+  shown.style.display = "flex";
   if (state.view === "speaker") {
-    speaker(state, limits);
+    speaker(state, deck);
   }
 }
 
@@ -123,23 +113,25 @@ export function apply(state: State, limits: Limits): void {
 // gets `data-speaker="next"`. The style sheet places the two pages. The notes
 // of the current page go into the element `speaker-notes`, and the position
 // goes into the element `speaker-position`.
-function speaker(state: State, limits: Limits): void {
-  const after = upcoming(state, limits);
+function speaker(state: State, deck: Deck): void {
+  const now = current(state, deck);
+  const following = upcoming(state, deck);
+  const after = following === null ? undefined : current(following, deck);
   let notes = "";
   for (const page of pages()) {
     const slide = Number(page.dataset.slide);
     const step = Number(page.dataset.step);
-    if (slide === state.slide && step === state.step) {
+    if (slide === now?.slide && step === now.step) {
       page.dataset.speaker = "current";
       notes = page.querySelector(".notes")?.textContent ?? "";
-    } else if (after !== null && slide === after.slide && step === after.step) {
+    } else if (slide === after?.slide && step === after.step) {
       page.dataset.speaker = "next";
     } else {
       delete page.dataset.speaker;
     }
   }
   text("speaker-notes", notes);
-  text("speaker-position", describe(state, limits));
+  text("speaker-position", position(now, state.blank));
 }
 
 // The overview shows the page of the last step of each slide in a grid. The
@@ -148,8 +140,8 @@ function speaker(state: State, limits: Limits): void {
 // the style sheet scales it with `zoom`. The padding and the gaps of the grid
 // are 1vw wide and 1vh high. The number of rows is not more than the number of
 // columns, so a zoom that fits the width also fits the height.
-function overview(state: State, limits: Limits): void {
-  const width = columns(limits.slides);
+function overview(state: State, deck: Deck): void {
+  const width = columns(deck.slides.length);
   const style = document.body.style;
   style.setProperty("--overview-columns", String(width));
   style.setProperty(
@@ -158,7 +150,7 @@ function overview(state: State, limits: Limits): void {
   );
   for (const page of pages()) {
     const slide = Number(page.dataset.slide);
-    if (Number(page.dataset.step) === maxStep(slide, limits)) {
+    if (Number(page.dataset.step) === (deck.slides[slide - 1]?.steps ?? 1)) {
       page.dataset.thumbnail = "";
     } else {
       delete page.dataset.thumbnail;
@@ -213,12 +205,6 @@ function help(state: State): void {
     row.appendChild(function_);
     panel.appendChild(row);
   }
-}
-
-// The value of `data-duration` on the `body`, which the renderer writes from
-// the deck option `duration`, or undefined.
-export function durationAttribute(): string | undefined {
-  return document.body.dataset.duration;
 }
 
 // Write the time left and the pace into the element `speaker-left`. The style

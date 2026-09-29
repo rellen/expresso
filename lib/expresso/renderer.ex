@@ -64,31 +64,6 @@ defmodule Expresso.Renderer do
     end
   end
 
-  # The value of `data-duration` on the `body`, or nil. The value is the length
-  # of the talk in minutes. The presenter reads it for the speaker view, and the
-  # address parameter `?duration=` replaces it.
-  defp duration(deck) do
-    case deck.metadata do
-      %{duration: minutes} when is_integer(minutes) and minutes > 0 -> Integer.to_string(minutes)
-      _other -> nil
-    end
-  end
-
-  # The value of `data-transition` on a slide of the present view. The value is
-  # the transition of the slide, or else the transition of the deck. The
-  # presenter reads it for the moves between this slide and the slide before.
-  # A deck without the key fades.
-  @transitions [:none, :fade, :slide, :zoom]
-
-  defp transition(deck, slide) do
-    Enum.find(
-      [slide.metadata[:transition], (deck.metadata || %{})[:transition]],
-      :fade,
-      &(&1 in @transitions)
-    )
-    |> Atom.to_string()
-  end
-
   # The text of the number of a slide, such as "3 / 12", or nil. A deck shows
   # the numbers only with `slide_numbers: true`, and slide 1 shows no number.
   defp slide_number(deck, slide) do
@@ -108,7 +83,8 @@ defmodule Expresso.Renderer do
   # classes come from Makeup, and the presenter bundle comes from files of this
   # repository. The renderer reads them at compile time, and no input of a user
   # can change them. The generated style block comes from the deck, and
-  # `Expresso.Overlay.Render.style/1` escapes each value of it.
+  # `Expresso.Overlay.Render.style/1` escapes each value of it. The list of the
+  # steps also comes from the deck, and `Expresso.Steps.json/1` escapes each `<`.
   # The three parts of a slide. The present view and the handout view show the
   # same parts, and each view gives its own container.
   defp slide_parts(assigns) do
@@ -196,15 +172,13 @@ defmodule Expresso.Renderer do
         body style: "min-height: 100vh; width: 100%; margin: 0px;",
              data_view: "present",
              data_progress: progress(@deck),
-             data_print_notes: print_notes(@deck),
-             data_duration: duration(@deck) do
+             data_print_notes: print_notes(@deck) do
           div class: "screen" do
             for {slide, index} <- Enum.with_index(@deck.slides) do
               section id: "slide-#{slide.metadata.slide_number}",
                       class: "slide",
                       data_step: 1,
                       data_max_step: Expresso.Overlay.Render.max_step(slide),
-                      data_transition: transition(@deck, slide),
                       style:
                         "height: 100%; display: #{if index == 0, do: "flex", else: "none"}; flex-direction: column; justify-content: stretch" do
                 c(&slide_parts/1, deck: @deck, slide: slide)
@@ -242,6 +216,12 @@ defmodule Expresso.Renderer do
           # The progress bar of the present view. The presenter gives it its
           # width, and the style sheet shows it.
           div id: "progress", style: "width: 0%;" do
+          end
+
+          # The list of the steps. The presenter reads it at load, so it comes
+          # before the script. `Expresso.Steps.json/1` escapes each `<`.
+          script id: "expresso-deck", type: "application/json" do
+            Phoenix.HTML.raw(Expresso.Steps.json(@deck))
           end
 
           script do

@@ -478,6 +478,17 @@ each step:
 
 ## The order of the work
 
+Part 1 is done: `Expresso.Steps` makes the list, and the state of the script holds an index
+into it. The script did not become smaller:
+
+- `assets/src/` went from 1398 lines to 1451 lines. `state.ts` lost 62 lines, but the new
+  module `deck.ts` has 133 lines, and most of them examine the JSON at load.
+- The bundle went from 13268 bytes to 13766 bytes.
+
+The calculations that moved to Elixir were short. The larger gain is in the tests: the
+tests of `fraction`, `done` and the position text are now ExUnit tests of
+`Expresso.Steps`.
+
 Do each part in its own pull request, in this sequence:
 
 1. Part 1, the list of the steps. Part 2 and the command variant need it.

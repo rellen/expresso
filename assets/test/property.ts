@@ -11,14 +11,25 @@ import {
   next,
   point,
 } from "../src/state.ts";
-import type { Limits, Pointer, State } from "../src/state.ts";
+import { KINDS } from "../src/deck.ts";
+import type { Deck } from "../src/deck.ts";
+import type { Pointer, State } from "../src/state.ts";
+import { deckOf } from "./decks.ts";
 
 export const RUNS = 500;
 
-// A deck of 1 to 12 slides, each with 1 to 6 steps.
-export const limits: fc.Arbitrary<Limits> = fc
-  .array(fc.integer({ min: 1, max: 6 }), { minLength: 1, maxLength: 12 })
-  .map((steps) => ({ slides: steps.length, steps }));
+// A deck of 1 to 12 slides, each with 1 to 6 steps and a kind of transition.
+export const decks: fc.Arbitrary<Deck> = fc
+  .array(fc.tuple(fc.integer({ min: 1, max: 6 }), fc.constantFrom(...KINDS)), {
+    minLength: 1,
+    maxLength: 12,
+  })
+  .map((slides) =>
+    deckOf(
+      slides.map(([steps]) => steps),
+      { kinds: slides.map(([, kind]) => kind) },
+    ),
+  );
 
 const bound = [...new Set(BINDINGS.flatMap((binding) => binding.keys))];
 
@@ -33,27 +44,27 @@ function near(maximum: number): fc.Arbitrary<number> {
   return fc.integer({ min: -1, max: maximum + 2 });
 }
 
-export function fragment(deck: Limits): fc.Arbitrary<string> {
+export function fragment(deck: Deck): fc.Arbitrary<string> {
   return fc.oneof(
     fc.string(),
-    near(deck.slides).map((slide) => `#${slide}`),
+    near(deck.slides.length).map((slide) => `#${slide}`),
     fc
-      .tuple(near(deck.slides), near(6))
+      .tuple(near(deck.slides.length), near(6))
       .map(([slide, step]) => `#${slide}.${step}`),
   );
 }
 
-export function data(deck: Limits): fc.Arbitrary<unknown> {
+export function data(deck: Deck): fc.Arbitrary<unknown> {
   return fc.oneof(
     { weight: 4, arbitrary: position(deck) },
     { weight: 1, arbitrary: fc.anything() },
   );
 }
 
-function position(deck: Limits) {
+function position(deck: Deck) {
   return fc.record({
     expresso: fc.constant("position"),
-    slide: near(deck.slides),
+    slide: near(deck.slides.length),
     step: near(6),
     blank: fc.boolean(),
     time: fc.nat(),
@@ -67,7 +78,7 @@ type Event =
   | { kind: "fromHash"; hash: string }
   | { kind: "follow"; data: unknown };
 
-function event(deck: Limits): fc.Arbitrary<Event> {
+function event(deck: Deck): fc.Arbitrary<Event> {
   return fc.oneof(
     {
       weight: 12,
@@ -81,7 +92,7 @@ function event(deck: Limits): fc.Arbitrary<Event> {
     },
     {
       weight: 1,
-      arbitrary: near(deck.slides).map((slide): Event => ({
+      arbitrary: near(deck.slides.length).map((slide): Event => ({
         kind: "choose",
         slide,
       })),
@@ -100,7 +111,7 @@ function event(deck: Limits): fc.Arbitrary<Event> {
   );
 }
 
-function apply(state: State, event: Event, deck: Limits): State {
+function apply(state: State, event: Event, deck: Deck): State {
   switch (event.kind) {
     case "key":
       return next(state, event.key, deck);
@@ -117,7 +128,7 @@ function apply(state: State, event: Event, deck: Limits): State {
 
 // A state that the presenter can get to in a deck: the first state of the
 // present view or of the speaker view, after 0 to 60 events.
-export function stateIn(deck: Limits): fc.Arbitrary<State> {
+export function stateIn(deck: Deck): fc.Arbitrary<State> {
   return fc
     .tuple(
       fc.constantFrom<"present" | "speaker">("present", "speaker"),
@@ -132,6 +143,6 @@ export function stateIn(deck: Limits): fc.Arbitrary<State> {
 }
 
 // A deck, and a state that the presenter can get to in that deck.
-export const reachable: fc.Arbitrary<[Limits, State]> = limits.chain((deck) =>
-  stateIn(deck).map((state): [Limits, State] => [deck, state]),
+export const reachable: fc.Arbitrary<[Deck, State]> = decks.chain((deck) =>
+  stateIn(deck).map((state): [Deck, State] => [deck, state]),
 );
