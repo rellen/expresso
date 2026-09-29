@@ -3,16 +3,20 @@
 // This module does not touch the document. `dom.ts` reads the document and
 // applies a state to it. This split gives the state a unit test.
 //
-// The state holds the number of the current slide, the number of the current
-// step in that slide, and the view. docs/overlays.md gives the rules of a step
-// and the reason for the handout view.
+// The state holds the index of the current step in the list of the steps, and
+// the view. `deck.ts` gives the list, and docs/overlays.md gives the rules of a
+// step and the reason for the handout view.
+
+import { indexOf } from "./deck.ts";
+import type { Deck, Entry, Kind } from "./deck.ts";
 
 // The present view shows one slide at one step. The handout view shows one page
 // for each step of each slide. The speaker view shows the current step, the
 // next step and the notes, in a second window.
 export type View = "present" | "handout" | "speaker";
 
-// `blank` is true while the present view shows a black screen. `digits` holds
+// `index` is the index of the current step in the `steps` of the deck. The
+// first step of the first slide has the index 0. `blank` is true while the present view shows a black screen. `digits` holds
 // the digits of a slide number that the presenter types before `Enter`.
 // `help` is true while the view shows the list of its keys. `progress` is
 // true while the present view shows the progress bar. `every` is true while
@@ -22,8 +26,7 @@ export type View = "present" | "handout" | "speaker";
 // the number of the selected slide in that grid. A message does not hold the
 // overview, so the overview shows only in the window that opens it.
 export type State = Readonly<{
-  slide: number;
-  step: number;
+  index: number;
   view: View;
   blank: boolean;
   digits: string;
@@ -37,13 +40,6 @@ export type State = Readonly<{
 // The set of keys that operate. The overview has its own set of keys in each
 // view that shows it.
 export type Mode = View | "overview";
-
-// `steps` holds the maximum step number of each slide, in slide order. The
-// entry for slide 1 is at index 0.
-export type Limits = {
-  readonly slides: number;
-  readonly steps: readonly number[];
-};
 
 // The function of a key. `main.ts` does the functions `speaker`, `reset` and
 // `fullscreen`, because they do not change the state.
@@ -282,17 +278,6 @@ export function binding(state: State, key: string): Binding | undefined {
   );
 }
 
-// The transition from one slide to the next in the present view. The renderer
-// writes one kind on each slide, from the option of the slide or of the deck.
-export type Kind = "none" | "fade" | "slide" | "zoom";
-
-export const KINDS: readonly Kind[] = ["none", "fade", "slide", "zoom"];
-
-// Tell if a value is a kind of transition.
-export function isKind(value: string | undefined): value is Kind {
-  return KINDS.some((kind) => kind === value);
-}
-
 // A move to a slide with a higher number goes forward. `slide` and `zoom`
 // use the direction, and `fade` does not.
 export type Transition = { kind: Kind; direction: "forward" | "back" };
@@ -306,35 +291,30 @@ export type Transition = { kind: Kind; direction: "forward" | "back" };
 // the kind of the slide that it goes to. A move back uses the kind of the
 // slide that it leaves, and the style sheet plays it in reverse. For this
 // reason, the kind of the slide with the higher number gives the kind, in the
-// two directions. The kind `none` gives no transition. `kinds` holds the kind of
-// each slide, in slide order, and a slide without a kind fades.
+// two directions. The kind `none` gives no transition.
 export function transition(
   before: State,
   after: State,
-  kinds: Kind[],
+  deck: Deck,
 ): Transition | null {
   const quiet = (state: State) =>
     state.view !== "present" || state.blank || state.overview || state.help;
-  if (before.slide === after.slide || quiet(before) || quiet(after)) {
+  const from = slide(before, deck);
+  const to = slide(after, deck);
+  if (from === to || quiet(before) || quiet(after)) {
     return null;
   }
-  const kind = kinds[Math.max(before.slide, after.slide) - 1] ?? "fade";
+  const kind: Kind = deck.slides[Math.max(from, to) - 1]?.transition ?? "fade";
   if (kind === "none") {
     return null;
   }
-  return {
-    kind,
-    direction: after.slide > before.slide ? "forward" : "back",
-  };
+  return { kind, direction: to > from ? "forward" : "back" };
 }
 
-// The first slide is slide 1, and the first step is step 1.
-// `Expresso.Deck.number_slides/1` gives the same number to the identifier of
-// each section.
+// The state starts at the index 0: step 1 of slide 1.
 export function initial(): State {
   return {
-    slide: 1,
-    step: 1,
+    index: 0,
     view: "present",
     blank: false,
     digits: "",
@@ -346,9 +326,14 @@ export function initial(): State {
   };
 }
 
-// The maximum step number of a slide. A slide without an entry has one step.
-export function maxStep(slide: number, limits: Limits): number {
-  return limits.steps[slide - 1] ?? 1;
+// The entry of the current step, or undefined for a deck with no slide.
+export function current(state: State, deck: Deck): Entry | undefined {
+  return deck.steps[state.index];
+}
+
+// The number of the current slide. A deck with no slide gives 1.
+function slide(state: State, deck: Deck): number {
+  return current(state, deck)?.slide ?? 1;
 }
 
 // Give the state after one key. A key that has no function gives the same
@@ -357,7 +342,7 @@ export function maxStep(slide: number, limits: Limits): number {
 // On a black screen or on the list of keys, each key closes it, and it does
 // nothing more. A digit adds to the slide number, and `Enter` goes to step 1
 // of that slide. Each other key removes the digits.
-export function next(state: State, key: string, limits: Limits): State {
+export function next(state: State, key: string, deck: Deck): State {
   const shown = close(state);
   if (shown !== state) {
     return shown;
@@ -365,25 +350,25 @@ export function next(state: State, key: string, limits: Limits): State {
 
   const action = binding(state, key)?.action;
   if (state.overview) {
-    return overview(state, action, limits);
+    return overview(state, action, deck);
   }
   if (action === "digit") {
     return { ...state, digits: state.digits + key };
   }
   if (action === "go") {
-    return go(state, limits);
+    return go(state, deck);
   }
 
   const cleared = state.digits === "" ? state : { ...state, digits: "" };
   switch (action) {
     case "forward":
-      return forward(cleared, limits);
+      return forward(cleared, deck);
     case "back":
-      return back(cleared, limits);
+      return back(cleared);
     case "first":
-      return move(cleared, 1, limits);
+      return move(cleared, 1, deck);
     case "last":
-      return move(cleared, limits.slides, limits);
+      return move(cleared, deck.slides.length, deck);
     case "blank":
       return { ...cleared, blank: true };
     case "handout":
@@ -397,7 +382,7 @@ export function next(state: State, key: string, limits: Limits): State {
     case "every":
       return { ...cleared, every: !cleared.every };
     case "overview":
-      return { ...cleared, overview: true, selected: cleared.slide };
+      return { ...cleared, overview: true, selected: slide(cleared, deck) };
     case "speaker":
     case "reset":
     case "fullscreen":
@@ -424,27 +409,23 @@ export function columns(slides: number): number {
 // slide. A key that selects a slide outside the deck has no effect. `pick`
 // goes to step 1 of the selected slide. `overview` closes the overview, and
 // the step does not change.
-function overview(
-  state: State,
-  action: Action | undefined,
-  limits: Limits,
-): State {
-  const width = columns(limits.slides);
+function overview(state: State, action: Action | undefined, deck: Deck): State {
+  const width = columns(deck.slides.length);
   switch (action) {
     case "forward":
-      return select(state, state.selected + 1, limits);
+      return select(state, state.selected + 1, deck);
     case "back":
-      return select(state, state.selected - 1, limits);
+      return select(state, state.selected - 1, deck);
     case "down":
-      return select(state, state.selected + width, limits);
+      return select(state, state.selected + width, deck);
     case "up":
-      return select(state, state.selected - width, limits);
+      return select(state, state.selected - width, deck);
     case "first":
-      return select(state, 1, limits);
+      return select(state, 1, deck);
     case "last":
-      return select(state, limits.slides, limits);
+      return select(state, deck.slides.length, deck);
     case "pick":
-      return choose(state, state.selected, limits);
+      return choose(state, state.selected, deck);
     case "overview":
       return { ...state, overview: false };
     case "help":
@@ -468,18 +449,18 @@ function overview(
   }
 }
 
-function select(state: State, slide: number, limits: Limits): State {
-  if (slide < 1 || slide > limits.slides || slide === state.selected) {
+function select(state: State, number: number, deck: Deck): State {
+  if (number < 1 || number > deck.slides.length || number === state.selected) {
     return state;
   }
-  return { ...state, selected: slide };
+  return { ...state, selected: number };
 }
 
 // Give the state that closes the overview and goes to step 1 of a slide. A
 // click on a slide of the overview and the key `Enter` use this function. For
 // a number that is not a slide, the function only closes the overview.
-export function choose(state: State, slide: number, limits: Limits): State {
-  return move({ ...state, overview: false }, slide, limits);
+export function choose(state: State, slide: number, deck: Deck): State {
+  return move({ ...state, overview: false }, slide, deck);
 }
 
 // The state with no black screen and no list of keys. A state with neither
@@ -498,7 +479,7 @@ function close(state: State): State {
 export type Pointer = "forward" | "back";
 
 // The function of a click or a tap at `x` pixels from the left edge of a
-// window of `width` pixels. The left third goes back, because a person
+// window of `width` pixels. The left third goes back, because the presenter
 // clicks to go forward more frequently than to go back.
 export function side(x: number, width: number): Pointer {
   return x < width / 3 ? "back" : "forward";
@@ -521,124 +502,77 @@ export function swipe(dx: number, dy: number): Pointer | undefined {
 // closes a black screen or the list of keys, and it does nothing more. The
 // handout view scrolls with a finger, so there it has no other function. In
 // the overview, `choose` gives the function of a click on a slide.
-export function point(state: State, pointer: Pointer, limits: Limits): State {
+export function point(state: State, pointer: Pointer, deck: Deck): State {
   const shown = close(state);
   if (shown !== state || state.view === "handout" || state.overview) {
     return shown;
   }
   const cleared = state.digits === "" ? state : { ...state, digits: "" };
-  return pointer === "forward"
-    ? forward(cleared, limits)
-    : back(cleared, limits);
-}
-
-// The part of the deck before the step of the state, from 0 at the first step
-// of the first slide to 1 at the last step of the last slide. Each step of
-// each slide counts one time. A deck of one step or no step gives 0.
-export function fraction(state: State, limits: Limits): number {
-  const [before, total] = count(state, limits);
-  if (total <= 1) {
-    return 0;
-  }
-  return before / (total - 1);
-}
-
-// The part of the deck that is done at the start of the step of the state,
-// from 0 at the first step. Each step of each slide counts one time. The last
-// step also has its part, so the value at the last step is less than 1.
-// `fraction` is 1 there. The speaker view compares this part with the time of
-// the talk. A deck with no step gives 0.
-export function done(state: State, limits: Limits): number {
-  const [before, total] = count(state, limits);
-  return total === 0 ? 0 : before / total;
-}
-
-// The number of steps before the step of the state, and the number of steps
-// of the deck.
-function count(state: State, limits: Limits): [number, number] {
-  let total = 0;
-  let before = 0;
-  for (let slide = 1; slide <= limits.slides; slide++) {
-    const steps = maxStep(slide, limits);
-    total += steps;
-    if (slide < state.slide) {
-      before += steps;
-    }
-  }
-  return [before + state.step - 1, total];
+  return pointer === "forward" ? forward(cleared, deck) : back(cleared);
 }
 
 // The step after the step of the state, or null at the last step of the last
 // slide. The speaker view shows this step as the next step.
-export function upcoming(state: State, limits: Limits): State | null {
-  const after = forward(state, limits);
+export function upcoming(state: State, deck: Deck): State | null {
+  const after = forward(state, deck);
   return after === state ? null : after;
 }
 
-// Move to the next step, and to the first step of the next slide after the
-// last step. A move past the last slide gives the same state.
-function forward(state: State, limits: Limits): State {
-  if (state.step < maxStep(state.slide, limits)) {
-    return { ...state, step: state.step + 1 };
+// Move to the next step. A move past the last step gives the same state.
+function forward(state: State, deck: Deck): State {
+  if (state.index + 1 >= deck.steps.length) {
+    return state;
   }
-  if (state.slide < limits.slides) {
-    return { ...state, slide: state.slide + 1, step: 1 };
-  }
-  return state;
+  return { ...state, index: state.index + 1 };
 }
 
-// Move to the previous step, and to the last step of the previous slide at
-// the first step. A move past the first slide gives the same state.
-function back(state: State, limits: Limits): State {
-  if (state.step > 1) {
-    return { ...state, step: state.step - 1 };
+// Move to the previous step. A move past the first step gives the same state.
+function back(state: State): State {
+  if (state.index <= 0) {
+    return state;
   }
-  if (state.slide > 1) {
-    const slide = state.slide - 1;
-    return { ...state, slide, step: maxStep(slide, limits) };
-  }
-  return state;
+  return { ...state, index: state.index - 1 };
 }
 
 // Go to step 1 of the slide that the digits give. A number that is not a
 // slide removes the digits, and the slide stays.
-function go(state: State, limits: Limits): State {
+function go(state: State, deck: Deck): State {
   if (state.digits === "") {
     return state;
   }
   const cleared = { ...state, digits: "" };
-  return move(cleared, Number(state.digits), limits);
+  return move(cleared, Number(state.digits), deck);
 }
 
 // Go to step 1 of a slide. A slide that the deck does not have, and the
 // current position, give the same state.
-function move(state: State, slide: number, limits: Limits): State {
-  if (slide < 1 || slide > limits.slides) {
+function move(state: State, number: number, deck: Deck): State {
+  const index = indexOf(deck, number, 1);
+  if (index === undefined || index === state.index) {
     return state;
   }
-  if (slide === state.slide && state.step === 1) {
-    return state;
-  }
-  return { ...state, slide, step: 1 };
+  return { ...state, index };
 }
 
 // The fragment of the address for a state, such as `#4.2` for step 2 of
-// slide 4. A reload of the document then shows the same step.
-export function toHash(state: State): string {
-  return `#${state.slide}.${state.step}`;
+// slide 4. A reload of the document then shows the same step. A deck with no
+// slide gives `#1.1`.
+export function toHash(state: State, deck: Deck): string {
+  const entry = current(state, deck);
+  return `#${entry?.slide ?? 1}.${entry?.step ?? 1}`;
 }
 
 // Give the state for a fragment of the address. The fragment `#4` is step 1
 // of slide 4. A fragment that gives no slide and step of the deck gives the
 // same state.
-export function fromHash(state: State, hash: string, limits: Limits): State {
+export function fromHash(state: State, hash: string, deck: Deck): State {
   const match = /^#(\d+)(?:\.(\d+))?$/.exec(hash);
   if (match === null) {
     return state;
   }
   const slide = Number(match[1]);
   const step = match[2] === undefined ? 1 : Number(match[2]);
-  return position(state, slide, step, false, limits);
+  return position(state, slide, step, false, deck);
 }
 
 // The message that one window of the presenter sends to the other window
@@ -660,9 +594,15 @@ export type Message = {
   time: number;
 };
 
-export function message(state: State, time: number): Message {
-  const { slide, step, blank } = state;
-  return { expresso: "position", slide, step, blank, time };
+export function message(state: State, deck: Deck, time: number): Message {
+  const entry = current(state, deck);
+  return {
+    expresso: "position",
+    slide: entry?.slide ?? 1,
+    step: entry?.step ?? 1,
+    blank: state.blank,
+    time,
+  };
 }
 
 // The time of a change of this window: the clock, or one more than the time of
@@ -709,11 +649,11 @@ export function isMessage(data: unknown): data is Message {
 
 // Give the state for a message from the other window. Data that is not a
 // message, or that gives no slide and step of the deck, gives the same state.
-export function follow(state: State, data: unknown, limits: Limits): State {
+export function follow(state: State, data: unknown, deck: Deck): State {
   if (!isMessage(data)) {
     return state;
   }
-  return position(state, data.slide, data.step, data.blank, limits);
+  return position(state, data.slide, data.step, data.blank, deck);
 }
 
 // Go to a slide, a step and a black screen. A slide and step that the deck
@@ -723,16 +663,14 @@ function position(
   slide: number,
   step: number,
   blank: boolean,
-  limits: Limits,
+  deck: Deck,
 ): State {
-  if (slide < 1 || slide > limits.slides) {
+  const index = indexOf(deck, slide, step);
+  if (index === undefined) {
     return state;
   }
-  if (step < 1 || step > maxStep(slide, limits)) {
+  if (index === state.index && blank === state.blank) {
     return state;
   }
-  if (slide === state.slide && step === state.step && blank === state.blank) {
-    return state;
-  }
-  return { ...state, slide, step, blank, digits: "" };
+  return { ...state, index, blank, digits: "" };
 }

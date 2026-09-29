@@ -43,13 +43,12 @@ defmodule Expresso.TransitionTest do
     end
   end
 
-  # The value of `data-transition` on each slide of the present view.
+  # The kind of each slide in the list of the steps of the document.
   defp kinds(deck) do
     deck
-    |> Expresso.Deck.render()
-    |> Floki.parse_document!()
-    |> Floki.find("section.slide")
-    |> Floki.attribute("data-transition")
+    |> Expresso.Test.Steps.read()
+    |> Map.fetch!("slides")
+    |> Enum.map(& &1["transition"])
   end
 
   test "a deck without the option fades" do
@@ -67,10 +66,10 @@ defmodule Expresso.TransitionTest do
     assert kinds(deck) == ["slide", "zoom", "none"]
   end
 
-  test "the handout view gets no transition" do
+  test "no element of the document gets a transition attribute" do
     document = MixedDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
 
-    assert document |> Floki.find(".handout-page[data-transition]") == []
+    assert document |> Floki.find("[data-transition]") == []
   end
 
   test "a deck from the imperative API takes the kinds from its metadata" do

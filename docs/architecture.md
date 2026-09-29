@@ -306,12 +306,11 @@ html
     style            assets/style.css
     style            the rules of the token classes of a code element, from Makeup
     style            the generated rules of the overlays, from Expresso.Overlay.Render
-    body           data-view "present", data-progress, data-print-notes and
-                   data-duration from the deck
+    body           data-view "present", and data-progress and data-print-notes
+                   from the deck
       div            the present view, class "screen"
         section      one for each slide, class "slide", id "slide-<number>",
-                     data-step "1", data-max-step from the slide,
-                     data-transition from the slide or the deck
+                     data-step "1", data-max-step from the slide
           div        the header, from the deck template
           div        the body, from the slide template
           div        the footer, from the deck template
@@ -323,6 +322,8 @@ html
           div        the same three parts as a slide of the present view
           aside      the notes of the slide, class "notes", when the slide has notes
       div            the progress bar, id "progress"
+      script         the list of the steps as JSON, id "expresso-deck",
+                     type "application/json", from Expresso.Steps
       script         priv/static/presenter.js, the presenter bundle
 ```
 
@@ -682,11 +683,13 @@ After the transformer, each element and each `on` entity holds its step numbers 
 
 ## The presenter
 
-The presenter is a TypeScript program under `assets/src/`. It has four modules:
+The presenter is a TypeScript program under `assets/src/`. It has six modules:
 
-- `state.ts` holds the state: the current slide, the current step, the view, the black
-  screen and the digits of a slide number. It also holds the function that changes the
-  state, and it does not touch the document.
+- `deck.ts` reads the list of the steps, which the section below describes.
+- `state.ts` holds the state: the index of the current step, the view, the black screen
+  and the digits of a slide number. It also holds the function that changes the state,
+  and it does not touch the document.
+- `help.ts` makes the rows of the list of keys.
 - `speaker.ts` makes the texts of the speaker view.
 - `dom.ts` reads the document. It applies a state with the inline `style.display`
   property, the `data-step` attribute, and the `data-view` and `data-blank` attributes of
@@ -695,6 +698,25 @@ The presenter is a TypeScript program under `assets/src/`. It has four modules:
 
 The first slide is slide 1, and the first step is step 1. `docs/overlays.md` gives the
 rules of a step.
+
+### The list of the steps
+
+`Expresso.Steps` makes a list of each step of the deck, and the renderer writes it as JSON
+into the element `script#expresso-deck`. The element comes before the presenter bundle, so
+the script can read it at load. The list holds the values that the script needs from the
+deck:
+
+- `steps` has one entry for each step of each slide, in sequence. An entry gives the
+  slide, the step, `fraction`, `done` and the position text of the speaker view.
+- `slides` has one object for each slide. It gives the index of step 1 of the slide in
+  `steps`, the number of steps and the kind of the transition.
+- `duration_ms` gives the length of the talk in milliseconds, or `null`.
+
+The state holds the index of the current step in `steps`. A move forward adds 1 to the
+index, and a move back subtracts 1. Each other value comes from the entry at the index, so
+the script calculates nothing from the deck. `parse` in `deck.ts` makes sure of the type of
+each value, and a list that is not valid stops the script with an error.
+`docs/research/elixir-presenter-report.md` gives the reason for the list.
 
 The unit tests of `assets/test/` test these modules with no browser. The browser tests of
 `test/e2e/` open a rendered deck in Chromium and operate the presenter with its keys, with
@@ -763,8 +785,9 @@ on the `body` from the metadata of the deck: `false` for `progress: false`, and 
 otherwise. `main.ts` reads that attribute into the state at load, and `g` changes the
 state.
 
-`fraction` in `state.ts` gives the part of the deck before the current step. Each step of
-each slide counts one time, so the bar is full at the last step only. `dom.ts` writes that
+The `fraction` of the current entry of the list of the steps is the part of the deck before
+the current step. Each step of each slide counts one time, so the bar is full at the last
+step only. `dom.ts` writes that
 part as the width of the bar. The style sheet shows the bar in the present view only, and
 not on a black screen, in the overview or on paper. A theme can set `--progress-color` and
 `--progress-height`.
@@ -774,9 +797,8 @@ not on a black screen, in the overview or on paper. A theme can set `--progress-
 The `transition` option of the deck gives the transition from one slide to the next in the
 present view: `:fade`, `:slide`, `:zoom` or `:none`. The default is `:fade`. A slide can
 have the same option, and `Expresso.Slide.put_options_in_metadata/1` puts it into the
-metadata of the slide. The renderer writes the kind of each slide as `data-transition` on
-its `section` of the present view. The slide option comes first, then the deck option, then
-`fade`.
+metadata of the slide. The list of the steps gives the kind of each slide. The slide option
+comes first, then the deck option, then `fade`.
 
 `transition` in `state.ts` decides if a change of state has a transition. Only a move to a
 different slide in the present view has one. A change of the step, a black screen, the
@@ -839,15 +861,15 @@ timer go into three elements that `dom.ts` makes. The speaker view knows the key
 present view, but `p` and `s` have no function in it. `r` sets the timer back to `0:00`,
 and the timer then starts at the next change of the step.
 
-The `duration` option of the deck gives the length of the talk in minutes. The renderer
-writes it as `data-duration` on the `body`, and `?duration=` in the address replaces it.
-`talkLength` in `speaker.ts` reads the two values. `dom.ts` makes a fourth element of the
+The `duration` option of the deck gives the length of the talk in minutes. The list of the
+steps gives it in milliseconds, and `?duration=` in the address replaces it with a number
+of minutes. `talkLength` in `speaker.ts` reads the two values. `dom.ts` makes a fourth element of the
 speaker view, `speaker-left`, and the speaker view writes the time left into it. `pace`
 gives its value of `data-pace`: `on`, `behind` or `over`. For a talk with no length, the
 element has no text, and the style sheet hides it.
 
-The pace compares the time used with `done` in `state.ts`: the part of the steps before the
-current step. The speaker is `behind` when the time used is more than one minute longer than
+The pace compares the time used with the `done` of the current entry: the part of the
+steps before the current step. The speaker is `behind` when the time used is more than one minute longer than
 that part of the time. `done` is not `fraction`, because `fraction` is 1 at the last step,
 and the last step also needs its part of the time. The time left goes up to the next full
 second, so the timer and the time left always give the length of the talk.

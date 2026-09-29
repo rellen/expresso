@@ -7,6 +7,8 @@
 // Node runs each test file in its own process, so each file gets one page.
 
 import assert from "node:assert/strict";
+import type { Kind } from "../src/deck.ts";
+import { deckOf, json } from "./decks.ts";
 
 export type FakeElement = {
   id: string;
@@ -67,11 +69,11 @@ type Options = {
   notes?: string[];
   // The value of `data-progress` that the renderer writes on the `body`.
   progress?: string;
-  // The value of `data-duration` that the renderer writes on the `body`.
-  duration?: string;
-  // The value of `data-transition` that the renderer writes on each slide, in
-  // slide order. A slide without an entry has no attribute.
-  transitions?: string[];
+  // The `duration` option of the deck, in minutes.
+  duration?: number;
+  // The kind of the transition of each slide, in slide order. A slide without
+  // an entry fades.
+  transitions?: Kind[];
   // True for a browser with the View Transitions API.
   viewTransitions?: boolean;
 };
@@ -155,9 +157,15 @@ export function element(
 
 export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   const slides = maxSteps.map((max, index) =>
-    element(`slide-${index + 1}`, "slide", {
-      maxStep: String(max),
-      transition: options.transitions?.[index],
+    element(`slide-${index + 1}`, "slide", { maxStep: String(max) }),
+  );
+  // The list of the steps that the renderer writes.
+  const list = element("expresso-deck");
+  list.textContent = json(
+    deckOf(maxSteps, {
+      kinds: options.transitions,
+      duration:
+        options.duration === undefined ? null : options.duration * 60_000,
     }),
   );
   const handout = element("", "handout");
@@ -181,12 +189,10 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   if (options.progress !== undefined) {
     body.dataset.progress = options.progress;
   }
-  if (options.duration !== undefined) {
-    body.dataset.duration = options.duration;
-  }
   // The renderer writes the progress bar into each document.
   const progress = element("progress");
   const all = () => [
+    list,
     ...slides,
     handout,
     ...handout.children,

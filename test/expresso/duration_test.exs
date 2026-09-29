@@ -26,33 +26,28 @@ defmodule Expresso.DurationTest do
     end
   end
 
-  defp duration(deck) do
-    deck
-    |> Expresso.Deck.render()
-    |> Floki.parse_document!()
-    |> Floki.find("body")
-    |> Floki.attribute("data-duration")
-  end
+  # The length of the talk in the list of the steps of the document.
+  defp duration(deck), do: Expresso.Test.Steps.read(deck)["duration_ms"]
 
-  test "the duration option writes the minutes on the body" do
+  test "the duration option writes the length in milliseconds into the document" do
     deck = Expresso.parse(TimedDeck)
 
     assert deck.metadata.duration == 20
-    assert duration(deck) == ["20"]
+    assert duration(deck) == 1_200_000
   end
 
-  test "a deck without the duration option writes no attribute" do
+  test "a deck without the duration option writes null" do
     deck = Expresso.parse(UntimedDeck)
 
     assert deck.metadata.duration == nil
-    assert duration(deck) == []
+    assert duration(deck) == nil
   end
 
   test "a deck from the imperative API takes the duration from its metadata" do
-    assert duration(Expresso.Deck.new("deck")) == []
-    assert duration(Expresso.Deck.new("deck", %{duration: 15})) == ["15"]
-    assert duration(Expresso.Deck.new("deck", %{duration: 0})) == []
-    assert duration(Expresso.Deck.new("deck", %{duration: "15"})) == []
+    assert duration(Expresso.Deck.new("deck")) == nil
+    assert duration(Expresso.Deck.new("deck", %{duration: 15})) == 900_000
+    assert duration(Expresso.Deck.new("deck", %{duration: 0})) == nil
+    assert duration(Expresso.Deck.new("deck", %{duration: "15"})) == nil
   end
 
   test "the DSL refuses a duration that is not a positive integer" do

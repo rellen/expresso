@@ -1,8 +1,7 @@
 // The texts of the speaker view. This module does not touch the document, so
 // each function has a unit test.
 
-import { maxStep } from "./state.ts";
-import type { Limits, State } from "./state.ts";
+import type { Entry } from "./deck.ts";
 
 // The elapsed time as `m:ss`, or as `h:mm:ss` from one hour. A time less than
 // zero gives `0:00`.
@@ -18,22 +17,21 @@ export function clock(milliseconds: number): string {
 }
 
 // The length of the talk in milliseconds, or null for a talk with no length.
-// The address parameter `?duration=` replaces the attribute `data-duration`
-// of the `body`. Each value is a number of minutes. A value that is not a
-// positive number has no effect. A value such as `1e305` also has no effect,
-// because its length in milliseconds is not a finite number.
+// The address parameter `?duration=` gives a number of minutes, and it
+// replaces `duration`, the length from the list of the steps. A parameter that
+// is not a positive number has no effect. A value such as `1e305` also has no
+// effect, because its length in milliseconds is not a finite number.
 export function talkLength(
-  attribute: string | undefined,
+  duration: number | null,
   parameter: string | null,
 ): number | null {
-  for (const value of [parameter, attribute]) {
-    const minutes = value === null || value === undefined ? NaN : Number(value);
-    const length = minutes * 60_000;
-    if (value !== "" && Number.isFinite(length) && length > 0) {
-      return length;
-    }
+  const minutes =
+    parameter === null || parameter === "" ? NaN : Number(parameter);
+  const length = minutes * 60_000;
+  if (Number.isFinite(length) && length > 0) {
+    return length;
   }
-  return null;
+  return duration;
 }
 
 // The pace of the talk. `over` is after the end of the time. `behind` means
@@ -62,15 +60,12 @@ export function left(elapsed: number, total: number): string {
   return `${clock(Math.ceil((total - elapsed) / 1000) * 1000)} left`;
 }
 
-// The position of the state, such as `Slide 4 of 13, step 2 of 3`. A slide
-// with one step gets no step part. A black screen adds a part.
-export function describe(state: State, limits: Limits): string {
-  const parts = [`Slide ${state.slide} of ${limits.slides}`];
-  const steps = maxStep(state.slide, limits);
-  if (steps > 1) {
-    parts.push(`step ${state.step} of ${steps}`);
-  }
-  if (state.blank) {
+// The position text of the speaker view: the position of the entry, such as
+// `Slide 4 of 13, step 2 of 3`, and a part for a black screen. A deck with no
+// slide has no entry.
+export function position(entry: Entry | undefined, blank: boolean): string {
+  const parts = entry === undefined ? [] : [entry.position];
+  if (blank) {
     parts.push("black screen");
   }
   return parts.join(", ");

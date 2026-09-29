@@ -22,7 +22,10 @@
 // The key `f` puts the document in full screen, or takes it out of full
 // screen. The key `Escape` of the browser also takes it out.
 //
-// The deck option `duration` gives the length of the talk in minutes, and
+// The renderer writes the list of the steps into the document, and `deck.ts`
+// reads it. The state holds the index of the current step in that list.
+//
+// The deck option `duration` gives the length of the talk, and
 // `?duration=` in the address replaces it. The speaker view then shows the
 // time left under the timer, and the style sheet gives the pace its color.
 //
@@ -42,7 +45,7 @@ import {
   accepts,
   binding,
   choose,
-  done,
+  current,
   follow,
   fromHash,
   initial,
@@ -60,17 +63,14 @@ import type { Pointer, State } from "./state.ts";
 import {
   animate,
   apply,
-  durationAttribute,
-  kinds,
-  limits,
+  deck as readDeck,
   showsProgress,
   speakerPanel,
   text,
   timeLeft,
 } from "./dom.ts";
 
-const deck = limits();
-const slideKinds = kinds(deck);
+const deck = readDeck();
 const parameters = new URLSearchParams(location.search);
 const isSpeaker = parameters.has("speaker");
 let state: State = {
@@ -88,17 +88,18 @@ let partner: Window | null = isSpeaker ? window.opener : null;
 // the step. The key `r` sets it back to the start.
 let started: number | null = null;
 
-// The length of the talk, from the deck option `duration` or the address
+// The length of the talk, from the list of the steps or the address
 // parameter `?duration=`. The speaker view opens with the address of the
 // present view, so it gets the same parameter.
-const total = talkLength(durationAttribute(), parameters.get("duration"));
+const total = talkLength(deck.duration, parameters.get("duration"));
 
 // Write the timer, and the time left and the pace of a talk with a length.
 function tick(): void {
   const elapsed = started === null ? 0 : Date.now() - started;
   text("speaker-timer", clock(elapsed));
   if (total !== null) {
-    timeLeft(left(elapsed, total), pace(elapsed, total, done(state, deck)));
+    const done = current(state, deck)?.done ?? 0;
+    timeLeft(left(elapsed, total), pace(elapsed, total, done));
   }
 }
 
@@ -115,18 +116,18 @@ function show(changed: State, local = true): void {
   if (changed === state) {
     return;
   }
-  const moved = changed.slide !== state.slide || changed.step !== state.step;
+  const moved = changed.index !== state.index;
   const sent = moved || changed.blank !== state.blank;
-  const change = transition(state, changed, slideKinds);
+  const change = transition(state, changed, deck);
   state = changed;
   // The browser runs the update of a transition later. The update then reads
   // the state of that time, so a fast second key does not show an old state.
   animate(change, () => apply(state, deck));
-  history.replaceState(null, "", toHash(state));
+  history.replaceState(null, "", toHash(state, deck));
   if (local && sent) {
     time = stamp(time, Date.now());
     if (partner !== null && !partner.closed) {
-      partner.postMessage(message(state, time), "*");
+      partner.postMessage(message(state, deck, time), "*");
     }
   }
   if (isSpeaker && moved && started === null) {
@@ -140,7 +141,7 @@ function show(changed: State, local = true): void {
 function openSpeaker(): void {
   const address = new URL(location.href);
   address.searchParams.set("speaker", "");
-  address.hash = toHash(state);
+  address.hash = toHash(state, deck);
   partner = window.open(address.href, "expresso-speaker");
 }
 

@@ -1,10 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fc from "fast-check";
-import { clock, describe, left, pace, talkLength } from "../src/speaker.ts";
+import { clock, left, pace, talkLength } from "../src/speaker.ts";
 import type { Pace } from "../src/speaker.ts";
-import { maxStep } from "../src/state.ts";
-import { reachable, RUNS } from "./property.ts";
+import { RUNS } from "./property.ts";
 
 // The seconds of a text such as `1:05:07`, `12:34 left` or `+0:30 over`.
 function seconds(text: string): number {
@@ -15,7 +14,7 @@ function seconds(text: string): number {
     .reduce((total, part) => total * 60 + Number(part), 0);
 }
 
-// A value of the attribute or of the address parameter.
+// A value of the address parameter.
 const value: fc.Arbitrary<string> = fc.oneof(
   fc.string(),
   fc.integer({ min: -100, max: 600 }).map(String),
@@ -74,21 +73,20 @@ test("after the end of the talk, left gives the time after the end", () => {
   );
 });
 
-test("talkLength gives null or a positive, finite length, and the address parameter replaces the attribute", () => {
+test("talkLength gives the address parameter as a positive, finite length, or else the length of the list", () => {
   fc.assert(
     fc.property(
-      fc.option(value, { nil: undefined }),
+      fc.option(fc.integer({ min: 1, max: 10 ** 9 }), { nil: null }),
       fc.option(value, { nil: null }),
-      (attribute, parameter) => {
-        const length = talkLength(attribute, parameter);
+      (duration, parameter) => {
+        const length = talkLength(duration, parameter);
+        const fromParameter = talkLength(null, parameter);
         assert.ok(
-          length === null || (length > 0 && Number.isFinite(length)),
-          String(length),
+          fromParameter === null ||
+            (fromParameter > 0 && Number.isFinite(fromParameter)),
+          String(fromParameter),
         );
-        const fromParameter = talkLength(undefined, parameter);
-        if (fromParameter !== null) {
-          assert.equal(length, fromParameter);
-        }
+        assert.equal(length, fromParameter ?? duration);
       },
     ),
     { numRuns: RUNS },
@@ -118,22 +116,6 @@ test("a later time or fewer steps done never give a better pace", () => {
         assert.equal(pace(late, total, less) === "over", late > total);
       },
     ),
-    { numRuns: RUNS },
-  );
-});
-
-test("describe gives the slide, a step part only for a slide with more than one step, and a part for a black screen", () => {
-  fc.assert(
-    fc.property(reachable, fc.boolean(), ([deck, state], blank) => {
-      const text = describe({ ...state, blank }, deck);
-      const steps = maxStep(state.slide, deck);
-      assert.ok(text.startsWith(`Slide ${state.slide} of ${deck.slides}`));
-      assert.equal(
-        text.includes(`, step ${state.step} of ${steps}`),
-        steps > 1,
-      );
-      assert.equal(text.endsWith(", black screen"), blank);
-    }),
     { numRuns: RUNS },
   );
 });

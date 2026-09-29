@@ -2,30 +2,17 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   clock,
-  describe,
   left,
   pace,
+  position,
   SLACK,
   talkLength,
 } from "../src/speaker.ts";
-import type { State } from "../src/state.ts";
+import { deckOf } from "./decks.ts";
+import { nth } from "./nth.ts";
 
-const three = { slides: 3, steps: [1, 3, 2] };
-
-function at(slide: number, step: number, blank = false): State {
-  return {
-    slide,
-    step,
-    view: "speaker",
-    blank,
-    digits: "",
-    help: false,
-    progress: true,
-    every: false,
-    overview: false,
-    selected: 1,
-  };
-}
+// Three slides. Slide 2 has three steps, and slide 3 has two steps.
+const three = deckOf([1, 3, 2]);
 
 test("clock gives minutes and seconds", () => {
   assert.equal(clock(0), "0:00");
@@ -43,29 +30,40 @@ test("clock gives 0:00 for a time less than zero", () => {
   assert.equal(clock(-5_000), "0:00");
 });
 
-test("describe gives the slide, and the step of a slide with more than one step", () => {
-  assert.equal(describe(at(1, 1), three), "Slide 1 of 3");
-  assert.equal(describe(at(2, 2), three), "Slide 2 of 3, step 2 of 3");
+test("position gives the position of the entry", () => {
+  assert.equal(position(nth(three.steps, 0), false), "Slide 1 of 3");
+  assert.equal(
+    position(nth(three.steps, 2), false),
+    "Slide 2 of 3, step 2 of 3",
+  );
 });
 
-test("describe tells about a black screen", () => {
-  assert.equal(describe(at(1, 1, true), three), "Slide 1 of 3, black screen");
+test("position tells about a black screen", () => {
+  assert.equal(
+    position(nth(three.steps, 0), true),
+    "Slide 1 of 3, black screen",
+  );
 });
 
-test("talkLength reads the minutes of the attribute", () => {
-  assert.equal(talkLength("20", null), 20 * 60_000);
-  assert.equal(talkLength(undefined, null), null);
+test("position gives only the black screen for a deck with no slide", () => {
+  assert.equal(position(undefined, false), "");
+  assert.equal(position(undefined, true), "black screen");
 });
 
-test("talkLength takes the address parameter first", () => {
-  assert.equal(talkLength("20", "15"), 15 * 60_000);
-  assert.equal(talkLength(undefined, "0.5"), 30_000);
+test("talkLength gives the length of the list of the steps", () => {
+  assert.equal(talkLength(20 * 60_000, null), 20 * 60_000);
+  assert.equal(talkLength(null, null), null);
 });
 
-test("talkLength ignores a value that is not a positive number", () => {
+test("talkLength takes the minutes of the address parameter first", () => {
+  assert.equal(talkLength(20 * 60_000, "15"), 15 * 60_000);
+  assert.equal(talkLength(null, "0.5"), 30_000);
+});
+
+test("talkLength ignores a parameter that is not a positive number", () => {
   for (const value of ["", "abc", "0", "-5", "Infinity", "1e305"]) {
-    assert.equal(talkLength(value, null), null, value);
-    assert.equal(talkLength("20", value), 20 * 60_000, value);
+    assert.equal(talkLength(null, value), null, value);
+    assert.equal(talkLength(20 * 60_000, value), 20 * 60_000, value);
   }
 });
 
