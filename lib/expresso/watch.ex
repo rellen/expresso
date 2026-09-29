@@ -1,27 +1,26 @@
 defmodule Expresso.Watch do
   @moduledoc """
-  The watch mode of `mix expresso` and of the binary
+  Serves a deck, and renders it again after each change
 
       $ mix expresso deck.exs [deck.html] --watch [--port 4100]
 
-  The watch mode renders the deck, and it serves the document at
-  `http://127.0.0.1:4100/`. It then renders the deck again after each change
-  to a file of the deck. The page in the browser reloads after each render
-  that succeeds, and it shows the same step. With an output path, the watch
-  mode also writes the document to that file after each render that succeeds.
+  Open `http://127.0.0.1:4100/` in a browser. After each change to the deck
+  file, or to an image, a diagram or a style sheet of the deck, the watch mode
+  renders the deck again. The page then reloads, and it shows the same step.
+  With an output path, the watch mode also writes the document to that file.
 
-  The files of the deck are the deck file, each image, diagram and style sheet
-  that the last render read, and the custom templates of `priv/templates`.
-  `Expresso.Watch.Files` finds their changes, and `Expresso.Watch.Server`
-  serves the page and makes it reload.
+  When a render fails, the watch mode writes the error to the standard error.
+  The page then keeps the last good document, and the output file does not
+  change. Stop the watch mode with Ctrl-C.
 
-  A render that fails writes its message to the standard error. The page then
-  keeps the last document that succeeded, and the output file stays as it is.
-  Each render evaluates the deck file again, and the compiler does not warn
-  about a module of the deck that the render defines again.
+  Three modules do the work:
 
-  The watch mode runs until a person stops the command, for example with
-  Ctrl-C.
+    * `Expresso.DeckFile` records the files that each render reads.
+    * `Expresso.Watch.Files` finds a change to one of those files.
+    * `Expresso.Watch.Server` serves the page, and makes it reload.
+
+  The section "The watch mode" of `docs/architecture.md` gives the design, and
+  the parts that a later version can replace.
   """
 
   alias Expresso.DeckFile
@@ -34,19 +33,20 @@ defmodule Expresso.Watch do
   Run the watch mode for a deck file
 
   The function returns only for an error that stops the watch mode, such as a
-  port in use. It writes the message of that error to the standard error.
+  port in use. It writes the error message to the standard error, and it
+  returns `{:error, message}`.
 
   The options are:
 
-    * `:port` - the port of the server, required. The port 0 gives a free
-      port.
-    * `:notify` - a process that gets `{Expresso.Watch, event}` for each event.
-      The event is `{:serving, url}`, `{:rendered, version}` or
-      `{:failed, message}`. The tests use it.
-    * `:interval` - the time between two snapshots, in milliseconds. The
-      default is 500.
-    * `:device` and `:error_device` - the devices of the messages and of the
+    * `:port` - the port of the server. This option is required. The port 0
+      gives a free port.
+    * `:interval` - the time between two snapshots of the files, in
+      milliseconds. The default is 500.
+    * `:device` and `:error_device` - the devices for the messages and for the
       errors. The defaults are `:stdio` and `:stderr`.
+    * `:notify` - a process that gets `{Expresso.Watch, event}` for each event:
+      `{:serving, url}`, `{:rendered, version}` or `{:failed, message}`. The
+      tests wait for these messages.
   """
   @spec run(Path.t(), Path.t() | nil, keyword()) :: {:error, String.t()}
   def run(input_path, output_path, options) do
@@ -62,7 +62,7 @@ defmodule Expresso.Watch do
           output: output_path,
           server: server,
           options: options,
-          files: [input_path],
+          paths: [input_path],
           snapshot: %{}
         }
         |> render()
@@ -76,43 +76,34 @@ defmodule Expresso.Watch do
 
   defp loop(state) do
     Process.sleep(Keyword.get(state.options, :interval, @interval))
-    snapshot = Files.snapshot(watched(state.files))
+    snapshot = Files.snapshot(watched_paths(state.paths))
 
     if Files.changed?(state.snapshot, snapshot),
       do: state |> render() |> loop(),
       else: loop(%{state | snapshot: snapshot})
   end
 
-  # A render that fails keeps the files of the renders before it, because the
-  # render stops before it reads each file of the deck.
-  #
   # The snapshot of the known files comes before the render. A change during
   # the render then gives a different snapshot at the next look, and a new
   # render. A file that the render reads for the first time gets its state
   # after the render.
   defp render(state) do
-    before = Files.snapshot(watched(state.files))
+    known = Files.snapshot(watched_paths(state.paths))
     started = System.monotonic_time(:millisecond)
-    {result, read} = DeckFile.tracking(fn -> evaluate(state.input) end)
+    {result, read_paths} = DeckFile.track(fn -> render_file(state.input) end)
     milliseconds = System.monotonic_time(:millisecond) - started
 
     state =
       case result do
-        {:ok, html} ->
-          published(state, html, milliseconds, read)
-
-        {:error, message} ->
-          IO.puts(error_device(state.options), "#{clock()} Couldn't render #{state.input}:")
-          IO.puts(error_device(state.options), message)
-          notify(state.options, {:failed, message})
-          %{state | files: Enum.uniq(state.files ++ read)}
+        {:ok, html} -> rendered(state, html, milliseconds, read_paths)
+        {:error, message} -> failed(state, message, read_paths)
       end
 
-    new = state.files |> watched() |> Enum.reject(&Map.has_key?(before, &1))
-    %{state | snapshot: Map.merge(Files.snapshot(new), before)}
+    new_paths = state.paths |> watched_paths() |> Enum.reject(&Map.has_key?(known, &1))
+    %{state | snapshot: Map.merge(Files.snapshot(new_paths), known)}
   end
 
-  defp published(state, html, milliseconds, read) do
+  defp rendered(state, html, milliseconds, read_paths) do
     server = Server.publish(state.server, html)
     written = write(html, state.output, state.options)
 
@@ -122,13 +113,22 @@ defmodule Expresso.Watch do
     )
 
     notify(state.options, {:rendered, server.version})
-    %{state | server: server, files: Enum.uniq([state.input | read])}
+    %{state | server: server, paths: Enum.uniq([state.input | read_paths])}
   end
 
-  # Each render evaluates the deck file again, and a deck module then gets a
-  # new definition. The option stops the warning of the compiler for it. The
-  # option is global, so it holds only for the render.
-  defp evaluate(input_path) do
+  # A render that fails can stop before it reads each file of the deck, so the
+  # watch mode keeps the paths of the renders before it.
+  defp failed(state, message, read_paths) do
+    IO.puts(error_device(state.options), "#{clock()} Couldn't render #{state.input}:")
+    IO.puts(error_device(state.options), message)
+    notify(state.options, {:failed, message})
+    %{state | paths: Enum.uniq(state.paths ++ read_paths)}
+  end
+
+  # Each render evaluates the deck file again, so a deck module gets a new
+  # definition each time. The compiler option stops the warning about that
+  # definition. The option is global, so it holds only during the render.
+  defp render_file(input_path) do
     previous = Code.get_compiler_option(:ignore_module_conflict)
     Code.put_compiler_option(:ignore_module_conflict, true)
 
@@ -160,10 +160,10 @@ defmodule Expresso.Watch do
   # sobelow_skip ["Traversal.FileModule"]
   defp write_to_file(html, output_path), do: File.write(output_path, html)
 
-  # `Expresso.load_templates/0` compiles these templates in each render, so a
-  # new template or a change to a template gives a new render too.
-  defp watched(files),
-    do: Enum.uniq(files ++ Path.wildcard("./priv/templates/{decks,slides}/*.exs"))
+  # `Expresso.load_templates/0` compiles the custom templates in each render,
+  # so a new template or a change to a template also starts a render.
+  defp watched_paths(paths),
+    do: Enum.uniq(paths ++ Path.wildcard("./priv/templates/{decks,slides}/*.exs"))
 
   defp clock do
     {_date, {hour, minute, second}} = :calendar.local_time()

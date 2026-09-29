@@ -99,11 +99,9 @@ When a step fails, the function writes the message to the standard error and ret
 error tuple. The standard output then holds no text. A failed write of the output file is
 also an error.
 
-The function has a clause for `nil` in front of these steps. The clause writes the usage
-text of the mix task to the standard error and returns an error tuple. The two commands do
-not call the function for a command with no argument: `Expresso.CommandLine.run/3` writes
-the usage text with the name of the command, and it also writes the help text for `--help`
-or `-h` in any position.
+The function also has a clause for `nil`, which writes the usage text of the mix task to
+the standard error and returns an error tuple. The two commands never call the function
+with `nil`: "The two commands" below tells what they do for a command with no argument.
 
 `Expresso.to_deck/1` accepts three values:
 
@@ -138,48 +136,48 @@ Step 5 is necessary because Floki drops a doctype node. Therefore the renderer c
 write the doctype, and the deck function adds it after step 4. Without the doctype a
 browser uses the quirks mode, and the layout is not correct.
 
+### The two commands
+
 Two entry points run a command line:
 
-- `Mix.Tasks.Expresso`, for the command `mix expresso <input> [output]`.
+- `Mix.Tasks.Expresso`, for `mix expresso`.
 - `Expresso.BurritoEntryPoint`, for the binary that Burrito makes.
 
 Each entry point calls `Expresso.CommandLine.run/3` with the name of the command and its
-help text, so the two commands agree. That function reads the arguments with
-`Expresso.CommandLine.parse/1`, it runs them, and it gives the exit status. The mix task
-turns the status 1 into `exit({:shutdown, 1})`, and the binary halts the VM with the
-status. The binary also catches an exception of the deck, and it writes the message.
+help text, so the two commands take the same arguments. `run/3` reads the arguments with
+`Expresso.CommandLine.parse/1`, runs them, and returns the exit status:
 
-`Expresso.CommandLine.parse/1` gives `:help` for `--help` or `-h` in any position, and then
-`:version` for `--version` in any position. `Expresso.CommandLine.version/0` gives the text
-of `--version`, from the version of `mix.exs` at compile time. A different argument that
-starts with `-` is an unknown option. `Expresso.CommandLine.run/3` then writes
-`Unknown option:` and the usage text to the standard error, and the exit status is 1. A
-third path gives `Unexpected argument:` in the same way. The argument `-` alone is a path,
-and `Expresso.main/2` reads it as the standard input or the standard output. A path that
+| Arguments | Operation | Exit status |
+| --- | --- | --- |
+| `--help` or `-h`, in any position | Writes the help text. | 0 |
+| `--version`, in any position | Writes the version from `mix.exs`. | 0 |
+| An unknown option, or a third path | Writes `Unknown option:` or `Unexpected argument:`, and the usage text, to the standard error. | 1 |
+| No input path | Writes the usage text to the standard error. | 1 |
+| `<input> [output]` | Calls `Expresso.main/2`. | 0, or 1 for an error |
+| `<input> [output] --watch` | Calls `Expresso.Watch.run/3`. See "The watch mode". | 1, after an error |
+
+Each argument that starts with `-` is an option, except `-` alone. `-` is a path, and
+`Expresso.main/2` reads it as the standard input or the standard output. A path that
 starts with `-` needs a directory in front of it, such as `./-deck.exs`.
 
-The parser is not `OptionParser` of Elixir. That module reads `--` as the end of the
-options, `--no-watch` and `--watch=true` as forms of `--watch`, and `-1` as a path. Each of
-these arguments starts with `-`, so the command gives each one as an unknown option.
+The parser does not use `OptionParser` from Elixir. That module reads `--` as the end of
+the options, `--no-watch` and `--watch=true` as forms of `--watch`, and `-1` as a path.
+Each of these arguments starts with `-`, so the command gives each one as an unknown
+option.
 
-With `--watch`, `Expresso.CommandLine.parse/1` gives `{:watch, input, output, port}`, and
-`Expresso.CommandLine.run/3` calls `Expresso.Watch.run/3` in place of `Expresso.main/2`.
-"The watch mode" below gives the details.
-
-A mix task that returns gives the exit status 0. Therefore `Mix.Tasks.Expresso` exits with
-`exit({:shutdown, 1})` for the status 1, and Mix then gives the exit status 1. The help text
-of the task is its `@moduledoc`, which is also the text of `mix help expresso`.
-
-The task does not call `Mix.Tasks.Help.run/1`. That function runs `deps.loadpaths` again,
-and `deps.loadpaths` changes the working directory of the VM for a moment. In `mix test`,
-the tests that run at the same time then do not find their files.
+A mix task that returns gives the exit status 0, so `Mix.Tasks.Expresso` exits with
+`exit({:shutdown, 1})` for the status 1. Its help text is its `@moduledoc`, which is also
+the text of `mix help expresso`. The task does not call `Mix.Tasks.Help.run/1`. That
+function runs `deps.loadpaths` again, and `deps.loadpaths` changes the working directory
+of the VM for a moment. In `mix test`, the tests that run at the same time then do not
+find their files.
 
 The launcher of Burrito starts the VM with `-s elixir start_cli`. After the boot, the CLI of
 Elixir runs the first argument as a script, and then it halts the VM. Therefore
 `Expresso.BurritoEntryPoint.start/2` runs the command before it returns, and it halts the
-VM. `Expresso.BurritoEntryPoint.run/2` gives the exit status: 0 for `:ok` and for the help
-text, and 1 for an error tuple, an exception or no argument. The CLI of Elixir then does
-not start.
+VM with the exit status. The CLI of Elixir then does not start. The binary also catches an
+exception from the deck, writes the message, and gives the exit status 1. For the mix
+task, Mix writes the exception.
 
 The standard output can close before the command writes all the HTML, as for `| head`:
 
@@ -196,45 +194,44 @@ The standard output can close before the command writes all the HTML, as for `| 
 
 ## The watch mode
 
-`mix expresso deck.exs --watch` serves the document at `http://127.0.0.1:4100/`. It renders
-the deck again after each change to a file of the deck, and the page then reloads on the
-same step. `--port` gives a different port. The binary takes the same options.
+`mix expresso deck.exs --watch` serves the document at `http://127.0.0.1:4100/`. After
+each change to a file of the deck, it renders the deck again, and the page reloads on the
+same step. `--port` gives a different port, and the binary takes the same options.
+
 `Expresso.Watch.run/3` does these steps:
 
 1. `Expresso.Watch.Server.start/1` starts the web server.
-2. `Expresso.render_file/1` makes the HTML. It gives an error tuple for each failure, and
-   it does not raise, so a deck with an error does not stop the watch mode.
-   `Expresso.DeckFile.tracking/1` records each file that the render reads.
-3. After a render that succeeds, `Expresso.Watch.Server.publish/2` serves the new
-   document, and the page reloads. With an output path, the function also writes that
-   file.
-4. After a render that fails, the function writes the message to the standard error. The
-   page keeps the last document that succeeded, and the output file stays as it is.
+2. `Expresso.render_file/1` makes the HTML inside `Expresso.DeckFile.track/1`, which
+   records each file that the render reads. `render_file/1` returns an error tuple for each
+   failure and does not raise, so a deck with an error does not stop the watch mode.
+3. After a good render, `Expresso.Watch.Server.publish/2` serves the new document, and the
+   page reloads. With an output path, the watch mode also writes that file.
+4. After a failed render, the watch mode writes the error to the standard error. The page
+   keeps the last good document, and the output file does not change.
 5. Two times each second, `Expresso.Watch.Files.snapshot/1` records the state of each file
-   of the deck. When `Expresso.Watch.Files.changed?/2` finds a change, the function goes
+   of the deck. When `Expresso.Watch.Files.changed?/2` finds a change, the watch mode goes
    back to step 2.
 
-The files of the deck are these files:
+The watch mode watches these files:
 
 - The deck file.
 - Each image, diagram and style sheet that the last render read. `Expresso.Image`,
-  `Expresso.Element.Diagram` and `Expresso.Css` read each of them with
+  `Expresso.Element.Diagram` and `Expresso.Css` read these files with
   `Expresso.DeckFile.read/1`, which records the path only inside
-  `Expresso.DeckFile.tracking/1`. The three modules know nothing about the watch mode.
-- The custom templates of `./priv/templates/`. See "The templates".
+  `Expresso.DeckFile.track/1`. Thus the three modules need no code for the watch mode.
+- The custom templates in `./priv/templates/`. See "The templates".
 
-The watch mode does not see a file that the script of the deck reads by itself, for
-example with `File.read!/1` or `Code.require_file/1`. After a failed render, the watch mode
-also keeps the files of the renders before it, because a failed render stops before it
-reads each file.
+The watch mode does not see a file that the deck script reads by itself, for example with
+`File.read!/1` or `Code.require_file/1`. A failed render can stop before it reads each file
+of the deck, so the watch mode also keeps the files of the earlier renders.
 
 Each render evaluates the deck file again, so a deck module gets a new definition each
-time. The watch mode sets the option `ignore_module_conflict` of the compiler for the
-render only, so the compiler does not warn about the new definition.
+time. During the render only, the watch mode sets the compiler option
+`ignore_module_conflict`, so the compiler does not warn about the new definition.
 
 ### The contract and the parts that can change
 
-A person sees these parts of the watch mode, and a later version must keep them:
+The user sees these parts of the watch mode, and a later version must keep them:
 
 - The options `--watch` and `--port`.
 - The address `http://127.0.0.1:<port>/`, and a page that reloads on the same step.
@@ -245,29 +242,29 @@ Two parts are internal, and a later version can replace each one:
 
 - `Expresso.Watch.Files` finds the changes. It reads the file system two times each
   second. A replacement can use the events of the operating system, for example with the
-  package `file_system`. On Linux, that package needs `inotifywait` of `inotify-tools`.
-  A replacement must then read the file system when `inotifywait` is not present, so a
-  person never installs a program for the watch mode.
+  package `file_system`. On Linux, that package needs `inotifywait` from `inotify-tools`.
+  A replacement must then read the file system when `inotifywait` is not present, so the
+  user never installs a program for the watch mode.
 - `Expresso.Watch.Server` serves the page and makes it reload. The script in the page asks
   the server for the number of the last render two times each second. A replacement can
   push the reload over a WebSocket, for example with Bandit. The module owns the server
   and the script, so the two always change together. The path `/version` is not a part
   of the contract.
 
-The first version reads the file system and uses `:httpd` because the two need no
+The first version reads the file system and uses `:httpd`, because the two need no
 dependency. They also work in the same way on each operating system and in the binary.
 A deck has a small number of files, so a snapshot two times each second costs little.
 The cost is a delay of 500 milliseconds or less before each render and each reload.
 
 ### The server
 
-The server is `:httpd` of the `inets` application of OTP. `mix.exs` puts `:inets` in
+The server is `:httpd` from the `inets` application of OTP. `mix.exs` puts `:inets` in
 `extra_applications`, so the release of the binary holds it. The server listens on
 127.0.0.1 only, so a different computer cannot read the deck. It serves a private
 directory in the temporary directory of the system, and that directory holds two files:
 
-- `index.html` is the last document that succeeded, with the script of the reload in front
-  of the last `</body>`.
+- `index.html` is the last good document, with the reload script in front of the last
+  `</body>`.
 - `version` holds the number of that render.
 
 `Expresso.Watch.Server.publish/2` writes the document first, and then the number. Each

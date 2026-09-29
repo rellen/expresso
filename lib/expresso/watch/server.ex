@@ -1,31 +1,29 @@
 defmodule Expresso.Watch.Server do
   @moduledoc """
-  The web server of the watch mode, and the reload of its page
+  Serves the page of the watch mode, and makes the page reload
 
-  The server is `:httpd` of the `inets` application of OTP, so it needs no
+  The server is `:httpd` from the `inets` application of OTP, so it needs no
   dependency. It listens on 127.0.0.1 only, so no other computer can read the
-  deck. It serves one private directory in the temporary directory of the
-  system. The directory holds two files:
+  deck. It serves a private directory in the temporary directory of the
+  system, and that directory holds two files:
 
-    * `index.html` is the document of the last render that succeeded, with a
-      small script at the end of the `body`.
-    * `version` holds the number of that render.
+    * `index.html` - the last good document, with a small reload script at the
+      end of the `body`.
+    * `version` - the number of that render.
 
-  The script asks for `version` two times each second. When the number is
-  different from the number of its own document, the script reloads the page.
-  The address holds the slide and the step, so the page shows the same step
-  after the reload. The speaker view gets the script too, because it opens the
-  same address.
+  The script asks for `version` two times each second. When the number is not
+  the number of its own document, the script reloads the page. The address
+  holds the slide and the step, so the page shows the same step after the
+  reload. The speaker view opens the same address, so it reloads too.
 
-  `publish/2` writes a new document, and then a new number. Each write goes to
-  a temporary file first, and a rename then replaces the file, so the server
-  never sends a part of a file.
+  `publish/2` writes the new document, and then the new number. Each write
+  goes to a temporary file, and a rename then replaces the old file. The
+  server thus never sends a part of a file.
 
-  This module owns the server and the script, so the two always agree. The
-  address, the flags and the messages of the command are the contract with a
-  person. The file `version` and the script are not, and a later version can
-  push the reload over a WebSocket with no change to that contract.
-  `docs/architecture.md` gives the details.
+  This module owns the server and the script, so the two always change
+  together. The file `version` and the script are internal: a later version
+  can push the reload over a WebSocket, and the user sees no difference. The
+  section "The watch mode" of `docs/architecture.md` gives the details.
   """
 
   @enforce_keys [:pid, :directory, :port]
@@ -39,14 +37,16 @@ defmodule Expresso.Watch.Server do
           version: non_neg_integer()
         }
 
-  # The time between two questions of the script, in milliseconds.
+  # The time between two requests of the script, in milliseconds.
   @interval 500
 
   @doc """
   Start the server on a port of 127.0.0.1
 
-  The port 0 gives a free port, and `url/1` then gives that port. The page
-  shows a short text until the first call of `publish/2`.
+  The port 0 gives a free port, and `url/1` then returns the address with that
+  port. Until the first call of `publish/2`, the page shows a short text.
+  For a port in use, the function returns an error message that names
+  `--port`.
   """
   @spec start(:inet.port_number()) :: {:ok, t()} | {:error, String.t()}
   def start(port) do

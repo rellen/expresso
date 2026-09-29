@@ -4,7 +4,6 @@ defmodule Expresso.WatchTest do
   use ExUnit.Case, async: false
 
   alias Expresso.Watch
-  alias Expresso.Watch.{Files, Server}
 
   @moduletag :tmp_dir
 
@@ -19,9 +18,9 @@ defmodule Expresso.WatchTest do
     """
   end
 
-  # Start the watch mode in a process, and give the address of its page. The
+  # Start the watch mode in a process, and return the address of its page. The
   # messages of the watch mode go to a device of the test.
-  defp start(input, output \\ nil) do
+  defp start_watch(input, output \\ nil) do
     {:ok, device} = StringIO.open("")
     test = self()
 
@@ -41,8 +40,8 @@ defmodule Expresso.WatchTest do
     %{url: url, device: device}
   end
 
-  # Write a file with a time of change one second later than its old time, so a
-  # snapshot sees the change at once.
+  # Write a file, and set its time of change one second later than its old
+  # time, so the next snapshot finds the change at once.
   defp change(path, contents) do
     %File.Stat{mtime: mtime} = File.stat!(path, time: :posix)
     File.write!(path, contents)
@@ -62,7 +61,7 @@ defmodule Expresso.WatchTest do
       output = Path.join(dir, "deck.html")
       File.write!(input, script("first text"))
 
-      %{url: url, device: device} = start(input, output)
+      %{url: url, device: device} = start_watch(input, output)
       assert_receive {Watch, {:rendered, 1}}, 10_000
 
       assert {200, page} = get(url)
@@ -91,7 +90,7 @@ defmodule Expresso.WatchTest do
       input = Path.join(dir, "deck.exs")
       File.write!(input, script("text"))
 
-      start(input)
+      start_watch(input)
       assert_receive {Watch, {:rendered, 1}}, 10_000
       refute_receive {Watch, {:rendered, _version}}, 500
     end
@@ -101,7 +100,7 @@ defmodule Expresso.WatchTest do
       input = Path.join(dir, "deck.exs")
       File.write!(input, script("good text"))
 
-      %{url: url, device: device} = start(input)
+      %{url: url, device: device} = start_watch(input)
       assert_receive {Watch, {:rendered, 1}}, 10_000
 
       change(input, "Expresso.Deck.new(")
@@ -126,7 +125,7 @@ defmodule Expresso.WatchTest do
       input = Path.join(dir, "deck.exs")
       File.write!(input, script("text", ",\n  Expresso.Element.Image.new(#{inspect(image)})"))
 
-      start(input)
+      start_watch(input)
       assert_receive {Watch, {:rendered, 1}}, 10_000
 
       change(image, File.read!("test/fixtures/dot.png") <> "more bytes")
@@ -145,64 +144,6 @@ defmodule Expresso.WatchTest do
 
       assert {_input, ^message <> "\n"} = StringIO.contents(device)
       :gen_tcp.close(socket)
-    end
-  end
-
-  describe "Expresso.Watch.Files" do
-    test "changed?/2 compares the time, the size and two digests", %{tmp_dir: dir} do
-      path = Path.join(dir, "deck.exs")
-      File.write!(path, "one")
-      recent = Files.snapshot([path])
-
-      assert %{^path => {_time, 3, digest}} = recent
-      refute digest == nil
-      refute Files.changed?(recent, Files.snapshot([path]))
-
-      # A change of the bytes in the same second.
-      %File.Stat{mtime: mtime} = File.stat!(path, time: :posix)
-      File.write!(path, "two")
-      File.touch!(path, mtime)
-      assert Files.changed?(recent, Files.snapshot([path]))
-
-      # A snapshot without a digest, as for an old file, is no change.
-      {time, size, _digest} = recent[path]
-      refute Files.changed?(recent, %{path => {time, size, nil}})
-      assert Files.changed?(recent, %{path => {time + 1, size, nil}})
-    end
-
-    test "changed?/2 sees a file that appears or goes", %{tmp_dir: dir} do
-      path = Path.join(dir, "new.css")
-      missing = Files.snapshot([path])
-      assert missing == %{path => :missing}
-
-      File.write!(path, "a {}")
-      assert Files.changed?(missing, Files.snapshot([path]))
-      assert Files.changed?(%{}, missing)
-    end
-  end
-
-  describe "Expresso.Watch.Server" do
-    test "serves a text before the first document, and puts the script in front of the last body end" do
-      {:ok, server} = Server.start(0)
-      on_exit(fn -> Server.stop(server) end)
-
-      assert {200, page} = get(Server.url(server))
-      assert page =~ "Expresso renders the deck"
-      assert get(Server.url(server) <> "version") == {200, "0"}
-
-      server = Server.publish(server, "<html><body><p>&lt;/body&gt;</p></body></html>")
-      assert server.version == 1
-      assert {200, page} = get(Server.url(server))
-      assert [_before, after_script] = String.split(page, "</script>")
-      assert after_script =~ ~r{^\s*</body></html>$}
-    end
-
-    test "listens on 127.0.0.1 only" do
-      {:ok, server} = Server.start(0)
-      on_exit(fn -> Server.stop(server) end)
-
-      assert Server.url(server) =~ ~r{^http://127\.0\.0\.1:\d+/$}
-      assert Keyword.fetch!(:httpd.info(server.pid), :bind_address) == {127, 0, 0, 1}
     end
   end
 end

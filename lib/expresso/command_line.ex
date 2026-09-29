@@ -1,13 +1,16 @@
 defmodule Expresso.CommandLine do
   @moduledoc """
-  The arguments of the command line of `mix expresso` and of the binary
+  Reads and runs the command line of `mix expresso` and of the binary
 
-  The two commands take the same arguments: an input path, an optional output
-  path, `--watch`, `--port`, `--help` or `-h`, and `--version`. `parse/1` reads
-  them, and `run/3` runs them, so the two commands agree.
+  The two commands take the same arguments:
+
+      <input> [output] [--watch [--port <port>]] [--help | -h] [--version]
+
+  `parse/1` reads the arguments, and `run/3` runs them. The mix task and the
+  binary both call `run/3`, so the two commands agree.
   """
 
-  # The version of `mix.exs`. The binary has no `Mix`, so the value comes in at
+  # The version in `mix.exs`. The binary has no `Mix`, so the value comes in at
   # compile time.
   @version Mix.Project.config()[:version]
 
@@ -18,18 +21,19 @@ defmodule Expresso.CommandLine do
   @doc """
   Read the arguments of a command line
 
-  The function returns `:help` for `--help` or `-h` in any position, and then
-  `:version` for `--version` in any position. For a different argument that
-  starts with `-`, it returns an error tuple with the message. The argument `-`
-  alone is a path: `Expresso.main/2` reads it as the standard input or the
-  standard output. A third path is an error too. Otherwise, the function
-  returns the input path and the output path. A missing path is `nil`.
+  The function returns the first of these results that applies:
 
-  With `--watch`, the function returns `{:watch, input, output, port}` for
-  `Expresso.Watch.run/3`. `--port 4200` or `--port=4200` gives the port, and
-  the port is 4100 without it. The watch mode needs an input file, and it does
-  not write to the standard output, so `-` is an error with `--watch`.
-  `--port` without `--watch` is an error too.
+    * `:help` for `--help` or `-h` in any position.
+    * `:version` for `--version` in any position.
+    * `{:error, message}` for an unknown option, a third path or a bad
+      `--port`. Each argument that starts with `-` is an option, except `-`
+      alone. `--port` without `--watch` is an error too.
+    * `{:watch, input, output, port}` for `--watch`. The port comes from
+      `--port 4200` or `--port=4200`, and it is 4100 without that option. The
+      watch mode needs an input file, and it does not write to the standard
+      output, so `-` is an error for either path.
+    * `{:paths, input, output}` otherwise. A missing path is `nil`, and `-`
+      gives the standard input or the standard output.
 
   A path that starts with `-` needs a directory in front of it, such as
   `./-deck.exs`.
@@ -65,36 +69,40 @@ defmodule Expresso.CommandLine do
     cond do
       Enum.any?(args, &(&1 in ["--help", "-h"])) -> :help
       "--version" in args -> :version
-      true -> args |> watch_options(%{watch: false, port: nil}, []) |> paths()
+      true -> args |> take_watch_options(%{watch: false, port: nil}, []) |> command()
     end
   end
 
   # Take `--watch` and `--port` out of the arguments. The other arguments keep
   # their order.
-  defp watch_options(["--watch" | rest], options, args),
-    do: watch_options(rest, %{options | watch: true}, args)
+  defp take_watch_options(["--watch" | rest], options, args),
+    do: take_watch_options(rest, %{options | watch: true}, args)
 
-  defp watch_options(["--port", value | rest], options, args),
-    do: port(value, rest, options, args)
+  defp take_watch_options(["--port", value | rest], options, args),
+    do: take_port(value, rest, options, args)
 
-  defp watch_options(["--port"], _options, _args), do: {:error, "--port needs a number"}
+  defp take_watch_options(["--port"], _options, _args), do: {:error, "--port needs a number"}
 
-  defp watch_options(["--port=" <> value | rest], options, args),
-    do: port(value, rest, options, args)
+  defp take_watch_options(["--port=" <> value | rest], options, args),
+    do: take_port(value, rest, options, args)
 
-  defp watch_options([arg | rest], options, args), do: watch_options(rest, options, [arg | args])
-  defp watch_options([], options, args), do: {options, Enum.reverse(args)}
+  defp take_watch_options([arg | rest], options, args),
+    do: take_watch_options(rest, options, [arg | args])
 
-  defp port(value, rest, options, args) do
+  defp take_watch_options([], options, args), do: {options, Enum.reverse(args)}
+
+  defp take_port(value, rest, options, args) do
     case Integer.parse(value) do
-      {port, ""} when port in 1..65_535 -> watch_options(rest, %{options | port: port}, args)
+      {port, ""} when port in 1..65_535 -> take_watch_options(rest, %{options | port: port}, args)
       _other -> {:error, "Invalid port: #{value}"}
     end
   end
 
-  defp paths({:error, _message} = error), do: error
+  # Make the result of `parse/1` from the watch options and the other
+  # arguments.
+  defp command({:error, _message} = error), do: error
 
-  defp paths({options, args}) do
+  defp command({options, args}) do
     cond do
       option = Enum.find(args, &option?/1) -> {:error, "Unknown option: #{option}"}
       length(args) > 2 -> {:error, "Unexpected argument: #{Enum.at(args, 2)}"}
@@ -104,6 +112,11 @@ defmodule Expresso.CommandLine do
     end
   end
 
+  # `-` alone is a path, and each other argument that starts with `-` is an
+  # option.
+  defp option?("-" <> rest), do: rest != ""
+  defp option?(_arg), do: false
+
   defp watch(input, _output, _port) when input in [nil, "-"],
     do: {:error, "--watch needs an input file"}
 
@@ -111,26 +124,27 @@ defmodule Expresso.CommandLine do
   defp watch(input, output, port), do: {:watch, input, output, port}
 
   @doc """
-  Run a command line, and give its exit status
+  Run a command line, and return its exit status
 
   `Mix.Tasks.Expresso` and `Expresso.BurritoEntryPoint` both call this
   function. `program` is the name of the command in the usage text, and `help`
-  is the text of `--help`.
+  is the text for `--help`. For each result of `parse/1`:
 
-    * `--help` or `-h` writes `help` to the standard output, and `--version`
-      writes the version. The exit status is 0.
-    * An error of `parse/1` writes the message and the usage text to the
+    * `:help` writes `help` to the standard output. The exit status is 0.
+    * `:version` writes the version to the standard output. The exit status
+      is 0.
+    * `{:error, message}` writes the message and the usage text to the
       standard error. The exit status is 1.
-    * A command with no input path writes the usage text to the standard
-      error. The exit status is 1.
-    * The paths go to `Expresso.main/2`. The exit status is 0 for `:ok` and for
-      a standard output that closed, and 1 for an error. `Expresso.main/2`
-      writes the message of an error.
-    * `--watch` runs `Expresso.Watch.run/3`, which returns only for an error.
-      The exit status is then 1.
+    * `{:paths, nil, _}` writes the usage text to the standard error. The exit
+      status is 1.
+    * `{:paths, input, output}` calls `Expresso.main/2`, which writes each
+      error message. The exit status is 1 for an error, and 0 otherwise. A
+      standard output that closed, as for `| head`, is not an error.
+    * `{:watch, input, output, port}` calls `Expresso.Watch.run/3`. That
+      function returns only for an error, so the exit status is 1.
 
-  The function does not catch an exception of the deck. The binary catches
-  it, and Mix writes it for the mix task.
+  The function does not catch an exception from the deck. The binary catches
+  it and writes the message, and Mix writes it for the mix task.
   """
   @spec run([String.t()], String.t(), String.t()) :: 0 | 1
   def run(args, program, help) do
@@ -166,7 +180,7 @@ defmodule Expresso.CommandLine do
   defp status({:error, _message}), do: 1
 
   @doc """
-  The usage text of a command with the name `program`
+  Return the usage text of a command with the name `program`
 
       iex> Expresso.CommandLine.usage("mix expresso")
       "Usage: mix expresso <input> [output]"
@@ -175,11 +189,8 @@ defmodule Expresso.CommandLine do
   def usage(program), do: "Usage: #{program} <input> [output]"
 
   @doc """
-  The text of `--version`: the name and the version of Expresso
+  Return the text for `--version`: the name and the version of Expresso
   """
   @spec version() :: String.t()
   def version, do: "Expresso #{@version}"
-
-  defp option?("-" <> rest), do: rest != ""
-  defp option?(_arg), do: false
 end

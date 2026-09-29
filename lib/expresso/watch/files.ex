@@ -1,21 +1,22 @@
 defmodule Expresso.Watch.Files do
   @moduledoc """
-  The files of a deck in the watch mode, and their changes
+  Finds a change to the files of a deck
 
-  A render reads the deck file, and it can read more files: an image, a
-  diagram and a style sheet. `Expresso.Watch` renders the deck in
-  `Expresso.DeckFile.tracking/1`, so it knows these files.
+  `Expresso.Watch` takes a snapshot of the files two times each second, and
+  `changed?/2` compares it with the snapshot before it. `Expresso.DeckFile`
+  gives the list of the files.
 
-  `snapshot/1` records the state of each file, and `changed?/2` compares two
-  snapshots. The watch mode takes a snapshot two times each second. The size
-  and the time of the last change come from the file system. That time has a
-  resolution of one second, so a file that changed in the last two seconds
-  also gets a digest of its bytes. `changed?/2` compares two digests only when
-  both snapshots have one, so a second change in the same second is a change,
-  and a digest that a later snapshot does not have is not a change.
+  A snapshot holds the size of each file and the time of its last change. The
+  file system gives that time to the second, so a file that changed in the
+  last two seconds also gets a digest of its bytes. `changed?/2` compares two
+  digests only when both snapshots have one:
 
-  `docs/architecture.md` tells why the watch mode reads the file system and
-  does not use the events of the operating system.
+    * Two changes in the same second give two different digests, so the second
+      change is found.
+    * An old file gets no digest, so a digest that goes away is not a change.
+
+  The section "The watch mode" of `docs/architecture.md` tells why the watch
+  mode reads the file system, and not the events of the operating system.
   """
 
   # A file that changed in this number of seconds gets a digest of its bytes.
@@ -27,9 +28,12 @@ defmodule Expresso.Watch.Files do
   @doc """
   Tell whether a file changed from one snapshot to the next
 
-  A file changed when its time of change or its size is different, when it
-  appears or goes, or when both snapshots have a digest and the digests are
-  different. A path of only one snapshot is a change too.
+  A file changed when:
+
+    * its size or its time of change is different,
+    * it appeared or it went away,
+    * both snapshots have a digest, and the digests are different, or
+    * its path is in only one of the two snapshots.
   """
   @spec changed?(snapshot(), snapshot()) :: boolean()
   def changed?(old, new) do
@@ -43,10 +47,10 @@ defmodule Expresso.Watch.Files do
   defp different?(old, new), do: old != new
 
   @doc """
-  Record the state of each file of a list
+  Record the state of each file in a list
 
-  A file that does not exist gets `:missing`, so a new file or a removed file
-  also gives a different snapshot.
+  A file that does not exist gets `:missing`. A new file or a removed file
+  thus also gives a different snapshot.
   """
   @spec snapshot([Path.t()]) :: snapshot()
   def snapshot(paths) do
