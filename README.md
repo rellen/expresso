@@ -3,7 +3,7 @@
 Declarative slide deck DSL and presenter in Elixir.
 
 Expresso makes one HTML document from a deck. The document holds each slide, the styles and
-a small script. You give the document to a browser, and you present from the browser.
+a small script. Open the document in a browser, and present from there.
 
 ## Status
 
@@ -18,12 +18,14 @@ the design.
 ## Install
 
 Expresso needs Erlang/OTP 29, Elixir 1.20 and Node 24. The file `.tool-versions` gives the
-exact versions. The repository gives a Nix shell with each tool:
+exact versions. The Nix shell of the repository has each tool:
 
 ```sh
 nix develop      # or: direnv allow, after you copy .envrc.example to .envrc
 mix deps.get
 ```
+
+Without Nix, `docs/development.md` tells how to get the same versions.
 
 ## Make a deck
 
@@ -110,20 +112,21 @@ Expresso.Deck.new("my deck")
 mix expresso my_deck.exs my_deck.html
 ```
 
-The second path is optional. Without it, the task writes the HTML to the standard output.
-`-` as the first path reads the script from the standard input, and `-` as the second path
-writes the HTML to the standard output, such as `cat my_deck.exs | mix expresso - -`.
-Without the first path, the task writes the usage text. The task writes the usage text and
-each error message to the standard error, and the exit status is then 1. `mix help expresso`
-or `mix expresso --help` gives the help of the task, and `--version` gives the version of
-Expresso. A different option, such as `--verbose`, is an error, and so is a third path. A
-path that starts with `-` needs a directory in front of it, such as `./-deck.exs`. When the
-reader of the standard output stops, as `| head` does, the task stops with no message, and
-the exit status is 0.
+- The second path is optional. Without it, the task writes the HTML to the standard output.
+- `-` reads the script from the standard input, or writes the HTML to the standard output:
+  `cat my_deck.exs | mix expresso - -`.
+- `mix expresso --help` shows the help, and `mix expresso --version` shows the version of
+  Expresso.
+- The task writes each error message, and the usage text, to the standard error. The exit
+  status is then 1. An unknown option, such as `--verbose`, is an error, and so is a third
+  path.
+- A path that starts with `-` needs a directory in front of it, such as `./-deck.exs`.
+- When the reader of the output stops, as `| head` does, the task stops with no message,
+  and the exit status is 0.
 
 ### Watch a deck
 
-Give `--watch` to serve the document while you write the deck:
+Add `--watch` to serve the document while you write the deck:
 
 ```sh
 mix expresso my_deck.exs --watch
@@ -135,8 +138,8 @@ then reloads, and it shows the same step. The speaker view reloads too.
 
 - `--port 4200` gives a different port.
 - An output path, such as `my_deck.html`, also gets the document after each render.
-- A render that fails writes its message to the terminal, and the page keeps the last
-  document.
+- When a render fails, the task writes the error in the terminal, and the page keeps the
+  last good document.
 - Stop the task with Ctrl-C.
 
 The binary takes the same options.
@@ -147,7 +150,7 @@ Write an option in the deck to apply it to each slide:
 
 | Option | Effect |
 | --- | --- |
-| `transition :slide` | The kind of the move into each slide: `:fade`, `:slide`, `:zoom` or `:none`. The default is `:fade`. |
+| `transition :slide` | How each slide comes in: `:fade`, `:slide`, `:zoom` or `:none`. The default is `:fade`. |
 | `duration 20` | The length of the talk in minutes. The speaker view then shows the time left. |
 | `progress false` | Hide the progress bar at the start. |
 | `slide_numbers true` | Show the number of each slide, such as `3 / 12`. |
@@ -156,7 +159,7 @@ Write an option in the deck to apply it to each slide:
 | `css "deck.css"` | A style sheet, or the path of one. It applies after the theme. |
 | `effect`, `speed`, `easing` | The animation of each overlay. See `docs/how-to/animate-elements.md`. |
 
-A slide takes `transition`, `handout`, `effect`, `speed` and `easing` too. An option of a
+A slide takes `transition`, `handout`, `effect`, `speed` and `easing` too. An option on a
 slide replaces the option of the deck for that slide.
 
 ## Present a deck
@@ -178,9 +181,9 @@ Open the HTML document in a browser.
 | `f` | Put the deck in full screen, or take it out of full screen. |
 | `o` | Show an overview of the slides. |
 | `g` | Show or hide the progress bar. |
-| `?` | Show the list of the keys of the view. The next key closes it. |
+| `?` | Show the keys of this view. The next key closes the list. |
 
-A presentation remote sends `Page Down` and `Page Up`, so a remote operates the deck.
+A presentation remote sends `Page Down` and `Page Up`, so it works with the deck.
 
 ![Three steps forward, one step back, a black screen, and the last slide](https://raw.githubusercontent.com/rellen/expresso/media/present-keys.gif)
 
@@ -201,14 +204,15 @@ change. In the speaker view, only the speaker window shows the overview.
 
 ### The transitions
 
-A change of slide in the present view fades the old slide out and the new slide in. The
-`transition` option of the deck or of a slide changes the kind. A move back plays the same
-kind in reverse. A change of the step keeps the animations of the overlays.
+A move to a different slide in the present view fades the old slide out and the new slide
+in. The `transition` option of the deck or of a slide sets a different kind. A move back
+plays the same kind in reverse. A move to a different step inside a slide uses the
+animations of the overlays.
 
 ![The second slide pushes the first slide out to the left, and a move back brings it in](https://raw.githubusercontent.com/rellen/expresso/media/transition-slide.gif)
 
 The transitions need the View Transitions API of the browser. A browser without it, and a
-reader who asks for reduced motion, get an instant change. The speaker view has no
+user who asks for reduced motion, get an instant change. The speaker view has no
 transitions.
 
 ### The address
@@ -225,8 +229,8 @@ in the speaker view gives a black screen to the audience.
 
 ![The speaker view: the current step, the next step, the notes, the position, the timer and the time left](https://raw.githubusercontent.com/rellen/expresso/media/present-speaker.png)
 
-The timer starts at the first change of the step, and `r` sets it back to `0:00`. A
-browser can block the second window. Then let the document open windows.
+The timer starts at the first change of the step, and `r` sets it back to `0:00`. If the
+browser blocks the second window, let the document open windows.
 
 ### The time of the talk
 
@@ -234,8 +238,8 @@ Write `duration 20` in the deck to give the talk a length of 20 minutes. The spe
 then shows the time left under the timer. The time left turns amber when you are more than
 one minute behind, and red after the end of the time.
 
-Each step gets the same part of the time. You are behind when the time used is longer than
-the part of the time for the steps before the current step.
+Each step gets the same part of the time. You are behind when you used more time than the
+steps before the current step get.
 
 The address parameter `?duration=15` replaces the deck option, so one file can give talks
 of different lengths.
@@ -263,7 +267,7 @@ print show the numbers too.
 
 The handout view shows one page for each step of each slide. In this view, only `j`, `k`,
 `p`, `a` and `?` operate, so the other keys scroll the pages. A printer gets this view
-without the key.
+with no key.
 
 ![The handout view: three pages, one for each step, with the notes under each page](https://raw.githubusercontent.com/rellen/expresso/media/present-handout.png)
 
@@ -277,9 +281,9 @@ end
 ```
 
 `handout :last` gives the last step only, and `handout :all` gives each step. `:last` can
-also go in a list, such as `[2, :last]`. Write `handout :last` in the deck to give the last
-step of each slide without the option. The handout view on a screen shows the same pages as
-the paper. The speaker view still shows each step.
+also go in a list, such as `[2, :last]`. Write `handout :last` in the deck to give only the
+last step of each slide that has no `handout` option. The handout view on a screen shows the
+same pages as the paper. The speaker view still shows each step.
 
 ### The print
 
@@ -317,21 +321,17 @@ Burrito makes a binary for macOS and for Linux, on x86_64 and on aarch64:
 mix release expresso_cli_app
 ```
 
-The binary takes the same two paths as the mix task. It gives the exit status 0 when it
-writes the HTML, and 1 for an error. Without the first path, it writes its usage text with
-the file name of the binary, such as `Usage: expresso_cli_app_linux_x86 <input> [output]`.
-It writes the usage text and each error message to the standard error. With `--help` or
-`-h`, it writes a help text to the standard output, and the exit status is 0. `--version`
-gives the version of Expresso. A different option is an error, and a closed standard output
-gives the exit status 0, as for the mix task.
+The command needs Zig 0.16.0 and `xz` on the path. The Nix shell gives both, and so does
+the hook of a remote Claude Code session.
 
-This command needs Zig 0.16.0 and `xz` on the path. The Nix shell gives both, and the hook
-of a remote Claude Code session gives both.
+The binary takes the same arguments as the mix task, `--watch` too, and it gives the same
+exit status. Its usage text has the file name of the binary, such as
+`Usage: expresso_cli_app_linux_x86 <input> [output]`.
 
 The first run of a binary installs its release on the computer, in a directory that has
 the version of the release. A later binary of the same version runs that installed release,
 and not its own. Therefore change the version in `mix.exs` for each binary that you give
-to other persons. `<binary> maintenance uninstall` removes the installed release.
+to other users. `<binary> maintenance uninstall` removes the installed release.
 
 ## Develop
 
@@ -347,8 +347,8 @@ npm test       # the tests of the presenter script
 `.github/workflows/check.yml` runs the same checks for a pull request, in parallel jobs.
 
 `CLAUDE.md` gives the conventions for a commit message and for prose.
-`docs/development.md` gives more detail, and it tells you how to get a toolchain in a
-container that has no Nix.
+`docs/development.md` gives more detail, and it tells you how to get a toolchain without
+Nix.
 
 ## Documents
 
