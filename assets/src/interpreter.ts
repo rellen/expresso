@@ -162,6 +162,13 @@ function apply(
         : gotoSlide({ ...state, digits: "" }, Number(state.digits), deck);
     case "builtin":
       return state;
+    default: {
+      // The type check finds each command that has no branch. The program
+      // comes from the renderer with no examination, so a command that the
+      // script does not know stops the script at once.
+      const unknown: never = command;
+      throw new Error(`An unknown command: ${JSON.stringify(unknown)}`);
+    }
   }
 }
 

@@ -4,8 +4,9 @@ defmodule Expresso.Presenter.Extension do
 
   It gives the options `state` and `sync`, the `mode` entity, and the `key` and
   `event` entities of a mode. The entities `attribute`, `property` and `mark`
-  give the projections of `Expresso.Presenter.Projection`. It imports `Expresso.Presenter.Commands`, so a
-  binding can write `step(1)` in place of `{:step, 1}`.
+  give the projections of `Expresso.Presenter.Projection`. It imports
+  `Expresso.Presenter.Commands`, so a binding can write `step(1)` in place of
+  `{:step, 1}`.
   `Expresso.Presenter.Verifier` runs when a module that uses the DSL compiles.
 
   Only `Expresso.Presenter.Default` uses the DSL. A deck cannot change the

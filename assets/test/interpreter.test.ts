@@ -84,6 +84,21 @@ test("the TypeScript interpreter returns the result of the Elixir interpreter fo
   assert.ok(events >= 900, `only ${events} events`);
 });
 
+test("run throws for a command that the script does not know", () => {
+  const { deck, program } = load("1,2");
+  const mode = program.modes.find((each) => each.name === "present");
+  assert.ok(mode);
+  const broken = {
+    ...program,
+    modes: [{ ...mode, other: [["jump", 1]] as unknown as Command[] }],
+  };
+
+  assert.throws(
+    () => run(broken, deck, program.state, { kind: "key", key: "x" }),
+    { message: 'An unknown command: ["jump",1]' },
+  );
+});
+
 test("a state with no change is the same object", () => {
   const { deck, program } = load("1,2");
   const state = program.state;

@@ -689,6 +689,37 @@ defect of the renderer, and the ExUnit tests and the fixtures already find such 
 Without the examination, `program.ts` needs approximately 50 lines for its types and one
 parse. Decision 11 asks the maintainer about this.
 
+### The result of decision 11
+
+The maintainer answered decision 11 after a comparison of three options. The script
+trusts the program, and the tests examine it:
+
+- `parse` in `program.ts` makes maps and objects of the JSON, and it examines no value.
+- The examination moved to `assets/test/validate.ts`. A test runs it on each program of
+  the fixture file, and it makes sure that `parse` returns the same program.
+- The interpreter throws for a command that it does not know. Before, such a command
+  gave the state `undefined`.
+- The click handler reads commands only from `a.goto[data-commands]` and from
+  `.handout-page[data-commands]`. Before, it read each element with `data-commands`, so a
+  deck could run commands from the HTML of a text area.
+
+These are the measurements:
+
+| Measurement | Before | After |
+| --- | --- | --- |
+| Lines of code of `assets/src/` | 1039 | 858 |
+| Lines of code of `program.ts` | 280 | 93 |
+| Bytes of the bundle | 12191 | 9678 |
+| Bytes of the bundle with `gzip -9` | 4550 | 3924 |
+
+The script has 181 fewer lines of code, and the bundle is 21 % smaller. The estimate was
+approximately 230 lines. The difference comes from the types of the JSON as the renderer
+writes it, which `parse` needs, and from the two guards.
+
+The estimate of "What moves" was 400 to 550 lines. The script is now 858 lines of code.
+`deck.ts` examines the list of the steps in the same way, and the same option can remove
+most of its 98 lines.
+
 ## The options that do not agree
 
 | Option | The reason |
@@ -737,7 +768,7 @@ Do each part in its own pull request, in this sequence:
 
 ## The decisions
 
-The maintainer decides each of these. Decisions 8 and 9 are settled, and the answer
+The maintainer decides each of these. Decisions 8, 9 and 11 are settled, and the answer
 follows each of them.
 
 1. Does Elixir own the table of keys?
@@ -761,7 +792,9 @@ follows each of them.
 10. Does the key `r` remove the typed digits, as `s` and `f` do?
 11. Does `program.ts` examine the program at load? The renderer writes the program and the
     script into the same document, and the tests already examine the program. Without the
-    examination, the script is approximately 230 lines of code smaller.
+    examination, the script is approximately 230 lines of code smaller. Answer: the script
+    trusts the program, and the tests examine it. "The result of decision 11" gives the
+    details.
 
 ## The sources
 
