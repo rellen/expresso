@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { indexOf, isKind, parse } from "../src/deck.ts";
+import { indexOf, parse } from "../src/deck.ts";
+import { raw } from "./fixtures.ts";
+import { isKind, validateDeck } from "./validate.ts";
 import { deckOf, json } from "./decks.ts";
 
 // Three slides. Slide 2 has three steps, and slide 3 has two steps.
@@ -26,7 +28,7 @@ test("parse reads the text of the renderer for a deck of two slides", () => {
   assert.deepEqual(parse(text), deckOf([1, 2], { duration: 300_000 }));
 });
 
-test("parse throws for a text that is not a list of the renderer", () => {
+test("validateDeck refuses a text that is not a list of the renderer", () => {
   const good = JSON.parse(json(three)) as Record<string, unknown>;
   const texts = [
     "null",
@@ -53,10 +55,19 @@ test("parse throws for a text that is not a list of the renderer", () => {
   ];
   for (const text of texts) {
     assert.throws(
-      () => parse(text),
+      () => validateDeck(text),
       { message: "The list of the steps is not valid" },
       text,
     );
+  }
+});
+
+// The script trusts the list, so this test examines each list of the fixture
+// file.
+test("each list of the fixture file is valid, and parse reads it as validateDeck does", () => {
+  for (const [name, { deck }] of Object.entries(raw.decks)) {
+    const text = JSON.stringify(deck);
+    assert.deepEqual(parse(text), validateDeck(text), name);
   }
 });
 

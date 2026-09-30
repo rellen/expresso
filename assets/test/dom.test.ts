@@ -85,13 +85,8 @@ test("deck reads an empty list for a document with no slide", () => {
   assert.deepEqual(deck(), deckOf([]));
 });
 
-test("deck throws for a document with no list, or a list that is not valid", () => {
+test("deck throws for a document with no list", () => {
   const doc = fakeDocument([1]);
-  doc.list.textContent = "{}";
-  assert.throws(() => deck(), {
-    message: "The list of the steps is not valid",
-  });
-
   doc.list.id = "";
   assert.throws(() => deck(), {
     message: "The document has no list of the steps",

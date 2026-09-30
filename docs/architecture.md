@@ -749,8 +749,9 @@ deck:
 
 The state holds the index of the current step in `steps`. A move forward adds 1 to the
 index, and a move back subtracts 1. Each other value comes from the entry at the index, so
-the script calculates nothing from the deck. `parse` in `deck.ts` makes sure of the type of
-each value, and a list that is not valid stops the script with an error.
+the script calculates nothing from the deck. The script trusts the list, as it trusts the
+program of the next section. `validateDeck` in `assets/test/validate.ts` examines each
+list of the fixture file.
 `docs/research/elixir-presenter-report.md` gives the reason for the list.
 
 ### The program
