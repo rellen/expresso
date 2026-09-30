@@ -130,4 +130,19 @@ defmodule Expresso.E2E.PresenterTest do
     page |> press("g")
     assert js(page, "getComputedStyle(#{bar}).display") == "none"
   end
+
+  test "the typed digits show until Enter", %{page: page} do
+    digits = "getComputedStyle(document.body, '::after').content"
+    assert js(page, digits) == "none"
+
+    page |> keys(["1", "2"])
+    assert js(page, digits) == ~s("12")
+
+    page |> press("Backspace") |> press("3")
+    assert js(page, digits) == ~s("3")
+
+    page |> press("Enter")
+    assert js(page, digits) == "none"
+    assert position(page) == "3.1"
+  end
 end
