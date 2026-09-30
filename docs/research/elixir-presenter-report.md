@@ -472,7 +472,7 @@ The lines of code do not include the documentation and the comments. `Program` i
 smaller than the estimate, because it does not write the JSON yet. Step 3 adds that. The
 renderer does not use the three modules yet, so the script in the browser does not change.
 
-A comparison with the script of today gave the result. It did these steps:
+The result comes from a comparison with the script of today, in these steps:
 
 1. Elixir made 2000 random decks of 0 to 8 slides, and 60 random events for each deck.
 2. The Elixir interpreter recorded the state, the call of `preventDefault`, the built-in
@@ -480,17 +480,18 @@ A comparison with the script of today gave the result. It did these steps:
 3. A Node script sent the same events through `state.ts`, as the listeners of `main.ts`
    do, and it compared each result.
 
-Two runs with different random seeds gave 240000 events and no difference. The events
-reached each difficult part of the state:
+Two runs with different random seeds sent 240000 events, and the comparison found no
+difference. The events reached each difficult part of the state:
 
 - Approximately 12 % of the states had the overview.
 - Approximately 16 % of the states had typed digits.
 - Approximately 2 % of the states had a black screen, and 2 % had the list of keys.
-- 228 of the 2000 decks of one run had no slide. To
-make sure that the comparison finds a difference, two deliberate changes went into the
-model, one at a time. Each change gave approximately 259 differences. The comparison
-scripts are not in the repository. Step 3 makes them permanent, as the fixtures of the
-tests of the TypeScript interpreter.
+- 228 of the 2000 decks of one run had no slide.
+
+To make sure that the comparison finds a difference, two deliberate changes went into the
+model, one at a time. Each change caused approximately 259 differences. The comparison
+scripts are not in the repository. Step 3 makes them permanent, as test fixtures for the
+TypeScript interpreter.
 
 The tests of the model are in `test/expresso/presenter/`: 58 tests, 17 properties with
 500 runs each, and 2 doctests. They come from `state.test.ts` and
@@ -500,25 +501,25 @@ does not hold the code that they test:
 - `message`, `isMessage`, `stamp` and `accepts`: the protocol of the messages between the
   windows.
 - `side` and `swipe`: the sources of the click events and the swipe events.
-- `binding`, `mode` and the rows of the table with no key: the structure of the table
-  `BINDINGS`.
+- `binding`, `mode` and the rows with no key: the structure of the table `BINDINGS`.
 
 The TypeScript tests stay until step 3 replaces `state.ts`.
 
-The work found four facts that the design above does not give:
+The work found four facts that the design above does not contain:
 
 - **A click on a page needs a flag on the mode.** A page of the overview holds the
   commands that go to its slide. The speaker view also shows pages, and there a click on a
   page is a plain click that moves one step. Therefore a mode has the flag `element`, and
   only the overview sets it.
-- **The overview needs two forms of `select`.** `ArrowDown` adds a number of columns, and
-  `End` selects the last slide. `select_by` moves by a number, and `select` goes to a
-  number. The model has 12 commands, as the estimate said.
-- **`clear` gives a field its first value.** The definition declares the first value of
+- **The overview needs two forms of `select`.** `ArrowDown` moves the selection by the
+  number of columns, and `End` selects the last slide. `select_by` moves the selection by
+  a number, and `select` selects a slide by its number. The model has 12 commands, as the
+  estimate said.
+- **`clear` sets a field to its first value.** The definition declares the first value of
   each field, so `clear(:digits)` needs no value.
 - **The fragment and the messages do not go through the modes.** They go to a slide and a
   step directly, as the design said. A fragment also removes a black screen, and a message
-  gives its own black screen.
+  sets the black screen that the other window sends.
 
 The key `r` keeps the typed digits, as the code of today does. The binding of `r` has
 `each: false`, so the definition shows the difference from `s` and `f`. Decision 10 is
@@ -557,7 +558,7 @@ tests of `fraction`, `done` and the position text are now ExUnit tests of
 `Expresso.Steps`.
 
 Step 2 of "The prototype" is also done, and each rule fits the model. The section "The
-result of step 2" gives the measurements.
+result of step 2" contains the measurements.
 
 Do each part in its own pull request, in this sequence:
 

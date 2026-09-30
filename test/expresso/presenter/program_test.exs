@@ -11,7 +11,7 @@ defmodule Expresso.Presenter.ProgramTest do
 
   describe "compile/2" do
     test "changes each symbol into a number for the deck" do
-      # Seven slides give three columns. The last slide starts at the index 8.
+      # A deck of seven slides has three columns. Step 1 of the last slide has the index 8.
       program = program([1, 1, 3, 1, 1, 1, 2])
       overview = mode(program, :overview)
       present = mode(program, :present)
@@ -26,7 +26,7 @@ defmodule Expresso.Presenter.ProgramTest do
       assert mode(program([]), :present).keys["End"] == [{:clear, :digits}, {:goto, nil}]
     end
 
-    test "puts the each commands of a mode in front of each binding, except where a binding refuses them" do
+    test "puts the each commands of a mode in front of each binding, except a binding with each: false" do
       present = mode(program([1]), :present)
 
       assert present.keys["j"] == [{:clear, :digits}, {:step, 1}]
@@ -38,7 +38,7 @@ defmodule Expresso.Presenter.ProgramTest do
       assert mode(program([1]), :speaker).keys["r"] == [{:builtin, :reset_timer}]
     end
 
-    test "gives each key its binding of the mode only" do
+    test "puts each binding of a key in its own mode only" do
       program = program([1])
 
       assert mode(program, :present).keys["s"] == [{:clear, :digits}, {:builtin, :open_speaker}]

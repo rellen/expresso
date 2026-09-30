@@ -1,8 +1,11 @@
 defmodule Expresso.Presenter.InterpreterTest do
-  # The tests of `assets/test/state.test.ts`, on the model. The tests of the
-  # messages between the windows (`message`, `isMessage`, `stamp` and
-  # `accepts`) and of the sources of events (`side` and `swipe`) stay in
-  # TypeScript, because the model does not hold that code.
+  # This module holds the tests of `assets/test/state.test.ts`, for the model in
+  # Elixir. Some tests stay in TypeScript only, because the model does not hold
+  # the code that they test:
+  #
+  #   * `message`, `isMessage`, `stamp` and `accepts` - the messages between the
+  #     windows.
+  #   * `side` and `swipe` - the sources of the click events and the swipe events.
   use ExUnit.Case, async: true
 
   import Expresso.Test.Presenter, only: [program: 1, program: 2, run: 3]
@@ -27,7 +30,7 @@ defmodule Expresso.Presenter.InterpreterTest do
       assert Interpreter.initial(@three) == at(1, 1)
     end
 
-    test "entry gives the slide and the step, and nil for a deck with no slide" do
+    test "entry returns the slide and the step, and nil for a deck with no slide" do
       assert Interpreter.entry(@three, at(2, 3)) == {2, 3}
       assert Interpreter.entry(program([]), Interpreter.initial(program([]))) == nil
     end
@@ -38,7 +41,7 @@ defmodule Expresso.Presenter.InterpreterTest do
       assert key(at(1, 1), "j") == at(2, 1)
     end
 
-    test "j on the last step of the last slide gives the same state, and the key goes to the browser" do
+    test "j on the last step of the last slide does not change the state, and the key goes to the browser" do
       assert effects(at(3, 2), "j") == {at(3, 2), [], false}
     end
 
@@ -74,11 +77,11 @@ defmodule Expresso.Presenter.InterpreterTest do
       end
     end
 
-    test "an unknown key gives the same state" do
+    test "an unknown key does not change the state" do
       assert effects(at(2, 2), "x") == {at(2, 2), [], false}
     end
 
-    test "upcoming gives the next step, and nil at the end of the deck" do
+    test "upcoming returns the next step, and nil at the end of the deck" do
       assert @three |> Interpreter.upcoming(at(2, 2)) == at(2, 3)
       assert @three |> Interpreter.upcoming(at(2, 3)) == at(3, 1)
       assert @three |> Interpreter.upcoming(at(3, 2)) == nil
@@ -148,11 +151,11 @@ defmodule Expresso.Presenter.InterpreterTest do
       assert keys(at(2, 2), ["0", "Enter"]) == at(2, 2)
     end
 
-    test "Enter without digits gives the same state, and the key goes to the browser" do
+    test "Enter without digits does not change the state, and the key goes to the browser" do
       assert effects(at(2, 2), "Enter") == {at(2, 2), [], false}
     end
 
-    test "a key that is not a digit removes the digits, also a key with no binding" do
+    test "a key that is not a digit removes the digits, and so does a key with no binding" do
       assert keys(at(1, 1), ["3", "j"]) == at(2, 1)
       assert keys(at(1, 1), ["3", "x"]) == at(1, 1)
       assert effects(%{at(1, 1) | digits: "3"}, "x") == {at(1, 1), [], true}
@@ -160,7 +163,7 @@ defmodule Expresso.Presenter.InterpreterTest do
   end
 
   describe "the black screen and the list of keys" do
-    test "b gives a black screen, and the next key shows the slide again and does no more" do
+    test "b shows a black screen, and the next key shows the slide again and does no more" do
       blank = key(at(2, 2), "b")
       assert blank == %{at(2, 2) | blank: true}
 
@@ -199,8 +202,9 @@ defmodule Expresso.Presenter.InterpreterTest do
       assert effects(at(1, 1, :handout), "f") == {at(1, 1, :handout), [], false}
     end
 
-    # The key `r` keeps the digits today. `docs/research/elixir-presenter-report.md`
-    # asks the maintainer about this difference from `s` and `f`.
+    # The key `r` keeps the digits today, and the keys `s` and `f` remove them.
+    # `docs/research/elixir-presenter-report.md` asks the maintainer about this
+    # difference.
     test "r sets the timer in the speaker view only, and keeps the digits" do
       typed = %{at(1, 1, :speaker) | digits: "3"}
       assert effects(typed, "r") == {typed, [:reset_timer], true}
@@ -243,18 +247,18 @@ defmodule Expresso.Presenter.InterpreterTest do
   end
 
   describe "the address" do
-    test "hash gives the slide and the step, and #1.1 for a deck with no slide" do
+    test "hash returns the slide and the step, and #1.1 for a deck with no slide" do
       assert Interpreter.hash(@three, at(2, 3)) == "#2.3"
       assert Interpreter.hash(program([]), Interpreter.initial(program([]))) == "#1.1"
     end
 
-    test "a fragment gives a slide and a step, and a slide alone is step 1" do
+    test "a fragment goes to a slide and a step, and a slide alone goes to step 1" do
       assert run(@three, at(1, 1), {:hash, "#2.3"}) == at(2, 3)
       assert run(@three, at(1, 1), {:hash, "#3"}) == at(3, 1)
       assert run(@three, at(1, 1, :handout), {:hash, "#2.2"}) == at(2, 2, :handout)
     end
 
-    test "a fragment that the deck does not have gives the same state" do
+    test "a fragment that the deck does not have does not change the state" do
       state = at(2, 2)
 
       for hash <- [
@@ -288,7 +292,7 @@ defmodule Expresso.Presenter.InterpreterTest do
                %{at(3, 2, :speaker) | blank: true}
     end
 
-    test "a message for the same position or a position not in the deck gives the same state" do
+    test "a message for the same position or a position not in the deck does not change the state" do
       state = at(2, 2)
 
       for event <- [message(2, 2), message(4, 1), message(2, 4), message(0, 1)] do
@@ -298,7 +302,7 @@ defmodule Expresso.Presenter.InterpreterTest do
   end
 
   describe "the overview" do
-    # Seven slides of one step each give three columns.
+    # A deck of seven slides with one step each has three columns.
     @seven program([1, 1, 1, 1, 1, 1, 1])
 
     defp grid(selected, slide \\ 4),
@@ -358,7 +362,7 @@ defmodule Expresso.Presenter.InterpreterTest do
       end
     end
 
-    test "a click under the list of keys of the overview closes only the list" do
+    test "in the overview, a click on a page under the list of keys closes only the list" do
       help = %{grid(4) | help: true}
       assert run(@seven, help, {:click, :right, Program.element(6)}) == grid(4)
     end
@@ -386,7 +390,7 @@ defmodule Expresso.Presenter.InterpreterTest do
       assert transition(on(4, 1), on(1, 1)) == %{kind: "zoom", direction: :back}
     end
 
-    test "the kind none gives no transition in the two directions" do
+    test "the kind none has no transition in the two directions" do
       assert transition(on(2, 2), on(3, 1)) == nil
       assert transition(on(3, 1), on(2, 2)) == nil
     end

@@ -1,7 +1,7 @@
 defmodule Expresso.Presenter.InterpreterPropertyTest do
-  # The properties of `assets/test/state_property.test.ts`, on the model. The
-  # properties of `accepts`, `stamp`, `side` and `swipe` stay in TypeScript,
-  # because the model does not hold that code.
+  # This module holds the properties of `assets/test/state_property.test.ts`, for
+  # the model in Elixir. The properties of `accepts`, `stamp`, `side` and `swipe`
+  # stay in TypeScript only, because the model does not hold that code.
   use ExUnit.Case, async: true
   use ExUnitProperties
 
@@ -9,7 +9,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
 
   alias Expresso.Presenter.{Interpreter, Program}
 
-  # The number of runs of each property, as in the TypeScript tests.
+  # Each property runs 500 times, as in the TypeScript tests.
   @runs 500
 
   @kinds [:none, :fade, :slide, :zoom]
@@ -32,7 +32,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     frequency([{9, member_of(@keys)}, {1, member_of(["x", "Tab", "F5", "Shift"])}])
   end
 
-  # A number of a slide or a step, inside and outside the deck.
+  # A slide number or a step number, inside and outside the deck.
   defp near(maximum), do: integer(-1..(maximum + 2))
 
   defp slides(program), do: tuple_size(program.slides)
@@ -62,8 +62,8 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     ])
   end
 
-  # A state that the presenter can get to in a deck: the first state of the
-  # present view or of the speaker view, after 0 to 60 events.
+  # A state that the presenter can go to in a deck: the first state of the
+  # present view or the speaker view, after 0 to 60 events.
   defp state_in(program) do
     gen all view <- member_of([:present, :speaker]),
             events <- list_of(event(program), max_length: 60) do
@@ -101,7 +101,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "a forward key and then k give the same step, and a forward key that gives the same state is the end" do
+  property "a forward key and then k return to the same step, and a forward key that changes nothing is at the last step" do
     check all {program, state} <- shown(),
               key <- member_of(@forward),
               max_runs: @runs do
@@ -116,21 +116,21 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "upcoming is nil only at the last step of the last slide" do
+  property "upcoming returns nil only at the last step of the last slide" do
     check all {program, state} <- reachable(), max_runs: @runs do
       last = state.index == tuple_size(program.steps) - 1
       assert Interpreter.upcoming(program, state) == nil == last
     end
   end
 
-  property "the fragment of a state gives the step of the state" do
+  property "the fragment of a state goes to the step of that state" do
     check all {program, state} <- reachable(), max_runs: @runs do
       read = run(program, Interpreter.initial(program), {:hash, Interpreter.hash(program, state)})
       assert read.index == state.index
     end
   end
 
-  property "a fragment gives a slide and a step of the deck, and other fragments give the same state" do
+  property "a fragment goes to a slide and a step of the deck, and other fragments do not change the state" do
     check all program <- decks(),
               state <- state_in(program),
               hash <- fragment(program),
@@ -152,7 +152,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "a message of a state gives the step and the black screen of the state" do
+  property "a message of a state goes to the step and the black screen of that state" do
     check all program <- decks(),
               sender <- state_in(program),
               receiver <- state_in(program),
@@ -164,7 +164,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "a message with a slide and a step that the deck does not have gives the same state" do
+  property "a message with a slide and a step that the deck does not have does not change the state" do
     check all program <- decks(),
               state <- state_in(program),
               {:message, data} = message <- message(program),
@@ -175,7 +175,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "the slide with the higher number gives the kind of a transition in the two directions" do
+  property "in the two directions, the kind of a transition comes from the slide with the higher number" do
     check all program <- decks(),
               a <- state_in(program),
               b <- state_in(program),
@@ -216,7 +216,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "a key that no binding of the mode has gives the same state" do
+  property "a key with no binding in the mode does not change the state" do
     check all {program, state} <- shown(), key <- key(), max_runs: @runs do
       state = %{state | digits: ""}
 
@@ -245,7 +245,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "a digit adds to the slide number, Enter goes to step 1 of that slide, and each other key removes the digits" do
+  property "a digit adds to the slide number, Enter goes to step 1 of that slide, and each other key except r removes the digits" do
     check all {program, state} <- shown(),
               view <- member_of([:present, :speaker]),
               digits <- map(list_of(member_of(@digits), max_length: 3), &Enum.join/1),
@@ -294,7 +294,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "a click on a page of the overview goes to step 1 of its slide, and for a number that is not a slide it only closes the overview" do
+  property "a click on a page of the overview goes to step 1 of its slide, or only closes the overview for a slide outside the deck" do
     check all {program, state} <- shown(),
               slide <- integer(-2..(slides(program) + 2)),
               max_runs: @runs do
@@ -310,7 +310,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "a click, a tap or a swipe in the handout view or in the overview gives the same state" do
+  property "a click, a tap or a swipe in the handout view or in the overview does not change the state" do
     check all {program, state} <- shown(),
               where <- member_of([:handout, :overview]),
               event <-
@@ -330,7 +330,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "columns gives the smallest number of columns with as many rows as columns or fewer" do
+  property "columns returns the smallest number of columns with as many rows as columns or fewer" do
     check all slides <- integer(1..100_000), max_runs: @runs do
       width = Program.columns(slides)
       assert width * width >= slides

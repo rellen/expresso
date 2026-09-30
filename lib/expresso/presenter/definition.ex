@@ -2,9 +2,10 @@ defmodule Expresso.Presenter.Definition do
   @moduledoc """
   Holds each rule of the presenter as data: modes, bindings and commands
 
-  This module is step 2 of the prototype in the section "The interpreter" of
-  `docs/research/elixir-presenter-report.md`. It holds the rules of
-  `assets/src/state.ts` and `assets/src/main.ts`. `Expresso.Presenter.Program`
+  This module is step 2 of the prototype that
+  `docs/research/elixir-presenter-report.md` describes in its section "The
+  interpreter". It holds the rules of `assets/src/state.ts` and
+  `assets/src/main.ts`. `Expresso.Presenter.Program`
   makes the program of one deck from it, and `Expresso.Presenter.Interpreter`
   runs that program. The renderer does not use these modules yet, so the script
   in the browser does not change.
@@ -15,8 +16,8 @@ defmodule Expresso.Presenter.Definition do
   interpreter uses the first mode whose condition the state matches. A mode
   holds:
 
-    * `bindings` - each binding gives one or more events, a list of commands and
-      the text of the list of keys.
+    * `bindings` - each binding holds one or more events, a list of commands and
+      its row in the list of keys.
     * `each` - the commands that go in front of each binding. The present, the
       speaker and the handout views remove the typed digits with each key. A
       binding with `each: false` does not get them.
@@ -33,19 +34,39 @@ defmodule Expresso.Presenter.Definition do
     * `{:swipe, :left}` and `{:swipe, :right}` - a movement of one finger.
     * `:element` - a click on an element that holds commands.
 
-  `Expresso.Presenter.Interpreter` gives the commands.
+  ## The commands
+
+    * `{:set, field, value}` - sets a field to a value.
+    * `{:toggle, field}` - changes a field from true to false, or from false to
+      true.
+    * `{:clear, field}` - sets a field to its first value, which `presenter/0`
+      declares.
+    * `{:assign, :selected, {:entry, :slide}}` - selects the slide of the current
+      step.
+    * `{:append, :digits}` - adds the key to the typed digits.
+    * `{:step, count}` - moves forward or back by a number of steps. A move past
+      the first step or the last step makes no change.
+    * `{:goto, index}` - goes to the step at an index in the deck.
+    * `{:goto_slide, slide}` - goes to step 1 of a slide. With `:selected`, it
+      goes to step 1 of the selected slide.
+    * `{:select, slide}` and `{:select_by, count}` - select a slide in the
+      overview, or move the selection by a number of slides. A slide outside the
+      deck makes no change.
+    * `:go_typed` - goes to step 1 of the slide that the typed digits give, and
+      removes the digits.
+    * `{:builtin, name}` - calls a built-in function of the browser:
+      `:open_speaker`, `:fullscreen` or `:reset_timer`.
+
+  A definition can hold two symbols in place of a number: `:last_slide` and
+  `{:columns, sign}`. `Expresso.Presenter.Program` changes each symbol into a
+  number for the deck.
   """
 
   @typedoc "A field of the state"
   @type field ::
           :index | :view | :blank | :help | :digits | :overview | :selected | :progress | :every
 
-  @typedoc """
-  A command of a definition
-
-  `Expresso.Presenter.Program` changes each symbol, such as `:last_slide`, into
-  a number for the deck.
-  """
+  @typedoc "A command of a definition. The section \"The commands\" of the module documentation tells what each command does."
   @type command ::
           {:set, field(), term()}
           | {:toggle, field()}
@@ -213,8 +234,8 @@ defmodule Expresso.Presenter.Definition do
   defp only(true, bindings), do: bindings
   defp only(false, _bindings), do: []
 
-  # The handout view knows only these keys, so the browser keeps the other
-  # keys, and the arrow keys and the space bar scroll the pages.
+  # The handout view knows only these keys. The browser gets each other key,
+  # so the arrow keys and the space bar scroll the pages.
   defp handout do
     [
       binding(keys(["j"]), [{:step, 1}], "Next step. The present view then shows it."),
