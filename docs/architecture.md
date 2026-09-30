@@ -1103,7 +1103,17 @@ The commands are:
 ## Open work
 
 This list gives the work in the order of its value. Take the first item that you can do.
-The list holds no item at this time.
+
+1. Make the tables of keys agree with `Expresso.Presenter.Default`. The section "The keys"
+   of this document and the table of keys in `README.md` repeat the bindings by hand, so
+   a change to a binding needs three changes. A test can make sure that each table names
+   the keys of the module. Or the tables can come from the module.
+2. Answer the question of the imperative API below, then do the work that the answer
+   gives.
+3. Move the GIF recorder of `assets/gifs/` to Elixir. This item is decision 7 of
+   `docs/research/elixir-presenter-report.md`, and it has the least value. The section
+   "The GIF recorder in Elixir" of the report gives its cost. Do it only if the
+   maintainer decides for it.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on

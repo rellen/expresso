@@ -783,19 +783,30 @@ Do each part in its own pull request, in this sequence:
 ## The decisions
 
 The maintainer decides each of these. Decisions 8, 9, 10 and 11 are settled, and the
-answer follows each of them.
+answer follows each of them. The work on the interpreter gave the answers to decisions 1
+to 6, and the answer follows each of them. Decision 7 is open.
 
-1. Does Elixir own the table of keys?
+1. Does Elixir own the table of keys? Answer: yes. `Expresso.Presenter.Default` holds
+   the keys of each mode. The renderer writes the lists of keys and the program from it.
 2. Which method keeps the actions equal: (a), the check at load, or (b), the generated
-   file?
-3. Part 2, the command variant or the interpreter?
+   file? Answer: a form of (b). Elixir writes the fixture file
+   `assets/test/fixtures/presenter.json`, and Git holds it. An ExUnit test fails when the
+   file is not current, and the TypeScript tests run each program of the file. Decision
+   11 removed the check at load.
+3. Part 2, the command variant or the interpreter? Answer: the interpreter.
+   `Expresso.Presenter.Interpreter` is the reference, and `interpreter.ts` runs the same
+   program in the browser.
 4. In the command variant, what holds the state? The attributes of the `body` can hold
    it. Or TypeScript can keep the object `State` and write the attributes from it. The
-   section "The interpreter" recommends the object.
+   section "The interpreter" recommends the object. Answer: the object. The projections
+   write the attributes from it.
 5. In the command variant, is the set of commands closed, or can an extension add a
-   command?
+   command? Answer: the set is closed. `Expresso.Presenter.Verifier` refuses a command
+   that the script does not know, and the interpreter throws for it.
 6. In the command variant, can a deck or an element hold a command? If yes, the commands
-   become a public API.
+   become a public API. Answer: only through the `goto` option. The user gives a slide
+   and a step, and `Expresso.Goto` writes the commands. The commands are therefore not a
+   public API.
 7. Does the GIF recorder move to Elixir?
 8. Is the definition of the presenter a Spark DSL or a plain module? Step 2 used a plain
    module, and it was sufficient. The DSL can come at step 4. Answer: a Spark DSL,
