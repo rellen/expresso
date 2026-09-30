@@ -202,12 +202,9 @@ defmodule Expresso.Presenter.InterpreterTest do
       assert effects(at(1, 1, :handout), "f") == {at(1, 1, :handout), [], false}
     end
 
-    # The key `r` keeps the digits today, and the keys `s` and `f` remove them.
-    # `docs/research/elixir-presenter-report.md` asks the maintainer about this
-    # difference.
-    test "r sets the timer in the speaker view only, and keeps the digits" do
+    test "r sets the timer in the speaker view only, and removes the digits" do
       typed = %{at(1, 1, :speaker) | digits: "3"}
-      assert effects(typed, "r") == {typed, [:reset_timer], true}
+      assert effects(typed, "r") == {at(1, 1, :speaker), [:reset_timer], true}
       assert effects(at(1, 1), "r") == {at(1, 1), [], false}
     end
   end

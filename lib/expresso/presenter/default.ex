@@ -128,9 +128,7 @@ defmodule Expresso.Presenter.Default do
     key "Enter", go_typed(), "Step 1 of the slide that you typed", each: false
     key "b", set(:blank, true), "Black screen. The next key shows the slide again."
 
-    # The key `r` does not remove the typed digits, and the keys `s` and `f`
-    # do. Decision 10 of the report asks the maintainer about this difference.
-    key "r", builtin(:reset_timer), "Set the timer to 0:00", each: false
+    key "r", builtin(:reset_timer), "Set the timer to 0:00"
     key "f", builtin(:fullscreen), "Full screen on or off"
 
     event [click: :right, swipe: :left], step(1), "Next step",

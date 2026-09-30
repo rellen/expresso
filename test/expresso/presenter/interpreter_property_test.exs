@@ -245,7 +245,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "a digit adds to the slide number, Enter goes to step 1 of that slide, and each other key except r removes the digits" do
+  property "a digit adds to the slide number, Enter goes to step 1 of that slide, and each other key removes the digits" do
     check all {program, state} <- shown(),
               view <- member_of([:present, :speaker]),
               digits <- map(list_of(member_of(@digits), max_length: 3), &Enum.join/1),
@@ -257,10 +257,6 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
       cond do
         key in @digits ->
           assert after_key.digits == digits <> key
-
-        # The key `r` of the speaker view keeps the digits today.
-        key == "r" and view == :speaker ->
-          assert after_key.digits == digits
 
         key == "Enter" ->
           assert after_key.digits == ""

@@ -35,7 +35,11 @@ defmodule Expresso.Presenter.ProgramTest do
       assert present.click[:left_third] == [{:clear, :digits}, {:step, -1}]
       assert present.swipe[:left] == [{:clear, :digits}, {:step, 1}]
       assert present.other == [{:clear, :digits}]
-      assert mode(program([1]), :speaker).keys["r"] == [{:builtin, :reset_timer}]
+
+      assert mode(program([1]), :speaker).keys["r"] == [
+               {:clear, :digits},
+               {:builtin, :reset_timer}
+             ]
     end
 
     test "puts each binding of a key in its own mode only" do
