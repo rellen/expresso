@@ -860,7 +860,8 @@ The presenter is in `assets/src/`. `state.ts` holds the index of the current ste
 list of the steps, which gives each step of each slide in sequence. `dom.ts` shows and
 hides a slide with the inline `style.display` property, and it writes the step number into
 the `data-step` attribute of the current `section`. Each rule below has a test in
-`assets/test/state.test.ts`.
+`test/expresso/presenter/interpreter_test.exs`. `assets/test/interpreter.test.ts` runs
+the same rules through the script.
 
 The rules are:
 

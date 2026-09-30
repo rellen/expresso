@@ -5,8 +5,8 @@
 
 import { indexOf } from "../src/deck.ts";
 import type { Deck, Entry, Kind } from "../src/deck.ts";
-import { initial } from "../src/state.ts";
 import type { State, View } from "../src/state.ts";
+import { load } from "./fixtures.ts";
 
 type Options = {
   // The kind of each slide, in slide order. A slide without an entry fades.
@@ -77,5 +77,5 @@ export function at(
   if (index === undefined) {
     throw new Error(`The deck has no step ${slide}.${step}`);
   }
-  return { ...initial(), index, view };
+  return { ...load("1,2").program.state, index, view };
 }

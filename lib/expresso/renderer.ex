@@ -15,6 +15,8 @@ defmodule Expresso.Renderer do
 
   use Temple.Component
 
+  alias Expresso.Presenter.{Definition, Help, Program}
+
   @external_resource "./assets/style.css"
 
   # `Mix.Tasks.Compile.Presenter` makes the bundle from these sources before
@@ -45,6 +47,11 @@ defmodule Expresso.Renderer do
   defp presenter do
     @presenter
   end
+
+  # The commands of the page of the last step of a slide. In the overview, a
+  # click on the page goes to step 1 of the slide.
+  defp page_commands(slide),
+    do: slide.metadata.slide_number |> Program.element() |> Program.json_commands()
 
   # The value of `data-progress` on the `body`. A deck from the imperative API
   # can have no metadata, and it then shows the progress bar.
@@ -84,7 +91,8 @@ defmodule Expresso.Renderer do
   # repository. The renderer reads them at compile time, and no input of a user
   # can change them. The generated style block comes from the deck, and
   # `Expresso.Overlay.Render.style/1` escapes each value of it. The list of the
-  # steps also comes from the deck, and `Expresso.Steps.json/1` escapes each `<`.
+  # steps and the program also come from the deck, and `Expresso.Steps.json/1`
+  # and `Expresso.Presenter.Program.json/1` escape each `<`.
   # The three parts of a slide. The present view and the handout view show the
   # same parts, and each view gives its own container.
   defp slide_parts(assigns) do
@@ -113,6 +121,27 @@ defmodule Expresso.Renderer do
     end
   end
 
+  # The list of keys of each mode. The key `?` shows the element, and the script
+  # shows only the list of the current mode. Temple escapes each text.
+  defp help_lists(assigns) do
+    temple do
+      div id: "help" do
+        for {mode, rows} <- @rows do
+          div data_mode: mode, hidden: true do
+            # Temple reads `text` as the name of an element, so the variables
+            # have other names.
+            for {keys_names, description} <- rows do
+              div do
+                kbd(do: keys_names)
+                span(do: description)
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
   @doc """
   Make the HTML tree of a deck
 
@@ -128,6 +157,7 @@ defmodule Expresso.Renderer do
   # sobelow_skip ["XSS.Raw", "XSS.HTML"]
   def render(assigns) do
     assigns = assigns |> Map.new() |> Map.update!(:deck, &Expresso.Overlay.Render.identify/1)
+    assigns = Map.put(assigns, :program, Program.compile(Definition.presenter(), assigns.deck))
 
     temple do
       # The language of the document. A screen reader reads the attribute, and
@@ -190,14 +220,17 @@ defmodule Expresso.Renderer do
             # Each step gets a page, because the speaker view shows the page of
             # each step. A page that the handout option does not select gets
             # `data-omit`, and the style sheet hides it in the handout view and
-            # on paper.
+            # on paper. The overview shows the page of the last step of each
+            # slide, and a click on that page runs its `data-commands`.
             for slide <- @deck.slides,
                 printed <- [Expresso.Handout.printed(@deck, slide)],
-                step <- 1..Expresso.Overlay.Render.max_step(slide)//1 do
+                max = Expresso.Overlay.Render.max_step(slide),
+                step <- 1..max//1 do
               section class: "handout-page",
                       data_step: step,
                       data_slide: slide.metadata.slide_number,
-                      data_omit: step not in printed do
+                      data_omit: step not in printed,
+                      data_commands: step == max && page_commands(slide) do
                 c(&slide_parts/1, deck: @deck, slide: slide)
 
                 # The notes of the speaker go under each page of the slide, and
@@ -218,10 +251,18 @@ defmodule Expresso.Renderer do
           div id: "progress", style: "width: 0%;" do
           end
 
+          c(&help_lists/1, rows: Help.rows(Definition.presenter()))
+
           # The list of the steps. The presenter reads it at load, so it comes
           # before the script. `Expresso.Steps.json/1` escapes each `<`.
           script id: "expresso-deck", type: "application/json" do
             Phoenix.HTML.raw(Expresso.Steps.json(@deck))
+          end
+
+          # The program of the presenter for this deck. The interpreter of the
+          # script runs it. `Expresso.Presenter.Program.json/1` escapes each `<`.
+          script id: "expresso-program", type: "application/json" do
+            Phoenix.HTML.raw(Program.json(@program))
           end
 
           script do

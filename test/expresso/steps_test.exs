@@ -126,11 +126,11 @@ defmodule Expresso.StepsTest do
   describe "the document" do
     test "holds the list in a JSON script element in front of the presenter script" do
       html = Deck.render(deck(@three))
-      [first, second] = html |> Floki.parse_document!() |> Floki.find("body > script")
+      [first, _program, bundle] = html |> Floki.parse_document!() |> Floki.find("body > script")
 
       assert Floki.attribute(first, "id") == ["expresso-deck"]
       assert Floki.attribute(first, "type") == ["application/json"]
-      assert Floki.attribute(second, "id") == []
+      assert Floki.attribute(bundle, "id") == []
       assert length(Document.read(deck(@three))["steps"]) == 6
     end
 

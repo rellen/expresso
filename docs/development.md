@@ -453,13 +453,18 @@ the Chromium of the container, and that Chromium can be older than the new versi
 
 `docs/typescript.md` gives the design. The parts are:
 
-- `assets/src/state.ts` — the state of the presenter and the function that changes it.
+- `assets/src/program.ts` — reads the program of the presenter that the renderer writes.
+- `assets/src/interpreter.ts` — runs the program for each key, click and swipe.
+- `assets/src/state.ts` — the state of the presenter, the messages between the windows,
+  the side of a click and the direction of a swipe.
 - `assets/src/dom.ts` — the code that reads the document and writes to it.
 - `assets/src/main.ts` — the entry, which esbuild bundles.
+- `assets/test/interpreter.test.ts` — the test that runs the fixtures of the Elixir
+  interpreter. "The fixtures of the interpreter" below tells how to write them again.
 - `assets/test/state.test.ts` — the example tests of the state.
 - `assets/test/state_property.test.ts` and `assets/test/speaker_property.test.ts` — the
   property tests of the state and of the speaker view texts.
-- `assets/test/property.ts` — the generators of the property tests, and `RUNS`.
+- `assets/test/property.ts` — `RUNS`, the number of runs of each property.
 - `assets/test/nth.ts` — the item at an index, for the tests.
 - `assets/tsconfig.json` — the options of the type check.
 - `package.json` — the tools, with a pinned version of each.
@@ -509,6 +514,31 @@ file at a time. These options refuse code that is unused, unreachable or incompl
 `nth` of `assets/test/nth.ts`, which stops the test for a missing item.
 `exactOptionalPropertyTypes` refuses `undefined` for an optional property. The options do
 not change the bundle.
+
+### The fixtures of the interpreter
+
+The TypeScript interpreter must return the result of the Elixir interpreter for each
+event. Node cannot run Elixir, so Git holds the results of the Elixir interpreter in
+`assets/test/fixtures/presenter.json`. `interpreter.test.ts` runs the same events, and it
+compares each result. The tests of `main.ts` also read the programs and the lists of keys
+from this file.
+
+`Expresso.Test.PresenterFixtures` makes the file. Its test in
+`test/expresso/presenter/fixtures_test.exs` fails when the file does not agree with the
+text that `json/0` returns. After a change to the definition of the presenter or to the interpreter, do these
+steps:
+
+1. Write the file again:
+
+   ```sh
+   EXPRESSO_FIXTURES=write mix test test/expresso/presenter/fixtures_test.exs
+   ```
+
+2. Run `npm test`.
+3. Commit the file with the change.
+
+Prettier does not format the file, because `.prettierignore` holds its directory. The file
+has one line for each deck and for each case, so a diff shows each changed case.
 
 A call of the DSL has no parentheses. `.formatter.exs` holds the list
 `spark_locals_without_parens`, and `mix format` then adds none. After a change to an

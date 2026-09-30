@@ -318,12 +318,19 @@ html
       div            the handout view, class "handout"
         section      one for each step of each slide, class "handout-page",
                      data-step from the step, data-slide from the slide,
-                     data-omit when the handout option does not select the step
+                     data-omit when the handout option does not select the step,
+                     data-commands on the page of the last step of the slide
           div        the same three parts as a slide of the present view
           aside      the notes of the slide, class "notes", when the slide has notes
       div            the progress bar, id "progress"
+      div            the list of keys, id "help"
+        div          one for each mode that has bindings, data-mode from the
+                     mode, hidden
+          div        one for each binding, with a kbd and a span
       script         the list of the steps as JSON, id "expresso-deck",
                      type "application/json", from Expresso.Steps
+      script         the program of the presenter as JSON, id "expresso-program",
+                     type "application/json", from Expresso.Presenter.Program
       script         priv/static/presenter.js, the presenter bundle
 ```
 
@@ -683,18 +690,33 @@ After the transformer, each element and each `on` entity holds its step numbers 
 
 ## The presenter
 
-The presenter is a TypeScript program under `assets/src/`. It has six modules:
+The presenter has an Elixir part and a TypeScript part. The Elixir part tells what each
+key, click and swipe does. The TypeScript part runs these rules in the browser.
+
+The Elixir part is in `lib/expresso/presenter/`:
+
+- `Expresso.Presenter.Definition` holds the modes of the presenter and the bindings of
+  each mode. A binding holds its events, its commands and its row in the list of keys.
+- `Expresso.Presenter.Program` makes the program of one deck from the definition. It
+  changes each symbol, such as the last slide, into a number for the deck.
+- `Expresso.Presenter.Interpreter` is the reference interpreter. The ExUnit tests run it.
+- `Expresso.Presenter.Help` makes the rows of the list of keys.
+
+The TypeScript part is under `assets/src/`. It has seven modules:
 
 - `deck.ts` reads the list of the steps, which the section below describes.
+- `program.ts` reads the program of the presenter.
+- `interpreter.ts` runs the program. It applies one event to the state, and it does not
+  touch the document.
 - `state.ts` holds the state: the index of the current step, the view, the black screen
-  and the digits of a slide number. It also holds the function that changes the state,
-  and it does not touch the document.
-- `help.ts` makes the rows of the list of keys.
+  and the digits of a slide number. It also holds the messages between the windows, and
+  the side of a click and the direction of a swipe.
 - `speaker.ts` makes the texts of the speaker view.
 - `dom.ts` reads the document. It applies a state with the inline `style.display`
   property, the `data-step` attribute, and the `data-view` and `data-blank` attributes of
   the `body`.
-- `main.ts` connects the modules, and it writes the fragment of the address.
+- `main.ts` connects the modules. It sends each event to the interpreter, and it writes
+  the fragment of the address.
 
 The first slide is slide 1, and the first step is step 1. `docs/overlays.md` gives the
 rules of a step.
@@ -718,6 +740,31 @@ the script calculates nothing from the deck. `parse` in `deck.ts` makes sure of 
 each value, and a list that is not valid stops the script with an error.
 `docs/research/elixir-presenter-report.md` gives the reason for the list.
 
+### The program
+
+The renderer writes the program of the deck as JSON into the element
+`script#expresso-program`, after the list of the steps. The program holds the first state
+and the modes. For each key, click and swipe, `run` in `interpreter.ts` does these steps:
+
+1. It finds the first mode whose condition the state matches. For example, the mode
+   `blank` matches a state with a black screen.
+2. It finds the commands of the event in that mode.
+3. It applies the commands to the state, one after the other.
+
+A command changes a field of the state, goes to a step or a slide, or calls a built-in
+function. The built-in functions are `open_speaker`, `fullscreen` and `reset_timer`, and
+`main.ts` calls them. `main.ts` stops the default operation of the browser when the state
+changes or when the event calls a built-in function. The fragment of the address and the
+messages between the windows do not go through the modes.
+
+A new key with the current commands is therefore a change to
+`Expresso.Presenter.Definition` only. The TypeScript interpreter must return the result of
+the Elixir interpreter. `assets/test/interpreter.test.ts` runs the fixtures of the Elixir
+interpreter, and `docs/development.md` tells how to write them again.
+`docs/research/elixir-presenter-report.md` gives the reason for the design.
+
+### The tests and the bundle
+
 The unit tests of `assets/test/` test these modules with no browser. The browser tests of
 `test/e2e/` open a rendered deck in Chromium and operate the presenter with its keys, with
 the mouse and with a finger. `docs/development.md` gives both.
@@ -729,7 +776,8 @@ compiles `lib/`. `docs/typescript.md` gives the design.
 
 ### The keys
 
-The keys of the present view are:
+`Expresso.Presenter.Definition` holds the keys of each mode. The keys of the present view
+are:
 
 - `j`, `ArrowRight`, `ArrowDown`, the space bar and `PageDown` show the next step, or the
   first step of the next slide after the last step.
@@ -752,11 +800,12 @@ the document out of full screen.
 
 ### The mouse and the touch screen
 
-A click or a tap on the right two thirds of the window shows the next step, and on the left
-third the previous step. A swipe of one finger to the left shows the next step, and to the
-right the previous step. `side` and `swipe` in `state.ts` give these rules, and `point`
-gives the state after them. As a key does, a click first closes a black screen or the list
-of keys. The handout view scrolls with a finger, so there a click or a swipe does no more.
+A click or a tap on the right two thirds of the window shows the next step, and on the
+left third the previous step. A swipe of one finger to the left shows the next step, and
+to the right the previous step. `side` and `swipe` in `state.ts` return the side of a
+click and the direction of a swipe, and the program holds the commands of each. As a key
+does, a click first closes a black screen or the list of keys. The handout view scrolls
+with a finger, so there a click or a swipe does no more.
 
 `main.ts` listens for `click`, `touchstart` and `touchend`. A swipe does not give a
 `click`, so one movement does not move two steps. A click goes to the browser in these
@@ -769,13 +818,16 @@ cases:
 
 ### The list of keys
 
-The table `BINDINGS` in `state.ts` gives each key, its function, the views that know it and
-its text in the list of keys. `next` finds the function of a key in this table, and
-`help.ts` makes the rows of the list from the same table. Therefore the list shows each key
-that operates, and no other key. A row with no key gives the text of a click or a swipe in
-the list, and `next` does not find it. `dom.ts` writes the rows into the element `help` as
-text, and the style sheet shows it while the `body` has `data-help`. A printer does not get
-the list.
+`Expresso.Presenter.Help` makes the rows of the list of keys from the bindings of the
+definition. The interpreter runs the same bindings, so the list shows each key that
+operates, and no other key. A binding of a click or a swipe has a label, and the list
+shows the label in place of a key.
+
+The renderer writes one list for each mode into the element `help`. Each list has the name
+of its mode in `data-mode`, and the renderer hides it. `helpMode` in `interpreter.ts`
+finds the mode under the list of keys, and `dom.ts` shows only the list of that mode. The
+style sheet shows the element while the `body` has `data-help`. A printer does not get the
+list.
 
 ### The progress bar
 
@@ -800,12 +852,12 @@ have the same option, and `Expresso.Slide.put_options_in_metadata/1` puts it int
 metadata of the slide. The list of the steps gives the kind of each slide. The slide option
 comes first, then the deck option, then `fade`.
 
-`transition` in `state.ts` decides if a change of state has a transition. Only a move to a
-different slide in the present view has one. A change of the step, a black screen, the
-overview and the list of keys have none. A transition belongs to the border between two
-slides, so the slide with the higher number gives the kind in the two directions. A move
-forward uses the kind of the next slide. A move back uses the kind of the slide that it
-leaves, and the direction `back` plays it in reverse.
+`transition` in `interpreter.ts` decides if a change of state has a transition. Only a
+move to a different slide in the present view has one. A change of the step, a black
+screen, the overview and the list of keys have none. A transition belongs to the border
+between two slides, so the slide with the higher number gives the kind in the two
+directions. A move forward uses the kind of the next slide. A move back uses the kind of
+the slide that it leaves, and the direction `back` plays it in reverse.
 
 `animate` in `dom.ts` writes `data-transition` and `data-direction` on the `html` element,
 and it applies the new state inside `document.startViewTransition`. The browser runs the
@@ -822,23 +874,25 @@ animations of the browser. A theme can set `--transition-dur`.
 ### The overview
 
 The overview shows the page of the last step of each slide in a grid. The state holds
-`overview` and `selected`, the number of the selected slide. `o` opens the overview, and it
-selects the current slide. While the overview shows, `mode` in `state.ts` gives
-`"overview"`. `binding` then finds only the keys of the rows for that mode, and the list of
-keys of the overview shows only these keys.
+`overview` and `selected`, the number of the selected slide. `o` opens the overview, and
+it selects the current slide. While the overview shows, the state matches the mode
+`overview`. The interpreter then finds only the bindings of that mode, and the list of
+keys of the overview shows only these bindings.
 
 `j`, `k`, the arrow keys, `Home` and `End` select a different slide. A key that selects a
-slide outside the deck has no effect. `Enter` and a click on a slide call `choose`, which
-closes the overview and goes to step 1 of the slide. `o` and `Escape` close the overview,
-and the step does not change.
+slide outside the deck has no effect. `Enter` and a click on a slide close the overview
+and go to step 1 of the slide. The page of the last step of each slide holds these
+commands in `data-commands`, and a click on the page runs them. `o` and `Escape` close the
+overview, and the step does not change.
 
-`columns` in `state.ts` gives the number of columns: the square root of the number of
-slides, or the next larger integer. The number of rows is then not more than the number of
-columns. `dom.ts` writes `data-thumbnail` on the page of the last step of each slide, and
-`data-selected` on the page of the selected slide. It also writes `--overview-columns` and
-`--overview-zoom` on the `body`, and the style sheet scales each page with `zoom`. The
-padding and the gaps of the grid are 1vw wide and 1vh high, so the grid of each deck fits in
-the window.
+`Expresso.Presenter.Program.columns/1` and `columns` in `state.ts` return the number of
+columns: the square root of the slide count, or the next larger integer. The program uses
+the number for `ArrowUp` and `ArrowDown`, and `dom.ts` uses it for the grid. The number of
+rows is then not more than the number of columns. `dom.ts` writes `data-thumbnail` on the
+page of the last step of each slide, and `data-selected` on the page of the selected
+slide. It also writes `--overview-columns` and `--overview-zoom` on the `body`, and the
+style sheet scales each page with `zoom`. The padding and the gaps of the grid are 1vw
+wide and 1vh high, so the grid of each deck fits in the window.
 
 In the speaker view, the overview replaces the grid of the speaker view while it shows. A
 theme can set `--overview-color` for the outline of the selected slide.
@@ -846,10 +900,10 @@ theme can set `--overview-color` for the outline of the selected slide.
 ### The handout view
 
 The handout view knows only `j`, `k`, `p`, `a` and `?`. `j` and `k` change the state, and
-`p` then shows that step in the present view. The browser keeps each other key, so the arrow
-keys and the space bar scroll the pages. A key with the Control, Alt or Meta modifier always
-goes to the browser. `main.ts` stops the default operation of a key only when the key
-changes the state.
+`p` then shows that step in the present view. The browser keeps each other key, so the
+arrow keys and the space bar scroll the pages. A key with the Control, Alt or Meta
+modifier always goes to the browser. `main.ts` stops the default operation of a key only
+when the key changes the state or calls a built-in function.
 
 ### The speaker view
 

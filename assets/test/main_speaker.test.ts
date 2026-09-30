@@ -114,9 +114,7 @@ test("r sets the timer back to 0:00, and the next change starts it again", () =>
 
 test("? lists r in the speaker view, and r then only closes the list", () => {
   page.press("?");
-  const panel = page.element("help");
-  assert.ok(panel, "no element help");
-  const names = panel.children.map((row) => nth(row.children, 0).textContent);
+  const names = page.keys().map((row) => row.names);
   assert.ok(names.includes("r"));
   assert.ok(!names.includes("s"));
 

@@ -1,7 +1,6 @@
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
 import { fakePage } from "./page.ts";
-import { nth } from "./nth.ts";
 
 // Five slides. Slide 2 has three steps, and slide 3 has two steps. The
 // overview has three columns. The tests run in sequence on the same page.
@@ -116,11 +115,10 @@ test("a click or a swipe between the slides of the overview does nothing", () =>
 
 test("? lists the keys of the overview, and the next key closes only the list", () => {
   page.press("?");
-  const panel = page.element("help");
-  const texts = panel?.children.map((row) => nth(row.children, 1).textContent);
-  assert.ok(texts?.includes("Select the next slide"));
-  assert.ok(texts?.includes("Step 1 of the selected slide"));
-  assert.ok(!texts?.includes("Handout view"));
+  const texts = page.keys().map((row) => row.text);
+  assert.ok(texts.includes("Select the next slide"));
+  assert.ok(texts.includes("Step 1 of the selected slide"));
+  assert.ok(!texts.includes("Handout view"));
 
   page.press("Enter");
   assert.equal(body.dataset.help, undefined);

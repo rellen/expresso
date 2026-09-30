@@ -200,9 +200,7 @@ test("? shows the list of keys of the present view, and the next key closes it",
   assert.equal(page.press("?"), true);
 
   assert.equal(body.dataset.help, "true");
-  const panel = page.element("help");
-  assert.ok(panel, "no element help");
-  const names = panel.children.map((row) => nth(row.children, 0).textContent);
+  const names = page.keys().map((row) => row.names);
   assert.ok(names.includes("s"));
   assert.ok(names.includes("?"));
 

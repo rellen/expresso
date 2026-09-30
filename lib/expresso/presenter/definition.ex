@@ -250,8 +250,10 @@ defmodule Expresso.Presenter.Definition do
     ]
   end
 
+  # The list of keys of the overview shows `?` in the first row.
   defp overview do
     [
+      binding(keys(["?"]), [{:set, :help, true}], "This list of keys. The next key closes it."),
       binding(
         keys(["j", "ArrowRight", "PageDown", " "]),
         [{:select_by, 1}],
@@ -276,8 +278,7 @@ defmodule Expresso.Presenter.Definition do
         keys(["o", "Escape"]),
         [{:set, :overview, false}],
         "Close the overview. The step does not change."
-      ),
-      binding(keys(["?"]), [{:set, :help, true}], "This list of keys. The next key closes it.")
+      )
     ]
   end
 end

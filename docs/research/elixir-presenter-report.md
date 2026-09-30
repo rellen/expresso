@@ -525,6 +525,76 @@ The key `r` keeps the typed digits, as the code of today does. The binding of `r
 `each: false`, so the definition shows the difference from `s` and `f`. Decision 10 is
 still open.
 
+### The result of step 3
+
+Step 3 is done. The script of the browser runs the program of each deck with a TypeScript
+interpreter. The table `BINDINGS`, the function `next` and the module `help.ts` are not in
+the script now. The 66 browser tests of `test/e2e/` pass with no change.
+
+The renderer writes three new parts into each document:
+
+- The program of the deck as JSON, in `script#expresso-program`. `Program.json/1` writes
+  it.
+- The list of keys of each mode as HTML, in the element `help`. `Expresso.Presenter.Help`
+  makes the rows, and `dom.ts` shows the list of one mode.
+- The commands of a click in the overview, in `data-commands` on the page of the last step
+  of each slide.
+
+The script has two new modules. `program.ts` reads the program, and it makes sure of the
+type of each value. `interpreter.ts` runs the program, as `Expresso.Presenter.Interpreter`
+does. `state.ts` keeps the type of the state, the messages between the windows, `side`,
+`swipe` and `columns`.
+
+These are the measurements. A line of code is a line that is not empty and not a comment:
+
+| Measurement | Before step 3 | After step 3 |
+| --- | --- | --- |
+| Lines of `assets/src/` | 1451 | 1443 |
+| Lines of code of `assets/src/` | 1054 | 1017 |
+| Lines of `state.ts` | 676 | 145 |
+| Lines of `program.ts` and `interpreter.ts` | 0 | 537 |
+| Bytes of the bundle | 13766 | 12468 |
+| Bytes of the bundle with `gzip -9` | 4749 | 4574 |
+| Lines of `assets/test/` | 3193 | 2396 |
+| Tests for `node --test` | 215 | 140 |
+| Lines of code of `Expresso.Presenter.Program` | 74 | 118 |
+| Lines of code of `Expresso.Presenter.Help` | 0 | 29 |
+
+The bundle is 1298 bytes smaller. The document is larger, because it holds the program and
+the lists of keys. For the deck of `examples/demo.exs`, the program has 3079 bytes and the
+lists of keys have 3442 bytes. Each slide adds 43 bytes of `data-commands`. A document
+with one slide is therefore approximately 5.2 kB larger. The document of that deck has
+199387 bytes, so the increase is approximately 2.6 %.
+
+The script did not become as small as the estimate of "What moves". These are the reasons:
+
+- `program.ts` has 206 lines of code, and most of them examine the JSON at load. The
+  estimate did not count this examination.
+- Step 3 did not make the projections. `dom.ts`, `speaker.ts` and `main.ts` did not
+  become smaller.
+
+The larger gain is in the rules. A new key with the current commands is now a change to
+`Expresso.Presenter.Definition` only. The TypeScript interpreter knows no key.
+
+The comparison of step 2 is now a permanent test:
+
+1. `Expresso.Test.PresenterFixtures` runs the Elixir interpreter on 32 cases: 16 random
+   decks, 2 sequences for each deck, and 30 random events in each sequence.
+2. It writes the events and the results into `assets/test/fixtures/presenter.json`. The
+   file also holds the programs of 23 decks and the lists of keys. It has 175779 bytes.
+3. `assets/test/interpreter.test.ts` runs the 960 events through the TypeScript
+   interpreter, and it compares each state, the call of `preventDefault`, the built-in
+   functions and the transition.
+4. `test/expresso/presenter/fixtures_test.exs` fails when the file does not agree with the
+   definition. `docs/development.md` tells how to write the file again.
+
+To make sure that the test finds a difference, a deliberate change went into the
+TypeScript interpreter. The test failed at event 14 of case 29.
+
+The first fixture file had 281 kB, and fewer random decks made it smaller. The property
+tests of `test/expresso/presenter/` examine the Elixir model with more events. The fixture
+file keeps the TypeScript interpreter equal to the Elixir interpreter.
+
 ## The options that do not agree
 
 | Option | The reason |
@@ -557,8 +627,9 @@ The calculations that moved to Elixir were short. The larger gain is in the test
 tests of `fraction`, `done` and the position text are now ExUnit tests of
 `Expresso.Steps`.
 
-Step 2 of "The prototype" is also done, and each rule fits the model. The section "The
-result of step 2" contains the measurements.
+Steps 2 and 3 of "The prototype" are also done. Each rule fits the model, and the script
+runs the program of each deck. The sections "The result of step 2" and "The result of step
+3" contain the measurements.
 
 Do each part in its own pull request, in this sequence:
 
