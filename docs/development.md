@@ -462,9 +462,10 @@ the Chromium of the container, and that Chromium can be older than the new versi
 - `assets/src/main.ts` — the entry, which esbuild bundles.
 - `assets/test/interpreter.test.ts` — the test that runs the fixtures of the Elixir
   interpreter. "The fixtures of the interpreter" below tells how to write them again.
-- `assets/test/validate.ts` — examines a program of the presenter.
-  `assets/test/program.test.ts` runs it on each program of the fixture file. After a
-  change to the format of the program, change `validate.ts` too.
+- `assets/test/validate.ts` — examines a program of the presenter and a list of the
+  steps. `assets/test/program.test.ts` and `assets/test/deck.test.ts` run it on each
+  program and each list of the fixture file. After a change to the format of the program
+  or of the list, change `validate.ts` too.
 - `assets/test/state.test.ts` — the example tests of the state.
 - `assets/test/state_property.test.ts` and `assets/test/speaker_property.test.ts` — the
   property tests of the state and of the speaker view texts.

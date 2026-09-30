@@ -716,9 +716,23 @@ The script has 181 fewer lines of code, and the bundle is 21 % smaller. The esti
 approximately 230 lines. The difference comes from the types of the JSON as the renderer
 writes it, which `parse` needs, and from the two guards.
 
-The estimate of "What moves" was 400 to 550 lines. The script is now 858 lines of code.
-`deck.ts` examines the list of the steps in the same way, and the same option can remove
-most of its 98 lines.
+After this change, the list of the steps got the same option. `parse` in `deck.ts` trusts
+the list, and `validateDeck` in `assets/test/validate.ts` examines each list of the
+fixture file:
+
+| Measurement | Before | After |
+| --- | --- | --- |
+| Lines of code of `assets/src/` | 858 | 811 |
+| Lines of code of `deck.ts` | 98 | 51 |
+| Bytes of the bundle | 9678 | 8979 |
+| Bytes of the bundle with `gzip -9` | 3924 | 3715 |
+
+The list needs no guard in the script. A missing entry gives no current step, and the
+script already handles a deck with no slide. A kind of transition with no rule in the
+style sheet gives the fade of the browser.
+
+The estimate of "What moves" was 400 to 550 lines. The script is now 811 lines of code.
+Since the start of the interpreter, the bundle went from 13766 bytes to 8979 bytes.
 
 ## The options that do not agree
 

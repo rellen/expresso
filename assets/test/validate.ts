@@ -1,9 +1,11 @@
-// The examination of a program of the presenter, for the tests.
+// The examination of a program of the presenter and of a list of the steps,
+// for the tests.
 //
-// The script trusts the program, because the renderer writes the program and
-// the script into the same document. The tests run each program that they make
-// through `validate`. The function makes sure of each value, and it throws for
-// a program that the script cannot run. The bundle does not hold this module.
+// The script trusts the program and the list, because the renderer writes them
+// and the script into the same document. The tests run each program that they
+// make through `validate`, and each list through `validateDeck`. The functions
+// make sure of each value, and they throw for a program or a list that the
+// script cannot run. The bundle does not hold this module.
 
 import type {
   Attribute,
@@ -16,6 +18,7 @@ import type {
   Projections,
   Property,
 } from "../src/program.ts";
+import type { Deck, Entry, Kind, Slide } from "../src/deck.ts";
 import type { State, View } from "../src/state.ts";
 
 const VIEWS: readonly View[] = ["present", "handout", "speaker"];
@@ -286,4 +289,82 @@ export function validateCommands(
   program: Program,
 ): readonly Command[] {
   return commandList(JSON.parse(source), program.state);
+}
+
+const KINDS: readonly Kind[] = ["none", "fade", "slide", "zoom"];
+
+// Tell if a value is a kind of transition.
+export function isKind(value: unknown): value is Kind {
+  return KINDS.some((kind) => kind === value);
+}
+
+// A list of the steps that is not valid is a defect of the renderer.
+function invalidList(): Error {
+  return new Error("The list of the steps is not valid");
+}
+
+function count(value: unknown): number {
+  if (!Number.isInteger(value) || (value as number) < 0) {
+    throw invalidList();
+  }
+  return value as number;
+}
+
+function part(value: unknown): number {
+  if (typeof value !== "number" || !(value >= 0 && value <= 1)) {
+    throw invalidList();
+  }
+  return value;
+}
+
+function entry(value: unknown): Entry {
+  if (!Array.isArray(value) || value.length !== 5) {
+    throw invalidList();
+  }
+  const [slide, step, fraction, done, position] = value as unknown[];
+  if (typeof position !== "string") {
+    throw invalidList();
+  }
+  return {
+    slide: count(slide),
+    step: count(step),
+    fraction: part(fraction),
+    done: part(done),
+    position,
+  };
+}
+
+function slide(value: unknown): Slide {
+  if (typeof value !== "object" || value === null) {
+    throw invalidList();
+  }
+  const { first, steps, transition } = value as Record<string, unknown>;
+  if (!isKind(transition)) {
+    throw invalidList();
+  }
+  return { first: count(first), steps: count(steps), transition };
+}
+
+// Read the JSON text of a list of the steps, and make sure of each value. A
+// text that is not a list of the renderer throws an error.
+export function validateDeck(text: string): Deck {
+  const data: unknown = JSON.parse(text);
+  if (typeof data !== "object" || data === null) {
+    throw invalidList();
+  }
+  const { steps, slides, duration_ms } = data as Record<string, unknown>;
+  if (!Array.isArray(steps) || !Array.isArray(slides)) {
+    throw invalidList();
+  }
+  if (
+    duration_ms !== null &&
+    !(Number.isFinite(duration_ms) && (duration_ms as number) > 0)
+  ) {
+    throw invalidList();
+  }
+  return {
+    steps: steps.map(entry),
+    slides: slides.map(slide),
+    duration: duration_ms as number | null,
+  };
 }
