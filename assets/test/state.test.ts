@@ -7,7 +7,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   accepts,
-  columns,
   current,
   isMessage,
   message,
@@ -81,16 +80,4 @@ test("swipe returns the direction of a swipe, and nothing for a short or vertica
   assert.equal(swipe(-49, 0), undefined);
   assert.equal(swipe(60, 60), undefined);
   assert.equal(swipe(0, -200), undefined);
-});
-
-test("columns returns a grid with as many rows as columns or fewer", () => {
-  assert.equal(columns(0), 1);
-  assert.equal(columns(1), 1);
-  assert.equal(columns(4), 2);
-  assert.equal(columns(5), 3);
-  assert.equal(columns(13), 4);
-  for (let slides = 1; slides <= 100; slides++) {
-    const width = columns(slides);
-    assert.ok(Math.ceil(slides / width) <= width, String(slides));
-  }
 });

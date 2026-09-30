@@ -32,7 +32,7 @@ test("an address with no fragment shows step 1, and writes no fragment", () => {
 
 test("the progress bar is on and empty at load", () => {
   assert.equal(body.dataset.progress, "true");
-  assert.equal(page.element("progress")?.style.width, "0%");
+  assert.equal(body.style.properties["--fraction"], "0");
 });
 
 test("an unknown key writes nothing, because the state does not change", () => {
@@ -220,7 +220,7 @@ test("s on the list of keys closes it, and opens no window", () => {
 
 test("the progress bar follows the step, and g hides and shows it", () => {
   page.navigate("#2.1");
-  assert.equal(page.element("progress")?.style.width, "50%");
+  assert.equal(body.style.properties["--fraction"], "0.5");
 
   assert.equal(page.press("g"), true);
   assert.equal(body.dataset.progress, "false");

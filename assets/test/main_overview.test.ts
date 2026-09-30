@@ -36,8 +36,6 @@ test("o shows the last step of each slide, and selects the current slide", () =>
   assert.equal(body.dataset.overview, "true");
   assert.deepEqual(pagesWith("thumbnail"), ["1.1", "2.3", "3.2", "4.1", "5.1"]);
   assert.deepEqual(pagesWith("selected"), ["2.3"]);
-  assert.equal(body.style.properties["--overview-columns"], "3");
-  assert.equal(body.style.properties["--overview-zoom"], "0.32");
   // The overview does not change the position, so the address stays.
   assert.equal(page.location.hash, "#2.2");
 });

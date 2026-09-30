@@ -5,20 +5,14 @@
 
 import { parse } from "./deck.ts";
 import type { Deck } from "./deck.ts";
-import { upcoming } from "./interpreter.ts";
+import { helpMode } from "./interpreter.ts";
 import type { Transition } from "./interpreter.ts";
 import { parse as parseProgram } from "./program.ts";
-import type { Program } from "./program.ts";
+import type { Program, Projections } from "./program.ts";
 import { position } from "./speaker.ts";
 import type { Pace } from "./speaker.ts";
-import { columns, current } from "./state.ts";
+import { current } from "./state.ts";
 import type { State } from "./state.ts";
-
-// The renderer writes `data-progress="false"` on the `body` for a deck that
-// hides the progress bar at the start. The key `g` can still show it.
-export function showsProgress(): boolean {
-  return document.body.dataset.progress !== "false";
-}
 
 // Read the list of the steps from the element `expresso-deck`, where the
 // renderer writes it as JSON. A document with no list is a defect of the
@@ -73,43 +67,17 @@ function slide(number: number): HTMLElement {
   return element;
 }
 
-// Apply a state to the document. The function writes the view on the `body`,
-// it shows the slide of the current step at that step, and it hides each
-// other slide. A deck with no slide gets the view only. The style sheet reads
-// `data-view` and `data-blank`, and the generated style block reads
-// `data-step`. docs/overlays.md gives the CSS contract. The speaker view also
-// writes `data-speaker` on two pages, and the texts of its elements.
-// The overview writes `data-overview` on the `body`, and attributes on pages.
-// `helpMode` is the name of the mode whose list of keys shows while the `body`
-// has `data-help`.
-export function apply(
-  state: State,
-  deck: Deck,
-  helpMode: string | undefined,
-): void {
-  document.body.dataset.view = state.view;
-  if (state.blank) {
-    document.body.dataset.blank = "true";
-  } else {
-    delete document.body.dataset.blank;
-  }
-  document.body.dataset.progress = String(state.progress);
-  document.body.dataset.every = String(state.every);
-  const bar = document.getElementById("progress");
-  if (bar !== null) {
-    bar.style.width = `${(current(state, deck)?.fraction ?? 0) * 100}%`;
-  }
-  if (state.overview) {
-    document.body.dataset.overview = "true";
-    overview(state, deck);
-  } else {
-    delete document.body.dataset.overview;
-  }
+// Apply a state to the document. The function applies the projections of the
+// program, and `Expresso.Presenter.Projection` tells what each projection
+// does. It shows the slide of the current step at that step, and it hides each
+// other slide. The generated style block reads `data-step`, and
+// docs/overlays.md gives the CSS contract. A deck with no slide gets the
+// projections only. The list of keys shows the rows of the mode under it, and
+// the speaker view writes the texts of its elements.
+export function apply(state: State, deck: Deck, program: Program): void {
+  project(program.project, state, deck);
   if (state.help) {
-    document.body.dataset.help = "true";
-    help(helpMode);
-  } else {
-    delete document.body.dataset.help;
+    help(helpMode(program, state));
   }
   for (let number = 1; number <= deck.slides.length; number++) {
     slide(number).style.display = "none";
@@ -128,79 +96,49 @@ export function apply(
   }
 }
 
-// The speaker view shows two pages of the handout view. The page of the
-// current step gets `data-speaker="current"`, and the page of the next step
-// gets `data-speaker="next"`. The style sheet places the two pages. The notes
-// of the current page go into the element `speaker-notes`, and the position
-// goes into the element `speaker-position`.
+// Write each projection of the program. A mark goes on each element of its
+// selector whose number agrees with the first of its values, and each other
+// element of the selector loses the attribute.
+function project(rules: Projections, state: State, deck: Deck): void {
+  const body = document.body;
+  for (const { field, name, flag } of rules.attributes) {
+    const value = state[field];
+    if (!flag) {
+      body.setAttribute(name, String(value));
+    } else if (value === true) {
+      body.setAttribute(name, "true");
+    } else {
+      body.removeAttribute(name);
+    }
+  }
+  const entry = current(state, deck);
+  for (const { name, entry: key } of rules.properties) {
+    body.style.setProperty(name, String(entry?.[key] ?? 0));
+  }
+  for (const { attribute, selector, key, values } of rules.marks) {
+    for (const element of document.querySelectorAll(selector)) {
+      const number = Number(element.getAttribute(`data-${key}`));
+      const found = values.find(
+        ([, field, offset]) => Number(state[field]) + offset === number,
+      );
+      if (found === undefined) {
+        element.removeAttribute(attribute);
+      } else {
+        element.setAttribute(attribute, found[0]);
+      }
+    }
+  }
+}
+
+// The notes of the page of the current step go into the element
+// `speaker-notes`, and the position goes into the element `speaker-position`.
+// The renderer writes the index of each step on its page in `data-index`.
 function speaker(state: State, deck: Deck): void {
-  const now = current(state, deck);
-  const following = upcoming(state, deck);
-  const after = following === null ? undefined : current(following, deck);
-  let notes = "";
-  for (const page of pages()) {
-    const slide = Number(page.dataset.slide);
-    const step = Number(page.dataset.step);
-    if (slide === now?.slide && step === now.step) {
-      page.dataset.speaker = "current";
-      notes = page.querySelector(".notes")?.textContent ?? "";
-    } else if (slide === after?.slide && step === after.step) {
-      page.dataset.speaker = "next";
-    } else {
-      delete page.dataset.speaker;
-    }
-  }
-  text("speaker-notes", notes);
-  text("speaker-position", position(now, state.blank));
-}
-
-// The overview shows the page of the last step of each slide in a grid. The
-// page of each last step gets `data-thumbnail`, and the page of the selected
-// slide also gets `data-selected`. Each page is as large as the window, and
-// the style sheet scales it with `zoom`. The padding and the gaps of the grid
-// are 1vw wide and 1vh high. The number of rows is not more than the number of
-// columns, so a zoom that fits the width also fits the height.
-function overview(state: State, deck: Deck): void {
-  const width = columns(deck.slides.length);
-  const style = document.body.style;
-  style.setProperty("--overview-columns", String(width));
-  style.setProperty(
-    "--overview-zoom",
-    String((98 - (width - 1)) / (100 * width)),
+  const page = pages().find(
+    (each) => Number(each.dataset.index) === state.index,
   );
-  for (const page of pages()) {
-    const slide = Number(page.dataset.slide);
-    if (Number(page.dataset.step) === (deck.slides[slide - 1]?.steps ?? 1)) {
-      page.dataset.thumbnail = "";
-    } else {
-      delete page.dataset.thumbnail;
-    }
-    if (slide === state.selected && page.dataset.thumbnail !== undefined) {
-      page.dataset.selected = "";
-    } else {
-      delete page.dataset.selected;
-    }
-  }
-}
-
-// Make the elements of the speaker view that the renderer does not write. The
-// elements go into the handout view, because the style sheet places them in
-// the grid of that view. A second call makes no new element.
-export function speakerPanel(): void {
-  if (document.getElementById("speaker-notes") !== null) {
-    return;
-  }
-  const handout = document.getElementsByClassName("handout")[0];
-  for (const id of [
-    "speaker-notes",
-    "speaker-position",
-    "speaker-timer",
-    "speaker-left",
-  ]) {
-    const element = document.createElement("div");
-    element.id = id;
-    handout?.appendChild(element);
-  }
+  text("speaker-notes", page?.querySelector(".notes")?.textContent ?? "");
+  text("speaker-position", position(current(state, deck), state.blank));
 }
 
 // Show the list of keys of one mode. The renderer writes the element `help`

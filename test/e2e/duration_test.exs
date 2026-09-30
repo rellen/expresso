@@ -55,7 +55,10 @@ defmodule Expresso.E2E.DurationTest do
 
     assert left(speaker) == "20:00 left"
     assert style(speaker, "display") == "block"
-    refute js(audience, "document.getElementById('speaker-left')")
+    # The renderer writes the element into each window, and the style sheet
+    # hides it outside the speaker view.
+    assert js(audience, "getComputedStyle(document.getElementById('speaker-left')).display") ==
+             "none"
   end
 
   test "?duration= replaces the deck option, and the speaker view gets it from the present view",

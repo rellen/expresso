@@ -60,6 +60,19 @@ test("parse throws for a program that the renderer does not write", () => {
     changed((data) => (present(data).keys = [[[1], []]])),
     changed((data) => (present(data).element = "no")),
     changed((data) => (present(data).element = [["goto", "x"]])),
+    changed((data) => delete data.project),
+    changed(
+      (data) => (data.project.attributes = [["color", "data-color", false]]),
+    ),
+    changed(
+      (data) => (data.project.attributes = [["view", "data-view", "no"]]),
+    ),
+    changed((data) => (data.project.properties = [["--x", "position"]])),
+    changed((data) => (data.project.marks = [["data-a", ".a", "step", []]])),
+    changed(
+      (data) =>
+        (data.project.marks = [["data-a", ".a", "slide", [["", "view", 0]]]]),
+    ),
   ];
   for (const each of texts) {
     assert.throws(
@@ -68,6 +81,32 @@ test("parse throws for a program that the renderer does not write", () => {
       each.slice(0, 80),
     );
   }
+});
+
+test("parse reads the projections that the renderer writes", () => {
+  const { project } = parse(text);
+
+  assert.deepEqual(project.attributes[0], {
+    field: "view",
+    name: "data-view",
+    flag: false,
+  });
+  assert.deepEqual(project.properties, [
+    { name: "--fraction", entry: "fraction" },
+  ]);
+  assert.deepEqual(
+    project.marks.map((mark) => [mark.attribute, mark.values]),
+    [
+      ["data-selected", [["", "selected", 0]]],
+      [
+        "data-speaker",
+        [
+          ["current", "index", 0],
+          ["next", "index", 1],
+        ],
+      ],
+    ],
+  );
 });
 
 test("commands reads the commands of a page of the overview", () => {

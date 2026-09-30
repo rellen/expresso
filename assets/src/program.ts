@@ -49,7 +49,32 @@ export type Mode = Readonly<{
   swipe: ReadonlyMap<string, readonly Command[]>;
 }>;
 
-export type Program = Readonly<{ state: State; modes: readonly Mode[] }>;
+// A projection writes a part of the state to the document, and
+// `Expresso.Presenter.Projection` tells what each kind does. An attribute
+// writes a field on the `body`, and with `flag` it is present only while the
+// field is true. A property writes a value of the current entry into a custom
+// property of the `body`. A mark writes an attribute on each element of a
+// selector whose `data-slide` or `data-index` agrees with a field plus an
+// offset.
+export type Attribute = Readonly<{ field: Field; name: string; flag: boolean }>;
+export type Property = Readonly<{ name: string; entry: "fraction" | "done" }>;
+export type Mark = Readonly<{
+  attribute: string;
+  selector: string;
+  key: "slide" | "index";
+  values: readonly (readonly [string, Field, number])[];
+}>;
+export type Projections = Readonly<{
+  attributes: readonly Attribute[];
+  properties: readonly Property[];
+  marks: readonly Mark[];
+}>;
+
+export type Program = Readonly<{
+  state: State;
+  modes: readonly Mode[];
+  project: Projections;
+}>;
 
 const VIEWS: readonly View[] = ["present", "handout", "speaker"];
 const BUILTINS: readonly Builtin[] = [
@@ -69,6 +94,20 @@ function object(value: unknown): Record<string, unknown> {
     throw invalid();
   }
   return value as Record<string, unknown>;
+}
+
+function list(value: unknown): unknown[] {
+  if (!Array.isArray(value)) {
+    throw invalid();
+  }
+  return value;
+}
+
+function text(value: unknown): string {
+  if (typeof value !== "string") {
+    throw invalid();
+  }
+  return value;
 }
 
 function integer(value: unknown): number {
@@ -237,19 +276,70 @@ function initialState(value: unknown): State {
   return data as State;
 }
 
-// Read the JSON text of the program. A text that is not a program of the
-// renderer throws an error.
-export function parse(text: string): Program {
-  const data = object(JSON.parse(text));
-  const state = initialState(data.state);
-  if (!Array.isArray(data.modes)) {
+// A field of the state that holds a number, for a mark.
+function numberField(value: unknown, state: State): Field {
+  const name = field(value, state);
+  if (typeof state[name] !== "number") {
     throw invalid();
   }
-  return { state, modes: data.modes.map((each) => mode(each, state)) };
+  return name;
+}
+
+function attribute(value: unknown, state: State): Attribute {
+  const [name, target, flag] = list(value);
+  if (typeof flag !== "boolean") {
+    throw invalid();
+  }
+  return { field: field(name, state), name: text(target), flag };
+}
+
+function property(value: unknown): Property {
+  const [name, entry] = list(value);
+  if (entry !== "fraction" && entry !== "done") {
+    throw invalid();
+  }
+  return { name: text(name), entry };
+}
+
+function mark(value: unknown, state: State): Mark {
+  const [name, selector, key, values] = list(value);
+  if (key !== "slide" && key !== "index") {
+    throw invalid();
+  }
+  return {
+    attribute: text(name),
+    selector: text(selector),
+    key,
+    values: list(values).map((each) => {
+      const [mark, target, offset] = list(each);
+      return [text(mark), numberField(target, state), integer(offset)];
+    }),
+  };
+}
+
+function projections(value: unknown, state: State): Projections {
+  const data = object(value);
+  return {
+    attributes: list(data.attributes).map((each) => attribute(each, state)),
+    properties: list(data.properties).map(property),
+    marks: list(data.marks).map((each) => mark(each, state)),
+  };
+}
+
+// Read the JSON text of the program. A text that is not a program of the
+// renderer throws an error.
+export function parse(source: string): Program {
+  const data = object(JSON.parse(source));
+  const state = initialState(data.state);
+  return {
+    state,
+    modes: list(data.modes).map((each) => mode(each, state)),
+    project: projections(data.project, state),
+  };
 }
 
 // Read the JSON text of the commands of an element, such as a page of the
 // overview. The renderer writes them in the attribute `data-commands`.
-export function commands(text: string, program: Program): readonly Command[] {
-  return commandList(JSON.parse(text), program.state);
+export function commands(source: string, program: Program): readonly Command[] {
+  return commandList(JSON.parse(source), program.state);
 }

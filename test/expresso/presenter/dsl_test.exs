@@ -6,6 +6,7 @@ defmodule Expresso.Presenter.DslTest do
   alias Expresso.Presenter.Definition
 
   doctest Expresso.Presenter.Commands
+  doctest Expresso.Presenter.Projection
 
   @state """
   state index: 0, view: :present, blank: false, help: false, digits: "",
@@ -71,6 +72,25 @@ defmodule Expresso.Presenter.DslTest do
       assert digits.each == false
       assert click.on == [click: :right, swipe: :left]
       assert click.label == "Click"
+    end
+
+    test "reads the projections in the order of the module" do
+      module =
+        compile("""
+        #{@state}
+        attribute :view, "data-view"
+        attribute :blank, "data-blank", flag: true
+        property "--fraction", :fraction
+        mark "data-speaker", ".handout-page", :index, [{"current", :index, 0}, {"next", :index, 1}]
+        """)
+
+      assert %{attributes: [view, blank], properties: [fraction], marks: [speaker]} =
+               Definition.from(module).project
+
+      assert {view.field, view.name, view.flag} == {:view, "data-view", false}
+      assert blank.flag
+      assert {fraction.name, fraction.entry} == {"--fraction", :fraction}
+      assert speaker.values == [{"current", :index, 0}, {"next", :index, 1}]
     end
 
     test "Expresso.Presenter.Default holds each mode of the presenter" do
@@ -213,6 +233,35 @@ defmodule Expresso.Presenter.DslTest do
         """)
 
       assert message =~ "the event :element needs the option element: true"
+    end
+
+    test "refuses a projection with an unknown field or a wrong name" do
+      for {projection, text} <- [
+            {~s(attribute :color, "data-color"), "is not valid"},
+            {~s(attribute :digits, "data-digits", flag: true), "is not valid"},
+            {~s(attribute :view, "view"), "must start with data-"},
+            {~s(property "fraction", :fraction), "is not valid"},
+            {~s(mark "data-a", ".page", :slide, [{"", :view, 0}]), "is not valid"},
+            {~s(mark "data-a", ".page", :slide, []), "is not valid"},
+            {~s(mark "a", ".page", :slide, [{"", :selected, 0}]), "must start with data-"}
+          ] do
+        assert error("""
+               #{@state}
+               #{projection}
+               """) =~ text,
+               projection
+      end
+    end
+
+    test "refuses two projections for one attribute" do
+      message =
+        error("""
+        #{@state}
+        attribute :blank, "data-blank", flag: true
+        attribute :help, "data-blank", flag: true
+        """)
+
+      assert message =~ "two projections write the attribute data-blank"
     end
   end
 end

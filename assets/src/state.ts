@@ -45,13 +45,6 @@ export function current(state: State, deck: Deck): Entry | undefined {
   return deck.steps[state.index];
 }
 
-// The number of columns of the overview: the square root of the number of
-// slides, or the next larger integer. The number of rows is then not more than
-// the number of columns, and each slide fits in the window.
-export function columns(slides: number): number {
-  return Math.max(1, Math.ceil(Math.sqrt(slides)));
-}
-
 // The part of the window under a click or a tap at `x` pixels from the left
 // edge of a window of `width` pixels. The left third goes back, because the
 // presenter clicks to go forward more frequently than to go back.

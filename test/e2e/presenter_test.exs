@@ -121,9 +121,11 @@ defmodule Expresso.E2E.PresenterTest do
     bar = "document.getElementById('progress')"
     assert js(page, "#{bar}.getBoundingClientRect().width") == 0
 
-    # Six steps give five moves, so step 2 of slide 2 is two fifths.
+    # Six steps give five moves, so step 2 of slide 2 is two fifths. The style
+    # sheet gives the bar the width of `--fraction`, after a short transition.
     page |> keys(["j", "j"])
-    assert js(page, "#{bar}.style.width") == "40%"
+    assert js(page, "document.body.style.getPropertyValue('--fraction')") == "0.4"
+    wait_for(page, "Math.abs(#{bar}.getBoundingClientRect().width - 0.4 * innerWidth) < 1")
 
     page |> press("g")
     assert js(page, "getComputedStyle(#{bar}).display") == "none"

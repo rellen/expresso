@@ -78,11 +78,12 @@ defmodule Expresso.ProgressTest do
     assert progress(deck) == ["true"]
   end
 
-  test "the document holds one empty progress bar" do
+  test "the document holds one progress bar, and the style sheet gives it the width of --fraction" do
     bars = ShownDeck |> Expresso.parse() |> document() |> Floki.find("#progress")
 
     assert length(bars) == 1
-    assert Floki.attribute(bars, "style") == ["width: 0%;"]
+    assert Floki.attribute(bars, "style") == []
+    assert Expresso.Theme.uses?(:fraction)
   end
 
   test "the theme uses the two custom properties of the progress bar" do

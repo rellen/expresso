@@ -27,7 +27,24 @@ export type FakeElement = {
   appendChild: (child: FakeElement) => void;
   replaceChildren: () => void;
   querySelector: (selector: string) => FakeElement | null;
+  // The attributes `data-*` of the element, in its `dataset`.
+  setAttribute: (name: string, value: string) => void;
+  getAttribute: (name: string) => string | null;
+  removeAttribute: (name: string) => void;
 };
+
+// The key in `dataset` of an attribute `data-*`, such as `speakerNext` for
+// `data-speaker-next`.
+function datasetKey(name: string): string {
+  assert.ok(name.startsWith("data-"), `the fake page has no attribute ${name}`);
+  return name
+    .slice("data-".length)
+    .replace(/-([a-z])/g, (_all, letter: string) => letter.toUpperCase());
+}
+
+// The `body` of a fake document.
+export type FakeBody = FakeElement;
+export const fakeBody = (): FakeBody => element("", "");
 
 // A fake window of the other side. It keeps each message that it gets.
 export type FakeWindow = {
@@ -71,7 +88,9 @@ type Options = {
   // The notes of each slide, in slide order. A slide without an entry has no
   // notes.
   notes?: string[];
-  // The value of `data-progress` that the renderer writes on the `body`.
+  // The value of `data-progress` that the renderer writes on the `body`. The
+  // value `"false"` also gives the program the first state with no progress
+  // bar.
   progress?: string;
   // The `duration` option of the deck, in minutes.
   duration?: number;
@@ -160,6 +179,13 @@ export function element(
     },
     querySelector: (selector) =>
       self.children.find((child) => `.${child.className}` === selector) ?? null,
+    setAttribute: (name, value) => {
+      self.dataset[datasetKey(name)] = value;
+    },
+    getAttribute: (name) => self.dataset[datasetKey(name)] ?? null,
+    removeAttribute: (name) => {
+      delete self.dataset[datasetKey(name)];
+    },
   };
   return self;
 }
@@ -177,7 +203,11 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   const list = element("expresso-deck");
   list.textContent = JSON.stringify(steps);
   const program = element("expresso-program");
-  program.textContent = found.program;
+  // The renderer writes the `progress` of the deck into the first state of the
+  // program.
+  const code = JSON.parse(found.program);
+  code.state.progress = options.progress !== "false";
+  program.textContent = JSON.stringify(code);
   // The renderer writes a list of keys for each mode, and it hides each list.
   const help = element("help");
   for (const [mode, rows] of raw.help) {
@@ -196,6 +226,7 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     help.appendChild(panel);
   }
   const handout = element("", "handout");
+  let first = 0;
   maxSteps.forEach((max, index) => {
     for (let step = 1; step <= max; step++) {
       // The page of the last step of each slide holds the commands of a click
@@ -207,9 +238,13 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
               ["set", "overview", false],
             ])
           : undefined;
+      // The renderer writes the index of the step in the list of the steps,
+      // and marks the page of the last step of each slide.
       const page = element("", "handout-page", {
         slide: String(index + 1),
         step: String(step),
+        index: String(first + step - 1),
+        thumbnail: step === max ? "" : undefined,
         commands,
       });
       const notes = options.notes?.[index];
@@ -220,8 +255,19 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
       }
       handout.appendChild(page);
     }
+    first += max;
   });
   const pages = [...handout.children];
+  // The renderer writes the four elements of the speaker view into the
+  // handout view.
+  for (const id of [
+    "speaker-notes",
+    "speaker-position",
+    "speaker-timer",
+    "speaker-left",
+  ]) {
+    handout.appendChild(element(id));
+  }
   const body = element("", "");
   if (options.progress !== undefined) {
     body.dataset.progress = options.progress;
@@ -261,9 +307,18 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     body,
     getElementsByClassName: (name: string) =>
       all().filter((each) => each.className === name),
-    // Only a selector of one class, such as `.handout-page`.
-    querySelectorAll: (selector: string) =>
-      all().filter((each) => `.${each.className}` === selector),
+    // Only a selector of one class, with one attribute or none, such as
+    // `.handout-page[data-thumbnail]`.
+    querySelectorAll: (selector: string) => {
+      const match = /^\.([\w-]+)(?:\[(data-[\w-]+)\])?$/.exec(selector);
+      assert.ok(match, `the fake page has no selector ${selector}`);
+      const [, className, attribute] = match;
+      return all().filter(
+        (each) =>
+          each.className === className &&
+          (attribute === undefined || each.getAttribute(attribute) !== null),
+      );
+    },
     getElementById: (id: string) =>
       all().find((each) => each.id === id) ?? null,
     createElement: () => element(""),

@@ -53,6 +53,17 @@ defmodule Expresso.Renderer do
   defp page_commands(slide),
     do: slide.metadata.slide_number |> Program.element() |> Program.json_commands()
 
+  # The columns of the overview and the zoom of each page in it. Each page is as
+  # large as the window, and the style sheet scales it with `zoom`. The padding
+  # and the gaps of the grid are 1vw wide and 1vh high. The number of rows is not
+  # more than the number of columns, so a zoom that fits the width also fits the
+  # height.
+  defp overview_sizes(deck) do
+    columns = deck.slides |> length() |> Program.columns()
+    zoom = (98 - (columns - 1)) / (100 * columns)
+    "--overview-columns: #{columns}; --overview-zoom: #{:erlang.float_to_binary(zoom, [:short])};"
+  end
+
   # The value of `data-progress` on the `body`. A deck from the imperative API
   # can have no metadata, and it then shows the progress bar.
   defp progress(deck) do
@@ -207,7 +218,7 @@ defmodule Expresso.Renderer do
           end
         end
 
-        body style: "min-height: 100vh; width: 100%; margin: 0px;",
+        body style: "min-height: 100vh; width: 100%; margin: 0px; #{overview_sizes(@deck)}",
              data_view: "present",
              data_progress: progress(@deck),
              data_print_notes: print_notes(@deck) do
@@ -229,15 +240,19 @@ defmodule Expresso.Renderer do
             # each step. A page that the handout option does not select gets
             # `data-omit`, and the style sheet hides it in the handout view and
             # on paper. The overview shows the page of the last step of each
-            # slide, and a click on that page runs its `data-commands`.
-            for slide <- @deck.slides,
+            # slide, which has `data-thumbnail`, and a click on that page runs
+            # its `data-commands`. `data-index` is the index of the step in the
+            # list of the steps, and the speaker view marks pages by it.
+            for {slide, %{first: first}} <- Enum.zip(@deck.slides, Expresso.Steps.slides(@deck)),
                 printed <- [Expresso.Handout.printed(@deck, slide)],
                 max = Expresso.Overlay.Render.max_step(slide),
                 step <- 1..max//1 do
               section class: "handout-page",
                       data_step: step,
                       data_slide: slide.metadata.slide_number,
+                      data_index: first + step - 1,
                       data_omit: step not in printed,
+                      data_thumbnail: step == max,
                       data_commands: step == max && page_commands(slide) do
                 c(&slide_parts/1, deck: @deck, slide: slide)
 
@@ -252,11 +267,19 @@ defmodule Expresso.Renderer do
                 end
               end
             end
+
+            # The four elements of the speaker view. They go into the handout
+            # view, because the style sheet places them in the grid of that
+            # view. The style sheet hides them in each other view and on paper.
+            for id <- ~w(speaker-notes speaker-position speaker-timer speaker-left) do
+              div id: id do
+              end
+            end
           end
 
-          # The progress bar of the present view. The presenter gives it its
-          # width, and the style sheet shows it.
-          div id: "progress", style: "width: 0%;" do
+          # The progress bar of the present view. The style sheet sets its width
+          # from `--fraction`, which the script writes on the `body`.
+          div id: "progress" do
           end
 
           c(&help_lists/1, rows: Help.rows(Definition.presenter()))

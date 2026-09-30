@@ -5,8 +5,10 @@ defmodule Expresso.Presenter.Default do
   Each document holds the program that `Expresso.Presenter.Program` makes from
   this definition. The modes come in the order that the interpreter examines
   them: the black screen, the list of keys, the overview, then the views. The
-  bindings of a mode come in the order of the rows in its list of keys.
-  `Expresso.Presenter.Definition` tells what each part does.
+  bindings of a mode come in the order of the rows in its list of keys. The
+  projections tell how the script writes a state to the document.
+  `Expresso.Presenter.Definition` tells what each part of a mode does, and
+  `Expresso.Presenter.Projection` tells what each projection does.
   """
 
   use Expresso.Presenter.Dsl
@@ -25,6 +27,23 @@ defmodule Expresso.Presenter.Default do
         every: false
 
   sync [:index, :blank]
+
+  # The attributes of the `body`. The style sheet reads them.
+  attribute :view, "data-view"
+  attribute :blank, "data-blank", flag: true
+  attribute :progress, "data-progress"
+  attribute :every, "data-every"
+  attribute :overview, "data-overview", flag: true
+  attribute :help, "data-help", flag: true
+
+  # The style sheet sets the width of the progress bar from the part of the
+  # deck before the current step.
+  property "--fraction", :fraction
+
+  # The overview marks the page of the selected slide. The speaker view marks
+  # the page of the current step and the page of the next step.
+  mark "data-selected", ".handout-page[data-thumbnail]", :slide, [{"", :selected, 0}]
+  mark "data-speaker", ".handout-page", :index, [{"current", :index, 0}, {"next", :index, 1}]
 
   # A black screen or the list of keys closes at the next event, and the event
   # does no more.
