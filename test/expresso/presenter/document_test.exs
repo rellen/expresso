@@ -55,6 +55,45 @@ defmodule Expresso.Presenter.DocumentTest do
     end
   end
 
+  describe "the parts that do not change" do
+    test "each page holds the index of its step, and the page of the last step of a slide is a thumbnail" do
+      pages =
+        for page <- Floki.find(document(), ".handout-page") do
+          {Floki.attribute(page, "data-index"), Floki.attribute(page, "data-thumbnail") != []}
+        end
+
+      assert pages == [
+               {["0"], true},
+               {["1"], false},
+               {["2"], false},
+               {["3"], true},
+               {["4"], false},
+               {["5"], true}
+             ]
+    end
+
+    test "the body holds the columns of the overview and the zoom of each page" do
+      [style] = document() |> Floki.find("body") |> Floki.attribute("style")
+
+      # Three slides give two columns, and (98 - 1) / 200 is 0.485.
+      assert style =~ "--overview-columns: 2;"
+      assert style =~ "--overview-zoom: 0.485;"
+
+      [style] = document([1, 1, 1, 1, 1, 1, 1]) |> Floki.find("body") |> Floki.attribute("style")
+      assert style =~ "--overview-columns: 3;"
+      assert style =~ "--overview-zoom: 0.32;"
+    end
+
+    test "the handout view holds the four empty elements of the speaker view" do
+      elements = Floki.find(document(), ".handout > div")
+
+      assert Enum.map(elements, &Floki.attribute(&1, "id")) ==
+               [["speaker-notes"], ["speaker-position"], ["speaker-timer"], ["speaker-left"]]
+
+      assert Enum.all?(elements, &(Floki.text(&1) == ""))
+    end
+  end
+
   describe "the pages of the handout" do
     test "only the page of the last step of each slide holds the commands of a click in the overview" do
       pages =

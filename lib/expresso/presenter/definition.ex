@@ -109,10 +109,10 @@ defmodule Expresso.Presenter.Definition do
           element: boolean()
         }
 
-  alias Expresso.Presenter.{Binding, Mode}
+  alias Expresso.Presenter.{Binding, Mode, Projection}
 
   @typedoc "The definition of the presenter"
-  @type t :: %{state: map(), sync: [field()], modes: [mode()]}
+  @type t :: %{state: map(), sync: [field()], modes: [mode()], project: Projection.t()}
 
   @doc """
   Return the definition of the presenter
@@ -129,10 +129,13 @@ defmodule Expresso.Presenter.Definition do
   """
   @spec from(module()) :: t()
   def from(module) do
+    entities = Spark.Dsl.Extension.get_entities(module, [:presenter])
+
     %{
       state: module |> Spark.Dsl.Extension.get_opt([:presenter], :state) |> Map.new(),
       sync: Spark.Dsl.Extension.get_opt(module, [:presenter], :sync),
-      modes: module |> Spark.Dsl.Extension.get_entities([:presenter]) |> Enum.map(&mode/1)
+      modes: for(%Mode{} = mode <- entities, do: mode(mode)),
+      project: Projection.from(entities)
     }
   end
 

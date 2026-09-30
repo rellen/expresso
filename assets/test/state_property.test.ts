@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fc from "fast-check";
-import { accepts, columns, side, stamp, swipe, SWIPE } from "../src/state.ts";
+import { accepts, side, stamp, swipe, SWIPE } from "../src/state.ts";
 import { RUNS } from "./property.ts";
 
 // A time in milliseconds. The small times give two windows the same time.
@@ -26,17 +26,6 @@ test("stamp is more than the last time, and not less than the clock", () => {
       assert.ok(time > last);
       assert.ok(time >= now);
       assert.ok(time === now || time === last + 1);
-    }),
-    { numRuns: RUNS },
-  );
-});
-
-test("columns returns the smallest number of columns with as many rows as columns or fewer", () => {
-  fc.assert(
-    fc.property(fc.integer({ min: 1, max: 100_000 }), (slides) => {
-      const width = columns(slides);
-      assert.ok(width * width >= slides);
-      assert.ok(width === 1 || (width - 1) * (width - 1) < slides);
     }),
     { numRuns: RUNS },
   );

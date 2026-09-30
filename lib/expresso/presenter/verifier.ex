@@ -15,6 +15,10 @@ defmodule Expresso.Presenter.Verifier do
     * One event has two bindings in one mode. The list of keys would then show
       two functions for the event.
     * The event `:element` is in a mode without the option `element`.
+    * A projection names an unknown field, or an attribute or a property with
+      a wrong name. `Expresso.Presenter.Projection` describes the projections. An
+      attribute with `flag: true` needs a field that is true or false, and a
+      mark needs a field that holds a number.
 
   The script in the browser reads the same fields and commands. Without the
   verifier, the script finds such an error only when the presenter uses the
@@ -23,6 +27,9 @@ defmodule Expresso.Presenter.Verifier do
 
   use Spark.Dsl.Verifier
 
+  alias Expresso.Presenter.Mode
+  alias Expresso.Presenter.Projection
+  alias Expresso.Presenter.Projection.{Attribute, Mark, Property}
   alias Spark.Dsl.Verifier
 
   # The type of each field of the state.
@@ -50,12 +57,14 @@ defmodule Expresso.Presenter.Verifier do
     module = Verifier.get_persisted(dsl_state, :module)
     state = Verifier.get_option(dsl_state, [:presenter], :state)
     sync = Verifier.get_option(dsl_state, [:presenter], :sync)
-    modes = Verifier.get_entities(dsl_state, [:presenter])
+    entities = Verifier.get_entities(dsl_state, [:presenter])
+    modes = for %Mode{} = mode <- entities, do: mode
 
     result =
       with :ok <- state(state),
            :ok <- sync(sync),
-           :ok <- names(modes) do
+           :ok <- names(modes),
+           :ok <- projections(Projection.from(entities)) do
         Enum.reduce_while(modes, :ok, &mode_result/2)
       end
 
@@ -153,6 +162,35 @@ defmodule Expresso.Presenter.Verifier do
     if Enum.any?(mode.bindings, &(:element in &1.on)),
       do: {:error, "the event :element needs the option element: true"},
       else: :ok
+  end
+
+  defp projections(%{attributes: attributes, properties: properties, marks: marks}) do
+    names = Enum.map(attributes, & &1.name) ++ Enum.map(marks, & &1.attribute)
+    rules = attributes ++ properties ++ marks
+
+    cond do
+      bad = Enum.find(rules, &(not projection?(&1))) ->
+        {:error, "the projection #{inspect(bad, structs: false)} is not valid"}
+
+      (repeated = attributes |> Enum.map(& &1.name) |> duplicates()) != [] ->
+        {:error, "two projections write the attribute #{hd(repeated)}"}
+
+      Enum.any?(names, &(not String.starts_with?(&1, "data-"))) ->
+        {:error, "the attribute of a projection must start with data-"}
+
+      true ->
+        :ok
+    end
+  end
+
+  defp projection?(%Attribute{field: field, flag: flag}),
+    do: Map.has_key?(@fields, field) and (not flag or @fields[field] == :boolean)
+
+  defp projection?(%Property{name: name}), do: String.starts_with?(name, "--")
+
+  defp projection?(%Mark{values: values}) do
+    values != [] and
+      Enum.all?(values, fn {_text, field, _offset} -> @fields[field] in [:index, :slide] end)
   end
 
   defp duplicates(items),

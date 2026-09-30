@@ -3,7 +3,8 @@ defmodule Expresso.Presenter.Extension do
   The Spark DSL extension of the presenter definition
 
   It gives the options `state` and `sync`, the `mode` entity, and the `key` and
-  `event` entities of a mode. It imports `Expresso.Presenter.Commands`, so a
+  `event` entities of a mode. The entities `attribute`, `property` and `mark`
+  give the projections of `Expresso.Presenter.Projection`. It imports `Expresso.Presenter.Commands`, so a
   binding can write `step(1)` in place of `{:step, 1}`.
   `Expresso.Presenter.Verifier` runs when a module that uses the DSL compiles.
 
@@ -98,11 +99,64 @@ defmodule Expresso.Presenter.Extension do
     ]
   }
 
+  @attribute %Spark.Dsl.Entity{
+    name: :attribute,
+    target: Expresso.Presenter.Projection.Attribute,
+    args: [:field, :name],
+    schema: [
+      field: [type: :atom, required: true, doc: "The field of the state."],
+      name: [
+        type: :string,
+        required: true,
+        doc: "The attribute of the `body`, such as data-view."
+      ],
+      flag: [
+        type: :boolean,
+        default: false,
+        doc: "Write \"true\" while the field is true, and remove the attribute while it is false."
+      ]
+    ]
+  }
+
+  @property %Spark.Dsl.Entity{
+    name: :property,
+    target: Expresso.Presenter.Projection.Property,
+    args: [:name, :entry],
+    schema: [
+      name: [type: :string, required: true, doc: "The custom property, such as --fraction."],
+      entry: [
+        type: {:in, [:fraction, :done]},
+        required: true,
+        doc: "The value of the current entry of the list of the steps."
+      ]
+    ]
+  }
+
+  @mark %Spark.Dsl.Entity{
+    name: :mark,
+    target: Expresso.Presenter.Projection.Mark,
+    args: [:attribute, :selector, :key, :values],
+    schema: [
+      attribute: [type: :string, required: true, doc: "The attribute, such as data-selected."],
+      selector: [type: :string, required: true, doc: "The CSS selector of the elements."],
+      key: [
+        type: {:in, [:slide, :index]},
+        required: true,
+        doc: "The number of an element: :slide reads data-slide, and :index reads data-index."
+      ],
+      values: [
+        type: {:list, {:tuple, [:string, :atom, :integer]}},
+        required: true,
+        doc: "Each text of the attribute, with a field of the state and an offset."
+      ]
+    ]
+  }
+
   @presenter %Spark.Dsl.Section{
     name: :presenter,
     top_level?: true,
     imports: [Expresso.Presenter.Commands],
-    entities: [@mode],
+    entities: [@mode, @attribute, @property, @mark],
     schema: [
       state: [
         type: :keyword_list,

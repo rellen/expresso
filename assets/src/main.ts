@@ -46,7 +46,6 @@
 import {
   follow,
   fromHash,
-  helpMode,
   prevented,
   run,
   toHash,
@@ -71,8 +70,6 @@ import {
   apply,
   deck as readDeck,
   program as readProgram,
-  showsProgress,
-  speakerPanel,
   text,
   timeLeft,
 } from "./dom.ts";
@@ -81,10 +78,11 @@ const deck = readDeck();
 const program = readProgram();
 const parameters = new URLSearchParams(location.search);
 const isSpeaker = parameters.has("speaker");
+// The program holds the first state, with the `progress` of the deck. The
+// address gives the view and `every`.
 let state: State = {
   ...program.state,
   view: isSpeaker ? "speaker" : "present",
-  progress: showsProgress(),
   every: parameters.has("all"),
 };
 
@@ -130,7 +128,7 @@ function show(changed: State, local = true): void {
   state = changed;
   // The browser runs the update of a transition later. The update then reads
   // the state of that time, so a fast second key does not show an old state.
-  animate(change, () => apply(state, deck, helpMode(program, state)));
+  animate(change, () => apply(state, deck, program));
   history.replaceState(null, "", toHash(state, deck));
   if (local && sent) {
     time = stamp(time, Date.now());
@@ -165,13 +163,12 @@ function fullscreen(): void {
 
 if (isSpeaker) {
   document.title = `Speaker view: ${document.title}`;
-  speakerPanel();
   tick();
   setInterval(tick, 250);
 }
 
 // The first application of the state gives the progress bar its width.
-apply(state, deck, helpMode(program, state));
+apply(state, deck, program);
 
 show(fromHash(state, location.hash, deck));
 

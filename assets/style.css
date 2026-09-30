@@ -869,12 +869,14 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   }
 }
 /*
- * The progress bar of the present view. The presenter gives it its width. A
- * theme can set `--progress-color` and `--progress-height`. The bar is not on
- * a black screen, in the overview, in the other views or on paper.
+ * The progress bar of the present view. Its width is the part of the deck
+ * before the current step, which the script writes into `--fraction` on the
+ * `body`. A theme can set `--progress-color` and `--progress-height`. The bar
+ * is not on a black screen, in the overview, in the other views or on paper.
  */
 #progress {
   display: none;
+  width: calc(var(--fraction, 0) * 100%);
 }
 @media screen {
   body[data-view="present"][data-progress="true"]:not([data-blank="true"]):not(

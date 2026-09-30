@@ -60,7 +60,34 @@ defmodule Expresso.Presenter.ProgramTest do
     end
   end
 
+  describe "compile/2 and the deck" do
+    test "takes the first value of progress from the deck" do
+      shown = Expresso.Deck.new("deck")
+      hidden = Expresso.Deck.new("deck", %{progress: false})
+      bare = %Expresso.Deck{name: "deck", metadata: nil, slides: []}
+
+      assert Program.compile(Definition.presenter(), shown).state.progress
+      refute Program.compile(Definition.presenter(), hidden).state.progress
+      assert Program.compile(Definition.presenter(), bare).state.progress
+    end
+  end
+
   describe "json/1" do
+    test "writes the projections of the definition" do
+      project = [1, 2] |> program() |> Program.json() |> JSON.decode!() |> Map.fetch!("project")
+
+      assert ["view", "data-view", false] in project["attributes"]
+      assert ["blank", "data-blank", true] in project["attributes"]
+      assert project["properties"] == [["--fraction", "fraction"]]
+
+      assert [
+               "data-speaker",
+               ".handout-page",
+               "index",
+               [["current", "index", 0], ["next", "index", 1]]
+             ] in project["marks"]
+    end
+
     test "writes the first state and each mode in the order of the interpreter" do
       data = [1, 2] |> program() |> Program.json() |> JSON.decode!()
 

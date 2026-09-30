@@ -646,6 +646,49 @@ Now it is 99 lines in `Expresso.Presenter.Default`, 64 lines in
 commands. The extra lines find a bad definition when the module compiles, and not when the
 presenter uses a document.
 
+### The result of the projections
+
+After step 4, the projections are done too. They are part 3 of the proposal, and the
+`project` declaration of "2. An object holds the state". Elixir now tells how the script
+writes a state to the document:
+
+- `Expresso.Presenter.Default` declares six attributes of the `body`, one custom property
+  and two marks. `Expresso.Presenter.Projection` describes the three kinds, and the
+  verifier refuses a projection with an unknown field or a wrong name.
+- `apply` in `dom.ts` writes each projection with one general function. The functions for
+  the attributes of the `body`, the overview and the pages of the speaker view are not in
+  the script now.
+- The renderer writes the parts that do not change: `data-thumbnail`, `data-index`, the
+  sizes of the overview and the four elements of the speaker view.
+- The program holds the first value of `progress` from the deck, so the script does not
+  read it from the `body`.
+- The style sheet sets the width of the progress bar from `--fraction`.
+
+The design changed in two places. `vars` of the design became the `property` entity. A
+`mark` holds a list of values, so one mark writes `current` and `next` for the speaker
+view.
+
+These are the measurements. A line of code is a line that is not empty and not a comment:
+
+| Measurement | Before | After |
+| --- | --- | --- |
+| Lines of code of `assets/src/` | 1021 | 1039 |
+| Lines of code of `dom.ts` | 178 | 130 |
+| Lines of code of `program.ts` | 206 | 280 |
+| Bytes of the bundle | 12508 | 12191 |
+| Bytes of the bundle with `gzip -9` | 4591 | 4550 |
+| Bytes of the projections in each program | 0 | 408 |
+
+The bundle is 317 bytes smaller, but the script has 18 more lines of code. `dom.ts` lost
+48 lines, and `program.ts` got 74 lines. These lines examine the JSON of the projections
+at load, as `program.ts` examines each other part of the program.
+
+`program.ts` is now the largest module of the script. The program and the script always
+come from the same renderer, in one document. Thus the examination at load finds only a
+defect of the renderer, and the ExUnit tests and the fixtures already find such a defect.
+Without the examination, `program.ts` needs approximately 50 lines for its types and one
+parse. Decision 11 asks the maintainer about this.
+
 ## The options that do not agree
 
 | Option | The reason |
@@ -679,9 +722,10 @@ tests of `fraction`, `done` and the position text are now ExUnit tests of
 `Expresso.Steps`.
 
 Steps 2, 3 and 4 of "The prototype" are also done. Each rule fits the model, the script
-runs the program of each deck, and an element can hold a link to a step. The sections "The
-result of step 2", "The result of step 3" and "The result of step 4" contain the
-measurements.
+runs the program of each deck, and an element can hold a link to a step. After step 4, the
+projections moved the writes of the document to Elixir. The sections "The result of step
+2", "The result of step 3", "The result of step 4" and "The result of the projections"
+contain the measurements.
 
 Do each part in its own pull request, in this sequence:
 
@@ -715,6 +759,9 @@ follows each of them.
    own states, which the print then shows? Answer: an element command can only go to
    a slide and a step.
 10. Does the key `r` remove the typed digits, as `s` and `f` do?
+11. Does `program.ts` examine the program at load? The renderer writes the program and the
+    script into the same document, and the tests already examine the program. Without the
+    examination, the script is approximately 230 lines of code smaller.
 
 ## The sources
 

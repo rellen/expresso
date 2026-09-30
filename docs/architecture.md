@@ -307,7 +307,8 @@ html
     style            the rules of the token classes of a code element, from Makeup
     style            the generated rules of the overlays, from Expresso.Overlay.Render
     body           data-view "present", and data-progress and data-print-notes
-                   from the deck
+                   from the deck, and a style with --overview-columns and
+                   --overview-zoom
       div            the present view, class "screen"
         section      one for each slide, class "slide", id "slide-<number>",
                      data-step "1", data-max-step from the slide
@@ -318,10 +319,14 @@ html
       div            the handout view, class "handout"
         section      one for each step of each slide, class "handout-page",
                      data-step from the step, data-slide from the slide,
-                     data-omit when the handout option does not select the step,
-                     data-commands on the page of the last step of the slide
+                     data-index from the index of the step in the list of the
+                     steps, data-omit when the handout option does not select
+                     the step, data-thumbnail and data-commands on the page of
+                     the last step of the slide
           div        the same three parts as a slide of the present view
           aside      the notes of the slide, class "notes", when the slide has notes
+        div          the four elements of the speaker view: speaker-notes,
+                     speaker-position, speaker-timer and speaker-left
       div            the progress bar, id "progress"
       div            the list of keys, id "help"
         div          one for each mode that has bindings, data-mode from the
@@ -701,6 +706,8 @@ The Elixir part is in `lib/expresso/presenter/`:
 - `Expresso.Presenter.Verifier` refuses a definition with an error when the module
   compiles. Examples are an unknown field, a value of the wrong type and a key with two
   bindings in one mode.
+- `Expresso.Presenter.Projection` describes the projections, which tell how the script
+  writes a state to the document.
 - `Expresso.Presenter.Definition` holds the types of a definition, and it reads the
   definition of `Expresso.Presenter.Default` into maps.
 - `Expresso.Presenter.Program` makes the program of one deck from the definition. It
@@ -718,9 +725,9 @@ The TypeScript part is under `assets/src/`. It has seven modules:
   and the digits of a slide number. It also holds the messages between the windows, and
   the side of a click and the direction of a swipe.
 - `speaker.ts` makes the texts of the speaker view.
-- `dom.ts` reads the document. It applies a state with the inline `style.display`
-  property, the `data-step` attribute, and the `data-view` and `data-blank` attributes of
-  the `body`.
+- `dom.ts` reads the document. It applies a state with the projections of the program,
+  and it shows the slide of the current step with the inline `style.display` property and
+  the `data-step` attribute.
 - `main.ts` connects the modules. It sends each event to the interpreter, and it writes
   the fragment of the address.
 
@@ -768,6 +775,28 @@ only. Only this module uses the DSL, and a deck cannot change the keys. The Type
 the Elixir interpreter. `assets/test/interpreter.test.ts` runs the fixtures of the Elixir
 interpreter, and `docs/development.md` tells how to write them again.
 `docs/research/elixir-presenter-report.md` gives the reason for the design.
+
+### The projections
+
+A **projection** is a rule that writes one part of the state to the document.
+`Expresso.Presenter.Default` declares each projection, and the program holds them. After
+each change of the state, `apply` in `dom.ts` writes them:
+
+| Projection | Example | Effect |
+| --- | --- | --- |
+| `attribute` | `attribute :blank, "data-blank", flag: true` | A field of the state in an attribute of the `body`. With `flag: true`, the attribute is present only while the field is true. |
+| `property` | `property "--fraction", :fraction` | A value of the current entry of the list of the steps in a custom property of the `body`. |
+| `mark` | `mark "data-selected", ".handout-page[data-thumbnail]", :slide, [{"", :selected, 0}]` | An attribute on each element of a selector whose `data-slide` or `data-index` agrees with a field of the state plus an offset. |
+
+The style sheet reads each of these attributes and properties. A new attribute of the
+state is therefore a change to `Expresso.Presenter.Default` and to the style sheet, and
+the script does not change. `Expresso.Presenter.Verifier` refuses a projection with an
+unknown field or a wrong name.
+
+The renderer writes each part that does not change during the talk. Examples are
+`data-thumbnail`, the sizes of the overview and the four elements of the speaker view.
+The script still writes the parts that need the document: the slide of the current step,
+the list of keys of the mode, and the texts of the speaker view.
 
 ### The tests and the bundle
 
@@ -867,17 +896,17 @@ list.
 ### The progress bar
 
 The progress bar is the element `progress` at the bottom of the present view. The
-renderer writes it into each document with a width of zero. It also writes `data-progress`
-on the `body` from the metadata of the deck: `false` for `progress: false`, and `true`
-otherwise. `main.ts` reads that attribute into the state at load, and `g` changes the
-state.
+renderer writes it into each document. It also writes `data-progress` on the `body` from
+the metadata of the deck: `false` for `progress: false`, and `true` otherwise. The program
+of the deck holds the same value as the first value of the field `progress`, and `g`
+changes the state.
 
-The `fraction` of the current entry of the list of the steps is the part of the deck before
-the current step. Each step of each slide counts one time, so the bar is full at the last
-step only. `dom.ts` writes that
-part as the width of the bar. The style sheet shows the bar in the present view only, and
-not on a black screen, in the overview or on paper. A theme can set `--progress-color` and
-`--progress-height`.
+The `fraction` of the current entry of the list of the steps is the part of the deck
+before the current step. Each step of each slide counts one time, so the bar is full at
+the last step only. The projection `property "--fraction", :fraction` writes that part
+into `--fraction` on the `body`, and the style sheet sets the width of the bar from it.
+The style sheet shows the bar in the present view only, and not on a black screen, in the
+overview or on paper. A theme can set `--progress-color` and `--progress-height`.
 
 ### The transitions
 
@@ -920,14 +949,14 @@ and go to step 1 of the slide. The page of the last step of each slide holds the
 commands in `data-commands`, and a click on the page runs them. `o` and `Escape` close the
 overview, and the step does not change.
 
-`Expresso.Presenter.Program.columns/1` and `columns` in `state.ts` return the number of
-columns: the square root of the slide count, or the next larger integer. The program uses
-the number for `ArrowUp` and `ArrowDown`, and `dom.ts` uses it for the grid. The number of
-rows is then not more than the number of columns. `dom.ts` writes `data-thumbnail` on the
-page of the last step of each slide, and `data-selected` on the page of the selected
-slide. It also writes `--overview-columns` and `--overview-zoom` on the `body`, and the
-style sheet scales each page with `zoom`. The padding and the gaps of the grid are 1vw
-wide and 1vh high, so the grid of each deck fits in the window.
+`Expresso.Presenter.Program.columns/1` returns the number of columns: the square root of
+the slide count, or the next larger integer. The number of rows is then not more than the
+number of columns. The program uses the number for `ArrowUp` and `ArrowDown`. The renderer
+writes `data-thumbnail` on the page of the last step of each slide, and
+`--overview-columns` and `--overview-zoom` on the `body`. The style sheet scales each page
+with `zoom`. A mark writes `data-selected` on the thumbnail of the selected slide. The
+padding and the gaps of the grid are 1vw wide and 1vh high, so the grid of each deck fits
+in the window.
 
 In the speaker view, the overview replaces the grid of the speaker view while it shows. A
 theme can set `--overview-color` for the outline of the selected slide.
@@ -944,18 +973,19 @@ when the key changes the state or calls a built-in function.
 
 The speaker view is the same document in a second window, with `?speaker` in the address.
 It shows two pages of the handout view: the page of the current step and the page of the
-next step. `dom.ts` writes `data-speaker` on these two pages, and the style sheet puts them
+next step. A mark writes `data-speaker` on these two pages, and the style sheet puts them
 in a grid and scales them with `zoom`. The notes of the current page, the position and a
-timer go into three elements that `dom.ts` makes. The speaker view knows the keys of the
+timer go into three elements that the renderer writes into the handout view. The style
+sheet hides them in each other view and on paper. The speaker view knows the keys of the
 present view, but `p` and `s` have no function in it. `r` sets the timer back to `0:00`,
 and the timer then starts at the next change of the step.
 
 The `duration` option of the deck gives the length of the talk in minutes. The list of the
 steps gives it in milliseconds, and `?duration=` in the address replaces it with a number
-of minutes. `talkLength` in `speaker.ts` reads the two values. `dom.ts` makes a fourth element of the
-speaker view, `speaker-left`, and the speaker view writes the time left into it. `pace`
-gives its value of `data-pace`: `on`, `behind` or `over`. For a talk with no length, the
-element has no text, and the style sheet hides it.
+of minutes. `talkLength` in `speaker.ts` reads the two values. The renderer writes a
+fourth element of the speaker view, `speaker-left`, and the speaker view writes the time
+left into it. `pace` gives its value of `data-pace`: `on`, `behind` or `over`. For a talk
+with no length, the element has no text, and the style sheet hides it.
 
 The pace compares the time used with the `done` of the current entry: the part of the
 steps before the current step. The speaker is `behind` when the time used is more than one minute longer than
@@ -1011,7 +1041,7 @@ option does not select.
 The style sheet hides such a page in the handout view and on paper. The handout view on a
 screen therefore shows the pages that a printer prints.
 
-The key `a` of the handout view changes the `every` field of the state, and `dom.ts`
+The key `a` of the handout view changes the `every` field of the state, and a projection
 writes it into `data-every` on the `body`. With `data-every="true"`, the style sheet shows
 each page in the handout view and on paper. A print then gets every step, whatever the
 `handout` options select. The field stays in one window, and a print from the speaker

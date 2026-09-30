@@ -870,8 +870,8 @@ The rules are:
   after the last step.
 - `k` moves to the previous step first. At the first step, it moves to the last step of
   the previous slide.
-- `p` changes between the present view and the handout view. `dom.ts` writes the view
-  into the `data-view` attribute of the `body`.
+- `p` changes between the present view and the handout view. A projection writes the
+  view into the `data-view` attribute of the `body`.
 
 The section "The presenter" of `docs/architecture.md` gives the other keys. These keys
 use the same two moves, or they go to step 1 of a slide.

@@ -19,7 +19,7 @@ defmodule Expresso.Presenter.Program do
   the commands of an element under a click.
   """
 
-  alias Expresso.Presenter.Definition
+  alias Expresso.Presenter.{Definition, Projection}
   alias Expresso.Steps
 
   @typedoc "The commands for each event in one mode"
@@ -45,24 +45,30 @@ defmodule Expresso.Presenter.Program do
           state: map(),
           sync: [Definition.field()],
           modes: [mode()],
+          project: Projection.t(),
           steps: tuple(),
           slides: tuple()
         }
 
-  @enforce_keys [:state, :sync, :modes, :steps, :slides]
+  @enforce_keys [:state, :sync, :modes, :project, :steps, :slides]
   defstruct @enforce_keys
 
   @doc """
   Make the program of a deck from a definition
+
+  The first value of the field `progress` comes from the deck: the deck option
+  `progress false` hides the progress bar at the start. A deck from the
+  imperative API with no such key in its metadata shows the bar.
   """
   @spec compile(Definition.t(), Expresso.Deck.t()) :: t()
   def compile(definition, deck) do
     slides = Steps.slides(deck)
 
     %__MODULE__{
-      state: definition.state,
+      state: Map.put(definition.state, :progress, progress(deck)),
       sync: definition.sync,
       modes: Enum.map(definition.modes, &mode(&1, slides)),
+      project: definition.project,
       steps: deck |> Steps.entries() |> Enum.map(&{&1.slide, &1.step}) |> List.to_tuple(),
       slides: List.to_tuple(slides)
     }
@@ -71,7 +77,7 @@ defmodule Expresso.Presenter.Program do
   @doc """
   Return the program as JSON for the `script` element
 
-  The JSON object has two keys:
+  The JSON object has three keys:
 
     * `"state"` - the first value of each field of the state.
     * `"modes"` - the modes, in the order that the interpreter examines them.
@@ -80,6 +86,8 @@ defmodule Expresso.Presenter.Program do
       or `null`.
       `"keys"`, `"click"` and `"swipe"` hold pairs of events and commands. Each
       pair holds each event that has the same commands.
+    * `"project"` - the projections, as `Expresso.Presenter.Projection.json/1`
+      returns them.
 
   A command is a JSON array, such as `["step", 1]`, as `json_commands/1`
   shows. The steps and the slides are not in the program, because
@@ -93,7 +101,8 @@ defmodule Expresso.Presenter.Program do
     %{
       "state" =>
         Map.new(program.state, fn {field, value} -> {Atom.to_string(field), value(value)} end),
-      "modes" => Enum.map(program.modes, &mode_json/1)
+      "modes" => Enum.map(program.modes, &mode_json/1),
+      "project" => Projection.json(program.project)
     }
     |> JSON.encode!()
     |> String.replace("<", "\\u003c")
@@ -144,6 +153,10 @@ defmodule Expresso.Presenter.Program do
 
   defp command_json(command) when is_atom(command), do: [value(command)]
   defp command_json(command), do: command |> Tuple.to_list() |> Enum.map(&value/1)
+
+  # The deck option `progress false` hides the progress bar at the start.
+  defp progress(%{metadata: %{progress: false}}), do: false
+  defp progress(_deck), do: true
 
   defp value(value) when is_boolean(value) or is_nil(value), do: value
   defp value(value) when is_atom(value), do: Atom.to_string(value)
