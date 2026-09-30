@@ -523,7 +523,7 @@ The work found four facts that the design above does not contain:
 
 The key `r` keeps the typed digits, as the code of today does. The binding of `r` has
 `each: false`, so the definition shows the difference from `s` and `f`. Decision 10 is
-still open.
+still open. Later, the answer to decision 10 removed this difference.
 
 ### The result of step 3
 
@@ -782,8 +782,8 @@ Do each part in its own pull request, in this sequence:
 
 ## The decisions
 
-The maintainer decides each of these. Decisions 8, 9 and 11 are settled, and the answer
-follows each of them.
+The maintainer decides each of these. Decisions 8, 9, 10 and 11 are settled, and the
+answer follows each of them.
 
 1. Does Elixir own the table of keys?
 2. Which method keeps the actions equal: (a), the check at load, or (b), the generated
@@ -803,7 +803,10 @@ follows each of them.
 9. Can an element command only go to a slide or a step? Or can an element declare its
    own states, which the print then shows? Answer: an element command can only go to
    a slide and a step.
-10. Does the key `r` remove the typed digits, as `s` and `f` do?
+10. Does the key `r` remove the typed digits, as `s` and `f` do? Answer: yes. The old
+    code kept the digits only because it handled `r` outside the function that removes
+    them. Now only a digit and `Enter` keep the digits, as the section "The keys" of
+    `docs/architecture.md` says.
 11. Does `program.ts` examine the program at load? The renderer writes the program and the
     script into the same document, and the tests already examine the program. Without the
     examination, the script is approximately 230 lines of code smaller. Answer: the script
