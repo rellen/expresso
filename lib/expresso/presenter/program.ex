@@ -17,7 +17,7 @@ defmodule Expresso.Presenter.Program do
   alias Expresso.Presenter.Definition
   alias Expresso.Steps
 
-  @typedoc "The commands of each event of one mode"
+  @typedoc "The commands for each event in one mode"
   @type mode :: %{
           name: atom(),
           when: keyword(),
@@ -32,9 +32,9 @@ defmodule Expresso.Presenter.Program do
   @typedoc """
   The program of one deck
 
-  `steps` holds `{slide, step}` for each step, and `slides` holds the index of
-  step 1 of each slide, its number of steps and its transition. Both are
-  tuples, so the interpreter reads an entry by its index.
+  `steps` holds `{slide, step}` for each step. `slides` holds a map for each
+  slide: the index of its step 1, its number of steps and its transition. Both
+  are tuples, so the interpreter reads an entry by its index.
   """
   @type t :: %__MODULE__{
           state: map(),
@@ -64,7 +64,7 @@ defmodule Expresso.Presenter.Program do
   end
 
   @doc """
-  Return the commands of a page of the overview for a slide
+  Return the commands that a page in the overview holds for a slide
 
   A click on the page goes to step 1 of the slide, and it closes the overview.
   """
@@ -72,10 +72,10 @@ defmodule Expresso.Presenter.Program do
   def element(slide), do: [{:goto_slide, slide}, {:set, :overview, false}]
 
   @doc """
-  Return the number of columns of the overview for a number of slides
+  Return the number of columns in the overview for a number of slides
 
-  The number is the square root of the number of slides, or the next larger
-  integer. The number of rows is then not more than the number of columns.
+  The result is the square root of the slide count, rounded up to an integer.
+  The number of rows is then not more than the number of columns.
 
       iex> Expresso.Presenter.Program.columns(7)
       3

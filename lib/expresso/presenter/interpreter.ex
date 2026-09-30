@@ -2,12 +2,13 @@ defmodule Expresso.Presenter.Interpreter do
   @moduledoc """
   Runs the program of the presenter on a state
 
-  This module is the reference interpreter of the section "The interpreter" of
-  `docs/research/elixir-presenter-report.md`. Each function is pure: it takes a
-  state and an event, and it returns the next state. The tests of the behavior
-  of the presenter run here, with no browser.
+  This module is the reference interpreter that
+  `docs/research/elixir-presenter-report.md` describes in its section "The
+  interpreter". Each function is pure: it takes a state and an event, and it
+  returns the next state. Thus the tests of the presenter behavior need no
+  browser.
 
-  `run/3` does the first steps of the interpreter in the browser:
+  `run/3` does the first three steps that the interpreter in the browser does:
 
     1. It finds the first mode whose condition the state matches.
     2. It finds the commands of the event in that mode.
@@ -25,7 +26,7 @@ defmodule Expresso.Presenter.Interpreter do
 
   alias Expresso.Presenter.Program
 
-  @typedoc "The state of the presenter. `Expresso.Presenter.Definition` gives the fields."
+  @typedoc "The state of the presenter. `Expresso.Presenter.Definition` declares the fields."
   @type state :: %{atom() => term()}
 
   @typedoc """
@@ -90,7 +91,8 @@ defmodule Expresso.Presenter.Interpreter do
   @doc """
   Tell if the browser must not use an event
 
-  The state changed, or the event called a built-in function.
+  The result is true when the state changed or the event called a built-in
+  function.
   """
   @spec prevented?(state(), state(), [atom()]) :: boolean()
   def prevented?(before, after_event, effects), do: after_event != before or effects != []
@@ -106,7 +108,7 @@ defmodule Expresso.Presenter.Interpreter do
   @doc """
   Return the fragment of the address for a state, such as `#4.2`
 
-  A deck with no slide gives `#1.1`.
+  For a deck with no slide, the function returns `#1.1`.
   """
   @spec hash(Program.t(), state()) :: String.t()
   def hash(program, state) do
@@ -126,11 +128,11 @@ defmodule Expresso.Presenter.Interpreter do
   end
 
   @doc """
-  Return the transition of a change of state, or nil
+  Return the transition between two states, or nil
 
-  Only a move to a different slide in the present view has a transition. The
-  slide with the higher number gives the kind in the two directions, and the
-  kind `"none"` gives no transition.
+  Only a move to a different slide in the present view has a transition. In
+  the two directions, the kind comes from the slide with the higher number. The
+  kind `"none"` has no transition.
   """
   @spec transition(Program.t(), state(), state()) :: transition() | nil
   def transition(program, before, after_event) do
@@ -201,7 +203,7 @@ defmodule Expresso.Presenter.Interpreter do
   defp command(program, _event, :go_typed, state),
     do: goto_slide(program, %{state | digits: ""}, number(state.digits))
 
-  # A move past the first step or the last step gives the same state.
+  # A move past the first step or the last step makes no change.
   defp step(program, state, by), do: goto(program, state, state.index + by)
 
   defp goto(program, state, index)
@@ -217,15 +219,15 @@ defmodule Expresso.Presenter.Interpreter do
     end
   end
 
-  # A slide outside the deck gives the same state.
+  # A slide outside the deck makes no change.
   defp select(program, state, slide) when slide >= 1 and slide <= tuple_size(program.slides),
     do: %{state | selected: slide}
 
   defp select(_program, state, _slide), do: state
 
-  # Go to a slide and a step, and to a black screen or not. A slide and a step
-  # that the deck does not have give the same state, and so does the current
-  # position.
+  # Go to a slide and a step, and set the black screen. A slide and a step that
+  # the deck does not have make no change, and the current position also makes
+  # no change.
   defp position(program, state, slide, step, blank) do
     case index_of(program, slide, step) do
       nil -> state
