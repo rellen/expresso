@@ -834,7 +834,10 @@ are:
   previous slide at the first step.
 - `Home` shows the first slide, and `End` shows step 1 of the last slide.
 - A digit adds to a slide number, and `Enter` then shows step 1 of that slide. A number
-  that is not a slide has no effect. Each other key removes the digits.
+  that is not a slide has no effect. Each other key removes the digits. The projection
+  `attribute :digits, "data-digits"` writes the digits on the `body`, and the style sheet
+  shows them in the top right corner. A theme can set `--digits-color` and
+  `--digits-background`.
 - `b` shows a black screen. The next key shows the slide again, and it does nothing more.
 - `p` changes to the handout view.
 - `s` opens the speaker view in a second window. A second `s` shows the same window.

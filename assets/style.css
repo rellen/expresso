@@ -869,6 +869,28 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   }
 }
 /*
+ * The slide number that the presenter types. The present view and the speaker
+ * view show it in the top right corner until `Enter` or another key. A theme
+ * can set `--digits-color` and `--digits-background`. The number is not on a
+ * black screen or on paper.
+ */
+@media screen {
+  body:is([data-view="present"], [data-view="speaker"])[data-digits]:not(
+      [data-digits=""]
+    ):not([data-blank="true"])::after {
+    content: attr(data-digits);
+    position: fixed;
+    top: 0.25rem;
+    right: 0.5rem;
+    padding: 0.1rem 0.3rem;
+    font-size: 0.5rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--digits-color, #fff);
+    background-color: var(--digits-background, rgba(0, 0, 0, 0.6));
+    z-index: 5;
+  }
+}
+/*
  * The progress bar of the present view. Its width is the part of the deck
  * before the current step, which the script writes into `--fraction` on the
  * `body`. A theme can set `--progress-color` and `--progress-height`. The bar

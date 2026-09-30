@@ -177,7 +177,7 @@ Open the HTML document in a browser.
 | `k`, `←`, `↑`, `Page Up` | Go to the previous step, or to the previous slide at the first step. |
 | `Home` | Go to the first slide. |
 | `End` | Go to step 1 of the last slide. |
-| A number, then `Enter` | Go to step 1 of that slide. For example, `1` `2` `Enter` goes to slide 12. |
+| A number, then `Enter` | Go to step 1 of that slide. For example, `1` `2` `Enter` goes to slide 12. The number shows in the top right corner until `Enter`. |
 | `b` | Show a black screen. The next key shows the slide again. |
 | `p` | Change between the present view and the handout view. |
 | `s` | Open the speaker view in a second window. |
@@ -317,6 +317,7 @@ A theme can set these custom properties:
 | `--slide-number-color`, `--slide-number-size` | The color and the size of the slide number. |
 | `--slide-number-right`, `--slide-number-bottom` | The position of the slide number. |
 | `--goto-color` | The color of a link of the `goto` option. |
+| `--digits-color`, `--digits-background` | The colors of the slide number that the presenter types. |
 
 ## Make a binary
 

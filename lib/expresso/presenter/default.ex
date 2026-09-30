@@ -35,6 +35,7 @@ defmodule Expresso.Presenter.Default do
   attribute :every, "data-every"
   attribute :overview, "data-overview", flag: true
   attribute :help, "data-help", flag: true
+  attribute :digits, "data-digits"
 
   # The style sheet sets the width of the progress bar from the part of the
   # deck before the current step.

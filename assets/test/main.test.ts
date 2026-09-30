@@ -99,6 +99,18 @@ test("digits and Enter go to a slide", () => {
   assert.deepEqual(displays(), ["flex", "none"]);
 });
 
+test("a digit writes data-digits, and another key removes the digits", () => {
+  page.press("1");
+  assert.equal(body.dataset.digits, "1");
+
+  page.press("2");
+  assert.equal(body.dataset.digits, "12");
+
+  page.press("x");
+  assert.equal(body.dataset.digits, "");
+  assert.deepEqual(displays(), ["flex", "none"]);
+});
+
 test("b writes data-blank, and the next key removes it", () => {
   page.press("b");
   assert.equal(body.dataset.blank, "true");

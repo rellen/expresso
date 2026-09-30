@@ -82,6 +82,7 @@ defmodule Expresso.Presenter.ProgramTest do
 
       assert ["view", "data-view", false] in project["attributes"]
       assert ["blank", "data-blank", true] in project["attributes"]
+      assert ["digits", "data-digits", false] in project["attributes"]
       assert project["properties"] == [["--fraction", "fraction"]]
 
       assert [
