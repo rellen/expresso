@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { commands, parse } from "../src/program.ts";
-import { texts } from "./fixtures.ts";
+import { raw, texts } from "./fixtures.ts";
+import { validate, validateCommands } from "./validate.ts";
 
 const text = texts("1,2").program;
 
@@ -39,7 +40,7 @@ test("parse reads the program that the renderer writes", () => {
   assert.equal(program.modes[4]?.element, null);
 });
 
-test("parse throws for a program that the renderer does not write", () => {
+test("validate refuses a program that the renderer does not write", () => {
   const texts = [
     "null",
     "[]",
@@ -76,7 +77,7 @@ test("parse throws for a program that the renderer does not write", () => {
   ];
   for (const each of texts) {
     assert.throws(
-      () => parse(each),
+      () => validate(each),
       { message: "The program of the presenter is not valid" },
       each.slice(0, 80),
     );
@@ -110,16 +111,37 @@ test("parse reads the projections that the renderer writes", () => {
 });
 
 test("commands reads the commands of a page of the overview", () => {
-  const program = parse(text);
+  assert.deepEqual(commands('[["goto_slide",2],["set","overview",false]]'), [
+    ["goto_slide", 2],
+    ["set", "overview", false],
+  ]);
+});
 
-  assert.deepEqual(
-    commands('[["goto_slide",2],["set","overview",false]]', program),
-    [
-      ["goto_slide", 2],
-      ["set", "overview", false],
-    ],
-  );
-  assert.throws(() => commands('[["goto_slide","x"]]', program), {
+test("validateCommands refuses commands that the renderer does not write", () => {
+  assert.throws(() => validateCommands('[["goto_slide","x"]]', parse(text)), {
     message: "The program of the presenter is not valid",
   });
+});
+
+// The script trusts the program, so these tests examine each program of the
+// fixture file. The fixture file holds the program of each deck of the tests.
+test("each program of the fixture file is valid, and parse reads it as validate does", () => {
+  for (const [name, { program }] of Object.entries(raw.decks)) {
+    const source = JSON.stringify(program);
+    assert.deepEqual(parse(source), validate(source), name);
+  }
+});
+
+test("the commands of each click in the fixture file are valid", () => {
+  const program = parse(text);
+  let clicks = 0;
+  for (const each of raw.cases) {
+    for (const [kind, , commands] of each.events) {
+      if (kind === "click" && commands !== null) {
+        validateCommands(JSON.stringify(commands), program);
+        clicks++;
+      }
+    }
+  }
+  assert.ok(clicks > 0, "the fixture file has no click with commands");
 });

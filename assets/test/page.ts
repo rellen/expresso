@@ -76,6 +76,9 @@ type Click = {
   // The link of the `goto` option under the click. It holds its commands in
   // `data-commands`.
   link?: FakeElement;
+  // An element of the HTML of a deck with `data-commands`, which the renderer
+  // did not write. Only the selector `[data-commands]` finds it.
+  stray?: FakeElement;
 };
 
 // A point on the screen.
@@ -379,10 +382,14 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
               ? null
               : {
                   ...event.link,
-                  matches: (each: string) => each === "a[data-commands]",
+                  matches: (each: string) => each === "a.goto[data-commands]",
                 };
-          if (selector === "[data-commands]") {
+          // The selector of the two kinds of element that hold commands.
+          if (selector.includes(".handout-page[data-commands]")) {
             return link ?? event.on ?? null;
+          }
+          if (selector === "[data-commands]") {
+            return event.stray ?? null;
           }
           if (link !== null && selector.includes("a,")) {
             return link;

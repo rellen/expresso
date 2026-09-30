@@ -454,6 +454,7 @@ the Chromium of the container, and that Chromium can be older than the new versi
 `docs/typescript.md` gives the design. The parts are:
 
 - `assets/src/program.ts` — reads the program of the presenter that the renderer writes.
+  It examines no value.
 - `assets/src/interpreter.ts` — runs the program for each key, click and swipe.
 - `assets/src/state.ts` — the state of the presenter, the messages between the windows,
   the side of a click and the direction of a swipe.
@@ -461,6 +462,9 @@ the Chromium of the container, and that Chromium can be older than the new versi
 - `assets/src/main.ts` — the entry, which esbuild bundles.
 - `assets/test/interpreter.test.ts` — the test that runs the fixtures of the Elixir
   interpreter. "The fixtures of the interpreter" below tells how to write them again.
+- `assets/test/validate.ts` — examines a program of the presenter.
+  `assets/test/program.test.ts` runs it on each program of the fixture file. After a
+  change to the format of the program, change `validate.ts` too.
 - `assets/test/state.test.ts` — the example tests of the state.
 - `assets/test/state_property.test.ts` and `assets/test/speaker_property.test.ts` — the
   property tests of the state and of the speaker view texts.

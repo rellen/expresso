@@ -94,6 +94,14 @@ test("a click on a link goes to its step, and the browser does not follow the li
   page.press("Home");
 });
 
+test("a click runs no commands from an element that the renderer did not write", () => {
+  const stray = element("", "", { commands: JSON.stringify([["goto", 2]]) });
+  page.click({ clientX: 100, stray });
+
+  // A click on the left third at the first step does nothing.
+  assert.equal(page.location.hash, "#1.1");
+});
+
 test("a click on a link closes a black screen, and it does nothing more", () => {
   page.press("b");
   assert.equal(page.click({ clientX: 900, link }), true);
