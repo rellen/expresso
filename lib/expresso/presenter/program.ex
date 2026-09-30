@@ -64,6 +64,86 @@ defmodule Expresso.Presenter.Program do
   end
 
   @doc """
+  Return the program as JSON for the `script` element
+
+  The JSON object has two keys:
+
+    * `"state"` - the first value of each field of the state.
+    * `"modes"` - the modes, in the order that the interpreter examines them.
+      A mode holds its `"name"`, its condition `"when"`, its `"any"` commands
+      or `null`, its `"other"` commands or `null`, and its `"element"` flag.
+      `"keys"`, `"click"` and `"swipe"` hold pairs of events and commands. Each
+      pair holds each event that has the same commands.
+
+  A command is a JSON array, such as `["step", 1]`, as `json_commands/1`
+  shows. The steps and the slides are not in the program, because
+  `Expresso.Steps.json/1` writes them. Each `<` becomes `\\u003c`, as in the
+  list of the steps.
+  """
+  @spec json(t()) :: String.t()
+  def json(program) do
+    # The keys are strings, so each render gives the same text. See
+    # `Expresso.Steps.json/1`.
+    %{
+      "state" =>
+        Map.new(program.state, fn {field, value} -> {Atom.to_string(field), value(value)} end),
+      "modes" => Enum.map(program.modes, &mode_json/1)
+    }
+    |> JSON.encode!()
+    |> String.replace("<", "\\u003c")
+  end
+
+  @doc """
+  Return a list of commands as JSON, such as `[["step",1]]`
+
+  The first element of each array is the name of the command. A field, a view
+  and a built-in function become strings.
+
+      iex> Expresso.Presenter.Program.json_commands([{:goto_slide, 2}, {:set, :overview, false}])
+      ~s([["goto_slide",2],["set","overview",false]])
+  """
+  @spec json_commands([Definition.command()]) :: String.t()
+  def json_commands(commands), do: commands |> Enum.map(&command_json/1) |> JSON.encode!()
+
+  defp mode_json(mode) do
+    %{
+      "name" => Atom.to_string(mode.name),
+      "when" =>
+        Map.new(mode.when, fn {field, value} -> {Atom.to_string(field), value(value)} end),
+      "any" => commands_json(mode.any),
+      "other" => commands_json(mode.other),
+      "element" => mode.element,
+      "keys" => pairs(mode.keys),
+      "click" => pairs(mode.click),
+      "swipe" => pairs(mode.swipe)
+    }
+  end
+
+  # Each group of events with the same commands becomes one pair. The groups and
+  # the events in each group are in sorted order.
+  defp pairs(map) do
+    map
+    |> Enum.group_by(fn {_event, commands} -> commands end, fn {event, _commands} ->
+      value(event)
+    end)
+    |> Enum.sort()
+    |> Enum.map(fn {commands, events} -> [Enum.sort(events), commands_json(commands)] end)
+  end
+
+  defp commands_json(nil), do: nil
+  defp commands_json(commands), do: Enum.map(commands, &command_json/1)
+
+  defp command_json({:assign, field, {:entry, :slide}}),
+    do: ["assign", value(field), ["entry", "slide"]]
+
+  defp command_json(command) when is_atom(command), do: [value(command)]
+  defp command_json(command), do: command |> Tuple.to_list() |> Enum.map(&value/1)
+
+  defp value(value) when is_boolean(value) or is_nil(value), do: value
+  defp value(value) when is_atom(value), do: Atom.to_string(value)
+  defp value(value), do: value
+
+  @doc """
   Return the commands that a page in the overview holds for a slide
 
   A click on the page goes to step 1 of the slide, and it closes the overview.

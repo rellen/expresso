@@ -8,7 +8,7 @@
 
 import assert from "node:assert/strict";
 import type { Kind } from "../src/deck.ts";
-import { deckOf, json } from "./decks.ts";
+import { key, raw, texts } from "./fixtures.ts";
 
 export type FakeElement = {
   id: string;
@@ -22,6 +22,7 @@ export type FakeElement = {
     properties: Record<string, string>;
   };
   textContent: string;
+  hidden: boolean;
   children: FakeElement[];
   appendChild: (child: FakeElement) => void;
   replaceChildren: () => void;
@@ -112,6 +113,9 @@ export type FakePage = {
   // Send a message from a window to the page.
   receive: (data: unknown, source: FakeWindow | null) => void;
   element: (id: string) => FakeElement | undefined;
+  // The rows of the list of keys that shows, as the names of the keys and the
+  // text. The test fails when not exactly one list shows.
+  keys: () => { names: string; text: string }[];
 };
 
 export function fakeWindow(): FakeWindow {
@@ -142,6 +146,7 @@ export function element(
       },
     },
     textContent: "",
+    hidden: false,
     children: [],
     appendChild: (child) => {
       self.children.push(child);
@@ -159,21 +164,49 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   const slides = maxSteps.map((max, index) =>
     element(`slide-${index + 1}`, "slide", { maxStep: String(max) }),
   );
-  // The list of the steps that the renderer writes.
+  // The list of the steps and the program that the renderer writes for the
+  // deck. They come from the fixture file.
+  const found = texts(key(maxSteps, options.transitions));
+  const steps = JSON.parse(found.deck);
+  steps.duration_ms =
+    options.duration === undefined ? null : options.duration * 60_000;
   const list = element("expresso-deck");
-  list.textContent = json(
-    deckOf(maxSteps, {
-      kinds: options.transitions,
-      duration:
-        options.duration === undefined ? null : options.duration * 60_000,
-    }),
-  );
+  list.textContent = JSON.stringify(steps);
+  const program = element("expresso-program");
+  program.textContent = found.program;
+  // The renderer writes a list of keys for each mode, and it hides each list.
+  const help = element("help");
+  for (const [mode, rows] of raw.help) {
+    const panel = element("", "", { mode });
+    panel.hidden = true;
+    for (const [names, text] of rows) {
+      const row = element("");
+      const kbd = element("");
+      kbd.textContent = names;
+      const span = element("");
+      span.textContent = text;
+      row.appendChild(kbd);
+      row.appendChild(span);
+      panel.appendChild(row);
+    }
+    help.appendChild(panel);
+  }
   const handout = element("", "handout");
   maxSteps.forEach((max, index) => {
     for (let step = 1; step <= max; step++) {
+      // The page of the last step of each slide holds the commands of a click
+      // in the overview, as the renderer writes them.
+      const commands =
+        step === max
+          ? JSON.stringify([
+              ["goto_slide", index + 1],
+              ["set", "overview", false],
+            ])
+          : undefined;
       const page = element("", "handout-page", {
         slide: String(index + 1),
         step: String(step),
+        commands,
       });
       const notes = options.notes?.[index];
       if (notes !== undefined) {
@@ -193,6 +226,8 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   const progress = element("progress");
   const all = () => [
     list,
+    program,
+    help,
     ...slides,
     handout,
     ...handout.children,
@@ -303,6 +338,14 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
       call("message", { data, source });
     },
     element: (id) => all().find((each) => each.id === id),
+    keys: () => {
+      const shown = help.children.filter((list) => !list.hidden);
+      assert.equal(shown.length, 1, "not exactly one list of keys shows");
+      return (shown[0]?.children ?? []).map((row) => ({
+        names: row.children[0]?.textContent ?? "",
+        text: row.children[1]?.textContent ?? "",
+      }));
+    },
   };
 
   const global = globalThis as unknown as Record<string, unknown>;

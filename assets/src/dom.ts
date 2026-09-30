@@ -1,15 +1,18 @@
 // The code that reads the document and writes to it.
 //
-// `state.ts` does not touch the document, and this module does not decide the
-// next state. `main.ts` connects the two.
+// `interpreter.ts` does not touch the document, and this module does not
+// decide the next state. `main.ts` connects the two.
 
 import { parse } from "./deck.ts";
 import type { Deck } from "./deck.ts";
-import { rows } from "./help.ts";
+import { upcoming } from "./interpreter.ts";
+import type { Transition } from "./interpreter.ts";
+import { parse as parseProgram } from "./program.ts";
+import type { Program } from "./program.ts";
 import { position } from "./speaker.ts";
 import type { Pace } from "./speaker.ts";
-import { columns, current, mode, upcoming } from "./state.ts";
-import type { State, Transition } from "./state.ts";
+import { columns, current } from "./state.ts";
+import type { State } from "./state.ts";
 
 // The renderer writes `data-progress="false"` on the `body` for a deck that
 // hides the progress bar at the start. The key `g` can still show it.
@@ -26,6 +29,17 @@ export function deck(): Deck {
     throw new Error("The document has no list of the steps");
   }
   return parse(element.textContent ?? "");
+}
+
+// Read the program of the presenter from the element `expresso-program`, where
+// the renderer writes it as JSON. A document with no program is a defect of the
+// renderer, so an error here is correct.
+export function program(): Program {
+  const element = document.getElementById("expresso-program");
+  if (element === null) {
+    throw new Error("The document has no program of the presenter");
+  }
+  return parseProgram(element.textContent ?? "");
 }
 
 // Run a change of the document as a transition, or run it at once. The
@@ -66,7 +80,13 @@ function slide(number: number): HTMLElement {
 // `data-step`. docs/overlays.md gives the CSS contract. The speaker view also
 // writes `data-speaker` on two pages, and the texts of its elements.
 // The overview writes `data-overview` on the `body`, and attributes on pages.
-export function apply(state: State, deck: Deck): void {
+// `helpMode` is the name of the mode whose list of keys shows while the `body`
+// has `data-help`.
+export function apply(
+  state: State,
+  deck: Deck,
+  helpMode: string | undefined,
+): void {
   document.body.dataset.view = state.view;
   if (state.blank) {
     document.body.dataset.blank = "true";
@@ -87,7 +107,7 @@ export function apply(state: State, deck: Deck): void {
   }
   if (state.help) {
     document.body.dataset.help = "true";
-    help(state);
+    help(helpMode);
   } else {
     delete document.body.dataset.help;
   }
@@ -183,27 +203,14 @@ export function speakerPanel(): void {
   }
 }
 
-// Write the list of keys of the view of the state into the element `help`.
-// The function makes the element at the first call. Each row holds the names
-// of the keys and their function, as text and not as HTML. The style sheet
-// shows the element while the `body` has `data-help`.
-function help(state: State): void {
-  let panel = document.getElementById("help");
-  if (panel === null) {
-    panel = document.createElement("div");
-    panel.id = "help";
-    document.body.appendChild(panel);
-  }
-  panel.replaceChildren();
-  for (const [keys, text] of rows(mode(state))) {
-    const row = document.createElement("div");
-    const name = document.createElement("kbd");
-    name.textContent = keys;
-    const function_ = document.createElement("span");
-    function_.textContent = text;
-    row.appendChild(name);
-    row.appendChild(function_);
-    panel.appendChild(row);
+// Show the list of keys of one mode. The renderer writes the element `help`
+// with one list for each mode, and each list has the name of its mode in
+// `data-mode`. The style sheet shows the element while the `body` has
+// `data-help`.
+function help(name: string | undefined): void {
+  const lists = document.getElementById("help")?.children ?? [];
+  for (const list of Array.from(lists) as HTMLElement[]) {
+    list.hidden = list.dataset.mode !== name;
   }
 }
 

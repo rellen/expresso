@@ -842,8 +842,14 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.4);
     z-index: 10;
   }
-  #help > div {
+  /* The renderer writes a list for each mode, and the script shows one of
+   * them. Each row of the list holds a key and its function. */
+  #help > div,
+  #help > div > div {
     display: contents;
+  }
+  #help > div[hidden] {
+    display: none;
   }
   #help kbd {
     font-family: inherit;

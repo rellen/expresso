@@ -93,7 +93,7 @@ test("apply shows the slide of the state and hides each other slide", () => {
   const doc = fakeDocument([1, 3, 2]);
   const list = deck();
 
-  apply(at(list, 2, 3), list);
+  apply(at(list, 2, 3), list, undefined);
 
   assert.deepEqual(
     doc.slides.map((slide) => slide.style.display),
@@ -105,7 +105,7 @@ test("apply writes the step of the state on the slide of the state", () => {
   const doc = fakeDocument([1, 3]);
   const list = deck();
 
-  apply(at(list, 2, 3), list);
+  apply(at(list, 2, 3), list, undefined);
 
   assert.equal(nth(doc.slides, 1).dataset.step, "3");
   assert.equal(nth(doc.slides, 0).dataset.step, undefined);
@@ -115,17 +115,17 @@ test("apply writes the view on the body", () => {
   const doc = fakeDocument([1]);
   const list = deck();
 
-  apply(at(list, 1, 1, "handout"), list);
+  apply(at(list, 1, 1, "handout"), list, undefined);
   assert.equal(doc.body.dataset.view, "handout");
 
-  apply(at(list, 1, 1), list);
+  apply(at(list, 1, 1), list, undefined);
   assert.equal(doc.body.dataset.view, "present");
 });
 
 test("apply writes the view only for a document with no slide", () => {
   const doc = fakeDocument([]);
 
-  apply({ ...at(deckOf([1]), 1, 1), view: "handout" }, deck());
+  apply({ ...at(deckOf([1]), 1, 1), view: "handout" }, deck(), undefined);
 
   assert.equal(doc.body.dataset.view, "handout");
 });
@@ -134,7 +134,7 @@ test("apply throws for a slide that the document does not hold", () => {
   fakeDocument([1]);
   const list = deckOf([1, 1]);
 
-  assert.throws(() => apply(at(list, 2, 1), list), {
+  assert.throws(() => apply(at(list, 2, 1), list, undefined), {
     message: "The document has no slide 2",
   });
 });
@@ -143,9 +143,9 @@ test("apply writes data-blank for a black screen, and removes it after", () => {
   const doc = fakeDocument([1]);
   const list = deck();
 
-  apply({ ...at(list, 1, 1), blank: true }, list);
+  apply({ ...at(list, 1, 1), blank: true }, list, undefined);
   assert.equal(doc.body.dataset.blank, "true");
 
-  apply(at(list, 1, 1), list);
+  apply(at(list, 1, 1), list, undefined);
   assert.equal("blank" in doc.body.dataset, false);
 });

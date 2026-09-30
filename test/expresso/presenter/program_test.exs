@@ -60,6 +60,59 @@ defmodule Expresso.Presenter.ProgramTest do
     end
   end
 
+  describe "json/1" do
+    test "writes the first state and each mode in the order of the interpreter" do
+      data = [1, 2] |> program() |> Program.json() |> JSON.decode!()
+
+      assert data["state"]["view"] == "present"
+      assert data["state"]["selected"] == 1
+
+      assert Enum.map(data["modes"], & &1["name"]) ==
+               ~w(blank help overview present speaker handout)
+    end
+
+    test "puts the events with the same commands in one pair" do
+      data = [1, 2] |> program() |> Program.json() |> JSON.decode!()
+      present = Enum.find(data["modes"], &(&1["name"] == "present"))
+
+      assert [" ", "ArrowDown", "ArrowRight", "PageDown", "j"] in Enum.map(present["keys"], &hd/1)
+      assert [["right"], [["clear", "digits"], ["step", 1]]] in present["click"]
+      assert present["other"] == [["clear", "digits"]]
+      assert present["any"] == nil
+    end
+
+    test "writes each command as an array with the name first" do
+      data = [1, 2] |> program() |> Program.json() |> JSON.decode!()
+      present = Enum.find(data["modes"], &(&1["name"] == "present"))
+      commands = Map.new(present["keys"], fn [[key | _keys], commands] -> {key, commands} end)
+
+      assert commands["o"] == [
+               ["clear", "digits"],
+               ["set", "overview", true],
+               ["assign", "selected", ["entry", "slide"]]
+             ]
+
+      # `End` goes to step 1 of the last slide, which has the index 1.
+      assert commands["End"] == [["clear", "digits"], ["goto", 1]]
+      assert commands["s"] == [["clear", "digits"], ["builtin", "open_speaker"]]
+    end
+
+    test "writes null for the last step of a deck with no slide" do
+      data = [] |> program() |> Program.json() |> JSON.decode!()
+      present = Enum.find(data["modes"], &(&1["name"] == "present"))
+      commands = Map.new(present["keys"], fn [[key | _keys], commands] -> {key, commands} end)
+
+      assert commands["End"] == [["clear", "digits"], ["goto", nil]]
+    end
+
+    test "returns the same text for each render, and the text has no <" do
+      text = [1, 3, 2] |> program() |> Program.json()
+
+      assert text == [1, 3, 2] |> program() |> Program.json()
+      refute text =~ "<"
+    end
+  end
+
   describe "element/1" do
     test "goes to step 1 of the slide, and closes the overview" do
       assert Program.element(4) == [{:goto_slide, 4}, {:set, :overview, false}]

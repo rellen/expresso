@@ -1,241 +1,39 @@
+// The tests of the code that stays in `state.ts`: the messages between the
+// windows and the sources of the click events and the swipe events. The tests
+// of the keys and the moves run on the program: `interpreter.test.ts` runs the
+// fixtures, and `test/expresso/presenter/` holds the ExUnit tests.
+
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  BINDINGS,
   accepts,
-  binding,
-  choose,
   columns,
   current,
-  follow,
-  fromHash,
-  initial,
   isMessage,
   message,
-  mode,
-  next,
-  point,
   side,
   stamp,
   swipe,
-  toHash,
-  transition,
-  upcoming,
 } from "../src/state.ts";
-import type { State, View } from "../src/state.ts";
-import { at as atIn, deckOf } from "./decks.ts";
+import { at, deckOf } from "./decks.ts";
 
 // Three slides. Slide 2 has three steps, and slide 3 has two steps.
 const three = deckOf([1, 3, 2]);
 
-// A state of the deck `three`, with no black screen and no digits.
-function at(slide: number, step: number, view: View = "present"): State {
-  return atIn(three, slide, step, view);
-}
-
-// Give the state after each key, in sequence.
-function keys(state: State, sequence: string[], deck = three): State {
-  return sequence.reduce((state, key) => next(state, key, deck), state);
-}
-
-test("the initial state is slide 1, step 1, in the present view", () => {
-  assert.deepEqual(initial(), at(1, 1));
+test("current returns the entry of the state, and undefined for a deck with no slide", () => {
+  assert.deepEqual(current(at(three, 2, 3), three), three.steps[3]);
+  assert.equal(current(at(three, 1, 1), deckOf([])), undefined);
 });
 
-test("current gives the entry of the state, and undefined for a deck with no slide", () => {
-  assert.deepEqual(current(at(2, 3), three), three.steps[3]);
-  assert.equal(current(initial(), deckOf([])), undefined);
-});
-
-test("j moves to the next step", () => {
-  assert.deepEqual(next(at(2, 1), "j", three), at(2, 2));
-});
-
-test("j on the last step moves to the first step of the next slide", () => {
-  assert.deepEqual(next(at(2, 3), "j", three), at(3, 1));
-  assert.deepEqual(next(at(1, 1), "j", three), at(2, 1));
-});
-
-test("j on the last step of the last slide gives the same state", () => {
-  const state = at(3, 2);
-  assert.equal(next(state, "j", three), state);
-});
-
-test("k moves to the previous step", () => {
-  assert.deepEqual(next(at(2, 3), "k", three), at(2, 2));
-});
-
-test("k on the first step moves to the last step of the previous slide", () => {
-  assert.deepEqual(next(at(3, 1), "k", three), at(2, 3));
-  assert.deepEqual(next(at(2, 1), "k", three), at(1, 1));
-});
-
-test("k on the first step of the first slide gives the same state", () => {
-  const state = at(1, 1);
-  assert.equal(next(state, "k", three), state);
-});
-
-test("p changes to the handout view, and p again changes back", () => {
-  const handout = next(at(2, 2), "p", three);
-  assert.deepEqual(handout, at(2, 2, "handout"));
-  assert.deepEqual(next(handout, "p", three), at(2, 2));
-});
-
-test("j and k keep the view", () => {
-  assert.deepEqual(next(at(2, 1, "handout"), "j", three), at(2, 2, "handout"));
-  assert.deepEqual(next(at(2, 2, "handout"), "k", three), at(2, 1, "handout"));
-});
-
-test("an unknown key gives the same state", () => {
-  const state = at(2, 2);
-  assert.equal(next(state, "x", three), state);
-});
-
-test("a deck with no slide stays on slide 1, step 1", () => {
-  const state = initial();
-  const empty = deckOf([]);
-  assert.equal(next(state, "j", empty), state);
-  assert.equal(next(state, "k", empty), state);
-  assert.equal(next(state, "End", empty), state);
-});
-
-test("the arrow keys, the space bar and the page keys move as j and k do", () => {
-  for (const key of ["ArrowRight", "ArrowDown", "PageDown", " "]) {
-    assert.deepEqual(next(at(2, 3), key, three), at(3, 1), key);
-  }
-  for (const key of ["ArrowLeft", "ArrowUp", "PageUp"]) {
-    assert.deepEqual(next(at(3, 1), key, three), at(2, 3), key);
-  }
-});
-
-test("Home goes to the first slide, and End goes to step 1 of the last slide", () => {
-  assert.deepEqual(next(at(2, 2), "Home", three), at(1, 1));
-  assert.deepEqual(next(at(2, 2), "End", three), at(3, 1));
-});
-
-test("Home on step 1 of the first slide gives the same state", () => {
-  const state = at(1, 1);
-  assert.equal(next(state, "Home", three), state);
-});
-
-test("digits and Enter go to step 1 of that slide", () => {
-  assert.deepEqual(keys(at(1, 1), ["3", "Enter"]), at(3, 1));
-  assert.deepEqual(keys(at(3, 2), ["0", "2", "Enter"]), at(2, 1));
-});
-
-test("a digit adds to the digits, and does not move", () => {
-  assert.deepEqual(keys(at(1, 1), ["1", "2"]), { ...at(1, 1), digits: "12" });
-});
-
-test("a number that is not a slide removes the digits, and the slide stays", () => {
-  assert.deepEqual(keys(at(2, 2), ["9", "Enter"]), at(2, 2));
-  assert.deepEqual(keys(at(2, 2), ["0", "Enter"]), at(2, 2));
-});
-
-test("Enter without digits gives the same state", () => {
-  const state = at(2, 2);
-  assert.equal(next(state, "Enter", three), state);
-});
-
-test("a key that is not a digit removes the digits", () => {
-  assert.deepEqual(keys(at(1, 1), ["3", "j"]), at(2, 1));
-  assert.deepEqual(keys(at(1, 1), ["3", "x"]), at(1, 1));
-});
-
-test("b gives a black screen, and the next key shows the slide again", () => {
-  const blank = next(at(2, 2), "b", three);
-  assert.deepEqual(blank, { ...at(2, 2), blank: true });
-  assert.deepEqual(next(blank, "b", three), at(2, 2));
-  assert.deepEqual(next(blank, "j", three), at(2, 2));
-  assert.deepEqual(next(blank, "p", three), at(2, 2));
-});
-
-test("the handout view does not know the other keys of the present view", () => {
-  const state = at(2, 2, "handout");
-  for (const key of [
-    "ArrowRight",
-    " ",
-    "PageDown",
-    "Home",
-    "End",
-    "b",
-    "3",
-    "Enter",
-  ]) {
-    assert.equal(next(state, key, three), state, key);
-  }
-});
-
-test("toHash gives the slide and the step", () => {
-  assert.equal(toHash(at(2, 3), three), "#2.3");
-  assert.equal(toHash(initial(), deckOf([])), "#1.1");
-});
-
-test("fromHash reads a slide and a step, and a slide alone is step 1", () => {
-  assert.deepEqual(fromHash(at(1, 1), "#2.3", three), at(2, 3));
-  assert.deepEqual(fromHash(at(1, 1), "#3", three), at(3, 1));
+test("message holds the slide, the step, the black screen and the time", () => {
   assert.deepEqual(
-    fromHash(at(1, 1, "handout"), "#2.2", three),
-    at(2, 2, "handout"),
-  );
-});
-
-test("fromHash gives the same state for a fragment that the deck does not have", () => {
-  const state = at(2, 2);
-  for (const hash of [
-    "",
-    "#",
-    "#0",
-    "#4",
-    "#2.0",
-    "#2.4",
-    "#1.2",
-    "#x",
-    "#2.2.1",
-    "#slide-2",
-  ]) {
-    assert.equal(fromHash(state, hash, three), state, hash);
-  }
-});
-
-test("fromHash for the current position gives the same state", () => {
-  const state = at(2, 2);
-  assert.equal(fromHash(state, "#2.2", three), state);
-});
-
-test("fromHash removes a black screen and the digits", () => {
-  const state = { ...at(1, 1), blank: true, digits: "3" };
-  assert.deepEqual(fromHash(state, "#2", three), at(2, 1));
-});
-
-test("the speaker view knows the keys of the present view, but not p", () => {
-  const state = at(2, 2, "speaker");
-  assert.deepEqual(next(state, "j", three), at(2, 3, "speaker"));
-  assert.deepEqual(next(state, "b", three), { ...state, blank: true });
-  assert.equal(next(state, "p", three), state);
-});
-
-test("upcoming gives the next step, and null at the end of the deck", () => {
-  assert.deepEqual(upcoming(at(2, 2), three), at(2, 3));
-  assert.deepEqual(upcoming(at(2, 3), three), at(3, 1));
-  assert.equal(upcoming(at(3, 2), three), null);
-});
-
-test("message gives the slide, the step, the black screen and the time", () => {
-  assert.deepEqual(
-    message({ ...at(2, 3), blank: true, digits: "4" }, three, 17),
-    {
-      expresso: "position",
-      slide: 2,
-      step: 3,
-      blank: true,
-      time: 17,
-    },
+    message({ ...at(three, 2, 3), blank: true, digits: "4" }, three, 17),
+    { expresso: "position", slide: 2, step: 3, blank: true, time: 17 },
   );
 });
 
 test("isMessage accepts only a message of the presenter", () => {
-  assert.equal(isMessage(message(at(1, 1), three, 1)), true);
+  assert.equal(isMessage(message(at(three, 1, 1), three, 1)), true);
   const others = [
     null,
     "position",
@@ -252,36 +50,7 @@ test("isMessage accepts only a message of the presenter", () => {
   }
 });
 
-test("follow moves to the position of a message, with its black screen", () => {
-  const data = {
-    expresso: "position",
-    slide: 3,
-    step: 2,
-    blank: true,
-    time: 1,
-  };
-  assert.deepEqual(follow(at(1, 1, "speaker"), data, three), {
-    ...at(3, 2, "speaker"),
-    blank: true,
-  });
-});
-
-test("follow gives the same state for the same position or a position not in the deck", () => {
-  const state = at(2, 2);
-  const outside = (slide: number, step: number) => ({
-    expresso: "position",
-    slide,
-    step,
-    blank: false,
-    time: 1,
-  });
-  assert.equal(follow(state, message(state, three, 1), three), state);
-  assert.equal(follow(state, outside(4, 1), three), state);
-  assert.equal(follow(state, outside(2, 4), three), state);
-  assert.equal(follow(state, { slide: 1 }, three), state);
-});
-
-test("stamp gives the clock, or one more than the last time", () => {
+test("stamp returns the clock, or one more than the last time", () => {
   assert.equal(stamp(0, 500), 500);
   assert.equal(stamp(500, 500), 501);
   assert.equal(stamp(900, 500), 901);
@@ -299,136 +68,22 @@ test("at the same time, the speaker view takes the message and the present view 
   assert.equal(accepts(10, 10, false), false);
 });
 
-test("? opens the list of keys in each view, and removes the digits", () => {
-  for (const view of ["present", "handout", "speaker"] as View[]) {
-    assert.deepEqual(next(at(2, 2, view), "?", three), {
-      ...at(2, 2, view),
-      help: true,
-    });
-  }
-  assert.deepEqual(keys(at(1, 1), ["3", "?"]), { ...at(1, 1), help: true });
+test("side returns the left third, and the right for the rest", () => {
+  assert.equal(side(0, 1200), "left_third");
+  assert.equal(side(399, 1200), "left_third");
+  assert.equal(side(400, 1200), "right");
+  assert.equal(side(1199, 1200), "right");
 });
 
-test("the next key closes the list of keys, and does nothing more", () => {
-  const open = { ...at(2, 2), help: true };
-  assert.deepEqual(next(open, "j", three), at(2, 2));
-  assert.deepEqual(next(open, "?", three), at(2, 2));
-  assert.deepEqual(next(open, "x", three), at(2, 2));
-});
-
-test("no key has two bindings in one view", () => {
-  for (const view of ["present", "handout", "speaker"] as View[]) {
-    const seen = new Set<string>();
-    for (const each of BINDINGS.filter((b) => b.views.includes(view))) {
-      for (const key of each.keys) {
-        assert.equal(seen.has(key), false, `${view}: ${key}`);
-        seen.add(key);
-      }
-    }
-  }
-});
-
-test("binding finds the key in the view of the state only", () => {
-  assert.equal(binding(at(1, 1), "s")?.action, "speaker");
-  assert.equal(binding(at(1, 1, "speaker"), "s"), undefined);
-  assert.equal(binding(at(1, 1, "speaker"), "r")?.action, "reset");
-  assert.equal(binding(at(1, 1), "r"), undefined);
-  assert.equal(binding(at(1, 1, "handout"), "p")?.action, "present");
-  assert.equal(binding(at(1, 1), "p")?.action, "handout");
-});
-
-test("g hides the progress bar in the present view, and g again shows it", () => {
-  const hidden = next(at(2, 2), "g", three);
-  assert.deepEqual(hidden, { ...at(2, 2), progress: false });
-  assert.deepEqual(next(hidden, "g", three), at(2, 2));
-});
-
-test("g has no function in the handout view and the speaker view", () => {
-  for (const view of ["handout", "speaker"] as View[]) {
-    const state = at(2, 2, view);
-    assert.equal(next(state, "g", three), state, view);
-  }
-});
-
-test("a in the handout view shows every step, and a again shows the selection", () => {
-  const every = next(at(2, 2, "handout"), "a", three);
-  assert.deepEqual(every, { ...at(2, 2, "handout"), every: true });
-  assert.deepEqual(next(every, "a", three), at(2, 2, "handout"));
-});
-
-test("a has no function in the present view and the speaker view", () => {
-  for (const view of ["present", "speaker"] as View[]) {
-    const state = at(2, 2, view);
-    assert.equal(next(state, "a", three), state, view);
-  }
-});
-
-test("side gives back for the left third, and forward for the rest", () => {
-  assert.equal(side(0, 1200), "back");
-  assert.equal(side(399, 1200), "back");
-  assert.equal(side(400, 1200), "forward");
-  assert.equal(side(1199, 1200), "forward");
-});
-
-test("swipe gives forward to the left, back to the right, and nothing else", () => {
-  assert.equal(swipe(-50, 0), "forward");
-  assert.equal(swipe(80, -30), "back");
+test("swipe returns the direction of a swipe, and nothing for a short or vertical movement", () => {
+  assert.equal(swipe(-50, 0), "left");
+  assert.equal(swipe(80, -30), "right");
   assert.equal(swipe(-49, 0), undefined);
   assert.equal(swipe(60, 60), undefined);
   assert.equal(swipe(0, -200), undefined);
 });
 
-test("point moves one step, as j and k do", () => {
-  assert.deepEqual(point(at(1, 1), "forward", three), at(2, 1));
-  assert.deepEqual(point(at(2, 1), "back", three), at(1, 1));
-  assert.deepEqual(point(at(1, 1, "speaker"), "forward", three), {
-    ...at(2, 1),
-    view: "speaker",
-  });
-  assert.deepEqual(point(at(3, 2), "forward", three), at(3, 2));
-});
-
-test("point removes the digits", () => {
-  const typed = { ...at(1, 1), digits: "3" };
-  assert.deepEqual(point(typed, "forward", three), at(2, 1));
-});
-
-test("point closes a black screen or the list of keys, and does nothing more", () => {
-  const blank = { ...at(2, 2), blank: true };
-  assert.deepEqual(point(blank, "forward", three), at(2, 2));
-
-  const help = { ...at(2, 2, "handout"), help: true };
-  assert.deepEqual(point(help, "back", three), at(2, 2, "handout"));
-});
-
-test("point has no other function in the handout view", () => {
-  const handout = at(2, 2, "handout");
-  assert.equal(point(handout, "forward", three), handout);
-  assert.equal(point(handout, "back", three), handout);
-});
-
-test("f is full screen in the present view and the speaker view only", () => {
-  assert.equal(binding(at(1, 1), "f")?.action, "fullscreen");
-  assert.equal(binding(at(1, 1, "speaker"), "f")?.action, "fullscreen");
-  assert.equal(binding(at(1, 1, "handout"), "f"), undefined);
-  assert.deepEqual(next(at(1, 1), "f", three), at(1, 1));
-});
-
-test("no key finds a row of a click or a swipe", () => {
-  for (const row of BINDINGS.filter((each) => each.keys.length === 0)) {
-    assert.ok(row.label, row.text);
-  }
-  assert.equal(binding(at(1, 1), ""), undefined);
-});
-
-// Seven slides of one step each give three columns.
-const seven = deckOf([1, 1, 1, 1, 1, 1, 1]);
-
-function grid(selected: number, slide = 4): State {
-  return { ...atIn(seven, slide, 1), overview: true, selected };
-}
-
-test("columns gives a grid with as many rows as columns or fewer", () => {
+test("columns returns a grid with as many rows as columns or fewer", () => {
   assert.equal(columns(0), 1);
   assert.equal(columns(1), 1);
   assert.equal(columns(4), 2);
@@ -437,145 +92,5 @@ test("columns gives a grid with as many rows as columns or fewer", () => {
   for (let slides = 1; slides <= 100; slides++) {
     const width = columns(slides);
     assert.ok(Math.ceil(slides / width) <= width, String(slides));
-  }
-});
-
-test("o opens the overview at the current slide in the present view and the speaker view", () => {
-  assert.deepEqual(next(atIn(seven, 4, 1), "o", seven), grid(4));
-  assert.deepEqual(next(atIn(seven, 2, 1, "speaker"), "o", seven), {
-    ...grid(2, 2),
-    view: "speaker",
-  });
-  assert.equal(binding(atIn(seven, 1, 1, "handout"), "o"), undefined);
-});
-
-test("mode is the overview while it shows", () => {
-  assert.equal(mode(at(1, 1)), "present");
-  assert.equal(mode(grid(1)), "overview");
-  assert.equal(mode({ ...grid(1), view: "speaker" }), "overview");
-});
-
-test("the keys of the overview select a slide inside the deck", () => {
-  assert.deepEqual(next(grid(4), "ArrowRight", seven), grid(5));
-  assert.deepEqual(next(grid(4), "k", seven), grid(3));
-  assert.deepEqual(next(grid(4), "ArrowDown", seven), grid(7));
-  assert.deepEqual(next(grid(4), "ArrowUp", seven), grid(1));
-  assert.deepEqual(next(grid(4), "End", seven), grid(7));
-  assert.deepEqual(next(grid(4), "Home", seven), grid(1));
-
-  for (const [selected, key] of [
-    [7, "j"],
-    [5, "ArrowDown"],
-    [2, "ArrowUp"],
-    [1, "ArrowLeft"],
-  ] as const) {
-    const state = grid(selected);
-    assert.equal(next(state, key, seven), state, key);
-  }
-});
-
-test("Enter goes to step 1 of the selected slide, and o or Escape keeps the step", () => {
-  const deck = deckOf([1, 1, 3, 1, 1, 1, 1]);
-  const deep = { ...atIn(deck, 3, 2), overview: true, selected: 2 };
-  const on = (slide: number, step: number) => ({
-    ...atIn(deck, slide, step),
-    selected: 2,
-  });
-  assert.deepEqual(next(deep, "Enter", deck), on(2, 1));
-  assert.deepEqual(next(deep, "o", deck), on(3, 2));
-  assert.deepEqual(next(deep, "Escape", deck), on(3, 2));
-});
-
-test("choose goes to step 1 of a slide, and closes the overview", () => {
-  const on = (slide: number) => ({ ...atIn(seven, slide, 1), selected: 1 });
-  assert.deepEqual(choose(grid(1), 6, seven), on(6));
-  assert.deepEqual(choose(grid(1), 4, seven), on(4));
-  assert.deepEqual(choose(grid(1), 9, seven), on(4));
-});
-
-test("the overview knows ?, and no key of the present view", () => {
-  assert.deepEqual(next(grid(4), "?", seven), { ...grid(4), help: true });
-  for (const key of ["b", "p", "s", "g", "f", "5", "PageDown"]) {
-    const action = binding(grid(4), key)?.action;
-    assert.ok(
-      action === undefined || action === "forward",
-      `${key}: ${action}`,
-    );
-  }
-  const state = grid(4);
-  assert.equal(next(state, "b", seven), state);
-});
-
-test("point does not move the overview", () => {
-  const state = grid(4);
-  assert.equal(point(state, "forward", seven), state);
-  assert.deepEqual(point({ ...grid(4), help: true }, "back", seven), grid(4));
-});
-
-test("a message of the other window keeps the overview", () => {
-  const moved = follow(
-    grid(2),
-    { expresso: "position", slide: 6, step: 1, blank: false, time: 1 },
-    seven,
-  );
-  assert.deepEqual(moved, { ...grid(2, 6) });
-});
-
-// Four slides: the kinds of slides 2 to 4 are slide, none and zoom.
-const four = deckOf([1, 2, 1, 1], { kinds: ["fade", "slide", "none", "zoom"] });
-
-function on(slide: number, step: number, view: View = "present"): State {
-  return atIn(four, slide, step, view);
-}
-
-test("a move forward uses the kind of the slide that it goes to", () => {
-  assert.deepEqual(transition(on(1, 1), on(2, 1), four), {
-    kind: "slide",
-    direction: "forward",
-  });
-  assert.deepEqual(transition(on(3, 1), on(4, 1), four), {
-    kind: "zoom",
-    direction: "forward",
-  });
-});
-
-test("a move back uses the kind of the slide that it leaves", () => {
-  assert.deepEqual(transition(on(2, 2), on(1, 1), four), {
-    kind: "slide",
-    direction: "back",
-  });
-  // Home from slide 4 to slide 1 uses the kind of slide 4.
-  assert.deepEqual(transition(on(4, 1), on(1, 1), four), {
-    kind: "zoom",
-    direction: "back",
-  });
-});
-
-test("the kind none gives no transition in the two directions", () => {
-  assert.equal(transition(on(2, 2), on(3, 1), four), null);
-  assert.equal(transition(on(3, 1), on(2, 2), four), null);
-});
-
-test("a change of the step has no transition", () => {
-  assert.equal(transition(on(2, 1), on(2, 2), four), null);
-  assert.equal(current(next(on(2, 1), "j", four), four)?.slide, 2);
-});
-
-test("only the present view has a transition", () => {
-  for (const view of ["speaker", "handout"] as const) {
-    assert.equal(transition(on(1, 1, view), on(2, 1, view), four), null);
-  }
-  assert.equal(transition(on(1, 1, "handout"), on(2, 1), four), null);
-});
-
-test("a black screen, the overview and the list of keys have no transition", () => {
-  for (const key of ["blank", "overview", "help"] as const) {
-    const quiet = { ...on(1, 1), [key]: true };
-    assert.equal(transition(quiet, on(2, 1), four), null, key);
-    assert.equal(
-      transition(on(1, 1), { ...on(2, 1), [key]: true }, four),
-      null,
-      key,
-    );
   }
 });

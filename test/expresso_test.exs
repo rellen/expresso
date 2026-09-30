@@ -372,8 +372,8 @@ defmodule ExpressoTest do
     test "the document holds the bundle as one classic script" do
       document = DslDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
 
-      # The other `script` element holds the list of the steps as JSON, and a
-      # browser does not run it.
+      # The other two `script` elements hold the list of the steps and the program
+      # of the presenter as JSON, and a browser does not run them.
       [script] =
         document |> Floki.find("script:not([type])") |> Enum.map(&Floki.text(&1, js: true))
 

@@ -1,8 +1,10 @@
 // The entry of the presenter. esbuild bundles this file and its imports into
 // one script, and `Expresso.Renderer` writes that script into the document.
 //
-// `state.ts` gives the keys. The fragment of the address holds the slide and
-// the step, so a reload shows the same step. A key with the Control, Alt or
+// The renderer writes the program of the presenter into the document, and
+// `interpreter.ts` runs it for each key, click and swipe. The program holds the
+// commands of each key. The fragment of the address holds the slide and the
+// step, so a reload shows the same step. A key with the Control, Alt or
 // Meta modifier goes to the browser, because the browser uses these keys.
 //
 // The key `s` opens the speaker view: the same document in a second window,
@@ -12,9 +14,10 @@
 //
 // A click or a tap on the right two thirds of the window goes to the next
 // step, and on the left third to the previous step. A swipe to the left goes
-// to the next step, and a swipe to the right to the previous step. `state.ts`
-// gives these rules. A click on a link, a button or a form field goes to the
-// browser, and so does a click that ends a selection of text.
+// to the next step, and a swipe to the right to the previous step. `side` and
+// `swipe` in `state.ts` find the part of the window and the direction, and the
+// program holds the commands of each. A click on a link, a button or a form
+// field goes to the browser, and so does a click that ends a selection of text.
 //
 // The key `o` shows an overview of the slides in this window. A click or a
 // tap on a slide of the overview goes to step 1 of that slide.
@@ -31,39 +34,43 @@
 //
 // A move to a different slide in the present view runs a transition of the
 // slide: `fade`, `slide` or `zoom`. The option of the slide or of the deck
-// gives the kind, and `state.ts` gives the rules. A browser without the View
-// Transitions API, and a reader who asks for reduced motion, get no
-// transition.
+// gives the kind, and `transition` in `interpreter.ts` holds the rules. A
+// browser without the View Transitions API, and a reader who asks for reduced
+// motion, get no transition.
 //
 // `?all` in the address shows every step in the handout view and on paper, as
 // the key `a` of the handout view does. A print or a PDF of such an address
 // then gets every step with no key. The speaker view opens with the same
 // address, so it also shows every step.
 
+import {
+  follow,
+  fromHash,
+  helpMode,
+  prevented,
+  run,
+  toHash,
+  transition,
+} from "./interpreter.ts";
+import type { Event } from "./interpreter.ts";
+import { commands } from "./program.ts";
+import type { Builtin } from "./program.ts";
 import { clock, left, pace, talkLength } from "./speaker.ts";
 import {
   accepts,
-  binding,
-  choose,
   current,
-  follow,
-  fromHash,
-  initial,
   isMessage,
   message,
-  next,
-  point,
   side,
   stamp,
   swipe,
-  toHash,
-  transition,
 } from "./state.ts";
-import type { Pointer, State } from "./state.ts";
+import type { State } from "./state.ts";
 import {
   animate,
   apply,
   deck as readDeck,
+  program as readProgram,
   showsProgress,
   speakerPanel,
   text,
@@ -71,10 +78,11 @@ import {
 } from "./dom.ts";
 
 const deck = readDeck();
+const program = readProgram();
 const parameters = new URLSearchParams(location.search);
 const isSpeaker = parameters.has("speaker");
 let state: State = {
-  ...initial(),
+  ...program.state,
   view: isSpeaker ? "speaker" : "present",
   progress: showsProgress(),
   every: parameters.has("all"),
@@ -122,7 +130,7 @@ function show(changed: State, local = true): void {
   state = changed;
   // The browser runs the update of a transition later. The update then reads
   // the state of that time, so a fast second key does not show an old state.
-  animate(change, () => apply(state, deck));
+  animate(change, () => apply(state, deck, helpMode(program, state)));
   history.replaceState(null, "", toHash(state, deck));
   if (local && sent) {
     time = stamp(time, Date.now());
@@ -163,40 +171,45 @@ if (isSpeaker) {
 }
 
 // The first application of the state gives the progress bar its width.
-apply(state, deck);
+apply(state, deck, helpMode(program, state));
 
 show(fromHash(state, location.hash, deck));
+
+// Call a built-in function of the program.
+function call(builtin: Builtin): void {
+  switch (builtin) {
+    case "open_speaker":
+      openSpeaker();
+      break;
+    case "fullscreen":
+      fullscreen();
+      break;
+    case "reset_timer":
+      started = null;
+      tick();
+      break;
+  }
+}
+
+// Run one event with the program. The browser does not use a key that changes
+// the state or calls a built-in function. The browser uses each other key, so
+// the arrow keys and the space bar scroll the pages of the handout view.
+function handle(input: Event, event?: KeyboardEvent): void {
+  const result = run(program, deck, state, input);
+  if (prevented(state, result)) {
+    event?.preventDefault();
+  }
+  show(result.state);
+  for (const builtin of result.effects) {
+    call(builtin);
+  }
+}
 
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.ctrlKey || event.altKey || event.metaKey) {
     return;
   }
-  // On a black screen or on the list of keys, `next` closes it first.
-  const action =
-    state.blank || state.help ? undefined : binding(state, event.key)?.action;
-  if (action === "speaker") {
-    event.preventDefault();
-    state = { ...state, digits: "" };
-    openSpeaker();
-    return;
-  }
-  if (action === "reset") {
-    event.preventDefault();
-    started = null;
-    tick();
-    return;
-  }
-  if (action === "fullscreen") {
-    event.preventDefault();
-    state = { ...state, digits: "" };
-    fullscreen();
-    return;
-  }
-  const changed = next(state, event.key, deck);
-  if (changed !== state) {
-    event.preventDefault();
-    show(changed);
-  }
+  handle({ kind: "key", key: event.key }, event);
 });
 
 // The elements that use a click themselves.
@@ -220,30 +233,25 @@ function ignores(event: MouseEvent): boolean {
   return window.getSelection?.()?.isCollapsed === false;
 }
 
-function pointed(pointer: Pointer | undefined): void {
-  if (pointer !== undefined) {
-    show(point(state, pointer, deck));
-  }
-}
-
-// The slide of the overview under a click, or null.
-function thumbnail(event: MouseEvent): number | null {
+// The commands of the page of the overview under a click, or null. The
+// renderer writes them on the page of the last step of each slide.
+function element(event: MouseEvent) {
   const target = event.target as Element | null;
-  const page = target?.closest?.(".handout-page[data-thumbnail]") as
+  const page = target?.closest?.(".handout-page[data-commands]") as
     HTMLElement | null | undefined;
-  return page ? Number(page.dataset.slide) : null;
+  const text = page?.dataset.commands;
+  return text === undefined ? null : commands(text, program);
 }
 
 document.addEventListener("click", (event: MouseEvent) => {
   if (ignores(event)) {
     return;
   }
-  const slide = state.overview ? thumbnail(event) : null;
-  if (slide !== null && !state.blank && !state.help) {
-    show(choose(state, slide, deck));
-  } else {
-    pointed(side(event.clientX, window.innerWidth));
-  }
+  handle({
+    kind: "click",
+    region: side(event.clientX, window.innerWidth),
+    element: element(event),
+  });
 });
 
 // The start of a movement of one finger, or null. A second finger, as for a
@@ -268,8 +276,12 @@ document.addEventListener(
     const finger = event.changedTouches[0];
     const start = touched;
     touched = null;
-    if (start !== null && finger !== undefined) {
-      pointed(swipe(finger.clientX - start.x, finger.clientY - start.y));
+    if (start === null || finger === undefined) {
+      return;
+    }
+    const direction = swipe(finger.clientX - start.x, finger.clientY - start.y);
+    if (direction !== undefined) {
+      handle({ kind: "swipe", direction });
     }
   },
   { passive: true },

@@ -37,7 +37,7 @@ export function talkLength(
 // The pace of the talk. `over` is after the end of the time. `behind` means
 // that the time that the talk used is more than one minute longer than the
 // part of the time for the steps before the current step. `done` is that part
-// of the deck, from `done` in `state.ts`.
+// of the deck, from the entry of the current step.
 export type Pace = "on" | "behind" | "over";
 
 // The time that a speaker can be behind and still be on pace.
