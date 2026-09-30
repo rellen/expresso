@@ -457,6 +457,73 @@ each step:
 4. **The Spark DSL and its verifiers.** Then add the first public feature: `goto(slide: n)`
    on an element.
 
+### The result of step 2
+
+Step 2 is done. Each rule of `state.ts` and `main.ts` fits the model, and no command needs
+a condition or a variable. Three modules in `lib/expresso/presenter/` hold the model:
+
+| Module | What it does | Estimate | Lines of code |
+| --- | --- | --- | --- |
+| `Expresso.Presenter.Definition` | Holds each rule as modes, bindings and commands | 200 | 192 |
+| `Expresso.Presenter.Program` | Makes the program of one deck | 200 | 74 |
+| `Expresso.Presenter.Interpreter` | Runs a program on a state | 150 | 137 |
+
+The lines of code do not include the documentation and the comments. `Program` is
+smaller than the estimate, because it does not write the JSON yet. Step 3 adds that. The
+renderer does not use the three modules yet, so the script in the browser does not change.
+
+A comparison with the script of today gave the result. It did these steps:
+
+1. Elixir made 2000 random decks of 0 to 8 slides, and 60 random events for each deck.
+2. The Elixir interpreter recorded the state, the call of `preventDefault`, the built-in
+   functions, the transition, the fragment and the next step after each event.
+3. A Node script sent the same events through `state.ts`, as the listeners of `main.ts`
+   do, and it compared each result.
+
+Two runs with different random seeds gave 240000 events and no difference. The events
+reached each difficult part of the state:
+
+- Approximately 12 % of the states had the overview.
+- Approximately 16 % of the states had typed digits.
+- Approximately 2 % of the states had a black screen, and 2 % had the list of keys.
+- 228 of the 2000 decks of one run had no slide. To
+make sure that the comparison finds a difference, two deliberate changes went into the
+model, one at a time. Each change gave approximately 259 differences. The comparison
+scripts are not in the repository. Step 3 makes them permanent, as the fixtures of the
+tests of the TypeScript interpreter.
+
+The tests of the model are in `test/expresso/presenter/`: 58 tests, 17 properties with
+500 runs each, and 2 doctests. They come from `state.test.ts` and
+`state_property.test.ts`. These TypeScript tests have no copy in ExUnit, because the model
+does not hold the code that they test:
+
+- `message`, `isMessage`, `stamp` and `accepts`: the protocol of the messages between the
+  windows.
+- `side` and `swipe`: the sources of the click events and the swipe events.
+- `binding`, `mode` and the rows of the table with no key: the structure of the table
+  `BINDINGS`.
+
+The TypeScript tests stay until step 3 replaces `state.ts`.
+
+The work found four facts that the design above does not give:
+
+- **A click on a page needs a flag on the mode.** A page of the overview holds the
+  commands that go to its slide. The speaker view also shows pages, and there a click on a
+  page is a plain click that moves one step. Therefore a mode has the flag `element`, and
+  only the overview sets it.
+- **The overview needs two forms of `select`.** `ArrowDown` adds a number of columns, and
+  `End` selects the last slide. `select_by` moves by a number, and `select` goes to a
+  number. The model has 12 commands, as the estimate said.
+- **`clear` gives a field its first value.** The definition declares the first value of
+  each field, so `clear(:digits)` needs no value.
+- **The fragment and the messages do not go through the modes.** They go to a slide and a
+  step directly, as the design said. A fragment also removes a black screen, and a message
+  gives its own black screen.
+
+The key `r` keeps the typed digits, as the code of today does. The binding of `r` has
+`each: false`, so the definition shows the difference from `s` and `f`. Decision 10 is
+still open.
+
 ## The options that do not agree
 
 | Option | The reason |
@@ -489,6 +556,9 @@ The calculations that moved to Elixir were short. The larger gain is in the test
 tests of `fraction`, `done` and the position text are now ExUnit tests of
 `Expresso.Steps`.
 
+Step 2 of "The prototype" is also done, and each rule fits the model. The section "The
+result of step 2" gives the measurements.
+
 Do each part in its own pull request, in this sequence:
 
 1. Part 1, the list of the steps. Part 2 and the command variant need it.
@@ -513,8 +583,8 @@ The maintainer decides each of these. None of them is settled.
 6. In the command variant, can a deck or an element hold a command? If yes, the commands
    become a public API.
 7. Does the GIF recorder move to Elixir?
-8. Is the definition of the presenter a Spark DSL or a plain module? A plain module is
-   sufficient for step 2 of the prototype, and the DSL can come at step 4.
+8. Is the definition of the presenter a Spark DSL or a plain module? Step 2 used a plain
+   module, and it was sufficient. The DSL can come at step 4.
 9. Can an element command only go to a slide or a step? Or can an element declare its
    own states, which the print then shows?
 10. Does the key `r` remove the typed digits, as `s` and `f` do?
