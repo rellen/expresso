@@ -93,6 +93,9 @@ Some notes on this example:
   such as `60%`.
 - A slide also takes a `notes` option. The handout view shows the notes under each page of
   the slide, and the speaker view shows them too.
+- A text area, an image or an item takes a `goto` option, such as `goto: [slide: 5]`. The
+  element is then a link to that slide. See
+  [the goto option](docs/reference/goto-option.md).
 
 ### With the functions
 
@@ -191,7 +194,8 @@ A presentation remote sends `Page Down` and `Page Up`, so it works with the deck
 
 A click or a tap on the right two thirds of the window goes to the next step. A click or a
 tap on the left third goes to the previous step. On a touch screen, swipe left for the next
-step, and swipe right for the previous step. A click on a link goes to the link.
+step, and swipe right for the previous step. A click on a link of the `goto` option goes to
+its slide and step. A click on another link goes to the link.
 
 ### The overview
 
@@ -312,6 +316,7 @@ A theme can set these custom properties:
 | `--progress-color`, `--progress-height` | The color and the height of the progress bar. |
 | `--slide-number-color`, `--slide-number-size` | The color and the size of the slide number. |
 | `--slide-number-right`, `--slide-number-bottom` | The position of the slide number. |
+| `--goto-color` | The color of a link of the `goto` option. |
 
 ## Make a binary
 
@@ -365,6 +370,7 @@ Reference pages describe each value of an option:
 - [The transition option](docs/reference/transition-option.md)
 - [The overlay options](docs/reference/overlay-options.md)
 - [The css option](docs/reference/css-option.md)
+- [The goto option](docs/reference/goto-option.md)
 
 Explanations give the design and its reasons:
 

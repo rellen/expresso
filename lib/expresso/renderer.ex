@@ -148,7 +148,8 @@ defmodule Expresso.Renderer do
   The assigns hold the deck under the key `deck`. `Expresso.Deck.render/1` calls
   this function, and it writes the tree and adds the doctype. The function
   gives each element its identity with `Expresso.Overlay.Render.identify/1`
-  first.
+  first. Then `Expresso.Goto.resolve/1` writes the commands of each link, and
+  it raises for a link to a slide or a step that the deck does not have.
   """
   @spec render(map() | keyword()) :: Phoenix.HTML.safe()
   # Sobelow reports `XSS.HTML` for the attribute of the `html` element. The
@@ -156,7 +157,14 @@ defmodule Expresso.Renderer do
   # user reaches it.
   # sobelow_skip ["XSS.Raw", "XSS.HTML"]
   def render(assigns) do
-    assigns = assigns |> Map.new() |> Map.update!(:deck, &Expresso.Overlay.Render.identify/1)
+    assigns =
+      assigns
+      |> Map.new()
+      |> Map.update!(
+        :deck,
+        &(&1 |> Expresso.Overlay.Render.identify() |> Expresso.Goto.resolve())
+      )
+
     assigns = Map.put(assigns, :program, Program.compile(Definition.presenter(), assigns.deck))
 
     temple do

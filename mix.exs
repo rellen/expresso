@@ -36,6 +36,7 @@ defmodule Expresso.MixProject do
         "docs/reference/transition-option.md",
         "docs/reference/overlay-options.md",
         "docs/reference/css-option.md",
+        "docs/reference/goto-option.md",
         "docs/overlays.md",
         "docs/architecture.md",
         "docs/development.md",

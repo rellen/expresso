@@ -13,6 +13,7 @@ defmodule Expresso.Element.Item do
 
   defstruct [
     :text,
+    :goto,
     :at,
     :steps,
     :el,
@@ -36,26 +37,42 @@ defmodule Expresso.Element.Item do
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from
-  `Expresso.Overlay.Render.attributes/1`.
+  `Expresso.Overlay.Render.attributes/1`. The key `goto` holds the link of the
+  `goto` option, or `nil`.
   """
   @spec get_assigns(t()) :: map()
   def get_assigns(item) do
-    %__MODULE__{text: text, elements: elements} = item
-    %{text: text, elements: elements, overlay: Expresso.Overlay.Render.attributes(item)}
+    %__MODULE__{text: text, elements: elements, goto: goto} = item
+
+    %{
+      text: text,
+      goto: goto,
+      elements: elements,
+      overlay: Expresso.Overlay.Render.attributes(item)
+    }
   end
 
   @doc """
   Make the HTML of an item
 
   The text goes into one block element, as in `Expresso.Element.TextArea`, and
-  each nested list comes after it.
+  each nested list comes after it. With the `goto` option, the text goes into
+  a link, and a nested list stays outside the link.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
   def render(assigns) do
     temple do
       li class: "item", rest!: @overlay do
-        div do
-          Phoenix.HTML.raw(@text)
+        if @goto do
+          a class: "goto", href: Expresso.Goto.href(@goto), data_commands: @goto.commands do
+            div do
+              Phoenix.HTML.raw(@text)
+            end
+          end
+        else
+          div do
+            Phoenix.HTML.raw(@text)
+          end
         end
 
         c(&Expresso.Template.render_elements(&1), elements: @elements)

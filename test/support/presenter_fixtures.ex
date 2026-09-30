@@ -23,7 +23,7 @@ defmodule Expresso.Test.PresenterFixtures do
   An event is one of these arrays: `["key", key]`, `["click", region,
   commands]`, `["swipe", direction]`, `["hash", fragment]` and `["message",
   slide, step, blank]`. The commands of a click are the commands of the page
-  under the click, or `null`. A result is `[state, prevented, effects,
+  of the overview or of the link under the click, or `null`. A result is `[state, prevented, effects,
   transition]`.
   """
 
@@ -167,9 +167,11 @@ defmodule Expresso.Test.PresenterFixtures do
         region = pick([:right, :left_third])
         {["click", Atom.to_string(region), nil], {:click, region}}
 
+      # A click on a page of the overview, or on a link of `Expresso.Goto`.
       16 ->
         region = pick([:right, :left_third])
-        commands = Program.element(near(slides))
+        link = Program.link(:rand.uniform(slides * 3 + 1) - 1)
+        commands = pick([Program.element(near(slides)), link])
         json = commands |> Program.json_commands() |> JSON.decode!()
         {["click", Atom.to_string(region), json], {:click, region, commands}}
 

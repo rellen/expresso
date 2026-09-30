@@ -525,8 +525,8 @@ from this file.
 
 `Expresso.Test.PresenterFixtures` makes the file. Its test in
 `test/expresso/presenter/fixtures_test.exs` fails when the file does not agree with the
-text that `json/0` returns. After a change to the definition of the presenter or to the interpreter, do these
-steps:
+text that `json/0` returns. After a change to `Expresso.Presenter.Default` or to an
+interpreter, do these steps:
 
 1. Write the file again:
 
@@ -540,11 +540,17 @@ steps:
 Prettier does not format the file, because `.prettierignore` holds its directory. The file
 has one line for each deck and for each case, so a diff shows each changed case.
 
-A call of the DSL has no parentheses. `.formatter.exs` holds the list
-`spark_locals_without_parens`, and `mix format` then adds none. After a change to an
-entity or an option of the DSL, run `mix spark.formatter --extensions Expresso.Extension`
-to make the list again. The task needs the `sourceror` package, which is a development
-dependency. The formatter removes no parentheses, so write a new call without them.
+A call of a DSL has no parentheses. Expresso has two DSLs: the deck DSL of
+`Expresso.Extension` and the presenter DSL of `Expresso.Presenter.Extension`.
+`.formatter.exs` holds the list `spark_locals_without_parens`, and `mix format` then adds
+no parentheses. After a change to an entity or an option of a DSL, run this command to make
+the list again:
+
+```sh
+mix spark.formatter --extensions Expresso.Extension,Expresso.Presenter.Extension
+```
+
+The task needs the `sourceror` package, which is a development dependency. The formatter removes no parentheses, so write a new call without them.
 
 Sobelow gives a warning for `Phoenix.HTML.raw/1`. When the input is safe, put a
 `# sobelow_skip` comment above the function, with the reason in a comment above it.

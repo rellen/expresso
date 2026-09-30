@@ -3,7 +3,8 @@ defmodule Expresso.Extension do
   The Spark DSL extension
 
   It gives the `deck` section, the `slide` entity and the entities of an element.
-  The overlay transformer and the overlay verifier run for each deck module.
+  The overlay transformer, the overlay verifiers and `Expresso.GotoVerifier` run
+  for each deck module.
   """
 
   # The overlay specification of an element. Each element entity merges this
@@ -39,6 +40,15 @@ defmodule Expresso.Extension do
     ]
   ]
 
+  # A link to a slide and a step of the deck. `Expresso.Goto` gives the rules.
+  @goto_schema [
+    goto: [
+      type: {:custom, Expresso.Goto, :new, []},
+      doc:
+        "Make the element a link to a slide and a step, such as [slide: 5] or [slide: 5, step: 2]. See Expresso.Goto."
+    ]
+  ]
+
   @on %Spark.Dsl.Entity{
     name: :on,
     target: Expresso.Element.On,
@@ -58,7 +68,7 @@ defmodule Expresso.Extension do
     name: :text_area,
     target: Expresso.Element.TextArea,
     entities: [on: [@on]],
-    schema: @overlay_schema ++ [text: [type: :string]]
+    schema: @overlay_schema ++ @goto_schema ++ [text: [type: :string]]
   }
 
   @image %Spark.Dsl.Entity{
@@ -68,6 +78,7 @@ defmodule Expresso.Extension do
     entities: [on: [@on]],
     schema:
       @overlay_schema ++
+        @goto_schema ++
         [
           src: [
             type: :string,
@@ -95,6 +106,7 @@ defmodule Expresso.Extension do
             entities: [elements: List.wrap(inner), on: [@on]],
             schema:
               @overlay_schema ++
+                @goto_schema ++
                 [text: [type: :string, required: true, doc: "The text of the item."]]
           }
 
@@ -416,6 +428,7 @@ defmodule Expresso.Extension do
     imports: [],
     transformers: [Expresso.Overlay.Transformer],
     verifiers: [
+      Expresso.GotoVerifier,
       Expresso.Overlay.Verifier,
       Expresso.Overlay.PropertyVerifier,
       Expresso.Overlay.EffectVerifier,

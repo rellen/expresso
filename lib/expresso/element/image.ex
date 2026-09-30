@@ -42,6 +42,7 @@ defmodule Expresso.Element.Image do
     :src,
     :alt,
     :width,
+    :goto,
     :at,
     :steps,
     :el,
@@ -66,15 +67,17 @@ defmodule Expresso.Element.Image do
   The key `overlay` holds the attributes of the overlay contract, from
   `Expresso.Overlay.Render.attributes/1`, and the `style` attribute of the
   `width` option. The key `src` holds the data URI of the file, and
-  `Expresso.Image.data_uri!/1` raises for a file that it cannot read.
+  `Expresso.Image.data_uri!/1` raises for a file that it cannot read. The key
+  `goto` holds the link of the `goto` option, or `nil`.
   """
   @spec get_assigns(t()) :: map()
   def get_assigns(image) do
-    %__MODULE__{src: src, alt: alt, width: width} = image
+    %__MODULE__{src: src, alt: alt, width: width, goto: goto} = image
 
     %{
       src: Expresso.Image.data_uri!(src),
       alt: alt || "",
+      goto: goto,
       overlay: Expresso.Overlay.Render.attributes(image) ++ width(width)
     }
   end
@@ -106,12 +109,22 @@ defmodule Expresso.Element.Image do
 
   @doc """
   Make the HTML of an image
+
+  With the `goto` option, the image goes into a link. A screen reader then
+  reads the `alt` text as the name of the link, so give such an image an `alt`
+  option.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
   def render(assigns) do
     temple do
       div class: "image", rest!: @overlay do
-        img src: @src, alt: @alt
+        if @goto do
+          a class: "goto", href: Expresso.Goto.href(@goto), data_commands: @goto.commands do
+            img src: @src, alt: @alt
+          end
+        else
+          img src: @src, alt: @alt
+        end
       end
     end
   end

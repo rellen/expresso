@@ -1,11 +1,12 @@
 # Used by "mix format"
 
-# `mix spark.formatter --extensions Expresso.Extension` manages this list. Run it
-# after a change to an entity or an option of the DSL. The formatter then adds no
+# `mix spark.formatter --extensions Expresso.Extension,Expresso.Presenter.Extension`
+# manages this list. Run it after a change to an entity or an option of a DSL. The formatter then adds no
 # parentheses to a call of the DSL. It removes none either, so write a call
 # without them.
 spark_locals_without_parens = [
   alt: 1,
+  any: 1,
   at: 1,
   auto_reveal: 1,
   by: 1,
@@ -21,8 +22,13 @@ spark_locals_without_parens = [
   diagram: 2,
   dim: 1,
   duration: 1,
+  each: 1,
   easing: 1,
   effect: 1,
+  element: 1,
+  event: 3,
+  event: 4,
+  goto: 1,
   handout: 1,
   header: 1,
   heading: 1,
@@ -30,16 +36,23 @@ spark_locals_without_parens = [
   image: 2,
   item: 1,
   item: 2,
+  key: 3,
+  key: 4,
+  label: 1,
   lang: 1,
   list: 0,
   list: 1,
+  match: 1,
   math: 1,
   math: 2,
+  mode: 1,
+  mode: 2,
   name: 1,
   notes: 1,
   on: 1,
   on: 2,
   ordered: 1,
+  other: 1,
   part: 1,
   part: 2,
   pause: 0,
@@ -61,6 +74,7 @@ spark_locals_without_parens = [
   speed: 1,
   state: 1,
   steps: 1,
+  sync: 1,
   table: 0,
   table: 1,
   text: 1,

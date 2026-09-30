@@ -35,14 +35,15 @@ export type Command =
 
 // A mode of the program. The interpreter uses the first mode whose `when`
 // matches the state. `any` holds the commands of each event of the mode.
-// `other` holds the commands of a key with no binding. `element` is true when a
-// click on an element runs the commands of the element.
+// `other` holds the commands of a key with no binding. `element` holds the
+// commands that go in front of the commands of an element under a click, or
+// `null` when the mode does not run the commands of an element.
 export type Mode = Readonly<{
   name: string;
   when: Readonly<Partial<State>>;
   any: readonly Command[] | null;
   other: readonly Command[] | null;
-  element: boolean;
+  element: readonly Command[] | null;
   keys: ReadonlyMap<string, readonly Command[]>;
   click: ReadonlyMap<string, readonly Command[]>;
   swipe: ReadonlyMap<string, readonly Command[]>;
@@ -187,7 +188,7 @@ function pairs(value: unknown, state: State): Map<string, readonly Command[]> {
 
 function mode(value: unknown, state: State): Mode {
   const data = object(value);
-  if (typeof data.name !== "string" || typeof data.element !== "boolean") {
+  if (typeof data.name !== "string") {
     throw invalid();
   }
   const when: Partial<Record<Field, State[Field]>> = {};
@@ -200,7 +201,7 @@ function mode(value: unknown, state: State): Mode {
     when: when as Partial<State>,
     any: optionalList(data.any, state),
     other: optionalList(data.other, state),
-    element: data.element,
+    element: optionalList(data.element, state),
     keys: pairs(data.keys, state),
     click: pairs(data.click, state),
     swipe: pairs(data.swipe, state),
