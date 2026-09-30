@@ -191,10 +191,12 @@ function call(builtin: Builtin): void {
   }
 }
 
-// Run one event with the program. The browser does not use a key that changes
-// the state or calls a built-in function. The browser uses each other key, so
-// the arrow keys and the space bar scroll the pages of the handout view.
-function handle(input: Event, event?: KeyboardEvent): void {
+// Run one event with the program. The browser does not use a key or a click
+// that changes the state or calls a built-in function. The browser uses each
+// other key, so the arrow keys and the space bar scroll the pages of the
+// handout view. The browser also follows a link of the `goto` option that the
+// program does not use, such as in the handout view.
+function handle(input: Event, event?: UIEvent): void {
   const result = run(program, deck, state, input);
   if (prevented(state, result)) {
     event?.preventDefault();
@@ -218,7 +220,8 @@ const INTERACTIVE =
 
 // True for a click that goes to the browser: a click with a modifier or with
 // a button other than the main button, a click on an interactive element, and
-// a click that ends a selection of text.
+// a click that ends a selection of text. A link with commands is not such an
+// element, because the program decides what a click on it does.
 function ignores(event: MouseEvent): boolean {
   if (event.button !== 0) {
     return true;
@@ -227,19 +230,23 @@ function ignores(event: MouseEvent): boolean {
     return true;
   }
   const target = event.target as Element | null;
-  if (target?.closest?.(INTERACTIVE)) {
+  const interactive = target?.closest?.(INTERACTIVE);
+  if (interactive && !interactive.matches("a[data-commands]")) {
     return true;
   }
   return window.getSelection?.()?.isCollapsed === false;
 }
 
-// The commands of the page of the overview under a click, or null. The
-// renderer writes them on the page of the last step of each slide.
+// The commands of the nearest element under a click that holds commands, or
+// null. The renderer writes them on the page of the last step of each slide,
+// for the overview, and on each link of the `goto` option. In the overview,
+// the style sheet stops a click on the content of a page, so the click finds
+// the page and not a link on it.
 function element(event: MouseEvent) {
   const target = event.target as Element | null;
-  const page = target?.closest?.(".handout-page[data-commands]") as
+  const holder = target?.closest?.("[data-commands]") as
     HTMLElement | null | undefined;
-  const text = page?.dataset.commands;
+  const text = holder?.dataset.commands;
   return text === undefined ? null : commands(text, program);
 }
 
@@ -247,11 +254,14 @@ document.addEventListener("click", (event: MouseEvent) => {
   if (ignores(event)) {
     return;
   }
-  handle({
-    kind: "click",
-    region: side(event.clientX, window.innerWidth),
-    element: element(event),
-  });
+  handle(
+    {
+      kind: "click",
+      region: side(event.clientX, window.innerWidth),
+      element: element(event),
+    },
+    event,
+  );
 });
 
 // The start of a movement of one finger, or null. A second finger, as for a

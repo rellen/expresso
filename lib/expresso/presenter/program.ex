@@ -11,7 +11,12 @@ defmodule Expresso.Presenter.Program do
   `compile/2` also puts the `each` commands of a mode in front of each binding,
   and it makes a map from each event to its commands. A key with two bindings
   in one mode raises an error, because the list of keys would show two
-  functions for it.
+  functions for it. `Expresso.Presenter.Verifier` refuses such a definition
+  when it compiles.
+
+  A mode with the option `element` gets its `each` commands in `element`, and
+  each other mode gets `nil`. The interpreter puts these commands in front of
+  the commands of an element under a click.
   """
 
   alias Expresso.Presenter.Definition
@@ -25,7 +30,7 @@ defmodule Expresso.Presenter.Program do
           keys: %{String.t() => [Definition.command()]},
           click: %{atom() => [Definition.command()]},
           swipe: %{atom() => [Definition.command()]},
-          element: boolean(),
+          element: [Definition.command()] | nil,
           other: [Definition.command()] | nil
         }
 
@@ -71,7 +76,8 @@ defmodule Expresso.Presenter.Program do
     * `"state"` - the first value of each field of the state.
     * `"modes"` - the modes, in the order that the interpreter examines them.
       A mode holds its `"name"`, its condition `"when"`, its `"any"` commands
-      or `null`, its `"other"` commands or `null`, and its `"element"` flag.
+      or `null`, its `"other"` commands or `null`, and its `"element"` commands
+      or `null`.
       `"keys"`, `"click"` and `"swipe"` hold pairs of events and commands. Each
       pair holds each event that has the same commands.
 
@@ -112,7 +118,7 @@ defmodule Expresso.Presenter.Program do
         Map.new(mode.when, fn {field, value} -> {Atom.to_string(field), value(value)} end),
       "any" => commands_json(mode.any),
       "other" => commands_json(mode.other),
-      "element" => mode.element,
+      "element" => commands_json(mode.element),
       "keys" => pairs(mode.keys),
       "click" => pairs(mode.click),
       "swipe" => pairs(mode.swipe)
@@ -152,6 +158,15 @@ defmodule Expresso.Presenter.Program do
   def element(slide), do: [{:goto_slide, slide}, {:set, :overview, false}]
 
   @doc """
+  Return the commands of a link to the step at an index, for `Expresso.Goto`
+
+      iex> Expresso.Presenter.Program.link(7)
+      [{:goto, 7}]
+  """
+  @spec link(non_neg_integer()) :: [Definition.command()]
+  def link(index), do: [{:goto, index}]
+
+  @doc """
   Return the number of columns in the overview for a number of slides
 
   The result is the square root of the slide count, rounded up to an integer.
@@ -180,7 +195,7 @@ defmodule Expresso.Presenter.Program do
       keys: events(mode.name, bindings, :key),
       click: events(mode.name, bindings, :click),
       swipe: events(mode.name, bindings, :swipe),
-      element: mode.element,
+      element: if(mode.element, do: mode.each),
       other: if(mode.other, do: mode.each)
     }
   end

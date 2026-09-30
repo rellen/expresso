@@ -35,6 +35,13 @@ h2 {
   font-variant-numeric: tabular-nums;
 }
 /*
+ * A link of the `goto` option. It keeps the color of the text around it, and
+ * the browser draws a line under its text. A theme can set `--goto-color`.
+ */
+a.goto {
+  color: var(--goto-color, inherit);
+}
+/*
  * A slide of the present view is only as wide as its content. The number
  * then uses the corner of the window. The other slides do not show, so their
  * numbers do not show.
@@ -811,6 +818,11 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     zoom: var(--overview-zoom, 1);
     outline: calc(1px / var(--overview-zoom, 1)) solid currentColor;
     cursor: pointer;
+  }
+  /* A click on the content of a page, such as a link, goes to the page. The
+   * script then runs the commands of the page, and not of the link. */
+  body[data-overview="true"] .handout-page[data-thumbnail] * {
+    pointer-events: none;
   }
   body[data-overview="true"] .handout-page[data-thumbnail][data-selected] {
     outline: calc(4px / var(--overview-zoom, 1)) solid

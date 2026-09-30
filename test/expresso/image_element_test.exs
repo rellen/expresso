@@ -151,7 +151,7 @@ defmodule Expresso.Element.ImageTest do
       assert %{overlay: [{"style", style}]} = Image.get_assigns(image)
       assert style == ~s(--image-width: 60vw" onload="x)
 
-      html = Image.render(%{src: "x", alt: "", overlay: [{"style", style}]})
+      html = Image.render(%{src: "x", alt: "", goto: nil, overlay: [{"style", style}]})
       refute Phoenix.HTML.safe_to_string(html) =~ ~s(onload=")
     end
 

@@ -695,8 +695,14 @@ key, click and swipe does. The TypeScript part runs these rules in the browser.
 
 The Elixir part is in `lib/expresso/presenter/`:
 
-- `Expresso.Presenter.Definition` holds the modes of the presenter and the bindings of
-  each mode. A binding holds its events, its commands and its row in the list of keys.
+- `Expresso.Presenter.Default` holds the modes of the presenter and the bindings of each
+  mode. A binding holds its events, its commands and its row in the list of keys. The
+  module uses the Spark DSL of `Expresso.Presenter.Extension`.
+- `Expresso.Presenter.Verifier` refuses a definition with an error when the module
+  compiles. Examples are an unknown field, a value of the wrong type and a key with two
+  bindings in one mode.
+- `Expresso.Presenter.Definition` holds the types of a definition, and it reads the
+  definition of `Expresso.Presenter.Default` into maps.
 - `Expresso.Presenter.Program` makes the program of one deck from the definition. It
   changes each symbol, such as the last slide, into a number for the deck.
 - `Expresso.Presenter.Interpreter` is the reference interpreter. The ExUnit tests run it.
@@ -757,8 +763,8 @@ function. The built-in functions are `open_speaker`, `fullscreen` and `reset_tim
 changes or when the event calls a built-in function. The fragment of the address and the
 messages between the windows do not go through the modes.
 
-A new key with the current commands is therefore a change to
-`Expresso.Presenter.Definition` only. The TypeScript interpreter must return the result of
+A new key with the current commands is therefore a change to `Expresso.Presenter.Default`
+only. Only this module uses the DSL, and a deck cannot change the keys. The TypeScript interpreter must return the result of
 the Elixir interpreter. `assets/test/interpreter.test.ts` runs the fixtures of the Elixir
 interpreter, and `docs/development.md` tells how to write them again.
 `docs/research/elixir-presenter-report.md` gives the reason for the design.
@@ -776,7 +782,7 @@ compiles `lib/`. `docs/typescript.md` gives the design.
 
 ### The keys
 
-`Expresso.Presenter.Definition` holds the keys of each mode. The keys of the present view
+`Expresso.Presenter.Default` holds the keys of each mode. The keys of the present view
 are:
 
 - `j`, `ArrowRight`, `ArrowDown`, the space bar and `PageDown` show the next step, or the
@@ -814,7 +820,36 @@ cases:
 - it has a modifier;
 - it is not the main button;
 - it ends a selection of text;
-- it is on a link, a button or a form field.
+- it is on a link, a button or a form field. A link of the `goto` option is not such a
+  link, and the next section gives its rules.
+
+### The links
+
+The `goto` option of a text area, an image or an item makes the element a link to a slide
+and a step. `docs/reference/goto-option.md` gives the option for the user.
+`Expresso.Goto` holds the value of the option, and `Expresso.GotoVerifier` refuses a
+link to a slide or a step that the deck does not have.
+
+The render function of the element puts its content into an `a` element with the class
+`goto`. The `href` attribute holds the fragment of the step, such as `#5.2`.
+`Expresso.Goto.resolve/1` writes the commands of the link into `data-commands`, such as
+`[["goto",7]]`. The number is the index of the step in the list of the steps.
+
+A click on an element with commands runs the commands only in a mode with the option
+`element`. The interpreter puts the `each` commands of the mode in front of them:
+
+| Mode | Effect of a click on a link |
+| --- | --- |
+| `blank` and `help` | The `any` commands close the black screen or the list of keys. |
+| `overview` | The style sheet stops a click on the content of a page, so the click finds the page and runs the commands of the page. |
+| `present` | The commands of the link, after the command that removes the typed digits. |
+| `speaker` | The mode has no option `element`, so the click moves one step. |
+| `handout` | The mode has no binding for a click, so the browser follows the `href`. |
+
+`main.ts` stops the default operation of the browser when the program changes the state.
+Therefore the browser does not follow the link, and the history gets no entry. A link can
+only go to a slide and a step, so the handout view and the print show each state that a
+link can give.
 
 ### The list of keys
 

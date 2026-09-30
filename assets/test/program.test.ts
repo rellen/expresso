@@ -34,8 +34,9 @@ test("parse reads the program that the renderer writes", () => {
     ["clear", "digits"],
     ["step", -1],
   ]);
-  assert.equal(mode?.element, false);
-  assert.equal(program.modes[2]?.element, true);
+  assert.deepEqual(mode?.element, [["clear", "digits"]]);
+  assert.deepEqual(program.modes[2]?.element, []);
+  assert.equal(program.modes[4]?.element, null);
 });
 
 test("parse throws for a program that the renderer does not write", () => {
@@ -58,6 +59,7 @@ test("parse throws for a program that the renderer does not write", () => {
     changed((data) => (present(data).keys = [[["j"], "step"]])),
     changed((data) => (present(data).keys = [[[1], []]])),
     changed((data) => (present(data).element = "no")),
+    changed((data) => (present(data).element = [["goto", "x"]])),
   ];
   for (const each of texts) {
     assert.throws(

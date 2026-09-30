@@ -84,8 +84,8 @@ function commandsOf(mode: Mode, event: Event): readonly Command[] {
     case "key":
       return mode.keys.get(event.key) ?? mode.other ?? [];
     case "click":
-      if (mode.element && event.element !== null) {
-        return event.element;
+      if (mode.element !== null && event.element !== null) {
+        return [...mode.element, ...event.element];
       }
       return mode.click.get(event.region) ?? [];
     case "swipe":

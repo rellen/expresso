@@ -1,6 +1,6 @@
 import { test, before } from "node:test";
 import assert from "node:assert/strict";
-import { fakePage } from "./page.ts";
+import { element, fakePage } from "./page.ts";
 
 // Two slides. Slide 1 has one step, and slide 2 has two steps. The window is
 // 1200 pixels wide, so the left third ends at 400. The tests run in sequence
@@ -11,6 +11,10 @@ const { body } = page;
 before(async () => {
   await import("../src/main.ts");
 });
+
+// A link of the `goto` option to step 2 of slide 2. That step has the index 2
+// in the list of the steps.
+const link = element("", "goto", { commands: JSON.stringify([["goto", 2]]) });
 
 test("a click on the right two thirds goes to the next step", () => {
   page.click(900);
@@ -79,6 +83,25 @@ test("a swipe closes the list of keys, and it does nothing more", () => {
   assert.equal(page.location.hash, "#1.1");
 });
 
+test("a click on a link goes to its step, and the browser does not follow the link", () => {
+  page.press("1");
+  assert.equal(page.click({ clientX: 100, link }), true);
+  assert.equal(page.location.hash, "#2.2");
+
+  // The click removed the typed digit, so Enter does not go to slide 1.
+  page.press("Enter");
+  assert.equal(page.location.hash, "#2.2");
+  page.press("Home");
+});
+
+test("a click on a link closes a black screen, and it does nothing more", () => {
+  page.press("b");
+  assert.equal(page.click({ clientX: 900, link }), true);
+
+  assert.equal(body.dataset.blank, undefined);
+  assert.equal(page.location.hash, "#1.1");
+});
+
 test("f puts the document in full screen, and takes it out", () => {
   assert.equal(page.press("f"), true);
   assert.equal(page.fullscreen, true);
@@ -123,4 +146,10 @@ test("a click in the handout view closes the list of keys", () => {
   page.click(900);
   assert.equal(body.dataset.help, undefined);
   assert.equal(body.dataset.view, "handout");
+});
+
+test("the browser follows a link in the handout view", () => {
+  const count = page.written.length;
+  assert.equal(page.click({ clientX: 900, link }), false);
+  assert.equal(page.written.length, count);
 });

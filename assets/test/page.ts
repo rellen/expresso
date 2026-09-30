@@ -56,6 +56,9 @@ type Click = {
   // The page of the handout view under the click, as for a click on a slide
   // of the overview.
   on?: FakeElement;
+  // The link of the `goto` option under the click. It holds its commands in
+  // `data-commands`.
+  link?: FakeElement;
 };
 
 // A point on the screen.
@@ -94,8 +97,9 @@ export type FakePage = {
   // Give one key to `main.ts`. The result tells if `main.ts` stopped the
   // default operation of the browser.
   press: (key: string | Key) => boolean;
-  // Give one click to `main.ts`.
-  click: (click: number | Click) => void;
+  // Give one click to `main.ts`. The result tells if `main.ts` stopped the
+  // default operation of the browser, such as the address of a link.
+  click: (click: number | Click) => boolean;
   // Give a movement of one finger from `start` to `end` to `main.ts`.
   swipe: (start: Point, end: Point) => void;
   // The text of the selection of the page.
@@ -308,18 +312,39 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
       return stopped;
     },
     click: (click) => {
-      const event = typeof click === "number" ? { clientX: click } : click;
+      const event: Click =
+        typeof click === "number" ? { clientX: click } : click;
+      // A link of the `goto` option is an interactive element that holds
+      // commands. A page of the overview holds commands, and it is not
+      // interactive.
       const target = {
         closest: (selector: string) => {
-          if (event.on !== undefined && selector.includes(".handout-page")) {
-            return event.on;
+          const link =
+            event.link === undefined
+              ? null
+              : {
+                  ...event.link,
+                  matches: (each: string) => each === "a[data-commands]",
+                };
+          if (selector === "[data-commands]") {
+            return link ?? event.on ?? null;
+          }
+          if (link !== null && selector.includes("a,")) {
+            return link;
           }
           return event.inside !== undefined && selector.includes(event.inside)
-            ? {}
+            ? { matches: () => false }
             : null;
         },
       };
-      call("click", { button: 0, ...event, target });
+      let stopped = false;
+      call("click", {
+        button: 0,
+        ...event,
+        target,
+        preventDefault: () => (stopped = true),
+      });
+      return stopped;
     },
     swipe: (start, end) => {
       call("touchstart", { touches: [touch(start)] });

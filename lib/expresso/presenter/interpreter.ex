@@ -160,7 +160,11 @@ defmodule Expresso.Presenter.Interpreter do
 
   defp commands(%{any: any}, _event) when is_list(any), do: any
   defp commands(mode, {:key, key}), do: Map.get(mode.keys, key) || mode.other || []
-  defp commands(%{element: true}, {:click, _region, element}) when is_list(element), do: element
+
+  defp commands(%{element: each}, {:click, _region, element})
+       when is_list(each) and is_list(element),
+       do: each ++ element
+
   defp commands(mode, {:click, region, _element}), do: Map.get(mode.click, region, [])
   defp commands(mode, {:swipe, direction}), do: Map.get(mode.swipe, direction, [])
 

@@ -595,6 +595,57 @@ The first fixture file had 281 kB, and fewer random decks made it smaller. The p
 tests of `test/expresso/presenter/` examine the Elixir model with more events. The fixture
 file keeps the TypeScript interpreter equal to the Elixir interpreter.
 
+### The result of step 4
+
+Step 4 is done. The maintainer settled two decisions for this step:
+
+- Decision 8: the definition of the presenter is a Spark DSL, and only Expresso uses it. A
+  deck cannot change the keys.
+- Decision 9: a command on an element can only go to a slide and a step.
+
+The step has two parts. The first part is the DSL of the presenter:
+
+- `Expresso.Presenter.Default` writes each rule of the presenter in the DSL of
+  `Expresso.Presenter.Extension`. `Expresso.Presenter.Definition` reads it into the maps
+  of step 2, so the program, the interpreters and the list of keys did not change.
+- `Expresso.Presenter.Verifier` refuses a bad definition when the module compiles. It finds
+  an unknown field, a value of the wrong type and an unknown command. It also finds two
+  modes with the same name, and one event with two bindings in one mode.
+- The fixture test compares the program of each fixture deck with the committed file.
+  After the first part, the test found no change.
+
+The second part is the first public feature, the `goto` option:
+
+- A text area, an image or an item with `goto: [slide: 5, step: 2]` is a link. The render
+  function puts its content into `<a class="goto" href="#5.2" data-commands=...>`.
+- `Expresso.GotoVerifier` refuses a link to a slide or a step that the deck does not have.
+- A click on the link in the present view runs its commands. The modes `present` and
+  `overview` have the option `element`, and the `each` commands of the mode go in front
+  of the commands of the element. Thus a click on a link removes the typed digits, as each other
+  click does.
+- `Tab` and `Enter` operate the link, and a screen reader reads it as a link.
+  `docs/reference/goto-option.md` gives the effect of a click in each view.
+
+These are the measurements. A line of code is a line that is not empty and not a comment:
+
+| Measurement | Before step 4 | After step 4 |
+| --- | --- | --- |
+| Lines of code of `assets/src/` | 1017 | 1021 |
+| Bytes of the bundle | 12468 | 12508 |
+| Lines of code of the definition in Elixir | 188 | 472 |
+| Lines of code of `Expresso.Goto` and `Expresso.GotoVerifier` | 0 | 101 |
+
+The feature added 4 lines of code to the script. The script finds the nearest element with
+commands, and it does not give a click on a link with commands to the browser. The overview
+needed one rule in the style sheet: a click on the content of a page finds the page. Each
+other part of the feature is in Elixir.
+
+The DSL made the definition larger. The definition was 188 lines of code in one module.
+Now it is 99 lines in `Expresso.Presenter.Default`, 64 lines in
+`Expresso.Presenter.Definition`, and 309 lines for the extension, the verifier and the
+commands. The extra lines find a bad definition when the module compiles, and not when the
+presenter uses a document.
+
 ## The options that do not agree
 
 | Option | The reason |
@@ -627,9 +678,10 @@ The calculations that moved to Elixir were short. The larger gain is in the test
 tests of `fraction`, `done` and the position text are now ExUnit tests of
 `Expresso.Steps`.
 
-Steps 2 and 3 of "The prototype" are also done. Each rule fits the model, and the script
-runs the program of each deck. The sections "The result of step 2" and "The result of step
-3" contain the measurements.
+Steps 2, 3 and 4 of "The prototype" are also done. Each rule fits the model, the script
+runs the program of each deck, and an element can hold a link to a step. The sections "The
+result of step 2", "The result of step 3" and "The result of step 4" contain the
+measurements.
 
 Do each part in its own pull request, in this sequence:
 
@@ -641,7 +693,8 @@ Do each part in its own pull request, in this sequence:
 
 ## The decisions
 
-The maintainer decides each of these. None of them is settled.
+The maintainer decides each of these. Decisions 8 and 9 are settled, and the answer
+follows each of them.
 
 1. Does Elixir own the table of keys?
 2. Which method keeps the actions equal: (a), the check at load, or (b), the generated
@@ -656,9 +709,11 @@ The maintainer decides each of these. None of them is settled.
    become a public API.
 7. Does the GIF recorder move to Elixir?
 8. Is the definition of the presenter a Spark DSL or a plain module? Step 2 used a plain
-   module, and it was sufficient. The DSL can come at step 4.
+   module, and it was sufficient. The DSL can come at step 4. Answer: a Spark DSL,
+   and only `Expresso.Presenter.Default` uses it.
 9. Can an element command only go to a slide or a step? Or can an element declare its
-   own states, which the print then shows?
+   own states, which the print then shows? Answer: an element command can only go to
+   a slide and a step.
 10. Does the key `r` remove the typed digits, as `s` and `f` do?
 
 ## The sources

@@ -1,14 +1,13 @@
 defmodule Expresso.Presenter.Definition do
   @moduledoc """
-  Holds each rule of the presenter as data: modes, bindings and commands
+  Holds the types of the presenter definition, and reads the definition
 
-  This module is step 2 of the prototype that
-  `docs/research/elixir-presenter-report.md` describes in its section "The
-  interpreter". It holds the rules of `assets/src/state.ts` and
-  `assets/src/main.ts`. `Expresso.Presenter.Program`
-  makes the program of one deck from it, and `Expresso.Presenter.Interpreter`
-  runs that program. The renderer does not use these modules yet, so the script
-  in the browser does not change.
+  A definition holds each rule of the presenter as data: modes, bindings and
+  commands. `Expresso.Presenter.Default` writes the definition in the DSL of
+  `Expresso.Presenter.Extension`, and `presenter/0` reads it into maps.
+  `Expresso.Presenter.Program` makes the program of one deck from the
+  definition, and the interpreter in the browser runs that program.
+  `Expresso.Presenter.Interpreter` is the reference interpreter in Elixir.
 
   ## The modes
 
@@ -25,7 +24,9 @@ defmodule Expresso.Presenter.Definition do
       list of keys close at the next event, and the event does no more.
     * `other` - true when a key with no binding gets the `each` commands.
     * `element` - true when a click on an element runs the commands of that
-      element. A page of the overview has the commands that go to its slide.
+      element, after the `each` commands. A page of the overview has the
+      commands that go to its slide, and a link of `Expresso.Goto` has the
+      commands that go to its step.
 
   ## The events
 
@@ -108,177 +109,45 @@ defmodule Expresso.Presenter.Definition do
           element: boolean()
         }
 
+  alias Expresso.Presenter.{Binding, Mode}
+
   @typedoc "The definition of the presenter"
   @type t :: %{state: map(), sync: [field()], modes: [mode()]}
 
-  @digits ~w(0 1 2 3 4 5 6 7 8 9)
-
   @doc """
-  Return the definition of the presenter today
+  Return the definition of the presenter
 
-  The modes come in the order that the interpreter examines them. The black
-  screen comes first, then the list of keys, then the overview, then the views.
+  The definition comes from `Expresso.Presenter.Default`. The modes come in the
+  order that the interpreter examines them. The black screen comes first, then
+  the list of keys, then the overview, then the views.
   """
   @spec presenter() :: t()
-  def presenter do
+  def presenter, do: from(Expresso.Presenter.Default)
+
+  @doc """
+  Make a definition from a module that uses `Expresso.Presenter.Dsl`
+  """
+  @spec from(module()) :: t()
+  def from(module) do
     %{
-      state: %{
-        index: 0,
-        view: :present,
-        blank: false,
-        help: false,
-        digits: "",
-        overview: false,
-        selected: 1,
-        progress: true,
-        every: false
-      },
-      sync: [:index, :blank],
-      modes: [
-        mode(:blank, [blank: true], any: [{:set, :blank, false}]),
-        mode(:help, [help: true], any: [{:set, :help, false}]),
-        mode(:overview, [overview: true], bindings: overview(), element: true),
-        mode(:present, [view: :present], bindings: showing(:present), each: clear(), other: true),
-        mode(:speaker, [view: :speaker], bindings: showing(:speaker), each: clear(), other: true),
-        mode(:handout, [view: :handout], bindings: handout(), each: clear(), other: true)
-      ]
+      state: module |> Spark.Dsl.Extension.get_opt([:presenter], :state) |> Map.new(),
+      sync: Spark.Dsl.Extension.get_opt(module, [:presenter], :sync),
+      modes: module |> Spark.Dsl.Extension.get_entities([:presenter]) |> Enum.map(&mode/1)
     }
   end
 
-  defp clear, do: [{:clear, :digits}]
-
-  defp mode(name, condition, options) do
+  defp mode(%Mode{} = mode) do
     %{
-      name: name,
-      when: condition,
-      bindings: Keyword.get(options, :bindings, []),
-      each: Keyword.get(options, :each, []),
-      any: Keyword.get(options, :any),
-      other: Keyword.get(options, :other, false),
-      element: Keyword.get(options, :element, false)
+      name: mode.name,
+      when: mode.match,
+      bindings: Enum.map(mode.bindings, &binding_map/1),
+      each: mode.each,
+      any: mode.any,
+      other: mode.other,
+      element: mode.element
     }
   end
 
-  defp binding(on, commands, text, options \\ []) do
-    %{
-      on: on,
-      commands: commands,
-      text: text,
-      label: Keyword.get(options, :label),
-      each: Keyword.get(options, :each, true)
-    }
-  end
-
-  defp keys(names), do: Enum.map(names, &{:key, &1})
-
-  # The present view and the speaker view share most keys. The order is the
-  # order of the rows in the list of keys today.
-  defp showing(view) do
-    [
-      binding(
-        keys(["j", "ArrowRight", "ArrowDown", "PageDown", " "]),
-        [{:step, 1}],
-        "Next step, or the first step of the next slide"
-      ),
-      binding(
-        keys(["k", "ArrowLeft", "ArrowUp", "PageUp"]),
-        [{:step, -1}],
-        "Previous step, or the last step of the previous slide"
-      ),
-      binding(keys(["Home"]), [{:goto, 0}], "First slide"),
-      binding(keys(["End"]), [{:goto, :last_slide}], "Step 1 of the last slide"),
-      binding(keys(@digits), [{:append, :digits}], "Type a slide number",
-        label: "0 to 9",
-        each: false
-      ),
-      binding(keys(["Enter"]), [:go_typed], "Step 1 of the slide that you typed", each: false),
-      binding(
-        keys(["b"]),
-        [{:set, :blank, true}],
-        "Black screen. The next key shows the slide again."
-      )
-    ] ++
-      only(view == :present, [
-        binding(keys(["p"]), [{:set, :view, :handout}], "Handout view"),
-        binding(
-          keys(["s"]),
-          [{:builtin, :open_speaker}],
-          "Speaker view, in a second window"
-        )
-      ]) ++
-      only(view == :speaker, [
-        # The key `r` does not remove the typed digits today, and the keys `s`
-        # and `f` do. The report asks the maintainer about this difference.
-        binding(keys(["r"]), [{:builtin, :reset_timer}], "Set the timer to 0:00", each: false)
-      ]) ++
-      [binding(keys(["f"]), [{:builtin, :fullscreen}], "Full screen on or off")] ++
-      only(view == :present, [
-        binding(keys(["g"]), [{:toggle, :progress}], "Progress bar on or off")
-      ]) ++
-      [
-        binding([{:click, :right}, {:swipe, :left}], [{:step, 1}], "Next step",
-          label: "Click or tap the right two thirds, or swipe left"
-        ),
-        binding([{:click, :left_third}, {:swipe, :right}], [{:step, -1}], "Previous step",
-          label: "Click or tap the left third, or swipe right"
-        ),
-        binding(
-          keys(["o"]),
-          [{:set, :overview, true}, {:assign, :selected, {:entry, :slide}}],
-          "Overview of the slides. Only this window shows it."
-        ),
-        binding(keys(["?"]), [{:set, :help, true}], "This list of keys. The next key closes it.")
-      ]
-  end
-
-  defp only(true, bindings), do: bindings
-  defp only(false, _bindings), do: []
-
-  # The handout view knows only these keys. The browser gets each other key,
-  # so the arrow keys and the space bar scroll the pages.
-  defp handout do
-    [
-      binding(keys(["j"]), [{:step, 1}], "Next step. The present view then shows it."),
-      binding(keys(["k"]), [{:step, -1}], "Previous step. The present view then shows it."),
-      binding(keys(["p"]), [{:set, :view, :present}], "Present view"),
-      binding(
-        keys(["a"]),
-        [{:toggle, :every}],
-        "Every step, or the steps of the handout option. A print shows the same."
-      ),
-      binding(keys(["?"]), [{:set, :help, true}], "This list of keys. The next key closes it.")
-    ]
-  end
-
-  # The list of keys of the overview shows `?` in the first row.
-  defp overview do
-    [
-      binding(keys(["?"]), [{:set, :help, true}], "This list of keys. The next key closes it."),
-      binding(
-        keys(["j", "ArrowRight", "PageDown", " "]),
-        [{:select_by, 1}],
-        "Select the next slide"
-      ),
-      binding(
-        keys(["k", "ArrowLeft", "PageUp"]),
-        [{:select_by, -1}],
-        "Select the previous slide"
-      ),
-      binding(keys(["ArrowDown"]), [{:select_by, {:columns, 1}}], "Select the slide below"),
-      binding(keys(["ArrowUp"]), [{:select_by, {:columns, -1}}], "Select the slide above"),
-      binding(keys(["Home"]), [{:select, 1}], "Select the first slide"),
-      binding(keys(["End"]), [{:select, :last_slide}], "Select the last slide"),
-      binding(
-        keys(["Enter"]),
-        [{:goto_slide, :selected}, {:set, :overview, false}],
-        "Step 1 of the selected slide"
-      ),
-      binding([:element], [], "Step 1 of that slide", label: "Click or tap a slide"),
-      binding(
-        keys(["o", "Escape"]),
-        [{:set, :overview, false}],
-        "Close the overview. The step does not change."
-      )
-    ]
-  end
+  defp binding_map(%Binding{} = binding),
+    do: Map.take(binding, [:on, :commands, :text, :label, :each])
 end
