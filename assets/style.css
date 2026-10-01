@@ -405,6 +405,20 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .code .line {
   display: block;
 }
+/*
+ * The number of a line, from the option `line_numbers`. The renderer sets
+ * `--line-number-width` to the width of the widest number, so the numbers
+ * stand in one column. The color of the comments meets the contrast minimum
+ * on the background of the code. A copy of the text does not take the number.
+ */
+.code .line-number {
+  display: inline-block;
+  min-width: var(--line-number-width, 1ch);
+  margin-right: 1.5ch;
+  text-align: right;
+  color: var(--code-comment);
+  user-select: none;
+}
 .columns {
   flex-grow: 1;
   display: flex;

@@ -225,4 +225,145 @@ defmodule Expresso.Element.CodeTest do
       assert Enum.any?(styles, &(&1 =~ ".highlight .kd"))
     end
   end
+
+  describe "the src option" do
+    @src "test/fixtures/code.js"
+
+    test "reads each line of the file, and the first line is line 1" do
+      code = Builder.code("js", src: @src)
+
+      assert code.text == @src |> File.read!() |> String.trim_trailing("\n")
+      assert code.first == 1
+    end
+
+    test "takes the lines of a range, and a reveal names the numbers of the file" do
+      code = Builder.code("js", src: @src, lines: 5..11, reveal: [5..7, 9..11], dim: true)
+
+      assert code.text |> String.split("\n") |> hd() == "function add(a, b) {"
+      assert code.first == 5
+      assert [%Lines{numbers: [5, 6, 7]}, %Lines{numbers: [9, 10, 11]}] = code.elements
+    end
+
+    test "writes the overlay attributes of a group on the lines of its numbers" do
+      html =
+        [
+          Builder.slide("one",
+            elements: [Builder.code("js", src: @src, lines: 5..7, reveal: [6])]
+          )
+        ]
+        |> Builder.deck()
+        |> Expresso.Deck.render()
+
+      lines = html |> Floki.parse_document!() |> Floki.find(".screen span.line")
+
+      assert Enum.map(lines, &Floki.attribute(&1, "data-on")) == [[], ["1"], []]
+    end
+
+    test "records the file for the watch mode" do
+      {_code, paths} = Expresso.DeckFile.track(fn -> Builder.code("js", src: @src) end)
+
+      assert paths == [@src]
+    end
+
+    test "gives an error for text and src, for neither, and for lines without src" do
+      assert_raise ArgumentError,
+                   "code: a code element takes the text option or the src option, and not both",
+                   fn -> Builder.code(text: "a", src: @src) end
+
+      assert_raise ArgumentError,
+                   "code: a code element needs the text option or the src option",
+                   fn -> Builder.code("js", []) end
+
+      assert_raise ArgumentError,
+                   "code: the lines option of a code element needs the src option",
+                   fn -> Builder.code(text: "a\nb", lines: 1..2) end
+    end
+
+    test "gives an error for a file that it cannot read, and for lines past the end" do
+      assert_raise ArgumentError,
+                   ~s(code: cannot read the code file "no/such.js": enoent),
+                   fn -> Builder.code(src: "no/such.js") end
+
+      assert_raise ArgumentError,
+                   ~s(code: the lines option ends at the line 40, and the file "#{@src}" has 12 lines),
+                   fn -> Builder.code(src: @src, lines: 10..40) end
+    end
+
+    test "gives an error for a reveal number that the element does not show" do
+      message =
+        "code: the reveal option has the line 4, and the code element shows the lines 5 to 7"
+
+      assert_raise ArgumentError, message, fn ->
+        Builder.code(src: @src, lines: 5..7, reveal: [4..5])
+      end
+    end
+
+    test "the DSL reads the file at compile time" do
+      source = """
+      defmodule Expresso.Element.CodeTest.SrcDeck do
+        use Expresso
+
+        slide "src" do
+          code "js" do
+            src "test/fixtures/code.js"
+            lines 9..11
+            reveal [9, 10..11]
+          end
+        end
+      end
+      """
+
+      [{module, _bytecode}] = Elixir.Code.compile_string(source)
+      [slide] = Expresso.parse(module).slides
+      [code] = slide.elements
+
+      assert code.first == 9
+      assert code.text =~ "function sum(list)"
+      assert slide.metadata.max_step == 2
+    end
+  end
+
+  describe "lines/1" do
+    test "accepts a range from line 1 or more" do
+      assert Code.lines(3..8) == {:ok, 3..8}
+      assert Code.lines(4..4) == {:ok, 4..4}
+    end
+
+    test "gives an error for another term" do
+      for value <- [0..3, 5..2//-1, 1..9//2, 3, [1, 2], "1..3"] do
+        assert {:error, _message} = Code.lines(value), inspect(value)
+      end
+    end
+  end
+
+  describe "the line_numbers option" do
+    defp numbered(opts) do
+      [Builder.slide("one", elements: [Builder.code("js", opts)])]
+      |> Builder.deck()
+      |> Expresso.Deck.render()
+      |> Floki.parse_document!()
+      |> Floki.find(".screen .code")
+    end
+
+    test "writes the number of each line from the first line of the range" do
+      [code] = numbered(src: "test/fixtures/code.js", lines: 8..11, line_numbers: true)
+      numbers = Floki.find(code, "span.line > span.line-number")
+
+      assert Enum.map(numbers, &Floki.text/1) == ["8", "9", "10", "11"]
+      assert Enum.all?(numbers, &(Floki.attribute(&1, "aria-hidden") == ["true"]))
+
+      assert code |> Floki.find("code") |> Floki.attribute("style") == [
+               "--line-number-width: 2ch"
+             ]
+    end
+
+    test "numbers a text from 1, and writes no number without the option" do
+      [code] = numbered(text: "a\nb", line_numbers: true)
+      assert code |> Floki.find(".line-number") |> Enum.map(&Floki.text/1) == ["1", "2"]
+
+      [plain] = numbered(text: "a\nb")
+      assert Floki.find(plain, ".line-number") == []
+      assert plain |> Floki.find("code") |> Floki.attribute("style") == []
+    end
+  end
 end

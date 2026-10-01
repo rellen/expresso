@@ -207,10 +207,30 @@ defmodule Expresso.Extension do
             type: :string,
             doc: "The name of the language, such as elixir. See Expresso.Highlight."
           ],
-          text: [type: :string, required: true, doc: "The source code."],
+          text: [
+            type: :string,
+            doc: "The source code. Give this option or the src option, and not both."
+          ],
+          src: [
+            type: :string,
+            doc:
+              "The path of a file that holds the source code, from the working directory of the command. See docs/reference/code-element.md."
+          ],
+          lines: [
+            type: {:custom, Expresso.Element.Code, :lines, []},
+            doc:
+              "The lines of the src file that the element shows, such as 10..24. The default is each line of the file."
+          ],
+          line_numbers: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Show the number of each line. With src, the number of a line is its number in the file."
+          ],
           reveal: [
             type: {:custom, Expresso.Element.Code, :reveal, []},
-            doc: "Line numbers and ranges, one group at each step. See docs/overlays.md."
+            doc:
+              "Line numbers and ranges, one group at each step. With src, a number is the number of the line in the file. See docs/overlays.md."
           ],
           dim: [
             type: :boolean,
