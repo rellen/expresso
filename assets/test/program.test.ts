@@ -140,9 +140,12 @@ test("the commands of each click in the fixture file are valid, except a page be
       if (kind !== "click" || commands === null) {
         continue;
       }
-      const [first] = commands as readonly (readonly unknown[])[];
+      const list = commands as readonly (readonly unknown[])[];
       const text = JSON.stringify(commands);
-      if (first?.[0] === "goto_slide" && (first[1] as number) < 1) {
+      const below = list.some(
+        ([name, slide]) => name === "goto_slide" && (slide as number) < 1,
+      );
+      if (below) {
         assert.throws(() => validateCommands(text), DecodeError, text);
         outside++;
       } else {
