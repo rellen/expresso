@@ -13,7 +13,8 @@ defmodule Mix.Tasks.Expresso.Gifs do
 
   The decks of `examples/animations/` give the GIFs of the guides of `docs/`.
   The decks of `examples/presenter/` give the GIFs and the stills of
-  `README.md`.
+  `README.md`. The deck of `examples/themes/` gives one still for each built-in
+  theme, which `docs/reference/theme-option.md` shows.
 
   The task is in `tools/`, so it is available in dev and in test only. The
   recorder needs the Playwright driver of `npm install` and Chromium. The
@@ -30,14 +31,15 @@ defmodule Mix.Tasks.Expresso.Gifs do
 
   @typedoc """
   An example: its name, the path of its deck file, the address after the path
-  of the HTML file, its actions, whether it is a still, and the page that
-  shows it
+  of the HTML file, its actions, whether it is a still, the page that shows
+  it, and the theme of the deck
 
   An action is a key, or `{:advance, milliseconds}`, which moves the clock of
   the page. The speaker view then shows a later time. A still gives one PNG
   after the actions, and each other example gives a GIF of each action. The
   height is the height of the picture, in the layout of a window of 1280 by
-  720 pixels. A still of the handout view can then show several pages.
+  720 pixels. A still of the handout view can then show several pages. A
+  theme replaces the `theme` option of the deck, and `nil` keeps it.
   """
   @type example :: %{
           name: String.t(),
@@ -46,7 +48,8 @@ defmodule Mix.Tasks.Expresso.Gifs do
           actions: [String.t() | {:advance, pos_integer()}],
           still: boolean(),
           height: pos_integer(),
-          page: :guides | :readme
+          page: :guides | :readme | :themes,
+          theme: atom() | nil
         }
 
   # The examples of the guides. Each guide shows the code of its decks and the
@@ -103,7 +106,18 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "present-handout", deck: "tour.exs", actions: ["p"], still: true, height: 2160}
   ]
 
-  @defaults %{address: "", actions: [], still: false, height: 720}
+  # The stills of the themes. Each still shows the deck at step 2, with a
+  # dimmed item.
+  @themes for theme <- Expresso.Palette.Builtin.names(),
+              do: %{
+                name: "theme-" <> String.replace(Atom.to_string(theme), "_", "-"),
+                deck: "showcase.exs",
+                theme: theme,
+                address: "#1.2",
+                still: true
+              }
+
+  @defaults %{address: "", actions: [], still: false, height: 720, theme: nil}
 
   @doc """
   Return each example, with the path of its deck file
@@ -111,7 +125,8 @@ defmodule Mix.Tasks.Expresso.Gifs do
   @spec examples() :: [example()]
   def examples do
     Enum.map(@guides, &example(&1, :guides, "examples/animations")) ++
-      Enum.map(@readme, &example(&1, :readme, "examples/presenter"))
+      Enum.map(@readme, &example(&1, :readme, "examples/presenter")) ++
+      Enum.map(@themes, &example(&1, :themes, "examples/themes"))
   end
 
   @doc """
@@ -140,19 +155,21 @@ defmodule Mix.Tasks.Expresso.Gifs do
 
     examples = selected(names)
 
-    # Several examples can share one deck, and the deck renders one time.
+    # Several examples can share one deck and one theme, and the pair renders
+    # one time.
     rendered =
-      Map.new(Enum.uniq(Enum.map(examples, & &1.deck)), fn deck ->
-        html = Path.join(work, Path.basename(deck, ".exs") <> ".html")
-        :ok = Expresso.main(deck, html)
-        {deck, html}
+      Map.new(Enum.uniq(Enum.map(examples, &{&1.deck, &1.theme})), fn {deck, theme} = key ->
+        html = Path.join(work, Path.basename(deck, ".exs") <> "-#{theme}.html")
+        render(deck, theme, html)
+        {key, html}
       end)
 
     recorder = Recorder.start()
 
     try do
       Enum.each(examples, fn example ->
-        url = "file://" <> Path.expand(Map.fetch!(rendered, example.deck)) <> example.address
+        html = Map.fetch!(rendered, {example.deck, example.theme})
+        url = "file://" <> Path.expand(html) <> example.address
         frames = Recorder.record(recorder, url, example.actions, example.height)
         path = Path.join(output, file(example))
         write(path, contents(example, frames))
@@ -161,6 +178,17 @@ defmodule Mix.Tasks.Expresso.Gifs do
     after
       Recorder.stop(recorder)
     end
+  end
+
+  defp render(deck, nil, html), do: :ok = Expresso.main(deck, html)
+
+  # The deck of the themes is a script of `Expresso.Builder`, so each
+  # evaluation gives a new deck and defines no module.
+  defp render(deck, theme, html) do
+    {value, _bindings} = Code.eval_file(deck)
+    {:ok, deck} = Expresso.to_deck(value)
+    deck = %{deck | metadata: Map.put(deck.metadata, :theme, theme)}
+    write(html, Expresso.Deck.render(deck))
   end
 
   # A still is the last frame, which shows the page after each action.

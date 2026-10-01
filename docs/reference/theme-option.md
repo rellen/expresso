@@ -76,6 +76,42 @@ element. The strongest dimming that keeps the text at 3:1 depends on the theme.
 
 A light theme dims less, because the text must stay at 3:1 on a light background.
 
+### The gallery
+
+Each picture shows the deck `examples/themes/showcase.exs` at its second step, with code,
+a dimmed item, the progress bar and the slide number. `mix expresso.gifs` records one
+still for each built-in theme. `docs/development.md` tells how.
+
+| Name | Still |
+| --- | --- |
+| `:ayu_dark` | ![Ayu Dark, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-ayu-dark.png) |
+| `:ayu_mirage` | ![Ayu Mirage, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-ayu-mirage.png) |
+| `:catppuccin_frappe` | ![Catppuccin Frappé, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-catppuccin-frappe.png) |
+| `:catppuccin_macchiato` | ![Catppuccin Macchiato, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-catppuccin-macchiato.png) |
+| `:catppuccin_mocha` | ![Catppuccin Mocha, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-catppuccin-mocha.png) |
+| `:default` | ![Default, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-default.png) |
+| `:dracula` | ![Dracula, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-dracula.png) |
+| `:everforest` | ![Everforest, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-everforest.png) |
+| `:everforest_dark_hard` | ![Everforest Dark Hard, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-everforest-dark-hard.png) |
+| `:github` | ![GitHub, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-github.png) |
+| `:github_dark` | ![GitHub Dark, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-github-dark.png) |
+| `:gruvbox_dark_hard` | ![Gruvbox dark, hard, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-gruvbox-dark-hard.png) |
+| `:gruvbox_dark_medium` | ![Gruvbox dark, medium, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-gruvbox-dark-medium.png) |
+| `:kanagawa` | ![Kanagawa, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-kanagawa.png) |
+| `:material` | ![Material, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-material.png) |
+| `:monokai` | ![Monokai, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-monokai.png) |
+| `:one_light` | ![One Light, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-one-light.png) |
+| `:rose_pine` | ![Rosé Pine, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-rose-pine.png) |
+| `:rose_pine_dawn` | ![Rosé Pine Dawn, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-rose-pine-dawn.png) |
+| `:rose_pine_moon` | ![Rosé Pine Moon, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-rose-pine-moon.png) |
+| `:solarized_dark` | ![Solarized Dark, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-solarized-dark.png) |
+| `:solarized_light` | ![Solarized Light, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-solarized-light.png) |
+| `:tokyo_night_dark` | ![Tokyo Night Dark, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-tokyo-night-dark.png) |
+| `:tokyo_night_light` | ![Tokyo Night Light, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-tokyo-night-light.png) |
+| `:tokyo_night_storm` | ![Tokyo Night Storm, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-tokyo-night-storm.png) |
+| `:tomorrow_night` | ![Tomorrow Night, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-tomorrow-night.png) |
+| `:zenburn` | ![Zenburn, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-zenburn.png) |
+
 ### The schemes that are not built in
 
 A scheme is built in only when no color moves more than 0.25. A larger change gives a

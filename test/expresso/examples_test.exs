@@ -30,12 +30,21 @@ defmodule Expresso.ExamplesTest do
   test "each example deck is in a directory of the examples, and the list holds each one" do
     listed = Gifs.examples() |> Enum.map(& &1.deck) |> Enum.uniq() |> Enum.sort()
 
-    assert listed == Enum.sort(Path.wildcard("examples/{animations,presenter}/*.exs"))
+    assert listed == Enum.sort(Path.wildcard("examples/{animations,presenter,themes}/*.exs"))
   end
 
   test "each example of the guides is in examples/animations, and each of the README in examples/presenter" do
     for example <- of(:guides), do: assert(example.deck =~ ~r{^examples/animations/})
     for example <- of(:readme), do: assert(example.deck =~ ~r{^examples/presenter/})
+    for example <- of(:themes), do: assert(example.deck =~ ~r{^examples/themes/})
+  end
+
+  test "each built-in theme has a still, and the theme option shows each one" do
+    themes = Enum.map(of(:themes), & &1.theme)
+    shown = shown(File.read!("docs/reference/theme-option.md"))
+
+    assert Enum.sort(themes) == Expresso.Palette.Builtin.names()
+    assert shown == of(:themes) |> Enum.map(&Gifs.file/1) |> Enum.sort()
   end
 
   test "a how-to guide shows the code of each example deck of the guides, as it is in the file" do
@@ -47,8 +56,10 @@ defmodule Expresso.ExamplesTest do
     end
   end
 
-  test "the guides show each GIF of the guides, and no file that the task does not record" do
-    assert shown(guides()) == of(:guides) |> Enum.map(&Gifs.file/1) |> Enum.sort()
+  test "the guides show each file of the guides and of the themes, and no file that the task does not record" do
+    files = Enum.map(of(:guides) ++ of(:themes), &Gifs.file/1)
+
+    assert shown(guides()) == Enum.sort(files)
   end
 
   test "the README shows each file of its examples, and no file that the task does not record" do
