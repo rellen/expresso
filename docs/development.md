@@ -6,7 +6,8 @@ deck in a browser.
 ## The toolchain
 
 The versions are in `.tool-versions`: Elixir 1.20.4, Erlang/OTP 29.1, Node 24.20.0 and
-Zig 0.16.0. Burrito needs Zig for the binary, and no other command needs it.
+Zig 0.16.0. Zigler needs Zig to compile the GIF encoder of `tools/` in dev and in test,
+so `mix compile` and `mix test` need it. Burrito needs Zig for the binary.
 
 Four places give a toolchain, and each place gives these versions:
 
@@ -20,7 +21,7 @@ change the other three.
 
 ### On your machine
 
-Use the Nix shell. It gives each tool, and it gives Zig for a Burrito release.
+Use the Nix shell. It gives each tool, and it gives Zig for Zigler and for Burrito.
 
 ```sh
 nix develop      # or: direnv allow, after you copy .envrc.example to .envrc
@@ -61,7 +62,7 @@ The hook does these steps:
 3. Download the Node build from `nodejs.org`, and put it in `/opt/node`.
 4. Put Zig in `/opt/zig` with `.github/actions/setup-zig/install.sh`, the script of the
    workflow. It downloads Zig from a community mirror, and it makes sure of the SHA-256.
-   A failure gives a warning, and the hook continues, because only the binary needs Zig.
+   A failure gives a warning, and the hook continues. Without Zig, `mix compile` fails.
 5. Write `PATH`, `ELIXIR_ERL_OPTIONS` and `LANG` into `$CLAUDE_ENV_FILE`.
 6. `mix local.hex`, `mix local.rebar`, `mix deps.get`, `mix compile` and `npm install`.
 
@@ -381,7 +382,9 @@ the new lockfile.
 
 ### Zig in the workflow
 
-The jobs `binary` and `macos` get Zig from `.github/actions/setup-zig`. This action uses
+The jobs `lint`, `test`, `gifs`, `binary` and `macos` get Zig from
+`.github/actions/setup-zig`. The first three jobs compile the GIF encoder of `tools/`, and
+the last two jobs also make the binary. This action uses
 the shell and `actions/cache`, and it has no code of its own for Node.js. The jobs used
 `mlugg/setup-zig` before. Its last release, v2.2.1 of 2026-01-19, targets Node.js 20, and
 GitHub gave a warning for each job that used it.
@@ -411,8 +414,11 @@ keeps the build cache of Zig. In this container, the build of the binary took 14
 with an empty build cache, and 47 seconds with the cache of an earlier build. A build cache
 of more than 1 GB goes, and the job starts a new one.
 
-The key of the build cache holds `mix.lock`, and a job saves the build cache only when no
-cache has its key. Therefore the jobs save it one time for each version of the lockfile.
+The key of the build cache holds the name of the job and `mix.lock`, and a job saves the
+build cache only when no cache has its key. Therefore each job saves it one time for each
+version of the lockfile. A job that does not make the binary has its own key, so its cache
+does not take the place of a cache with the wrapper of Burrito. Only the jobs `binary` and
+`macos` keep the download cache of Burrito.
 Until 2026-09-28, the key held the number of the run, so each run saved the build cache.
 Each build adds its payload to the cache, and one run saved 405 MB for `linux_x86` and
 234 MB for `macos_arm`. The build of the wrapper changes only with Burrito, so one save
@@ -590,11 +596,10 @@ mix expresso.gifs                        # each example, into _build/gifs
 mix expresso.gifs /tmp/gifs overlay-at   # one example, into /tmp/gifs
 ```
 
-The task renders each example deck to an HTML file. It then runs the recorder
-`assets/gifs/record.ts` with Node, and it gives the recorder a manifest with the HTML file,
-the address and the actions of each example. `npm run gifs -- <manifest> <output>` runs
-only the recorder. The list of the examples is in `Mix.Tasks.Expresso.Gifs`. An example
-has:
+The task renders each example deck to an HTML file, and `Expresso.Recorder` records it.
+`Expresso.Gif` then encodes the frames as a GIF. The task and the two modules are in
+`tools/`, so only dev and test compile them, and the binary does not hold them. The list of
+the examples is in `Mix.Tasks.Expresso.Gifs`. An example has:
 
 - a name, which gives the name of the file;
 - a deck file;
@@ -606,12 +611,26 @@ has:
 - a height of the picture, in the layout of a window of 1280 by 720 pixels, so a still of
   the handout view can show several pages.
 
-The recorder opens each document in Chromium, does the actions, and takes a screenshot of
-each frame. After a key, it pauses each animation of the page, and it moves the animations
-to the time of each frame. The clock of the page is fixed, and a move of the clock sets it
-to a later time. The frames therefore do not depend on the speed or the time of the
-computer. The recorder encodes the frames with `gifenc`, a JavaScript package, so it needs
-no program such as ffmpeg. A still is the last frame, as a PNG.
+The recorder opens each document in Chromium with `playwright_ex`, does the actions, and
+takes a screenshot of each frame. Before the first frame, it moves each animation of the
+load to its end. After a key, it pauses each animation of the page, and it moves the
+animations to the time of each frame. The clock of the page is fixed, and a move of the
+clock sets it to a later time. The frames therefore do not depend on the speed or the time
+of the computer, and two runs write the same files. A still is the last frame, as a PNG.
+
+`Expresso.Gif` encodes the frames with a NIF in Zig, `Expresso.Gif.Nif`, and it needs no
+program such as ffmpeg. These are the steps:
+
+1. A frame that is the same as the frame before it adds its delay to that frame.
+2. The first frame holds each pixel. Each later frame holds only the rectangle of the
+   pixels that change, and an unchanged pixel in it is transparent.
+3. Median cut makes a palette for each frame from its exact colors. A frame with 256
+   colors or fewer keeps its exact colors.
+4. LZW compresses the frame. The frames encode in parallel, on dirty CPU schedulers.
+
+`test/expresso/gif_test.exs` decodes each GIF with the decoder of
+`test/support/gif_decoder.ex`, and it compares the result with the frames. Draft pull
+request #114 compares this encoder with an encoder in Elixir, Rust, Vix, ffmpeg and gifski.
 
 The job `gifs` of the workflow records the files for each pull request, and the artifact
 `gifs` holds them. After a push to main, the job `media` replaces the branch `media` with

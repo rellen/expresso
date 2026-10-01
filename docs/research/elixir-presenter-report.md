@@ -734,6 +734,44 @@ style sheet gives the fade of the browser.
 The estimate of "What moves" was 400 to 550 lines. The script is now 811 lines of code.
 Since the start of the interpreter, the bundle went from 13766 bytes to 8979 bytes.
 
+### The result of decision 7
+
+The recorder is now `Expresso.Recorder`, in Elixir, and `Expresso.Gif` encodes the GIFs.
+`playwright_ex` drives Chromium, as it does for the browser tests. `gifenc`, `pngjs` and
+the files of `assets/gifs/` are gone. Node stays, because `playwright_ex` runs the Node
+driver of Playwright.
+
+Draft pull request #114 measured seven encoders on the 550 frames of the examples, on 4
+cores:
+
+| Encoder | Time | Size | Mean PSNR |
+| --- | --- | --- | --- |
+| Zig | 2.08 s | 5.39 MB | 91.6 dB |
+| Rust | 5.04 s | 5.11 MB | 63.4 dB |
+| `gifenc` in Node | 8.95 s | 4.02 MB | 56.1 dB |
+| ffmpeg | 10.83 s | 4.68 MB | 91.5 dB |
+| Vix | 21.61 s | 2.40 MB | 80.7 dB |
+| gifski | 41.57 s | 2.69 MB | 59.0 dB |
+| Elixir | 51.24 s | 5.39 MB | 91.5 dB |
+
+Vix and gifski made the smallest files, because they write only the pixels that change.
+The encoder in Zig now does the same. On 2026-10-01, in this container, the two recorders
+had these results for all the examples:
+
+| Recorder | Time | Processor time | Size of the GIFs |
+| --- | --- | --- | --- |
+| Node, with `gifenc` | 65.3 s | 30.3 s | 4.02 MB |
+| Elixir, with the encoder in Zig | 59.7 s | 9.1 s | 2.63 MB |
+
+The browser takes most of the time, so the time stays almost the same. The GIFs are 35%
+smaller. Before the change of the next paragraph, the two recorders took the same
+screenshots, pixel for pixel, for `overlay-at` and `present-keys`.
+
+The new recorder also moves each animation of the load to its end before the first frame.
+Before this change, the progress bar could move after the load, and two runs made
+different pixels in a still. Now two runs write the same 28 files, byte for byte. Zigler
+compiles the encoder, so dev and test need Zig. The binary does not hold the encoder.
+
 ## The options that do not agree
 
 | Option | The reason |
@@ -784,7 +822,8 @@ Do each part in its own pull request, in this sequence:
 
 The maintainer decides each of these. Decisions 8, 9, 10 and 11 are settled, and the
 answer follows each of them. The work on the interpreter gave the answers to decisions 1
-to 6, and the answer follows each of them. Decision 7 is open.
+to 6, and the answer follows each of them. The answer to decision 7 follows it, and "The
+result of decision 7" gives the details.
 
 1. Does Elixir own the table of keys? Answer: yes. `Expresso.Presenter.Default` holds
    the keys of each mode. The renderer writes the lists of keys and the program from it.
@@ -807,7 +846,8 @@ to 6, and the answer follows each of them. Decision 7 is open.
    become a public API. Answer: only through the `goto` option. The user gives a slide
    and a step, and `Expresso.Goto` writes the commands. The commands are therefore not a
    public API.
-7. Does the GIF recorder move to Elixir?
+7. Does the GIF recorder move to Elixir? Answer: yes, with an encoder in Zig. Draft pull
+   request #114 compared seven encoders, and the maintainer chose the encoder in Zig.
 8. Is the definition of the presenter a Spark DSL or a plain module? Step 2 used a plain
    module, and it was sufficient. The DSL can come at step 4. Answer: a Spark DSL,
    and only `Expresso.Presenter.Default` uses it.
