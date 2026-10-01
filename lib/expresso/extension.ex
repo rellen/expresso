@@ -339,7 +339,7 @@ defmodule Expresso.Extension do
         doc: "Show each element of the slide one after the other. See docs/overlays.md."
       ],
       transition: [
-        type: {:in, [:none, :fade, :slide, :zoom]},
+        type: {:in, Expresso.Presenter.Schema.transitions()},
         doc:
           "The transition between the slide before and this slide, in the two directions. The default is the transition of the deck."
       ],
@@ -392,7 +392,7 @@ defmodule Expresso.Extension do
           "The easing of each animation in a slide: #{Enum.map_join(@easings, ", ", &inspect/1)}. A slide, an element or its parent can replace it. Without the option, the theme gives :ease_in_out."
       ],
       transition: [
-        type: {:in, [:none, :fade, :slide, :zoom]},
+        type: {:in, Expresso.Presenter.Schema.transitions()},
         default: :fade,
         doc:
           "The transition from one slide to the next in the present view: :fade, :slide, :zoom or :none. A slide can replace it."

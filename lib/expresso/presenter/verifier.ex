@@ -30,25 +30,17 @@ defmodule Expresso.Presenter.Verifier do
   alias Expresso.Presenter.Mode
   alias Expresso.Presenter.Projection
   alias Expresso.Presenter.Projection.{Attribute, Mark, Property}
+  alias Expresso.Presenter.Schema
   alias Shoddy.Lists
   alias Shoddy.Result
   alias Spark.Dsl.Verifier
 
-  # The type of each field of the state.
-  @fields %{
-    index: :index,
-    view: :view,
-    blank: :boolean,
-    help: :boolean,
-    digits: :digits,
-    overview: :boolean,
-    selected: :slide,
-    progress: :boolean,
-    every: :boolean
-  }
-
-  @views [:present, :speaker, :handout]
-  @builtins [:open_speaker, :fullscreen, :reset_timer]
+  # The kind of value of each field of the state, the views and the built-in
+  # functions. `Expresso.Presenter.Schema` holds them, and the script reads the
+  # same forms from `assets/src/schema.ts`.
+  @fields Map.new(Schema.fields())
+  @views Schema.views()
+  @builtins Schema.builtins()
 
   @doc """
   Make sure of the definition of a presenter
