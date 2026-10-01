@@ -14,6 +14,7 @@ defmodule Expresso.Element.Quotation do
   @type t :: %__MODULE__{}
 
   defstruct [
+    :class,
     :text,
     :by,
     :at,
@@ -48,7 +49,7 @@ defmodule Expresso.Element.Quotation do
   @spec render(map()) :: Phoenix.HTML.safe()
   def render(assigns) do
     temple do
-      figure class: "quotation", rest!: @overlay do
+      figure class: Expresso.Element.classes("quotation", assigns[:class]), rest!: @overlay do
         blockquote do
           div do
             Phoenix.HTML.raw(@text)

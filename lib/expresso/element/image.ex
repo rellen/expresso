@@ -39,6 +39,7 @@ defmodule Expresso.Element.Image do
   @type t :: %__MODULE__{}
 
   defstruct [
+    :class,
     :src,
     :alt,
     :width,
@@ -109,7 +110,7 @@ defmodule Expresso.Element.Image do
   @spec render(map()) :: Phoenix.HTML.safe()
   def render(assigns) do
     temple do
-      div class: "image", rest!: @overlay do
+      div class: Expresso.Element.classes("image", assigns[:class]), rest!: @overlay do
         if @goto do
           a class: "goto", href: Expresso.Goto.href(@goto), data_commands: @goto.commands do
             img src: @src, alt: @alt

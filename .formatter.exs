@@ -12,6 +12,7 @@ spark_locals_without_parens = [
   attribute: 3,
   auto_reveal: 1,
   by: 1,
+  class: 1,
   code: 0,
   code: 1,
   code: 2,

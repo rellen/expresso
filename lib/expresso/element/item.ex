@@ -12,6 +12,7 @@ defmodule Expresso.Element.Item do
   @type t :: %__MODULE__{}
 
   defstruct [
+    :class,
     :text,
     :goto,
     :at,
@@ -54,7 +55,7 @@ defmodule Expresso.Element.Item do
   @spec render(map()) :: Phoenix.HTML.safe()
   def render(assigns) do
     temple do
-      li class: "item", rest!: @overlay do
+      li class: Expresso.Element.classes("item", assigns[:class]), rest!: @overlay do
         if @goto do
           a class: "goto", href: Expresso.Goto.href(@goto), data_commands: @goto.commands do
             div do

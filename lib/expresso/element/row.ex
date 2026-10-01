@@ -12,6 +12,7 @@ defmodule Expresso.Element.Row do
   @type t :: %__MODULE__{}
 
   defstruct [
+    :class,
     :at,
     :steps,
     :el,
@@ -48,7 +49,7 @@ defmodule Expresso.Element.Row do
   # sobelow_skip ["XSS.Raw"]
   def render(assigns) do
     temple do
-      tr class: "row", rest!: @overlay do
+      tr class: Expresso.Element.classes("row", assigns[:class]), rest!: @overlay do
         for cell <- @cells do
           if @header do
             th do

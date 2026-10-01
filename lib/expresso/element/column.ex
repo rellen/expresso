@@ -14,6 +14,7 @@ defmodule Expresso.Element.Column do
   @type t :: %__MODULE__{}
 
   defstruct [
+    :class,
     :width,
     :at,
     :steps,
@@ -53,7 +54,7 @@ defmodule Expresso.Element.Column do
   @spec render(map()) :: Phoenix.HTML.safe()
   def render(assigns) do
     temple do
-      div class: "column", rest!: @overlay do
+      div class: Expresso.Element.classes("column", assigns[:class]), rest!: @overlay do
         c(&Expresso.Template.render_elements(&1), elements: @elements)
       end
     end

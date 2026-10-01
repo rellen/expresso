@@ -456,6 +456,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Make a deck from data](docs/how-to/make-a-deck-from-data.md)
 - [Show code on a slide](docs/how-to/show-code.md)
 - [Check that a deck fits the screen](docs/how-to/check-the-layout.md)
+- [Style one slide or one element](docs/how-to/style-one-slide.md)
 
 Reference pages describe each value of an option:
 
@@ -465,6 +466,7 @@ Reference pages describe each value of an option:
 - [The goto option](docs/reference/goto-option.md)
 - [The code element](docs/reference/code-element.md)
 - [The layout check](docs/reference/layout-check.md)
+- [The class option](docs/reference/class-option.md)
 - [The template option](docs/reference/template-option.md)
 - [The theme option](docs/reference/theme-option.md)
 

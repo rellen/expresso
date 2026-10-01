@@ -50,6 +50,7 @@ defmodule Expresso.Element.Diagram do
   @type t :: %__MODULE__{}
 
   defstruct [
+    :class,
     :src,
     :width,
     :at,
@@ -172,7 +173,7 @@ defmodule Expresso.Element.Diagram do
   # sobelow_skip ["XSS.Raw"]
   def render(assigns) do
     temple do
-      div class: "diagram", rest!: @overlay do
+      div class: Expresso.Element.classes("diagram", assigns[:class]), rest!: @overlay do
         Phoenix.HTML.raw(@svg)
       end
     end

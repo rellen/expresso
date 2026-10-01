@@ -482,8 +482,8 @@ An element is the content of a slide. These are the elements at this time:
 
 An element module has these parts:
 
-- A struct with a `__spark_metadata__` field, and with the `at`, `on`, `steps` and `el`
-  fields of the overlays.
+- A struct with a `__spark_metadata__` field, with the `at`, `on`, `steps` and `el`
+  fields of the overlays, and with the `class` field of the `class` option.
 - A `get_assigns/1` function. It makes a map of assigns from the struct. The key `overlay`
   holds the attributes from `Expresso.Overlay.Render.attributes/1`.
 - A `render/1` function. It makes the HTML from the assigns, and it puts the `overlay`
@@ -493,6 +493,13 @@ An element module has these parts:
 `Expresso.Template.render_elements/1` matches `%module{}` for each element. It then calls
 `module.get_assigns/1` and `module.render/1`. There is no `@behaviour` for an element, and
 the compiler does not make sure that a module has the two functions.
+
+`render_elements/1` also puts the `class` field into the assigns, so `get_assigns/1` does
+not need it. The render function writes `Expresso.Element.classes/2` of its own class and
+`assigns[:class]` on the root tag. The class of the theme comes first, so each rule of the
+theme still selects the element. The option is not part of the overlay attributes,
+because the root tag already has a `class` attribute, and HTML takes only the first of
+two. A table renders its rows itself, so it puts the class of each row into its assigns.
 
 ### The text box and the text area
 

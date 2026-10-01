@@ -21,6 +21,7 @@ defmodule Expresso.Element.Table do
   @type t :: %__MODULE__{}
 
   defstruct [
+    :class,
     :at,
     :steps,
     :el,
@@ -61,7 +62,7 @@ defmodule Expresso.Element.Table do
   @spec render(map()) :: Phoenix.HTML.safe()
   def render(assigns) do
     temple do
-      table class: "table", rest!: @overlay do
+      table class: Expresso.Element.classes("table", assigns[:class]), rest!: @overlay do
         if @head do
           thead do
             c(&Expresso.Element.Row.render/1, rest!: header_assigns(@head))
@@ -70,14 +71,15 @@ defmodule Expresso.Element.Table do
 
         tbody do
           for row <- @body do
-            c(&Expresso.Element.Row.render/1, rest!: Expresso.Element.Row.get_assigns(row))
+            c(&Expresso.Element.Row.render/1, rest!: row_assigns(row))
           end
         end
       end
     end
   end
 
-  defp header_assigns(row) do
-    row |> Expresso.Element.Row.get_assigns() |> Map.put(:header, true)
-  end
+  defp header_assigns(row), do: row |> row_assigns() |> Map.put(:header, true)
+
+  defp row_assigns(row),
+    do: row |> Expresso.Element.Row.get_assigns() |> Map.put(:class, row.class)
 end

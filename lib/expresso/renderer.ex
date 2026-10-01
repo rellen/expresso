@@ -236,7 +236,7 @@ defmodule Expresso.Renderer do
           div class: "screen" do
             for {slide, index} <- Enum.with_index(@deck.slides) do
               section id: "slide-#{slide.metadata.slide_number}",
-                      class: "slide",
+                      class: Expresso.Element.classes("slide", slide.metadata[:class]),
                       data_step: 1,
                       data_max_step: Expresso.Overlay.Render.max_step(slide),
                       style:
@@ -258,7 +258,7 @@ defmodule Expresso.Renderer do
                 printed <- [Expresso.Handout.printed(@deck, slide)],
                 max = Expresso.Overlay.Render.max_step(slide),
                 step <- 1..max//1 do
-              section class: "handout-page",
+              section class: Expresso.Element.classes("handout-page", slide.metadata[:class]),
                       data_step: step,
                       data_slide: slide.metadata.slide_number,
                       data_index: first + step - 1,

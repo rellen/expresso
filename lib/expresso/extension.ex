@@ -43,6 +43,16 @@ defmodule Expresso.Extension do
     ]
   ]
 
+  # The CSS classes of an element or of a slide. `Expresso.Element.class/1`
+  # gives the rules.
+  @class_schema [
+    class: [
+      type: {:custom, Expresso.Element, :class, []},
+      doc:
+        "CSS class names for the element, such as \"dense\". A rule of the css option of the deck can then select the element. See docs/reference/class-option.md."
+    ]
+  ]
+
   # A link to a slide and a step of the deck. `Expresso.Goto` gives the rules.
   @goto_schema [
     goto: [
@@ -71,7 +81,7 @@ defmodule Expresso.Extension do
     name: :text_area,
     target: Expresso.Element.TextArea,
     entities: [on: [@on]],
-    schema: @overlay_schema ++ @goto_schema ++ [text: [type: :string]]
+    schema: @overlay_schema ++ @class_schema ++ @goto_schema ++ [text: [type: :string]]
   }
 
   @image %Spark.Dsl.Entity{
@@ -81,6 +91,7 @@ defmodule Expresso.Extension do
     entities: [on: [@on]],
     schema:
       @overlay_schema ++
+        @class_schema ++
         @goto_schema ++
         [
           src: [
@@ -109,6 +120,7 @@ defmodule Expresso.Extension do
             entities: [elements: List.wrap(inner), on: [@on]],
             schema:
               @overlay_schema ++
+                @class_schema ++
                 @goto_schema ++
                 [text: [type: :string, required: true, doc: "The text of the item."]]
           }
@@ -119,6 +131,7 @@ defmodule Expresso.Extension do
             entities: [elements: [item], on: [@on]],
             schema:
               @overlay_schema ++
+                @class_schema ++
                 [
                   ordered: [
                     type: :boolean,
@@ -146,6 +159,7 @@ defmodule Expresso.Extension do
     entities: [on: [@on]],
     schema:
       @overlay_schema ++
+        @class_schema ++
         [cells: [type: {:list, :string}, required: true, doc: "The text of each cell."]]
   }
 
@@ -155,6 +169,7 @@ defmodule Expresso.Extension do
     entities: [elements: [@row], on: [@on]],
     schema:
       @overlay_schema ++
+        @class_schema ++
         [
           header: [
             type: :boolean,
@@ -181,6 +196,7 @@ defmodule Expresso.Extension do
     entities: [on: [@on]],
     schema:
       @overlay_schema ++
+        @class_schema ++
         [
           text: [type: :string, required: true, doc: "The text of the quotation."],
           by: [type: :string, doc: "The name of the source of the quotation."]
@@ -191,7 +207,7 @@ defmodule Expresso.Extension do
     name: :spacer,
     target: Expresso.Element.Spacer,
     entities: [on: [@on]],
-    schema: @overlay_schema
+    schema: @overlay_schema ++ @class_schema
   }
 
   @code %Spark.Dsl.Entity{
@@ -202,6 +218,7 @@ defmodule Expresso.Extension do
     transform: {Expresso.Element.Code, :build, []},
     schema:
       @overlay_schema ++
+        @class_schema ++
         [
           lang: [
             type: :string,
@@ -247,6 +264,7 @@ defmodule Expresso.Extension do
     entities: [on: [@on]],
     schema:
       @overlay_schema ++
+        @class_schema ++
         [text: [type: :string, required: true, doc: "The MathML, from <math> to </math>."]]
   }
 
@@ -267,6 +285,7 @@ defmodule Expresso.Extension do
     entities: [elements: [@part], on: [@on]],
     schema:
       @overlay_schema ++
+        @class_schema ++
         [
           src: [
             type: :string,
@@ -299,6 +318,7 @@ defmodule Expresso.Extension do
     entities: [elements: @inner_elements, on: [@on]],
     schema:
       @overlay_schema ++
+        @class_schema ++
         [
           width: [
             type: :string,
@@ -313,14 +333,14 @@ defmodule Expresso.Extension do
     name: :columns,
     target: Expresso.Element.Columns,
     entities: [elements: [@column], on: [@on]],
-    schema: @overlay_schema
+    schema: @overlay_schema ++ @class_schema
   }
 
   @text_box %Spark.Dsl.Entity{
     name: :text_box,
     target: Expresso.Element.TextBox,
     entities: [elements: @inner_elements ++ [@columns], on: [@on]],
-    schema: @overlay_schema
+    schema: @overlay_schema ++ @class_schema
   }
 
   @pause %Spark.Dsl.Entity{
@@ -337,6 +357,11 @@ defmodule Expresso.Extension do
     entities: @slide_elements,
     schema: [
       name: [type: :string, doc: "A name for the slide."],
+      class: [
+        type: {:custom, Expresso.Element, :class, []},
+        doc:
+          "CSS class names for the slide, such as \"dense\". The present view and each page of the handout view get them. See docs/reference/class-option.md."
+      ],
       heading: [type: :string, doc: "The heading that the slide template shows."],
       template: [
         type: @template,

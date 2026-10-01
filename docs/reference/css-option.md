@@ -11,6 +11,9 @@ replace each rule of the theme, and it can give new effects and new states.
 | `css ~S"""` and the rules on the next lines | The rules. A value with a brace or a line break is a style sheet. |
 | `css "deck.css"` | The file at this path, relative to the working directory of the command. |
 
+A rule of the style sheet applies to each slide. To style one slide or one element, give it
+a class name with [the class option](class-option.md), and write a rule for that class.
+
 A file that the compiler cannot read gives an error at compile time. A deck from
 `Expresso.Builder` takes the same option, such as `deck(slides, css: "deck.css")`, and the
 renderer reads the file.
