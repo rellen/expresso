@@ -23,6 +23,7 @@ defmodule Expresso.Element.List do
   @type t :: %__MODULE__{}
 
   defstruct [
+    :class,
     :at,
     :steps,
     :el,
@@ -58,11 +59,11 @@ defmodule Expresso.Element.List do
   def render(assigns) do
     temple do
       if @ordered do
-        ol class: "list", rest!: @overlay do
+        ol class: Expresso.Element.classes("list", assigns[:class]), rest!: @overlay do
           c(&Expresso.Template.render_elements(&1), elements: @elements)
         end
       else
-        ul class: "list", rest!: @overlay do
+        ul class: Expresso.Element.classes("list", assigns[:class]), rest!: @overlay do
           c(&Expresso.Template.render_elements(&1), elements: @elements)
         end
       end

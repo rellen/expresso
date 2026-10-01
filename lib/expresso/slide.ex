@@ -5,6 +5,7 @@ defmodule Expresso.Slide do
 
   @type t :: %__MODULE__{
           :name => String.t() | nil,
+          :class => String.t() | nil,
           :heading => String.t() | nil,
           :template => module() | {:builtins, atom()} | nil,
           :notes => String.t() | nil,
@@ -21,6 +22,7 @@ defmodule Expresso.Slide do
 
   defstruct [
     :name,
+    :class,
     :heading,
     :template,
     :notes,
@@ -47,7 +49,17 @@ defmodule Expresso.Slide do
 
   # The options of a slide that the metadata holds, for the templates, the
   # handout view and the renderer.
-  @metadata_options [:heading, :template, :notes, :handout, :transition, :effect, :speed, :easing]
+  @metadata_options [
+    :class,
+    :heading,
+    :template,
+    :notes,
+    :handout,
+    :transition,
+    :effect,
+    :speed,
+    :easing
+  ]
 
   @doc """
   Write the options of the DSL into the metadata of the slide

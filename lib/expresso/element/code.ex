@@ -42,6 +42,7 @@ defmodule Expresso.Element.Code do
   @type t :: %__MODULE__{}
 
   defstruct [
+    :class,
     :lang,
     :text,
     :src,
@@ -239,7 +240,7 @@ defmodule Expresso.Element.Code do
   # sobelow_skip ["XSS.Raw"]
   def render(assigns) do
     temple do
-      div class: "code", rest!: @overlay do
+      div class: Expresso.Element.classes("code", assigns[:class]), rest!: @overlay do
         pre do
           code class: "highlight", style: @numbers && "--line-number-width: #{@numbers}ch" do
             for {number, html, attributes} <- @lines do

@@ -16,7 +16,18 @@ defmodule Expresso.Element.Math do
   @typedoc "The struct of a math element"
   @type t :: %__MODULE__{}
 
-  defstruct [:text, :at, :steps, :el, :effect, :speed, :easing, on: [], __spark_metadata__: nil]
+  defstruct [
+    :class,
+    :text,
+    :at,
+    :steps,
+    :el,
+    :effect,
+    :speed,
+    :easing,
+    on: [],
+    __spark_metadata__: nil
+  ]
 
   @doc """
   Make the assigns of the render function from the struct
@@ -38,7 +49,7 @@ defmodule Expresso.Element.Math do
   @spec render(map()) :: Phoenix.HTML.safe()
   def render(assigns) do
     temple do
-      div class: "math", rest!: @overlay do
+      div class: Expresso.Element.classes("math", assigns[:class]), rest!: @overlay do
         div do
           Phoenix.HTML.raw(@text)
         end
