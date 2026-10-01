@@ -31,15 +31,15 @@ defmodule Expresso.Presenter.Verifier do
   alias Expresso.Presenter.Projection
   alias Expresso.Presenter.Projection.{Attribute, Mark, Property}
   alias Expresso.Presenter.Schema
+  alias Expresso.Presenter.Schema.Check
   alias Shoddy.Lists
   alias Shoddy.Result
   alias Spark.Dsl.Verifier
 
-  # The kind of value of each field of the state, the views and the built-in
-  # functions. `Expresso.Presenter.Schema` holds them, and the script reads the
-  # same forms from `assets/src/schema.ts`.
+  # The kind of value of each field of the state and the built-in functions.
+  # `Expresso.Presenter.Schema` holds them, and the script reads the same forms
+  # from `assets/src/schema.ts`.
   @fields Map.new(Schema.fields())
-  @views Schema.views()
   @builtins Schema.builtins()
 
   @doc """
@@ -185,11 +185,16 @@ defmodule Expresso.Presenter.Verifier do
 
   defp value?(field, value), do: Map.has_key?(@fields, field) and type?(@fields[field], value)
 
-  defp type?(:index, value), do: is_integer(value) and value >= 0
-  defp type?(:slide, value), do: is_integer(value) and value >= 1
-  defp type?(:view, value), do: value in @views
-  defp type?(:boolean, value), do: is_boolean(value)
-  defp type?(:digits, value), do: is_binary(value) and String.match?(value, ~r/^[0-9]*$/)
+  # `Expresso.Presenter.Schema.kind/1` gives the form of each kind. A definition
+  # holds an atom where the JSON holds a string, such as `:present` for a view,
+  # so only the digits can be a string.
+  defp type?(kind, value) when is_binary(value) and kind != :digits, do: false
+  defp type?(kind, value), do: Check.check(json(value), Schema.kind(kind)) == :ok
+
+  defp json(value) when is_atom(value) and not is_boolean(value) and not is_nil(value),
+    do: Atom.to_string(value)
+
+  defp json(value), do: value
 
   defp command?({:set, field, value}), do: value?(field, value)
   defp command?({:toggle, field}), do: @fields[field] == :boolean

@@ -39,8 +39,8 @@ defmodule Expresso.Presenter.Extension do
 
   @pointer {:or,
             [
-              {:tuple, [{:in, [:click]}, {:in, [:left_third, :right]}]},
-              {:tuple, [{:in, [:swipe]}, {:in, [:left, :right]}]},
+              {:tuple, [{:in, [:click]}, {:in, Expresso.Presenter.Schema.regions()}]},
+              {:tuple, [{:in, [:swipe]}, {:in, Expresso.Presenter.Schema.directions()}]},
               {:in, [:element]}
             ]}
 

@@ -4,7 +4,11 @@ defmodule Expresso.Presenter.SchemaTest do
 
   alias Expresso.Builder
   alias Expresso.Presenter.{Definition, Program, Schema}
-  alias Expresso.Test.{DeckTree, SchemaCheck, SchemaWriter}
+  alias Expresso.Presenter.Schema.Check
+  alias Expresso.Test.{DeckTree, SchemaWriter}
+
+  doctest Expresso.Presenter.Schema
+  doctest Expresso.Presenter.Schema.Check
 
   # `Expresso.Test.SchemaWriter` tells how to write the file again.
   test "assets/src/schema.ts agrees with the forms of the schema" do
@@ -54,8 +58,8 @@ defmodule Expresso.Presenter.SchemaTest do
     check all deck <- deck() do
       {program, steps} = written(deck)
 
-      assert SchemaCheck.check(program, :written_program) == :ok
-      assert SchemaCheck.check(steps, :written_deck) == :ok
+      assert Check.check(program, :written_program) == :ok
+      assert Check.check(steps, :written_deck) == :ok
     end
   end
 
@@ -63,8 +67,8 @@ defmodule Expresso.Presenter.SchemaTest do
     check all slides <- DeckTree.slides(), max_runs: 50 do
       {program, steps} = written(DeckTree.builder([name: "deck"], slides))
 
-      assert SchemaCheck.check(program, :written_program) == :ok
-      assert SchemaCheck.check(steps, :written_deck) == :ok
+      assert Check.check(program, :written_program) == :ok
+      assert Check.check(steps, :written_deck) == :ok
     end
   end
 
@@ -72,7 +76,7 @@ defmodule Expresso.Presenter.SchemaTest do
     check all slide <- integer(1..100), index <- integer(0..100) do
       for commands <- [Program.element(slide), Program.link(index)] do
         value = commands |> Program.json_commands() |> JSON.decode!()
-        assert SchemaCheck.check(value, :commands) == :ok
+        assert Check.check(value, :commands) == :ok
       end
     end
   end
@@ -88,19 +92,19 @@ defmodule Expresso.Presenter.SchemaTest do
     {program, steps} = written(Builder.deck([Builder.slide("one")]))
 
     assert {:error, "$.state.view: expected view"} =
-             SchemaCheck.check(put_in(program, ["state", "view"], "stage"), :written_program)
+             Check.check(put_in(program, ["state", "view"], "stage"), :written_program)
 
     assert {:error, "$.state.extra: expected no such key"} =
-             SchemaCheck.check(put_in(program, ["state", "extra"], 1), :written_program)
+             Check.check(put_in(program, ["state", "extra"], 1), :written_program)
 
     assert {:error, "$.modes[0].any[0]: expected command"} =
-             SchemaCheck.check(
+             Check.check(
                put_in(program, ["modes", Access.at(0), "any"], [["toggle", "digits"]]),
                :written_program
              )
 
     assert {:error, "$.steps[0][2]: expected {:number, 0, 1}"} =
-             SchemaCheck.check(
+             Check.check(
                update_in(steps, ["steps", Access.at(0)], &List.replace_at(&1, 2, 2)),
                :written_deck
              )
@@ -115,8 +119,8 @@ defmodule Expresso.Presenter.SchemaTest do
       "time" => 5
     }
 
-    assert SchemaCheck.check(Map.put(message, "from", "x"), :message) == :ok
-    assert {:error, _message} = SchemaCheck.check(%{message | "time" => "5"}, :message)
+    assert Check.check(Map.put(message, "from", "x"), :message) == :ok
+    assert {:error, _message} = Check.check(%{message | "time" => "5"}, :message)
   end
 
   defp refs({:ref, name}), do: [name]
