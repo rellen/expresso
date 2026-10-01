@@ -112,6 +112,49 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @embed %Spark.Dsl.Entity{
+    name: :embed,
+    target: Expresso.Element.Embed,
+    args: [:src],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          src: [
+            type: {:custom, Expresso.Element.Embed, :source, []},
+            required: true,
+            doc:
+              "The page: an address that starts with https:// or http://, or the path of a local .html file. See docs/reference/embed-element.md."
+          ],
+          title: [
+            type: :string,
+            required: true,
+            doc: "The name of the page for a screen reader."
+          ],
+          fallback: [
+            type: :string,
+            doc:
+              "The path of an image that shows on paper, in the handout view and while the page loads."
+          ],
+          width: [
+            type: :string,
+            doc: "The width of the page, such as 900px or 80%. The default is 80%."
+          ],
+          aspect: [
+            type: {:custom, Expresso.Element.Embed, :aspect, []},
+            doc:
+              "The ratio of the width to the height, such as \"16/9\". The default is \"16/9\"."
+          ],
+          interactive: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Let the page take clicks and keys. The default is false, so the keys and the clicks of the presenter work on the slide."
+          ]
+        ]
+  }
+
   # A list holds items, and an item holds one nested list. Spark cannot nest
   # two entities inside each other without a limit, so the extension builds
   # three levels. The item of the deepest list holds no list.
@@ -319,7 +362,8 @@ defmodule Expresso.Extension do
     @spacer,
     @code,
     @math,
-    @diagram
+    @diagram,
+    @embed
   ]
 
   @column %Spark.Dsl.Entity{

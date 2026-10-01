@@ -188,6 +188,7 @@ defmodule Expresso.Renderer do
         &(&1
           |> Expresso.Element.Code.spotlight()
           |> Expresso.Element.Diagram.place()
+          |> Expresso.Element.Embed.number()
           |> Expresso.Overlay.Render.identify()
           |> Expresso.Goto.resolve())
       )
@@ -310,6 +311,15 @@ defmodule Expresso.Renderer do
           # script runs it. `Expresso.Presenter.Program.json/1` escapes each `<`.
           script id: "expresso-program", type: "application/json" do
             Phoenix.HTML.raw(Program.json(@program))
+          end
+
+          # The sources of the embeds. The presenter gives a frame its source
+          # when its slide shows, so each page loads one time. A deck with no
+          # embed has no such element.
+          if embeds = Expresso.Element.Embed.json(@deck) do
+            script id: "expresso-embeds", type: "application/json" do
+              Phoenix.HTML.raw(embeds)
+            end
           end
 
           script do

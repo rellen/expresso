@@ -236,6 +236,17 @@ export const decodeWrittenDeck: Decoder<WrittenDeck> = /* @__PURE__ */ object({
   duration_ms: /* @__PURE__ */ nullable(/* @__PURE__ */ integer(1)),
 });
 
+// The source of each embed of a deck, in the order of the numbers of the
+// elements, as the renderer writes it.
+export type WrittenEmbeds = readonly (Readonly<{
+  kind: "src" | "srcdoc";
+  value: string;
+}>)[];
+export const decodeWrittenEmbeds: Decoder<WrittenEmbeds> = /* @__PURE__ */ list(/* @__PURE__ */ object({
+  kind: /* @__PURE__ */ oneOf(["src", "srcdoc"]),
+  value: /* @__PURE__ */ string(),
+}));
+
 // The message that one window of the presenter sends to the other window. The
 // other window ignores a key that it does not know.
 export type Message = Readonly<{
