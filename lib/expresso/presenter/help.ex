@@ -47,13 +47,18 @@ defmodule Expresso.Presenter.Help do
   """
   @spec names(Definition.binding()) :: String.t()
   def names(%{label: label}) when is_binary(label), do: label
+  def names(binding), do: binding |> keys() |> Enum.join(", ")
 
-  def names(binding) do
-    binding.on
-    |> Enum.flat_map(fn
+  @doc """
+  Return the name of each key of a binding, such as `["j", "→", "↓", "Page Down", "Space"]`
+
+  An event that is not a key has no name.
+  """
+  @spec keys(Definition.binding()) :: [String.t()]
+  def keys(binding) do
+    Enum.flat_map(binding.on, fn
       {:key, key} -> [Map.get(@names, key, key)]
       _event -> []
     end)
-    |> Enum.join(", ")
   end
 end

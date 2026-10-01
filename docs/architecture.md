@@ -825,27 +825,25 @@ compiles `lib/`. `docs/typescript.md` gives the design.
 
 ### The keys
 
-`Expresso.Presenter.Default` holds the keys of each mode. The keys of the present view
-are:
+`Expresso.Presenter.Default` holds the keys of each mode. The list of keys that `?` shows
+comes from it, and so do the tables of keys in `README.md`. `Expresso.Test.KeyTables`
+writes each table between two comments, such as `<!-- keys present -->` and
+`<!-- /keys -->`. A test fails when a table does not agree with the module. This command
+writes the tables again:
 
-- `j`, `ArrowRight`, `ArrowDown`, the space bar and `PageDown` show the next step, or the
-  first step of the next slide after the last step.
-- `k`, `ArrowLeft`, `ArrowUp` and `PageUp` show the previous step, or the last step of the
-  previous slide at the first step.
-- `Home` shows the first slide, and `End` shows step 1 of the last slide.
-- A digit adds to a slide number, and `Enter` then shows step 1 of that slide. A number
-  that is not a slide has no effect. Each other key removes the digits. The projection
-  `attribute :digits, "data-digits"` writes the digits on the `body`, and the style sheet
-  shows them in the top right corner. A theme can set `--digits-color` and
-  `--digits-background`.
-- `b` shows a black screen. The next key shows the slide again, and it does nothing more.
-- `p` changes to the handout view.
-- `s` opens the speaker view in a second window. A second `s` shows the same window.
-- `f` puts the document in full screen, or takes it out of full screen.
-- `o` shows the overview of the slides.
-- `g` shows or hides the progress bar.
-- `?` shows the list of the keys of the view. The next key closes it, and it does
+```sh
+EXPRESSO_KEYS=write mix test test/expresso/presenter/key_tables_test.exs
+```
+
+The tables do not give these rules:
+
+- A number that is not a slide has no effect. Each key except a digit and `Enter` removes
+  the digits. The projection `attribute :digits, "data-digits"` writes the digits on the
+  `body`, and the style sheet shows them in the top right corner. A theme can set
+  `--digits-color` and `--digits-background`.
+- The key after `b` or `?` closes the black screen or the list of keys, and it does
   nothing more.
+- A second `s` shows the window of the speaker view again, and it opens no second window.
 
 `f` calls the full screen functions of the browser, and `Escape` of the browser also takes
 the document out of full screen.
@@ -1107,13 +1105,9 @@ The commands are:
 
 This list gives the work in the order of its value. Take the first item that you can do.
 
-1. Make the tables of keys agree with `Expresso.Presenter.Default`. The section "The keys"
-   of this document and the table of keys in `README.md` repeat the bindings by hand, so
-   a change to a binding needs three changes. A test can make sure that each table names
-   the keys of the module. Or the tables can come from the module.
-2. Answer the question of the imperative API below, then do the work that the answer
+1. Answer the question of the imperative API below, then do the work that the answer
    gives.
-3. Move the GIF recorder of `assets/gifs/` to Elixir. This item is decision 7 of
+2. Move the GIF recorder of `assets/gifs/` to Elixir. This item is decision 7 of
    `docs/research/elixir-presenter-report.md`, and it has the least value. The section
    "The GIF recorder in Elixir" of the report gives its cost. Do it only if the
    maintainer decides for it.

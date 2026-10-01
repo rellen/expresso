@@ -564,6 +564,21 @@ Sobelow gives a warning for `Phoenix.HTML.raw/1`. When the input is safe, put a
 Prettier formats the files in `assets/`. `package.json` pins the version, and
 `npm install` gives the command. Run `npm run format`, which is not one of the checks.
 
+### The tables of keys
+
+`README.md` holds a table of keys for each mode, and `Expresso.Test.KeyTables` makes each
+table from `Expresso.Presenter.Default`. Its test in
+`test/expresso/presenter/key_tables_test.exs` fails when a table does not agree with the
+module. After a change to a binding, write the tables again, and commit `README.md` with
+the change:
+
+```sh
+EXPRESSO_KEYS=write mix test test/expresso/presenter/key_tables_test.exs
+```
+
+Do not change the text between `<!-- keys present -->` and `<!-- /keys -->` by hand. Put
+a rule that a table does not give in the text after the table.
+
 ## Record the GIFs and the stills of the examples
 
 The how-to guides and the reference pages show a GIF of each example deck of
