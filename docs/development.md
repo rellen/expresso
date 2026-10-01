@@ -473,6 +473,10 @@ the Chromium of the container, and that Chromium can be older than the new versi
 
 - `assets/src/program.ts` — reads the program of the presenter that the renderer writes.
   It examines no value.
+- `assets/src/schema.ts` — the type and the decoder of each value that Elixir writes for
+  the script. `Expresso.Test.SchemaWriter` writes it. Do not change it by hand. "The schema
+  of the presenter" below tells how to write it again.
+- `assets/src/decode.ts` — the functions that make the decoders of `schema.ts`.
 - `assets/src/interpreter.ts` — runs the program for each key, click and swipe.
 - `assets/src/state.ts` — the state of the presenter, the messages between the windows,
   the side of a click and the direction of a swipe.
@@ -481,9 +485,8 @@ the Chromium of the container, and that Chromium can be older than the new versi
 - `assets/test/interpreter.test.ts` — the test that runs the fixtures of the Elixir
   interpreter. "The fixtures of the interpreter" below tells how to write them again.
 - `assets/test/validate.ts` — examines a program of the presenter and a list of the
-  steps. `assets/test/program.test.ts` and `assets/test/deck.test.ts` run it on each
-  program and each list of the fixture file. After a change to the format of the program
-  or of the list, change `validate.ts` too.
+  steps with the decoders of `schema.ts`. `assets/test/program.test.ts` and
+  `assets/test/deck.test.ts` run it on each program and each list of the fixture file.
 - `assets/test/state.test.ts` — the example tests of the state.
 - `assets/test/state_property.test.ts` and `assets/test/speaker_property.test.ts` — the
   property tests of the state and of the speaker view texts.
@@ -537,6 +540,40 @@ file at a time. These options refuse code that is unused, unreachable or incompl
 `nth` of `assets/test/nth.ts`, which stops the test for a missing item.
 `exactOptionalPropertyTypes` refuses `undefined` for an optional property. The options do
 not change the bundle.
+
+### The schema of the presenter
+
+`Expresso.Presenter.Schema` describes the JSON form of each value that Elixir writes for
+the script: the program, the list of the steps, the commands of an element, and the
+message between the two windows. It is the one source of these forms:
+
+- `Expresso.Presenter.Verifier` reads the fields of the state, the views and the
+  built-in functions from it.
+- `Expresso.Test.SchemaWriter` writes `assets/src/schema.ts`. That file holds a
+  TypeScript type, a decoder, and for a form of strings a constant, for each form. The
+  modules of the script import their types from it, and `tsc` makes sure that each decoder
+  agrees with its type.
+- `Expresso.Test.SchemaCheck` examines a decoded JSON value with the same forms. The
+  property tests of `test/expresso/presenter/schema_test.exs` make random decks, and they
+  make sure that each program and each list of the steps agrees with its form.
+
+The test `assets/src/schema.ts agrees with the forms of the schema` fails when the file
+does not agree with the schema. After a change to a form, do these steps:
+
+1. Write the file again:
+
+   ```sh
+   EXPRESSO_SCHEMA=write mix test test/expresso/presenter/schema_test.exs
+   ```
+
+2. Run `npm run check` and `npm test`.
+3. Commit `assets/src/schema.ts` with the change.
+
+The script trusts the program and the list, so the bundle does not decode them. The bundle
+decodes only the message from the other window, because another page or an extension of
+the browser can send any value. Each call in `schema.ts` has the annotation `@__PURE__`,
+so esbuild removes each decoder that the script does not use. Prettier does not format the
+file, and `.prettierignore` names it.
 
 ### The fixtures of the interpreter
 

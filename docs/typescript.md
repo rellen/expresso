@@ -319,3 +319,10 @@ dependency.
 The decision is no runtime dependency from npm. The merge of the pull request that adds
 this decision accepts the proposal. After that change, the bundle is 13,268 bytes
 minified and 4,554 bytes gzipped.
+
+The same reasons apply to a library of decoders, such as Zod. The script decodes the
+message from the other window with `assets/src/decode.ts`, a module of approximately 180
+lines with no dependency. `Expresso.Presenter.Schema` describes each value, and a test
+writes `assets/src/schema.ts`, which holds the type and the decoder of each value. The
+bundle holds only the decoder of the message. On 2026-10-01, this change made the bundle
+go from 8,979 to 9,846 bytes minified, and from 3,702 to 4,054 bytes gzipped.

@@ -778,7 +778,7 @@ deck:
 The state holds the index of the current step in `steps`. A move forward adds 1 to the
 index, and a move back subtracts 1. Each other value comes from the entry at the index, so
 the script calculates nothing from the deck. The script trusts the list, as it trusts the
-program of the next section. `validateDeck` in `assets/test/validate.ts` examines each
+program of the next section. `validateDeck` in `assets/test/validate.ts` decodes each
 list of the fixture file.
 `docs/research/elixir-presenter-report.md` gives the reason for the list.
 
@@ -811,12 +811,22 @@ into the same document. `parse` in `program.ts` makes maps and objects of the JS
 examines no value. These parts find a defect of the program:
 
 - `Expresso.Presenter.Verifier` examines the definition when it compiles.
-- `validate` in `assets/test/validate.ts` examines each program of the fixture file. It
-  runs only in the tests, and the bundle does not hold it.
+- The property tests of `Expresso.Presenter.SchemaTest` make sure that the program and the
+  list of the steps of random decks agree with `Expresso.Presenter.Schema`.
+- `validate` in `assets/test/validate.ts` decodes each program of the fixture file with
+  the decoders of `assets/src/schema.ts`. It runs only in the tests, and the bundle does
+  not hold it.
 - The interpreter throws for a command that it does not know.
 - The click handler reads commands only from a link of the `goto` option and from a page
   of the overview. Thus the script does not run an attribute `data-commands` from the
   HTML of a deck.
+
+`Expresso.Presenter.Schema` describes each value that Elixir writes for the script, and
+`assets/src/schema.ts` holds the TypeScript type and the decoder of each value. A test
+writes that file from the schema, so the types of the script and the forms of Elixir
+cannot differ. The script decodes only the message from the other window, because that
+value comes from outside the document. `docs/development.md` tells how to write the file
+again.
 
 ### The projections
 
