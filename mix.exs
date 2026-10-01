@@ -38,6 +38,7 @@ defmodule Expresso.MixProject do
         "docs/reference/overlay-options.md",
         "docs/reference/css-option.md",
         "docs/reference/goto-option.md",
+        "docs/reference/code-element.md",
         "docs/reference/template-option.md",
         "docs/reference/theme-option.md",
         "docs/overlays.md",

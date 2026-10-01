@@ -453,6 +453,7 @@ Reference pages describe each value of an option:
 - [The overlay options](docs/reference/overlay-options.md)
 - [The css option](docs/reference/css-option.md)
 - [The goto option](docs/reference/goto-option.md)
+- [The code element](docs/reference/code-element.md)
 - [The template option](docs/reference/template-option.md)
 - [The theme option](docs/reference/theme-option.md)
 
