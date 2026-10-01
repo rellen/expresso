@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { indexOf, parse } from "../src/deck.ts";
 import { raw } from "./fixtures.ts";
+import { DecodeError } from "../src/decode.ts";
 import { isKind, validateDeck } from "./validate.ts";
 import { deckOf, json } from "./decks.ts";
 
@@ -54,11 +55,7 @@ test("validateDeck refuses a text that is not a list of the renderer", () => {
     }),
   ];
   for (const text of texts) {
-    assert.throws(
-      () => validateDeck(text),
-      { message: "The list of the steps is not valid" },
-      text,
-    );
+    assert.throws(() => validateDeck(text), DecodeError, text);
   }
 });
 
