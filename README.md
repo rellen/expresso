@@ -7,9 +7,9 @@ a small script. Open the document in a browser, and present from there.
 
 ## Status
 
-Expresso is at an early stage. It has one built-in theme and these elements: `text_box`,
-`text_area`, `image`, `list`, `table`, `quotation`, `spacer`, `code`, `columns`, `math` and
-`diagram`.
+Expresso is at an early stage. It has 27 built-in themes and these elements: `text_box`,
+`text_area`, `image`, `list`, `table`, `quotation`, `spacer`, `code`, `columns`, `math`,
+`diagram` and `embed`.
 
 Overlays are the steps inside one slide. A slide takes steps, and an element shows at a set
 of steps. The document also holds a handout view for a printer. `docs/overlays.md` gives
@@ -458,6 +458,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Check that a deck fits the screen](docs/how-to/check-the-layout.md)
 - [Style one slide or one element](docs/how-to/style-one-slide.md)
 - [Move a part of a diagram to another part](docs/how-to/move-a-diagram-part.md)
+- [Show a web page in a slide](docs/how-to/show-a-web-page.md)
 
 Reference pages describe each value of an option:
 
@@ -468,6 +469,7 @@ Reference pages describe each value of an option:
 - [The code element](docs/reference/code-element.md)
 - [The layout check](docs/reference/layout-check.md)
 - [The class option](docs/reference/class-option.md)
+- [The embed element](docs/reference/embed-element.md)
 - [The template option](docs/reference/template-option.md)
 - [The theme option](docs/reference/theme-option.md)
 

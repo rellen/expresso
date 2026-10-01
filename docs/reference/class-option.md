@@ -36,7 +36,7 @@ end
 | Place | The element that gets the classes |
 | --- | --- |
 | A slide | The `section` of the slide in the present view, and the `section` of each page of the slide in the handout view. |
-| `text_box`, `text_area`, `image`, `list`, `item`, `table`, `row`, `quotation`, `spacer`, `code`, `math`, `diagram`, `columns` and `column` | The root element of the element, such as the `div` of a code element or the `tr` of a row. |
+| `text_box`, `text_area`, `image`, `list`, `item`, `table`, `row`, `quotation`, `spacer`, `code`, `math`, `diagram`, `embed`, `columns` and `column` | The root element of the element, such as the `div` of a code element or the `tr` of a row. |
 
 A `part` of a diagram, an `on` entity and `pause` do not take the option.
 

@@ -26,7 +26,7 @@ The check measures these elements, and the content of each:
 
 - the heading of the slide,
 - a text box, a text area, an image, a list, a table, a quotation, a code element, a
-  formula, a diagram, a `columns` element and a `column`,
+  formula, a diagram, an embed, a `columns` element and a `column`,
 - the content of an element: a `math` element, an `img` element, an `svg` element and a
   `pre` element.
 
