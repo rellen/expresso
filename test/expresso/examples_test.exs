@@ -71,6 +71,16 @@ defmodule Expresso.ExamplesTest do
     assert shown -- all == []
   end
 
+  test "the talk about Line 4 renders each of its slides" do
+    {value, _bindings} = Code.eval_file("examples/line4/line4.exs")
+    assert {:ok, deck} = Expresso.to_deck(value)
+
+    document = deck |> Expresso.Deck.render() |> Floki.parse_document!()
+
+    assert document |> Floki.find("section.slide") |> length() == length(deck.slides)
+    assert document |> Floki.find(".screen .diagram svg") |> length() == 10
+  end
+
   test "each guide is an extra of ExDoc" do
     extras = Mix.Project.config()[:docs][:extras]
 

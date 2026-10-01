@@ -743,6 +743,15 @@ mix expresso examples/demo.exs /tmp/demo.html
 mix expresso examples/dsl_deck.exs /tmp/dsl.html
 ```
 
+`examples/line4/line4.exs` is a full talk about an isometric factory in one HTML file. It
+uses each feature of Expresso: a deck template, a slide template, a theme from a map, the
+`css` option, each element and each overlay option. Its SVG diagrams are in the same
+directory. Use it to look at a change to the style sheet on real slides:
+
+```sh
+mix expresso examples/line4/line4.exs /tmp/line4.html
+```
+
 With `--watch`, the task renders the deck again after each change, and the page reloads.
 Open `http://127.0.0.1:4100/`:
 
