@@ -10,7 +10,7 @@ Read these documents before you change the code:
 
 - `docs/architecture.md` — the two input paths, the render pipeline, the templates, the
   elements, the DSL, the presenter and the build. Its section "Open work" gives the next
-  items in the order of their value. Start there.
+  items in the order of their value. It has no item at this time.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide. The
   code contains each part of the design. The document ends with six decisions, and
   each is settled.
@@ -44,7 +44,8 @@ EXPRESSO_BINARY=burrito_out/expresso_cli_app_linux_x86 mix test --only release
 
 Each command above passes at this time, and `mix check` passes as a whole. Keep them so. The
 two `npm` commands need Node, and the hook runs `npm install`. `mix compile`
-does not need Node.
+does not need Node. It needs Zig, because Zigler compiles the GIF encoder of `tools/` in
+dev and in test.
 
 `mix check` runs each command above, except the two `npm` commands. It runs the formatter
 with `--check-formatted`. It makes the binary for the target of the computer, and it runs
