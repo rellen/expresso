@@ -81,6 +81,16 @@ defmodule Expresso.ExamplesTest do
     assert document |> Floki.find(".screen .diagram svg") |> length() == 10
   end
 
+  test "the talk about Line 4 shows the start of its deck module on the slide of the DSL" do
+    {value, _bindings} = Code.eval_file("examples/line4/line4.exs")
+    assert {:ok, deck} = Expresso.to_deck(value)
+
+    [code] = Enum.find(deck.slides, &(&1.name == "this deck")).elements
+
+    assert code.text =~ ~r/\Adefmodule Line4.Deck do\n  use Expresso\n/
+    assert code.text =~ ~r/  easing :ease_out\z/
+  end
+
   test "each guide is an extra of ExDoc" do
     extras = Mix.Project.config()[:docs][:extras]
 
