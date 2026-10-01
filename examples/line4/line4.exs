@@ -8,6 +8,10 @@
 #
 #     mix expresso examples/line4/line4.exs /tmp/line4.html
 #
+# The slides fit a window of 1920 × 1080. Open the document with `?check` at the
+# end of the address to make sure: the report then names each element that does
+# not fit.
+#
 # The code on the slides comes from the script of the page. Long lines have line
 # breaks, and "…" marks lines that the slide leaves out.
 
@@ -177,7 +181,8 @@ defmodule Line4.Deck do
   # ---------------------------------------------------------------- 2
   slide "route" do
     heading "The route through the factory"
-    notes "Each item is a link. The talk follows the order of the list."
+
+    notes "Each item is a link to the start of its part. A link names its slide by name, so a new slide does not break it."
 
     list do
       ordered true
@@ -186,23 +191,23 @@ defmodule Line4.Deck do
       speed 450
 
       item "The picture: boxes, a projection and a paint order" do
-        goto slide: 4
+        goto slide: "Part 1"
       end
 
       item "The line: the frame, the stations and the state machines" do
-        goto slide: 14
+        goto slide: "Part 2"
       end
 
       item "Trouble: faults, people and the physics check" do
-        goto slide: 24
+        goto slide: "Part 3"
       end
 
       item "The numbers and the small things" do
-        goto slide: 29
+        goto slide: "Part 4"
       end
 
       item "This deck, in the DSL of Expresso" do
-        goto slide: 36
+        goto slide: "this deck"
       end
     end
   end
@@ -1358,28 +1363,17 @@ defmodule Line4.Deck do
   slide "this deck" do
     heading "This deck, in the DSL of Expresso"
 
-    notes "The deck is examples/line4/line4.exs in the repository of Expresso. This slide shows the plan slide, with fewer parts."
+    notes "The deck is examples/line4/line4.exs in the repository of Expresso. The code on this slide comes from that file, so it shows the options of the deck as they are."
 
+    # The lines are the start of the module Line4.Deck in this file. A change
+    # above the module moves them, and test/expresso/examples_test.exs then
+    # fails.
     code "elixir" do
-      reveal [1..2, 3..7, 8..12, 13..14]
+      src "examples/line4/line4.exs"
+      lines 66..78
+      line_numbers true
+      reveal [66..68, 69..71, 72..78]
       dim true
-
-      text ~S"""
-      slide "plan" do
-        heading "From a blank widget to a pallet on the dock"
-        diagram "examples/line4/line.svg" do
-          part "widget" do
-            on 2, set: [x: "129.2px"]
-            on [from: 2], set: [color: "#e23b3b"]
-          end
-          part "pallet" do
-            at from: 7
-            effect :grow
-            on [from: 10], set: [x: "319.6px", opacity: 0.3]
-          end
-        end
-      end
-      """
     end
   end
 
@@ -1393,7 +1387,7 @@ defmodule Line4.Deck do
     image "examples/line4/line4.png" do
       alt "Line 4. Go back to the route through the factory"
       width "48%"
-      goto slide: 2
+      goto slide: "route"
     end
 
     text_area(text: "rellen.github.io/iso-factories/line-4")
