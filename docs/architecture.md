@@ -1115,6 +1115,11 @@ presenter script, and the Playwright driver. The `.tool-versions` file gives the
 same versions for a different tool manager, and `.claude/hooks/session-start.sh` gives them
 to a remote session.
 
+Each dependency comes from Hex, except Shoddy. Shoddy gives the functions for results,
+lists, maps and keyword lists, such as `Shoddy.Result.collect/2` for the transformer and
+the verifiers. It comes from the `main` branch on GitHub, and the lockfile gives the
+commit. `docs/development.md` tells how to update it.
+
 The commands are:
 
 - `mix deps.get` gets the dependencies.

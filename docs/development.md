@@ -357,6 +357,10 @@ operation takes approximately two minutes. The PLT stays in `_build`, so each
 Hex 2.5 added the advisories to this task, and they come from the same source as the
 warnings of `mix deps.get`. The job `lint` runs it for each pull request.
 
+`mix hex.audit` does not read Shoddy, because Shoddy comes from GitHub and not from Hex.
+Shoddy has no dependency at run time, and the lockfile gives the commit of its `main`
+branch. Read the new commits of Shoddy before you run `mix deps.update shoddy`.
+
 Hex can publish an advisory after a merge. Therefore `.github/workflows/audit.yml` also
 runs `mix hex.audit` on `main` each day, at 08:07 UTC. GitHub sends an email for a failed
 scheduled run to the person who last changed the schedule. The workflow reads the versions

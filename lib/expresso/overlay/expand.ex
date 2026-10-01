@@ -14,6 +14,7 @@ defmodule Expresso.Overlay.Expand do
   alias Expresso.Element.{On, Pause}
   alias Expresso.Overlay
   alias Expresso.Slide
+  alias Shoddy.Result
 
   @doc """
   Expand the specifications of a slide
@@ -179,16 +180,9 @@ defmodule Expresso.Overlay.Expand do
   # The expansion into step numbers
 
   defp expand(elements, max) do
-    Enum.reduce_while(elements, {:ok, []}, fn element, {:ok, acc} ->
-      case expand_element(element, max) do
-        {:ok, element} -> {:cont, {:ok, [element | acc]}}
-        {:error, message} -> {:halt, {:error, message}}
-      end
-    end)
-    |> case do
-      {:ok, elements} -> {:ok, Enum.reverse(elements)}
-      {:error, message} -> {:error, message}
-    end
+    elements
+    |> Stream.map(&expand_element(&1, max))
+    |> Result.collect()
   end
 
   defp expand_element(%Pause{} = pause, _max), do: {:ok, pause}
@@ -237,16 +231,11 @@ defmodule Expresso.Overlay.Expand do
   end
 
   defp expand_on(on, max) do
-    Enum.reduce_while(on, {:ok, []}, fn %On{} = on, {:ok, acc} ->
-      case expand_spec(on.at, max) do
-        {:ok, steps} -> {:cont, {:ok, [%On{on | steps: steps} | acc]}}
-        {:error, message} -> {:halt, {:error, message}}
-      end
+    on
+    |> Stream.map(fn %On{} = on ->
+      on.at |> expand_spec(max) |> Result.map_ok(&%On{on | steps: &1})
     end)
-    |> case do
-      {:ok, on} -> {:ok, Enum.reverse(on)}
-      {:error, message} -> {:error, message}
-    end
+    |> Result.collect()
   end
 
   defp expand_spec(nil, _max), do: {:ok, nil}

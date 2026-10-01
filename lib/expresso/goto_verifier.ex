@@ -12,6 +12,7 @@ defmodule Expresso.GotoVerifier do
 
   alias Expresso.Goto
   alias Expresso.Overlay.Render
+  alias Shoddy.Result
   alias Spark.Dsl.Verifier
 
   @doc """
@@ -24,12 +25,16 @@ defmodule Expresso.GotoVerifier do
     slides = Verifier.get_entities(dsl_state, [:deck])
     max_steps = Enum.map(slides, &Render.max_step/1)
 
-    Enum.reduce_while(slides, :ok, fn slide, :ok ->
-      case slide.elements |> List.wrap() |> links() |> first_error(max_steps) do
-        :ok -> {:cont, :ok}
-        {:error, message} -> {:halt, {:error, dsl_error(module, slide, message)}}
-      end
+    slides
+    |> Stream.map(fn slide ->
+      slide.elements
+      |> List.wrap()
+      |> links()
+      |> first_error(max_steps)
+      |> Result.map_error(&dsl_error(module, slide, &1))
     end)
+    |> Result.collect()
+    |> Result.ignore()
   end
 
   # Each link of a tree of elements.
@@ -40,12 +45,10 @@ defmodule Expresso.GotoVerifier do
   end
 
   defp first_error(links, max_steps) do
-    Enum.find_value(links, :ok, fn goto ->
-      case Goto.check(goto, max_steps) do
-        :ok -> nil
-        error -> error
-      end
-    end)
+    links
+    |> Stream.map(&Goto.check(&1, max_steps))
+    |> Result.collect()
+    |> Result.ignore()
   end
 
   defp dsl_error(module, slide, message) do

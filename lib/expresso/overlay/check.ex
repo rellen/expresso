@@ -11,6 +11,7 @@ defmodule Expresso.Overlay.Check do
 
   alias Expresso.Element.{On, Pause}
   alias Expresso.Slide
+  alias Shoddy.Result
 
   @doc """
   Give an error for a slide that breaks a rule of the overlays
@@ -32,12 +33,10 @@ defmodule Expresso.Overlay.Check do
   end
 
   defp check_all(elements, parent, nested?) do
-    Enum.reduce_while(elements, :ok, fn element, :ok ->
-      case check(element, parent, nested?) do
-        :ok -> {:cont, :ok}
-        {:error, message} -> {:halt, {:error, message}}
-      end
-    end)
+    elements
+    |> Stream.map(&check(&1, parent, nested?))
+    |> Result.collect()
+    |> Result.ignore()
   end
 
   defp check(%Pause{}, _parent, false), do: :ok
@@ -57,14 +56,13 @@ defmodule Expresso.Overlay.Check do
   end
 
   defp check_on(on, element) do
-    Enum.reduce_while(on, :ok, fn %On{steps: steps}, :ok ->
+    on
+    |> Stream.map(fn %On{steps: steps} ->
       with :ok <- check_positive(steps, "on entity"),
-           :ok <- check_inside(steps, element, "the on entity") do
-        {:cont, :ok}
-      else
-        {:error, message} -> {:halt, {:error, message}}
-      end
+           do: check_inside(steps, element, "the on entity")
     end)
+    |> Result.collect()
+    |> Result.ignore()
   end
 
   defp check_positive(nil, _name), do: :ok

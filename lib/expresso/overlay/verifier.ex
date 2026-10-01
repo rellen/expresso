@@ -10,6 +10,7 @@ defmodule Expresso.Overlay.Verifier do
   use Spark.Dsl.Verifier
 
   alias Expresso.Overlay.Check
+  alias Shoddy.Result
   alias Spark.Dsl.Verifier
 
   @doc """
@@ -22,12 +23,11 @@ defmodule Expresso.Overlay.Verifier do
 
     dsl_state
     |> Verifier.get_entities([:deck])
-    |> Enum.reduce_while(:ok, fn slide, :ok ->
-      case Check.slide(slide) do
-        :ok -> {:cont, :ok}
-        {:error, message} -> {:halt, {:error, dsl_error(module, slide, message)}}
-      end
+    |> Stream.map(fn slide ->
+      slide |> Check.slide() |> Result.map_error(&dsl_error(module, slide, &1))
     end)
+    |> Result.collect()
+    |> Result.ignore()
   end
 
   defp dsl_error(module, slide, message) do

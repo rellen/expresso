@@ -30,6 +30,8 @@ defmodule Expresso.Presenter.Verifier do
   alias Expresso.Presenter.Mode
   alias Expresso.Presenter.Projection
   alias Expresso.Presenter.Projection.{Attribute, Mark, Property}
+  alias Shoddy.Lists
+  alias Shoddy.Result
   alias Spark.Dsl.Verifier
 
   # The type of each field of the state.
@@ -65,28 +67,24 @@ defmodule Expresso.Presenter.Verifier do
            :ok <- sync(sync),
            :ok <- names(modes),
            :ok <- projections(Projection.from(entities)) do
-        Enum.reduce_while(modes, :ok, &mode_result/2)
+        modes
+        |> Stream.map(fn mode -> mode |> mode() |> Result.map_error(&{:mode, mode.name, &1}) end)
+        |> Result.collect()
+        |> Result.ignore()
       end
 
     result(result, module)
   end
 
-  defp mode_result(mode, :ok) do
-    case mode(mode) do
-      :ok -> {:cont, :ok}
-      {:error, message} -> {:halt, {:error, message, mode.name}}
-    end
-  end
-
   defp result(:ok, _module), do: :ok
 
-  defp result({:error, message}, module),
-    do: {:error, Spark.Error.DslError.exception(module: module, message: message, path: [])}
-
-  defp result({:error, message, mode}, module),
+  defp result({:error, {:mode, mode, message}}, module),
     do:
       {:error,
        Spark.Error.DslError.exception(module: module, message: message, path: [:mode, mode])}
+
+  defp result({:error, message}, module),
+    do: {:error, Spark.Error.DslError.exception(module: module, message: message, path: [])}
 
   defp state(state) do
     keys = Keyword.keys(state)
@@ -113,7 +111,7 @@ defmodule Expresso.Presenter.Verifier do
   end
 
   defp names(modes) do
-    case modes |> Enum.map(& &1.name) |> duplicates() do
+    case modes |> Enum.map(& &1.name) |> Lists.duplicates() do
       [] -> :ok
       [name | _names] -> {:error, "two modes have the name #{inspect(name)}"}
     end
@@ -150,7 +148,7 @@ defmodule Expresso.Presenter.Verifier do
   defp any(_mode), do: :ok
 
   defp events(mode) do
-    case mode.bindings |> Enum.flat_map(& &1.on) |> duplicates() do
+    case mode.bindings |> Enum.flat_map(& &1.on) |> Lists.duplicates() do
       [] -> :ok
       [event | _events] -> {:error, "the event #{inspect(event)} has two bindings"}
     end
@@ -172,7 +170,7 @@ defmodule Expresso.Presenter.Verifier do
       bad = Enum.find(rules, &(not projection?(&1))) ->
         {:error, "the projection #{inspect(bad, structs: false)} is not valid"}
 
-      (repeated = attributes |> Enum.map(& &1.name) |> duplicates()) != [] ->
+      (repeated = attributes |> Enum.map(& &1.name) |> Lists.duplicates()) != [] ->
         {:error, "two projections write the attribute #{hd(repeated)}"}
 
       Enum.any?(names, &(not String.starts_with?(&1, "data-"))) ->
@@ -192,9 +190,6 @@ defmodule Expresso.Presenter.Verifier do
     values != [] and
       Enum.all?(values, fn {_text, field, _offset} -> @fields[field] in [:index, :slide] end)
   end
-
-  defp duplicates(items),
-    do: items |> Enum.frequencies() |> Enum.filter(&(elem(&1, 1) > 1)) |> Enum.map(&elem(&1, 0))
 
   defp value?(field, value), do: Map.has_key?(@fields, field) and type?(@fields[field], value)
 
