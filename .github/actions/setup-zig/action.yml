@@ -1,5 +1,6 @@
-# The setup of Zig for each job of `.github/workflows/check.yml` that makes the
-# binary with Burrito.
+# The setup of Zig for each job of `.github/workflows/check.yml` that compiles
+# the project in dev or in test, or that makes the binary with Burrito. Zigler
+# compiles the NIF of `tools/` with Zig in dev and in test.
 #
 # The jobs used mlugg/setup-zig before. That action targets Node.js 20, and
 # GitHub gives a warning for each job that uses it. This action has no code of
@@ -11,8 +12,10 @@
 #
 # Zig keeps the build of the wrapper of Burrito in its own cache. The cache of
 # GitHub keeps that directory too, so the next run compiles less. The key holds
-# `mix.lock`, and a job saves the cache only when no cache has its key.
-# Therefore the jobs save it one time for each version of the lockfile.
+# the name of the job and `mix.lock`, and a job saves the cache only when no
+# cache has its key. Therefore each job saves it one time for each version of
+# the lockfile. A job that does not make the binary has its own key, so it
+# does not save a cache without the wrapper of Burrito for the key of a binary.
 #
 # Burrito downloads the ERTS of the target, and on Linux a musl runtime. It
 # keeps them in its own download cache, and the cache of GitHub keeps that
@@ -26,6 +29,13 @@ inputs:
   version:
     description: The version of Zig, which must agree with `.tool-versions`.
     required: true
+  cache:
+    description: The name of the job in the key of the build cache of Zig.
+    required: true
+  burrito:
+    description: Keep the download cache of Burrito, for a job that makes the binary.
+    required: false
+    default: "false"
 
 runs:
   using: composite
@@ -73,9 +83,9 @@ runs:
       uses: actions/cache@v6
       with:
         path: ${{ runner.temp }}/zig-cache
-        key: zig-build-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}-${{ hashFiles('mix.lock') }}
+        key: zig-build-${{ inputs.cache }}-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}-${{ hashFiles('mix.lock') }}
         restore-keys: |
-          zig-build-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}-
+          zig-build-${{ inputs.cache }}-${{ runner.os }}-${{ runner.arch }}-${{ inputs.version }}-
 
     # Zig does not remove old entries from its build cache, and a build of new
     # code adds entries. A build cache of more than 1 GB goes, and the job starts
@@ -98,6 +108,7 @@ runs:
     # version of Erlang and `mix.lock`, which gives the version of Burrito, so
     # a job saves the cache one time for each version of the two.
     - name: Read the path of the download cache of Burrito
+      if: inputs.burrito == 'true'
       id: burrito
       shell: bash
       run: |
@@ -105,6 +116,7 @@ runs:
         echo "path=${path}" >> "${GITHUB_OUTPUT}"
 
     - name: Read the download cache of Burrito
+      if: inputs.burrito == 'true'
       uses: actions/cache@v6
       with:
         path: ${{ steps.burrito.outputs.path }}

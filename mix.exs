@@ -54,8 +54,11 @@ defmodule Expresso.MixProject do
   end
 
   # `test/support` holds the generators of the property tests, and only the test
-  # environment compiles them.
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  # environment compiles them. `tools/` holds the recorder of the GIFs and its
+  # encoder, a Zig NIF. The release does not need them, so only `dev` and `test`
+  # compile them.
+  defp elixirc_paths(:test), do: ["lib", "tools", "test/support"]
+  defp elixirc_paths(:dev), do: ["lib", "tools"]
   defp elixirc_paths(_env), do: ["lib"]
 
   # Run "mix help compile.app" to learn about applications.
@@ -67,10 +70,22 @@ defmodule Expresso.MixProject do
     ]
   end
 
+  # Zigler writes the library of each NIF in `tools/` to `priv/lib`, and the
+  # release copies `priv`. The binary does not use these libraries, so this step
+  # removes them before Burrito wraps the release.
+  defp drop_tool_libraries(release) do
+    release.path
+    |> Path.join("lib/expresso-*/priv/lib")
+    |> Path.wildcard()
+    |> Enum.each(&File.rm_rf!/1)
+
+    release
+  end
+
   def releases do
     [
       expresso_cli_app: [
-        steps: [:assemble, &Burrito.wrap/1],
+        steps: [:assemble, &drop_tool_libraries/1, &Burrito.wrap/1],
         burrito: [
           targets: [
             macos_x86: [os: :darwin, cpu: :x86_64],
@@ -120,8 +135,10 @@ defmodule Expresso.MixProject do
       {:makeup_rust, "~> 0.3"},
       {:makeup_diff, "~> 0.1"},
 
-      # docs
-      {:ex_doc, "~> 0.40", only: :dev, runtime: false},
+      # docs. Zigler depends on zig_doc, which asks for ExDoc 0.39.1 exactly.
+      # zig_doc compiles with this version too, so the override keeps it, and
+      # zig_doc needs ExDoc in each environment that compiles Zigler.
+      {:ex_doc, "~> 0.40", only: [:dev, :test], runtime: false, override: true},
 
       # checks
       {:ex_check, "~> 0.16", only: :dev},
@@ -134,9 +151,13 @@ defmodule Expresso.MixProject do
       # therefore the dependency is present in `dev` too.
       {:stream_data, "~> 1.2", only: [:dev, :test], runtime: false},
 
-      # the browser tests of `mix test --only e2e`. The client drives the
-      # Playwright driver of `package.json`.
-      {:playwright_ex, "~> 0.12", only: :test},
+      # the browser tests of `mix test --only e2e` and the recorder of the GIFs
+      # in `tools/`. The client drives the Playwright driver of `package.json`.
+      {:playwright_ex, "~> 0.12", only: [:dev, :test]},
+
+      # the GIF encoder of the recorder, a NIF in Zig. Zigler compiles it with
+      # the Zig of the toolchain.
+      {:zigler, "~> 0.16", only: [:dev, :test], runtime: false},
 
       # static analysis
       {:credo, ">= 0.0.0", only: :dev, runtime: false},

@@ -1109,8 +1109,9 @@ high. Therefore each page keeps the proportions of a slide.
 
 The repository gives a Nix shell. `flake.nix` and `shell.nix` give Erlang/OTP 29, Elixir
 1.20, Node 24 and Zig 0.16. `flake.nix` pins `nixpkgs` to one commit, so the shell gives
-the versions of `.tool-versions`. Zig is a dependency of Burrito. `package.json` gives
-Prettier and the other tools of the presenter script. The `.tool-versions` file gives the
+the versions of `.tool-versions`. Burrito needs Zig for the binary, and Zigler needs it
+for the GIF encoder of `tools/`. `package.json` gives Prettier, the other tools of the
+presenter script, and the Playwright driver. The `.tool-versions` file gives the
 same versions for a different tool manager, and `.claude/hooks/session-start.sh` gives them
 to a remote session.
 
@@ -1128,6 +1129,9 @@ The commands are:
   configuration. It makes a compiler warning an error, and it lets Sobelow read the skip
   comments. It also runs `mix hex.audit` and the browser tests, and it makes the binary for
   the target of the computer and runs the release tests.
+- `mix expresso.gifs` records the GIFs and the stills of the example decks. The task,
+  `Expresso.Recorder` and `Expresso.Gif` are in `tools/`, which only dev and test
+  compile. `docs/development.md` gives the details.
 - `mix release expresso_cli_app` makes a binary with Burrito. The targets are macOS and
   Linux, for x86_64 and for aarch64. Burrito needs Zig 0.16.0 and `xz` on the path.
   `shell.nix` pins the Zig version, and `mix.exs` must agree with it.
@@ -1136,12 +1140,8 @@ The commands are:
 
 ## Open work
 
-This list gives the work in the order of its value. Take the first item that you can do.
-
-1. Move the GIF recorder of `assets/gifs/` to Elixir. This item is decision 7 of
-   `docs/research/elixir-presenter-report.md`, and it has the least value. The section
-   "The GIF recorder in Elixir" of the report gives its cost. Do it only if the
-   maintainer decides for it.
+The list has no item at this time. The last item, decision 7 of
+`docs/research/elixir-presenter-report.md`, moved the GIF recorder to Elixir.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on

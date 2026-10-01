@@ -5,21 +5,26 @@ defmodule Mix.Tasks.Expresso.Gifs do
       mix expresso.gifs [output] [name ...]
 
   The task renders each example deck to an HTML file with `Expresso.main/2`.
-  It then runs the recorder `assets/gifs/record.ts` with Node, and the
-  recorder writes one GIF for each example into the output directory, or one
-  PNG for a still. The default output directory is `_build/gifs`. A list of
-  names records only those examples.
+  `Expresso.Recorder` then opens each HTML file in Chromium, does the actions
+  of the example, and returns the frames. The task writes one GIF for each
+  example into the output directory, with `Expresso.Gif`, or one PNG for a
+  still. The default output directory is `_build/gifs`. A list of names
+  records only those examples.
 
   The decks of `examples/animations/` give the GIFs of the guides of `docs/`.
   The decks of `examples/presenter/` give the GIFs and the stills of
   `README.md`.
 
-  The recorder needs `npm install` and Chromium. The environment variable
-  `EXPRESSO_CHROMIUM` gives the path of a Chromium executable, as it does for
-  the browser tests. `docs/development.md` gives the details.
+  The task is in `tools/`, so it is available in dev and in test only. The
+  recorder needs the Playwright driver of `npm install` and Chromium. The
+  environment variable `EXPRESSO_CHROMIUM` gives the path of a Chromium
+  executable, as it does for the browser tests. `Expresso.Gif` needs Zig to
+  compile. `docs/development.md` gives the details.
   """
 
   use Mix.Task
+
+  alias Expresso.{Gif, Recorder}
 
   @shortdoc "Record a GIF or a PNG of each example deck"
 
@@ -101,7 +106,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
   @defaults %{address: "", actions: [], still: false, height: 720}
 
   @doc """
-  Give each example, with the path of its deck file
+  Return each example, with the path of its deck file
   """
   @spec examples() :: [example()]
   def examples do
@@ -110,7 +115,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
   end
 
   @doc """
-  Give the name of the file of an example in the output directory
+  Return the name of the file of an example in the output directory
   """
   @spec file(example()) :: String.t()
   def file(%{name: name, still: true}), do: name <> ".png"
@@ -127,9 +132,11 @@ defmodule Mix.Tasks.Expresso.Gifs do
   @impl Mix.Task
   def run(args) do
     Mix.Task.run("compile")
+    {:ok, _apps} = Application.ensure_all_started(:playwright_ex)
     {output, names} = parse(args)
     work = Path.join(System.tmp_dir!(), "expresso-gifs-#{System.unique_integer([:positive])}")
     File.mkdir_p!(work)
+    File.mkdir_p!(output)
 
     examples = selected(names)
 
@@ -141,25 +148,33 @@ defmodule Mix.Tasks.Expresso.Gifs do
         {deck, html}
       end)
 
-    manifest =
-      for example <- examples do
-        %{
-          name: example.name,
-          html: Map.fetch!(rendered, example.deck),
-          address: example.address,
-          actions: Enum.map(example.actions, &action/1),
-          still: example.still,
-          height: example.height
-        }
-      end
+    recorder = Recorder.start()
 
-    path = Path.join(work, "manifest.json")
-    write(path, JSON.encode!(manifest))
-    record(path, output)
+    try do
+      Enum.each(examples, fn example ->
+        url = "file://" <> Path.expand(Map.fetch!(rendered, example.deck)) <> example.address
+        frames = Recorder.record(recorder, url, example.actions, example.height)
+        path = Path.join(output, file(example))
+        write(path, contents(example, frames))
+        Mix.shell().info("#{path}: #{describe(example, frames)}")
+      end)
+    after
+      Recorder.stop(recorder)
+    end
   end
 
-  defp action({:advance, milliseconds}), do: %{advance: milliseconds}
-  defp action(key), do: key
+  # A still is the last frame, which shows the page after each action.
+  defp contents(%{still: true}, frames), do: List.last(frames).png
+
+  defp contents(example, frames) do
+    case Gif.encode(frames) do
+      {:ok, gif} -> gif
+      {:error, message} -> Mix.raise("#{example.name}: #{message}")
+    end
+  end
+
+  defp describe(%{still: true}, _frames), do: "a still"
+  defp describe(_example, frames), do: "#{length(frames)} frames"
 
   defp parse([]), do: {"_build/gifs", []}
   defp parse([output | names]), do: {output, names}
@@ -173,20 +188,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     end
   end
 
-  # The path is a file in the temporary directory of this task.
+  # The path is a file in the output directory that the user gives.
   # sobelow_skip ["Traversal.FileModule"]
   defp write(path, contents), do: File.write!(path, contents)
-
-  # The command and its first argument are fixed. The other arguments are the
-  # manifest of this task and the output directory of the person who runs it.
-  # sobelow_skip ["CI.System"]
-  defp record(manifest, output) do
-    case System.cmd("node", ["assets/gifs/record.ts", manifest, output],
-           into: IO.stream(),
-           stderr_to_stdout: true
-         ) do
-      {_output, 0} -> :ok
-      {_output, status} -> Mix.raise("the recorder stopped with the status #{status}")
-    end
-  end
 end
