@@ -171,3 +171,43 @@ element.
 The options do not change the transition between slides. The transition option has its
 own time. A reader who asks for reduced motion gets no animation, and each change is
 instant. The same is true on paper.
+
+## In `Expresso.Builder`
+
+`Expresso.Builder` takes the same options and the same forms, with the same checks:
+
+| DSL | `Expresso.Builder` |
+| --- | --- |
+| `at :next` in the block of an element | `at: :next` in the keyword list of the function |
+| `effect`, `speed`, `easing`, `reveal`, `dim` | The same keys in the keyword list |
+| `auto_reveal true` in a slide | `slide("name", auto_reveal: true)` |
+| `on 2, state: :alert` in an element | `on: [on(2, state: :alert)]` in the keyword list of the element |
+| `pause()` in a slide | `pause()` in the `elements` list of the slide |
+
+This deck has four steps. The second text box shows only at step 2, and the items of the
+list show at step 3 and step 4:
+
+```elixir
+import Expresso.Builder
+
+deck([
+  slide("steps",
+    elements: [
+      text_box(elements: [text_area(text: "Step 1 and after")]),
+      pause(),
+      text_box(
+        at: :next,
+        effect: :grow,
+        elements: [text_area(text: "Step 2 only")],
+        on: [on(2, state: :alert)]
+      ),
+      list(reveal: true, dim: true, elements: [item("One"), item("Two")])
+    ]
+  )
+])
+```
+
+`Expresso.Builder.deck/2` runs the overlay checks of the DSL. A step that is more than the
+maximum step of a slide raises a `Spark.Error.DslError`, with the same message as the
+compiler of the DSL.
+

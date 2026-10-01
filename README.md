@@ -125,7 +125,7 @@ deck(
 and the same errors. Use the functions when a program makes the slides at runtime. A
 module of the DSL can also make slides from data with `for`, but a module of many slides
 compiles slowly: 2000 slides take approximately 30 seconds, and the functions take
-approximately 0.1 seconds.
+approximately 0.1 seconds. See [Make a deck from data](docs/how-to/make-a-deck-from-data.md).
 
 ### Render the document
 
@@ -179,7 +179,7 @@ Write an option in the deck to apply it to each slide:
 | `print_notes false` | Leave the notes out of the handout view and of the print. |
 | `css "deck.css"` | A style sheet, or the path of one. It applies after the theme. |
 | `effect`, `speed`, `easing` | The animation of each overlay. See `docs/how-to/animate-elements.md`. |
-| `template MyDeckTemplate` | A module that gives the header and the footer. See "The templates" in `docs/architecture.md`. |
+| `template MyDeckTemplate` | A module that makes the header and the footer. See [the template option](docs/reference/template-option.md). |
 
 A slide takes `transition`, `handout`, `effect`, `speed`, `easing` and `template` too. An option on a
 slide replaces the option of the deck for that slide.
@@ -444,6 +444,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 
 - [Add transitions between slides](docs/how-to/add-transitions.md)
 - [Animate elements in a slide](docs/how-to/animate-elements.md)
+- [Make a deck from data](docs/how-to/make-a-deck-from-data.md)
 
 Reference pages describe each value of an option:
 
@@ -451,6 +452,7 @@ Reference pages describe each value of an option:
 - [The overlay options](docs/reference/overlay-options.md)
 - [The css option](docs/reference/css-option.md)
 - [The goto option](docs/reference/goto-option.md)
+- [The template option](docs/reference/template-option.md)
 
 Explanations give the design and its reasons:
 
