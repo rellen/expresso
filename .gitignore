@@ -22,3 +22,8 @@ node_modules/
 
 # the directory that ExUnit makes for a test with the tmp_dir tag
 /tmp/
+
+# the libraries and the generated sources of the NIFs in `tools/`, which Zigler
+# makes when it compiles in dev and in test
+/priv/lib/
+/tools/**/.Elixir.*.zig
