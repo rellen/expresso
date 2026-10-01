@@ -143,6 +143,20 @@ defmodule Expresso.Renderer do
     end
   end
 
+  # The sources of the embeds. The presenter gives a frame its source when its
+  # slide shows, so each page loads one time. A deck with no embed has no such
+  # element. `Expresso.Element.Embed.json/1` escapes each `<`.
+  # sobelow_skip ["XSS.Raw"]
+  defp embeds(assigns) do
+    temple do
+      if json = Expresso.Element.Embed.json(@deck) do
+        script id: "expresso-embeds", type: "application/json" do
+          Phoenix.HTML.raw(json)
+        end
+      end
+    end
+  end
+
   # The list of keys of each mode. The key `?` shows the element, and the script
   # shows only the list of the current mode. Temple escapes each text.
   defp help_lists(assigns) do
@@ -313,14 +327,7 @@ defmodule Expresso.Renderer do
             Phoenix.HTML.raw(Program.json(@program))
           end
 
-          # The sources of the embeds. The presenter gives a frame its source
-          # when its slide shows, so each page loads one time. A deck with no
-          # embed has no such element.
-          if embeds = Expresso.Element.Embed.json(@deck) do
-            script id: "expresso-embeds", type: "application/json" do
-              Phoenix.HTML.raw(embeds)
-            end
-          end
+          c(&embeds/1, deck: @deck)
 
           script do
             Phoenix.HTML.raw(presenter())
