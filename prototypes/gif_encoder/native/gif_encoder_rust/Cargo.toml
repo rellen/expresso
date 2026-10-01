@@ -1,0 +1,19 @@
+[package]
+name = "gif_encoder_rust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "gif_encoder_rust"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+rustler = "0.38"
+png = "0.17"
+color_quant = "1.1"
+weezl = "0.1"
+
+[profile.release]
+lto = true
+codegen-units = 1

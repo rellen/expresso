@@ -1,0 +1,7 @@
+/_build
+/deps
+/native/*/target
+/priv/native
+/bench
+/priv/lib
+/lib/**/.Elixir.*.zig
