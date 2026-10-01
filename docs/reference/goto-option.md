@@ -67,5 +67,5 @@ The list of keys of the present view shows the row "Click or tap a link".
   show each step that a link can show.
 - The text of a text area or of an item with the option must hold no link. HTML does not
   permit a link inside a link.
-- The link keeps the color of the text around it, and the browser draws a line under its
-  text. A theme can set `--goto-color`.
+- The link has the color `--accent` of the theme, and the browser draws a line under its
+  text. A deck can set `--goto-color`.

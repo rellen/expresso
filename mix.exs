@@ -39,6 +39,7 @@ defmodule Expresso.MixProject do
         "docs/reference/css-option.md",
         "docs/reference/goto-option.md",
         "docs/reference/template-option.md",
+        "docs/reference/theme-option.md",
         "docs/overlays.md",
         "docs/architecture.md",
         "docs/development.md",
