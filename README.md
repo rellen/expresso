@@ -171,20 +171,33 @@ Open the HTML document in a browser.
 
 ### The keys
 
+The present view knows these keys. `?` shows the same list in the browser.
+
+<!-- keys present -->
+
 | Key | Action |
 | --- | --- |
-| `j`, `→`, `↓`, `Space`, `Page Down` | Go to the next step, or to the next slide after the last step. |
-| `k`, `←`, `↑`, `Page Up` | Go to the previous step, or to the previous slide at the first step. |
-| `Home` | Go to the first slide. |
-| `End` | Go to step 1 of the last slide. |
-| A number, then `Enter` | Go to step 1 of that slide. For example, `1` `2` `Enter` goes to slide 12. The number shows in the top right corner until `Enter`. |
-| `b` | Show a black screen. The next key shows the slide again. |
-| `p` | Change between the present view and the handout view. |
-| `s` | Open the speaker view in a second window. |
-| `f` | Put the deck in full screen, or take it out of full screen. |
-| `o` | Show an overview of the slides. |
-| `g` | Show or hide the progress bar. |
-| `?` | Show the keys of this view. The next key closes the list. |
+| `j`, `→`, `↓`, `Page Down`, `Space` | Next step, or the first step of the next slide |
+| `k`, `←`, `↑`, `Page Up` | Previous step, or the last step of the previous slide |
+| `Home` | First slide |
+| `End` | Step 1 of the last slide |
+| 0 to 9 | Type a slide number |
+| `Enter` | Step 1 of the slide that you typed |
+| `b` | Black screen. The next key shows the slide again. |
+| `p` | Handout view |
+| `s` | Speaker view, in a second window |
+| `f` | Full screen on or off |
+| `g` | Progress bar on or off |
+| Click or tap the right two thirds, or swipe left | Next step |
+| Click or tap the left third, or swipe right | Previous step |
+| Click or tap a link | The slide and the step of the link |
+| `o` | Overview of the slides. Only this window shows it. |
+| `?` | This list of keys. The next key closes it. |
+
+<!-- /keys -->
+
+To go to a slide, type its number, then press `Enter`. For example, `1` `2` `Enter` goes
+to slide 12. The number shows in the top right corner until `Enter`.
 
 A presentation remote sends `Page Down` and `Page Up`, so it works with the deck.
 
@@ -199,10 +212,25 @@ its slide and step. A click on another link goes to the link.
 
 ### The overview
 
-The overview shows each slide at its last step, in a grid that fits the window. The arrow
-keys, `j`, `k`, `Home` and `End` select a different slide. `Enter` or a click on a slide
-goes to step 1 of that slide. `o` or `Esc` closes the overview, and the step does not
-change. In the speaker view, only the speaker window shows the overview.
+The overview shows each slide at its last step, in a grid that fits the window. In the
+speaker view, only the speaker window shows the overview. The overview knows these keys:
+
+<!-- keys overview -->
+
+| Key | Action |
+| --- | --- |
+| `?` | This list of keys. The next key closes it. |
+| `j`, `→`, `Page Down`, `Space` | Select the next slide |
+| `k`, `←`, `Page Up` | Select the previous slide |
+| `↓` | Select the slide below |
+| `↑` | Select the slide above |
+| `Home` | Select the first slide |
+| `End` | Select the last slide |
+| `Enter` | Step 1 of the selected slide |
+| Click or tap a slide | Step 1 of that slide |
+| `o`, `Esc` | Close the overview. The step does not change. |
+
+<!-- /keys -->
 
 ![The overview opens, the selection moves two slides, and Enter goes to that slide](https://raw.githubusercontent.com/rellen/expresso/media/present-overview.gif)
 
@@ -229,12 +257,33 @@ step 2 of slide 4. A reload shows the same step, and a link can go to one slide.
 The speaker view shows the current step, the next step, the notes of the slide, the
 position and a timer. Put this window on your screen, and put the first window on the
 projector. The keys operate in either window, and the two windows show the same step. `b`
-in the speaker view gives a black screen to the audience.
+in the speaker view gives a black screen to the audience. The speaker view knows these
+keys:
+
+<!-- keys speaker -->
+
+| Key | Action |
+| --- | --- |
+| `j`, `→`, `↓`, `Page Down`, `Space` | Next step, or the first step of the next slide |
+| `k`, `←`, `↑`, `Page Up` | Previous step, or the last step of the previous slide |
+| `Home` | First slide |
+| `End` | Step 1 of the last slide |
+| 0 to 9 | Type a slide number |
+| `Enter` | Step 1 of the slide that you typed |
+| `b` | Black screen. The next key shows the slide again. |
+| `r` | Set the timer to 0:00 |
+| `f` | Full screen on or off |
+| Click or tap the right two thirds, or swipe left | Next step |
+| Click or tap the left third, or swipe right | Previous step |
+| `o` | Overview of the slides. Only this window shows it. |
+| `?` | This list of keys. The next key closes it. |
+
+<!-- /keys -->
 
 ![The speaker view: the current step, the next step, the notes, the position, the timer and the time left](https://raw.githubusercontent.com/rellen/expresso/media/present-speaker.png)
 
-The timer starts at the first change of the step, and `r` sets it back to `0:00`. If the
-browser blocks the second window, let the document open windows.
+The timer starts at the first change of the step. If the browser blocks the second window,
+let the document open windows.
 
 ### The time of the talk
 
@@ -269,9 +318,20 @@ print show the numbers too.
 
 ### The handout view
 
-The handout view shows one page for each step of each slide. In this view, only `j`, `k`,
-`p`, `a` and `?` operate, so the other keys scroll the pages. A printer gets this view
-with no key.
+The handout view shows one page for each step of each slide. A printer gets this view with
+no key. In this view, only these keys operate, so the other keys scroll the pages:
+
+<!-- keys handout -->
+
+| Key | Action |
+| --- | --- |
+| `j` | Next step. The present view then shows it. |
+| `k` | Previous step. The present view then shows it. |
+| `p` | Present view |
+| `a` | Every step, or the steps of the handout option. A print shows the same. |
+| `?` | This list of keys. The next key closes it. |
+
+<!-- /keys -->
 
 ![The handout view: three pages, one for each step, with the notes under each page](https://raw.githubusercontent.com/rellen/expresso/media/present-handout.png)
 
