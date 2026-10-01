@@ -26,23 +26,23 @@
     <text x="740.4" y="206.8" font-size="15" text-anchor="middle" fill="currentColor">A3 · 3 lanes</text>
   </g>
   <g id="st-tester">
-    <rect x="410.6" y="142.2" width="13.6" height="47.6" rx="4" fill="#7c8794" fill-opacity="0.85" stroke="currentColor" stroke-opacity="0.6"/>
+    <rect id="st-tester-box" x="410.6" y="142.2" width="13.6" height="47.6" rx="4" fill="#7c8794" fill-opacity="0.85" stroke="currentColor" stroke-opacity="0.6"/>
     <text x="417.4" y="123.5" font-size="15" text-anchor="middle" fill="currentColor">test 3%</text>
   </g>
   <g id="st-booth">
-    <rect x="468.4" y="142.2" width="61.2" height="47.6" rx="4" fill="#3aa6a0" fill-opacity="0.85" stroke="currentColor" stroke-opacity="0.6"/>
+    <rect id="st-booth-box" x="468.4" y="142.2" width="61.2" height="47.6" rx="4" fill="#3aa6a0" fill-opacity="0.85" stroke="currentColor" stroke-opacity="0.6"/>
     <text x="499" y="123.5" font-size="15" text-anchor="middle" fill="currentColor">paint booth</text>
   </g>
   <g id="st-dryer">
-    <rect x="584" y="142.2" width="68" height="47.6" rx="4" fill="#8d5a3c" fill-opacity="0.85" stroke="currentColor" stroke-opacity="0.6"/>
+    <rect id="st-dryer-box" x="584" y="142.2" width="68" height="47.6" rx="4" fill="#8d5a3c" fill-opacity="0.85" stroke="currentColor" stroke-opacity="0.6"/>
     <text x="618" y="123.5" font-size="15" text-anchor="middle" fill="currentColor">dryer</text>
   </g>
   <g id="st-final">
-    <rect x="655.4" y="142.2" width="13.6" height="47.6" rx="4" fill="#7c8794" fill-opacity="0.85" stroke="currentColor" stroke-opacity="0.6"/>
+    <rect id="st-final-box" x="655.4" y="142.2" width="13.6" height="47.6" rx="4" fill="#7c8794" fill-opacity="0.85" stroke="currentColor" stroke-opacity="0.6"/>
     <text x="662.2" y="98" font-size="15" text-anchor="middle" fill="currentColor">final 2%</text>
   </g>
   <g id="st-packer">
-    <rect x="754" y="142.2" width="37.4" height="47.6" rx="4" fill="#4f6b8f" fill-opacity="0.85" stroke="currentColor" stroke-opacity="0.6"/>
+    <rect id="st-packer-box" x="754" y="142.2" width="37.4" height="47.6" rx="4" fill="#4f6b8f" fill-opacity="0.85" stroke="currentColor" stroke-opacity="0.6"/>
     <text x="772.7" y="123.5" font-size="15" text-anchor="middle" fill="currentColor">packer × 6</text>
   </g>
   <g id="tanks">
@@ -53,6 +53,7 @@
     <rect x="791.4" y="200" width="27.2" height="149.6" fill="#2a2f36"/>
     <polyline points="796.5,213.6 805,222.1 813.5,213.6" fill="none" stroke="rgba(232,184,58,0.8)" stroke-width="2"/><polyline points="796.5,244.2 805,252.7 813.5,244.2" fill="none" stroke="rgba(232,184,58,0.8)" stroke-width="2"/><polyline points="796.5,274.8 805,283.3 813.5,274.8" fill="none" stroke="rgba(232,184,58,0.8)" stroke-width="2"/><polyline points="796.5,305.4 805,313.9 813.5,305.4" fill="none" stroke="rgba(232,184,58,0.8)" stroke-width="2"/><polyline points="796.5,336 805,344.5 813.5,336" fill="none" stroke="rgba(232,184,58,0.8)" stroke-width="2"/>
     <text x="784.6" y="278.2" font-size="15" text-anchor="end" fill="currentColor">B · 0.9 u/s</text>
+    <rect id="belt-b-end" x="804.5" y="335.5" width="1" height="1" fill="none"/>
   </g>
   <g id="st-palletizer">
     <circle cx="869.6" cy="390.4" r="17" fill="#f28c28" stroke="currentColor" stroke-opacity="0.6"/>
@@ -63,15 +64,15 @@
     <text x="788" y="495.8" font-size="15" text-anchor="start" fill="currentColor">output track · 0.9 u/s</text>
   </g>
   <g id="st-wrapper">
-    <rect x="1005.6" y="417.6" width="54.4" height="61.2" rx="4" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <rect id="st-wrapper-box" x="1005.6" y="417.6" width="54.4" height="61.2" rx="4" fill="none" stroke="currentColor" stroke-width="2.5"/>
     <text x="1032.8" y="404" font-size="15" text-anchor="middle" fill="currentColor">wrap 7 s</text>
   </g>
   <g id="st-labeller">
-    <rect x="1077" y="417.6" width="54.4" height="61.2" rx="4" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <rect id="st-labeller-box" x="1077" y="417.6" width="54.4" height="61.2" rx="4" fill="none" stroke="currentColor" stroke-width="2.5"/>
     <text x="1104.2" y="404" font-size="15" text-anchor="middle" fill="currentColor">label 2.5 s</text>
   </g>
   <g id="st-dock">
-    <rect x="1182.4" y="410.8" width="17" height="74.8" fill="#e8b83a"/>
+    <rect id="st-dock-box" x="1182.4" y="410.8" width="17" height="74.8" fill="#e8b83a"/>
     <text x="1190.9" y="397.2" font-size="15" text-anchor="middle" fill="currentColor">dock</text>
   </g>
   <g id="widget">
