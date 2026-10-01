@@ -97,6 +97,10 @@ jobs:
       - uses: ./.github/actions/setup-elixir
         with:
           cache: lint
+      - uses: ./.github/actions/setup-zig
+        with:
+          version: ${{ env.ZIG_VERSION }}
+          cache: lint
       - run: mix compile --warnings-as-errors
       - if: ${{ !cancelled() }}
         run: mix credo
@@ -132,6 +136,10 @@ jobs:
       - uses: ./.github/actions/setup-elixir
         with:
           cache: test
+      - uses: ./.github/actions/setup-zig
+        with:
+          version: ${{ env.ZIG_VERSION }}
+          cache: test
       - run: mix test
       - if: ${{ !cancelled() }}
         run: mix test --only e2e
@@ -161,6 +169,10 @@ jobs:
       - uses: ./.github/actions/setup-playwright
       - uses: ./.github/actions/setup-elixir
         with:
+          cache: gifs
+      - uses: ./.github/actions/setup-zig
+        with:
+          version: ${{ env.ZIG_VERSION }}
           cache: gifs
       - run: mix expresso.gifs gifs
       - uses: actions/upload-artifact@v7
@@ -201,6 +213,8 @@ jobs:
       - uses: ./.github/actions/setup-zig
         with:
           version: ${{ env.ZIG_VERSION }}
+          cache: binary-${{ matrix.target }}
+          burrito: "true"
       - run: |
           mix release expresso_cli_app --overwrite
           rm -rf _build/prod/rel
@@ -239,6 +253,8 @@ jobs:
       - uses: ./.github/actions/setup-zig
         with:
           version: ${{ env.ZIG_VERSION }}
+          cache: macos
+          burrito: "true"
       - run: brew install xz coreutils
       - run: mix check --only compiler --only ex_unit --only e2e --only release --only release_tests
       - run: rm -rf _build/prod/rel
