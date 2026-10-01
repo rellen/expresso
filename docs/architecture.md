@@ -393,6 +393,22 @@ gives the names of the custom properties and of the effects of the theme to two 
 `Expresso.Overlay.PropertyVerifier` and `Expresso.Overlay.EffectVerifier`.
 `docs/overlays.md` gives the rules of those verifiers.
 
+### The colors
+
+`assets/style.css` declares no color. Each color is a custom property of a role, such as
+`--text`, `--accent` or `--code-keyword`. The renderer writes the roles of the theme of
+the deck on `:root`, at the start of the style element of the theme. It also writes the
+roles of the default theme for `@media print`. The `css` option of the deck comes later,
+so it can replace a role.
+
+`Expresso.Palette` gives each role a color of a base16 scheme, and it holds the contrast
+minimums of WCAG. `Expresso.Palette.Builtin` reads the schemes of `assets/themes/` at
+compile time, and it adjusts the lightness of each color that fails. The compile stops
+for a scheme that needs a change of more than 0.25. `Expresso.ThemeVerifier` gives a
+warning for a scheme of a deck that fails, and `Expresso.Color` calculates the contrast
+and the lightness. `docs/reference/theme-option.md` gives the roles, the minimums and the
+built-in themes.
+
 ### The style of a slide
 
 The renderer writes an inline `style` attribute on each `section` of the present view.
@@ -574,9 +590,10 @@ package for each of these languages:
 - C and Rust
 - diff
 
-Without a lexer for the language, the fragment is the escaped text. The rules of the token
-classes come from a style of Makeup, and the renderer writes them into the document in
-their own `style` element.
+Without a lexer for the language, the fragment is the escaped text. `Expresso.Highlight`
+writes a rule for each token class, and the renderer writes them into the document in
+their own `style` element. Each rule reads a role of the theme, such as `--code-keyword`,
+so the code gets the colors of the theme.
 
 A lexer gives each pair of delimiters, such as `(` and `)`, a `data-group-id`. Without the
 option `group_prefix`, the id starts with a random prefix, and two renders of one deck are
@@ -960,7 +977,7 @@ before the current step. Each step of each slide counts one time, so the bar is 
 the last step only. The projection `property "--fraction", :fraction` writes that part
 into `--fraction` on the `body`, and the style sheet sets the width of the bar from it.
 The style sheet shows the bar in the present view only, and not on a black screen, in the
-overview or on paper. A theme can set `--progress-color` and `--progress-height`.
+overview or on paper. Its color is `--accent`, and a deck can set `--progress-color` and `--progress-height`.
 
 ### The transitions
 
@@ -1013,7 +1030,7 @@ padding and the gaps of the grid are 1vw wide and 1vh high, so the grid of each 
 in the window.
 
 In the speaker view, the overview replaces the grid of the speaker view while it shows. A
-theme can set `--overview-color` for the outline of the selected slide.
+deck can set `--overview-color` for the outline of the selected slide, which has the color `--accent`.
 
 ### The handout view
 

@@ -180,6 +180,7 @@ Write an option in the deck to apply it to each slide:
 | `css "deck.css"` | A style sheet, or the path of one. It applies after the theme. |
 | `effect`, `speed`, `easing` | The animation of each overlay. See `docs/how-to/animate-elements.md`. |
 | `template MyDeckTemplate` | A module that makes the header and the footer. See [the template option](docs/reference/template-option.md). |
+| `theme :dracula` | The colors of the slides and of the code. Each built-in theme meets the contrast minimums of WCAG. See [the theme option](docs/reference/theme-option.md). |
 
 A slide takes `transition`, `handout`, `effect`, `speed`, `easing` and `template` too. An option on a
 slide replaces the option of the deck for that slide.
@@ -453,6 +454,7 @@ Reference pages describe each value of an option:
 - [The css option](docs/reference/css-option.md)
 - [The goto option](docs/reference/goto-option.md)
 - [The template option](docs/reference/template-option.md)
+- [The theme option](docs/reference/theme-option.md)
 
 Explanations give the design and its reasons:
 

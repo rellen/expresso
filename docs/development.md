@@ -635,6 +635,30 @@ EXPRESSO_KEYS=write mix test test/expresso/presenter/key_tables_test.exs
 Do not change the text between `<!-- keys present -->` and `<!-- /keys -->` by hand. Put
 a rule that a table does not give in the text after the table.
 
+## Add a built-in theme
+
+A built-in theme is a base16 scheme of the
+[Tinted Theming project](https://github.com/tinted-theming/schemes). To add one, do these
+steps:
+
+1. Download the file of the scheme from `base16/` of that repository into
+   `assets/themes/`. Do not change the file. `assets/themes/LICENSE` covers it.
+2. Run `mix compile`. `Expresso.Palette.Builtin` adjusts the scheme, and the compile stops
+   when a color needs a change of lightness of more than 0.25. Such a scheme cannot be a
+   built-in theme. Remove its file.
+3. Add the theme to the table of `docs/reference/theme-option.md`, with its change and its
+   dim opacity. This command writes each row:
+
+   ```sh
+   mix run -e 'for n <- Expresso.Palette.Builtin.names(), p = Expresso.Palette.Builtin.fetch!(n), do: IO.puts("#{n} #{p.variant} #{Float.round(p.change, 2)} #{p.dim_opacity}")'
+   ```
+
+4. Run `mix test test/expresso/palette_test.exs`. It makes sure that each built-in theme
+   meets each minimum.
+
+The name of the theme is the name of its file, with underscores, such as
+`:tokyo_night_storm` for `tokyo-night-storm.yaml`.
+
 ## Record the GIFs and the stills of the examples
 
 The how-to guides and the reference pages show a GIF of each example deck of
