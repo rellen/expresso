@@ -244,10 +244,14 @@ The `on` entity can change two things only:
 
 - `state` names a state of the theme. The compiler maps the state `alert` to the custom
   property `--alert`, and it sets the property to `1` on those steps. The theme of this
-  project has the states `alert` and `dim`.
+  project has the states `alert`, `dim` and `highlight`. The `highlight` option of a code
+  element gives the state `highlight` to the lines in focus.
 - `set` writes custom properties. The compiler maps the key `x` to the property `--x`.
   The theme of this project reads the keys `x`, `y`, `scale`, `rotate`, `opacity` and
   `color`.
+
+The `move_to` option of an `on` entity in a part of a diagram is not a third kind of
+change. The render replaces it with `x` and `y` in `set`, so the contract stays the same.
 
 ```elixir
 text_box do
