@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1210 400" width="1210" height="400" font-size="18" role="img">
+  <title>The states of a pallet on the output track</title>
+  <g id="edges">
+    <line x1="180" y1="122" x2="210" y2="122" stroke="currentColor" stroke-width="2.5"/><polygon points="220,122 210,117 210,127" fill="currentColor"/><line x1="370" y1="122" x2="400" y2="122" stroke="currentColor" stroke-width="2.5"/><polygon points="410,122 400,117 400,127" fill="currentColor"/><line x1="560" y1="122" x2="590" y2="122" stroke="currentColor" stroke-width="2.5"/><polygon points="600,122 590,117 590,127" fill="currentColor"/><line x1="750" y1="122" x2="780" y2="122" stroke="currentColor" stroke-width="2.5"/><polygon points="790,122 780,117 780,127" fill="currentColor"/><line x1="940" y1="122" x2="970" y2="122" stroke="currentColor" stroke-width="2.5"/><polygon points="980,122 970,117 970,127" fill="currentColor"/><path d="M 1130 122 L 1148 122 L 1148 302 L 1140 302" fill="none" stroke="currentColor" stroke-width="2.5"/><polygon points="1130,302 1141,296 1141,308" fill="currentColor"/><line x1="980" y1="302" x2="950" y2="302" stroke="currentColor" stroke-width="2.5"/><polygon points="940,302 950,307 950,297" fill="currentColor"/><line x1="790" y1="302" x2="760" y2="302" stroke="currentColor" stroke-width="2.5"/><polygon points="750,302 760,307 760,297" fill="currentColor"/><line x1="600" y1="302" x2="570" y2="302" stroke="currentColor" stroke-width="2.5"/><polygon points="560,302 570,307 570,297" fill="currentColor"/><line x1="410" y1="302" x2="380" y2="302" stroke="currentColor" stroke-width="2.5"/><polygon points="370,302 380,307 380,297" fill="currentColor"/><line x1="220" y1="302" x2="190" y2="302" stroke="currentColor" stroke-width="2.5"/><polygon points="180,302 190,307 190,297" fill="currentColor"/>
+  </g>
+  <g id="g-queue">
+    <rect x="30" y="90" width="150" height="64" rx="32" fill="#33404d"/><text x="105" y="129.7" font-size="22" text-anchor="middle" fill="#e6ebf0">q0</text><text x="105" y="178" font-size="16" text-anchor="middle" fill="currentColor">Q1 free?</text>
+    <rect x="220" y="90" width="150" height="64" rx="6" fill="none" stroke="#7c8794" stroke-width="2" stroke-dasharray="7 5"/><text x="295" y="129.7" font-size="22" text-anchor="middle" fill="currentColor">toQ1</text><text x="295" y="178" font-size="16" text-anchor="middle" fill="currentColor">move(Q1_X)</text>
+    <rect x="410" y="90" width="150" height="64" rx="32" fill="#33404d"/><text x="485" y="129.7" font-size="22" text-anchor="middle" fill="#e6ebf0">q1</text><text x="485" y="178" font-size="16" text-anchor="middle" fill="currentColor">PZ free?</text>
+  </g>
+  <g id="g-build">
+    <rect x="600" y="90" width="150" height="64" rx="6" fill="none" stroke="#7c8794" stroke-width="2" stroke-dasharray="7 5"/><text x="675" y="129.7" font-size="22" text-anchor="middle" fill="currentColor">toPZ</text><text x="675" y="178" font-size="16" text-anchor="middle" fill="currentColor">move(PZ_X)</text>
+    <rect x="790" y="90" width="150" height="64" rx="6" fill="#3aa6a0"/><text x="865" y="129.7" font-size="22" text-anchor="middle" fill="#e6ebf0">pz</text><text x="865" y="178" font-size="16" text-anchor="middle" fill="currentColor">20 cartons</text>
+    <rect x="980" y="90" width="150" height="64" rx="32" fill="#33404d"/><text x="1055" y="129.7" font-size="22" text-anchor="middle" fill="#e6ebf0">full</text><text x="1055" y="178" font-size="16" text-anchor="middle" fill="currentColor">WR free?</text>
+  </g>
+  <g id="g-wrap">
+    <rect x="980" y="270" width="150" height="64" rx="6" fill="none" stroke="#7c8794" stroke-width="2" stroke-dasharray="7 5"/><text x="1055" y="309.7" font-size="22" text-anchor="middle" fill="currentColor">toWR</text><text x="1055" y="358" font-size="16" text-anchor="middle" fill="currentColor">move(WR_X)</text>
+    <rect x="790" y="270" width="150" height="64" rx="6" fill="#3aa6a0"/><text x="865" y="309.7" font-size="22" text-anchor="middle" fill="#e6ebf0">wr</text><text x="865" y="358" font-size="16" text-anchor="middle" fill="currentColor">wrap += dt / 7</text>
+    <rect x="600" y="270" width="150" height="64" rx="32" fill="#33404d"/><text x="675" y="309.7" font-size="22" text-anchor="middle" fill="#e6ebf0">wrapped</text><text x="675" y="358" font-size="16" text-anchor="middle" fill="currentColor">LB free?</text>
+  </g>
+  <g id="g-label">
+    <rect x="410" y="270" width="150" height="64" rx="6" fill="none" stroke="#7c8794" stroke-width="2" stroke-dasharray="7 5"/><text x="485" y="309.7" font-size="22" text-anchor="middle" fill="currentColor">toLB</text><text x="485" y="358" font-size="16" text-anchor="middle" fill="currentColor">move(LB_X)</text>
+    <rect x="220" y="270" width="150" height="64" rx="6" fill="#3aa6a0"/><text x="295" y="309.7" font-size="22" text-anchor="middle" fill="#e6ebf0">lb</text><text x="295" y="358" font-size="16" text-anchor="middle" fill="currentColor">label += dt / 2.5</text>
+    <rect x="30" y="270" width="150" height="64" rx="6" fill="none" stroke="#7c8794" stroke-width="2" stroke-dasharray="7 5"/><text x="105" y="309.7" font-size="22" text-anchor="middle" fill="currentColor">out</text><text x="105" y="358" font-size="16" text-anchor="middle" fill="currentColor">fade to the dock</text>
+  </g>
+  <g id="token">
+    <rect x="79" y="40" width="52" height="32" rx="3" fill="#8a6a42" stroke="#0e1218" stroke-width="1.5"/><rect x="86" y="45" width="38" height="22" fill="#c8a061"/>
+  </g>
+</svg>

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 430" width="1200" height="430" font-size="18" role="img">
+  <title>One frame of the main loop</title>
+  <g id="b-raf">
+    <rect x="20" y="50" width="220" height="90" rx="6" fill="#33404d"/><text x="130" y="92" font-size="20" text-anchor="middle" fill="#e6ebf0">requestAnimationFrame</text><text x="130" y="115" font-size="16.0" text-anchor="middle" fill="#e6ebf0">frame(now)</text>
+  </g>
+  <g id="a1">
+    <line x1="240" y1="95" x2="263" y2="95" stroke="currentColor" stroke-width="3"/><polygon points="275,95 263,89 263,101" fill="currentColor"/>
+  </g>
+  <g id="b-raw">
+    <rect x="280" y="50" width="230" height="90" rx="6" fill="#33404d"/><text x="395" y="92" font-size="20" text-anchor="middle" fill="#e6ebf0">rawDt = min(0.05, …)</text><text x="395" y="115" font-size="16.0" text-anchor="middle" fill="#e6ebf0">a slow frame is capped</text>
+  </g>
+  <g id="a2">
+    <line x1="510" y1="95" x2="533" y2="95" stroke="currentColor" stroke-width="3"/><polygon points="545,95 533,89 533,101" fill="currentColor"/>
+  </g>
+  <g id="b-dt">
+    <rect x="550" y="50" width="230" height="90" rx="6" fill="#33404d"/><text x="665" y="92" font-size="20" text-anchor="middle" fill="#e6ebf0">dt = rawDt × speed</text><text x="665" y="115" font-size="16.0" text-anchor="middle" fill="#e6ebf0">0 while paused</text>
+  </g>
+  <g id="a3">
+    <line x1="780" y1="95" x2="803" y2="95" stroke="currentColor" stroke-width="3"/><polygon points="815,95 803,89 803,101" fill="currentColor"/>
+  </g>
+  <g id="b-sub">
+    <rect x="820" y="25" width="360" height="165" rx="10" fill="none" stroke="#e8b83a" stroke-width="3" stroke-dasharray="10 6"/><text x="1000" y="45" font-size="20" text-anchor="middle" fill="#e8b83a">n = ⌈dt / 0.034⌉ sub-steps</text><rect x="840" y="65" width="150" height="70" rx="6" fill="#33404d"/><text x="915" y="97" font-size="19" text-anchor="middle" fill="#e6ebf0">updateLine</text><text x="915" y="119" font-size="15.200000000000001" text-anchor="middle" fill="#e6ebf0">(dt / n)</text><rect x="1010" y="65" width="150" height="70" rx="6" fill="#33404d"/><text x="1085" y="97" font-size="19" text-anchor="middle" fill="#e6ebf0">updateActor</text><text x="1085" y="119" font-size="15.200000000000001" text-anchor="middle" fill="#e6ebf0">(a, dt / n)</text><line x1="990" y1="100" x2="1000" y2="100" stroke="currentColor" stroke-width="2"/><polygon points="1008,100 1000,96 1000,104" fill="currentColor"/><path d="M 1085 135 C 1085 170, 915 170, 915 138" fill="none" stroke="#e8b83a" stroke-width="2.5"/><polygon points="915,136 909,148 921,148" fill="#e8b83a"/><text x="1000" y="180" font-size="18" text-anchor="middle" fill="#e8b83a">× n</text>
+  </g>
+  <g id="a4">
+    <line x1="1000" y1="192" x2="1000" y2="253" stroke="currentColor" stroke-width="3"/><polygon points="1000,265 1006,253 994,253" fill="currentColor"/>
+  </g>
+  <g id="b-scene">
+    <rect x="880" y="270" width="240" height="90" rx="6" fill="#33404d"/><text x="1000" y="312" font-size="20" text-anchor="middle" fill="#e6ebf0">buildScene()</text><text x="1000" y="335" font-size="16.0" text-anchor="middle" fill="#e6ebf0">every box, from the state</text>
+  </g>
+  <g id="a5">
+    <line x1="880" y1="315" x2="827" y2="315" stroke="currentColor" stroke-width="3"/><polygon points="815,315 827,321 827,309" fill="currentColor"/>
+  </g>
+  <g id="b-render">
+    <rect x="520" y="270" width="290" height="90" rx="6" fill="#33404d"/><text x="665" y="312" font-size="20" text-anchor="middle" fill="#e6ebf0">renderCached()</text><text x="665" y="335" font-size="16.0" text-anchor="middle" fill="#e6ebf0">or a full paintOrder + drawBox</text>
+  </g>
+  <g id="a6">
+    <line x1="520" y1="315" x2="467" y2="315" stroke="currentColor" stroke-width="3"/><polygon points="455,315 467,321 467,309" fill="currentColor"/>
+  </g>
+  <g id="b-hud">
+    <rect x="220" y="270" width="230" height="90" rx="6" fill="#33404d"/><text x="335" y="312" font-size="20" text-anchor="middle" fill="#e6ebf0">updateHud()</text><text x="335" y="335" font-size="16.0" text-anchor="middle" fill="#e6ebf0">on every sixth frame</text>
+  </g>
+  <g id="a7">
+    <path d="M 220 315.0 L 130 315.0 L 130 154" fill="none" stroke="currentColor" stroke-width="3"/><polygon points="130,142 124,156 136,156" fill="currentColor"/>
+    <text x="120" y="355" font-size="18" text-anchor="middle" fill="currentColor">next frame</text>
+  </g>
+</svg>

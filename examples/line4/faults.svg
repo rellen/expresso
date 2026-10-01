@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 380" width="1200" height="380" font-size="18" role="img">
+  <title>The three severity levels of a fault and their repair times</title>
+  <g id="axis">
+    <line x1="260" y1="320" x2="1070" y2="320" stroke="currentColor" stroke-width="2"/><line x1="260" y1="320" x2="260" y2="328" stroke="currentColor" stroke-width="2"/><text x="260" y="350" font-size="16" text-anchor="middle" fill="currentColor">0 s</text><line x1="350" y1="320" x2="350" y2="328" stroke="currentColor" stroke-width="2"/><text x="350" y="350" font-size="16" text-anchor="middle" fill="currentColor">10 s</text><line x1="440" y1="320" x2="440" y2="328" stroke="currentColor" stroke-width="2"/><text x="440" y="350" font-size="16" text-anchor="middle" fill="currentColor">20 s</text><line x1="530" y1="320" x2="530" y2="328" stroke="currentColor" stroke-width="2"/><text x="530" y="350" font-size="16" text-anchor="middle" fill="currentColor">30 s</text><line x1="620" y1="320" x2="620" y2="328" stroke="currentColor" stroke-width="2"/><text x="620" y="350" font-size="16" text-anchor="middle" fill="currentColor">40 s</text><line x1="710" y1="320" x2="710" y2="328" stroke="currentColor" stroke-width="2"/><text x="710" y="350" font-size="16" text-anchor="middle" fill="currentColor">50 s</text><line x1="800" y1="320" x2="800" y2="328" stroke="currentColor" stroke-width="2"/><text x="800" y="350" font-size="16" text-anchor="middle" fill="currentColor">60 s</text><line x1="890" y1="320" x2="890" y2="328" stroke="currentColor" stroke-width="2"/><text x="890" y="350" font-size="16" text-anchor="middle" fill="currentColor">70 s</text><line x1="980" y1="320" x2="980" y2="328" stroke="currentColor" stroke-width="2"/><text x="980" y="350" font-size="16" text-anchor="middle" fill="currentColor">80 s</text><line x1="1070" y1="320" x2="1070" y2="328" stroke="currentColor" stroke-width="2"/><text x="1070" y="350" font-size="16" text-anchor="middle" fill="currentColor">90 s</text>
+  </g>
+  <g id="lvl-1">
+    <text x="240" y="46" font-size="20" text-anchor="end" fill="currentColor" font-weight="bold">Level 1 · 50%</text>
+    <text x="240" y="70" font-size="16" text-anchor="end" fill="currentColor">operator or tech</text>
+    <rect x="287" y="36" width="45" height="34" rx="4" fill="#3fbf5a" stroke="#3fbf5a" stroke-width="2"/><text x="342" y="60" font-size="17" text-anchor="start" fill="currentColor">3–8 s</text>
+  </g>
+  <g id="lvl-2">
+    <text x="240" y="131" font-size="20" text-anchor="end" fill="currentColor" font-weight="bold">Level 2 · 35%</text>
+    <text x="240" y="155" font-size="16" text-anchor="end" fill="currentColor">tech only</text>
+    <rect x="332" y="121" width="108" height="34" rx="4" fill="#f0d12a" stroke="#f0d12a" stroke-width="2"/><text x="450" y="145" font-size="17" text-anchor="start" fill="currentColor">8–20 s</text>
+  </g>
+  <g id="lvl-3">
+    <text x="240" y="216" font-size="20" text-anchor="end" fill="currentColor" font-weight="bold">Level 3 · 15%</text>
+    <text x="240" y="240" font-size="16" text-anchor="end" fill="currentColor">tech + contractor</text>
+    <rect x="395" y="206" width="225" height="34" rx="4" fill="#7c8794" stroke="#7c8794" stroke-width="2" stroke-dasharray="6 4" fill-opacity="0.25"/><text x="630" y="230" font-size="17" text-anchor="start" fill="currentColor">call-out 15–40 s</text>
+    <rect x="575" y="246" width="450" height="34" rx="4" fill="#e23b3b" stroke="#e23b3b" stroke-width="2"/><text x="1035" y="270" font-size="17" text-anchor="start" fill="currentColor">repair 20–45 s after arrival</text>
+  </g>
+</svg>
