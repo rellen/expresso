@@ -30,6 +30,10 @@ defmodule Expresso.GotoTest do
         end
 
         item "No link"
+
+        item "By name" do
+          goto slide: "summary"
+        end
       end
     end
 
@@ -53,8 +57,20 @@ defmodule Expresso.GotoTest do
       assert Goto.new(slide: 3) == {:ok, %Goto{slide: 3, step: 1}}
     end
 
+    test "takes the name of a slide" do
+      assert Goto.new(slide: "summary", step: 2) == {:ok, %Goto{slide: "summary", step: 2}}
+    end
+
     test "refuses a value that is not a slide and a step" do
-      for value <- [3, [step: 2], [slide: 1, page: 2], [slide: "3"], [slide: 1, step: 0], "x"] do
+      for value <- [
+            3,
+            [step: 2],
+            [slide: 1, page: 2],
+            [slide: ""],
+            [slide: :a],
+            [slide: 1, step: 0],
+            "x"
+          ] do
         assert {:error, _message} = Goto.new(value), inspect(value)
       end
     end
@@ -78,7 +94,7 @@ defmodule Expresso.GotoTest do
     end
 
     test "puts the text of an item into a link, and the nested list stays outside the link" do
-      [link] = links(".item a.goto")
+      [link, _by_name] = links(".item a.goto")
 
       assert Floki.attribute(link, "href") == ["#2.1"]
       assert Floki.text(link) =~ "Details"
@@ -86,9 +102,16 @@ defmodule Expresso.GotoTest do
       assert links(".item .item") |> Floki.text() =~ "Inside"
     end
 
+    test "gives a link by name the address and the commands of the slide with that name" do
+      [_details, link] = links(".item a.goto")
+
+      assert Floki.attribute(link, "href") == ["#3.1"]
+      assert Floki.attribute(link, "data-commands") == [~s([["goto",3]])]
+    end
+
     test "gives no link to an element without the option" do
-      assert length(links("a.goto")) == 3
-      assert length(Floki.find(document(), ".handout a.goto")) == 3
+      assert length(links("a.goto")) == 4
+      assert length(Floki.find(document(), ".handout a.goto")) == 4
     end
   end
 
@@ -135,7 +158,109 @@ defmodule Expresso.GotoTest do
     end
   end
 
+  describe "the verifier and a name" do
+    test "refuses a name that no slide has" do
+      errors =
+        dsl_errors do
+          defmodule Elixir.Expresso.GotoTest.NoName do
+            use Expresso
+
+            slide "one" do
+              text_area(text: "Next", goto: [slide: "two"])
+            end
+          end
+        end
+
+      assert [{Expresso.GotoTest.NoName, [error]}] = errors
+
+      assert Exception.message(error) =~
+               ~s(goto names the slide "two", and no slide has that name)
+    end
+
+    test "refuses a name that two slides have" do
+      errors =
+        dsl_errors do
+          defmodule Elixir.Expresso.GotoTest.SharedName do
+            use Expresso
+
+            slide "one" do
+              text_area(text: "Next", goto: [slide: "same"])
+            end
+
+            slide "same" do
+              text_area(text: "a")
+            end
+
+            slide "same" do
+              text_area(text: "b")
+            end
+          end
+        end
+
+      assert [{Expresso.GotoTest.SharedName, [error]}] = errors
+
+      assert Exception.message(error) =~
+               ~s(goto names the slide "same", and 2 slides have that name: the slides 2, 3)
+    end
+
+    test "refuses a step that the named slide does not have" do
+      errors =
+        dsl_errors do
+          defmodule Elixir.Expresso.GotoTest.NameStep do
+            use Expresso
+
+            slide "one" do
+              text_area(text: "Next", goto: [slide: "two", step: 2])
+            end
+
+            slide "two" do
+              text_area(text: "a")
+            end
+          end
+        end
+
+      assert [{Expresso.GotoTest.NameStep, [error]}] = errors
+
+      assert Exception.message(error) =~
+               ~s(goto names the step 2 of the slide "two", and it has 1 steps)
+    end
+
+    test "Expresso.Builder takes a name, and refuses an unknown name" do
+      import Expresso.Builder
+
+      deck =
+        deck([
+          slide("one", elements: [text_area(text: "Next", goto: [slide: "two"])]),
+          slide("two", elements: [text_area(text: "a")])
+        ])
+
+      [link] =
+        deck |> Expresso.Deck.render() |> Floki.parse_document!() |> Floki.find(".screen a.goto")
+
+      assert Floki.attribute(link, "href") == ["#2.1"]
+
+      assert_raise Spark.Error.DslError, ~r/no slide has that name/, fn ->
+        deck([slide("one", elements: [text_area(text: "Next", goto: [slide: "three"])])])
+      end
+    end
+  end
+
   describe "resolve/1" do
+    test "replaces the name of a link with the number of the slide" do
+      link = %TextArea{text: "Next", goto: %Goto{slide: "two"}}
+
+      slides = [
+        %Expresso.Slide{name: "one", metadata: %{}, elements: [link]},
+        %Expresso.Slide{name: "two", metadata: %{}, elements: []}
+      ]
+
+      deck = "deck" |> Expresso.Deck.new(%{}, slides) |> Expresso.Deck.number_slides()
+      [%Expresso.Slide{elements: [resolved]} | _] = Goto.resolve(deck).slides
+
+      assert resolved.goto.slide == 2
+      assert resolved.goto.commands == ~s([["goto",1]])
+    end
+
     test "raises for a link of a deck struct to a slide that it does not have" do
       link = %TextArea{text: "Next", goto: %Goto{slide: 2}}
       slide = %Expresso.Slide{name: "one", metadata: %{}, elements: [link]}

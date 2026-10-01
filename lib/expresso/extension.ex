@@ -48,7 +48,7 @@ defmodule Expresso.Extension do
     goto: [
       type: {:custom, Expresso.Goto, :new, []},
       doc:
-        "Make the element a link to a slide and a step, such as [slide: 5] or [slide: 5, step: 2]. See Expresso.Goto."
+        "Make the element a link to a slide and a step, such as [slide: 5], [slide: 5, step: 2] or [slide: \"summary\"]. The slide is a number or the name of a slide. See Expresso.Goto."
     ]
   ]
 
