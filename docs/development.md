@@ -547,15 +547,16 @@ not change the bundle.
 the script: the program, the list of the steps, the commands of an element, and the
 message between the two windows. It is the one source of these forms:
 
-- `Expresso.Presenter.Verifier` reads the fields of the state, the views and the
-  built-in functions from it.
+- `Expresso.Presenter.Verifier` reads the fields of the state, the built-in functions and
+  the kind of each value from it.
 - `Expresso.Test.SchemaWriter` writes `assets/src/schema.ts`. That file holds a
   TypeScript type, a decoder, and for a form of strings a constant, for each form. The
   modules of the script import their types from it, and `tsc` makes sure that each decoder
   agrees with its type.
-- `Expresso.Test.SchemaCheck` examines a decoded JSON value with the same forms. The
-  property tests of `test/expresso/presenter/schema_test.exs` make random decks, and they
-  make sure that each program and each list of the steps agrees with its form.
+- `Expresso.Presenter.Schema.Check` examines a decoded JSON value with the same forms. The
+  verifier uses it for the values of a definition. The property tests of
+  `test/expresso/presenter/schema_test.exs` make random decks, and they make sure that
+  each program and each list of the steps agrees with its form.
 
 The test `assets/src/schema.ts agrees with the forms of the schema` fails when the file
 does not agree with the schema. After a change to a form, do these steps:
