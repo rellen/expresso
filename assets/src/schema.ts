@@ -224,7 +224,7 @@ export const decodeSlide: Decoder<Slide> = /* @__PURE__ */ object({
 export type WrittenEntry = readonly [number, number, number, number, string];
 export const decodeWrittenEntry: Decoder<WrittenEntry> = /* @__PURE__ */ tuple(/* @__PURE__ */ integer(1), /* @__PURE__ */ integer(1), /* @__PURE__ */ number(0, 1), /* @__PURE__ */ number(0, 1), /* @__PURE__ */ string());
 
-// The list of the steps of the deck, as the renderer writes it.
+// The steps and the slides of a deck, as the renderer writes them.
 export type WrittenDeck = Readonly<{
   steps: readonly WrittenEntry[];
   slides: readonly Slide[];

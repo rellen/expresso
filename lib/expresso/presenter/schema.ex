@@ -2,19 +2,20 @@ defmodule Expresso.Presenter.Schema do
   @moduledoc """
   Describes each value that Elixir writes for the script of the presenter
 
-  The renderer writes three values for the script: the program of
-  `Expresso.Presenter.Program`, the list of the steps of `Expresso.Steps`, and
-  the commands of an element. The two windows of the presenter also send a
+  The renderer writes three values for the script: the program that
+  `Expresso.Presenter.Program` makes, the list of the steps that
+  `Expresso.Steps` makes, and the commands of an element. The two windows of the presenter also send a
   message to each other. This module describes the JSON form of each value.
   It is the one source of these forms:
 
-    * `Expresso.Presenter.Verifier` reads the fields of the state, the views
-      and the built-in functions from it.
+    * `Expresso.Presenter.Verifier` reads the fields of the state, the views,
+      the built-in functions and the kind of each value from it.
     * `Expresso.Test.SchemaWriter` writes `assets/src/schema.ts` from it. That
       file holds a TypeScript type and a decoder for each value. A test fails
       when the file does not agree with this module.
-    * `Expresso.Test.SchemaCheck` makes sure that each value of the renderer
-      agrees with its form, in the tests of Elixir.
+    * `Expresso.Presenter.Schema.Check` examines a value with the forms.
+      The verifier uses it for the values of a definition, and the tests use
+      it for each value that the renderer writes.
 
   `types/0` returns the forms in order. A form can name an earlier form only.
   `t:type/0` describes the terms of a form.
@@ -79,6 +80,8 @@ defmodule Expresso.Presenter.Schema do
   @views [:present, :handout, :speaker]
   @builtins [:open_speaker, :fullscreen, :reset_timer]
   @transitions [:none, :fade, :slide, :zoom]
+  @regions [:left_third, :right]
+  @directions [:left, :right]
 
   @doc "Return the fields of the state and the kind of value of each field, in order"
   @spec fields() :: [{atom(), kind()}]
@@ -95,6 +98,14 @@ defmodule Expresso.Presenter.Schema do
   @doc "Return the kinds of the transition into a slide"
   @spec transitions() :: [atom()]
   def transitions, do: @transitions
+
+  @doc "Return the parts of the window under a click"
+  @spec regions() :: [atom()]
+  def regions, do: @regions
+
+  @doc "Return the directions of a swipe"
+  @spec directions() :: [atom()]
+  def directions, do: @directions
 
   @doc """
   Return the form of a value of a kind
@@ -126,8 +137,8 @@ defmodule Expresso.Presenter.Schema do
       {:state, "The state of the presenter. The program holds its first value.",
        {:object, for({field, kind} <- @fields, do: {field, kind(kind)})}},
       {:builtin, "A built-in function of the browser.", strings(@builtins)},
-      {:region, "A part of the window under a click.", {:enum, ["left_third", "right"]}},
-      {:direction, "The direction of a swipe.", {:enum, ["left", "right"]}},
+      {:region, "A part of the window under a click.", strings(@regions)},
+      {:direction, "The direction of a swipe.", strings(@directions)},
       {:command,
        "A command of the program. `Expresso.Presenter.Definition` tells what each command does.",
        {:union, commands()}},
@@ -176,7 +187,7 @@ defmodule Expresso.Presenter.Schema do
       {:written_entry,
        "One step of the deck as the renderer writes it: the slide, the step, the fraction, the done part and the position.",
        {:tuple, [{:integer, 1}, {:integer, 1}, {:number, 0, 1}, {:number, 0, 1}, :string]}},
-      {:written_deck, "The list of the steps of the deck, as the renderer writes it.",
+      {:written_deck, "The steps and the slides of a deck, as the renderer writes them.",
        {:object,
         steps: {:list, {:ref, :written_entry}},
         slides: {:list, {:ref, :slide}},

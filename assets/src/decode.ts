@@ -103,6 +103,12 @@ export function tuple<const D extends readonly Decoder<unknown>[]>(
 type Fields = Readonly<Record<string, Decoder<unknown>>>;
 type Shape<F extends Fields> = { readonly [K in keyof F]: Out<F[K]> };
 
+// Tell if an object has a key of its own. The operator `in` also finds a key
+// of `Object.prototype`, such as `constructor`.
+function own(object: object, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(object, key);
+}
+
 function record(value: unknown, path: string): Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -120,14 +126,14 @@ function fieldsOf(
     const data = record(value, path);
     if (mode !== "open") {
       for (const key of Object.keys(data)) {
-        if (!(key in fields)) {
+        if (!own(fields, key)) {
           fail(`${path}.${key}`, "no such key");
         }
       }
     }
     const result: Record<string, unknown> = {};
     for (const [key, decoder] of Object.entries(fields)) {
-      if (key in data) {
+      if (own(data, key)) {
         result[key] = decoder(data[key], `${path}.${key}`);
       } else if (mode !== "partial") {
         fail(`${path}.${key}`, "a value");

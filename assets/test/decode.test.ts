@@ -71,6 +71,23 @@ test("a number decoder refuses a value that is not finite, and an integer decode
   assert.equal(is(number(0, 1), 1.01), false);
 });
 
+test("an object refuses a key of Object.prototype, and does not read it from the prototype", () => {
+  const decoder = object({ a: integer() });
+
+  assert.equal(
+    error(decoder, JSON.parse('{"a":1,"constructor":1}')),
+    "$.constructor: expected no such key",
+  );
+  assert.equal(
+    error(partial({ a: integer() }), JSON.parse('{"toString":0}')),
+    "$.toString: expected no such key",
+  );
+  assert.equal(
+    error(object({ toString: integer() }), {}),
+    "$.toString: expected a value",
+  );
+});
+
 test("an open object takes other keys and does not return them", () => {
   const decoder = openObject({ a: integer() });
 

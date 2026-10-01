@@ -121,6 +121,20 @@ defmodule Expresso.Presenter.DslTest do
       assert message =~ "the field view cannot have the value :stage"
     end
 
+    test "refuses a value that the form of its kind in the schema refuses" do
+      for {field, value} <- [digits: ~s("12\\n"), view: ~s("present"), selected: "0"] do
+        state =
+          [index: "0", view: ":present", blank: "false", help: "false", digits: ~s("")]
+          |> Keyword.merge(overview: "false", selected: "1", progress: "true", every: "false")
+          |> Keyword.put(field, value)
+          |> Enum.map_join(", ", fn {key, text} -> "#{key}: #{text}" end)
+
+        message = error("state #{state}\nsync [:index]\n")
+
+        assert message =~ "the field #{field} cannot have the value"
+      end
+    end
+
     test "refuses an unknown field in the option sync" do
       message =
         error("""

@@ -127,7 +127,10 @@ defmodule Expresso.Test.SchemaWriter do
   # deeper than `depth`.
   defp decode(:boolean, _depth), do: "boolean"
   defp decode(:string, _depth), do: call("string", "")
-  defp decode({:string, pattern}, _depth), do: call("string", "/#{pattern}/")
+
+  defp decode({:string, pattern}, _depth),
+    do: call("string", "/#{String.replace(pattern, "/", "\\/")}/")
+
   defp decode({:integer, nil}, _depth), do: call("integer", "")
   defp decode({:integer, min}, _depth), do: call("integer", "#{min}")
   defp decode({:number, nil, nil}, _depth), do: call("number", "")
