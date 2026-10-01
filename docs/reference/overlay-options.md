@@ -105,7 +105,7 @@ then moves, changes its size and turns together. Code keeps the colors of its sy
 | --- | --- | --- |
 | `list` | `true` | Each item shows at its own step. |
 | `table` | `true` | Each row shows at its own step. |
-| `code` | a list of line numbers and ranges, such as `[1..3, 5..6]` | Each group of lines shows at its own step. A line that does not show keeps its space. |
+| `code` | a list of line numbers and ranges, such as `[1..3, 5..6]` | Each group of lines shows at its own step. A line that does not show keeps its space. With `src`, a number is the number of the line in the file. See [the code element](code-element.md). |
 
 ![The items of a list, one at each step](https://raw.githubusercontent.com/rellen/expresso/media/overlay-list.gif)
 
