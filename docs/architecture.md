@@ -760,7 +760,7 @@ The Elixir part is in `lib/expresso/presenter/`:
 - `Expresso.Presenter.Interpreter` is the reference interpreter. The ExUnit tests run it.
 - `Expresso.Presenter.Help` makes the rows of the list of keys.
 
-The TypeScript part is under `assets/src/`. It has seven modules:
+The TypeScript part is under `assets/src/`. It has these modules:
 
 - `deck.ts` reads the list of the steps, which the section below describes.
 - `program.ts` reads the program of the presenter, and it trusts the renderer.
@@ -775,6 +775,8 @@ The TypeScript part is under `assets/src/`. It has seven modules:
   the `data-step` attribute.
 - `main.ts` connects the modules. It sends each event to the interpreter, and it writes
   the fragment of the address.
+- `layout.ts` makes the layout check of `?check`. It shows each step with `dom.ts`, it
+  measures the elements of the slide, and it writes a report into the document.
 
 The first slide is slide 1, and the first step is step 1. `docs/overlays.md` gives the
 rules of a step.

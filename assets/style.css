@@ -940,3 +940,34 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     z-index: 5;
   }
 }
+/*
+ * The report of the layout check, from `?check` in the address. It stays in a
+ * corner of the window, over the slide, and paper does not get it.
+ */
+#layout-check {
+  position: fixed;
+  right: 0.25rem;
+  bottom: 0.25rem;
+  z-index: 10;
+  max-width: 50vw;
+  max-height: 40vh;
+  overflow: auto;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.35rem;
+  text-align: left;
+  color: var(--text);
+  background-color: var(--background);
+  border: 2px solid var(--accent);
+}
+#layout-check p,
+#layout-check ol {
+  margin: 0 0 0.2rem;
+}
+#layout-check a {
+  color: var(--accent);
+}
+@media print {
+  #layout-check {
+    display: none;
+  }
+}

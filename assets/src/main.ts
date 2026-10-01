@@ -42,6 +42,11 @@
 // the key `a` of the handout view does. A print or a PDF of such an address
 // then gets every step with no key. The speaker view opens with the same
 // address, so it also shows every step.
+//
+// `?check` in the address of the present view runs the layout check after the
+// load of the document and of its fonts. The check shows each step, finds the
+// elements that go past an edge of the window and the lines of code that
+// break, and writes a report into the document. `layout.ts` gives the rules.
 
 import {
   follow,
@@ -54,6 +59,7 @@ import {
 import type { Event } from "./interpreter.ts";
 import { commands } from "./program.ts";
 import type { Builtin } from "./program.ts";
+import { audit, report } from "./layout.ts";
 import { clock, left, pace, talkLength } from "./speaker.ts";
 import {
   accepts,
@@ -171,6 +177,27 @@ if (isSpeaker) {
 apply(state, deck, program);
 
 show(fromHash(state, location.hash, deck));
+
+// The layout check measures each step, and then it shows the current step
+// again. The images of a document load after the script, so the check waits
+// for the load of the document.
+function check(): void {
+  document.fonts.ready.then(() => {
+    const problems = audit(deck.steps, (index) =>
+      apply({ ...state, index }, deck, program),
+    );
+    apply(state, deck, program);
+    report(problems);
+  });
+}
+
+if (parameters.has("check") && !isSpeaker) {
+  if (document.readyState === "complete") {
+    check();
+  } else {
+    window.addEventListener("load", check, { once: true });
+  }
+}
 
 // Call a built-in function of the program.
 function call(builtin: Builtin): void {

@@ -1026,55 +1026,46 @@ defmodule Line4.Deck do
     off() is the rule that each station reads: a machine is off when it is down, or when it is not electrical and the MCC has no supply.
     """
 
-    columns do
-      column do
-        code "js" do
-          reveal [1..5, 6..10, 11..15]
-          dim true
+    code "js" do
+      reveal [1..5, 6..10, 11..15]
+      dim true
 
-          text ~S"""
-          const LEVELS = [
-            { p: 0.5, min: 3, max: 8 },
-            { p: 0.35, min: 8, max: 20 },
-            { p: 0.15, min: 20, max: 45 },
-          ];
-          function raiseFault(m, level) {
-            const u = Math.random();
-            m.level = level || (u < LEVELS[0].p ? 1
-              : u < LEVELS[0].p + LEVELS[1].p ? 2 : 3);
-            if (m.electrical && m.level === 1) m.level = Math.random() < 0.7 ? 2 : 3;
-            const band = LEVELS[m.level - 1];
-            m.repairTime = band.min + Math.random() * (band.max - band.min);
-            if (m.level === 3) m.callAt = sim.t + 15 + Math.random() * 25;
-            // …
-          }
-          """
-        end
-      end
+      text ~S"""
+      const LEVELS = [
+        { p: 0.5, min: 3, max: 8 },
+        { p: 0.35, min: 8, max: 20 },
+        { p: 0.15, min: 20, max: 45 },
+      ];
+      function raiseFault(m, level) {
+        const u = Math.random();
+        m.level = level || (u < LEVELS[0].p ? 1
+          : u < LEVELS[0].p + LEVELS[1].p ? 2 : 3);
+        if (m.electrical && m.level === 1) m.level = Math.random() < 0.7 ? 2 : 3;
+        const band = LEVELS[m.level - 1];
+        m.repairTime = band.min + Math.random() * (band.max - band.min);
+        if (m.level === 3) m.callAt = sim.t + 15 + Math.random() * 25;
+        // …
+      }
+      """
+    end
 
-      column do
-        width "40%"
+    code "js" do
+      at from: 4
+      effect :fly_left
 
-        code "js" do
-          at from: 4
-          effect :fly_left
+      text ~S"""
+      const powerOut = () => machines.switchboard.down ? machines.switchboard : null;
+      const mccOut = () => !!powerOut() || machines.mcc.down;
+      const off = m => m.down || (!m.electrical && mccOut());
+      """
+    end
 
-          text ~S"""
-          const powerOut = () =>
-            machines.switchboard.down ? machines.switchboard : null;
-          const mccOut = () => !!powerOut() || machines.mcc.down;
-          const off = m => m.down || (!m.electrical && mccOut());
-          """
-        end
-
-        text_area do
-          text "Each station asks <code>off()</code>."
-          at from: 5
-          effect :fade
-          speed :fast
-          on [from: 5], set: [color: "#e8b83a"]
-        end
-      end
+    text_area do
+      text "Each station asks <code>off()</code>."
+      at from: 5
+      effect :fade
+      speed :fast
+      on [from: 5], set: [color: "#e8b83a"]
     end
   end
 
