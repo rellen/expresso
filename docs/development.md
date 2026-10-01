@@ -482,6 +482,7 @@ the Chromium of the container, and that Chromium can be older than the new versi
   the side of a click and the direction of a swipe.
 - `assets/src/dom.ts` — the code that reads the document and writes to it.
 - `assets/src/main.ts` — the entry, which esbuild bundles.
+- `assets/src/layout.ts` — the layout check of `?check` in the address.
 - `assets/test/interpreter.test.ts` — the test that runs the fixtures of the Elixir
   interpreter. "The fixtures of the interpreter" below tells how to write them again.
 - `assets/test/validate.ts` — examines a program of the presenter and a list of the
@@ -761,7 +762,10 @@ mix expresso examples/dsl_deck.exs --watch
 
 The browser tests cover the behavior of the presenter. Add a test to `test/e2e/` for a
 new behavior. A look at the slides is still necessary after a change to
-`assets/style.css`, because no test reads the layout. A remote container has no display,
+`assets/style.css`. `?check` in the address finds an element past an edge of the window
+and a line of code that breaks, and `test/e2e/layout_check_test.exs` runs it on
+`examples/line4/line4.exs` at 1920 × 1080. The check does not see a color, an order or a
+size that is wrong, so look at the slides too. A remote container has no display,
 but it has Chromium, and `npm install` gives Playwright. The browser is at
 `/opt/pw-browsers/chromium`. This path is not the default path of Playwright, so give it
 to `chromium.launch`.

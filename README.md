@@ -385,6 +385,19 @@ chromium --headless --print-to-pdf=deck.pdf "file:///path/to/deck.html?all"
 The name of the command can be `google-chrome` or `chrome`. Without `?all`, the PDF gets
 the pages that the `handout` options select.
 
+### The layout check
+
+`?check` at the end of the address, such as `deck.html?check`, finds the parts of the deck
+that do not fit the window. Open the document in a window of the size of the projector,
+such as 1920 × 1080. The presenter shows each step, and it finds two kinds of problem:
+
+- An element that goes past an edge of the window, so a part of it does not show.
+- A line of code that is too long for its box, so the browser breaks it on the slide.
+
+A report in a corner of the window gives the size of the window and each problem, with a
+link to its step. The console of the browser gets the same lines. A different size of
+window gives a different layout, so make the check at the size of the talk.
+
 ### The custom properties of a theme
 
 A theme can set these custom properties:
