@@ -11,6 +11,7 @@ defmodule Expresso.Overlay.Transformer do
   use Spark.Dsl.Transformer
 
   alias Expresso.Overlay.Expand
+  alias Shoddy.Result
   alias Spark.Dsl.Transformer
 
   @doc """
@@ -23,16 +24,11 @@ defmodule Expresso.Overlay.Transformer do
 
     dsl_state
     |> Transformer.get_entities([:deck])
-    |> Enum.reduce_while({:ok, []}, fn slide, {:ok, slides} ->
-      case Expand.slide(slide) do
-        {:ok, slide} -> {:cont, {:ok, [slide | slides]}}
-        {:error, message} -> {:halt, {:error, dsl_error(module, slide, message)}}
-      end
+    |> Stream.map(fn slide ->
+      slide |> Expand.slide() |> Result.map_error(&dsl_error(module, slide, &1))
     end)
-    |> case do
-      {:ok, slides} -> {:ok, put_slides(dsl_state, Enum.reverse(slides))}
-      {:error, error} -> {:error, error}
-    end
+    |> Result.collect()
+    |> Result.map_ok(&put_slides(dsl_state, &1))
   end
 
   defp put_slides(dsl_state, slides) do

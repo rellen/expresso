@@ -62,10 +62,7 @@ defmodule Expresso.Slide do
   def put_options_in_metadata(%__MODULE__{} = slide) do
     metadata =
       Enum.reduce(@metadata_options, slide.metadata || %{}, fn key, metadata ->
-        case Map.fetch!(slide, key) do
-          nil -> metadata
-          value -> Map.put(metadata, key, value)
-        end
+        Shoddy.Maps.put_present(metadata, key, Map.fetch!(slide, key))
       end)
 
     %__MODULE__{slide | metadata: metadata}

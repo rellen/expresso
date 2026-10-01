@@ -11,6 +11,8 @@ defmodule Expresso.Overlay do
   `docs/overlays.md` gives the forms and the rules.
   """
 
+  alias Shoddy.Result
+
   @typedoc "The first step of a pair"
   @type first :: pos_integer() | :next
 
@@ -44,16 +46,9 @@ defmodule Expresso.Overlay do
 
   def new(items) when is_list(items) do
     items
-    |> Enum.reduce_while({:ok, []}, fn item, {:ok, pairs} ->
-      case pair(item) do
-        {:ok, pair} -> {:cont, {:ok, [pair | pairs]}}
-        {:error, message} -> {:halt, {:error, message}}
-      end
-    end)
-    |> case do
-      {:ok, pairs} -> {:ok, %__MODULE__{pairs: Enum.reverse(pairs)}}
-      {:error, message} -> {:error, message}
-    end
+    |> Stream.map(&pair/1)
+    |> Result.collect()
+    |> Result.map_ok(&%__MODULE__{pairs: &1})
   end
 
   def new(term) do

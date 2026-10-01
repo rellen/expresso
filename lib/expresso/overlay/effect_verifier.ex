@@ -14,6 +14,7 @@ defmodule Expresso.Overlay.EffectVerifier do
 
   alias Expresso.Element.Pause
   alias Expresso.Theme
+  alias Shoddy.Result
   alias Spark.Dsl.Verifier
 
   @doc """
@@ -39,17 +40,15 @@ defmodule Expresso.Overlay.EffectVerifier do
            check([Verifier.get_option(dsl_state, [:deck], :effect)], effects, module, [:deck]) do
       dsl_state
       |> Verifier.get_entities([:deck])
-      |> Enum.reduce_while(:ok, &check_slide(&1, &2, effects, module))
+      |> Stream.map(&check_slide(&1, effects, module))
+      |> Result.collect()
+      |> Result.ignore()
     end
   end
 
-  defp check_slide(slide, :ok, effects, module) do
+  defp check_slide(slide, effects, module) do
     path = [:deck, :slide] ++ List.wrap(slide.name)
-
-    case check([slide.effect | element_effects(slide.elements || [])], effects, module, path) do
-      :ok -> {:cont, :ok}
-      error -> {:halt, error}
-    end
+    check([slide.effect | element_effects(slide.elements || [])], effects, module, path)
   end
 
   defp check(values, effects, module, path) do

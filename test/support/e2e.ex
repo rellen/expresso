@@ -38,13 +38,12 @@ defmodule Expresso.E2E do
       {PlaywrightEx.Supervisor, timeout: @timeout, executable: "node_modules/playwright/cli.js"}
     )
 
-    launch = [timeout: @timeout, headless: true]
-
     launch =
-      case System.get_env("EXPRESSO_CHROMIUM") do
-        nil -> launch
-        path -> Keyword.put(launch, :executable_path, path)
-      end
+      Shoddy.Keywords.put_present(
+        [timeout: @timeout, headless: true],
+        :executable_path,
+        System.get_env("EXPRESSO_CHROMIUM")
+      )
 
     {:ok, browser} = PlaywrightEx.launch_browser(:chromium, launch)
     %{browser: browser}

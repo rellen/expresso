@@ -89,6 +89,10 @@ defmodule Expresso.MixProject do
       # DSL
       {:spark, "~> 2.7"},
 
+      # results, lists, maps and keyword lists. Shoddy is not on Hex, so the lockfile
+      # gives the commit of its main branch.
+      {:shoddy, github: "rellen/shoddy", branch: "main"},
+
       # HTML
       {:floki, "~> 0.38"},
       {:phoenix_html, "~> 4.3"},
