@@ -1,6 +1,7 @@
 defmodule Expresso.Element.MathTest do
   use ExUnit.Case, async: true
 
+  alias Expresso.Builder
   alias Expresso.Element.Math
 
   @formula ~S(<math display="block"><mfrac><mi>a</mi><mi>b</mi></mfrac></math>)
@@ -29,8 +30,8 @@ defmodule Expresso.Element.MathTest do
 
   defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
 
-  test "new/1 makes a math element" do
-    assert Math.new(@formula) == %Math{text: @formula}
+  test "Expresso.Builder.math/1 makes a math element" do
+    assert %Math{text: @formula} = Builder.math(@formula)
   end
 
   test "the DSL entity takes the MathML as its first argument, with the overlays" do

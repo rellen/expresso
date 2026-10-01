@@ -27,6 +27,7 @@ defmodule Expresso.Test.PresenterFixtures do
   transition]`.
   """
 
+  alias Expresso.Builder
   alias Expresso.Presenter.{Definition, Help, Interpreter, Program}
 
   @path "assets/test/fixtures/presenter.json"
@@ -110,11 +111,12 @@ defmodule Expresso.Test.PresenterFixtures do
 
   defp deck(counts, kinds) do
     counts
-    |> Enum.with_index()
-    |> Enum.reduce(Expresso.Deck.new("deck"), fn {steps, index}, deck ->
-      metadata = %{max_step: steps, transition: Enum.at(kinds, index)}
-      Expresso.Deck.add_slide(deck, "slide #{index + 1}", metadata, [])
+    |> Enum.with_index(1)
+    |> Enum.map(fn {steps, number} ->
+      transition = for kind <- [Enum.at(kinds, number - 1)], kind, do: {:transition, kind}
+      Builder.slide("slide #{number}", [steps: steps] ++ transition)
     end)
+    |> Builder.deck(name: "deck")
   end
 
   defp case_of({counts, kinds} = shape) do

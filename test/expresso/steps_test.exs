@@ -2,18 +2,21 @@ defmodule Expresso.StepsTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  alias Expresso.Deck
+  alias Expresso.{Deck, Slide}
   alias Expresso.Steps
   alias Expresso.Test.Steps, as: Document
 
-  # A deck from the imperative API, with the number of steps of each slide.
+  # A deck with the number of steps of each slide. The tests make the structs,
+  # so a slide can have metadata that the DSL does not give.
   defp deck(counts, metadata \\ %{}) do
-    counts
-    |> Enum.with_index(1)
-    |> Enum.reduce(Deck.new("deck", metadata), fn {steps, number}, deck ->
-      Deck.add_slide(deck, "slide #{number}", %{max_step: steps}, [])
-    end)
+    slides =
+      for {steps, number} <- Enum.with_index(counts, 1),
+          do: slide("slide #{number}", %{max_step: steps})
+
+    "deck" |> Deck.new(metadata, slides) |> Deck.number_slides()
   end
+
+  defp slide(name, metadata), do: %Slide{name: name, metadata: metadata, elements: []}
 
   # Three slides. Slide 2 has three steps, and slide 3 has two steps.
   @three [1, 3, 2]
@@ -50,8 +53,8 @@ defmodule Expresso.StepsTest do
       assert [%{fraction: +0.0, done: +0.0, position: "Slide 1 of 1"}] = Steps.entries(deck([1]))
     end
 
-    test "a slide from the imperative API has one step" do
-      deck = "deck" |> Deck.new() |> Deck.add_slide("one", %{}, [])
+    test "a slide with no maximum step has one step" do
+      deck = "deck" |> Deck.new(%{}, [slide("one", %{})]) |> Deck.number_slides()
 
       assert [%{slide: 1, step: 1}] = Steps.entries(deck)
     end
@@ -68,12 +71,13 @@ defmodule Expresso.StepsTest do
     end
 
     test "gives the transition of the slide, then of the deck, then fade" do
-      deck =
-        "deck"
-        |> Deck.new(%{transition: :zoom})
-        |> Deck.add_slide("one", %{}, [])
-        |> Deck.add_slide("two", %{transition: :slide}, [])
-        |> Deck.add_slide("three", %{transition: :spin}, [])
+      slides = [
+        slide("one", %{}),
+        slide("two", %{transition: :slide}),
+        slide("three", %{transition: :spin})
+      ]
+
+      deck = "deck" |> Deck.new(%{transition: :zoom}, slides) |> Deck.number_slides()
 
       assert Enum.map(Steps.slides(deck), & &1.transition) == ["zoom", "slide", "zoom"]
       assert Enum.map(Steps.slides(deck([1])), & &1.transition) == ["fade"]

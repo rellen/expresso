@@ -84,6 +84,7 @@ spark_locals_without_parens = [
   sync: 1,
   table: 0,
   table: 1,
+  template: 1,
   text: 1,
   text_area: 0,
   text_area: 1,

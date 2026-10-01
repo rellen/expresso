@@ -3,6 +3,7 @@ defmodule Expresso.Element.ListTest do
 
   import Spark.Test, only: [dsl_errors: 1]
 
+  alias Expresso.Builder
   alias Expresso.Element.Item
   alias Expresso.Overlay
 
@@ -91,9 +92,9 @@ defmodule Expresso.Element.ListTest do
 
   defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
 
-  describe "new/2" do
+  describe "Expresso.Builder.list/1" do
     test "makes a list from items" do
-      list = Expresso.Element.List.new([Item.new("a"), Item.new("b", [])], ordered: true)
+      list = Builder.list(elements: [Builder.item("a"), Builder.item("b")], ordered: true)
 
       assert [%Item{text: "a"}, %Item{text: "b"}] = list.elements
       assert list.ordered == true

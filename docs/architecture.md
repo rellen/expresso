@@ -9,17 +9,38 @@ Expresso has two ways to make an `Expresso.Deck` struct. Both paths reach HTML.
 
 ### The imperative path
 
-A script builds a deck with function calls, and the script returns the deck.
+A script makes a deck with the functions of `Expresso.Builder`, and the script returns the
+deck.
 
 ```elixir
-Expresso.Deck.new("demo")
-|> Expresso.Deck.add_slide("heading_with_text_box", %{heading: "This is a heading"}, [
-  Expresso.Element.TextBox.new("This is a text-area inside a text-box.")
-])
+import Expresso.Builder
+
+deck(
+  [
+    slide("heading_with_text_box",
+      heading: "This is a heading",
+      elements: [text_box(elements: [text_area(text: "This is a text-area inside a text-box.")])]
+    )
+  ],
+  name: "demo"
+)
 ```
 
 `Expresso.main/2` reads a file of this kind. The section "The render pipeline" gives the
 steps.
+
+The functions come from the DSL. `Expresso.Builder.Generator` reads the definition of
+each entity of `Expresso.Extension`, and it makes one function for each entity. A
+function builds its struct with `Spark.Dsl.Entity.build/5`, which the macros of the DSL
+also call. `Expresso.Builder.deck/2` makes the state that a module of the DSL has, and it
+runs the transformers and the verifiers of the extension on it. Then
+`Expresso.from_dsl_state/1` makes the deck, as `Expresso.parse/1` does for a module. Thus
+the two paths give the same deck, and `test/expresso/builder_test.exs` makes sure that
+they give the same HTML.
+
+Spark has no public function for this work, so the generator depends on two parts of
+Spark that are not public: `Spark.Dsl.Entity.build/5` and the form of the DSL state.
+After an update of Spark, the parity tests find a change of either part.
 
 ### The DSL path
 
@@ -76,8 +97,7 @@ end
 ```
 
 Spark puts the option into the `heading` field of the struct. The templates read the
-heading from the metadata, as they do for a slide from `Expresso.Deck.add_slide/4`.
-Therefore `Expresso.parse/1` calls `Expresso.Slide.put_options_in_metadata/1` for each
+heading from the metadata. Therefore `Expresso.from_dsl_state/1` calls `Expresso.Slide.put_options_in_metadata/1` for each
 slide, and that function puts the heading into the metadata. The default slide template
 writes the heading container only when the metadata contains a heading.
 
@@ -107,7 +127,7 @@ with `nil`: "The two commands" below tells what they do for a command with no ar
 
 | Value | Operation |
 | --- | --- |
-| An `Expresso.Deck` struct | The function returns the struct. |
+| An `Expresso.Deck` struct, such as the result of `Expresso.Builder.deck/2` | The function returns the struct. |
 | A module that uses the DSL | The function calls `Expresso.parse/1`. |
 | The tuple of a `defmodule` expression | The function reads the module from the tuple. |
 
@@ -409,14 +429,22 @@ The value takes one of two forms. The tuple `{:builtins, name}` selects a built-
 A module selects that module. Therefore a template that `Expresso.load_templates/0` compiles
 from `./priv/templates/` is available as a module.
 
-These two lines show each kind:
+The `template` option of the deck and of a slide gives each kind:
 
 ```elixir
-Expresso.Deck.new("my deck", %{template: MyDeckTemplate})
-|> Expresso.Deck.add_slide("first", %{template: MySlideTemplate}, [])
+defmodule MyDeck do
+  use Expresso
+
+  name "my deck"
+  template MyDeckTemplate
+
+  slide "first" do
+    template MySlideTemplate
+  end
+end
 ```
 
-The DSL gives no template option. A deck from the DSL uses the built-in templates.
+`Expresso.Builder` takes the same option, such as `slide("first", template: MySlideTemplate)`.
 
 ## The elements
 
@@ -1105,9 +1133,7 @@ The commands are:
 
 This list gives the work in the order of its value. Take the first item that you can do.
 
-1. Answer the question of the imperative API below, then do the work that the answer
-   gives.
-2. Move the GIF recorder of `assets/gifs/` to Elixir. This item is decision 7 of
+1. Move the GIF recorder of `assets/gifs/` to Elixir. This item is decision 7 of
    `docs/research/elixir-presenter-report.md`, and it has the least value. The section
    "The GIF recorder in Elixir" of the report gives its cost. Do it only if the
    maintainer decides for it.
@@ -1115,7 +1141,3 @@ This list gives the work in the order of its value. Take the first item that you
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on
 the versions of `.tool-versions`.
-
-One question has no answer, and the maintainer decides it. The section "The imperative
-API" of `docs/overlays.md` asks whether `Expresso.Deck.add_slide/4` keeps parity with the
-DSL for an overlay, or whether an overlay needs the DSL.

@@ -852,7 +852,8 @@ renderer writes a third `style` element, after the fonts and the theme. It holds
 result of `Expresso.Overlay.Render.style/1`.
 
 The renderer writes `data-step="1"` and `data-max-step` on each `section` element. A slide
-from the imperative API has no `max_step` in its metadata, and its maximum is 1.
+that the overlay transformer did not expand has no `max_step` in its metadata, and its
+maximum is 1. The DSL and `Expresso.Builder` expand each slide.
 
 ### The JavaScript code
 
@@ -878,10 +879,13 @@ use the same two moves, or they go to step 1 of a slide.
 
 ### The imperative API
 
-`Expresso.Deck.add_slide/4` and `Expresso.Element.TextBox.new/1` make a deck without the
-DSL. `examples/demo.exs` uses this API. These functions have no parameter for an overlay,
-and no transformer runs for them. The design must say whether this API keeps parity with
-the DSL, or whether overlays need the DSL.
+`Expresso.Builder` makes a deck with functions in place of the DSL. `examples/demo.exs`
+uses it. `Expresso.Builder.Generator` makes one function for each entity of
+`Expresso.Extension`, from the definition of the entity. Each function takes the options
+of the entity, and it validates them with the schema of the entity. `deck/2` then runs
+the transformers and the verifiers of the extension. Therefore the two paths give the
+same overlays, with the same checks and the same messages. The decision "Does the
+imperative API keep parity with the DSL?" gives the reasons.
 
 ## The test plan
 
@@ -1038,3 +1042,32 @@ one slide, and it has two uses. An author can add an empty step at the end of a 
 it makes the first condition of the verifier possible, because a specification above a
 declared maximum is an error. Without a declared maximum, a large step number raises the
 maximum, and nothing reports it.
+
+### Does the imperative API keep parity with the DSL? (decided)
+
+The maintainer decided this on 2026-10-01. Yes. The functions of the imperative API come
+from the definition of the DSL. `Expresso.Builder.Generator` makes one function for each
+entity of `Expresso.Extension`, and `Expresso.Builder.deck/2` runs the transformers and
+the verifiers of the extension. The hand-written functions, such as
+`Expresso.Deck.add_slide/4` and `Expresso.Element.TextBox.new/1`, do not exist now.
+
+These measurements, of 2026-10-01, gave the decision:
+
+- The hand-written functions ignored an overlay, and they gave no message. A text box with
+  `at: [from: 2]` showed at step 1. `List.new/2` accepted `reveal:` and `dim:`, and the
+  options had no effect.
+- `Expresso.Overlay.Expand.slide/1` and `Expresso.Overlay.Check.slide/1` are pure
+  functions on a slide. But a second expansion of a list with `dim` adds each `on` entity
+  again. Thus the expansion must run one time, in the same place for each path.
+- The DSL accepts a `for` loop, so a deck from data does not need the functions. But a
+  DSL module of 2000 slides compiled in 33 s. The functions made the same deck in
+  approximately 0.1 s.
+- Spark gives no runtime API for the users of a DSL. `Spark.Dsl.Transformer.build_entity/4`
+  validates one entity, but it finds only the first two levels of the tree. Reactor has a
+  DSL and a builder, and it writes the builder by hand.
+
+The generator reads the definitions of the entities, which Spark gives as data, and the
+DSL keeps one definition. The cost is a dependency on the form of the DSL state that the
+transformers and the verifiers read. A test makes sure that each deck of a set gives the
+same HTML from the two paths, so a change in Spark fails in the tests. A message from
+`deck/2` has the path of the slide, but it has no file and no line.

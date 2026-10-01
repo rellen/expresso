@@ -200,19 +200,17 @@ defmodule Expresso.HandoutTest do
     end
   end
 
-  describe "the imperative API" do
-    test "the metadata of the deck and of a slide select the pages" do
-      deck =
-        "deck"
-        |> Expresso.Deck.new(%{handout: :last})
-        |> Expresso.Deck.add_slide("one", %{})
-        |> Expresso.Deck.add_slide("two", %{handout: :all})
+  describe "the builder and a deck struct" do
+    test "the options of the deck and of a slide select the pages" do
+      slides = [Expresso.Builder.slide("one"), Expresso.Builder.slide("two", handout: :all)]
+      deck = Expresso.Builder.deck(slides, handout: :last)
 
       assert pages(deck) == [{"1.1", true}, {"2.1", true}]
     end
 
     test "a step that the slide does not have raises at render" do
-      deck = Expresso.Deck.add_slide(Expresso.Deck.new("deck"), "one", %{handout: [2]})
+      slide = %Expresso.Slide{name: "one", metadata: %{handout: [2]}, elements: []}
+      deck = "deck" |> Expresso.Deck.new(%{}, [slide]) |> Expresso.Deck.number_slides()
 
       assert_raise ArgumentError, ~r/slide 1: .*the step 2 is more than the maximum step 1/, fn ->
         Expresso.Deck.render(deck)

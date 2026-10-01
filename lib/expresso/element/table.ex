@@ -36,21 +36,6 @@ defmodule Expresso.Element.Table do
   ]
 
   @doc """
-  Make a table from rows
-
-  The options are `header`, `reveal` and `dim`, and each takes a boolean.
-  """
-  @spec new([Expresso.Element.Row.t()], keyword()) :: t()
-  def new(rows, opts \\ []) do
-    %__MODULE__{
-      elements: rows,
-      header: Keyword.get(opts, :header, false),
-      reveal: Keyword.get(opts, :reveal, false),
-      dim: Keyword.get(opts, :dim, false)
-    }
-  end
-
-  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

@@ -1,19 +1,23 @@
 defmodule Expresso.Presenter.DocumentTest do
   use ExUnit.Case, async: true
 
+  alias Expresso.Builder
   alias Expresso.Presenter.{Definition, Help, Program}
 
   # A deck with three slides. Slide 2 has three steps.
   defp document(counts \\ [1, 3, 2]) do
     counts
     |> Enum.with_index(1)
-    |> Enum.reduce(Expresso.Deck.new("deck"), fn {steps, number}, deck ->
-      elements = for step <- 1..steps//1, do: Expresso.Element.TextBox.new("text #{step}")
-      Expresso.Deck.add_slide(deck, "slide #{number}", %{max_step: steps}, elements)
+    |> Enum.map(fn {steps, number} ->
+      elements = for step <- 1..steps//1, do: box("text #{step}")
+      Builder.slide("slide #{number}", steps: steps, elements: elements)
     end)
+    |> Builder.deck(name: "deck")
     |> Expresso.Deck.render()
     |> Floki.parse_document!()
   end
+
+  defp box(text), do: Builder.text_box(elements: [Builder.text_area(text: text)])
 
   describe "the program" do
     test "is a JSON script element between the list of the steps and the bundle" do
@@ -24,12 +28,7 @@ defmodule Expresso.Presenter.DocumentTest do
 
     test "holds the program of the deck" do
       text = document() |> Floki.find("script#expresso-program") |> Floki.text(js: true)
-      deck = Expresso.Deck.new("deck")
-
-      deck =
-        Enum.reduce([1, 3, 2], deck, fn steps, deck ->
-          Expresso.Deck.add_slide(deck, "slide", %{max_step: steps}, [])
-        end)
+      deck = Builder.deck(for(steps <- [1, 3, 2], do: Builder.slide("slide", steps: steps)))
 
       assert text == Program.json(Program.compile(Definition.presenter(), deck))
     end

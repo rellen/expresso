@@ -19,12 +19,6 @@ defmodule Expresso.Element.Math do
   defstruct [:text, :at, :steps, :el, :effect, :speed, :easing, on: [], __spark_metadata__: nil]
 
   @doc """
-  Make a math element with MathML
-  """
-  @spec new(String.t()) :: t()
-  def new(text), do: %__MODULE__{text: text}
-
-  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

@@ -226,17 +226,17 @@ defmodule Expresso.CssTest do
       refute css =~ "</style>"
     end
 
-    test "reads the CSS of a deck from the imperative API", %{tmp_dir: tmp_dir} do
+    test "reads the CSS of a deck from the builder", %{tmp_dir: tmp_dir} do
       path = Path.join(tmp_dir, "deck.css")
       File.write!(path, "h2 { color: teal; }")
 
-      deck = "deck" |> Expresso.Deck.new(%{css: path}) |> Expresso.Deck.add_slide("one", %{}, [])
+      deck = Expresso.Builder.deck([Expresso.Builder.slide("one")], css: path)
 
       assert [_, _, _, _, "h2 { color: teal; }"] = styles(deck)
     end
 
     test "writes no fifth style element without CSS" do
-      deck = "deck" |> Expresso.Deck.new() |> Expresso.Deck.add_slide("one", %{}, [])
+      deck = Expresso.Builder.deck([Expresso.Builder.slide("one")])
 
       assert length(styles(deck)) == 4
     end

@@ -23,8 +23,8 @@ slide "contents" do
 end
 ```
 
-A deck from the imperative API puts an `Expresso.Goto` struct into the `goto` field of the
-element, such as `%Expresso.Goto{slide: 5}`.
+`Expresso.Builder` takes the same option, such as
+`text_area(text: "The summary", goto: [slide: 3, step: 2])`.
 
 ## The values
 
@@ -38,7 +38,7 @@ have the slide and the step:
 
 - A deck from the DSL does not compile with a link to a slide or a step that it does not
   have. The error names the slide of the link.
-- A deck from the imperative API raises an `ArgumentError` when it renders.
+- `Expresso.Builder.deck/2` raises a `Spark.Error.DslError` with the same message.
 
 ## What a click does
 

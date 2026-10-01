@@ -24,14 +24,6 @@ defmodule Expresso.Element.Row do
   ]
 
   @doc """
-  Make a row from cells
-  """
-  @spec new([String.t()]) :: t()
-  def new(cells) do
-    %__MODULE__{cells: cells}
-  end
-
-  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

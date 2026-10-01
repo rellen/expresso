@@ -192,10 +192,8 @@ defmodule Expresso.E2E.OverviewTest do
   end
 
   test "the overview of 30 slides fits the window with no scroll", %{page: page, tmp_dir: tmp_dir} do
-    deck =
-      Enum.reduce(1..30, Expresso.Deck.new("thirty slides"), fn number, deck ->
-        Expresso.Deck.add_slide(deck, "slide #{number}", %{}, [])
-      end)
+    slides = for number <- 1..30, do: Expresso.Builder.slide("slide #{number}")
+    deck = Expresso.Builder.deck(slides, name: "thirty slides")
 
     page |> open(render(deck, tmp_dir, "thirty")) |> press("o")
 

@@ -128,10 +128,7 @@ defmodule Expresso.E2E.PrintTest do
   end
 
   test "the notes print by default", %{page: page, tmp_dir: tmp_dir} do
-    deck =
-      "deck"
-      |> Expresso.Deck.new()
-      |> Expresso.Deck.add_slide("one", %{notes: "For the audience too."})
+    deck = Expresso.Builder.deck([Expresso.Builder.slide("one", notes: "For the audience too.")])
 
     page = page |> open(render(deck, tmp_dir)) |> emulate("print")
 

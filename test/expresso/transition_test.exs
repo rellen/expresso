@@ -72,18 +72,20 @@ defmodule Expresso.TransitionTest do
     assert document |> Floki.find("[data-transition]") == []
   end
 
-  test "a deck from the imperative API takes the kinds from its metadata" do
+  test "a deck struct takes the kinds from its metadata, and ignores a kind that it does not know" do
+    slide = &%Expresso.Slide{name: &1, metadata: &2, elements: []}
+
+    slides = [
+      slide.("one", %{}),
+      slide.("two", %{transition: :slide}),
+      slide.("three", %{transition: :spin})
+    ]
+
     deck =
-      "deck"
-      |> Expresso.Deck.new(%{transition: :zoom})
-      |> Expresso.Deck.add_slide("one", %{}, [])
-      |> Expresso.Deck.add_slide("two", %{transition: :slide}, [])
-      |> Expresso.Deck.add_slide("three", %{transition: :spin}, [])
+      "deck" |> Expresso.Deck.new(%{transition: :zoom}, slides) |> Expresso.Deck.number_slides()
 
     assert kinds(deck) == ["zoom", "slide", "zoom"]
-
-    assert "deck" |> Expresso.Deck.new() |> Expresso.Deck.add_slide("one", %{}, []) |> kinds() ==
-             ["fade"]
+    assert [Expresso.Builder.slide("one")] |> Expresso.Builder.deck() |> kinds() == ["fade"]
   end
 
   test "the DSL refuses a kind that it does not know" do

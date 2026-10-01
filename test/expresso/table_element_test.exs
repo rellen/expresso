@@ -1,6 +1,7 @@
 defmodule Expresso.Element.TableTest do
   use ExUnit.Case, async: true
 
+  alias Expresso.Builder
   alias Expresso.Element.{Row, Table}
 
   defmodule TableDeck do
@@ -49,9 +50,10 @@ defmodule Expresso.Element.TableTest do
 
   defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
 
-  describe "new/2" do
+  describe "Expresso.Builder.table/1" do
     test "makes a table from rows" do
-      table = Table.new([Row.new(["a", "b"]), Row.new(["c", "d"])], header: true)
+      rows = [Builder.row(["a", "b"]), Builder.row(["c", "d"])]
+      table = Builder.table(elements: rows, header: true)
 
       assert [%Row{cells: ["a", "b"]}, %Row{cells: ["c", "d"]}] = table.elements
       assert table.header == true

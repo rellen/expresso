@@ -112,7 +112,7 @@ defmodule Expresso.BinaryTest do
 
     source = """
     File.write!(#{inspect(count)}, "x", [:append])
-    Expresso.Deck.new("a counted deck")
+    Expresso.Builder.deck([], name: "a counted deck")
     """
 
     input = write_script(dir, "count.exs", source)
@@ -126,11 +126,17 @@ defmodule Expresso.BinaryTest do
   test "writes all the HTML of a deck that takes a long time to render",
        %{tmp_dir: dir} = context do
     source = """
-    Enum.reduce(1..2000, Expresso.Deck.new("a large deck"), fn n, deck ->
-      Expresso.Deck.add_slide(deck, "slide_\#{n}", %{heading: "Slide \#{n}"}, [
-        Expresso.Element.TextBox.new("text \#{n}")
-      ])
-    end)
+    import Expresso.Builder
+
+    slides =
+      for n <- 1..2000 do
+        slide("slide_\#{n}",
+          heading: "Slide \#{n}",
+          elements: [text_box(elements: [text_area(text: "text \#{n}")])]
+        )
+      end
+
+    deck(slides, name: "a large deck")
     """
 
     input = write_script(dir, "large.exs", source)

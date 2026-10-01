@@ -4,13 +4,17 @@ defmodule Expresso.E2E.WatchTest do
   # A deck with two slides from a script, so a render defines no module.
   defp script(text) do
     """
-    Expresso.Deck.new("a watched deck")
-    |> Expresso.Deck.add_slide("one", %{heading: "One"}, [
-      Expresso.Element.TextBox.new("the first slide")
-    ])
-    |> Expresso.Deck.add_slide("two", %{heading: "Two"}, [
-      Expresso.Element.TextBox.new(#{inspect(text)})
-    ])
+    import Expresso.Builder
+
+    box = &text_box(elements: [text_area(text: &1)])
+
+    deck(
+      [
+        slide("one", heading: "One", elements: [box.("the first slide")]),
+        slide("two", heading: "Two", elements: [box.(#{inspect(text)})])
+      ],
+      name: "a watched deck"
+    )
     """
   end
 

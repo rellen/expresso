@@ -7,13 +7,16 @@ defmodule Expresso.EntryPointsTest do
 
   import ExUnit.CaptureIO
 
-  # A script that returns an `Expresso.Deck` struct. It needs no module, so two
-  # runs of the same test give no warning for a module that Elixir redefines.
+  # A script that returns an `Expresso.Deck` struct from `Expresso.Builder`. It
+  # needs no module, so two runs of the same test give no warning for a module
+  # that Elixir redefines.
   @script """
-  Expresso.Deck.new("a deck from a script")
-  |> Expresso.Deck.add_slide("first", %{heading: "Hello"}, [
-    Expresso.Element.TextBox.new("some text")
-  ])
+  import Expresso.Builder
+
+  deck(
+    [slide("first", heading: "Hello", elements: [text_box(elements: [text_area(text: "some text")])])],
+    name: "a deck from a script"
+  )
   """
 
   # The standard output and the standard error of a function.

@@ -64,14 +64,6 @@ defmodule Expresso.Element.Diagram do
   ]
 
   @doc """
-  Make a diagram with a path, with parts and with a width
-  """
-  @spec new(Path.t(), [Expresso.Element.Part.t()], String.t() | nil) :: t()
-  def new(src, parts \\ [], width \\ nil) do
-    %__MODULE__{src: src, elements: parts, width: width}
-  end
-
-  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

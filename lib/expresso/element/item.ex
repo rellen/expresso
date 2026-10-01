@@ -26,14 +26,6 @@ defmodule Expresso.Element.Item do
   ]
 
   @doc """
-  Make an item with text, and with nested lists
-  """
-  @spec new(String.t(), list()) :: t()
-  def new(text, elements \\ []) do
-    %__MODULE__{text: text, elements: elements}
-  end
-
-  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

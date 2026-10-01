@@ -1,6 +1,7 @@
 defmodule Expresso.Element.CodeTest do
   use ExUnit.Case, async: true
 
+  alias Expresso.Builder
   alias Expresso.Element.{Code, Lines}
   alias Expresso.Overlay
 
@@ -57,32 +58,34 @@ defmodule Expresso.Element.CodeTest do
 
   defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
 
-  describe "new/2" do
+  describe "Expresso.Builder.code/2" do
     test "makes a code element and its groups of lines" do
-      code = Code.new("a\nb\nc", lang: "elixir", reveal: [1, 2..3])
+      code = Builder.code(text: "a\nb\nc", lang: "elixir", reveal: [1, 2..3])
 
       assert %Code{lang: "elixir", reveal: [1, 2..3]} = code
       assert [%Lines{numbers: [1]}, %Lines{numbers: [2, 3]}] = code.elements
       assert Enum.all?(code.elements, &(&1.at == Overlay.from_next()))
-      assert Code.new("a").elements == []
+      assert Builder.code(text: "a").elements == []
     end
 
     test "takes a line number to the last line, and a text ends with one line break" do
-      assert [%Lines{numbers: [2]}] = Code.new("a\nb", reveal: [2]).elements
-      assert [%Lines{numbers: [2]}] = Code.new("a\nb\n", reveal: [2]).elements
-      assert [%Lines{numbers: [1, 2, 3]}] = Code.new("a\nb\n\n", reveal: [1..3]).elements
+      assert [%Lines{numbers: [2]}] = Builder.code(text: "a\nb", reveal: [2]).elements
+      assert [%Lines{numbers: [2]}] = Builder.code(text: "a\nb\n", reveal: [2]).elements
+
+      assert [%Lines{numbers: [1, 2, 3]}] =
+               Builder.code(text: "a\nb\n\n", reveal: [1..3]).elements
     end
 
     test "raises for a line number that the text does not have" do
-      message = "the reveal option has the line 3, and the code element has 2 lines"
+      message = "code: the reveal option has the line 3, and the code element has 2 lines"
 
-      assert_raise ArgumentError, message, fn -> Code.new("a\nb\n", reveal: [1, 3]) end
-      assert_raise ArgumentError, message, fn -> Code.new("a\nb", reveal: [2..3]) end
+      assert_raise ArgumentError, message, fn -> Builder.code(text: "a\nb\n", reveal: [1, 3]) end
+      assert_raise ArgumentError, message, fn -> Builder.code(text: "a\nb", reveal: [2..3]) end
 
       assert_raise ArgumentError,
-                   "the reveal option has the line 2, and the code element has 1 line",
+                   "code: the reveal option has the line 2, and the code element has 1 line",
                    fn ->
-                     Code.new("a", reveal: [2])
+                     Builder.code(text: "a", reveal: [2])
                    end
     end
   end

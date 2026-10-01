@@ -71,15 +71,16 @@ defmodule Expresso.NotesTest do
     assert [] = Floki.find(document, ".screen aside.notes")
   end
 
-  test "a slide from the imperative API takes the notes from its metadata" do
+  test "a slide from the builder takes the notes option" do
+    box = Expresso.Builder.text_box(elements: [Expresso.Builder.text_area(text: "A box")])
+
     deck =
-      Expresso.Deck.new("deck")
-      |> Expresso.Deck.add_slide("one", %{notes: "From the metadata"}, [
-        Expresso.Element.TextBox.new("A box")
+      Expresso.Builder.deck([
+        Expresso.Builder.slide("one", notes: "From the builder", elements: [box])
       ])
 
     assert deck |> document() |> Floki.find(".handout-page aside.notes") |> Floki.text() ==
-             "From the metadata"
+             "From the builder"
   end
 
   defp print_notes(document) do
@@ -102,7 +103,7 @@ defmodule Expresso.NotesTest do
              "Only for the speaker."
   end
 
-  test "a deck from the imperative API takes print_notes from its metadata" do
+  test "a deck struct takes print_notes from its metadata" do
     assert "deck" |> Expresso.Deck.new() |> document() |> print_notes() == ["true"]
 
     assert "deck"

@@ -10,8 +10,8 @@ view.
 | The deck | `:fade` | The kind for each slide change of the deck. |
 | A slide | the kind of the deck | The kind between this slide and the slide before, in the two directions. |
 
-A deck from the imperative API gives the same values in the metadata: `:transition` in the
-metadata of the deck, and `:transition` in the metadata of a slide.
+`Expresso.Builder` takes the same option, such as `deck(slides, transition: :slide)` and
+`slide("second", transition: :zoom)`.
 
 ## The kinds
 

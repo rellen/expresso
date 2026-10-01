@@ -68,7 +68,7 @@ defmodule Expresso.ProgressTest do
     assert progress(Expresso.parse(HiddenDeck)) == ["false"]
   end
 
-  test "a deck from the imperative API shows the progress bar without the key" do
+  test "a deck struct shows the progress bar without the key" do
     assert progress(Expresso.Deck.new("deck")) == ["true"]
     assert progress(Expresso.Deck.new("deck", %{progress: false})) == ["false"]
   end
