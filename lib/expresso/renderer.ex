@@ -169,8 +169,9 @@ defmodule Expresso.Renderer do
 
   The assigns hold the deck under the key `deck`. `Expresso.Deck.render/1` calls
   this function, and it writes the tree and adds the doctype. The function
-  gives each element its identity with `Expresso.Overlay.Render.identify/1`
-  first. Then `Expresso.Goto.resolve/1` writes the commands of each link, and
+  dims the lines of each code element with the `highlight` option with
+  `Expresso.Element.Code.spotlight/1` first. It gives each element its identity
+  with `Expresso.Overlay.Render.identify/1` next. Then `Expresso.Goto.resolve/1` writes the commands of each link, and
   it raises for a link to a slide or a step that the deck does not have.
   """
   @spec render(map() | keyword()) :: Phoenix.HTML.safe()
@@ -184,7 +185,10 @@ defmodule Expresso.Renderer do
       |> Map.new()
       |> Map.update!(
         :deck,
-        &(&1 |> Expresso.Overlay.Render.identify() |> Expresso.Goto.resolve())
+        &(&1
+          |> Expresso.Element.Code.spotlight()
+          |> Expresso.Overlay.Render.identify()
+          |> Expresso.Goto.resolve())
       )
 
     assigns = Map.put(assigns, :program, Program.compile(Definition.presenter(), assigns.deck))

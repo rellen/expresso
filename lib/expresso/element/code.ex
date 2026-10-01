@@ -31,11 +31,20 @@ defmodule Expresso.Element.Code do
   The `dim` option gives each group the state `dim` from the first step of a
   later group. A line that is in no group does not dim. `docs/overlays.md`
   gives the rules.
+
+  The `highlight` option takes groups of lines in the same form as `reveal`.
+  Each line shows at each step, and each group is in focus at its own step:
+  the lines of the group get the state `highlight`, and each other line gets
+  the state `dim`. `build/1` gives each group an `on` entity with `:next`, so
+  the transformer gives the groups one step each from the counter of the
+  slide. Each line in no group goes into one more group with no `on` entity.
+  `spotlight/1` then gives each group the state `dim` at the steps of the
+  other groups, before the render.
   """
 
   use Expresso.Element
 
-  alias Expresso.Element.Lines
+  alias Expresso.Element.{Lines, On}
   alias Expresso.Overlay
 
   @typedoc "The struct of a code element"
@@ -48,6 +57,7 @@ defmodule Expresso.Element.Code do
     :src,
     :lines,
     :reveal,
+    :highlight,
     :at,
     :steps,
     :el,
@@ -80,7 +90,10 @@ defmodule Expresso.Element.Code do
       file,
     * a line number of `reveal` that the element does not show. Such a group
       shows nothing, and it takes one step of the slide, so the deck gets a
-      step at which nothing changes.
+      step at which nothing changes,
+    * an element with both `reveal` and `highlight`, a `highlight` with `dim`,
+      a line number of `highlight` that the element does not show, and a line
+      that is in two groups of `highlight`.
   """
   @spec build(t()) :: {:ok, t()} | {:error, String.t()}
   def build(%__MODULE__{} = code) do
@@ -118,18 +131,62 @@ defmodule Expresso.Element.Code do
     end
   end
 
-  defp groups(%__MODULE__{reveal: nil} = code), do: {:ok, code}
+  defp groups(%__MODULE__{reveal: reveal, highlight: highlight})
+       when reveal != nil and highlight != nil,
+       do:
+         {:error, "a code element takes the reveal option or the highlight option, and not both"}
 
-  defp groups(%__MODULE__{reveal: reveal, text: text, first: first} = code) do
+  defp groups(%__MODULE__{highlight: highlight, dim: true}) when highlight != nil,
+    do:
+      {:error,
+       "the highlight option dims the other lines itself, so the code element takes no dim option"}
+
+  defp groups(%__MODULE__{reveal: nil, highlight: nil} = code), do: {:ok, code}
+
+  defp groups(%__MODULE__{reveal: reveal, highlight: nil} = code) do
+    with :ok <- shows(code, :reveal, reveal) do
+      groups = Enum.map(reveal, &%Lines{numbers: numbers(&1), at: Overlay.from_next()})
+      {:ok, %__MODULE__{code | elements: groups}}
+    end
+  end
+
+  defp groups(%__MODULE__{highlight: highlight, text: text, first: first} = code) do
+    with :ok <- shows(code, :highlight, highlight),
+         :ok <- apart(highlight) do
+      {:ok, next} = Overlay.new(:next)
+
+      groups =
+        Enum.map(highlight, fn item ->
+          %Lines{numbers: numbers(item), on: [%On{at: next, state: :highlight}]}
+        end)
+
+      grouped = Enum.flat_map(highlight, &numbers/1)
+      rest = Enum.to_list(first..(first + line_count(text) - 1)//1) -- grouped
+      rest = if rest == [], do: [], else: [%Lines{numbers: rest}]
+
+      {:ok, %__MODULE__{code | elements: groups ++ rest}}
+    end
+  end
+
+  defp shows(%__MODULE__{text: text, first: first} = code, option, items) do
     last = first + line_count(text) - 1
 
-    case reveal |> Enum.flat_map(&numbers/1) |> Enum.find(&(&1 < first or &1 > last)) do
+    case items |> Enum.flat_map(&numbers/1) |> Enum.find(&(&1 < first or &1 > last)) do
       nil ->
-        groups = Enum.map(reveal, &%Lines{numbers: numbers(&1), at: Overlay.from_next()})
-        {:ok, %__MODULE__{code | elements: groups}}
+        :ok
 
       line ->
-        {:error, "the reveal option has the line #{line}, and " <> shown(code, first, last)}
+        {:error, "the #{option} option has the line #{line}, and " <> shown(code, first, last)}
+    end
+  end
+
+  # A line can have the attributes of one group only.
+  defp apart(highlight) do
+    numbers = Enum.flat_map(highlight, &numbers/1)
+
+    case numbers -- Enum.uniq(numbers) do
+      [] -> :ok
+      [line | _] -> {:error, "the line #{line} is in two groups of the highlight option"}
     end
   end
 
@@ -162,6 +219,52 @@ defmodule Expresso.Element.Code do
 
   defp numbers(line) when is_integer(line), do: [line]
   defp numbers(_first.._last//1 = range), do: Enum.to_list(range)
+
+  @doc """
+  Dim the lines of each code element that are not in focus
+
+  A code element with the `highlight` option has one group of lines for each
+  item of the option, and one more group for the lines in no item. The
+  transformer gives each group of an item its step, in the `on` entity with
+  the state `highlight`. This function gives each other group of the element
+  an `on` entity with the state `dim` at that step. The other lines then dim,
+  and the group in focus shows in full.
+
+  `Expresso.Renderer` calls this function before `Expresso.Overlay.Render.identify/1`,
+  because a group needs an identity for its `on` entities.
+  """
+  @spec spotlight(Expresso.Deck.t()) :: Expresso.Deck.t()
+  def spotlight(%Expresso.Deck{slides: slides} = deck) do
+    %Expresso.Deck{deck | slides: Enum.map(slides, &%{&1 | elements: walk(&1.elements || [])})}
+  end
+
+  defp walk(elements) do
+    Enum.map(elements, fn
+      %__MODULE__{highlight: highlight} = code when highlight != nil ->
+        %__MODULE__{code | elements: dim_others(code.elements)}
+
+      %{elements: children} = element when is_list(children) ->
+        %{element | elements: walk(children)}
+
+      element ->
+        element
+    end)
+  end
+
+  defp dim_others(groups) do
+    focus = Enum.map(groups, &focus_steps/1)
+
+    groups
+    |> Enum.with_index()
+    |> Enum.map(fn {%Lines{} = group, index} ->
+      others = focus |> List.delete_at(index) |> List.flatten() |> Enum.sort()
+      dims = if others == [], do: [], else: [%On{state: :dim, steps: others}]
+      %Lines{group | on: group.on ++ dims}
+    end)
+  end
+
+  defp focus_steps(%Lines{on: on}),
+    do: for(%On{state: :highlight, steps: steps} <- on, step <- steps || [], do: step)
 
   @doc """
   Make sure that a `reveal` option is a list of line numbers and of ranges

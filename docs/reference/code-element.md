@@ -29,8 +29,11 @@ end
 | `line_numbers` | `true` or `false` | Show the number of each line. The default is `false`. |
 | `reveal` | Line numbers and ranges, such as `[10..12, 13..20]` | Each group of lines shows at its own step. See [the overlay options](overlay-options.md). |
 | `dim` | `true` or `false` | Each group dims when a later group shows. |
+| `highlight` | Line numbers and ranges, such as `[10..12, 13..20]` | Each line shows at each step. Each group is in focus at its own step, and the other lines dim. |
+| `class` | CSS class names | See [the class option](class-option.md). |
 
-The element takes `text` or `src`, and not both.
+The element takes `text` or `src`, and not both. It takes `reveal` or `highlight`, and not
+both.
 
 ## Code from a file
 
@@ -51,7 +54,9 @@ The compiler gives an error for:
 - a `lines` option without `src`,
 - a file that it cannot read,
 - a `lines` range that goes past the end of the file,
-- a number of `reveal` that the element does not show.
+- a number of `reveal` or `highlight` that the element does not show,
+- `reveal` and `highlight` together, and `highlight` with `dim`,
+- a line that is in two groups of `highlight`.
 
 `Expresso.Builder.code/2` raises an `ArgumentError` with the same message.
 
@@ -66,3 +71,22 @@ numbers that the slide shows.
 With `line_numbers true`, each line starts with its number. The numbers stand in one
 column, with the color of the comments of the theme. A screen reader does not read the
 numbers, and a copy of the text from the slide does not take them.
+
+## The highlight option
+
+The `highlight` option takes groups of lines, in the same form as `reveal`. Each line
+shows at each step. Each group is in focus at one step, in the order of the option:
+
+| Step | The lines of the group | Each other line |
+| --- | --- | --- |
+| The step of the group | Full opacity, and a bar in the color `--accent` at the left | Dim, with the dim opacity of the theme |
+| A step of no group | Full opacity | Full opacity |
+
+The groups take their steps from the counter of the slide, one step each, as the items of
+a list with `reveal true` do. The first group is thus in focus at the first step of the
+slide. A `pause()` in front of the code element gives one step with no line in focus. See
+[the overlay options](overlay-options.md).
+
+A line can be in one group only. A line in no group dims at each step of a group.
+
+The bar is a shadow at the left of the line. It takes no space, so the text does not move.

@@ -36,6 +36,7 @@ spark_locals_without_parens = [
   handout: 1,
   header: 1,
   heading: 1,
+  highlight: 1,
   image: 1,
   image: 2,
   item: 1,

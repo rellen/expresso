@@ -630,6 +630,15 @@ element, and a hidden line keeps its space. `docs/overlays.md` gives the rules.
 A line number that the element does not show gives an error. Such a group shows nothing,
 and it takes one step of the slide.
 
+The `highlight` option uses the same groups, with no `at` option. `build/1` gives each
+group an `on` entity with `:next` and the state `highlight`, and it puts the lines in no
+group into one more group. The transformer then gives each group its step. The other lines
+must dim at that step, and the step is known only after the transformer. Therefore
+`Expresso.Element.Code.spotlight/1` runs in `Expresso.Renderer.render/1`, before
+`Expresso.Overlay.Render.identify/1`. It gives each group an `on` entity with the state
+`dim` at the steps of the other groups. The style block then holds plain rules of the
+contract, and the presenter and the handout view need no new code.
+
 `Expresso.Deck.render/1` writes the document with Floki, and Floki drops a text node that
 is only white space. A line of code holds such nodes: an indentation, a space between two
 tokens, a line break. Therefore `Expresso.Highlight` puts each white space token into the

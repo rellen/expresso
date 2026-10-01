@@ -404,6 +404,15 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
    of lines shows. */
 .code .line {
   display: block;
+  /* The state `highlight` of the option `highlight` draws a bar in the accent
+     color at the left of each line in focus. The bar is a shadow, so it takes
+     no space and does not move the text. The second shadow is the bar, and the
+     first one hides its right part, so a gap stays between the bar and the
+     text. Without the state, each shadow is behind the line. The bar does not
+     change the background, so the text keeps its contrast. */
+  box-shadow:
+    calc(var(--highlight, 0) * -0.25rem) 0 0 var(--code-background),
+    calc(var(--highlight, 0) * -0.4rem) 0 0 var(--accent);
 }
 /*
  * The number of a line, from the option `line_numbers`. The renderer sets
