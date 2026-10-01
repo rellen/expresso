@@ -77,6 +77,38 @@ end
 
 For the steps of a slide, see [Animate elements in a slide](animate-elements.md).
 
+## Point at lines one group at a time
+
+Write `highlight` with a range for each group. Each line shows at each step. At the step
+of a group, its lines show in full with a bar at the left, and the other lines dim:
+
+```elixir
+code "elixir" do
+  src "lib/my_app/server.ex"
+  lines 40..58
+  line_numbers true
+  highlight [40..44, 45..52, 53..58]
+end
+```
+
+The first group is in focus at the first step of the code. To show the whole code first,
+put `pause()` in front of the code element:
+
+```elixir
+slide "the server" do
+  pause()
+
+  code "elixir" do
+    src "lib/my_app/server.ex"
+    lines 40..58
+    highlight [40..44, 45..52, 53..58]
+  end
+end
+```
+
+Use `reveal` to show new lines at each step, and `highlight` to point at lines that the
+audience already sees. A code element takes one of the two options.
+
 ## Make sure that the lines fit
 
 A long line breaks on the slide, and the reader then sees two lines with one number. Open

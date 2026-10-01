@@ -366,4 +366,105 @@ defmodule Expresso.Element.CodeTest do
       assert plain |> Floki.find("code") |> Floki.attribute("style") == []
     end
   end
+
+  describe "the highlight option" do
+    defp highlight_deck(code) do
+      [Builder.slide("one", elements: [code])]
+      |> Builder.deck()
+    end
+
+    test "makes one group with an on entity for each item, and one group of the other lines" do
+      code = Builder.code(text: "a\nb\nc\nd\ne", highlight: [2, 3..4])
+
+      assert [
+               %Lines{numbers: [2], on: [%Expresso.Element.On{state: :highlight}]},
+               %Lines{numbers: [3, 4], on: [%Expresso.Element.On{state: :highlight}]},
+               %Lines{numbers: [1, 5], on: []}
+             ] = code.elements
+
+      assert Enum.all?(code.elements, &(&1.at == nil))
+    end
+
+    test "gives each group one step, and each line shows at each step" do
+      [slide] = highlight_deck(Builder.code(text: "a\nb\nc", highlight: [1, 2..3])).slides
+      [code] = slide.elements
+
+      assert slide.metadata.max_step == 2
+      assert Enum.map(code.elements, & &1.steps) == [nil, nil]
+      assert [[1], [2]] = Enum.map(code.elements, fn %Lines{on: [on]} -> on.steps end)
+    end
+
+    test "dims each other line at the step of a group" do
+      deck = highlight_deck(Builder.code(text: "a\nb\nc\nd", highlight: [2, 3]))
+      [%{elements: [code]}] = Code.spotlight(deck).slides
+
+      states =
+        Enum.map(code.elements, fn group ->
+          {group.numbers, Enum.map(group.on, &{&1.state, &1.steps})}
+        end)
+
+      assert states == [
+               {[2], [{:highlight, [1]}, {:dim, [2]}]},
+               {[3], [{:highlight, [2]}, {:dim, [1]}]},
+               {[1, 4], [{:dim, [1, 2]}]}
+             ]
+    end
+
+    test "writes the rules of the focus and of the dim into the style block" do
+      html = deck_html(Builder.code(text: "a\nb\nc", highlight: [1, 2]))
+
+      assert html =~ ~s(section[data-step="1"] [data-el="s1-e2"] { --highlight: 1; })
+      assert html =~ ~s(section[data-step="2"] [data-el="s1-e2"] { --dim: 1; })
+
+      assert html =~
+               ~s(section[data-step="1"] [data-el="s1-e4"], section[data-step="2"] [data-el="s1-e4"] { --dim: 1; })
+    end
+
+    test "uses the numbers of the file with src" do
+      code = Builder.code("js", src: "test/fixtures/code.js", lines: 5..11, highlight: [9..11])
+
+      assert [%Lines{numbers: [9, 10, 11]}, %Lines{numbers: [5, 6, 7, 8]}] = code.elements
+    end
+
+    test "starts after the step of a pause" do
+      [slide] =
+        [
+          Builder.slide("one",
+            elements: [Builder.pause(), Builder.code(text: "a\nb", highlight: [1, 2])]
+          )
+        ]
+        |> Builder.deck()
+        |> Map.get(:slides)
+
+      code = Enum.find(slide.elements, &match?(%Code{}, &1))
+      assert slide.metadata.max_step == 3
+
+      assert [[2], [3]] =
+               Enum.map(Enum.take(code.elements, 2), fn %Lines{on: [on]} -> on.steps end)
+    end
+
+    test "gives an error for reveal and highlight, for dim, for a line it does not show, and for a line in two groups" do
+      assert_raise ArgumentError,
+                   "code: a code element takes the reveal option or the highlight option, and not both",
+                   fn -> Builder.code(text: "a\nb", reveal: [1], highlight: [2]) end
+
+      assert_raise ArgumentError, ~r/the highlight option dims the other lines itself/, fn ->
+        Builder.code(text: "a\nb", highlight: [1], dim: true)
+      end
+
+      assert_raise ArgumentError,
+                   "code: the highlight option has the line 3, and the code element has 2 lines",
+                   fn -> Builder.code(text: "a\nb", highlight: [3]) end
+
+      assert_raise ArgumentError,
+                   "code: the line 2 is in two groups of the highlight option",
+                   fn -> Builder.code(text: "a\nb\nc", highlight: [1..2, 2..3]) end
+    end
+  end
+
+  defp deck_html(code) do
+    [Builder.slide("one", elements: [code])]
+    |> Builder.deck()
+    |> Expresso.Deck.render()
+  end
 end

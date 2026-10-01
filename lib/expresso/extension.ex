@@ -253,6 +253,11 @@ defmodule Expresso.Extension do
             type: :boolean,
             default: false,
             doc: "Dim each group of lines when a later group shows. See docs/overlays.md."
+          ],
+          highlight: [
+            type: {:custom, Expresso.Element.Code, :reveal, []},
+            doc:
+              "Line numbers and ranges, one group in focus at each step. Each line shows at each step, and the lines that are not in focus dim. See docs/reference/code-element.md."
           ]
         ]
   }
