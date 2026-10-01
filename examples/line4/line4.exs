@@ -107,6 +107,10 @@ defmodule Line4.Deck do
   .code pre {
     font-size: 0.46rem;
   }
+  /* The class of a slide with a long listing. */
+  .dense .code pre {
+    font-size: 0.4rem;
+  }
   .math {
     font-size: 0.8rem;
   }
@@ -657,11 +661,15 @@ defmodule Line4.Deck do
   slide "main loop" do
     heading "frame(now)"
 
-    notes "There is no fixed time step and no accumulator. At 4× speed and a frame of 50 ms, dt is 0.2 s and n is 6."
+    notes """
+    Step 1 shows the whole function. Each next step puts one box of the frame diagram in focus: the cap, the speed, the sub-steps, the scene, the render and the HUD.
+    There is no fixed time step and no accumulator. At 4× speed and a frame of 50 ms, dt is 0.2 s and n is 6.
+    """
+
+    pause()
 
     code "js" do
-      reveal [1..4, 5..11, 12..17, 18..21]
-      dim true
+      highlight [3..4, 5, 6..13, 14, 15..19, 20..22]
 
       text ~S"""
       let last = performance.now();
@@ -714,9 +722,9 @@ defmodule Line4.Deck do
       part "widget" do
         speed :slow
         easing :ease_in_out
-        on 2, set: [x: "129.2px"]
-        on 3, set: [x: "248.2px"]
-        on [from: 4], set: [x: "402.9px"]
+        on 2, move_to: "st-booth-box"
+        on 3, move_to: "st-dryer-box"
+        on [from: 4], move_to: "st-packer-box"
         on [from: 2], set: [color: "#e23b3b"]
         on [from: 5], set: [opacity: 0]
       end
@@ -725,7 +733,7 @@ defmodule Line4.Deck do
         at from: 5
         effect :grow
         speed :slow
-        on [from: 6], set: [y: "122.4px"]
+        on [from: 6], move_to: "belt-b-end"
         on [from: 7], set: [opacity: 0]
       end
 
@@ -734,9 +742,9 @@ defmodule Line4.Deck do
         effect :grow
         speed :slow
         easing :spring
-        on 8, set: [x: "163.2px"]
-        on 9, set: [x: "234.6px"]
-        on [from: 10], set: [x: "319.6px", opacity: 0.3]
+        on 8, move_to: "st-wrapper-box"
+        on 9, move_to: "st-labeller-box"
+        on [from: 10], move_to: "st-dock-box", set: [opacity: 0.3]
       end
 
       part "st-booth" do
@@ -931,10 +939,10 @@ defmodule Line4.Deck do
       part "token" do
         speed :slow
         easing :spring
-        on 2, set: [x: "760px"]
-        on 3, set: [x: "760px", y: "180px"]
-        on 4, set: [x: "190px", y: "180px"]
-        on [from: 5], set: [x: "0px", y: "180px", opacity: 0.3]
+        on 2, move_to: "slot-pz"
+        on 3, move_to: "slot-wr"
+        on 4, move_to: "slot-lb"
+        on [from: 5], move_to: "slot-out", set: [opacity: 0.3]
       end
     end
   end
@@ -942,6 +950,7 @@ defmodule Line4.Deck do
   # ---------------------------------------------------------------- 23
   slide "track code" do
     heading "The states in a switch"
+    class "dense"
 
     notes "move(to) closes up on the pallet in front, and it stops when the track section under the pallet is off. It returns true when the pallet is at its slot."
 
