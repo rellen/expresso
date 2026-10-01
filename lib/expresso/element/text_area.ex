@@ -22,14 +22,6 @@ defmodule Expresso.Element.TextArea do
   ]
 
   @doc """
-  Make a text area with text
-  """
-  @spec new(String.t()) :: t()
-  def new(text) do
-    %__MODULE__{text: text}
-  end
-
-  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

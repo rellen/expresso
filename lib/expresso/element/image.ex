@@ -54,14 +54,6 @@ defmodule Expresso.Element.Image do
   ]
 
   @doc """
-  Make an image with a path, with text for a screen reader and with a width
-  """
-  @spec new(Path.t(), String.t() | nil, String.t() | nil) :: t()
-  def new(src, alt \\ nil, width \\ nil) do
-    %__MODULE__{src: src, alt: alt, width: width}
-  end
-
-  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

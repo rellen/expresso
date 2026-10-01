@@ -2,6 +2,7 @@ defmodule Expresso.Element.ImageTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
+  alias Expresso.Builder
   alias Expresso.Element.Image
   alias Expresso.Overlay
   alias Expresso.Test.CSS
@@ -40,11 +41,11 @@ defmodule Expresso.Element.ImageTest do
 
   defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
 
-  describe "new/3" do
+  describe "Expresso.Builder.image/2" do
     test "makes an image with a path" do
-      assert Image.new(@png) == %Image{src: @png, alt: nil, width: nil}
-      assert Image.new(@png, "a dot").alt == "a dot"
-      assert Image.new(@png, "a dot", "60vw").width == "60vw"
+      assert %Image{src: @png, alt: nil, width: nil} = Builder.image(@png)
+      assert Builder.image(@png, alt: "a dot").alt == "a dot"
+      assert Builder.image(@png, alt: "a dot", width: "60vw").width == "60vw"
     end
   end
 

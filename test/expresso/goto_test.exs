@@ -136,12 +136,10 @@ defmodule Expresso.GotoTest do
   end
 
   describe "resolve/1" do
-    test "raises for a link of a deck from the imperative API to a slide that it does not have" do
-      deck =
-        Expresso.Deck.new("imperative")
-        |> Expresso.Deck.add_slide("one", %{}, [
-          %TextArea{TextArea.new("Next") | goto: %Goto{slide: 2}}
-        ])
+    test "raises for a link of a deck struct to a slide that it does not have" do
+      link = %TextArea{text: "Next", goto: %Goto{slide: 2}}
+      slide = %Expresso.Slide{name: "one", metadata: %{}, elements: [link]}
+      deck = "deck" |> Expresso.Deck.new(%{}, [slide]) |> Expresso.Deck.number_slides()
 
       assert_raise ArgumentError, "goto names the slide 2, and the deck has 1 slides", fn ->
         Expresso.Deck.render(deck)

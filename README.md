@@ -99,15 +99,33 @@ Some notes on this example:
 
 ### With the functions
 
-Build a deck and return it. The heading goes into the metadata:
+`Expresso.Builder` has one function for each entity of the DSL, with the same name and the
+same options. A function takes the arguments of the entity, then a keyword list with the
+options and the children. Build a deck with `deck/2` and return it:
 
 ```elixir
 # my_deck.exs
-Expresso.Deck.new("my deck")
-|> Expresso.Deck.add_slide("first", %{heading: "Hello"}, [
-  Expresso.Element.TextBox.new("A text area in a text box. Text accepts <b>HTML</b>.")
-])
+import Expresso.Builder
+
+points = ["Concurrency", "Fault tolerance"]
+
+deck(
+  [
+    slide("first",
+      heading: "Hello",
+      elements: [text_box(elements: [text_area(text: "Text accepts <b>HTML</b>.")])]
+    ),
+    slide("second", elements: [list(reveal: true, elements: Enum.map(points, &item/1))])
+  ],
+  name: "my deck"
+)
 ```
+
+`deck/2` runs the checks of the DSL, so an overlay and a wrong option give the same steps
+and the same errors. Use the functions when a program makes the slides at runtime. A
+module of the DSL can also make slides from data with `for`, but a module of many slides
+compiles slowly: 2000 slides take approximately 30 seconds, and the functions take
+approximately 0.1 seconds.
 
 ### Render the document
 
@@ -161,8 +179,9 @@ Write an option in the deck to apply it to each slide:
 | `print_notes false` | Leave the notes out of the handout view and of the print. |
 | `css "deck.css"` | A style sheet, or the path of one. It applies after the theme. |
 | `effect`, `speed`, `easing` | The animation of each overlay. See `docs/how-to/animate-elements.md`. |
+| `template MyDeckTemplate` | A module that gives the header and the footer. See "The templates" in `docs/architecture.md`. |
 
-A slide takes `transition`, `handout`, `effect`, `speed` and `easing` too. An option on a
+A slide takes `transition`, `handout`, `effect`, `speed`, `easing` and `template` too. An option on a
 slide replaces the option of the deck for that slide.
 
 ## Present a deck

@@ -1,6 +1,7 @@
 defmodule Expresso.Element.DiagramTest do
   use ExUnit.Case, async: true
 
+  alias Expresso.Builder
   alias Expresso.Element.{Diagram, Part}
 
   @svg "test/fixtures/flow.svg"
@@ -33,10 +34,13 @@ defmodule Expresso.Element.DiagramTest do
 
   defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
 
-  test "new/3 makes a diagram with parts and a width" do
-    assert Diagram.new(@svg) == %Diagram{src: @svg, elements: [], width: nil}
-    assert [%Part{id: "arrow"}] = Diagram.new(@svg, [Part.new("arrow")]).elements
-    assert Diagram.new(@svg, [], "60%").width == "60%"
+  test "Expresso.Builder.diagram/2 makes a diagram with parts and a width" do
+    assert %Diagram{src: @svg, elements: [], width: nil} = Builder.diagram(@svg)
+
+    assert [%Part{id: "arrow"}] =
+             Builder.diagram(@svg, elements: [Builder.part("arrow")]).elements
+
+    assert Builder.diagram(@svg, width: "60%").width == "60%"
   end
 
   describe "the DSL entity" do
@@ -143,7 +147,8 @@ defmodule Expresso.Element.DiagramTest do
         %Part{id: "word", el: "s1-e3", steps: [1]}
       ]
 
-      svg = Diagram.get_assigns(Diagram.new(src, parts)).svg |> Floki.parse_fragment!()
+      svg =
+        Diagram.get_assigns(%Diagram{src: src, elements: parts}).svg |> Floki.parse_fragment!()
 
       [wrapper] = Floki.find(svg, "g.diagram-part")
       assert Floki.attribute([wrapper], "transform") == []
@@ -157,7 +162,7 @@ defmodule Expresso.Element.DiagramTest do
     end
 
     test "raises for an id that the file does not hold" do
-      diagram = Diagram.new(@svg, [Part.new("no-such-id")])
+      diagram = Builder.diagram(@svg, elements: [Builder.part("no-such-id")])
 
       assert_raise ArgumentError, ~r/has no element with the id "no-such-id"/, fn ->
         Diagram.get_assigns(diagram)
@@ -166,7 +171,7 @@ defmodule Expresso.Element.DiagramTest do
 
     test "raises for a file that it cannot read" do
       assert_raise ArgumentError, ~r/cannot read the diagram "no\/such\/file.svg"/, fn ->
-        Diagram.get_assigns(Diagram.new("no/such/file.svg"))
+        Diagram.get_assigns(Builder.diagram("no/such/file.svg"))
       end
     end
   end

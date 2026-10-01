@@ -7,14 +7,21 @@ defmodule Expresso.WatchTest do
 
   @moduletag :tmp_dir
 
-  # A script that returns an `Expresso.Deck` struct, so a render defines no
-  # module.
+  # A script that returns an `Expresso.Deck` struct from `Expresso.Builder`, so
+  # a render defines no module.
   defp script(text, extra \\ "") do
     """
-    Expresso.Deck.new("a watched deck")
-    |> Expresso.Deck.add_slide("first", %{heading: "Hello"}, [
-      Expresso.Element.TextBox.new(#{inspect(text)})#{extra}
-    ])
+    import Expresso.Builder
+
+    deck(
+      [
+        slide("first",
+          heading: "Hello",
+          elements: [text_box(elements: [text_area(text: #{inspect(text)})])#{extra}]
+        )
+      ],
+      name: "a watched deck"
+    )
     """
   end
 
@@ -103,7 +110,7 @@ defmodule Expresso.WatchTest do
       %{url: url, device: device} = start_watch(input)
       assert_receive {Watch, {:rendered, 1}}, 10_000
 
-      change(input, "Expresso.Deck.new(")
+      change(input, "deck(")
       assert_receive {Watch, {:failed, message}}, 10_000
       assert message =~ "TokenMissingError"
 
@@ -123,7 +130,7 @@ defmodule Expresso.WatchTest do
       image = Path.join(dir, "dot.png")
       File.cp!("test/fixtures/dot.png", image)
       input = Path.join(dir, "deck.exs")
-      File.write!(input, script("text", ",\n  Expresso.Element.Image.new(#{inspect(image)})"))
+      File.write!(input, script("text", ", image(#{inspect(image)})"))
 
       start_watch(input)
       assert_receive {Watch, {:rendered, 1}}, 10_000

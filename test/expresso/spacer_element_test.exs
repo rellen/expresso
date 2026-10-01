@@ -1,6 +1,7 @@
 defmodule Expresso.Element.SpacerTest do
   use ExUnit.Case, async: true
 
+  alias Expresso.Builder
   alias Expresso.Element.Spacer
 
   defmodule SpacerDeck do
@@ -30,8 +31,8 @@ defmodule Expresso.Element.SpacerTest do
 
   defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
 
-  test "new/0 makes a spacer" do
-    assert Spacer.new() == %Spacer{}
+  test "Expresso.Builder.spacer/0 makes a spacer" do
+    assert %Spacer{} = Builder.spacer()
   end
 
   test "the DSL entity goes at the level of the slide and inside a text box" do

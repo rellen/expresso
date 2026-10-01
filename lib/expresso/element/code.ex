@@ -45,32 +45,10 @@ defmodule Expresso.Element.Code do
   ]
 
   @doc """
-  Make a code element with text
-
-  The options are `lang`, the name of the language, `reveal`, a list of line
-  numbers and of ranges, and `dim`, a boolean. The function raises for a
-  `reveal` option with a line number that the text does not have.
-  """
-  @spec new(String.t(), keyword()) :: t()
-  def new(text, opts \\ []) do
-    code = %__MODULE__{
-      text: text,
-      lang: Keyword.get(opts, :lang),
-      reveal: Keyword.get(opts, :reveal),
-      dim: Keyword.get(opts, :dim, false)
-    }
-
-    case build(code) do
-      {:ok, code} -> code
-      {:error, message} -> raise ArgumentError, message
-    end
-  end
-
-  @doc """
   Make the groups of lines from the `reveal` option
 
-  The DSL calls this function after it makes the struct, and `new/2` calls
-  it too. It puts one `Expresso.Element.Lines` child into `elements` for each
+  The transform of the `code` entity calls this function after it makes the
+  struct, in the DSL and in `Expresso.Builder`. It puts one `Expresso.Element.Lines` child into `elements` for each
   item of the option, in order.
 
   The function gives an error for a line number that is more than the number

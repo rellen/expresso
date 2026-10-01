@@ -100,11 +100,9 @@ defmodule Expresso.SlideNumbersTest do
     assert row |> Floki.find(".slide-number") |> Floki.text() == "2 / 3"
   end
 
-  test "a deck from the imperative API takes slide_numbers from its metadata" do
+  test "a deck takes slide_numbers from its metadata" do
     deck =
-      Enum.reduce(1..2, Expresso.Deck.new("deck"), fn number, deck ->
-        Expresso.Deck.add_slide(deck, "slide #{number}", %{}, [])
-      end)
+      Expresso.Builder.deck(for number <- 1..2, do: Expresso.Builder.slide("slide #{number}"))
 
     assert deck |> document() |> present() == [nil, nil]
 

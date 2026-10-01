@@ -175,7 +175,7 @@ defmodule Expresso.EffectTest do
 
   describe "a diagram part" do
     defp svg(part) do
-      Expresso.Element.Diagram.new("test/fixtures/flow.svg", [part])
+      %Expresso.Element.Diagram{src: "test/fixtures/flow.svg", elements: [part]}
       |> Expresso.Element.Diagram.get_assigns()
       |> Map.fetch!(:svg)
       |> Floki.parse_fragment!()

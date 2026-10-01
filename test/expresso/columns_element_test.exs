@@ -1,6 +1,7 @@
 defmodule Expresso.Element.ColumnsTest do
   use ExUnit.Case, async: true
 
+  alias Expresso.Builder
   alias Expresso.Element.{Column, Columns, Image, TextBox}
 
   defmodule ColumnsDeck do
@@ -47,9 +48,14 @@ defmodule Expresso.Element.ColumnsTest do
 
   defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
 
-  describe "new/1 and new/2" do
-    test "make columns from columns, with an optional width" do
-      columns = Columns.new([Column.new([TextBox.new("a")], "40%"), Column.new([])])
+  describe "Expresso.Builder.columns/1" do
+    test "makes columns from columns, with an optional width" do
+      box = Builder.text_box(elements: [Builder.text_area(text: "a")])
+
+      columns =
+        Builder.columns(
+          elements: [Builder.column(elements: [box], width: "40%"), Builder.column()]
+        )
 
       assert [%Column{width: "40%"}, %Column{width: nil, elements: []}] = columns.elements
     end

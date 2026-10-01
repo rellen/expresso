@@ -30,12 +30,6 @@ defmodule Expresso.Element.Columns do
   ]
 
   @doc """
-  Make a columns element from columns
-  """
-  @spec new([Expresso.Element.Column.t()]) :: t()
-  def new(columns), do: %__MODULE__{elements: columns}
-
-  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

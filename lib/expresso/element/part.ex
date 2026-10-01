@@ -11,10 +11,4 @@ defmodule Expresso.Element.Part do
   @type t :: %__MODULE__{}
 
   defstruct [:id, :at, :steps, :el, :effect, :speed, :easing, on: [], __spark_metadata__: nil]
-
-  @doc """
-  Make a part with the id of an element of the SVG file
-  """
-  @spec new(String.t()) :: t()
-  def new(id), do: %__MODULE__{id: id}
 end

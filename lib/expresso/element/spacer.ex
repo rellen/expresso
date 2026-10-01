@@ -15,12 +15,6 @@ defmodule Expresso.Element.Spacer do
   defstruct [:at, :steps, :el, :effect, :speed, :easing, on: [], __spark_metadata__: nil]
 
   @doc """
-  Make a spacer
-  """
-  @spec new() :: t()
-  def new, do: %__MODULE__{}
-
-  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

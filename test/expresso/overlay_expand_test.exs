@@ -222,7 +222,7 @@ defmodule Expresso.Overlay.ExpandTest do
     end
 
     test "dims each group of lines of a code element" do
-      code = Expresso.Element.Code.new("a\nb\nc\n", reveal: [1, 2..3], dim: true)
+      code = Expresso.Builder.code(text: "a\nb\nc\n", reveal: [1, 2..3], dim: true)
       [code] = expand([code]).elements
 
       assert dims(code) == [[[2]], []]

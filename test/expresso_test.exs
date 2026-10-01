@@ -1,7 +1,11 @@
 defmodule ExpressoTest do
   use ExUnit.Case
 
+  alias Expresso.Builder
+
   doctest Expresso
+
+  defp box(text), do: Builder.text_box(elements: [Builder.text_area(text: text)])
 
   defmodule DslDeck do
     use Expresso
@@ -103,19 +107,27 @@ defmodule ExpressoTest do
   end
 
   describe "number_slides/1" do
-    test "numbers the slides of an imperative deck from 1" do
-      deck =
-        Expresso.Deck.new("imperative deck")
-        |> Expresso.Deck.add_slide("first", %{}, [])
-        |> Expresso.Deck.add_slide("second", %{}, [])
+    test "numbers the slides of a deck from the builder from 1" do
+      deck = Builder.deck([Builder.slide("first"), Builder.slide("second")])
 
       assert Enum.map(deck.slides, & &1.metadata.slide_number) == [1, 2]
+    end
+
+    test "writes a number into a slide with no metadata" do
+      deck = %Expresso.Deck{
+        name: "d",
+        metadata: %{},
+        slides: [%Expresso.Slide{}, %Expresso.Slide{}]
+      }
+
+      assert deck |> Expresso.Deck.number_slides() |> Map.get(:slides) |> Enum.map(& &1.metadata) ==
+               [%{slide_number: 1}, %{slide_number: 2}]
     end
   end
 
   describe "to_deck/1" do
     test "accepts a deck" do
-      deck = Expresso.Deck.new("a deck")
+      deck = Builder.deck([], name: "a deck")
 
       assert Expresso.to_deck(deck) == {:ok, deck}
     end
@@ -248,11 +260,10 @@ defmodule ExpressoTest do
       assert document |> Floki.find(".screen .text-area") |> Floki.text() =~ "a deck with no name"
     end
 
-    test "works through the imperative API" do
+    test "works through the builder" do
       document =
-        nil
-        |> Expresso.Deck.new()
-        |> Expresso.Deck.add_slide("first", %{}, [Expresso.Element.TextBox.new("text")])
+        [Builder.slide("first", elements: [box("text")])]
+        |> Builder.deck()
         |> Expresso.Deck.render()
         |> Floki.parse_document!()
 
@@ -296,8 +307,8 @@ defmodule ExpressoTest do
 
     test "accepts a module as the template of a slide" do
       document =
-        Expresso.Deck.new("custom deck")
-        |> Expresso.Deck.add_slide("first", %{template: CustomSlideTemplate}, [])
+        [Builder.slide("first", template: CustomSlideTemplate)]
+        |> Builder.deck(name: "custom deck")
         |> Expresso.Deck.render()
         |> Floki.parse_document!()
 
@@ -306,8 +317,8 @@ defmodule ExpressoTest do
 
     test "accepts a module as the template of a deck" do
       document =
-        Expresso.Deck.new("custom deck", %{template: CustomDeckTemplate})
-        |> Expresso.Deck.add_slide("first", %{}, [])
+        [Builder.slide("first")]
+        |> Builder.deck(name: "custom deck", template: CustomDeckTemplate)
         |> Expresso.Deck.render()
         |> Floki.parse_document!()
 
@@ -317,8 +328,8 @@ defmodule ExpressoTest do
 
     test "uses the built-in deck template when the metadata gives none" do
       document =
-        Expresso.Deck.new("plain deck")
-        |> Expresso.Deck.add_slide("first", %{}, [])
+        [Builder.slide("first")]
+        |> Builder.deck(name: "plain deck")
         |> Expresso.Deck.render()
         |> Floki.parse_document!()
 
@@ -329,8 +340,8 @@ defmodule ExpressoTest do
   describe "render/1 and the doctype" do
     test "writes the doctype of HTML 5 in front of the document" do
       html =
-        Expresso.Deck.new("doctype deck")
-        |> Expresso.Deck.add_slide("first", %{}, [])
+        [Builder.slide("first")]
+        |> Builder.deck(name: "doctype deck")
         |> Expresso.Deck.render()
 
       assert String.starts_with?(html, "<!DOCTYPE html>\n<html")
@@ -384,13 +395,11 @@ defmodule ExpressoTest do
     end
   end
 
-  describe "render/1 for a deck from the imperative API" do
-    test "writes the heading from the metadata" do
+  describe "render/1 for a deck from the builder" do
+    test "writes the heading of the slide" do
       document =
-        Expresso.Deck.new("imperative deck")
-        |> Expresso.Deck.add_slide("first", %{heading: "A heading"}, [
-          Expresso.Element.TextBox.new("some text")
-        ])
+        [Builder.slide("first", heading: "A heading", elements: [box("some text")])]
+        |> Builder.deck(name: "builder deck")
         |> Expresso.Deck.render()
         |> Floki.parse_document!()
 

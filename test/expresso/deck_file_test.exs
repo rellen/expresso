@@ -51,7 +51,7 @@ defmodule Expresso.DeckFileTest do
     test "returns the files of images, diagrams and style sheets", %{tmp_dir: dir} do
       css = Path.join(dir, "deck.css")
       File.write!(css, ".slide { color: red; }")
-      diagram = Expresso.Element.Diagram.new("test/fixtures/flow.svg")
+      diagram = Expresso.Builder.diagram("test/fixtures/flow.svg")
 
       {_result, paths} =
         DeckFile.track(fn ->

@@ -43,7 +43,7 @@ defmodule Expresso.DurationTest do
     assert duration(deck) == nil
   end
 
-  test "a deck from the imperative API takes the duration from its metadata" do
+  test "a deck struct takes the duration from its metadata" do
     assert duration(Expresso.Deck.new("deck")) == nil
     assert duration(Expresso.Deck.new("deck", %{duration: 15})) == 900_000
     assert duration(Expresso.Deck.new("deck", %{duration: 0})) == nil

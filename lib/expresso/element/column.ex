@@ -27,14 +27,6 @@ defmodule Expresso.Element.Column do
   ]
 
   @doc """
-  Make a column from elements, with an optional width
-  """
-  @spec new(list(), String.t() | nil) :: t()
-  def new(elements, width \\ nil) do
-    %__MODULE__{elements: elements, width: width}
-  end
-
-  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

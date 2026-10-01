@@ -27,14 +27,6 @@ defmodule Expresso.Element.Quotation do
   ]
 
   @doc """
-  Make a quotation with text, and with the name of the source
-  """
-  @spec new(String.t(), String.t() | nil) :: t()
-  def new(text, by \\ nil) do
-    %__MODULE__{text: text, by: by}
-  end
-
-  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

@@ -1,6 +1,7 @@
 defmodule Expresso.Element.QuotationTest do
   use ExUnit.Case, async: true
 
+  alias Expresso.Builder
   alias Expresso.Element.Quotation
 
   defmodule QuotationDeck do
@@ -29,10 +30,10 @@ defmodule Expresso.Element.QuotationTest do
 
   defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
 
-  describe "new/2" do
+  describe "Expresso.Builder.quotation/2" do
     test "makes a quotation with text and a source" do
-      assert Quotation.new("a") == %Quotation{text: "a", by: nil}
-      assert Quotation.new("a", "b").by == "b"
+      assert %Quotation{text: "a", by: nil} = Builder.quotation("a")
+      assert Builder.quotation("a", by: "b").by == "b"
     end
   end
 

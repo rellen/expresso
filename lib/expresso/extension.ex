@@ -16,6 +16,9 @@ defmodule Expresso.Extension do
   # The time and the easing of the animations of an element. A speed is a
   # preset of the theme or a number of milliseconds.
   @speed {:or, [{:in, [:fast, :normal, :slow]}, :pos_integer]}
+
+  # A template is a module, or a built-in template such as {:builtins, :default}.
+  @template {:or, [{:tuple, [{:in, [:builtins]}, :atom]}, :atom]}
   @easings [:ease_in_out, :ease_out, :linear, :spring]
 
   @overlay_schema [
@@ -315,6 +318,11 @@ defmodule Expresso.Extension do
     schema: [
       name: [type: :string, doc: "A name for the slide."],
       heading: [type: :string, doc: "The heading that the slide template shows."],
+      template: [
+        type: @template,
+        doc:
+          "The slide template: a module, or {:builtins, name}. See docs/architecture.md. The default is {:builtins, :default}."
+      ],
       notes: [
         type: :string,
         doc: "The notes of the speaker. The handout view shows them under each page."
@@ -417,6 +425,11 @@ defmodule Expresso.Extension do
         default: false,
         doc:
           "Show the number of each slide and the number of slides, such as 3 / 12, in a corner of the slide. Slide 1 shows no number."
+      ],
+      template: [
+        type: @template,
+        doc:
+          "The deck template, which gives the header and the footer: a module, or {:builtins, name}. See docs/architecture.md. The default is {:builtins, :default}."
       ]
     ]
   }

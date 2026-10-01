@@ -45,26 +45,14 @@ defmodule Expresso.Deck do
   defstruct [:name, :metadata, :slides]
 
   @doc """
-  Create a new deck
+  Make the struct of a deck
+
+  `Expresso.from_dsl_state/1` calls this function. Make a deck with the DSL
+  or with `Expresso.Builder`.
   """
   @spec new(name :: String.t(), metadata :: map(), slides :: list()) :: t()
   def new(name, metadata \\ %{}, slides \\ []) do
     %__MODULE__{name: name, metadata: metadata, slides: slides}
-  end
-
-  @doc """
-  Add a slide to a deck
-  """
-  @spec add_slide(
-          deck :: t(),
-          name :: String.t() | nil,
-          metadata :: map(),
-          elements :: Keyword.t()
-        ) ::
-          t()
-  def add_slide(%__MODULE__{} = deck, name \\ nil, metadata \\ %{}, elements \\ []) do
-    new_slide = Expresso.Slide.new(name, metadata, elements)
-    %__MODULE__{deck | slides: deck.slides ++ [new_slide]} |> number_slides()
   end
 
   @doc """

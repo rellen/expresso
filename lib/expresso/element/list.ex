@@ -38,21 +38,6 @@ defmodule Expresso.Element.List do
   ]
 
   @doc """
-  Make a list from items
-
-  The options are `ordered`, `reveal` and `dim`, and each takes a boolean.
-  """
-  @spec new([Expresso.Element.Item.t()], keyword()) :: t()
-  def new(items, opts \\ []) do
-    %__MODULE__{
-      elements: items,
-      ordered: Keyword.get(opts, :ordered, false),
-      reveal: Keyword.get(opts, :reveal, false),
-      dim: Keyword.get(opts, :dim, false)
-    }
-  end
-
-  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

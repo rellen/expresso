@@ -2,9 +2,10 @@ defmodule Expresso do
   @moduledoc """
   Expresso makes one HTML document from a deck
 
-  A deck comes from one of two input paths. A script builds an `Expresso.Deck`
-  struct with function calls, or a module declares a deck with the DSL of this
-  module. `to_deck/1` accepts the value of either path.
+  A deck comes from one of two input paths. A module declares a deck with the
+  DSL of this module, or a script makes an `Expresso.Deck` struct with the
+  functions of `Expresso.Builder`. The two paths run the same transformers and
+  verifiers. `to_deck/1` accepts the value of either path.
 
   `main/2` is the entry point of the command `mix expresso <input> [output]` and
   of the binary that Burrito makes. It reads the input script, it makes the HTML,
@@ -20,40 +21,47 @@ defmodule Expresso do
   Make a deck from a module that uses the DSL
   """
   @spec parse(module()) :: Expresso.Deck.t()
-  def parse(module) do
-    name = Spark.Dsl.Extension.get_opt(module, [:deck], :name)
-    progress = Spark.Dsl.Extension.get_opt(module, [:deck], :progress, true)
-    handout = Spark.Dsl.Extension.get_opt(module, [:deck], :handout, :all)
-    print_notes = Spark.Dsl.Extension.get_opt(module, [:deck], :print_notes, true)
-    slide_numbers = Spark.Dsl.Extension.get_opt(module, [:deck], :slide_numbers, false)
-    duration = Spark.Dsl.Extension.get_opt(module, [:deck], :duration)
-    transition = Spark.Dsl.Extension.get_opt(module, [:deck], :transition, :fade)
-    effect = Spark.Dsl.Extension.get_opt(module, [:deck], :effect, :fade)
-    speed = Spark.Dsl.Extension.get_opt(module, [:deck], :speed)
-    easing = Spark.Dsl.Extension.get_opt(module, [:deck], :easing)
-    css = Spark.Dsl.Extension.get_opt(module, [:deck], :css)
+  def parse(module), do: from_dsl_state(module.spark_dsl_config())
+
+  @doc """
+  Make a deck from the state of the DSL
+
+  The state comes from a module that uses the DSL, or from
+  `Expresso.Builder.deck/2`. The transformers of the DSL already ran on it.
+  """
+  @spec from_dsl_state(map()) :: Expresso.Deck.t()
+  def from_dsl_state(state) do
+    option = &Spark.Dsl.Transformer.get_option(state, [:deck], &1, &2)
 
     slides =
-      module
-      |> Spark.Dsl.Extension.get_entities([:deck])
+      state
+      |> Spark.Dsl.Transformer.get_entities([:deck])
       |> Enum.map(&Expresso.Slide.put_options_in_metadata/1)
 
-    name
-    |> Expresso.Deck.new(
-      %{
-        progress: progress,
-        handout: handout,
-        print_notes: print_notes,
-        slide_numbers: slide_numbers,
-        duration: duration,
-        transition: transition,
-        effect: effect,
-        speed: speed,
-        easing: easing,
-        css: css
-      },
-      slides
-    )
+    metadata = %{
+      progress: option.(:progress, true),
+      handout: option.(:handout, :all),
+      print_notes: option.(:print_notes, true),
+      slide_numbers: option.(:slide_numbers, false),
+      duration: option.(:duration, nil),
+      transition: option.(:transition, :fade),
+      effect: option.(:effect, :fade),
+      speed: option.(:speed, nil),
+      easing: option.(:easing, nil),
+      css: option.(:css, nil)
+    }
+
+    # The deck template reads the key when it is present, so the key is
+    # present only for a template that the deck gives.
+    metadata =
+      case option.(:template, nil) do
+        nil -> metadata
+        template -> Map.put(metadata, :template, template)
+      end
+
+    :name
+    |> option.(nil)
+    |> Expresso.Deck.new(metadata, slides)
     |> Expresso.Deck.number_slides()
   end
 
