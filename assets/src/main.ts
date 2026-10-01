@@ -43,6 +43,10 @@
 // then gets every step with no key. The speaker view opens with the same
 // address, so it also shows every step.
 //
+// A frame of the embed element gets its source when its slide shows in the
+// present view, after the load of the document. The speaker view and the
+// handout view load no page. `embed.ts` gives the rules.
+//
 // `?check` in the address of the present view runs the layout check after the
 // load of the document and of its fonts. The check shows each step, finds the
 // elements that go past an edge of the window and the lines of code that
@@ -59,6 +63,7 @@ import {
 import type { Event } from "./interpreter.ts";
 import { commands } from "./program.ts";
 import type { Builtin } from "./program.ts";
+import { load as loadEmbeds } from "./embed.ts";
 import { audit, report } from "./layout.ts";
 import { clock, left, pace, talkLength } from "./speaker.ts";
 import {
@@ -142,9 +147,21 @@ function show(changed: State, local = true): void {
       partner.postMessage(message(state, deck, time), "*");
     }
   }
+  if (document.readyState === "complete") {
+    embeds();
+  }
   if (isSpeaker && moved && started === null) {
     started = Date.now();
     tick();
+  }
+}
+
+// Load the pages of the current slide. The present view of this window shows
+// the slide, so the speaker view loads no page.
+function embeds(): void {
+  const entry = current(state, deck);
+  if (!isSpeaker && state.view === "present" && entry !== undefined) {
+    loadEmbeds(entry.slide);
   }
 }
 
@@ -177,6 +194,15 @@ if (isSpeaker) {
 apply(state, deck, program);
 
 show(fromHash(state, location.hash, deck));
+
+// The pages load after the document, so the slides show at once. A page that
+// loads slowly then does not hold the load of the document.
+if (document.readyState === "complete") {
+  embeds();
+} else {
+  window.addEventListener("load", embeds, { once: true });
+}
+window.addEventListener("online", embeds);
 
 // The layout check measures each step, and then it shows the current step
 // again. The images of a document load after the script, so the check waits

@@ -7,6 +7,7 @@
 spark_locals_without_parens = [
   alt: 1,
   any: 1,
+  aspect: 1,
   at: 1,
   attribute: 2,
   attribute: 3,
@@ -29,8 +30,11 @@ spark_locals_without_parens = [
   easing: 1,
   effect: 1,
   element: 1,
+  embed: 1,
+  embed: 2,
   event: 3,
   event: 4,
+  fallback: 1,
   flag: 1,
   goto: 1,
   handout: 1,
@@ -39,6 +43,7 @@ spark_locals_without_parens = [
   highlight: 1,
   image: 1,
   image: 2,
+  interactive: 1,
   item: 1,
   item: 2,
   key: 3,
@@ -97,6 +102,7 @@ spark_locals_without_parens = [
   text_box: 0,
   text_box: 1,
   theme: 1,
+  title: 1,
   transition: 1,
   width: 1
 ]

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>A test page</title></head>
+<body style="margin: 0; background: #224466; color: white; font: 40px sans-serif;">
+<p id="ticks">0</p>
+<script>
+  let ticks = 0;
+  // The page tells its count to the deck, because the sandbox does not let
+  // the deck read the page.
+  setInterval(() => {
+    ticks += 1;
+    document.getElementById("ticks").textContent = String(ticks);
+    parent.postMessage({ ticks }, "*");
+  }, 50);
+</script>
+</body>
+</html>

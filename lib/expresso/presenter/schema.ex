@@ -2,9 +2,10 @@ defmodule Expresso.Presenter.Schema do
   @moduledoc """
   Describes each value that Elixir writes for the script of the presenter
 
-  The renderer writes three values for the script: the program that
+  The renderer writes four values for the script: the program that
   `Expresso.Presenter.Program` makes, the list of the steps that
-  `Expresso.Steps` makes, and the commands of an element. The two windows of the presenter also send a
+  `Expresso.Steps` makes, the commands of an element, and the sources of the
+  embeds that `Expresso.Element.Embed` makes. The two windows of the presenter also send a
   message to each other. This module describes the JSON form of each value.
   It is the one source of these forms:
 
@@ -192,6 +193,9 @@ defmodule Expresso.Presenter.Schema do
         steps: {:list, {:ref, :written_entry}},
         slides: {:list, {:ref, :slide}},
         duration_ms: {:nullable, {:integer, 1}}}},
+      {:written_embeds,
+       "The source of each embed of a deck, in the order of the numbers of the elements, as the renderer writes it.",
+       {:list, {:object, kind: {:enum, ["src", "srcdoc"]}, value: :string}}},
       {:message,
        "The message that one window of the presenter sends to the other window. The other window ignores a key that it does not know.",
        {:open_object,
