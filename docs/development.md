@@ -424,6 +424,14 @@ Each build adds its payload to the cache, and one run saved 405 MB for `linux_x8
 234 MB for `macos_arm`. The build of the wrapper changes only with Burrito, so one save
 keeps most of the gain.
 
+On a Linux runner, the action sets `TARGET_ARCH`, `TARGET_OS` and `TARGET_ABI`. Zigler
+then compiles the NIF of `tools/` for the baseline CPU of the architecture, and not for the
+CPU of the runner. The cache of `_build` gives the NIF to the next runner, and that runner
+can have a different CPU. On 2026-10-01, a NIF with AVX-512 instructions stopped a runner
+without AVX-512 with `Illegal instruction`. The key of the cache of `deps` and `_build`
+starts with `mix-baseline`, so no job reads a cache from before this change. Burrito does
+not read these variables, and a macOS runner and your computer keep their own CPU.
+
 Burrito downloads the ERTS of the target from the CDN `beam-machine-universal.b-cdn.net`,
 and on Linux also a musl runtime. It keeps them in its own download cache:
 `~/.cache/burrito_file_cache` on Linux and `~/Library/Caches/burrito_file_cache` on macOS.

@@ -34,16 +34,19 @@ runs:
 
     # `_build` holds the PLT of Dialyzer, which `mix.exs` puts there. A change to
     # `mix.lock` gives a new key, and the tools then run against a new build.
+    # The prefix `mix-baseline` came with the baseline CPU of
+    # `.github/actions/setup-zig`. A cache from before that change holds a NIF for
+    # the CPU of one runner, and no job reads it.
     - name: Read the cache of the dependencies and of the build
       uses: actions/cache@v6
       with:
         path: |
           deps
           _build
-        key: mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}-${{ github.sha }}
+        key: mix-baseline-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}-${{ github.sha }}
         restore-keys: |
-          mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}-
-          mix-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-
+          mix-baseline-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-${{ hashFiles('mix.lock') }}-
+          mix-baseline-${{ inputs.cache }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-
 
     # `--check-locked` fails when `mix.lock` does not agree with `mix.exs`, so
     # each job uses the versions of the lockfile. Hex writes a warning for an
