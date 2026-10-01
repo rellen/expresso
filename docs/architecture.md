@@ -928,7 +928,9 @@ cases:
 The `goto` option of a text area, an image or an item makes the element a link to a slide
 and a step. `docs/reference/goto-option.md` gives the option for the user.
 `Expresso.Goto` holds the value of the option, and `Expresso.GotoVerifier` refuses a
-link to a slide or a step that the deck does not have.
+link to a slide or a step that the deck does not have. A link can name its slide by number
+or by name. The verifier refuses a name that no slide has or that two slides have, and
+`Expresso.Goto.resolve/1` replaces each name with the number of its slide.
 
 The render function of the element puts its content into an `a` element with the class
 `goto`. The `href` attribute holds the fragment of the step, such as `#5.2`.

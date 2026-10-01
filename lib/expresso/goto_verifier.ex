@@ -11,7 +11,6 @@ defmodule Expresso.GotoVerifier do
   use Spark.Dsl.Verifier
 
   alias Expresso.Goto
-  alias Expresso.Overlay.Render
   alias Shoddy.Result
   alias Spark.Dsl.Verifier
 
@@ -23,14 +22,14 @@ defmodule Expresso.GotoVerifier do
   def verify(dsl_state) do
     module = Verifier.get_persisted(dsl_state, :module)
     slides = Verifier.get_entities(dsl_state, [:deck])
-    max_steps = Enum.map(slides, &Render.max_step/1)
+    targets = Goto.targets(slides)
 
     slides
     |> Stream.map(fn slide ->
       slide.elements
       |> List.wrap()
       |> links()
-      |> first_error(max_steps)
+      |> first_error(targets)
       |> Result.map_error(&dsl_error(module, slide, &1))
     end)
     |> Result.collect()
@@ -44,9 +43,9 @@ defmodule Expresso.GotoVerifier do
     end)
   end
 
-  defp first_error(links, max_steps) do
+  defp first_error(links, targets) do
     links
-    |> Stream.map(&Goto.check(&1, max_steps))
+    |> Stream.map(&Goto.check(&1, targets))
     |> Result.collect()
     |> Result.ignore()
   end

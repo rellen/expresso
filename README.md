@@ -93,8 +93,8 @@ Some notes on this example:
   such as `60%`.
 - A slide also takes a `notes` option. The handout view shows the notes under each page of
   the slide, and the speaker view shows them too.
-- A text area, an image or an item takes a `goto` option, such as `goto: [slide: 5]`. The
-  element is then a link to that slide. See
+- A text area, an image or an item takes a `goto` option, such as `goto: [slide: 5]` or
+  `goto: [slide: "summary"]`. The element is then a link to that slide. See
   [the goto option](docs/reference/goto-option.md).
 
 ### With the functions

@@ -19,12 +19,17 @@ slide "contents" do
     item "The details" do
       goto slide: 3, step: 2
     end
+
+    item "The end" do
+      goto slide: "end"
+    end
   end
 end
 ```
 
 `Expresso.Builder` takes the same option, such as
-`text_area(text: "The summary", goto: [slide: 3, step: 2])`.
+`text_area(text: "The summary", goto: [slide: 3, step: 2])` or
+`text_area(text: "The end", goto: [slide: "end"])`.
 
 ## The values
 
@@ -32,12 +37,23 @@ end
 | --- | --- |
 | `[slide: 5]` | Step 1 of slide 5. |
 | `[slide: 5, step: 2]` | Step 2 of slide 5. |
+| `[slide: "end"]` | Step 1 of the slide with the name `"end"`. |
+| `[slide: "end", step: 2]` | Step 2 of the slide with the name `"end"`. |
 
-The slide and the step are positive integers. The first slide is slide 1. The deck must
-have the slide and the step:
+The slide is a positive integer or the name of a slide. The first slide is slide 1. The
+name of a slide is the first argument of `slide`, such as `slide "end" do`. The step is a
+positive integer.
+
+Use a name for a link in a deck that changes. A new slide in front of the target changes
+the number of the target, and a link by number then goes to the wrong slide with no error.
+A link by name goes to the same slide.
+
+The deck must have the slide and the step:
 
 - A deck from the DSL does not compile with a link to a slide or a step that it does not
   have. The error names the slide of the link.
+- A deck from the DSL does not compile with a link to a name that no slide has, or that
+  two or more slides have. The error gives the number of each slide with the name.
 - `Expresso.Builder.deck/2` raises a `Spark.Error.DslError` with the same message.
 
 ## What a click does
