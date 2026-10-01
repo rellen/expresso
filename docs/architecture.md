@@ -811,8 +811,9 @@ into the same document. `parse` in `program.ts` makes maps and objects of the JS
 examines no value. These parts find a defect of the program:
 
 - `Expresso.Presenter.Verifier` examines the definition when it compiles.
-- The property tests of `Expresso.Presenter.SchemaTest` make sure that the program and the
-  list of the steps of random decks agree with `Expresso.Presenter.Schema`.
+- The property tests of `Expresso.Presenter.SchemaTest` make random decks. They make sure
+  that the program and the list of the steps for each deck agree with
+  `Expresso.Presenter.Schema`.
 - `validate` in `assets/test/validate.ts` decodes each program of the fixture file with
   the decoders of `assets/src/schema.ts`. It runs only in the tests, and the bundle does
   not hold it.
