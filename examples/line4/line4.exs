@@ -170,13 +170,16 @@ defmodule Line4.Deck do
   slide "Northside Works" do
     heading "Line 4: how the factory works"
     template Line4.PartTemplate
-    notes "The page is one HTML file. Open it next to the deck, and let it run during the talk."
+
+    notes "The factory on this slide is the page itself, and it runs during the talk. Without a network, the screenshot shows in its place. The handout and paper show the screenshot."
 
     text_area(text: "An isometric factory in one HTML file, and the code that runs it")
 
-    image "examples/line4/line4.png" do
-      alt "Line 4 after 12 seconds: belts, robot arms, a paint booth, forklifts and the status panel"
+    embed "https://rellen.github.io/iso-factories/line-4/index.html" do
+      title "Line 4, the running factory: belts, robot arms, a paint booth, forklifts and the status panel"
+      fallback "examples/line4/line4.png"
       width "62%"
+      aspect "16/9"
       effect :blur
       speed :slow
     end

@@ -477,6 +477,7 @@ An element is the content of a slide. These are the elements at this time:
 - `Expresso.Element.Columns`, with `Expresso.Element.Column`
 - `Expresso.Element.Math`
 - `Expresso.Element.Diagram`, with `Expresso.Element.Part`
+- `Expresso.Element.Embed`
 
 ### The parts of an element module
 
@@ -711,6 +712,32 @@ center of the part to the center of the target. These are the reasons for this d
 - **The distance is in the coordinates of the parent of the part.** The wrapper of a part
   is in the same parent as the part, and the theme moves the wrapper. A parent with
   `scale(2)` therefore gets half the distance of the file.
+
+### The embed
+
+An `embed` shows a web page in a frame. `docs/reference/embed-element.md` gives the options
+for the user. These are the reasons for its design:
+
+- **No copy holds the source.** The document holds a copy of each slide for the present
+  view and one for each page of the handout view. A source in each copy would load the page
+  once for each step of the slide, and a local file would go into the document many times.
+  Therefore `Expresso.Element.Embed.number/1` gives each embed a number, the frame holds
+  only `data-embed`, and the renderer writes the sources one time into the element
+  `expresso-embeds`. The form `written_embeds` of `Expresso.Presenter.Schema` describes it.
+- **The presenter loads a page when its slide shows.** `embed.ts` gives the frame of the
+  present view its source, after the load of the document. The slides then show at once, a
+  page that loads slowly does not hold the load of the document, and the layout check does
+  not wait for the network. The speaker view and the handout view load no page, so a page
+  runs one time.
+- **A loaded page stays.** A demonstration can have a state, such as the time of a
+  simulation. A move back to the slide shows the page as it was.
+- **A local file goes into `srcdoc`.** The deck then stays one file, as an image does.
+- **The sandbox depends on the source.** A page of the network keeps its own origin with
+  `allow-same-origin`. A local file has no origin of its own, and with `allow-same-origin` it
+  would get the origin of the deck, so it gets `allow-scripts` only.
+- **A frame takes no click by default.** A key goes to the frame that has the focus, and a
+  deck cannot take it back from a page of a different origin. Without `interactive`, the
+  frame has `pointer-events: none` and `tabindex="-1"`, so the focus stays on the deck.
 
 ## The DSL
 
