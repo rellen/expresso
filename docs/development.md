@@ -653,8 +653,17 @@ steps:
    mix run -e 'for n <- Expresso.Palette.Builtin.names(), p = Expresso.Palette.Builtin.fetch!(n), do: IO.puts("#{n} #{p.variant} #{Float.round(p.change, 2)} #{p.dim_opacity}")'
    ```
 
-4. Run `mix test test/expresso/palette_test.exs`. It makes sure that each built-in theme
-   meets each minimum.
+4. Add the still of the theme to "The gallery" of `docs/reference/theme-option.md`.
+   `mix expresso.gifs` records a still for each built-in theme, with the name
+   `theme-` and the name of the theme with hyphens, such as `theme-tokyo-night-storm.png`.
+   This command records it:
+
+   ```sh
+   mix expresso.gifs /tmp/gifs theme-tokyo-night-storm
+   ```
+
+5. Run `mix test test/expresso/palette_test.exs test/expresso/examples_test.exs`. They
+   make sure that each built-in theme meets each minimum and has its still.
 
 The name of the theme is the name of its file, with underscores, such as
 `:tokyo_night_storm` for `tokyo-night-storm.yaml`.
@@ -663,7 +672,9 @@ The name of the theme is the name of its file, with underscores, such as
 
 The how-to guides and the reference pages show a GIF of each example deck of
 `examples/animations/`. "Present a deck" in `README.md` shows a GIF or a still of each
-example deck of `examples/presenter/`. `mix expresso.gifs` records them:
+example deck of `examples/presenter/`. "The gallery" of `docs/reference/theme-option.md`
+shows a still of `examples/themes/showcase.exs` for each built-in theme.
+`mix expresso.gifs` records them:
 
 ```sh
 mix expresso.gifs                        # each example, into _build/gifs
@@ -683,7 +694,10 @@ the examples is in `Mix.Tasks.Expresso.Gifs`. An example has:
   `{:advance, 90_000}`, for the timer of the speaker view;
 - `still: true` for a PNG of the page after the actions, in place of a GIF;
 - a height of the picture, in the layout of a window of 1280 by 720 pixels, so a still of
-  the handout view can show several pages.
+  the handout view can show several pages;
+- a theme, which replaces the `theme` option of the deck. The task makes one example
+  with each built-in theme for the deck of the themes. That deck uses `Expresso.Builder`,
+  so the task can evaluate it again for each theme.
 
 The recorder opens each document in Chromium with `playwright_ex`, does the actions, and
 takes a screenshot of each frame. Before the first frame, it moves each animation of the
