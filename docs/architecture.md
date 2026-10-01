@@ -575,8 +575,21 @@ element put the element in the middle. Write `spacer()` with parentheses, as for
 ### The code
 
 A `code` element shows source code. The entity takes the name of the language as its
-optional first argument, and the `text` option holds the source. `Expresso.Highlight`
-makes one HTML fragment for each line at render time.
+optional first argument. The `text` option holds the source, or the `src` option names a
+file that holds it. `Expresso.Highlight` makes one HTML fragment for each line at render
+time.
+
+`Expresso.Element.Code.build/1` reads the file of `src`, and not the render function. The
+transform of the entity calls `build/1`, so the compiler of the DSL and
+`Expresso.Builder.code/2` both read the file. The check of the `reveal` option needs the
+lines, and the transform runs before the transformer gives the steps. The function reads
+the file through `Expresso.DeckFile`. Each render of the watch mode evaluates the deck
+file again inside `Expresso.DeckFile.track/1`, so the watch mode also watches the file of
+the code.
+
+With `src`, a line keeps its number in the file, and `reveal` uses that number. The
+author then reads the number of a group in the editor, and the slide shows the same number
+with `line_numbers`. A count from 1 in the excerpt would need a calculation for each group.
 
 Makeup lexes the text when a lexer package registers the language. `mix.exs` lists one
 package for each of these languages:
@@ -607,8 +620,8 @@ child for each item, with the specification `[from: :next]`. The transformer the
 each group its steps, as it does for the items of a list. Each line goes into a `span`
 element, and a hidden line keeps its space. `docs/overlays.md` gives the rules.
 
-A line number that is more than the number of lines of the text gives an error. Such a
-group shows nothing, and it takes one step of the slide.
+A line number that the element does not show gives an error. Such a group shows nothing,
+and it takes one step of the slide.
 
 `Expresso.Deck.render/1` writes the document with Floki, and Floki drops a text node that
 is only white space. A line of code holds such nodes: an indentation, a space between two
@@ -1136,6 +1149,30 @@ from that window gives the same pages.
 A page of the handout view takes the full height of the screen, or of the paper. The
 print block gives the paper a landscape orientation, because a slide is wider than it is
 high. Therefore each page keeps the proportions of a slide.
+
+### The layout check
+
+`?check` in the address runs the layout check of `layout.ts`. `docs/reference/layout-check.md`
+gives what it finds. These are the reasons for its design:
+
+- **It runs in the browser.** Only a browser engine knows the place of each element,
+  because the place depends on the fonts, the style sheet and the size of the window. The
+  compiler and the binary have no browser engine. A headless Chromium can still run the
+  check with no window, so a continuous integration job can use it.
+- **It measures the window, and not the slide.** A slide of the present view is as large
+  as its content, so content past the edge of the window makes the slide larger too. The
+  window is the part that the audience sees.
+- **It sets the time of each animation to zero.** The check reads the final place of each
+  element at each step. With an animation, the check would read a place during the
+  animation.
+- **It measures each step.** An `on` entity can move an element past an edge at one step
+  only. A hidden element keeps its space, so most problems show at each step. The report
+  gives each problem at its first step only.
+- **It names the innermost element.** A formula that is too wide also makes its column
+  and its `columns` element too wide. The innermost element is the one to correct.
+- **It reads `offsetHeight` for a line of code.** An `on` entity can turn a code element,
+  and a turned box has a larger bounding box. `offsetHeight` does not change with a
+  transform, so a turned line with no break counts as one line.
 
 ## The build
 

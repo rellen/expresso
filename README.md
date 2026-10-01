@@ -387,16 +387,11 @@ the pages that the `handout` options select.
 
 ### The layout check
 
-`?check` at the end of the address, such as `deck.html?check`, finds the parts of the deck
-that do not fit the window. Open the document in a window of the size of the projector,
-such as 1920 × 1080. The presenter shows each step, and it finds two kinds of problem:
-
-- An element that goes past an edge of the window, so a part of it does not show.
-- A line of code that is too long for its box, so the browser breaks it on the slide.
-
-A report in a corner of the window gives the size of the window and each problem, with a
-link to its step. The console of the browser gets the same lines. A different size of
-window gives a different layout, so make the check at the size of the talk.
+`?check` at the end of the address, such as `deck.html?check`, finds an element that goes
+past an edge of the window and a line of code that breaks. A report in a corner of the
+window gives each problem, with a link to its step. See
+[Check that a deck fits the screen](docs/how-to/check-the-layout.md) and
+[the layout check](docs/reference/layout-check.md).
 
 ### The custom properties of a theme
 
@@ -459,6 +454,8 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Add transitions between slides](docs/how-to/add-transitions.md)
 - [Animate elements in a slide](docs/how-to/animate-elements.md)
 - [Make a deck from data](docs/how-to/make-a-deck-from-data.md)
+- [Show code on a slide](docs/how-to/show-code.md)
+- [Check that a deck fits the screen](docs/how-to/check-the-layout.md)
 
 Reference pages describe each value of an option:
 
@@ -467,6 +464,7 @@ Reference pages describe each value of an option:
 - [The css option](docs/reference/css-option.md)
 - [The goto option](docs/reference/goto-option.md)
 - [The code element](docs/reference/code-element.md)
+- [The layout check](docs/reference/layout-check.md)
 - [The template option](docs/reference/template-option.md)
 - [The theme option](docs/reference/theme-option.md)
 
