@@ -334,7 +334,8 @@ defmodule ExpressoTest do
         |> Expresso.Deck.render()
         |> Floki.parse_document!()
 
-      assert document |> Floki.find("span.header") |> Floki.text() =~ "plain deck"
+      # The header holds the name of the deck and no other text.
+      assert document |> Floki.find(".screen span.header") |> Floki.text() == "plain deck"
     end
   end
 

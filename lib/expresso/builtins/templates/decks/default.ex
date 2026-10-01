@@ -20,7 +20,7 @@ defmodule Expresso.Builtins.Templates.Decks.Default do
       div do
         if name = @deck.name do
           span class: "header" do
-            "Header " <> name
+            name
           end
         end
       end
