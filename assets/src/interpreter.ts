@@ -25,6 +25,7 @@ import type {
   Program,
   Region,
 } from "./program.ts";
+import { FIELDS } from "./schema.ts";
 import { current, isMessage } from "./state.ts";
 import type { State } from "./state.ts";
 
@@ -42,18 +43,6 @@ export type Event =
 // The state after an event, and the built-in functions that the event calls.
 // A state with no change is the same object as the state before the event.
 export type Result = Readonly<{ state: State; effects: readonly Builtin[] }>;
-
-const FIELDS: readonly Field[] = [
-  "index",
-  "view",
-  "blank",
-  "digits",
-  "help",
-  "progress",
-  "every",
-  "overview",
-  "selected",
-];
 
 function same(a: State, b: State): boolean {
   return FIELDS.every((field) => a[field] === b[field]);

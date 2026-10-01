@@ -9,14 +9,15 @@
 // step and the reason for the handout view. The program of the presenter
 // declares the first value of each field.
 
+import { is } from "./decode.ts";
 import type { Deck, Entry } from "./deck.ts";
-import type { Direction, Region } from "./program.ts";
+import { decodeMessage } from "./schema.ts";
+import type { Direction, Message, Region, State } from "./schema.ts";
 
 // The present view shows one slide at one step. The handout view shows one page
 // for each step of each slide. The speaker view shows the current step, the
 // next step and the notes, in a second window.
-export type View = "present" | "handout" | "speaker";
-
+//
 // `index` is the index of the current step in the `steps` of the deck. The
 // first step of the first slide has the index 0. `blank` is true while the
 // present view shows a black screen. `digits` holds the digits of a slide
@@ -28,17 +29,9 @@ export type View = "present" | "handout" | "speaker";
 // present view or the speaker view shows a grid of the slides. `selected` is
 // the number of the selected slide in that grid. A message does not hold the
 // overview, so the overview shows only in the window that opens it.
-export type State = Readonly<{
-  index: number;
-  view: View;
-  blank: boolean;
-  digits: string;
-  help: boolean;
-  progress: boolean;
-  every: boolean;
-  overview: boolean;
-  selected: number;
-}>;
+//
+// `schema.ts` declares `View` and `State`.
+export type { State, View } from "./schema.ts";
 
 // The entry of the current step, or undefined for a deck with no slide.
 export function current(state: State, deck: Deck): Entry | undefined {
@@ -76,13 +69,9 @@ export function swipe(dx: number, dy: number): Direction | undefined {
 // no loop: before this rule, the echo of the first key came back after the
 // second key, and the two windows sent the two positions to each other with
 // no end.
-export type Message = {
-  expresso: "position";
-  slide: number;
-  step: number;
-  blank: boolean;
-  time: number;
-};
+//
+// `schema.ts` declares `Message`.
+export type { Message } from "./schema.ts";
 
 export function message(state: State, deck: Deck, time: number): Message {
   const entry = current(state, deck);
@@ -114,25 +103,9 @@ export function accepts(
   return incoming > own || (incoming === own && speaker);
 }
 
-// Tell if data from the other window is a message of the presenter.
+// Tell if data from the other window is a message of the presenter. The other
+// window and the extensions of the browser can send any value, so the script
+// decodes each message.
 export function isMessage(data: unknown): data is Message {
-  if (
-    typeof data !== "object" ||
-    data === null ||
-    !("expresso" in data) ||
-    !("slide" in data) ||
-    !("step" in data) ||
-    !("blank" in data) ||
-    !("time" in data)
-  ) {
-    return false;
-  }
-  const { expresso, slide, step, blank, time } = data;
-  return (
-    expresso === "position" &&
-    Number.isInteger(slide) &&
-    Number.isInteger(step) &&
-    typeof blank === "boolean" &&
-    Number.isFinite(time)
-  );
+  return is(decodeMessage, data);
 }

@@ -12,31 +12,16 @@
 //
 // `Expresso.Presenter.Definition` tells what each mode and each command does.
 
-import type { State } from "./state.ts";
+import type {
+  Command,
+  Commands,
+  Field,
+  WrittenMode,
+  WrittenProgram,
+} from "./schema.ts";
 
-// A field of the state.
-export type Field = keyof State;
-
-// A built-in function of the browser.
-export type Builtin = "open_speaker" | "fullscreen" | "reset_timer";
-
-// A part of the window for a click, and a direction of a swipe.
-export type Region = "left_third" | "right";
-export type Direction = "left" | "right";
-
-export type Command =
-  | readonly ["set", Field, State[Field]]
-  | readonly ["toggle", Field]
-  | readonly ["clear", Field]
-  | readonly ["assign", "selected", readonly ["entry", "slide"]]
-  | readonly ["append", "digits"]
-  | readonly ["step", number]
-  | readonly ["goto", number | null]
-  | readonly ["goto_slide", "selected" | number]
-  | readonly ["select", number]
-  | readonly ["select_by", number]
-  | readonly ["go_typed"]
-  | readonly ["builtin", Builtin];
+// `schema.ts` declares the types of the values that the renderer writes.
+export type { Builtin, Command, Direction, Field, Region } from "./schema.ts";
 
 // A mode of the program. The interpreter uses the first mode whose `when`
 // matches the state. `any` holds the commands of each event of the mode.
@@ -45,7 +30,7 @@ export type Command =
 // `null` when the mode does not run the commands of an element.
 export type Mode = Readonly<{
   name: string;
-  when: Readonly<Partial<State>>;
+  when: WrittenMode["when"];
   any: readonly Command[] | null;
   other: readonly Command[] | null;
   element: readonly Command[] | null;
@@ -76,27 +61,14 @@ export type Projections = Readonly<{
 }>;
 
 export type Program = Readonly<{
-  state: State;
+  state: WrittenProgram["state"];
   modes: readonly Mode[];
   project: Projections;
 }>;
 
 // The pairs of events and commands of a mode, as the renderer writes them. Each
 // pair holds each event that has the same commands.
-type Pairs = readonly (readonly [readonly string[], readonly Command[]])[];
-
-// The program as the renderer writes it. `parse` makes maps of the pairs and
-// objects of the projections.
-type Written = Readonly<{
-  state: State;
-  modes: readonly (Omit<Mode, "keys" | "click" | "swipe"> &
-    Readonly<{ keys: Pairs; click: Pairs; swipe: Pairs }>)[];
-  project: Readonly<{
-    attributes: readonly (readonly [Field, string, boolean])[];
-    properties: readonly (readonly [string, Property["entry"]])[];
-    marks: readonly (readonly [string, string, Mark["key"], Mark["values"]])[];
-  }>;
-}>;
+type Pairs = WrittenMode["keys" | "click" | "swipe"];
 
 function map(pairs: Pairs): ReadonlyMap<string, readonly Command[]> {
   return new Map(
@@ -106,9 +78,13 @@ function map(pairs: Pairs): ReadonlyMap<string, readonly Command[]> {
   );
 }
 
-// Read the JSON text of the program.
-export function parse(source: string): Program {
-  const { state, modes, project }: Written = JSON.parse(source);
+// Make maps of the pairs and objects of the projections. `parse` reads the
+// text, and the tests read a program that `decodeWrittenProgram` returns.
+export function fromWritten({
+  state,
+  modes,
+  project,
+}: WrittenProgram): Program {
   return {
     state,
     modes: modes.map((mode) => ({
@@ -134,8 +110,13 @@ export function parse(source: string): Program {
   };
 }
 
+// Read the JSON text of the program.
+export function parse(source: string): Program {
+  return fromWritten(JSON.parse(source));
+}
+
 // Read the JSON text of the commands of an element, such as a page of the
 // overview. The renderer writes them in the attribute `data-commands`.
-export function commands(source: string): readonly Command[] {
+export function commands(source: string): Commands {
   return JSON.parse(source);
 }
