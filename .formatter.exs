@@ -90,6 +90,7 @@ spark_locals_without_parens = [
   text_area: 1,
   text_box: 0,
   text_box: 1,
+  theme: 1,
   transition: 1,
   width: 1
 ]
