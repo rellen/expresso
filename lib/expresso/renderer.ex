@@ -187,6 +187,7 @@ defmodule Expresso.Renderer do
         :deck,
         &(&1
           |> Expresso.Element.Code.spotlight()
+          |> Expresso.Element.Diagram.place()
           |> Expresso.Overlay.Render.identify()
           |> Expresso.Goto.resolve())
       )

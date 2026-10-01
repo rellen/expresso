@@ -72,11 +72,32 @@ step specification.
 | `set: [rotate: "-8deg"]` | The element turns by that angle. |
 | `set: [opacity: 0.3]` | The element shows at that opacity, from 0 to 1. |
 | `set: [color: "#c92a2a"]` | The text of the element changes to that color. |
+| `move_to: "station"` | A part of a diagram moves to the center of the element with the id `"station"` in the same SVG file. See "Move a part to another part" below. |
 
 An `on` entity can be in each element, in an item of a list, in a row of a table and in
 a part of a diagram. In a diagram, `x` and `y` are in the units of the SVG file. A part
 inside a `text` element of the file, such as a `tspan`, can fade, dim and change its
 color, and it cannot move or get an outline.
+
+### Move a part to another part
+
+`on 3, move_to: "station"` in a `part` moves the part at step 3, so its center is at the
+center of the element with the id `"station"`. The render reads the SVG file, measures the
+two elements, and writes the distance as `x` and `y` in the units of the file. A change of
+the file changes the distance at the next render.
+
+- Only an `on` entity of a `part` takes `move_to`. The compiler gives an error for a
+  different element.
+- The `set` of the same `on` entity can hold other keys, such as `scale`, and it cannot
+  hold `x` or `y`, because `move_to` gives them.
+- The render gives an error for an id that the file does not have, and for an element with
+  no shape, such as a `title`.
+
+The render measures the box of each element from its attributes, with the `transform` of
+the element and of each parent. A path gives the box of its points and of its control
+points. A text has no width without its font, so a text gives the point of its `x` and
+`y`. A group thus gets the center of its shapes, and a text that goes past the shapes of
+its group does not move that center.
 
 The theme owns the custom properties that `set` writes. The compiler gives a warning for a
 key that the theme does not use. The theme of this project uses `x`, `y`, `scale`,

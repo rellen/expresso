@@ -9,7 +9,7 @@ defmodule Expresso.Overlay.Check do
   `docs/overlays.md` gives the conditions.
   """
 
-  alias Expresso.Element.{On, Pause}
+  alias Expresso.Element.{On, Part, Pause}
   alias Expresso.Slide
   alias Shoddy.Result
 
@@ -21,6 +21,8 @@ defmodule Expresso.Overlay.Check do
   - A `pause` entity is inside an element.
   - A step number is less than 1.
   - An `on` entity has a step at which its element does not show.
+  - An `on` entity with `move_to` is not in a part of a diagram, or it also
+    sets `x` or `y`.
   - A child element has a step at which its parent does not show.
 
   An element without an `at` option shows at each step of its parent, and the
@@ -57,12 +59,27 @@ defmodule Expresso.Overlay.Check do
 
   defp check_on(on, element) do
     on
-    |> Stream.map(fn %On{steps: steps} ->
+    |> Stream.map(fn %On{steps: steps} = entity ->
       with :ok <- check_positive(steps, "on entity"),
+           :ok <- check_move(entity, element),
            do: check_inside(steps, element, "the on entity")
     end)
     |> Result.collect()
     |> Result.ignore()
+  end
+
+  defp check_move(%On{move_to: nil}, _element), do: :ok
+
+  defp check_move(%On{}, element) when not is_struct(element, Part),
+    do:
+      {:error,
+       "the on entity of the #{name(element)} has move_to, and only an on entity of a part takes it"}
+
+  defp check_move(%On{set: set}, _element) do
+    if Keyword.has_key?(set || [], :x) or Keyword.has_key?(set || [], :y),
+      do:
+        {:error, "an on entity with move_to gives x and y itself, so its set has no x and no y"},
+      else: :ok
   end
 
   defp check_positive(nil, _name), do: :ok

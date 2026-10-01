@@ -73,7 +73,12 @@ defmodule Expresso.Extension do
         doc: "The steps that give the state."
       ],
       state: [type: :atom, doc: "A state of the theme, such as :alert."],
-      set: [type: :keyword_list, doc: "Custom properties, such as [x: \"400px\"]."]
+      set: [type: :keyword_list, doc: "Custom properties, such as [x: \"400px\"]."],
+      move_to: [
+        type: :string,
+        doc:
+          "The id of an element of the SVG file. The part moves to the center of that element. Only an on entity of a part takes it. See docs/reference/overlay-options.md."
+      ]
     ]
   }
 

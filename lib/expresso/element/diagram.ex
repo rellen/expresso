@@ -65,6 +65,74 @@ defmodule Expresso.Element.Diagram do
   ]
 
   @doc """
+  Replace each `move_to` of the parts of a deck with a move
+
+  An `on` entity of a part can take `move_to`, the id of an element of the
+  SVG file. This function reads the file of each diagram with such an entity,
+  and `Expresso.Element.Diagram.Geometry.distance/3` gives the distance from
+  the center of the part to the center of that element. The function puts the
+  distance into `set` as `x` and `y`, in the units of the file, and the render
+  writes it as for each other `set`. A change of the file then changes the
+  move at the next render.
+
+  `Expresso.Renderer` calls this function before the render. It raises for
+  an id that the file does not have, and for an element with no shape.
+  """
+  @spec place(Expresso.Deck.t()) :: Expresso.Deck.t()
+  def place(%Expresso.Deck{slides: slides} = deck) do
+    %Expresso.Deck{
+      deck
+      | slides: Enum.map(slides, &%{&1 | elements: place_all(&1.elements || [])})
+    }
+  end
+
+  defp place_all(elements) do
+    Enum.map(elements, fn
+      %__MODULE__{elements: parts} = diagram ->
+        if Enum.any?(parts, &moves?/1), do: place_parts(diagram), else: diagram
+
+      %{elements: children} = element when is_list(children) ->
+        %{element | elements: place_all(children)}
+
+      element ->
+        element
+    end)
+  end
+
+  defp moves?(%Expresso.Element.Part{on: on}), do: Enum.any?(on, &(&1.move_to != nil))
+
+  defp place_parts(%__MODULE__{src: src, elements: parts} = diagram) do
+    tree = src |> read() |> Floki.parse_fragment!()
+    %__MODULE__{diagram | elements: Enum.map(parts, &place_part(&1, tree, src))}
+  end
+
+  defp place_part(%Expresso.Element.Part{id: id, on: on} = part, tree, src) do
+    on =
+      Enum.map(on, fn
+        %Expresso.Element.On{move_to: nil} = entity ->
+          entity
+
+        %Expresso.Element.On{move_to: target, set: set} = entity ->
+          case Expresso.Element.Diagram.Geometry.distance(tree, id, target) do
+            {:ok, {x, y}} ->
+              %Expresso.Element.On{entity | set: [x: pixels(x), y: pixels(y)] ++ (set || [])}
+
+            {:error, message} ->
+              raise ArgumentError, "the diagram \"#{src}\" #{message}"
+          end
+      end)
+
+    %Expresso.Element.Part{part | on: on}
+  end
+
+  # A length of CSS in the units of the file. The theme moves a part in the
+  # coordinates of its parent, and a pixel of CSS is one unit there.
+  defp pixels(value) do
+    rounded = Float.round(value, 2)
+    if rounded == Float.round(rounded), do: "#{trunc(rounded)}px", else: "#{rounded}px"
+  end
+
+  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from

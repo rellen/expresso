@@ -37,6 +37,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/show-code.md",
         "docs/how-to/check-the-layout.md",
         "docs/how-to/style-one-slide.md",
+        "docs/how-to/move-a-diagram-part.md",
         "docs/reference/transition-option.md",
         "docs/reference/overlay-options.md",
         "docs/reference/css-option.md",

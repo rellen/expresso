@@ -457,6 +457,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Show code on a slide](docs/how-to/show-code.md)
 - [Check that a deck fits the screen](docs/how-to/check-the-layout.md)
 - [Style one slide or one element](docs/how-to/style-one-slide.md)
+- [Move a part of a diagram to another part](docs/how-to/move-a-diagram-part.md)
 
 Reference pages describe each value of an option:
 
