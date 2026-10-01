@@ -36,7 +36,7 @@ defmodule Expresso.Steps do
   @type slide :: %{first: non_neg_integer(), steps: pos_integer(), transition: String.t()}
 
   # The kinds of a transition. A slide without a kind fades.
-  @transitions [:none, :fade, :slide, :zoom]
+  @transitions Expresso.Presenter.Schema.transitions()
 
   # The number of decimal places of `fraction` and `done`. Four places are
   # sufficient for the width of the progress bar and for the pace.
