@@ -44,9 +44,9 @@ The slide is a positive integer or the name of a slide. The first slide is slide
 name of a slide is the first argument of `slide`, such as `slide "end" do`. The step is a
 positive integer.
 
-Use a name for a link in a deck that changes. A new slide in front of the target changes
-the number of the target, and a link by number then goes to the wrong slide with no error.
-A link by name goes to the same slide.
+A link by name goes to the slide with that name. A new slide in front of the target does
+not change the target of a link by name. It changes the target of a link by number, and
+the compiler gives no error for that change.
 
 The deck must have the slide and the step:
 

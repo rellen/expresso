@@ -34,23 +34,34 @@ The element takes `text` or `src`, and not both.
 
 ## Code from a file
 
-Use `src` for code that is in a file of your project. The slide then shows the code as it
-is in the file, and a change to the file changes the slide. A copy in the `text` option can
-become different from the file with no error.
+The element reads the file of `src` when the deck compiles, and `Expresso.Builder.code/2`
+reads it when it makes the element. The text of the lines of `lines` is then the source of
+the element.
 
 - `mix expresso` reads the file each time that it renders the deck.
 - The watch mode renders the deck again after a change to the file.
-- The compiler gives an error for a file that it cannot read, and for a `lines` range that
-  goes past the end of the file.
+
+For the steps, see [Show code on a slide](../how-to/show-code.md).
+
+## The errors
+
+The compiler gives an error for:
+
+- an element with both `text` and `src`, or with neither,
+- a `lines` option without `src`,
+- a file that it cannot read,
+- a `lines` range that goes past the end of the file,
+- a number of `reveal` that the element does not show.
+
+`Expresso.Builder.code/2` raises an `ArgumentError` with the same message.
 
 ## The numbers of the lines
 
 Each line has a number. The first line of the `text` option is line 1. With `src`, the
 number of a line is its number in the file, so the first line of `lines 40..58` is line 40.
 
-The `reveal` option uses the same numbers. Thus a group of lines in the deck agrees with
-the numbers on the slide and with the numbers in your editor. The compiler gives an error
-for a number of `reveal` that the element does not show.
+The `reveal` option uses the same numbers. A group of lines in the deck therefore has the
+numbers that the slide shows.
 
 With `line_numbers true`, each line starts with its number. The numbers stand in one
 column, with the color of the comments of the theme. A screen reader does not read the
