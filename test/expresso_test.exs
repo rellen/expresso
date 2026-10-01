@@ -79,7 +79,8 @@ defmodule ExpressoTest do
                effect: :fade,
                speed: nil,
                easing: nil,
-               css: nil
+               css: nil,
+               theme: :default
              }
     end
 

@@ -70,12 +70,13 @@ defmodule Expresso.E2E.DurationTest do
     assert left(speaker) == "0:03 left"
 
     # The first change of the step starts the timer. After 3 seconds the time
-    # is up, and the time left turns red.
+    # is up, and the time left gets the color `danger` of the default theme,
+    # `#a40000`.
     speaker |> press("j")
     wait_for(speaker, "document.getElementById('speaker-left').dataset.pace === 'over'")
 
     assert left(speaker) =~ ~r/^\+0:0\d over$/
-    assert style(speaker, "color") == "rgb(201, 42, 42)"
+    assert style(speaker, "color") == "rgb(164, 0, 0)"
   end
 
   test "a deck with no duration shows no time left", %{

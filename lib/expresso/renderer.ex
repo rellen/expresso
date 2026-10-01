@@ -36,6 +36,17 @@ defmodule Expresso.Renderer do
     @style
   end
 
+  # The custom properties of the theme of the deck. Paper gets the default
+  # theme, because a printer gives a white sheet and a dark theme on it wastes
+  # ink. `docs/reference/theme-option.md` gives the reasons.
+  defp theme(deck) do
+    palette = Expresso.Palette.of((deck.metadata || %{})[:theme])
+    print = Expresso.Palette.Builtin.fetch!(:default)
+
+    ":root { #{Expresso.Palette.declarations(palette)} }\n" <>
+      "@media print { :root { #{Expresso.Palette.declarations(print)} } }"
+  end
+
   defp deck_css(deck) do
     case Expresso.Css.resolve((deck.metadata || %{})[:css]) do
       {:ok, ""} -> nil
@@ -200,7 +211,7 @@ defmodule Expresso.Renderer do
           end
 
           style do
-            Phoenix.HTML.raw(style())
+            Phoenix.HTML.raw(theme(@deck) <> "\n" <> style())
           end
 
           style do

@@ -19,12 +19,42 @@ defmodule Expresso.Highlight do
 
   alias Makeup.Formatters.HTML.HTMLFormatter
 
-  # The style of the tokens. Each style of Makeup is a function of
-  # `Makeup.Styles.HTML.StyleMap`, and this one gives dark text on a light
-  # background, as the theme does.
-  @style :tango_style
+  # The role of the theme for each token type, and the style of its font. The
+  # roles are custom properties of `Expresso.Palette`, so the colors of a code
+  # block come from the theme of the deck. A type that is not here, such as an
+  # operator, a variable or punctuation, keeps `--code-text`. The map follows
+  # the styling guide of base16, and a variable keeps the color of the text.
+  @roles [
+    {~w(comment comment_single comment_multiline comment_special comment_hashbang string_doc generic_prompt)a,
+     :code_comment, "font-style: italic;"},
+    {~w(comment_preproc comment_preproc_file keyword keyword_declaration keyword_namespace keyword_pseudo keyword_reserved operator_word)a,
+     :code_keyword, ""},
+    {~w(keyword_type name_class name_exception name_namespace)a, :code_type, ""},
+    {~w(keyword_constant name_constant name_attribute name_label literal literal_date number number_bin number_float number_hex number_integer number_integer_long number_oct)a,
+     :code_number, ""},
+    {~w(name_function name_function_magic name_decorator generic_heading generic_subheading)a,
+     :code_function, ""},
+    {~w(name_builtin name_builtin_pseudo name_entity string_escape string_regex string_interpol string_symbol)a,
+     :code_support, ""},
+    {~w(string string_affix string_backtick string_char string_delimiter string_double string_heredoc string_other string_sigil string_single generic_inserted)a,
+     :code_string, ""},
+    {~w(name_tag generic_deleted generic_error generic_traceback error)a, :code_tag, ""}
+  ]
 
-  @stylesheet Makeup.stylesheet(@style, "highlight")
+  @stylesheet [
+                ".highlight {color: var(--code-text); background-color: var(--code-background);}\n",
+                ".highlight .unselectable {user-select: none;}\n",
+                ".highlight .ge {font-style: italic;}\n",
+                ".highlight .gs {font-weight: bold;}\n"
+                | for {types, role, font} <- @roles,
+                      type <- types,
+                      class = Makeup.Token.Utils.css_class_for_token_type(type),
+                      class != nil do
+                    property = role |> Atom.to_string() |> String.replace("_", "-")
+                    ".highlight .#{class} {color: var(--#{property}); #{font}}\n"
+                  end
+              ]
+              |> IO.iodata_to_binary()
 
   # Each lexer package registers its languages when its application starts.
   # A release starts each application, and `lines/2` starts them for a
@@ -152,6 +182,9 @@ defmodule Expresso.Highlight do
 
   @doc """
   Give the CSS of the token classes, for the class `highlight`
+
+  Each color is a custom property of `Expresso.Palette`, such as
+  `--code-keyword`, so the theme of the deck gives the colors.
   """
   @spec stylesheet() :: String.t()
   def stylesheet, do: @stylesheet

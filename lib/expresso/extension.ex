@@ -430,6 +430,12 @@ defmodule Expresso.Extension do
         type: @template,
         doc:
           "The deck template, which gives the header and the footer: a module, or {:builtins, name}. See docs/architecture.md. The default is {:builtins, :default}."
+      ],
+      theme: [
+        type: {:custom, Expresso.Palette, :validate, []},
+        default: :default,
+        doc:
+          "The colors of the deck: the name of a built-in theme, such as :dracula, or a map with a #rrggbb color for each slot of base16, from :base00 to :base0F. Each built-in theme meets the contrast minimums of WCAG, and a map that does not gets a warning. Paper always gets the default theme. See docs/reference/theme-option.md."
       ]
     ]
   }
@@ -445,6 +451,7 @@ defmodule Expresso.Extension do
       Expresso.Overlay.Verifier,
       Expresso.Overlay.PropertyVerifier,
       Expresso.Overlay.EffectVerifier,
-      Expresso.Overlay.SizeVerifier
+      Expresso.Overlay.SizeVerifier,
+      Expresso.ThemeVerifier
     ]
 end

@@ -5,3 +5,7 @@ assets/test/fixtures/
 # `Expresso.Test.SchemaWriter` writes this file, and a test compares it with a
 # new copy.
 assets/src/schema.ts
+
+# The base16 schemes of Tinted Theming, unchanged. `Expresso.Palette.Builtin`
+# reads them.
+assets/themes/
