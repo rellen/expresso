@@ -56,6 +56,7 @@ spark_locals_without_parens = [
   math: 2,
   mode: 1,
   mode: 2,
+  move_to: 1,
   name: 1,
   notes: 1,
   on: 1,

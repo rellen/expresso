@@ -695,6 +695,23 @@ The document passes Floki, and Floki writes each name of an SVG in lowercase, su
 `viewbox`. A browser reads the lowercase names inside an `svg` element as the names of
 SVG, so the diagram keeps its meaning.
 
+The `move_to` option of an `on` entity in a part names a different element of the file.
+`Expresso.Element.Diagram.place/1` runs before the render, and it replaces each `move_to`
+with `x` and `y` in `set`. `Expresso.Element.Diagram.Geometry` gives the distance from the
+center of the part to the center of the target. These are the reasons for this design:
+
+- **Elixir measures, and not the browser.** A browser measures each shape exactly, but the
+  script would then need to measure each copy of the diagram, a hidden copy has no layout,
+  and paper gets no script. A distance in the style block works in each view and on
+  paper, with no new code in the presenter.
+- **The measure is of the attributes.** The module reads the shapes and the `transform`
+  attributes, and not the style sheet. The theme moves a part with CSS, so a part keeps the
+  same measure at each step. A text has no size without its font, so a text gives its
+  start point.
+- **The distance is in the coordinates of the parent of the part.** The wrapper of a part
+  is in the same parent as the part, and the theme moves the wrapper. A parent with
+  `scale(2)` therefore gets half the distance of the file.
+
 ## The DSL
 
 `Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a
