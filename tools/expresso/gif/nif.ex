@@ -26,6 +26,16 @@ defmodule Expresso.Gif.Nif do
       encode_frame: [concurrency: :dirty_cpu]
     ]
 
+  # Zigler writes the library to `priv/lib`, and `_build` holds only a link to
+  # `priv`. A cache of `_build` without `priv/lib` therefore holds a current
+  # module and no library, and Mix does not compile the module again. Mix calls
+  # this function, and it compiles the module again when the library is missing.
+  @doc false
+  @spec __mix_recompile__?() :: boolean()
+  def __mix_recompile__? do
+    not File.exists?(Application.app_dir(:expresso, "priv/lib/Elixir.Expresso.Gif.Nif.so"))
+  end
+
   ~Z"""
   const std = @import("std");
   const beam = @import("beam");
