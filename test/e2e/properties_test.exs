@@ -87,8 +87,10 @@ defmodule Expresso.E2E.PropertiesTest do
   test "an item dims when a later item shows, and shows in full again after a step back", %{
     page: page
   } do
+    # The default theme dims to 0.45, the strongest dimming that keeps its
+    # text at 3:1 on the background.
     page |> press("j")
-    assert styles(page)["items"] == ["blur(0px) opacity(0.4)", "none"]
+    assert styles(page)["items"] == ["blur(0px) opacity(0.45)", "none"]
 
     page |> press("k")
     assert styles(page)["items"] == ["blur(0px) opacity(1)", "none"]

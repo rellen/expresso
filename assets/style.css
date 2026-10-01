@@ -1,6 +1,13 @@
+/*
+ * The colors come from the theme of the deck. The renderer writes a custom
+ * property for each role of `Expresso.Palette`, such as `--text` and
+ * `--code-keyword`, on `:root`. Paper always gets the default theme.
+ */
 html {
   font-family: "Atkinson Hyperlegible", sans-serif;
   font-size: 48px;
+  color: var(--text);
+  background-color: var(--background);
 }
 h1 {
   font-size: 2rem;
@@ -22,7 +29,7 @@ h2 {
 /*
  * The number of a slide, such as "3 / 12". The deck option `slide_numbers`
  * writes it into the row of the footer, and a page of the handout view shows
- * it in the right corner of that row. A theme can set
+ * it in the right corner of that row. Its color is `--muted`. A deck can set
  * `--slide-number-color`, `--slide-number-size`, `--slide-number-right` and
  * `--slide-number-bottom`.
  */
@@ -31,15 +38,15 @@ h2 {
   right: var(--slide-number-right, 0.5rem);
   bottom: var(--slide-number-bottom, 0.25rem);
   font-size: var(--slide-number-size, 0.4rem);
-  color: var(--slide-number-color, currentColor);
+  color: var(--slide-number-color, var(--muted));
   font-variant-numeric: tabular-nums;
 }
 /*
- * A link of the `goto` option. It keeps the color of the text around it, and
- * the browser draws a line under its text. A theme can set `--goto-color`.
+ * A link of the `goto` option. It has the color `--accent`, and the browser
+ * draws a line under its text. A deck can set `--goto-color`.
  */
 a.goto {
-  color: var(--goto-color, inherit);
+  color: var(--goto-color, var(--accent));
 }
 /*
  * A slide of the present view is only as wide as its content. The number
@@ -527,7 +534,8 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
  * `--opacity` and the state `dim` change a filter, and not `opacity`. The
  * reveal rule of a step sets `opacity: 1`, so a change of `opacity` stays
  * hidden. The filter multiplies the two values, and the fade of `at` then
- * works as before. A theme can set `--dim-opacity`, and 0.4 is the default.
+ * works as before. The theme gives `--dim-opacity`, the strongest dimming that
+ * keeps the text at 3:1 on the background.
  * The blur of the effect `blur` is in the same filter.
  *
  * `--color` has no registration, so it has no initial value. Without the
@@ -538,7 +546,7 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 [data-effect] {
   filter: blur(calc((1 - var(--shown)) * var(--enter-blur)))
     opacity(
-      calc(var(--opacity) * (1 - var(--dim, 0) * (1 - var(--dim-opacity, 0.4))))
+      calc(var(--opacity) * (1 - var(--dim, 0) * (1 - var(--dim-opacity))))
     );
 }
 [data-el] {
@@ -753,8 +761,9 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     font-variant-numeric: tabular-nums;
   }
   /*
-   * The time left of a talk with a length, and its pace. A theme can set
-   * `--pace-behind-color` and `--pace-over-color`. A talk with no length
+   * The time left of a talk with a length, and its pace. The colors are
+   * `--warning` and `--danger`, and a deck can set `--pace-behind-color` and
+   * `--pace-over-color`. A talk with no length
    * gives no text, and the element then does not show.
    */
   #speaker-left {
@@ -767,10 +776,10 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     display: none;
   }
   #speaker-left[data-pace="behind"] {
-    color: var(--pace-behind-color, #b45309);
+    color: var(--pace-behind-color, var(--warning));
   }
   #speaker-left[data-pace="over"] {
-    color: var(--pace-over-color, #c92a2a);
+    color: var(--pace-over-color, var(--danger));
   }
   body:not([data-view="speaker"]) #speaker-notes,
   body:not([data-view="speaker"]) #speaker-position,
@@ -826,7 +835,7 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   }
   body[data-overview="true"] .handout-page[data-thumbnail][data-selected] {
     outline: calc(4px / var(--overview-zoom, 1)) solid
-      var(--overview-color, #e8590c);
+      var(--overview-color, var(--accent));
   }
 }
 /* The list of keys. `?` shows it, and the next key closes it. */
@@ -848,9 +857,9 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     box-sizing: border-box;
     padding: 0.5rem 0.75rem;
     font-size: 0.4rem;
-    color: #000;
-    background-color: #fff;
-    border: 2px solid #000;
+    color: var(--text);
+    background-color: var(--background);
+    border: 2px solid var(--text);
     box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.4);
     z-index: 10;
   }
@@ -870,8 +879,9 @@ body[data-view="handout"][data-print-notes="false"] .notes {
 }
 /*
  * The slide number that the presenter types. The present view and the speaker
- * view show it in the top right corner until `Enter` or another key. A theme
- * can set `--digits-color` and `--digits-background`. The number is not on a
+ * view show it in the top right corner until `Enter` or another key. It has
+ * the colors of the text the other way round, and a deck can set
+ * `--digits-color` and `--digits-background`. The number is not on a
  * black screen or on paper.
  */
 @media screen {
@@ -885,15 +895,16 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     padding: 0.1rem 0.3rem;
     font-size: 0.5rem;
     font-variant-numeric: tabular-nums;
-    color: var(--digits-color, #fff);
-    background-color: var(--digits-background, rgba(0, 0, 0, 0.6));
+    color: var(--digits-color, var(--background));
+    background-color: var(--digits-background, var(--text));
     z-index: 5;
   }
 }
 /*
  * The progress bar of the present view. Its width is the part of the deck
  * before the current step, which the script writes into `--fraction` on the
- * `body`. A theme can set `--progress-color` and `--progress-height`. The bar
+ * `body`. Its color is `--accent`, and a deck can set `--progress-color` and
+ * `--progress-height`. The bar
  * is not on a black screen, in the overview, in the other views or on paper.
  */
 #progress {
@@ -910,10 +921,7 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     left: 0;
     bottom: 0;
     height: var(--progress-height, 4px);
-    background-color: var(
-      --progress-color,
-      color-mix(in srgb, currentColor 50%, transparent)
-    );
+    background-color: var(--progress-color, var(--accent));
     transition: width 0.2s;
     z-index: 5;
   }

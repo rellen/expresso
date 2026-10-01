@@ -48,7 +48,8 @@ defmodule Expresso do
       effect: option.(:effect, :fade),
       speed: option.(:speed, nil),
       easing: option.(:easing, nil),
-      css: option.(:css, nil)
+      css: option.(:css, nil),
+      theme: option.(:theme, :default)
     }
 
     # The deck template reads the key when it is present, so the key is
