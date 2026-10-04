@@ -43,39 +43,39 @@ Most schemes have colors under the minimums, frequently the color of the comment
 minimum. The hue and each background stay the same. The column "Change" gives the largest
 change of lightness in OKLab, from 0 to 1. The column "Dim" gives the opacity of a dimmed
 element. It is the strongest dimming that keeps each color of text at its minimums for a
-dimmed element. This includes each color of code, such as the color of a comment. The
-weakest color of a built-in theme is near its minimums, so the theme dims to a value from
-0.75 to 0.85.
+dimmed element. This includes each color of code, such as the color of a comment. A dark
+theme dims to a value from 0.6 to 0.65, and a light theme to a value from 0.75 to 0.8.
+"The contrast of a theme" in `docs/architecture.md` tells why a light theme dims less.
 
 | Name | Theme | Variant | Change | Dim |
 | --- | --- | --- | --- | --- |
-| `:ayu_dark` | Ayu Dark | dark | 0.36 | 0.85 |
-| `:ayu_mirage` | Ayu Mirage | dark | 0.35 | 0.85 |
-| `:catppuccin_frappe` | Catppuccin Frappé | dark | 0.33 | 0.85 |
-| `:catppuccin_macchiato` | Catppuccin Macchiato | dark | 0.35 | 0.85 |
-| `:catppuccin_mocha` | Catppuccin Mocha | dark | 0.36 | 0.85 |
+| `:ayu_dark` | Ayu Dark | dark | 0.36 | 0.65 |
+| `:ayu_mirage` | Ayu Mirage | dark | 0.35 | 0.65 |
+| `:catppuccin_frappe` | Catppuccin Frappé | dark | 0.33 | 0.6 |
+| `:catppuccin_macchiato` | Catppuccin Macchiato | dark | 0.35 | 0.65 |
+| `:catppuccin_mocha` | Catppuccin Mocha | dark | 0.36 | 0.65 |
 | `:default` | Default | light | 0.07 | 0.8 |
-| `:dracula` | Dracula | dark | 0.22 | 0.85 |
-| `:everforest` | Everforest | dark | 0.16 | 0.85 |
-| `:everforest_dark_hard` | Everforest Dark Hard | dark | 0.15 | 0.85 |
+| `:dracula` | Dracula | dark | 0.22 | 0.65 |
+| `:everforest` | Everforest | dark | 0.16 | 0.6 |
+| `:everforest_dark_hard` | Everforest Dark Hard | dark | 0.15 | 0.6 |
 | `:github` | GitHub | light | 0.11 | 0.8 |
-| `:github_dark` | GitHub Dark | dark | 0.21 | 0.85 |
-| `:gruvbox_dark_hard` | Gruvbox dark, hard | dark | 0.32 | 0.85 |
-| `:gruvbox_dark_medium` | Gruvbox dark, medium | dark | 0.32 | 0.85 |
-| `:kanagawa` | Kanagawa | dark | 0.31 | 0.85 |
-| `:material` | Material | dark | 0.28 | 0.85 |
-| `:monokai` | Monokai | dark | 0.25 | 0.85 |
+| `:github_dark` | GitHub Dark | dark | 0.21 | 0.65 |
+| `:gruvbox_dark_hard` | Gruvbox dark, hard | dark | 0.32 | 0.65 |
+| `:gruvbox_dark_medium` | Gruvbox dark, medium | dark | 0.32 | 0.6 |
+| `:kanagawa` | Kanagawa | dark | 0.31 | 0.65 |
+| `:material` | Material | dark | 0.28 | 0.6 |
+| `:monokai` | Monokai | dark | 0.25 | 0.65 |
 | `:one_light` | One Light | light | 0.17 | 0.8 |
-| `:rose_pine` | Rosé Pine | dark | 0.24 | 0.85 |
+| `:rose_pine` | Rosé Pine | dark | 0.24 | 0.65 |
 | `:rose_pine_dawn` | Rosé Pine Dawn | light | 0.20 | 0.8 |
-| `:rose_pine_moon` | Rosé Pine Moon | dark | 0.25 | 0.85 |
-| `:solarized_dark` | Solarized Dark | dark | 0.22 | 0.85 |
+| `:rose_pine_moon` | Rosé Pine Moon | dark | 0.25 | 0.65 |
+| `:solarized_dark` | Solarized Dark | dark | 0.22 | 0.65 |
 | `:solarized_light` | Solarized Light | light | 0.14 | 0.8 |
-| `:tokyo_night_dark` | Tokyo Night Dark | dark | 0.35 | 0.85 |
+| `:tokyo_night_dark` | Tokyo Night Dark | dark | 0.35 | 0.65 |
 | `:tokyo_night_light` | Tokyo Night Light | light | 0.27 | 0.75 |
-| `:tokyo_night_storm` | Tokyo Night Storm | dark | 0.35 | 0.85 |
-| `:tomorrow_night` | Tomorrow Night | dark | 0.16 | 0.85 |
-| `:zenburn` | Zenburn | dark | 0.27 | 0.8 |
+| `:tokyo_night_storm` | Tokyo Night Storm | dark | 0.35 | 0.65 |
+| `:tomorrow_night` | Tomorrow Night | dark | 0.16 | 0.65 |
+| `:zenburn` | Zenburn | dark | 0.27 | 0.6 |
 
 A dark theme needs the largest change, because most dark schemes give their comments a low
 contrast. The contrast ratio of WCAG is too high for a color on a dark background, and the
@@ -143,7 +143,7 @@ gives a warning for each color under its minimum.
 | Part | WCAG 2.2 | APCA | WCAG criterion |
 | --- | --- | --- | --- |
 | Each text on its background: the slides, the code, the speaker view and the list of keys | 4.5:1 | Lc 60 | 1.4.3 |
-| Each text of a dimmed element, with the dim opacity of the theme, on its background | 3:1 | Lc 45 | 1.4.11 |
+| Each text of a dimmed element, with the dim opacity of the theme, on its background | 3:1 | Lc 30 | 1.4.11 |
 | The progress bar, the selected page of the overview and a link | 4.5:1, from the accent | Lc 60, from the accent | 1.4.11 |
 
 Each color must meet both measures. The contrast ratio of WCAG 2.2 gives too high a value
@@ -151,8 +151,9 @@ for a color on a dark background. The lightness contrast `Lc` of APCA, the metho
 draft of WCAG 3, corrects this. Expresso uses the absolute value of `Lc`, and the
 constants of APCA-W3 0.0.98G-4g.
 
-Lc 60 is the APCA minimum for the text of content, and Lc 45 is its minimum for large
-text. WCAG lets large text have 3:1. A theme does not use the smaller minimums of large
+Lc 60 is the APCA minimum for the text of content. Lc 30 is its minimum for any text that
+the reader must be able to read, such as a dimmed item that is not the content of the
+moment. WCAG lets large text have 3:1. A theme does not use the smaller minimums of large
 text for its colors of text, because a projector and the light of a room lower the
 contrast of each slide.
 

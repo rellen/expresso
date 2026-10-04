@@ -20,12 +20,16 @@ defmodule Expresso.Palette do
       projector and the light of a room lower the contrast, so a theme does not
       use the smaller minimums of large text.
     * Each role of text with the dim opacity of the palette, on its
-      background: 3:1 and Lc 45. 3:1 is the minimum of criterion 1.4.11 for a
-      part that the reader must see, and Lc 45 is the minimum of APCA for
-      large text. A dimmed element is less important, and it must stay
-      readable. The dimming applies to each color of the element, such as a
-      comment of a dimmed line of code, so the role with the lowest contrast
-      sets the opacity.
+      background: 3:1 and Lc 30. 3:1 is the minimum of criterion 1.4.11 for a
+      part that the reader must see. Lc 30 is the minimum of APCA for any
+      text that the reader must be able to read, such as a text that is not
+      the content of the moment. A dimmed element is less important, and it
+      must stay readable. The dimming applies to each color of the element,
+      such as a comment of a dimmed line of code, so the role with the lowest
+      contrast sets the opacity.
+
+  `docs/architecture.md` gives the formulas, and it tells why the dimming of a
+  theme is small.
 
   The accent also colors the progress bar and the frame of the selected page
   in the overview, and 4.5:1 is more than the 3:1 that criterion 1.4.11 gives
@@ -83,10 +87,15 @@ defmodule Expresso.Palette do
     code_keyword: {:base0E, :code_background}
   ]
 
-  # The minimums of a role of text, and of a role of text with the dim opacity:
-  # a contrast ratio of WCAG and a lightness contrast of APCA.
-  @text {4.5, 60}
-  @dimmed {3.0, 45}
+  # The minimums of a role of text on its background: a contrast ratio of WCAG
+  # and a lightness contrast of APCA.
+  @text_ratio 4.5
+  @text_lc 60
+  # The minimums of a role of text at the dim opacity.
+  @dimmed_ratio 3.0
+  @dimmed_lc 30
+  # The dim opacity is a multiple of this step, from one step to 1.
+  @dim_step 0.05
 
   @doc "Return the slots of a base16 scheme, in order"
   @spec slots() :: [slot()]
@@ -105,7 +114,7 @@ defmodule Expresso.Palette do
 
   `colors` holds a `#rrggbb` color for each slot. The dim opacity is the
   smallest multiple of 0.05 that keeps each dimmed role of text at 3:1 and at
-  Lc 45 on its background.
+  Lc 30 on its background.
   """
   @spec new(String.t(), :dark | :light, %{slot() => Color.t()}) :: t()
   def new(name, variant, colors) do
@@ -130,15 +139,12 @@ defmodule Expresso.Palette do
   """
   @spec problems(t()) :: [{atom(), :wcag | :apca, float(), number()}]
   def problems(%__MODULE__{roles: roles, dim_opacity: opacity}) do
-    {ratio_minimum, lc_minimum} = @text
-    {dimmed_ratio, dimmed_lc} = @dimmed
-
     text =
       for {role, {_slot, on}} <- @roles,
           on != nil,
           problem <- [
-            {role, :wcag, Color.contrast(roles[role], roles[on]), ratio_minimum},
-            {role, :apca, Color.lightness_contrast(roles[role], roles[on]), lc_minimum}
+            {role, :wcag, Color.contrast(roles[role], roles[on]), @text_ratio},
+            {role, :apca, Color.lightness_contrast(roles[role], roles[on]), @text_lc}
           ],
           elem(problem, 2) < elem(problem, 3),
           do: problem
@@ -146,7 +152,7 @@ defmodule Expresso.Palette do
     {ratio, lc} = dimmed_contrast(roles, opacity)
 
     dimmed =
-      for {value, measure, minimum} <- [{ratio, :wcag, dimmed_ratio}, {lc, :apca, dimmed_lc}],
+      for {value, measure, minimum} <- [{ratio, :wcag, @dimmed_ratio}, {lc, :apca, @dimmed_lc}],
           value < minimum,
           do: {:dimmed_text, measure, value, minimum}
 
@@ -167,7 +173,7 @@ defmodule Expresso.Palette do
         {:cont, {Map.put(acc, role, roles[role]), change}}
 
       {role, {_slot, on}}, {acc, change} ->
-        case Color.adjust(roles[role], roles[on], elem(@text, 0), elem(@text, 1)) do
+        case Color.adjust(roles[role], roles[on], @text_ratio, @text_lc) do
           {:ok, color, delta} -> {:cont, {Map.put(acc, role, color), max(change, delta)}}
           :error -> {:halt, :error}
         end
@@ -259,12 +265,12 @@ defmodule Expresso.Palette do
   # The smallest multiple of 0.05 that keeps each dimmed role of text at its
   # minimums. A palette with a role under them gets no dimming.
   defp dim_opacity(roles) do
-    {ratio_minimum, lc_minimum} = @dimmed
+    steps = round(1 / @dim_step)
 
-    Enum.find(1..20, 20, fn step ->
-      {ratio, lc} = dimmed_contrast(roles, step / 20)
-      ratio >= ratio_minimum and lc >= lc_minimum
-    end) / 20
+    Enum.find(1..steps, steps, fn step ->
+      {ratio, lc} = dimmed_contrast(roles, step / steps)
+      ratio >= @dimmed_ratio and lc >= @dimmed_lc
+    end) / steps
   end
 
   # The lowest contrast ratio and the lowest lightness contrast of the roles of

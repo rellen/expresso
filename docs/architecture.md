@@ -402,12 +402,106 @@ roles of the default theme for `@media print`. The `css` option of the deck come
 so it can replace a role.
 
 `Expresso.Palette` gives each role a color of a base16 scheme, and it holds the contrast
-minimums of WCAG. `Expresso.Palette.Builtin` reads the schemes of `assets/themes/` at
-compile time, and it adjusts the lightness of each color that fails. The compile stops
-for a scheme that needs a change of more than 0.25. `Expresso.ThemeVerifier` gives a
+minimums of WCAG and APCA. `Expresso.Palette.Builtin` reads the schemes of `assets/themes/`
+at compile time, and it adjusts the lightness of each color that fails. The compile stops
+for a scheme that needs a change of more than 0.4. `Expresso.ThemeVerifier` gives a
 warning for a scheme of a deck that fails, and `Expresso.Color` calculates the contrast
 and the lightness. `docs/reference/theme-option.md` gives the roles, the minimums and the
 built-in themes.
+
+### The contrast of a theme
+
+This section gives the formulas of `Expresso.Color` and `Expresso.Palette`, and it tells
+why the minimums have their values. Each constant of a formula is a module attribute with
+a name, such as `@wcag_flare` or `@apca_black_threshold`.
+
+#### Two measures of contrast
+
+`Color.contrast/2` returns the contrast ratio of WCAG 2.2, from 1 to 21:
+
+1. Decode each channel of sRGB to a linear value, with the transfer function of
+   IEC 61966-2-1.
+2. Calculate the relative luminance: `L = 0.2126 R + 0.7152 G + 0.0722 B`.
+3. Calculate the ratio: `(L_lighter + 0.05) / (L_darker + 0.05)`.
+
+The value 0.05 stands for the flare of a screen. On a dark background, both luminances
+are small, and the ratio of two small numbers grows fast. Thus the ratio gives a dark pair
+more contrast than a reader sees.
+
+`Color.lightness_contrast/2` returns the lightness contrast `Lc` of APCA-W3 0.0.98G-4g,
+the method of the draft of WCAG 3:
+
+1. Calculate a luminance with a simple power: `Y = 0.2126729 R^2.4 + 0.7151522 G^2.4 +
+   0.0721750 B^2.4`.
+2. Clamp a luminance near black: when `Y < 0.022`, `Y` becomes `Y + (0.022 - Y)^1.414`.
+3. For dark text on a light background, calculate `S = (Y_background^0.56 -
+   Y_text^0.57) × 1.14`. For light text on a dark background, calculate
+   `S = (Y_background^0.65 - Y_text^0.62) × 1.14`.
+4. When `|S|` is less than 0.1, `Lc` is 0. Otherwise, `Lc = (|S| - 0.027) × 100`.
+
+`Lc` goes from 0 to about 108. APCA gives a negative value for light text, and Expresso
+uses the absolute value. The order of the colors is important, because the text and the
+background get different powers.
+
+This table shows why a theme needs both measures:
+
+| Text | Background | WCAG 2.2 | APCA |
+| --- | --- | --- | --- |
+| `#6272a4`, the comments of the Dracula scheme | `#21222c` | 3.36:1 | Lc 27 |
+| `#7788bb`, the same color adjusted to 4.5:1 | `#21222c` | 4.53:1 | Lc 37 |
+| `#a3b5eb`, the same color adjusted to 4.5:1 and Lc 60 | `#21222c` | 7.80:1 | Lc 60 |
+| `#767676`, a gray | `#ffffff` | 4.54:1 | Lc 72 |
+
+The second and the fourth row have the same contrast ratio. On white, APCA gives Lc 72. On
+the dark background, it gives Lc 37, which is less than its minimum for large text.
+
+#### The adjustment of a color
+
+`Color.adjust/4` changes the lightness of a color until the color meets a contrast ratio
+and an `Lc`:
+
+1. Convert the color to OKLab. OKLab has a lightness `L` from 0 to 1 that agrees with the
+   lightness that a reader sees, and two values `a` and `b` for the hue and the chroma.
+2. Move `L` in steps of 0.001. The color becomes lighter on a background with an `L` under
+   0.5, and darker on a lighter background. `a` and `b` stay the same.
+3. When a color is outside sRGB, reduce `a` and `b` together, in steps of 1/50, until the
+   color is inside sRGB.
+4. Stop at the first color that meets both minimums.
+
+The change of a color is the difference of `L`. The comment of Dracula in the table needs a
+change of 0.22. `Expresso.Palette.Builtin` refuses a scheme with a change of more than
+0.4, because a larger change gives a color that the reader does not know as a color of the
+scheme.
+
+#### The dim opacity
+
+The state `dim` gives an element a filter with an opacity `o`. Each channel of each color
+of the element then becomes `o × color + (1 - o) × background`, and its contrast becomes
+less:
+
+| Text and background | 1 | 0.8 | 0.65 | 0.5 |
+| --- | --- | --- | --- | --- |
+| The text of Dracula, `#f8f8f2` on `#282a36` | 13.36:1, Lc 99 | 9.10:1, Lc 73 | 6.55:1, Lc 55 | 4.52:1, Lc 39 |
+| The comments of Dracula, `#a3b5eb` on `#21222c` | 7.80:1, Lc 60 | 5.54:1, Lc 45 | 4.16:1, Lc 34 | 3.04:1, Lc 23 |
+| The numbers of the default theme, `#bb5407` on `#f8f8f8` | 4.51:1, Lc 68 | 3.28:1, Lc 58 | 2.59:1, Lc 49 | 2.03:1, Lc 38 |
+| The text of the default theme, `#000000` on `#ffffff` | 21:1, Lc 106 | 12.63:1, Lc 99 | 7:1, Lc 84 | 3.95:1, Lc 67 |
+
+The filter applies one opacity to all the colors of the element. Thus the color with the
+lowest contrast sets the opacity. `Expresso.Palette` uses the smallest multiple of 0.05
+that keeps each role of text at 3:1 and at Lc 30 on its background:
+
+- On a dark theme, APCA sets the opacity. A comment at Lc 60 goes under Lc 30 below 0.65.
+- On a light theme, WCAG sets the opacity. A color at 4.5:1 goes under 3:1 below 0.8.
+  Thus a light theme dims less than a dark theme.
+
+The text alone could dim much more: the text of the default theme stays at 3.95:1 at 0.5.
+Each other role is near its own minimum, because `Color.adjust/4` stops at the minimum.
+Thus an opacity cannot dim an element far and keep each of its colors readable.
+
+The minimum of a dimmed element is less than the minimum of a text. 3:1 is the minimum of
+criterion 1.4.11 for a part that the reader must see. Lc 30 is the APCA minimum for any
+text that the reader must be able to read. A dimmed element is not the content of the
+moment, but the reader can go back to it.
 
 ### The style of a slide
 
