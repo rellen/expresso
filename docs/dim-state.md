@@ -2,7 +2,7 @@
 
 This document gives a plan for the state `dim`. The code does not contain this plan yet.
 The plan depends on pull request #128, which adds the APCA minimums to each theme. The
-document ends with four decisions.
+document ends with four decisions, and each is settled.
 
 ## The problem
 
@@ -82,16 +82,19 @@ is small for a theme with a text of low contrast, such as `:solarized_light`.
 
 ## The decisions
 
-1. **A color for each role, or one color for all the code.** The plan gives each role its
-   own dimmed color. The first alternative is simpler, and it loses the syntax colors of a
-   dimmed line.
-2. **The color space of the mix.** The plan mixes in sRGB. `Color.blend/3` calculates in
-   sRGB, so the color of the browser agrees with the color that the palette measured. A mix
-   in OKLab looks smoother, and the palette must then calculate in OKLab too.
-3. **The property `--dim-opacity`.** A deck can read it in its `css` option today. The plan
-   can keep it for one release as the shared opacity, or remove it. To remove it is a
-   breaking change.
-4. **A nested dimmed element.** The plan uses the inherited property `--dimmed`, so an
-   element inside a dimmed element is dimmed too. The filter of today multiplies the
-   opacity of a nested element. The plan does not multiply: a nested element stays at the
-   dimmed colors, which are the minimums.
+Each decision is settled.
+
+1. **A color for each role.** Each role gets its own dimmed color, so a dimmed line of code
+   keeps its syntax colors. The alternative gives all the code of a dimmed element one
+   color. It is simpler, and it loses the syntax colors.
+2. **A mix in sRGB.** `Color.blend/3` calculates in sRGB, so the color of the browser
+   agrees with the color that the palette measured. A mix in OKLab looks smoother, but the
+   palette must then calculate in OKLab too, and the two calculations can disagree.
+3. **`--dim-opacity` stays for one release.** The renderer still writes it, with the
+   shared opacity of #128, and the style sheet no longer reads it. A deck that reads it in
+   its `css` option keeps its result for one release. `docs/reference/css-option.md`
+   marks the property as deprecated, and the release after the change removes it.
+4. **A nested dimmed element does not dim two times.** The inherited property `--dimmed`
+   carries the state to each element inside a dimmed element. A nested element with the
+   state `dim` stays at the dimmed colors. The dimmed colors are the minimums, so a second
+   multiplication would make the text unreadable.
