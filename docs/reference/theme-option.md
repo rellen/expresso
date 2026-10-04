@@ -42,39 +42,41 @@ Most schemes have colors under the minimums, frequently the color of the comment
 `Expresso.Palette.Builtin` changes the lightness of each such color until it meets its
 minimum. The hue and each background stay the same. The column "Change" gives the largest
 change of lightness in OKLab, from 0 to 1. The column "Dim" gives the opacity of a dimmed
-element. The strongest dimming that keeps the text at 3:1 depends on the theme.
+element. It is the strongest dimming that keeps each color of text at 3:1 on its
+background. This includes each color of code, such as the color of a comment. The weakest
+color of a built-in theme is near 4.5:1, so the theme dims to a value from 0.7 to 0.8.
 
 | Name | Theme | Variant | Change | Dim |
 | --- | --- | --- | --- | --- |
-| `:ayu_dark` | Ayu Dark | dark | 0.19 | 0.4 |
-| `:ayu_mirage` | Ayu Mirage | dark | 0.22 | 0.45 |
-| `:catppuccin_frappe` | Catppuccin Frappé | dark | 0.21 | 0.5 |
-| `:catppuccin_macchiato` | Catppuccin Macchiato | dark | 0.20 | 0.45 |
-| `:catppuccin_mocha` | Catppuccin Mocha | dark | 0.20 | 0.45 |
-| `:default` | Default | light | 0.07 | 0.45 |
-| `:dracula` | Dracula | dark | 0.07 | 0.4 |
-| `:everforest` | Everforest | dark | 0.08 | 0.5 |
-| `:everforest_dark_hard` | Everforest Dark Hard | dark | 0.05 | 0.5 |
-| `:github` | GitHub | light | 0.11 | 0.6 |
-| `:github_dark` | GitHub Dark | dark | 0.04 | 0.45 |
-| `:gruvbox_dark_hard` | Gruvbox dark, hard | dark | 0.23 | 0.45 |
-| `:gruvbox_dark_medium` | Gruvbox dark, medium | dark | 0.23 | 0.5 |
-| `:kanagawa` | Kanagawa | dark | 0.14 | 0.45 |
-| `:material` | Material | dark | 0.19 | 0.4 |
-| `:monokai` | Monokai | dark | 0.16 | 0.35 |
-| `:one_light` | One Light | light | 0.17 | 0.55 |
-| `:rose_pine` | Rosé Pine | dark | 0.09 | 0.4 |
-| `:rose_pine_dawn` | Rosé Pine Dawn | light | 0.20 | 0.65 |
-| `:rose_pine_moon` | Rosé Pine Moon | dark | 0.12 | 0.4 |
-| `:solarized_dark` | Solarized Dark | dark | 0.12 | 0.65 |
-| `:solarized_light` | Solarized Light | light | 0.14 | 0.75 |
-| `:tokyo_night_dark` | Tokyo Night Dark | dark | 0.18 | 0.5 |
-| `:tokyo_night_light` | Tokyo Night Light | light | 0.23 | 0.65 |
-| `:tokyo_night_storm` | Tokyo Night Storm | dark | 0.18 | 0.55 |
-| `:tomorrow_night` | Tomorrow Night | dark | 0.04 | 0.45 |
-| `:zenburn` | Zenburn | dark | 0.20 | 0.45 |
+| `:ayu_dark` | Ayu Dark | dark | 0.19 | 0.75 |
+| `:ayu_mirage` | Ayu Mirage | dark | 0.22 | 0.75 |
+| `:catppuccin_frappe` | Catppuccin Frappé | dark | 0.21 | 0.75 |
+| `:catppuccin_macchiato` | Catppuccin Macchiato | dark | 0.20 | 0.75 |
+| `:catppuccin_mocha` | Catppuccin Mocha | dark | 0.20 | 0.75 |
+| `:default` | Default | light | 0.07 | 0.8 |
+| `:dracula` | Dracula | dark | 0.07 | 0.75 |
+| `:everforest` | Everforest | dark | 0.08 | 0.75 |
+| `:everforest_dark_hard` | Everforest Dark Hard | dark | 0.05 | 0.75 |
+| `:github` | GitHub | light | 0.11 | 0.8 |
+| `:github_dark` | GitHub Dark | dark | 0.04 | 0.75 |
+| `:gruvbox_dark_hard` | Gruvbox dark, hard | dark | 0.23 | 0.75 |
+| `:gruvbox_dark_medium` | Gruvbox dark, medium | dark | 0.23 | 0.75 |
+| `:kanagawa` | Kanagawa | dark | 0.14 | 0.75 |
+| `:material` | Material | dark | 0.19 | 0.75 |
+| `:monokai` | Monokai | dark | 0.16 | 0.75 |
+| `:one_light` | One Light | light | 0.17 | 0.8 |
+| `:rose_pine` | Rosé Pine | dark | 0.09 | 0.75 |
+| `:rose_pine_dawn` | Rosé Pine Dawn | light | 0.20 | 0.8 |
+| `:rose_pine_moon` | Rosé Pine Moon | dark | 0.12 | 0.75 |
+| `:solarized_dark` | Solarized Dark | dark | 0.12 | 0.8 |
+| `:solarized_light` | Solarized Light | light | 0.14 | 0.8 |
+| `:tokyo_night_dark` | Tokyo Night Dark | dark | 0.18 | 0.75 |
+| `:tokyo_night_light` | Tokyo Night Light | light | 0.23 | 0.8 |
+| `:tokyo_night_storm` | Tokyo Night Storm | dark | 0.18 | 0.75 |
+| `:tomorrow_night` | Tomorrow Night | dark | 0.04 | 0.75 |
+| `:zenburn` | Zenburn | dark | 0.20 | 0.7 |
 
-A light theme dims less, because the text must stay at 3:1 on a light background.
+A light theme dims less, because each color must stay at 3:1 on a light background.
 
 ### The gallery
 
@@ -136,7 +138,7 @@ for each color under its minimum.
 | Part | Minimum | WCAG 2.2 |
 | --- | --- | --- |
 | Each text on its background: the slides, the code, the speaker view and the list of keys | 4.5:1 | 1.4.3 |
-| A dimmed element, with the dim opacity of the theme | 3:1 | 1.4.11 |
+| Each text of a dimmed element, with the dim opacity of the theme, on its background | 3:1 | 1.4.11 |
 | The progress bar, the selected page of the overview and a link | 4.5:1, from the accent | 1.4.11 |
 
 WCAG lets large text have 3:1. A theme does not use that minimum, because a projector and

@@ -620,7 +620,7 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
  * reveal rule of a step sets `opacity: 1`, so a change of `opacity` stays
  * hidden. The filter multiplies the two values, and the fade of `at` then
  * works as before. The theme gives `--dim-opacity`, the strongest dimming that
- * keeps the text at 3:1 on the background.
+ * keeps each color of text at 3:1 on its background.
  * The blur of the effect `blur` is in the same filter.
  *
  * `--color` has no registration, so it has no initial value. Without the

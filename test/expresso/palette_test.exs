@@ -12,6 +12,14 @@ defmodule Expresso.PaletteTest do
     Builtin.fetch!(:default).colors |> Map.merge(overrides)
   end
 
+  # The lowest contrast of a role of text on its background, with the opacity.
+  defp dimmed(roles, opacity) do
+    for {role, {_slot, on}} <- Palette.roles(), on != nil do
+      Color.contrast(Color.blend(roles[role], roles[on], opacity), roles[on])
+    end
+    |> Enum.min()
+  end
+
   test "each built-in theme meets each minimum, within the limit of the change" do
     for name <- Builtin.names(), palette = Builtin.fetch!(name) do
       assert Palette.problems(palette) == [], "#{name}"
@@ -38,19 +46,45 @@ defmodule Expresso.PaletteTest do
     assert Color.contrast(palette.roles.code_comment, palette.roles.code_background) >= 4.5
   end
 
-  test "the dim opacity is the strongest dimming that keeps the text at 3:1" do
+  test "the dim opacity is the strongest dimming that keeps each role of text at 3:1" do
     for name <- Builtin.names(),
         %Palette{roles: roles, dim_opacity: opacity} = Builtin.fetch!(name) do
-      dimmed =
-        Color.contrast(Color.blend(roles.text, roles.background, opacity), roles.background)
-
-      assert dimmed >= 3.0, "#{name}"
+      assert dimmed(roles, opacity) >= 3.0, "#{name}"
 
       if opacity > 0.05 do
-        stronger = Color.blend(roles.text, roles.background, opacity - 0.05)
-        assert Color.contrast(stronger, roles.background) < 3.0, "#{name}"
+        assert dimmed(roles, opacity - 0.05) < 3.0, "#{name}"
       end
     end
+  end
+
+  test "a dimmed comment of a dark theme stays at 3:1 on the background of the code" do
+    # The theme of the Line 4 example. Its comments are at 5.3:1, and its
+    # text is at 14:1.
+    palette =
+      Palette.of(%{
+        base00: "#1b232c",
+        base01: "#222c37",
+        base02: "#33404d",
+        base03: "#93a0ae",
+        base04: "#93a0ae",
+        base05: "#e6ebf0",
+        base06: "#f0f4f7",
+        base07: "#ffffff",
+        base08: "#ff6b6b",
+        base09: "#ffb13b",
+        base0A: "#f0d12a",
+        base0B: "#5cf58a",
+        base0C: "#9dc4d6",
+        base0D: "#e8b83a",
+        base0E: "#7fb0ff",
+        base0F: "#c8a061"
+      })
+
+    %Palette{roles: roles, dim_opacity: opacity} = palette
+
+    comment = Color.blend(roles.code_comment, roles.code_background, opacity)
+    assert Color.contrast(comment, roles.code_background) >= 3.0
+    assert Palette.problems(palette) == []
   end
 
   test "problems names each role under its minimum, and the dimmed text" do
@@ -107,6 +141,6 @@ defmodule Expresso.PaletteTest do
       assert text =~ "--#{role |> Atom.to_string() |> String.replace("_", "-")}: #"
     end
 
-    assert text =~ "--dim-opacity: 0.4;"
+    assert text =~ "--dim-opacity: 0.75;"
   end
 end
