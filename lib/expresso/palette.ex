@@ -16,9 +16,12 @@ defmodule Expresso.Palette do
       2.2 for normal text, criterion 1.4.3. A slide shows large text, but a
       projector and the light of a room lower the contrast, so a theme does not
       use the smaller minimum of large text.
-    * The text with the dim opacity of the palette, on the background: 3:1,
-      which criterion 1.4.11 gives for a part that the reader must see. A dimmed
-      element is less important, and it must stay readable.
+    * Each role of text with the dim opacity of the palette, on its
+      background: 3:1, which criterion 1.4.11 gives for a part that the reader
+      must see. A dimmed element is less important, and it must stay readable.
+      The dimming applies to each color of the element, such as a comment of a
+      dimmed line of code, so the role with the lowest contrast sets the
+      opacity.
 
   The accent also colors the progress bar and the frame of the selected page
   in the overview, and 4.5:1 is more than the 3:1 that criterion 1.4.11 gives
@@ -95,7 +98,8 @@ defmodule Expresso.Palette do
   Make a palette from the 16 colors of a base16 scheme
 
   `colors` holds a `#rrggbb` color for each slot. The dim opacity is the
-  smallest multiple of 0.05 that keeps dimmed text at 3:1 on the background.
+  smallest multiple of 0.05 that keeps each dimmed role of text at 3:1 on its
+  background.
   """
   @spec new(String.t(), :dark | :light, %{slot() => Color.t()}) :: t()
   def new(name, variant, colors) do
@@ -124,7 +128,7 @@ defmodule Expresso.Palette do
           ratio < @text,
           do: {role, ratio, @text}
 
-    dimmed = Color.contrast(Color.blend(roles.text, roles.background, opacity), roles.background)
+    dimmed = dimmed_contrast(roles, opacity)
     if dimmed < @dimmed, do: text ++ [{:dimmed_text, dimmed, @dimmed}], else: text
   end
 
@@ -231,12 +235,19 @@ defmodule Expresso.Palette do
 
   defp hex?(color), do: is_binary(color) and Regex.match?(~r/\A#[0-9a-fA-F]{6}\z/, color)
 
-  # The smallest multiple of 0.05 that keeps dimmed text at 3:1. Text that
-  # fails the minimum itself gets no dimming.
+  # The smallest multiple of 0.05 that keeps each dimmed role of text at 3:1.
+  # A palette with a role under 3:1 gets no dimming.
   defp dim_opacity(roles) do
-    Enum.find(1..20, 20, fn step ->
-      dimmed = Color.blend(roles.text, roles.background, step / 20)
-      Color.contrast(dimmed, roles.background) >= @dimmed
-    end) / 20
+    Enum.find(1..20, 20, &(dimmed_contrast(roles, &1 / 20) >= @dimmed)) / 20
+  end
+
+  # The lowest contrast of a role of text on its background, with the opacity.
+  defp dimmed_contrast(roles, opacity) do
+    @roles
+    |> Enum.reject(fn {_role, {_slot, on}} -> is_nil(on) end)
+    |> Enum.map(fn {role, {_slot, on}} ->
+      Color.contrast(Color.blend(roles[role], roles[on], opacity), roles[on])
+    end)
+    |> Enum.min()
   end
 end

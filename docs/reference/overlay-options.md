@@ -66,7 +66,7 @@ step specification.
 | Option | Effect |
 | --- | --- |
 | `state: :alert` | The theme draws an outline around the element. |
-| `state: :dim` | The element shows at 40% of its opacity. |
+| `state: :dim` | The element shows at the dim opacity of the theme, such as 75% of its opacity. |
 | `set: [x: "-300px", y: "0px"]` | The element moves by that distance. |
 | `set: [scale: 1.5]` | The element changes its size by that factor. |
 | `set: [rotate: "-8deg"]` | The element turns by that angle. |
