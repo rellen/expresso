@@ -482,6 +482,7 @@ For a contributor:
 
 - `docs/development.md` — the toolchain, the checks and a browser.
 - `docs/typescript.md` — the plan for the presenter script in TypeScript.
+- `docs/dim-state.md` — the plan for a dim state with a color for each role.
 
 ## License
 

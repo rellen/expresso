@@ -10,7 +10,7 @@ Read these documents before you change the code:
 
 - `docs/architecture.md` — the two input paths, the render pipeline, the templates, the
   elements, the DSL, the presenter and the build. Its section "Open work" gives the next
-  items in the order of their value. It has no item at this time.
+  items in the order of their value.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide. The
   code contains each part of the design. The document ends with six decisions, and
   each is settled.
@@ -18,6 +18,8 @@ Read these documents before you change the code:
   a deck in a browser.
 - `docs/typescript.md` — the plan for the presenter script in TypeScript, and the record
   of its result. The code contains this conversion.
+- `docs/dim-state.md` — the plan for a dim state with a color for each role. The code does
+  not contain this plan yet. The document ends with four decisions.
 
 ## Build and test
 
