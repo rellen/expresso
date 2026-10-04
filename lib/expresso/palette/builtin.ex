@@ -9,9 +9,12 @@ defmodule Expresso.Palette.Builtin do
   name of its file, such as `:catppuccin_mocha` for `catppuccin-mocha.yaml`.
 
   A theme is built in only when no color of its adjusted roles moves more than
-  0.25 in the lightness of OKLab, which is a quarter of the way from black to
+  0.4 in the lightness of OKLab, which is two fifths of the way from black to
   white. A larger change gives a color that the reader does not know as a color
-  of the scheme. The compile stops for a file that needs a larger change.
+  of the scheme. The compile stops for a file that needs a larger change. The
+  comments of a dark scheme need the largest change, because most schemes give
+  them a low contrast. A comment has little chroma, so it stays a gray of the
+  scheme.
   `docs/reference/theme-option.md` lists the themes, and the schemes that this
   limit leaves out.
 
@@ -21,7 +24,7 @@ defmodule Expresso.Palette.Builtin do
 
   alias Expresso.Palette
 
-  @limit 0.25
+  @limit 0.4
 
   @directory "assets/themes"
 

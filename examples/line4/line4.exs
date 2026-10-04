@@ -78,23 +78,25 @@ defmodule Line4.Deck do
   easing :ease_out
 
   # The colors of the page itself: the background, the ink, the safety yellow of
-  # the floor lines and the colors of the status lights.
+  # the floor lines and the colors of the status lights. The gray, the red and
+  # the blue are lighter than on the page, so each color of text meets the
+  # minimums of WCAG and APCA that `docs/reference/theme-option.md` gives.
   theme %{
     base00: "#1b232c",
     base01: "#222c37",
     base02: "#33404d",
-    base03: "#93a0ae",
-    base04: "#93a0ae",
+    base03: "#acbac8",
+    base04: "#acbac8",
     base05: "#e6ebf0",
     base06: "#f0f4f7",
     base07: "#ffffff",
-    base08: "#ff6b6b",
+    base08: "#fe9e99",
     base09: "#ffb13b",
     base0A: "#f0d12a",
     base0B: "#5cf58a",
     base0C: "#9dc4d6",
     base0D: "#e8b83a",
-    base0E: "#7fb0ff",
+    base0E: "#8fbafe",
     base0F: "#c8a061"
   }
 
@@ -1082,7 +1084,7 @@ defmodule Line4.Deck do
       at from: 5
       effect :fade
       speed :fast
-      on [from: 5], set: [color: "#e8b83a"]
+      on [from: 5], set: [color: "var(--accent)"]
     end
   end
 
@@ -1243,7 +1245,7 @@ defmodule Line4.Deck do
     """ do
       at from: 4
       effect :grow
-      on 4, set: [color: "#e8b83a"]
+      on 4, set: [color: "var(--accent)"]
     end
   end
 

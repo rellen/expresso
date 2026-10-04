@@ -21,7 +21,7 @@ defmodule Expresso.ThemeOptionTest do
     [screen, print] = String.split(text, "@media print", parts: 2)
 
     assert screen =~ "--background: #282a36;"
-    assert screen =~ "--dim-opacity: 0.75;"
+    assert screen =~ "--dim-opacity: 0.85;"
     assert print =~ "--background: #ffffff;"
     assert print =~ "--text: #000000;"
   end
@@ -100,6 +100,8 @@ defmodule Expresso.ThemeOptionTest do
 
     assert output =~ "the theme gives code_comment a contrast of"
     assert output =~ "and WCAG asks for 4.5:1"
+    assert output =~ "the theme gives code_comment a lightness contrast of Lc"
+    assert output =~ "and APCA asks for Lc 60"
   end
 
   test "a name that is not a built-in theme stops the compile" do

@@ -3,11 +3,13 @@ defmodule Expresso.Color do
   Calculates the contrast of two colors, and moves the lightness of a color
 
   A color is a `#rrggbb` string of sRGB. `contrast/2` returns the contrast ratio
-  of WCAG 2.2, from 1 to 21. `blend/3` returns the color of a foreground with an
-  opacity on a background, as a browser paints it. `adjust/3` makes a
-  foreground lighter or darker until it has a contrast ratio with a background.
-  It changes only the lightness of the color in OKLab, so the hue stays the same.
-  `Expresso.Palette` uses these functions for the themes.
+  of WCAG 2.2, from 1 to 21. `lightness_contrast/2` returns the lightness
+  contrast `Lc` of APCA, from 0 to about 108. `blend/3` returns the color of a
+  foreground with an opacity on a background, as a browser paints it.
+  `adjust/4` makes a foreground lighter or darker until it has a contrast ratio
+  and a lightness contrast with a background. It changes only the lightness of
+  the color in OKLab, so the hue stays the same. `Expresso.Palette` uses these
+  functions for the themes.
   """
 
   @typedoc "A color as `#rrggbb`"
@@ -26,6 +28,50 @@ defmodule Expresso.Color do
   def contrast(first, second) do
     [high, low] = Enum.sort([luminance(first), luminance(second)], :desc)
     (high + 0.05) / (low + 0.05)
+  end
+
+  @doc """
+  Return the lightness contrast `Lc` of a text on a background, as APCA defines it
+
+  The function uses the constants of APCA-W3 version 0.0.98G-4g. APCA gives a
+  negative value for light text on a dark background. This function returns
+  the absolute value, so a larger value is always more contrast. The order of
+  the arguments is important: the first color is the text.
+
+      iex> Float.round(Expresso.Color.lightness_contrast("#000000", "#ffffff"), 1)
+      106.0
+
+      iex> Float.round(Expresso.Color.lightness_contrast("#ffffff", "#000000"), 1)
+      107.9
+
+      iex> Float.round(Expresso.Color.lightness_contrast("#888888", "#ffffff"), 1)
+      63.1
+  """
+  @spec lightness_contrast(t(), t()) :: float()
+  def lightness_contrast(text, background) do
+    y_text = screen_luminance(text)
+    y_background = screen_luminance(background)
+
+    cond do
+      abs(y_background - y_text) < 0.0005 ->
+        0.0
+
+      y_background > y_text ->
+        scaled = (:math.pow(y_background, 0.56) - :math.pow(y_text, 0.57)) * 1.14
+        if scaled < 0.1, do: 0.0, else: (scaled - 0.027) * 100
+
+      true ->
+        scaled = (:math.pow(y_background, 0.65) - :math.pow(y_text, 0.62)) * 1.14
+        if scaled > -0.1, do: 0.0, else: -(scaled + 0.027) * 100
+    end
+  end
+
+  # The luminance of APCA: a simple power of each channel, with a soft clamp
+  # near black for the flare of a screen.
+  defp screen_luminance(color) do
+    [r, g, b] = color |> rgb() |> Enum.map(&:math.pow(&1, 2.4))
+    y = 0.2126729 * r + 0.7151522 * g + 0.0721750 * b
+    if y < 0.022, do: y + :math.pow(0.022 - y, 1.414), else: y
   end
 
   @doc """
@@ -53,7 +99,10 @@ defmodule Expresso.Color do
 
   @doc """
   Make a foreground lighter or darker until its contrast with the background is
-  at least `minimum`
+  at least `minimum`, and its lightness contrast is at least `lc`
+
+  `minimum` is a contrast ratio of WCAG, and `lc` is an absolute value of APCA.
+  The default `lc` of 0 asks only for the contrast ratio.
 
   The function returns the color and the change of its lightness in OKLab, from
   0 to 1. A color that already has the contrast comes back with the change 0.
@@ -65,9 +114,11 @@ defmodule Expresso.Color do
       iex> Expresso.Color.adjust("#ffffff", "#000000", 4.5)
       {:ok, "#ffffff", 0.0}
   """
-  @spec adjust(t(), t(), number()) :: {:ok, t(), float()} | :error
-  def adjust(foreground, background, minimum) do
-    if contrast(foreground, background) >= minimum do
+  @spec adjust(t(), t(), number(), number()) :: {:ok, t(), float()} | :error
+  def adjust(foreground, background, minimum, lc \\ 0) do
+    meets = &(contrast(&1, background) >= minimum and lightness_contrast(&1, background) >= lc)
+
+    if meets.(foreground) do
       {:ok, foreground, 0.0}
     else
       {lightness, a, b} = oklab(foreground)
@@ -77,7 +128,7 @@ defmodule Expresso.Color do
       |> Stream.map(&(lightness + direction * &1 / 1000))
       |> Stream.take_while(&(&1 >= 0 and &1 <= 1))
       |> Stream.map(&{in_gamut(&1, a, b), abs(&1 - lightness)})
-      |> Enum.find(fn {color, _change} -> contrast(color, background) >= minimum end)
+      |> Enum.find(fn {color, _change} -> meets.(color) end)
       |> case do
         {color, change} -> {:ok, color, change}
         nil -> :error

@@ -88,7 +88,7 @@ defmodule Expresso.E2E.PropertiesTest do
     page: page
   } do
     # The default theme dims to 0.8, the strongest dimming that keeps each
-    # color of its text at 3:1 on its background.
+    # color of its text at 3:1 and at Lc 45 on its background.
     page |> press("j")
     assert styles(page)["items"] == ["blur(0px) opacity(0.8)", "none"]
 
