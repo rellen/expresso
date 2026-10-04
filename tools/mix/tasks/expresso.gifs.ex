@@ -69,6 +69,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "overlay-color", deck: "overlay_color.exs", actions: ["j", "j"]},
     %{name: "overlay-dim", deck: "overlay_dim.exs", actions: ["j", "j"]},
     %{name: "overlay-dim-code", deck: "overlay_dim_code.exs", actions: ["j", "j"]},
+    %{name: "overlay-dim-color", deck: "overlay_dim_color.exs", actions: ["j", "j"]},
     %{name: "overlay-row", deck: "overlay_row.exs", actions: ["j", "j"]},
     %{name: "overlay-diagram", deck: "overlay_diagram.exs", actions: ["j", "j"]},
     %{name: "overlay-effects", deck: "overlay_effects.exs", actions: ["j", "j", "j", "j", "j"]},

@@ -64,22 +64,49 @@ steps for such a rule:
 
 1. Find the role of the color, such as `--accent`. Its dimmed color has the same name with
    `-dim` at the end, such as `--accent-dim`.
-2. Write the color as a mix of the two, with `--dimmed` as the amount:
-
-   ```elixir
-   css ~S"""
-   .callout {
-     color: color-mix(
-       in srgb,
-       var(--accent-dim) calc(var(--dimmed) * 100%),
-       var(--accent)
-     );
-   }
-   """
-   ```
-
+2. In the rule, write the color as a mix of the role and its dimmed color. Use `--dimmed`
+   as the amount.
 3. Render the deck, and go to a step where the element dims. The text of the element
    changes to the dimmed color.
+
+In this deck, the first item has the accent color. It changes to `--accent-dim` when the
+second item shows:
+
+```elixir
+defmodule Examples.OverlayDimColor do
+  use Expresso
+
+  css ~S"""
+  .callout {
+    color: color-mix(
+      in srgb,
+      var(--accent-dim) calc(var(--dimmed) * 100%),
+      var(--accent)
+    );
+  }
+  """
+
+  slide "dim color" do
+    heading "Dim a color of your own"
+
+    list do
+      reveal true
+      dim true
+
+      item "A point in the accent color" do
+        class "callout"
+      end
+
+      item "The next point"
+      item "The last point"
+    end
+  end
+end
+
+Examples.OverlayDimColor
+```
+
+![The item in the accent color dims when the next item shows](https://raw.githubusercontent.com/rellen/expresso/media/overlay-dim-color.gif)
 
 The text then dims as the text of the theme does, and it keeps 3:1 and Lc 30 on its
 background. Each built-in role has a dimmed color. For the names, see

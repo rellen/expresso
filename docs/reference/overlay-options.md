@@ -136,9 +136,12 @@ each role, such as `--text-dim`, and a deck can replace one in its `css` option.
 
 `dim true` on a `list`, a `table` or a `code` element gives each child the state `dim` from
 the first step of a later child. The newest child then shows in full, and the earlier
-children show in their dimmed colors. The option reads the steps of the children, so it works with
-`reveal` and with an `at` option on each child. A child without steps, such as the header
-of a table, does not dim.
+children show in their dimmed colors. The option reads the steps of the children, so it
+works with `reveal` and with an `at` option on each child. A child without steps, such as
+the header of a table, does not dim.
+
+A color that a rule of the deck gives to text does not dim. For the steps to make it dim,
+see [Make a color of your own dim](../how-to/style-one-slide.md#make-a-color-of-your-own-dim).
 
 ![The earlier items of a list dim](https://raw.githubusercontent.com/rellen/expresso/media/overlay-dim.gif)
 
