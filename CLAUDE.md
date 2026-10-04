@@ -19,7 +19,7 @@ Read these documents before you change the code:
 - `docs/typescript.md` — the plan for the presenter script in TypeScript, and the record
   of its result. The code contains this conversion.
 - `docs/dim-state.md` — the plan for a dim state with a color for each role. The code does
-  not contain this plan yet. The document ends with four decisions.
+  not contain this plan yet. The document ends with four decisions, and each is settled.
 
 ## Build and test
 
