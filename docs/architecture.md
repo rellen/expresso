@@ -1363,8 +1363,12 @@ The commands are:
 
 ## Open work
 
-The list has no item at this time. The last item, decision 7 of
-`docs/research/elixir-presenter-report.md`, moved the GIF recorder to Elixir.
+1. A dim state with a color for each role. `docs/dim-state.md` gives the plan and its
+   decisions. A dimmed element then dims each color as far as its minimums let it, in
+   place of one opacity for all its colors.
+
+The item before, decision 7 of `docs/research/elixir-presenter-report.md`, moved the GIF
+recorder to Elixir.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on

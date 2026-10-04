@@ -52,13 +52,14 @@ defmodule Expresso.MixProject do
         "docs/overlays.md",
         "docs/architecture.md",
         "docs/development.md",
-        "docs/typescript.md"
+        "docs/typescript.md",
+        "docs/dim-state.md"
       ],
       groups_for_extras: [
         "How-to guides": ~r"docs/how-to/",
         Reference: ~r"docs/reference/",
         Explanation: ["docs/overlays.md", "docs/architecture.md"],
-        Contributing: ["docs/development.md", "docs/typescript.md"]
+        Contributing: ["docs/development.md", "docs/typescript.md", "docs/dim-state.md"]
       ]
     ]
   end
