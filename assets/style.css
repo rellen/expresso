@@ -646,10 +646,10 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
  * multiplies the two values, and the fade of `at` then works as before. The
  * blur of the effect `blur` is in the same filter.
  *
- * The state `dim` does not change the filter. It sets `--dim` on the element
- * and `--dimmed` on the element and on each element inside it, and the color
- * of the element moves to the dimmed color of the text. `--dim-color`
- * gives that color: `--text-dim` on a slide, and `--code-text-dim` in code.
+ * The state `dim` does not change the filter. It sets `--dim` and `--dimmed`
+ * on the element, and `--dimmed` inherits to each element inside it. The
+ * color of the element moves to the dimmed text color. `--dim-color` gives
+ * that color: `--text-dim` on a slide, and `--code-text-dim` in code.
  * A rule of the theme for a role, such as a color of the syntax, moves to the
  * dimmed color of its own role.
  *
@@ -680,7 +680,7 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 }
 /*
  * A graphic has colors that the palette does not know: an image, an SVG file
- * and the page of an embed. A graphic inside a dimmed element dims with the
+ * and an embed. A graphic inside a dimmed element dims with the
  * opacity `--dim-opacity` of the theme, the strongest opacity that keeps each
  * role of text at 3:1 and at Lc 30. The rule applies only on a slide and on a
  * page of the handout view, so the presenter keeps its own icons.

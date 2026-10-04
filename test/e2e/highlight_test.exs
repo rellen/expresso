@@ -36,8 +36,8 @@ defmodule Expresso.E2E.HighlightTest do
     """)
   end
 
-  # True for each line that dims: its text has the dimmed color of the text of
-  # the code, and not the color of the text of the code.
+  # True for each line that dims: the line does not have the color of the code
+  # text, which is black in the default theme.
   defp dim(page) do
     page
     |> js("""

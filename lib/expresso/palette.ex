@@ -22,8 +22,8 @@ defmodule Expresso.Palette do
     * Each role of text with the dim opacity of the palette, on its
       background: 3:1 and Lc 30. 3:1 is the minimum of criterion 1.4.11 for a
       part that the reader must see. Lc 30 is the minimum of APCA for any
-      text that the reader must be able to read, such as a text that is not
-      the content of the moment. A dimmed element is less important, and it
+      text that the reader must be able to read, such as a text that the
+      presenter does not talk about now. A dimmed element is less important, and it
       must stay readable. The dimming applies to each color of the element,
       such as a comment of a dimmed line of code, so the role with the lowest
       contrast sets the opacity.
@@ -48,7 +48,7 @@ defmodule Expresso.Palette do
   A palette: its name, its variant, its 16 colors, and the color of each role
 
   `change` is the largest change of lightness that `adjust/1` made, in OKLab,
-  from 0 to 1. `dimmed` holds the dimmed color of each role of text, with the
+  from 0 to 1. `dimmed` holds, for each role of text, its dimmed color and the
   opacity that gives it. `dim_opacity` is one opacity that dims each role of
   text to its minimums. The style sheet dims an image, an SVG file and an
   embed with it, because their colors are not roles.
@@ -116,10 +116,10 @@ defmodule Expresso.Palette do
   @doc """
   Make a palette from the 16 colors of a base16 scheme
 
-  `colors` holds a `#rrggbb` color for each slot. The dimmed color of a role
-  of text is the role blended on its background at the smallest multiple of
-  0.05 that keeps it at 3:1 and at Lc 30 on that background. Each role dims as
-  far as its own contrast lets it.
+  `colors` holds a `#rrggbb` color for each slot. Each role of text gets a
+  dimmed color: the role blended on its background at the smallest multiple
+  of 0.05 that keeps the role at 3:1 and at Lc 30. Each role dims as far as
+  its own contrast lets it.
   """
   @spec new(String.t(), :dark | :light, %{slot() => Color.t()}) :: t()
   def new(name, variant, colors) do

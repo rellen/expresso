@@ -23,7 +23,8 @@ defmodule Expresso.E2E.DimTest do
     end
   end
 
-  # The filter of the picture of the image, and of the wrapper of the part.
+  # The filters of the picture in the image, of the wrapper of the part and of
+  # the SVG.
   defp filters(page) do
     js(page, """
     [

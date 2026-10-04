@@ -45,10 +45,11 @@ change of lightness in OKLab, from 0 to 1.
 
 A dimmed element shows each color of its text in the dimmed color of the role. The dimmed
 color is the role at the strongest dimming that keeps it at 3:1 and at Lc 30 on its
-background, so each role dims as far as its own contrast lets it. The columns "Text dim"
-and "Comment dim" give the opacity of the dimmed color of the text and of the comments. A
-lower value dims more. "The contrast of a theme" in `docs/architecture.md` gives the
-formulas.
+background. Thus each role dims as far as its own contrast lets it.
+
+The column "Text dim" gives the opacity that dims the text, and the column "Comment dim"
+gives the opacity that dims the comments. A lower value gives a stronger dimming. "The
+contrast of a theme" in `docs/architecture.md` gives the formulas.
 
 | Name | Theme | Variant | Change | Text dim | Comment dim |
 | --- | --- | --- | --- | --- | --- |
@@ -155,8 +156,8 @@ draft of WCAG 3, corrects this. Expresso uses the absolute value of `Lc`, and th
 constants of APCA-W3 0.0.98G-4g.
 
 Lc 60 is the APCA minimum for the text of content. Lc 30 is its minimum for any text that
-the reader must be able to read, such as a dimmed item that is not the content of the
-moment. WCAG lets large text have 3:1. A theme does not use the smaller minimums of large
+the reader must be able to read, such as a dimmed item that the presenter does not talk
+about now. WCAG lets large text have 3:1. A theme does not use the smaller minimums of large
 text for its colors of text, because a projector and the light of a room lower the
 contrast of each slide.
 

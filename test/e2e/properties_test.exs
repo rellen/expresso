@@ -92,9 +92,9 @@ defmodule Expresso.E2E.PropertiesTest do
   test "an item dims when a later item shows, and shows in full again after a step back", %{
     page: page
   } do
-    # The dimmed item keeps its opacity, and its text takes the dimmed color of
-    # the text of the default theme: black at 0.45 on white, the strongest
-    # dimming that keeps it at 3:1 and at Lc 30.
+    # The dimmed item keeps its opacity. Its text takes the dimmed text color of
+    # the default theme: black at 0.45 on white, the strongest dimming that
+    # keeps 3:1 and Lc 30.
     {0.45, dimmed} = Expresso.Palette.Builtin.fetch!(:default).dimmed.text
 
     [r, g, b] =
