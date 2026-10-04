@@ -64,6 +64,45 @@ defmodule Expresso.PaletteTest do
     end
   end
 
+  test "each dimmed color is the strongest dimming of its role that keeps 3:1 and Lc 30" do
+    for name <- Builtin.names(),
+        %Palette{roles: roles, dimmed: dimmed} = Builtin.fetch!(name),
+        {role, {_slot, on}} <- Palette.roles(),
+        on != nil do
+      {opacity, color} = Map.fetch!(dimmed, role)
+      background = roles[on]
+
+      assert color == Color.blend(roles[role], background, opacity), "#{name} #{role}"
+      assert Color.contrast(color, background) >= 3.0, "#{name} #{role}"
+      assert Color.lightness_contrast(color, background) >= 30, "#{name} #{role}"
+
+      if opacity > 0.05 do
+        stronger = Color.blend(roles[role], background, opacity - 0.05)
+
+        refute Color.contrast(stronger, background) >= 3.0 and
+                 Color.lightness_contrast(stronger, background) >= 30,
+               "#{name} #{role}"
+      end
+    end
+  end
+
+  test "the text of a theme dims further than the shared dim opacity" do
+    %Palette{dimmed: dimmed, dim_opacity: shared} = Builtin.fetch!(:dracula)
+
+    assert {0.45, _color} = dimmed.text
+    assert shared == 0.65
+  end
+
+  test "the declarations write the dimmed color of each role of text, and none for a background" do
+    palette = Builtin.fetch!(:dracula)
+    text = Palette.declarations(palette)
+
+    assert text =~ "--text-dim: #{elem(palette.dimmed.text, 1)};"
+    assert text =~ "--code-comment-dim: #{elem(palette.dimmed.code_comment, 1)};"
+    refute text =~ "--background-dim"
+    refute text =~ "--code-background-dim"
+  end
+
   test "each role of text of a built-in theme meets Lc 60 on its background" do
     for name <- Builtin.names(),
         %Palette{roles: roles} = Builtin.fetch!(name),

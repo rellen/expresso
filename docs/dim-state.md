@@ -1,8 +1,9 @@
 # A dim state with a color for each role
 
-This document gives a plan for the state `dim`. The code does not contain this plan yet.
-The plan depends on pull request #128, which adds the APCA minimums to each theme. The
-document ends with four decisions, and each is settled.
+This document gives a plan for the state `dim`, and the record of its result. The code
+contains this plan. The plan depends on pull request #128, which adds the APCA minimums to
+each theme. The document ends with four decisions, and each is settled. "The result"
+gives the four places where the code is different from the plan.
 
 ## The problem
 
@@ -90,11 +91,34 @@ Each decision is settled.
 2. **A mix in sRGB.** `Color.blend/3` calculates in sRGB, so the color of the browser
    agrees with the color that the palette measured. A mix in OKLab looks smoother, but the
    palette must then calculate in OKLab too, and the two calculations can disagree.
-3. **`--dim-opacity` stays for one release.** The renderer still writes it, with the
-   shared opacity of #128, and the style sheet no longer reads it. A deck that reads it in
-   its `css` option keeps its result for one release. `docs/reference/css-option.md`
-   marks the property as deprecated, and the release after the change removes it.
+3. **`--dim-opacity` stays.** The plan kept it for one release, and the style sheet did
+   not read it. The result changes this decision: an image, an SVG file and an embed dim
+   with `--dim-opacity`, so the property stays, and it is not deprecated. "The result"
+   tells why.
 4. **A nested dimmed element does not dim two times.** The inherited property `--dimmed`
    carries the state to each element inside a dimmed element. A nested element with the
    state `dim` stays at the dimmed colors. The dimmed colors are the minimums, so a second
    multiplication would make the text unreadable.
+
+## The result
+
+The code follows the plan, with four changes:
+
+1. **The state also reads `--dim`.** The color of a dimmed element mixes with
+   `max(var(--dim, 0), var(--dimmed))`. Without a rule that reads `--dim`, the verifier of
+   the properties warns that the theme does not use the state `dim`.
+2. **A `dim` key of `set` also sets `--dimmed`.** `set: [dim: 0.3]` dims part of the way,
+   and the renderer writes `--dimmed: 0.3` with it. The colors then move 30% of the way to
+   their dimmed colors.
+3. **The text of code has its own dimmed color.** A line of code takes the dimmed color of
+   `--code-text`, and not of `--text`, because the background of the code is different.
+   The property `--dim-color` gives the dimmed color to the element, and `.highlight`
+   sets it to `--code-text-dim`.
+4. **A graphic dims with one opacity.** The palette does not know the colors of an image,
+   of an SVG file or of the page of an embed, and an SVG draws with `fill` and not with
+   `color`. Such a graphic inside a dimmed element dims with `filter: opacity(...)` and
+   `--dim-opacity`, as before. A part of a diagram dims in the same way with its own
+   state. Thus decision 3 changes, and `--dim-opacity` stays.
+
+A rule of a deck that gives a color to text does not dim by itself.
+`docs/reference/css-option.md` shows the mix that such a rule uses.

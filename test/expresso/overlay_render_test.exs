@@ -172,7 +172,9 @@ defmodule Expresso.Overlay.RenderTest do
       assert style =~
                ~s(section[data-step="2"] [data-el="s1-e1"], section[data-step="3"] [data-el="s1-e1"] { --alert: 1; })
 
-      assert style =~ ~s(section[data-step="3"] [data-el="s1-e2"] { --x: 400px; --dim: 0.3; })
+      assert style =~
+               ~s(section[data-step="3"] [data-el="s1-e2"] { --x: 400px; --dim: 0.3; --dimmed: 0.3; })
+
       assert style =~ ~s(section[data-step="1"] [data-el="s1-e3"] { --alert: 1; --x: 1px; })
 
       [first, second, third] = Regex.scan(~r/\[data-el="(s1-e\d)"\] \{/, style)
@@ -288,9 +290,9 @@ defmodule Expresso.Overlay.RenderTest do
       assert generated =~
                ~s(section[data-step="2"] [data-el="s1-e2"], ) <>
                  ~s(section[data-step="3"] [data-el="s1-e2"], ) <>
-                 ~s(section[data-step="4"] [data-el="s1-e2"] { --dim: 1; })
+                 ~s(section[data-step="4"] [data-el="s1-e2"] { --dim: 1; --dimmed: 1; })
 
-      assert generated =~ ~s(section[data-step="4"] [data-el="s1-e5"] { --dim: 1; })
+      assert generated =~ ~s(section[data-step="4"] [data-el="s1-e5"] { --dim: 1; --dimmed: 1; })
     end
 
     test "writes data-el on the lines of a group that dims", %{document: document} do

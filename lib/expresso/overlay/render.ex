@@ -144,7 +144,9 @@ defmodule Expresso.Overlay.Render do
     plays the `--enter-animation` of the effect, and the theme plays the
     `--exit-animation` of a hidden element.
   - One rule for each `on` entity, in document order. It sets the custom
-    properties of the entity on the element, at each step of the entity.
+    properties of the entity on the element, at each step of the entity. A
+    `dim` value also sets `--dimmed`, which the theme reads for the dimmed
+    colors.
   - One rule for each speed in milliseconds of the deck, such as
     `[data-speed="450"] { --speed: 450ms; }`. The theme gives the presets.
 
@@ -208,10 +210,22 @@ defmodule Expresso.Overlay.Render do
     "#{selectors} { #{declarations(on)} }"
   end
 
+  # The state `dim`, or a `dim` key of `set`, also sets `--dimmed` to the same
+  # value. The theme registers `--dimmed` as a number that inherits, so each
+  # element inside a dimmed element is dimmed too, and the colors of its text
+  # move to their dimmed colors. `--dim` does not inherit, so an element inside
+  # with its own `on` entity would reset it.
   defp declarations(%On{state: state, set: set}) do
     state = if state, do: [{state, 1}], else: []
+    properties = state ++ (set || [])
 
-    Enum.map_join(state ++ (set || []), " ", fn {key, value} ->
+    dimmed =
+      case List.keyfind(properties, :dim, 0) do
+        {:dim, value} -> [{:dimmed, value}]
+        nil -> []
+      end
+
+    Enum.map_join(properties ++ dimmed, " ", fn {key, value} ->
       "--#{key}: #{css_value(value)};"
     end)
   end

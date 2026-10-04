@@ -173,6 +173,36 @@ defmodule Expresso.E2E do
   end
 
   @doc """
+  Write a computed color as `rgb(r, g, b)`
+
+  The browser writes the result of `color-mix()` as `color(srgb r g b)`, with
+  each channel from 0 to 1. The function writes it as the other colors, so a
+  test can compare the two forms. A color that is already `rgb()` comes back
+  unchanged.
+  """
+  @spec rgb(String.t()) :: String.t()
+  def rgb("color(srgb " <> channels) do
+    [r, g, b] =
+      channels
+      |> String.trim_trailing(")")
+      |> String.split()
+      |> Enum.take(3)
+      |> Enum.map(&round(String.to_float(normal(&1)) * 255))
+
+    "rgb(#{r}, #{g}, #{b})"
+  end
+
+  def rgb(color), do: color
+
+  # `String.to_float/1` needs a digit before and after the point.
+  defp normal(number) do
+    cond do
+      String.contains?(number, ".") -> number
+      true -> number <> ".0"
+    end
+  end
+
+  @doc """
   Give the position of the present view, such as `"2.3"`: the number of the
   slide that shows and its step
   """

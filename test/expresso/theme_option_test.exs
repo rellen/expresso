@@ -33,8 +33,12 @@ defmodule Expresso.ThemeOptionTest do
     assert head_theme(deck) =~ ":root { " <> Palette.declarations(Builtin.fetch!(:default))
   end
 
-  test "each color of the highlight style sheet is a role of the theme" do
-    roles = MapSet.new(Palette.roles(), fn {role, _slot} -> property(role) end)
+  test "each color of the highlight style sheet is a role of the theme or its dimmed color" do
+    roles =
+      for {role, _slot} <- Palette.roles(),
+          name <- [property(role), property(role) <> "-dim"],
+          into: MapSet.new(["--dimmed"]),
+          do: name
 
     used =
       for [_all, name] <- Regex.scan(~r/var\((--[a-z-]+)\)/, Expresso.Highlight.stylesheet()),
@@ -51,6 +55,10 @@ defmodule Expresso.ThemeOptionTest do
     for role <- [:text, :background, :muted, :accent, :warning, :danger],
         do: assert(css =~ "var(#{property(role)})", "#{role}")
 
+    for role <- [:text, :muted, :accent, :code_comment],
+        do: assert(css =~ "var(#{property(role)}-dim)", "#{role}")
+
+    assert css =~ "var(--dimmed)"
     assert css =~ "var(--dim-opacity)"
 
     assert Regex.scan(~r/#[0-9a-fA-F]{3,6}\b|rgba?\([^)]*\)/, css) == [

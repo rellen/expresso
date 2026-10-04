@@ -473,11 +473,10 @@ change of 0.22. `Expresso.Palette.Builtin` refuses a scheme with a change of mor
 0.4, because a larger change gives a color that the reader does not know as a color of the
 scheme.
 
-#### The dim opacity
+#### The dimmed colors
 
-The state `dim` gives an element a filter with an opacity `o`. Each channel of each color
-of the element then becomes `o × color + (1 - o) × background`, and its contrast becomes
-less:
+An opacity `o` changes each channel of a color to `o × color + (1 - o) × background`, and
+the contrast of the color becomes less:
 
 | Text and background | 1 | 0.8 | 0.65 | 0.5 |
 | --- | --- | --- | --- | --- |
@@ -486,22 +485,38 @@ less:
 | The numbers of the default theme, `#bb5407` on `#f8f8f8` | 4.51:1, Lc 68 | 3.28:1, Lc 58 | 2.59:1, Lc 49 | 2.03:1, Lc 38 |
 | The text of the default theme, `#000000` on `#ffffff` | 21:1, Lc 106 | 12.63:1, Lc 99 | 7:1, Lc 84 | 3.95:1, Lc 67 |
 
-The filter applies one opacity to all the colors of the element. Thus the color with the
-lowest contrast sets the opacity. `Expresso.Palette` uses the smallest multiple of 0.05
-that keeps each role of text at 3:1 and at Lc 30 on its background:
+The minimum of a dimmed element is 3:1 and Lc 30. 3:1 is the minimum of criterion 1.4.11
+for a part that the reader must see. Lc 30 is the APCA minimum for any text that the
+reader must be able to read. A dimmed element is not the content of the moment, but the
+reader can go back to it.
 
-- On a dark theme, APCA sets the opacity. A comment at Lc 60 goes under Lc 30 below 0.65.
-- On a light theme, WCAG sets the opacity. A color at 4.5:1 goes under 3:1 below 0.8.
-  Thus a light theme dims less than a dark theme.
+Each role starts at a different contrast. `Color.adjust/4` stops at the minimum of a text,
+so most roles start near 4.5:1 and Lc 60, and the text starts far above them. One opacity
+for all the colors of an element thus has to stop where the weakest role meets its
+minimum. `Expresso.Palette` gives each role of text its own dimmed color instead: the role
+blended on its background at the smallest multiple of 0.05 that keeps it at 3:1 and at
+Lc 30.
 
-The text alone could dim much more: the text of the default theme stays at 3.95:1 at 0.5.
-Each other role is near its own minimum, because `Color.adjust/4` stops at the minimum.
-Thus an opacity cannot dim an element far and keep each of its colors readable.
+| Role | Dimmed color | Opacity | Contrast | One opacity for all |
+| --- | --- | --- | --- | --- |
+| The text of Dracula | `#86878b` | 0.45 | 3.97:1, Lc 34 | 0.65 |
+| The comments of Dracula | `#7682a8` | 0.65 | 4.16:1, Lc 34 | 0.65 |
+| The text of the default theme | `#8c8c8c` | 0.45 | 3.36:1, Lc 61 | 0.8 |
+| The numbers of the default theme | `#ca7d43` | 0.75 | 3.03:1, Lc 55 | 0.8 |
 
-The minimum of a dimmed element is less than the minimum of a text. 3:1 is the minimum of
-criterion 1.4.11 for a part that the reader must see. Lc 30 is the APCA minimum for any
-text that the reader must be able to read. A dimmed element is not the content of the
-moment, but the reader can go back to it.
+On a dark theme, APCA sets the opacity of most roles. On a light theme, WCAG sets it, so a
+light theme dims less.
+
+The renderer writes each dimmed color as a custom property, such as `--text-dim`. The state
+`dim` sets `--dim: 1` on the element and `--dimmed: 1` on the element and on each element
+inside it, because `--dimmed` is registered to inherit. The style sheet mixes each color
+of text toward its dimmed color with `color-mix(in srgb, ...)` and the value of
+`--dimmed`. `Color.blend/3` and `color-mix()` both blend in sRGB, so the browser shows the
+color that the palette measured. `docs/dim-state.md` gives the design and its decisions.
+
+An image, an SVG file and the page of an embed have colors that the palette does not know.
+They dim with one opacity, `--dim-opacity`: the strongest opacity that keeps each role of
+text at 3:1 and at Lc 30.
 
 ### The style of a slide
 
@@ -1363,12 +1378,8 @@ The commands are:
 
 ## Open work
 
-1. A dim state with a color for each role. `docs/dim-state.md` gives the plan and its
-   decisions. A dimmed element then dims each color as far as its minimums let it, in
-   place of one opacity for all its colors.
-
-The item before, decision 7 of `docs/research/elixir-presenter-report.md`, moved the GIF
-recorder to Elixir.
+The list has no item at this time. The last item, the dim state of `docs/dim-state.md`,
+gave each role of text its own dimmed color.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on
