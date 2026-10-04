@@ -114,11 +114,11 @@ The code follows the plan, with four changes:
    `--code-text`, and not of `--text`, because the background of the code is different.
    The property `--dim-color` gives the dimmed color to the element, and `.highlight`
    sets it to `--code-text-dim`.
-4. **A graphic dims with one opacity.** The palette does not know the colors of an image,
-   of an SVG file or of the page of an embed, and an SVG draws with `fill` and not with
+4. **A graphic dims with one opacity.** An image, an SVG file and an embed have colors
+   that the palette does not know. Also, an SVG draws with `fill` and not with
    `color`. Such a graphic inside a dimmed element dims with `filter: opacity(...)` and
    `--dim-opacity`, as before. A part of a diagram dims in the same way with its own
    state. Thus decision 3 changes, and `--dim-opacity` stays.
 
-A rule of a deck that gives a color to text does not dim by itself.
-`docs/reference/css-option.md` shows the mix that such a rule uses.
+A rule of a deck that gives a color to text does not dim by itself. "Make a color of your
+own dim" in `docs/how-to/style-one-slide.md` gives the steps for such a rule.

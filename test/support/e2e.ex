@@ -176,8 +176,8 @@ defmodule Expresso.E2E do
   Write a computed color as `rgb(r, g, b)`
 
   The browser writes the result of `color-mix()` as `color(srgb r g b)`, with
-  each channel from 0 to 1. The function writes it as the other colors, so a
-  test can compare the two forms. A color that is already `rgb()` comes back
+  each channel from 0 to 1. The function returns such a color as `rgb()`, so
+  a test can compare it with the other colors. It returns another color
   unchanged.
   """
   @spec rgb(String.t()) :: String.t()

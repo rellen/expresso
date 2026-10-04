@@ -68,20 +68,10 @@ A rule of the deck can set or read these custom properties of the theme:
   `--accent` and `--code-keyword`, and the dimmed color of each role of text, such as
   `--text-dim`. A role that a rule of the deck replaces gets no check of its contrast.
 
-### A color of your own in a dimmed element
-
-A dimmed element and each element inside it get `--dimmed: 1`. The theme mixes each color
-of text toward its dimmed color with that value. A rule of the deck that gives a color to
-text must do the same, or its text does not dim:
-
-```css
-.part-heading {
-  color: color-mix(
-    in srgb,
-    var(--accent-dim) calc(var(--dimmed) * 100%),
-    var(--accent)
-  );
-}
-```
+`--dimmed` is 1 in a dimmed element and in each element inside it, and 0 in other
+elements. A `dim` key of `set` gives it a value between 0 and 1. The theme mixes each color
+of text toward its dimmed color with this value. A rule of the deck that gives a color to
+text does not dim. To make it dim, see
+[Make a color of your own dim](../how-to/style-one-slide.md#make-a-color-of-your-own-dim).
 
 ![A box that bounces in, a box that drops in, and a marker](https://raw.githubusercontent.com/rellen/expresso/media/overlay-custom.gif)

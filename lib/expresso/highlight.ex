@@ -41,9 +41,9 @@ defmodule Expresso.Highlight do
     {~w(name_tag generic_deleted generic_error generic_traceback error)a, :code_tag, ""}
   ]
 
-  # Each color of a token moves to the dimmed color of its role, at the value
-  # of `--dimmed`. `--dim-color` gives the dimmed color of the text of the
-  # code to a dimmed line.
+  # Each color of a token moves to the dimmed color of its role, by the amount
+  # in `--dimmed`. `--dim-color` gives a dimmed line the dimmed color of the
+  # code text.
   @stylesheet [
                 ".highlight {color: color-mix(in srgb, var(--code-text-dim) calc(var(--dimmed) * 100%), var(--code-text)); background-color: var(--code-background); --dim-color: var(--code-text-dim);}\n",
                 ".highlight .unselectable {user-select: none;}\n",

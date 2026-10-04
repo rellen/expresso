@@ -487,15 +487,15 @@ the contrast of the color becomes less:
 
 The minimum of a dimmed element is 3:1 and Lc 30. 3:1 is the minimum of criterion 1.4.11
 for a part that the reader must see. Lc 30 is the APCA minimum for any text that the
-reader must be able to read. A dimmed element is not the content of the moment, but the
-reader can go back to it.
+reader must be able to read. The presenter does not talk about a dimmed element now, but
+the reader can go back to it.
 
 Each role starts at a different contrast. `Color.adjust/4` stops at the minimum of a text,
-so most roles start near 4.5:1 and Lc 60, and the text starts far above them. One opacity
-for all the colors of an element thus has to stop where the weakest role meets its
-minimum. `Expresso.Palette` gives each role of text its own dimmed color instead: the role
-blended on its background at the smallest multiple of 0.05 that keeps it at 3:1 and at
-Lc 30.
+so most roles start near 4.5:1 and Lc 60. The text starts far above them. Thus one opacity
+for all the colors of an element must stop where the weakest role meets its minimum.
+
+`Expresso.Palette` gives each role of text its own dimmed color. The dimmed color is the
+role blended on its background at the smallest multiple of 0.05 that keeps 3:1 and Lc 30.
 
 | Role | Dimmed color | Opacity | Contrast | One opacity for all |
 | --- | --- | --- | --- | --- |
@@ -508,13 +508,13 @@ On a dark theme, APCA sets the opacity of most roles. On a light theme, WCAG set
 light theme dims less.
 
 The renderer writes each dimmed color as a custom property, such as `--text-dim`. The state
-`dim` sets `--dim: 1` on the element and `--dimmed: 1` on the element and on each element
-inside it, because `--dimmed` is registered to inherit. The style sheet mixes each color
+`dim` sets `--dim: 1` and `--dimmed: 1` on the element. `--dimmed` is registered to
+inherit, so each element inside the dimmed element also gets `--dimmed: 1`. The style sheet mixes each color
 of text toward its dimmed color with `color-mix(in srgb, ...)` and the value of
 `--dimmed`. `Color.blend/3` and `color-mix()` both blend in sRGB, so the browser shows the
 color that the palette measured. `docs/dim-state.md` gives the design and its decisions.
 
-An image, an SVG file and the page of an embed have colors that the palette does not know.
+An image, an SVG file and an embed have colors that the palette does not know.
 They dim with one opacity, `--dim-opacity`: the strongest opacity that keeps each role of
 text at 3:1 and at Lc 30.
 
