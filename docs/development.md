@@ -645,7 +645,7 @@ steps:
 1. Download the file of the scheme from `base16/` of that repository into
    `assets/themes/`. Do not change the file. `assets/themes/LICENSE` covers it.
 2. Run `mix compile`. `Expresso.Palette.Builtin` adjusts the scheme, and the compile stops
-   when a color needs a change of lightness of more than 0.25. Such a scheme cannot be a
+   when a color needs a change of lightness of more than 0.4. Such a scheme cannot be a
    built-in theme. Remove its file.
 3. Add the theme to the table of `docs/reference/theme-option.md`, with its change and its
    dim opacity. This command writes each row:

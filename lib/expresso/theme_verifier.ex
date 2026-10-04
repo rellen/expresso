@@ -29,8 +29,12 @@ defmodule Expresso.ThemeVerifier do
 
   defp warnings(problems) do
     {:warn,
-     Enum.map(problems, fn {role, ratio, minimum} ->
-       "the theme gives #{role} a contrast of #{Float.round(ratio, 2)}:1, and WCAG asks for #{minimum}:1"
+     Enum.map(problems, fn
+       {role, :wcag, ratio, minimum} ->
+         "the theme gives #{role} a contrast of #{Float.round(ratio, 2)}:1, and WCAG asks for #{minimum}:1"
+
+       {role, :apca, lc, minimum} ->
+         "the theme gives #{role} a lightness contrast of Lc #{round(lc)}, and APCA asks for Lc #{minimum}"
      end)}
   end
 end
