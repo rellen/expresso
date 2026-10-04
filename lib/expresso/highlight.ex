@@ -41,8 +41,11 @@ defmodule Expresso.Highlight do
     {~w(name_tag generic_deleted generic_error generic_traceback error)a, :code_tag, ""}
   ]
 
+  # Each color of a token moves to the dimmed color of its role, at the value
+  # of `--dimmed`. `--dim-color` gives the dimmed color of the text of the
+  # code to a dimmed line.
   @stylesheet [
-                ".highlight {color: var(--code-text); background-color: var(--code-background);}\n",
+                ".highlight {color: color-mix(in srgb, var(--code-text-dim) calc(var(--dimmed) * 100%), var(--code-text)); background-color: var(--code-background); --dim-color: var(--code-text-dim);}\n",
                 ".highlight .unselectable {user-select: none;}\n",
                 ".highlight .ge {font-style: italic;}\n",
                 ".highlight .gs {font-weight: bold;}\n"
@@ -51,7 +54,8 @@ defmodule Expresso.Highlight do
                       class = Makeup.Token.Utils.css_class_for_token_type(type),
                       class != nil do
                     property = role |> Atom.to_string() |> String.replace("_", "-")
-                    ".highlight .#{class} {color: var(--#{property}); #{font}}\n"
+
+                    ".highlight .#{class} {color: color-mix(in srgb, var(--#{property}-dim) calc(var(--dimmed) * 100%), var(--#{property})); #{font}}\n"
                   end
               ]
               |> IO.iodata_to_binary()

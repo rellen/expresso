@@ -414,10 +414,10 @@ defmodule Expresso.Element.CodeTest do
       html = deck_html(Builder.code(text: "a\nb\nc", highlight: [1, 2]))
 
       assert html =~ ~s(section[data-step="1"] [data-el="s1-e2"] { --highlight: 1; })
-      assert html =~ ~s(section[data-step="2"] [data-el="s1-e2"] { --dim: 1; })
+      assert html =~ ~s(section[data-step="2"] [data-el="s1-e2"] { --dim: 1; --dimmed: 1; })
 
       assert html =~
-               ~s(section[data-step="1"] [data-el="s1-e4"], section[data-step="2"] [data-el="s1-e4"] { --dim: 1; })
+               ~s(section[data-step="1"] [data-el="s1-e4"], section[data-step="2"] [data-el="s1-e4"] { --dim: 1; --dimmed: 1; })
     end
 
     test "uses the numbers of the file with src" do

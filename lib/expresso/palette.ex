@@ -48,18 +48,22 @@ defmodule Expresso.Palette do
   A palette: its name, its variant, its 16 colors, and the color of each role
 
   `change` is the largest change of lightness that `adjust/1` made, in OKLab,
-  from 0 to 1. `dim_opacity` is the opacity of a dimmed element.
+  from 0 to 1. `dimmed` holds the dimmed color of each role of text, with the
+  opacity that gives it. `dim_opacity` is one opacity that dims each role of
+  text to its minimums. The style sheet dims an image, an SVG file and an
+  embed with it, because their colors are not roles.
   """
   @type t :: %__MODULE__{
           name: String.t(),
           variant: :dark | :light,
           colors: %{slot() => Color.t()},
           roles: %{atom() => Color.t()},
+          dimmed: %{atom() => {float(), Color.t()}},
           dim_opacity: float(),
           change: float()
         }
 
-  @enforce_keys [:name, :variant, :colors, :roles, :dim_opacity]
+  @enforce_keys [:name, :variant, :colors, :roles, :dimmed, :dim_opacity]
   defstruct @enforce_keys ++ [change: 0.0]
 
   @slots ~w(base00 base01 base02 base03 base04 base05 base06 base07 base08 base09 base0A base0B base0C base0D base0E base0F)a
@@ -112,9 +116,10 @@ defmodule Expresso.Palette do
   @doc """
   Make a palette from the 16 colors of a base16 scheme
 
-  `colors` holds a `#rrggbb` color for each slot. The dim opacity is the
-  smallest multiple of 0.05 that keeps each dimmed role of text at 3:1 and at
-  Lc 30 on its background.
+  `colors` holds a `#rrggbb` color for each slot. The dimmed color of a role
+  of text is the role blended on its background at the smallest multiple of
+  0.05 that keeps it at 3:1 and at Lc 30 on that background. Each role dims as
+  far as its own contrast lets it.
   """
   @spec new(String.t(), :dark | :light, %{slot() => Color.t()}) :: t()
   def new(name, variant, colors) do
@@ -125,6 +130,7 @@ defmodule Expresso.Palette do
       variant: variant,
       colors: colors,
       roles: roles,
+      dimmed: dimmed(roles),
       dim_opacity: dim_opacity(roles)
     }
   end
@@ -183,25 +189,43 @@ defmodule Expresso.Palette do
         :error
 
       {adjusted, change} ->
-        {:ok, %{palette | roles: adjusted, dim_opacity: dim_opacity(adjusted), change: change}}
+        {:ok,
+         %{
+           palette
+           | roles: adjusted,
+             dimmed: dimmed(adjusted),
+             dim_opacity: dim_opacity(adjusted),
+             change: change
+         }}
     end
   end
 
   @doc """
   Return the custom properties of the palette, as declarations for a rule
 
+  Each role gets a property, such as `--text`. Each role of text also gets
+  the property of its dimmed color, such as `--text-dim`. `--dim-opacity`
+  holds the dim opacity of the palette.
+
       iex> palette = Expresso.Palette.Builtin.fetch!(:default)
       iex> Expresso.Palette.declarations(palette) =~ "--text: #000000;"
       true
+      iex> Expresso.Palette.declarations(palette) =~ "--text-dim: #"
+      true
   """
   @spec declarations(t()) :: String.t()
-  def declarations(%__MODULE__{roles: roles, dim_opacity: opacity}) do
-    colors =
-      for {role, _slot} <- @roles,
-          do: "--#{role |> Atom.to_string() |> String.replace("_", "-")}: #{roles[role]};"
+  def declarations(%__MODULE__{roles: roles, dimmed: dimmed, dim_opacity: opacity}) do
+    colors = for {role, _slot} <- @roles, do: "--#{property(role)}: #{roles[role]};"
 
-    Enum.join(colors ++ ["--dim-opacity: #{opacity};"], " ")
+    dimmed =
+      for {role, _slot} <- @roles,
+          Map.has_key?(dimmed, role),
+          do: "--#{property(role)}-dim: #{elem(dimmed[role], 1)};"
+
+    Enum.join(colors ++ dimmed ++ ["--dim-opacity: #{opacity};"], " ")
   end
+
+  defp property(role), do: role |> Atom.to_string() |> String.replace("_", "-")
 
   @doc """
   Return the palette of the `theme` option of a deck
@@ -261,6 +285,28 @@ defmodule Expresso.Palette do
        "the theme must be the name of a built-in theme or a map of 16 colors, not #{inspect(value)}"}
 
   defp hex?(color), do: is_binary(color) and Regex.match?(~r/\A#[0-9a-fA-F]{6}\z/, color)
+
+  # The dimmed color of each role of text, with its opacity: the role blended
+  # on its background at the smallest step that keeps the role at its minimums
+  # for a dimmed element. A role under the minimums gets no dimming.
+  defp dimmed(roles) do
+    steps = round(1 / @dim_step)
+
+    for {role, {_slot, on}} <- @roles, on != nil, into: %{} do
+      step =
+        Enum.find(1..steps, steps, fn step ->
+          dimmed_meets?(Color.blend(roles[role], roles[on], step / steps), roles[on])
+        end)
+
+      opacity = step / steps
+      {role, {opacity, Color.blend(roles[role], roles[on], opacity)}}
+    end
+  end
+
+  defp dimmed_meets?(color, background) do
+    Color.contrast(color, background) >= @dimmed_ratio and
+      Color.lightness_contrast(color, background) >= @dimmed_lc
+  end
 
   # The smallest multiple of 0.05 that keeps each dimmed role of text at its
   # minimums. A palette with a role under them gets no dimming.

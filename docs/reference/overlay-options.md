@@ -66,7 +66,7 @@ step specification.
 | Option | Effect |
 | --- | --- |
 | `state: :alert` | The theme draws an outline around the element. |
-| `state: :dim` | The element shows at the dim opacity of the theme, such as 65% of its opacity. |
+| `state: :dim` | Each color of text in the element changes to the dimmed color of its role. An image, an SVG file and an embed show at the dim opacity of the theme. |
 | `set: [x: "-300px", y: "0px"]` | The element moves by that distance. |
 | `set: [scale: 1.5]` | The element changes its size by that factor. |
 | `set: [rotate: "-8deg"]` | The element turns by that angle. |
@@ -105,8 +105,8 @@ key that the theme does not use. The theme of this project uses `x`, `y`, `scale
 
 Two `on` entities can apply at the same step, and each writes its own keys. The element
 then moves, changes its size and turns together. Code keeps the colors of its syntax, and
-`color` changes only the text without a syntax color. A theme can change the level of
-`dim` with the custom property `--dim-opacity`.
+`color` changes only the text without a syntax color. The theme writes the dimmed color of
+each role, such as `--text-dim`, and a deck can replace one in its `css` option.
 
 ![The alert state at step 2](https://raw.githubusercontent.com/rellen/expresso/media/overlay-alert.gif)
 
@@ -136,7 +136,7 @@ then moves, changes its size and turns together. Code keeps the colors of its sy
 
 `dim true` on a `list`, a `table` or a `code` element gives each child the state `dim` from
 the first step of a later child. The newest child then shows in full, and the earlier
-children show at 40%. The option reads the steps of the children, so it works with
+children show in their dimmed colors. The option reads the steps of the children, so it works with
 `reveal` and with an `at` option on each child. A child without steps, such as the header
 of a table, does not dim.
 

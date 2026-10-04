@@ -647,11 +647,11 @@ steps:
 2. Run `mix compile`. `Expresso.Palette.Builtin` adjusts the scheme, and the compile stops
    when a color needs a change of lightness of more than 0.4. Such a scheme cannot be a
    built-in theme. Remove its file.
-3. Add the theme to the table of `docs/reference/theme-option.md`, with its change and its
-   dim opacity. This command writes each row:
+3. Add the theme to the table of `docs/reference/theme-option.md`, with its change and the
+   dim opacities of its text and its comments. This command writes each row:
 
    ```sh
-   mix run -e 'for n <- Expresso.Palette.Builtin.names(), p = Expresso.Palette.Builtin.fetch!(n), do: IO.puts("#{n} #{p.variant} #{Float.round(p.change, 2)} #{p.dim_opacity}")'
+   mix run -e 'for n <- Expresso.Palette.Builtin.names(), p = Expresso.Palette.Builtin.fetch!(n), do: IO.puts("#{n} #{p.variant} #{Float.round(p.change, 2)} #{elem(p.dimmed.text, 0)} #{elem(p.dimmed.code_comment, 0)}")'
    ```
 
 4. Add the still of the theme to "The gallery" of `docs/reference/theme-option.md`.

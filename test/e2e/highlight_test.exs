@@ -14,6 +14,20 @@ defmodule Expresso.E2E.HighlightTest do
     end
   end
 
+  # Line 2 is in focus at step 1, so line 1, a comment, dims.
+  defmodule CommentDeck do
+    use Expresso
+
+    theme :dracula
+
+    slide "comment" do
+      code "elixir" do
+        highlight([2])
+        text "# a comment\nx = 1\n"
+      end
+    end
+  end
+
   # The horizontal offset of the shadow of the bar, the last shadow of each line.
   defp bar_offsets(page) do
     js(page, """
@@ -22,12 +36,15 @@ defmodule Expresso.E2E.HighlightTest do
     """)
   end
 
-  # True for each line that dims.
+  # True for each line that dims: its text has the dimmed color of the text of
+  # the code, and not the color of the text of the code.
   defp dim(page) do
-    js(page, """
+    page
+    |> js("""
     Array.from(document.querySelectorAll(".screen .code .line")).map((line) =>
-      !getComputedStyle(line).filter.includes("opacity(1)"))
+      getComputedStyle(line).color)
     """)
+    |> Enum.map(&(rgb(&1) != "rgb(0, 0, 0)"))
   end
 
   test "the group in focus shows in full with a bar, and each other line dims", %{
@@ -43,5 +60,31 @@ defmodule Expresso.E2E.HighlightTest do
     assert position(page) == "1.2"
     assert dim(page) == [true, true, false, false, true]
     assert Enum.map(bar_offsets(page), &(&1 < 0)) == [false, false, true, true, false]
+  end
+
+  test "a dimmed comment takes the dimmed color of the comments, and its line the dimmed color of the code text",
+       %{page: page, tmp_dir: tmp_dir} do
+    %{dimmed: dimmed, roles: roles} = Expresso.Palette.Builtin.fetch!(:dracula)
+    page = open(page, render(CommentDeck, tmp_dir))
+
+    [[comment, line], [focus_comment, focus_line]] =
+      page
+      |> js("""
+      Array.from(document.querySelectorAll(".screen .code .line")).map((line) => [
+        getComputedStyle(line.querySelector(".c1") || line).color,
+        getComputedStyle(line).color
+      ])
+      """)
+      |> Enum.map(fn pair -> Enum.map(pair, &rgb/1) end)
+
+    assert comment == hex(elem(dimmed.code_comment, 1))
+    assert line == hex(elem(dimmed.code_text, 1))
+    assert focus_line == hex(roles.code_text)
+    assert focus_comment == hex(roles.code_text)
+  end
+
+  defp hex("#" <> hex) do
+    [r, g, b] = for <<pair::binary-2 <- hex>>, do: String.to_integer(pair, 16)
+    "rgb(#{r}, #{g}, #{b})"
   end
 end

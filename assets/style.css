@@ -46,7 +46,11 @@ h2 {
  * draws a line under its text. A deck can set `--goto-color`.
  */
 a.goto {
-  color: var(--goto-color, var(--accent));
+  color: color-mix(
+    in srgb,
+    var(--accent-dim) calc(var(--dimmed) * 100%),
+    var(--goto-color, var(--accent))
+  );
 }
 /*
  * A slide of the present view is only as wide as its content. The number
@@ -255,6 +259,19 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   initial-value: 1;
 }
 /*
+ * The state `dim` sets `--dimmed` to 1, and a `dim` key of `set` sets it to a
+ * part of 1. It inherits, so each element inside a dimmed element is dimmed
+ * too. Each color of text moves from its role to the dimmed color of the
+ * role, such as from `--text` to `--text-dim`. `Expresso.Palette` calculates
+ * each dimmed color at the strongest dimming that keeps the role at 3:1 and
+ * at Lc 30 of APCA on its background.
+ */
+@property --dimmed {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+/*
  * The effect of an element with steps. The reveal rule of a step sets
  * `--shown: 1`, and a hidden element keeps 0. An effect gives the offset, the
  * size or the blur of the hidden element, and the element rule below moves
@@ -383,7 +400,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   margin: 0.2rem;
 }
 .embed-address {
-  color: var(--muted);
+  color: color-mix(
+    in srgb,
+    var(--muted-dim) calc(var(--dimmed) * 100%),
+    var(--muted)
+  );
   overflow-wrap: anywhere;
 }
 .embed-fallback[hidden] {
@@ -487,7 +508,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   min-width: var(--line-number-width, 1ch);
   margin-right: 1.5ch;
   text-align: right;
-  color: var(--code-comment);
+  color: color-mix(
+    in srgb,
+    var(--code-comment-dim) calc(var(--dimmed) * 100%),
+    var(--code-comment)
+  );
   user-select: none;
 }
 .columns {
@@ -616,32 +641,65 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
  * such an element has the `data-el` or the `data-effect` attribute, so a
  * different element gets no filter and keeps the color of its parent.
  *
- * `--opacity` and the state `dim` change a filter, and not `opacity`. The
- * reveal rule of a step sets `opacity: 1`, so a change of `opacity` stays
- * hidden. The filter multiplies the two values, and the fade of `at` then
- * works as before. The theme gives `--dim-opacity`, the strongest dimming that
- * keeps each color of text at 3:1 and at Lc 30 of APCA on its background.
- * The blur of the effect `blur` is in the same filter.
+ * `--opacity` changes a filter, and not `opacity`. The reveal rule of a step
+ * sets `opacity: 1`, so a change of `opacity` stays hidden. The filter
+ * multiplies the two values, and the fade of `at` then works as before. The
+ * blur of the effect `blur` is in the same filter.
+ *
+ * The state `dim` does not change the filter. It sets `--dim` on the element
+ * and `--dimmed` on the element and on each element inside it, and the color
+ * of the element moves to the dimmed color of the text. `--dim-color`
+ * gives that color: `--text-dim` on a slide, and `--code-text-dim` in code.
+ * A rule of the theme for a role, such as a color of the syntax, moves to the
+ * dimmed color of its own role.
  *
  * `--color` has no registration, so it has no initial value. Without the
  * property, the element gets the color of its parent, as an element without
- * the rule does.
+ * the rule does. `currentColor` in the property `color` is the color of the
+ * parent.
  */
 [data-el],
 [data-effect] {
   filter: blur(calc((1 - var(--shown)) * var(--enter-blur)))
-    opacity(
-      calc(var(--opacity) * (1 - var(--dim, 0) * (1 - var(--dim-opacity))))
-    );
+    opacity(var(--opacity));
 }
 [data-el] {
-  color: var(--color, inherit);
+  color: color-mix(
+    in srgb,
+    var(--dim-color, var(--text-dim))
+      calc(max(var(--dim, 0), var(--dimmed)) * 100%),
+    var(--color, currentColor)
+  );
   transition:
     opacity var(--dur) var(--ease),
     transform var(--dur) var(--ease),
     outline-width var(--dur) var(--ease),
     filter var(--dur) var(--ease),
-    color var(--dur) var(--ease);
+    color var(--dur) var(--ease),
+    --dimmed var(--dur) var(--ease);
+}
+/*
+ * A graphic has colors that the palette does not know: an image, an SVG file
+ * and the page of an embed. A graphic inside a dimmed element dims with the
+ * opacity `--dim-opacity` of the theme, the strongest opacity that keeps each
+ * role of text at 3:1 and at Lc 30. The rule applies only on a slide and on a
+ * page of the handout view, so the presenter keeps its own icons.
+ */
+:is(.slide, .handout-page) :is(img, svg, iframe) {
+  filter: opacity(calc(1 - var(--dimmed) * (1 - var(--dim-opacity))));
+}
+/*
+ * A part of a diagram is in an SVG file, and its colors are the colors of the
+ * file. It dims with `--dim-opacity` when it has the state `dim` itself. A
+ * part inside a dimmed diagram does not dim again, because the SVG dims. The
+ * color of the part changes only with `set: [color: ...]`.
+ */
+svg [data-el] {
+  color: var(--color, currentColor);
+  filter: blur(calc((1 - var(--shown)) * var(--enter-blur)))
+    opacity(
+      calc(var(--opacity) * (1 - var(--dim, 0) * (1 - var(--dim-opacity))))
+    );
 }
 /*
  * An element with an overlay keeps `visible` until the end of its fade out,

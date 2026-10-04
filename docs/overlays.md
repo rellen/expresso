@@ -657,10 +657,12 @@ the transition is on `color`, which CSS calculates as a color. Only an element w
 entity has this rule and this transition. A child with its own transition of an inherited
 property starts a new transition at each frame of its parent, and it arrives late.
 
-`--opacity` and the state `dim` change `filter: opacity(...)`, and not `opacity`. The
+`--opacity` changes `filter: opacity(...)`, and not `opacity`. The
 reveal rule of a step sets `opacity: 1`, and that rule has a higher specificity than the
 rule of the theme. The filter multiplies the two values, so the fade of `at` works as
-before. The theme gives `--dim-opacity`, the strongest dimming that keeps each color of text at 3:1 and at Lc 30 of APCA on its background. `docs/reference/theme-option.md` gives the value of each theme.
+before. The state `dim` changes the colors of the text, and not the filter:
+`docs/dim-state.md` gives the design. An image, an SVG file and an embed still dim with
+`filter: opacity(...)` and `--dim-opacity`, because the theme does not know their colors.
 
 The `@property` at-rule became available in all major browsers in July 2024. Chrome 85,
 Safari 16.4 and Firefox 128 support it. The floor of this design is that date, and not

@@ -41,41 +41,44 @@ holds the scheme files unchanged, and `assets/themes/LICENSE` gives their MIT li
 Most schemes have colors under the minimums, frequently the color of the comments.
 `Expresso.Palette.Builtin` changes the lightness of each such color until it meets its
 minimum. The hue and each background stay the same. The column "Change" gives the largest
-change of lightness in OKLab, from 0 to 1. The column "Dim" gives the opacity of a dimmed
-element. It is the strongest dimming that keeps each color of text at its minimums for a
-dimmed element. This includes each color of code, such as the color of a comment. A dark
-theme dims to a value from 0.6 to 0.65, and a light theme to a value from 0.75 to 0.8.
-"The contrast of a theme" in `docs/architecture.md` tells why a light theme dims less.
+change of lightness in OKLab, from 0 to 1.
 
-| Name | Theme | Variant | Change | Dim |
-| --- | --- | --- | --- | --- |
-| `:ayu_dark` | Ayu Dark | dark | 0.36 | 0.65 |
-| `:ayu_mirage` | Ayu Mirage | dark | 0.35 | 0.65 |
-| `:catppuccin_frappe` | Catppuccin Frappé | dark | 0.33 | 0.6 |
-| `:catppuccin_macchiato` | Catppuccin Macchiato | dark | 0.35 | 0.65 |
-| `:catppuccin_mocha` | Catppuccin Mocha | dark | 0.36 | 0.65 |
-| `:default` | Default | light | 0.07 | 0.8 |
-| `:dracula` | Dracula | dark | 0.22 | 0.65 |
-| `:everforest` | Everforest | dark | 0.16 | 0.6 |
-| `:everforest_dark_hard` | Everforest Dark Hard | dark | 0.15 | 0.6 |
-| `:github` | GitHub | light | 0.11 | 0.8 |
-| `:github_dark` | GitHub Dark | dark | 0.21 | 0.65 |
-| `:gruvbox_dark_hard` | Gruvbox dark, hard | dark | 0.32 | 0.65 |
-| `:gruvbox_dark_medium` | Gruvbox dark, medium | dark | 0.32 | 0.6 |
-| `:kanagawa` | Kanagawa | dark | 0.31 | 0.65 |
-| `:material` | Material | dark | 0.28 | 0.6 |
-| `:monokai` | Monokai | dark | 0.25 | 0.65 |
-| `:one_light` | One Light | light | 0.17 | 0.8 |
-| `:rose_pine` | Rosé Pine | dark | 0.24 | 0.65 |
-| `:rose_pine_dawn` | Rosé Pine Dawn | light | 0.20 | 0.8 |
-| `:rose_pine_moon` | Rosé Pine Moon | dark | 0.25 | 0.65 |
-| `:solarized_dark` | Solarized Dark | dark | 0.22 | 0.65 |
-| `:solarized_light` | Solarized Light | light | 0.14 | 0.8 |
-| `:tokyo_night_dark` | Tokyo Night Dark | dark | 0.35 | 0.65 |
-| `:tokyo_night_light` | Tokyo Night Light | light | 0.27 | 0.75 |
-| `:tokyo_night_storm` | Tokyo Night Storm | dark | 0.35 | 0.65 |
-| `:tomorrow_night` | Tomorrow Night | dark | 0.16 | 0.65 |
-| `:zenburn` | Zenburn | dark | 0.27 | 0.6 |
+A dimmed element shows each color of its text in the dimmed color of the role. The dimmed
+color is the role at the strongest dimming that keeps it at 3:1 and at Lc 30 on its
+background, so each role dims as far as its own contrast lets it. The columns "Text dim"
+and "Comment dim" give the opacity of the dimmed color of the text and of the comments. A
+lower value dims more. "The contrast of a theme" in `docs/architecture.md` gives the
+formulas.
+
+| Name | Theme | Variant | Change | Text dim | Comment dim |
+| --- | --- | --- | --- | --- | --- |
+| `:ayu_dark` | Ayu Dark | dark | 0.36 | 0.5 | 0.65 |
+| `:ayu_mirage` | Ayu Mirage | dark | 0.35 | 0.55 | 0.6 |
+| `:catppuccin_frappe` | Catppuccin Frappé | dark | 0.33 | 0.55 | 0.6 |
+| `:catppuccin_macchiato` | Catppuccin Macchiato | dark | 0.35 | 0.5 | 0.65 |
+| `:catppuccin_mocha` | Catppuccin Mocha | dark | 0.36 | 0.5 | 0.65 |
+| `:default` | Default | light | 0.07 | 0.45 | 0.7 |
+| `:dracula` | Dracula | dark | 0.22 | 0.45 | 0.65 |
+| `:everforest` | Everforest | dark | 0.16 | 0.55 | 0.6 |
+| `:everforest_dark_hard` | Everforest Dark Hard | dark | 0.15 | 0.55 | 0.6 |
+| `:github` | GitHub | light | 0.11 | 0.6 | 0.8 |
+| `:github_dark` | GitHub Dark | dark | 0.21 | 0.55 | 0.65 |
+| `:gruvbox_dark_hard` | Gruvbox dark, hard | dark | 0.32 | 0.55 | 0.6 |
+| `:gruvbox_dark_medium` | Gruvbox dark, medium | dark | 0.32 | 0.55 | 0.6 |
+| `:kanagawa` | Kanagawa | dark | 0.31 | 0.5 | 0.65 |
+| `:material` | Material | dark | 0.28 | 0.4 | 0.6 |
+| `:monokai` | Monokai | dark | 0.25 | 0.45 | 0.6 |
+| `:one_light` | One Light | light | 0.17 | 0.55 | 0.8 |
+| `:rose_pine` | Rosé Pine | dark | 0.24 | 0.5 | 0.65 |
+| `:rose_pine_dawn` | Rosé Pine Dawn | light | 0.20 | 0.65 | 0.8 |
+| `:rose_pine_moon` | Rosé Pine Moon | dark | 0.25 | 0.5 | 0.6 |
+| `:solarized_dark` | Solarized Dark | dark | 0.22 | 0.65 | 0.6 |
+| `:solarized_light` | Solarized Light | light | 0.14 | 0.75 | 0.8 |
+| `:tokyo_night_dark` | Tokyo Night Dark | dark | 0.35 | 0.65 | 0.65 |
+| `:tokyo_night_light` | Tokyo Night Light | light | 0.27 | 0.65 | 0.75 |
+| `:tokyo_night_storm` | Tokyo Night Storm | dark | 0.35 | 0.6 | 0.65 |
+| `:tomorrow_night` | Tomorrow Night | dark | 0.16 | 0.55 | 0.6 |
+| `:zenburn` | Zenburn | dark | 0.27 | 0.5 | 0.6 |
 
 A dark theme needs the largest change, because most dark schemes give their comments a low
 contrast. The contrast ratio of WCAG is too high for a color on a dark background, and the
@@ -143,7 +146,7 @@ gives a warning for each color under its minimum.
 | Part | WCAG 2.2 | APCA | WCAG criterion |
 | --- | --- | --- | --- |
 | Each text on its background: the slides, the code, the speaker view and the list of keys | 4.5:1 | Lc 60 | 1.4.3 |
-| Each text of a dimmed element, with the dim opacity of the theme, on its background | 3:1 | Lc 30 | 1.4.11 |
+| Each text of a dimmed element, in the dimmed color of its role, on its background | 3:1 | Lc 30 | 1.4.11 |
 | The progress bar, the selected page of the overview and a link | 4.5:1, from the accent | Lc 60, from the accent | 1.4.11 |
 
 Each color must meet both measures. The contrast ratio of WCAG 2.2 gives too high a value
@@ -183,7 +186,8 @@ option of the deck comes after them, so a deck can replace a role.
 | `--code-support` | `base0C` | Built-ins, atoms, escapes and regular expressions |
 | `--code-function` | `base0D` | Functions and headings |
 | `--code-keyword` | `base0E` | Keywords |
-| `--dim-opacity` | – | The opacity of a dimmed element |
+| `--text-dim`, `--code-comment-dim` and one for each other role of text | – | The dimmed color of the role |
+| `--dim-opacity` | – | The opacity of a dimmed image, SVG file and embed |
 
 No role uses `base02`, `base06`, `base07` or `base0F`. A variable keeps the color of the
 text, so a slide of code has fewer colors than an editor.

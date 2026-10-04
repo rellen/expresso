@@ -32,7 +32,7 @@ defmodule Expresso.E2E.ThemeTest do
     """)
   end
 
-  defp rgb("#" <> hex) do
+  defp hex_rgb("#" <> hex) do
     [r, g, b] = for <<pair::binary-2 <- hex>>, do: String.to_integer(pair, 16)
     "rgb(#{r}, #{g}, #{b})"
   end
@@ -46,18 +46,21 @@ defmodule Expresso.E2E.ThemeTest do
 
     page |> open(render(deck(), tmp_dir))
 
-    assert colors(page) ==
+    assert Enum.map(colors(page), &rgb/1) ==
              Enum.map(
                [dracula.background, dracula.text, dracula.code_background, dracula.code_comment],
-               &rgb/1
+               &hex_rgb/1
              )
 
     emulate(page, "print")
 
-    assert [background, _heading, code, comment] = colors_on_paper(page)
+    assert [background, _heading, code, comment] = Enum.map(colors_on_paper(page), &rgb/1)
 
     assert [background, code, comment] ==
-             Enum.map([default.background, default.code_background, default.code_comment], &rgb/1)
+             Enum.map(
+               [default.background, default.code_background, default.code_comment],
+               &hex_rgb/1
+             )
   end
 
   # On paper the screen does not show, so the colors come from the handout.

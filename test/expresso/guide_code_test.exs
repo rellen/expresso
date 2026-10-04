@@ -34,7 +34,7 @@ defmodule Expresso.GuideCodeTest do
     assert deck(code).metadata.theme == :dracula
   end
 
-  test "the table of the theme option holds each built-in theme, with its change and its dim opacity" do
+  test "the table of the theme option holds each built-in theme, with its change and its dim opacities" do
     text = File.read!("docs/reference/theme-option.md")
 
     for name <- Expresso.Palette.Builtin.names(),
@@ -42,7 +42,7 @@ defmodule Expresso.GuideCodeTest do
       change = :erlang.float_to_binary(palette.change, decimals: 2)
 
       row =
-        ~r/^\| `#{inspect(name)}` \| [^|]+ \| #{palette.variant} \| #{change} \| #{palette.dim_opacity} \|$/m
+        ~r/^\| `#{inspect(name)}` \| [^|]+ \| #{palette.variant} \| #{change} \| #{elem(palette.dimmed.text, 0)} \| #{elem(palette.dimmed.code_comment, 0)} \|$/m
 
       assert Regex.match?(row, text), "the row of #{inspect(name)}"
     end

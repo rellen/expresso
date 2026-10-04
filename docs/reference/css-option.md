@@ -60,12 +60,28 @@ A rule of the deck can set or read these custom properties of the theme:
 
 - The timing: `--dur`, `--ease`, `--motion` and `--transition-dur`.
 - The overlays: `--x`, `--y`, `--scale`, `--rotate`, `--opacity`, `--color`, `--alert`,
-  `--dim`, `--dim-opacity` and `--shown`.
+  `--dim`, `--dimmed`, `--dim-opacity` and `--shown`.
 - The parts of the page: `--progress-color`, `--progress-height`, `--slide-number-color`,
   `--slide-number-size`, `--slide-number-right`, `--slide-number-bottom`,
   `--overview-color`, `--pace-behind-color` and `--pace-over-color`.
 - The colors: each role of [the theme option](theme-option.md), such as `--text`,
-  `--accent` and `--code-keyword`. A role that a rule of the deck replaces gets no check
-  of its contrast.
+  `--accent` and `--code-keyword`, and the dimmed color of each role of text, such as
+  `--text-dim`. A role that a rule of the deck replaces gets no check of its contrast.
+
+### A color of your own in a dimmed element
+
+A dimmed element and each element inside it get `--dimmed: 1`. The theme mixes each color
+of text toward its dimmed color with that value. A rule of the deck that gives a color to
+text must do the same, or its text does not dim:
+
+```css
+.part-heading {
+  color: color-mix(
+    in srgb,
+    var(--accent-dim) calc(var(--dimmed) * 100%),
+    var(--accent)
+  );
+}
+```
 
 ![A box that bounces in, a box that drops in, and a marker](https://raw.githubusercontent.com/rellen/expresso/media/overlay-custom.gif)

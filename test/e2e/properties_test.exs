@@ -48,7 +48,8 @@ defmodule Expresso.E2E.PropertiesTest do
   # The computed style of the box, of its text area and of the items. The
   # context asks for reduced motion, so each change is instant.
   defp styles(page) do
-    js(page, """
+    page
+    |> js("""
     (() => {
       const box = document.querySelector(".screen .text-box");
       const items = [...document.querySelectorAll(".screen .item")];
@@ -56,10 +57,14 @@ defmodule Expresso.E2E.PropertiesTest do
         transform: getComputedStyle(box).transform,
         filter: getComputedStyle(box).filter,
         color: getComputedStyle(box.querySelector(".text-area")).color,
-        items: items.map((item) => getComputedStyle(item).filter)
+        items: items.map((item) => [getComputedStyle(item).filter, getComputedStyle(item).color])
       };
     })()
     """)
+    |> Map.update!("color", &rgb/1)
+    |> Map.update!("items", fn items ->
+      Enum.map(items, fn [filter, color] -> [filter, rgb(color)] end)
+    end)
   end
 
   # The last item has no later item, so it has no on entity and no filter.
@@ -70,7 +75,7 @@ defmodule Expresso.E2E.PropertiesTest do
              "transform" => "matrix(1, 0, 0, 1, 0, 0)",
              "filter" => "blur(0px) opacity(1)",
              "color" => "rgb(0, 0, 0)",
-             "items" => ["blur(0px) opacity(1)", "none"]
+             "items" => [["blur(0px) opacity(1)", "rgb(0, 0, 0)"], ["none", "rgb(0, 0, 0)"]]
            }
   end
 
@@ -87,13 +92,27 @@ defmodule Expresso.E2E.PropertiesTest do
   test "an item dims when a later item shows, and shows in full again after a step back", %{
     page: page
   } do
-    # The default theme dims to 0.8, the strongest dimming that keeps each
-    # color of its text at 3:1 and at Lc 30 on its background.
+    # The dimmed item keeps its opacity, and its text takes the dimmed color of
+    # the text of the default theme: black at 0.45 on white, the strongest
+    # dimming that keeps it at 3:1 and at Lc 30.
+    {0.45, dimmed} = Expresso.Palette.Builtin.fetch!(:default).dimmed.text
+
+    [r, g, b] =
+      for <<pair::binary-2 <- String.trim_leading(dimmed, "#")>>, do: String.to_integer(pair, 16)
+
     page |> press("j")
-    assert styles(page)["items"] == ["blur(0px) opacity(0.8)", "none"]
+
+    assert styles(page)["items"] == [
+             ["blur(0px) opacity(1)", "rgb(#{r}, #{g}, #{b})"],
+             ["none", "rgb(0, 0, 0)"]
+           ]
 
     page |> press("k")
-    assert styles(page)["items"] == ["blur(0px) opacity(1)", "none"]
+
+    assert styles(page)["items"] == [
+             ["blur(0px) opacity(1)", "rgb(0, 0, 0)"],
+             ["none", "rgb(0, 0, 0)"]
+           ]
   end
 
   # The transform and the outline of the row and of the wrapper of the part,
