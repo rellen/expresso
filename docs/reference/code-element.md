@@ -79,7 +79,7 @@ shows at each step. Each group is in focus at one step, in the order of the opti
 
 | Step | The lines of the group | Each other line |
 | --- | --- | --- |
-| The step of the group | Full opacity, and a bar in the color `--accent` at the left | Dim, with the dim opacity of the theme |
+| The step of the group | Full opacity, and a bar in the color `--accent` at the left | Each color of the line changes to its dimmed color |
 | A step of no group | Full opacity | Full opacity |
 
 The groups take their steps from the counter of the slide, one step each, as the items of
