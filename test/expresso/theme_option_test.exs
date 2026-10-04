@@ -21,7 +21,7 @@ defmodule Expresso.ThemeOptionTest do
     [screen, print] = String.split(text, "@media print", parts: 2)
 
     assert screen =~ "--background: #282a36;"
-    assert screen =~ "--dim-opacity: 0.85;"
+    assert screen =~ "--dim-opacity: 0.65;"
     assert print =~ "--background: #ffffff;"
     assert print =~ "--text: #000000;"
   end

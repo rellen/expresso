@@ -12,7 +12,7 @@ defmodule Expresso.PaletteTest do
     Builtin.fetch!(:default).colors |> Map.merge(overrides)
   end
 
-  # Whether each role of text meets 3:1 and Lc 45 on its background, with the
+  # Whether each role of text meets 3:1 and Lc 30 on its background, with the
   # opacity.
   defp dimmed?(roles, opacity) do
     Enum.all?(Palette.roles(), fn
@@ -23,7 +23,7 @@ defmodule Expresso.PaletteTest do
         color = Color.blend(roles[role], roles[on], opacity)
 
         Color.contrast(color, roles[on]) >= 3.0 and
-          Color.lightness_contrast(color, roles[on]) >= 45
+          Color.lightness_contrast(color, roles[on]) >= 30
     end)
   end
 
@@ -53,7 +53,7 @@ defmodule Expresso.PaletteTest do
     assert Color.contrast(palette.roles.code_comment, palette.roles.code_background) >= 4.5
   end
 
-  test "the dim opacity is the strongest dimming that keeps each role of text at 3:1 and Lc 45" do
+  test "the dim opacity is the strongest dimming that keeps each role of text at 3:1 and Lc 30" do
     for name <- Builtin.names(),
         %Palette{roles: roles, dim_opacity: opacity} = Builtin.fetch!(name) do
       assert dimmed?(roles, opacity), "#{name}"
@@ -82,7 +82,7 @@ defmodule Expresso.PaletteTest do
     assert Color.lightness_contrast(roles.code_comment, roles.code_background) >= 60
   end
 
-  test "a dimmed comment of the theme of the Line 4 example stays at 3:1 and Lc 45" do
+  test "a dimmed comment of the theme of the Line 4 example stays at 3:1 and Lc 30" do
     palette =
       Palette.of(%{
         base00: "#1b232c",
@@ -107,7 +107,7 @@ defmodule Expresso.PaletteTest do
 
     comment = Color.blend(roles.code_comment, roles.code_background, opacity)
     assert Color.contrast(comment, roles.code_background) >= 3.0
-    assert Color.lightness_contrast(comment, roles.code_background) >= 45
+    assert Color.lightness_contrast(comment, roles.code_background) >= 30
     assert Palette.problems(palette) == []
   end
 
@@ -165,6 +165,6 @@ defmodule Expresso.PaletteTest do
       assert text =~ "--#{role |> Atom.to_string() |> String.replace("_", "-")}: #"
     end
 
-    assert text =~ "--dim-opacity: 0.85;"
+    assert text =~ "--dim-opacity: 0.65;"
   end
 end

@@ -660,7 +660,7 @@ property starts a new transition at each frame of its parent, and it arrives lat
 `--opacity` and the state `dim` change `filter: opacity(...)`, and not `opacity`. The
 reveal rule of a step sets `opacity: 1`, and that rule has a higher specificity than the
 rule of the theme. The filter multiplies the two values, so the fade of `at` works as
-before. The theme gives `--dim-opacity`, the strongest dimming that keeps each color of text at 3:1 and at Lc 45 of APCA on its background. `docs/reference/theme-option.md` gives the value of each theme.
+before. The theme gives `--dim-opacity`, the strongest dimming that keeps each color of text at 3:1 and at Lc 30 of APCA on its background. `docs/reference/theme-option.md` gives the value of each theme.
 
 The `@property` at-rule became available in all major browsers in July 2024. Chrome 85,
 Safari 16.4 and Firefox 128 support it. The floor of this design is that date, and not
