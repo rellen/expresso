@@ -195,12 +195,7 @@ defmodule Expresso.E2E do
   def rgb(color), do: color
 
   # `String.to_float/1` needs a digit before and after the point.
-  defp normal(number) do
-    cond do
-      String.contains?(number, ".") -> number
-      true -> number <> ".0"
-    end
-  end
+  defp normal(number), do: if(String.contains?(number, "."), do: number, else: number <> ".0")
 
   @doc """
   Give the position of the present view, such as `"2.3"`: the number of the
