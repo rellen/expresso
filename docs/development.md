@@ -247,7 +247,7 @@ find this defect.
 ### The checks of a pull request
 
 `.github/workflows/check.yml` runs the checks for a pull request and for a push to `main`.
-The Linux jobs run in parallel, so the slowest of them gives their time:
+The jobs run in parallel on Linux, so the slowest of them gives their time:
 
 - `format`: the formatter.
 - `lint`: the compiler with warnings as errors, Credo, Sobelow, `mix hex.audit`, the check
@@ -259,30 +259,18 @@ The Linux jobs run in parallel, so the slowest of them gives their time:
   runner. Each job makes the binary for its own architecture, so it can run the binary.
   Neither job publishes the binary. `.github/actions/setup-zig` installs Zig, as "Zig in
   the workflow" below tells.
-- `macos`: five tools of `mix check` on an arm64 runner with macOS. It makes the binary for
-  `macos_arm`. Homebrew gives `xz`, and the Homebrew package of GNU coreutils gives
-  `gtimeout`. The job starts only when each Linux job succeeded.
 
 Together they run each tool of `mix check`, the two npm commands, the browser tests and
-the release tests. They make and test the binary for `linux_x86`, `linux_arm` and
-`macos_arm`. No job makes the binary for `macos_x86`.
+the release tests. They make and test the binary for `linux_x86` and `linux_arm`. No job
+makes a binary for macOS.
 
-The Linux jobs do not run `mix check`, because that command runs the tools one after the
-other in one job. The job `macos` runs only the tools that can give a different result on a
-Mac:
+The jobs do not run `mix check`, because that command runs the tools one after the other
+in one job.
 
-```sh
-mix check --only compiler --only ex_unit --only e2e --only release --only release_tests
-```
-
-The Linux jobs already ran the other tools, such as Credo and Dialyzer, and their result
-does not depend on the platform. Therefore the workflow does not show that each tool of
-`mix check` runs on a Mac. Run `mix check` on a Mac to find that out.
-
-The job `macos` needs each Linux job. A macOS runner costs more than a Linux runner, and
-most defects also show on Linux. Therefore `macos` starts only when each Linux job
-succeeded. When a Linux job fails, GitHub skips `macos`, and the last job fails. The time
-of the workflow is the time of the slowest Linux job, plus the time of `macos`.
+No job runs on macOS. A macOS runner costs more than a Linux runner, and most defects also
+show on Linux. To find a defect of the Mac, run `mix check` on a Mac. Until 2026-10-05, the
+job `macos` ran the compiler, the unit tests, the browser tests, the binary for
+`macos_arm` and the release tests on macOS.
 
 A job compiles the project for one environment. Therefore the tools that need the same
 build share one job, and the project compiles two times for the development environment,
@@ -386,9 +374,9 @@ the new lockfile.
 
 ### Zig in the workflow
 
-The jobs `lint`, `test`, `gifs`, `binary` and `macos` get Zig from
+The jobs `lint`, `test`, `gifs` and `binary` get Zig from
 `.github/actions/setup-zig`. The first three jobs compile the GIF encoder of `tools/`, and
-the last two jobs also make the binary. This action uses
+the `binary` jobs also make the binary. This action uses
 the shell and `actions/cache`, and it has no code of its own for Node.js. The jobs used
 `mlugg/setup-zig` before. Its last release, v2.2.1 of 2026-01-19, targets Node.js 20, and
 GitHub gave a warning for each job that used it.
@@ -421,8 +409,8 @@ of more than 1 GB goes, and the job starts a new one.
 The key of the build cache holds the name of the job and `mix.lock`, and a job saves the
 build cache only when no cache has its key. Therefore each job saves it one time for each
 version of the lockfile. A job that does not make the binary has its own key, so its cache
-does not take the place of a cache with the wrapper of Burrito. Only the jobs `binary` and
-`macos` keep the download cache of Burrito.
+does not take the place of a cache with the wrapper of Burrito. Only the `binary` jobs keep
+the download cache of Burrito.
 Until 2026-09-28, the key held the number of the run, so each run saved the build cache.
 Each build adds its payload to the cache, and one run saved 405 MB for `linux_x86` and
 234 MB for `macos_arm`. The build of the wrapper changes only with Burrito, so one save
