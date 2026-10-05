@@ -1,9 +1,8 @@
 # The checks that run for a pull request and for a push to main.
 #
-# The Linux checks run in parallel jobs, so the slowest of them gives their
-# time, and not the sum of the jobs. The job `macos` starts when each Linux job
-# succeeded, because a macOS runner costs more. The list is the list of
-# `CLAUDE.md`, and it covers each tool of `mix check`:
+# The checks run in parallel jobs on Linux, so the slowest of them gives their
+# time, and not the sum of the jobs. The list is the list of `CLAUDE.md`, and
+# it covers each tool of `mix check`:
 #
 # - format: `mix format --check-formatted`
 # - lint: `mix compile --warnings-as-errors`, `mix credo`, `mix sobelow`,
@@ -15,9 +14,9 @@
 #   of the guides and of the README
 # - binary: `mix release expresso_cli_app` for Linux on x86_64 and on
 #   aarch64, and `mix test --only release`, the tests of each binary
-# - macos: the tools of `mix check` that can give a different result on
-#   macOS: the compiler, the unit tests, the browser tests, the binary and the
-#   release tests
+#
+# No job runs on macOS, because a macOS runner costs more than a Linux runner.
+# `docs/development.md` tells how to check the project on a Mac.
 #
 # `.github/workflows/audit.yml` also runs `mix hex.audit` on main each day, so
 # an advisory that Hex publishes after a merge fails a run of main.
@@ -192,8 +191,8 @@ jobs:
   # it after the tests.
   #
   # Each target has its own cache. The two jobs run at the same time, and with
-  # one key only one of them can save its cache. The macOS job makes the binary
-  # of `macos_arm`, and no job makes the binary of `macos_x86`.
+  # one key only one of them can save its cache. No job makes a binary for
+  # macOS.
   binary:
     name: binary (${{ matrix.target }})
     strategy:
@@ -224,40 +223,6 @@ jobs:
       - run: mix test --only release
         env:
           EXPRESSO_BINARY: burrito_out/expresso_cli_app_${{ matrix.target }}
-
-  # `mix check` on macOS, on an arm64 runner, for the tools that can give a
-  # different result on a Mac: the compiler, the unit tests, the browser tests,
-  # the binary and the release tests. The Linux jobs already ran the other
-  # tools, such as Credo and Dialyzer, and their result does not depend on the
-  # platform. `.check.exs` makes the binary of the target `macos_arm`. Homebrew
-  # gives xz for Burrito, and it gives `gtimeout` of GNU coreutils for the
-  # release tests. The job removes the release after the run, so the cache does
-  # not keep it.
-  #
-  # A macOS runner costs more than a Linux runner, and most defects also show
-  # on Linux. Therefore this job needs each Linux job, and it starts only when
-  # each of them succeeded. When a Linux job fails, GitHub skips this job, and
-  # the last job fails.
-  macos:
-    name: macos
-    needs: [format, lint, test, presenter, gifs, binary]
-    runs-on: macos-latest
-    env:
-      HOMEBREW_NO_AUTO_UPDATE: "1"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-playwright
-      - uses: ./.github/actions/setup-elixir
-        with:
-          cache: macos
-      - uses: ./.github/actions/setup-zig
-        with:
-          version: ${{ env.ZIG_VERSION }}
-          cache: macos
-          burrito: "true"
-      - run: brew install xz coreutils
-      - run: mix check --only compiler --only ex_unit --only e2e --only release --only release_tests
-      - run: rm -rf _build/prod/rel
 
   # Put the GIFs of a push to main on the branch `media`, as one commit with no
   # parent. The push replaces the branch, so the branch holds the GIFs of the
@@ -316,7 +281,7 @@ jobs:
   all:
     name: Erlang/OTP 29, Elixir 1.20, Node 24
     if: always()
-    needs: [format, lint, test, presenter, gifs, binary, macos]
+    needs: [format, lint, test, presenter, gifs, binary]
     runs-on: ubuntu-latest
     steps:
       - name: Fail when a check does not succeed

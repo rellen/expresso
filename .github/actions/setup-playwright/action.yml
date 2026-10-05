@@ -33,7 +33,7 @@ runs:
       run: echo "playwright=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
 
     # Playwright keeps the browser in ~/.cache on Linux, and in ~/Library/Caches
-    # on macOS. The job `macos` uses this action too.
+    # on macOS.
     - name: Read the cache of the browser
       uses: actions/cache@v6
       with:
