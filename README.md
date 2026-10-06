@@ -482,6 +482,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Style one slide or one element](docs/how-to/style-one-slide.md)
 - [Move a part of a diagram to another part](docs/how-to/move-a-diagram-part.md)
 - [Show a web page in a slide](docs/how-to/show-a-web-page.md)
+- [Make templates of your own](docs/how-to/make-templates.md)
 
 Reference pages describe each value of an option:
 

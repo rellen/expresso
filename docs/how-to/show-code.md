@@ -43,23 +43,29 @@ file, and a change to the file changes the slide.
 
 Without `lines`, the slide shows each line of the file.
 
-A change above the lines moves them. To find the lines by their text, give the start of
-the first line and the start of the last line:
+In the watch mode, a change to the file renders the deck again. With a range of line
+numbers, a change above the lines moves them, so the slide then shows different lines. To
+keep the same lines, find them by their text.
 
-```elixir
-code "elixir" do
-  src "lib/my_app/server.ex"
-  lines from: "def handle_call(", to: "\n  end"
-end
-```
+## Find the lines by their text
+
+1. Find a text that starts the first line, such as `def handle_call(`. The text must be in
+   the file one time only.
+2. Find a text that ends the excerpt, such as `"\n  end"`. The excerpt ends at the first
+   copy of this text after the first line.
+3. Give the two texts in `lines`:
+
+   ```elixir
+   code "elixir" do
+     src "lib/my_app/server.ex"
+     lines from: "def handle_call(", to: "\n  end"
+   end
+   ```
 
 The compiler gives an error when a text is not in the file, and when the `from` text is in
 it more than one time. Give a longer text, such as `"def handle_call(:get"`, to make it
-one time.
-
-In the watch mode, a change to the file renders the deck again. With a range of line
-numbers, a change above the lines moves them, so the slide then shows different lines. Look
-at the slide after a change to the file.
+one time. A change above the excerpt then does not move it. The example in
+[Show the whole code first](#show-the-whole-code-first) uses this option.
 
 ## Show code from the project of the deck
 
@@ -142,22 +148,40 @@ code "elixir" do
 end
 ```
 
-The first group is in focus at the first step of the code. To show the whole code first,
-write `whole_first true`:
-
-```elixir
-code "elixir" do
-  src "lib/my_app/server.ex"
-  lines 40..58
-  highlight [40..44, 45..52, 53..58]
-  whole_first true
-end
-```
-
-The code then takes one step with no group in focus, as a `pause()` in front of it does.
-
 Use `reveal` to show new lines at each step, and `highlight` to point at lines that the
 audience already sees. A code element takes one of the two options.
+
+## Show the whole code first
+
+The first group of `highlight` is in focus at the first step of the code. To show the
+whole code in full color first, write `whole_first true`. The code then takes one step
+with no group in focus, as a `pause()` in front of it does.
+
+This deck shows the function `handle_call/3` of the file
+`examples/animations/counter.ex`. It finds the lines by their text, and it puts line 13,
+then line 14, in focus:
+
+```elixir
+defmodule Examples.CodeWholeFirst do
+  use Expresso
+
+  slide "the counter" do
+    heading "The counter"
+
+    code "elixir" do
+      src "examples/animations/counter.ex"
+      lines from: "def handle_call(", to: "\n  end"
+      line_numbers true
+      highlight [13, 14]
+      whole_first true
+    end
+  end
+end
+
+Examples.CodeWholeFirst
+```
+
+![The whole function shows at step 1, then line 13 and line 14 come into focus](https://raw.githubusercontent.com/rellen/expresso/media/code-whole-first.gif)
 
 ## Make sure that the lines fit
 
