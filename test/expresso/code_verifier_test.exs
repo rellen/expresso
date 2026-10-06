@@ -4,6 +4,7 @@ defmodule Expresso.CodeVerifierTest do
   import ExUnit.CaptureIO
 
   alias Expresso.Builder
+  alias Expresso.CodeVerifier
   alias Expresso.Highlight
 
   defp compile(name, lang) do
@@ -33,10 +34,16 @@ defmodule Expresso.CodeVerifierTest do
     assert output =~ "The languages with a lexer are: " <> Enum.join(Highlight.languages(), ", ")
   end
 
+  # The standard error of the VM is shared by the tests that run at the same
+  # time, so this test asks the verifier for its result.
   test "a language with a lexer, and no language, compile with no warning" do
-    assert compile(Elixir, "elixir") == ""
-    assert compile(Plain, nil) == ""
-    assert [_slide] = Expresso.parse(__MODULE__.Plain).slides
+    for {name, lang} <- [{Elixir, "elixir"}, {Plain, nil}] do
+      compile(name, lang)
+      module = Module.concat(__MODULE__, name)
+
+      assert CodeVerifier.verify(module.spark_dsl_config()) == :ok
+      assert [_slide] = Expresso.parse(module).slides
+    end
   end
 
   test "a deck of the builder gives the same warning" do
