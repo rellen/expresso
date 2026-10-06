@@ -180,10 +180,13 @@ Write an option in the deck to apply it to each slide:
 | `css "deck.css"` | A style sheet, or the path of one. It applies after the theme. |
 | `effect`, `speed`, `easing` | The animation of each overlay. See `docs/how-to/animate-elements.md`. |
 | `template MyDeckTemplate` | A module that makes the header and the footer. See [the template option](docs/reference/template-option.md). |
+| `slide_template MySlideTemplate` | A module that makes the body of each slide. |
 | `theme :dracula` | The colors of the slides and of the code. Each built-in theme meets the contrast minimums of WCAG. See [the theme option](docs/reference/theme-option.md). |
 
-A slide takes `transition`, `handout`, `effect`, `speed`, `easing` and `template` too. An option on a
-slide replaces the option of the deck for that slide.
+A slide takes `transition`, `handout`, `effect`, `speed` and `easing` too. An option on a
+slide replaces the option of the deck for that slide. The `template` option of a slide
+replaces `slide_template`, and its `meta` option gives values of your own to the
+templates.
 
 ## Present a deck
 

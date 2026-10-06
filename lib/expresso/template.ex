@@ -14,10 +14,15 @@ defmodule Expresso.Template do
 
   @doc """
   Render a slide template
+
+  The function reads the template from `slide.metadata[:template]`, then from
+  `deck.metadata[:slide_template]`. The default value is `{:builtins, :default}`.
   """
   @spec render_slide_template(assigns :: Keyword.t() | map()) :: term()
   def render_slide_template(assigns) do
-    template = assigns[:slide].metadata[:template] || {:builtins, :default}
+    template =
+      assigns[:slide].metadata[:template] || slide_template(assigns[:deck]) ||
+        {:builtins, :default}
 
     assigns = Expresso.Slide.get_assigns(assigns[:slide])
 
@@ -48,6 +53,9 @@ defmodule Expresso.Template do
   defp deck_template(%Expresso.Deck{metadata: %{template: template}}), do: template
 
   defp deck_template(_deck), do: {:builtins, :default}
+
+  defp slide_template(%Expresso.Deck{metadata: %{slide_template: template}}), do: template
+  defp slide_template(_deck), do: nil
 
   defp do_render_template(module, assigns) do
     apply(module, :render, [assigns])

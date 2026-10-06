@@ -8,11 +8,13 @@ slide.
 
 | Place | Default | Effect |
 | --- | --- | --- |
-| The deck | `{:builtins, :default}` | The header and the footer of each slide. |
-| A slide | `{:builtins, :default}` | The body of this slide. |
+| `template` of the deck | `{:builtins, :default}` | The header and the footer of each slide. |
+| `slide_template` of the deck | `{:builtins, :default}` | The body of each slide without a `template` option. |
+| `template` of a slide | The `slide_template` of the deck | The body of this slide. |
 
-`Expresso.Builder` takes the same option, such as `deck(slides, template: MyDeckTemplate)`
-and `slide("first", template: MySlideTemplate)`.
+`Expresso.Builder` takes the same options, such as
+`deck(slides, template: MyDeckTemplate, slide_template: MySlideTemplate)` and
+`slide("first", template: MySlideTemplate)`.
 
 ## The values
 
@@ -36,7 +38,7 @@ defmodule MyDeckTemplate do
   def header(assigns) do
     temple do
       div class: "my-header" do
-        @deck.name
+        Keyword.get(@slide.metadata[:meta] || [], :section, @deck.name)
       end
     end
   end
@@ -51,8 +53,9 @@ defmodule MyDeckTemplate do
 end
 ```
 
-The default deck template writes the name of the deck in the header, and its footer is
-empty. The `slide_numbers` option writes the number of the slide next to the footer of
+This header writes the section of the slide from the `meta` option, or the name of the
+deck. The default deck template writes the name of the deck in the header, and its footer
+is empty. The `slide_numbers` option writes the number of the slide next to the footer of
 each deck template.
 
 ## A slide template
@@ -79,10 +82,19 @@ end
 `@metadata` holds the options of the slide, such as `:heading` and `:notes`. The default
 slide template writes the heading, then the elements.
 
+## Values of your own
+
+The `meta` option of a slide takes a keyword list of your own values, such as
+`meta section: "Part 1"`. Each template reads it from the metadata: a slide template from
+`@metadata[:meta]`, and a deck template from `@slide.metadata[:meta]`. The values stay
+under the key `:meta`, so a value cannot replace an option of Expresso. A slide without
+the option has no key `:meta`.
+
 ## Use the templates
 
-Give the deck template to the deck, and give the slide template to each slide that uses it.
-A slide without the option uses the built-in slide template:
+Give the deck template to the deck with `template`, and the slide template of each slide
+with `slide_template`. The `template` option of a slide replaces the slide template for
+that slide:
 
 ```elixir
 defmodule MyDeck do
@@ -90,19 +102,22 @@ defmodule MyDeck do
 
   name "my deck"
   template MyDeckTemplate
+  slide_template MySlideTemplate
 
   slide "first" do
     heading "Hello"
-    template MySlideTemplate
+    meta section: "Part 1"
 
     text_box do
-      text_area(text: "A slide with my template")
+      text_area(text: "A slide with my slide template")
     end
   end
 
   slide "second" do
+    template {:builtins, :default}
+
     text_box do
-      text_area(text: "A slide with the built-in template")
+      text_area(text: "A slide with the built-in slide template")
     end
   end
 end

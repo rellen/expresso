@@ -124,7 +124,7 @@ defmodule Expresso.Renderer do
       end
 
       div style: "width: 100%; flex-grow: 1; display: flex; justify-content: center;" do
-        c(&Expresso.Template.render_slide_template/1, slide: @slide)
+        c(&Expresso.Template.render_slide_template/1, deck: @deck, slide: @slide)
       end
 
       # The number of the slide goes into the row of the footer, so a page of
