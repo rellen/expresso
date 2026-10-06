@@ -53,19 +53,41 @@ a.goto {
   );
 }
 /*
- * A slide of the present view is only as wide as its content. The number
- * then uses the corner of the window. The other slides do not show, so their
- * numbers do not show.
+ * The number of a slide of the present view uses the corner of the window.
+ * The other slides do not show, so their numbers do not show.
  */
 .screen .slide-number {
   position: fixed;
 }
+/*
+ * A slide of the present view takes the full width of the window, and a page
+ * of the handout view takes the full width of the page. A `columns` element
+ * then divides that width, and not the width of the content.
+ *
+ * `--slide-padding` is the space between the edge and the content. A theme or
+ * the `css` option of a deck can change it.
+ */
+:root {
+  --slide-padding: 0 1rem;
+}
+.screen > .slide {
+  width: 100%;
+}
 .slide-body {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+  padding: var(--slide-padding);
 }
 .slide-heading-container {
   flex-grow: 0;
+}
+/* `:where` gives no weight to the container, so a rule `h1` of a deck wins. */
+:where(.slide-heading-container) h1 {
+  margin: 0.5rem 0;
+  text-align: center;
 }
 .slide-main {
   flex-grow: 1;
@@ -466,6 +488,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .spacer {
   flex-grow: 1;
 }
+/*
+ * A code element that is alone in its parent grows, and its code stays in the
+ * center. Code elements that share a parent do not grow, and their code
+ * starts at the left edge of the parent, so the lines of each one align.
+ */
 .code {
   flex-grow: 1;
   display: flex;
@@ -473,6 +500,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   justify-content: center;
   align-items: center;
   min-width: 0;
+}
+.code:has(~ .code),
+.code ~ .code {
+  flex-grow: 0;
+  align-items: flex-start;
 }
 .code pre {
   margin: 0;

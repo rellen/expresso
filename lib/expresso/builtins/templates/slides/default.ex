@@ -2,7 +2,9 @@ defmodule Expresso.Builtins.Templates.Slides.Default do
   @moduledoc """
   The default slide template
 
-  It gives the heading of a slide and the elements of a slide.
+  It gives the heading of a slide and the elements of a slide. The style
+  sheet gives the margin and the alignment of the heading, so a rule of the
+  `css` option of a deck can change them.
   """
 
   use Expresso.Template
@@ -16,7 +18,7 @@ defmodule Expresso.Builtins.Templates.Slides.Default do
       div class: "slide-body" do
         if heading = Map.get(@metadata, :heading) do
           div class: "slide-heading-container" do
-            h1 style: "margin: 0.5rem 0; text-align: center" do
+            h1 do
               heading
             end
           end

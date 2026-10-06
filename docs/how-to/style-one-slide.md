@@ -127,3 +127,19 @@ slide "second listing" do
   # ...
 end
 ```
+
+## Change the heading or the space at the sides
+
+The style sheet gives the heading its place in the center, and a rule `h1` of the deck
+replaces it. `--slide-padding` gives the space between the edge of a slide and its
+content:
+
+```elixir
+css """
+h1 { text-align: left; }
+:root { --slide-padding: 0 2rem; }
+"""
+```
+
+To change only some slides, put the class of those slides in front, such as
+`.dense h1 { text-align: left; }`.

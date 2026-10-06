@@ -535,6 +535,13 @@ The class `.screen` gives the container `height: 100vh`, and each `section` gets
 a percentage height cannot resolve against a minimum height. With `height: 100%` on the
 container, each slide takes the height of its content only.
 
+A slide of the present view takes the full width of the window, and its `.slide-body`
+takes the full width of the slide. A page of the handout view does the same in the width of
+the page. A `columns` element thus divides the width of the window, and not the width of
+its content. The custom property `--slide-padding` gives the space between the edge and the
+content, `0 1rem` by default. The default slide template writes the heading with no inline
+style, so a rule `h1` of the `css` option can align it.
+
 ## The templates
 
 A template makes the HTML for a part of the document. There are two kinds.
@@ -720,7 +727,7 @@ package for each of these languages:
 - C and Rust
 - diff
 
-Without a lexer for the language, the fragment is the escaped text. `Expresso.Highlight`
+Without a lexer for the language, the fragment is one `span` with the escaped text. `Expresso.Highlight`
 writes a rule for each token class, and the renderer writes them into the document in
 their own `style` element. Each rule reads a role of the theme, such as `--code-keyword`,
 so the code gets the colors of the theme.
@@ -900,8 +907,7 @@ the row of the footer, after the footer of the deck template. The number therefo
 with each deck template. Slide 1 gets no number, because it is usually the title slide.
 The default deck template gives an empty footer, so a deck does not show two numbers.
 
-In the present view, the style sheet puts the number in the corner of the window. A slide
-there is only as wide as its content.
+In the present view, the style sheet puts the number in the corner of the window.
 
 ### The transformer and the verifiers
 
@@ -1328,9 +1334,12 @@ gives what it finds. These are the reasons for its design:
   because the place depends on the fonts, the style sheet and the size of the window. The
   compiler and the binary have no browser engine. A headless Chromium can still run the
   check with no window, so a continuous integration job can use it.
-- **It measures the window, and not the slide.** A slide of the present view is as large
-  as its content, so content past the edge of the window makes the slide larger too. The
-  window is the part that the audience sees.
+- **It measures the window, and not the slide.** Content past the edge of the window can
+  make the slide larger too. The window is the part that the audience sees.
+- **It measures the text, and not the box.** A text box is as wide as the slide. When it
+  moves, its box goes past an edge, and its text can stay in the window. The check
+  therefore measures the text and the content of each element, such as an `img` or a
+  `pre`.
 - **It sets the time of each animation to zero.** The check reads the final place of each
   element at each step. With an animation, the check would read a place during the
   animation.

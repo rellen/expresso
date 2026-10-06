@@ -127,4 +127,28 @@ defmodule Expresso.E2E.LayoutCheckTest do
     assert result["problems"] == []
     assert result["layout"] == "ok"
   end
+
+  # The size of the GIFs of the guides, of the README and of the themes.
+  test "each example deck fits a window of 1280 × 720", %{browser: browser, tmp_dir: tmp_dir} do
+    {:ok, context} =
+      Browser.new_context(browser.guid,
+        timeout: 10_000,
+        viewport: %{width: 1280, height: 720},
+        reduced_motion: "reduce"
+      )
+
+    on_exit(fn -> BrowserContext.close(context.guid, timeout: 10_000) end)
+    {:ok, page} = BrowserContext.new_page(context.guid, timeout: 10_000)
+
+    decks = Mix.Tasks.Expresso.Gifs.examples() |> Enum.map(& &1.deck) |> Enum.uniq()
+
+    problems =
+      for deck <- decks,
+          {value, _bindings} = Code.eval_file(deck),
+          problem <-
+            page |> open(render(value, tmp_dir) <> "?check") |> report() |> Map.fetch!("problems"),
+          do: {deck, problem}
+
+    assert problems == []
+  end
 end
