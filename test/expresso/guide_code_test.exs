@@ -54,4 +54,22 @@ defmodule Expresso.GuideCodeTest do
 
     assert [%{metadata: %{max_step: 4}}] = deck(code).slides
   end
+
+  @tag :tmp_dir
+  test "the deck of the guide to code from the project of the deck renders from another directory",
+       %{tmp_dir: tmp_dir} do
+    [code] =
+      "docs/how-to/show-code.md" |> blocks() |> Enum.filter(&(&1 =~ "__DIR__"))
+
+    lines = Enum.map_join(1..60, &"# line #{&1}\n")
+    File.mkdir_p!(Path.join(tmp_dir, "talk"))
+    File.mkdir_p!(Path.join(tmp_dir, "lib/my_app"))
+    File.write!(Path.join(tmp_dir, "lib/my_app/server.ex"), lines)
+    File.write!(Path.join(tmp_dir, "talk/deck.exs"), String.replace(code, ~r/^   /m, ""))
+
+    assert {:ok, html} = Expresso.render_file(Path.join(tmp_dir, "talk/deck.exs"))
+    assert html =~ "# line 40"
+    assert html =~ "# line 58"
+    refute html =~ "# line 59"
+  end
 end
