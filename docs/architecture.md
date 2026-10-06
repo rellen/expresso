@@ -555,7 +555,9 @@ A slide template gives the body of a slide. It has a `render/1` function.
 `Expresso.Template` selects a template from the metadata. A slide template comes from
 `slide.metadata[:template]`, then from `deck.metadata[:slide_template]`, and a deck
 template comes from `deck.metadata[:template]`. The default value of each is
-`{:builtins, :default}`. The private function
+`{:builtins, :default}`. The `meta` option of a slide goes into `slide.metadata[:meta]`,
+and not into the metadata itself, so a value of the user cannot replace a key that
+Expresso reads. The private function
 `module_from_template_definition/2` maps this value to a module name.
 
 The value takes one of two forms. The tuple `{:builtins, name}` selects a built-in template.

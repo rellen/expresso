@@ -2,7 +2,7 @@
 
 The `template` option selects a template, which makes the HTML of a part of each slide. A
 deck template makes the header and the footer. A slide template makes the body of the
-slide.
+slide. For the steps, see [Make templates of your own](../how-to/make-templates.md).
 
 ## Where you write it
 
@@ -90,11 +90,12 @@ The `meta` option of a slide takes a keyword list of your own values, such as
 under the key `:meta`, so a value cannot replace an option of Expresso. A slide without
 the option has no key `:meta`.
 
-## Use the templates
+## A deck with the templates
 
-Give the deck template to the deck with `template`, and the slide template of each slide
+The deck gives the deck template with `template`, and the slide template of each slide
 with `slide_template`. The `template` option of a slide replaces the slide template for
-that slide:
+that slide. In this deck, the first slide uses `MySlideTemplate`, and the second slide
+uses the built-in slide template:
 
 ```elixir
 defmodule MyDeck do
@@ -125,8 +126,8 @@ end
 
 ## Rules
 
-- The template modules must compile before the deck renders. Put them in the same script
-  as the deck, in front of the deck.
+- The template modules must compile before the deck renders. A module in the same script
+  as the deck, in front of the deck, meets this rule.
 - `Expresso.load_templates/0` compiles each file in `./priv/templates/decks/` and in
   `./priv/templates/slides/` before a render. A module in one of these files is available
   as a template.

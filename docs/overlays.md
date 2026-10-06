@@ -373,7 +373,8 @@ The transformer runs one time for each slide. It does these operations:
 1. Give `at [from: :next]` to each element at the level of the slide that has no `at`
    option, when the slide has the `auto_reveal` option.
 2. Read the elements of the slide in document order.
-3. Increment the counter at each `pause` entity.
+3. Increment the counter at each `pause` entity, and after the `on` entities of a code
+   element with `whole_first`.
 4. Replace each `+` with the current value of the counter, and increment the counter.
 5. Expand each specification into an explicit list of step numbers.
 6. Write the maximum step number into `slide.metadata`.
@@ -384,6 +385,11 @@ the counter. It also fixes the maximum step number of the slide.
 
 An open specification, such as `[from: 2]`, needs the maximum step number of the slide.
 Therefore the transformer expands the open specifications after step 5 finds that number.
+
+In step 3, `whole_first` gives a code element with `highlight` one step with no group in
+focus. The step is the same as a `pause` in front of the element, but it stays with the
+element when the element moves in the deck. `Expresso.Element.Code.lead/1` gives the
+number of the steps.
 
 Step 7 is necessary because the renderer renders each element of a slide. A `pause`
 entity holds no content, and it has no render function. The transformer removes the
