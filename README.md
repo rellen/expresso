@@ -427,6 +427,25 @@ the version of the release. A later binary of the same version runs that install
 and not its own. Therefore change the version in `mix.exs` for each binary that you give
 to other users. `<binary> maintenance uninstall` removes the installed release.
 
+### Render a deck of another project
+
+`mix expresso` runs only in the project of Expresso. A deck in another project uses the
+binary, which needs no Elixir:
+
+1. Make the binaries, as above. `burrito_out/` then holds one binary for each computer,
+   such as `burrito_out/expresso_cli_app_linux_x86`. `BURRITO_TARGET=linux_x86` in front
+   of the command makes only that binary.
+2. Copy the binary of your computer to a directory on your path, such as `~/.local/bin`.
+3. Render the deck from the directory of your project:
+
+   ```sh
+   expresso_cli_app_linux_x86 talk/deck.exs talk/deck.html
+   ```
+
+A relative path in the deck, such as the `src` of a code element, is relative to the
+working directory. To give each path from the deck file, see "Show code from the project of
+the deck" in [Show code on a slide](docs/how-to/show-code.md).
+
 ## Develop
 
 ```sh
