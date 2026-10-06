@@ -183,7 +183,8 @@ the theme gives code_comment a contrast of 1.28:1, and WCAG asks for 4.5:1. The 
   opacity of the theme. It passes when each role of text passes.
 
 `Expresso.Palette.suggestions/1` returns the same colors, and `Expresso.Palette.problems/1`
-returns each role that fails.
+returns each role that fails. For the steps, see
+[Use colors of your own](../how-to/use-colors-of-your-own.md).
 
 ## The roles
 

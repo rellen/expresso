@@ -78,7 +78,9 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "overlay-easing", deck: "overlay_easing.exs", actions: ["j"]},
     %{name: "overlay-custom", deck: "overlay_custom.exs", actions: ["j", "j", "j"]},
     %{name: "code-whole-first", deck: "code_whole_first.exs", actions: ["j", "j"]},
-    %{name: "template-section", deck: "template_section.exs", actions: ["j", "j"]}
+    %{name: "template-section", deck: "template_section.exs", actions: ["j", "j"]},
+    %{name: "embed-video", deck: "embed_video.exs", actions: ["p"]},
+    %{name: "theme-map", deck: "theme_map.exs", actions: ["j"]}
   ]
 
   # The examples of "Present a deck" in README.md. The tour deck has ten

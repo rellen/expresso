@@ -65,6 +65,32 @@ The video starts when its slide shows, and it plays again from the start at the 
 browser starts a video automatically only when it has no sound, so `autoplay` needs
 `muted`. The handout view and paper show the screenshot.
 
+The deck below shows a video in this way. The command of step 3 made
+`examples/animations/clip.html` from `examples/animations/clip.webm`, and
+`examples/animations/clip.png` is a frame of the video. The key `p` opens the handout view,
+which shows the screenshot and the notes:
+
+```elixir
+defmodule Examples.EmbedVideo do
+  use Expresso
+
+  slide "the demonstration" do
+    heading "The demonstration"
+    notes "The handout view and paper show the screenshot in place of the video."
+
+    embed "examples/animations/clip.html" do
+      title "A test pattern that moves"
+      fallback "examples/animations/clip.png"
+      width "60%"
+    end
+  end
+end
+
+Examples.EmbedVideo
+```
+
+![The video plays in the slide, and the handout view shows the screenshot and the notes](https://raw.githubusercontent.com/rellen/expresso/media/embed-video.gif)
+
 ## Let the audience see you use the page
 
 By default, a click on the page goes to the presenter, so the slides move as usual. To click
