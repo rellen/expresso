@@ -1,6 +1,8 @@
 defmodule Expresso.Element.CodeTest do
   use ExUnit.Case, async: true
 
+  import ExUnit.CaptureIO
+
   alias Expresso.Builder
   alias Expresso.Element.{Code, Lines}
   alias Expresso.Overlay
@@ -45,9 +47,9 @@ defmodule Expresso.Element.CodeTest do
         end
       end
 
-      code "no-such-language" do
+      code "json" do
         at from: 2
-        text "x"
+        text "1"
       end
     end
   end
@@ -201,14 +203,15 @@ defmodule Expresso.Element.CodeTest do
              ]
     end
 
-    test "escapes a line without a language, and without a lexer", %{document: document} do
-      [plain, unknown] = Floki.find(document, "#slide-3 .code")
+    test "escapes a line without a language, and puts it in one span", %{document: document} do
+      [plain, _json] = Floki.find(document, "#slide-3 .code")
+      lines = Floki.find([plain], "span.line")
 
-      assert plain |> Floki.find("span.line") |> Enum.map(&Floki.text/1) ==
-               ["a < b\n", "\u200B\n", "  c\n"]
+      assert Enum.map(lines, &Floki.text/1) == ["a < b\n", "\u200B\n", "  c\n"]
 
-      assert [] = Floki.find([plain], "span.line span")
-      assert Floki.attribute([unknown], "data-on") == ["2"]
+      for {"span", _attributes, children} <- lines do
+        assert [{"span", [], [_text]}] = children
+      end
     end
 
     test "keeps the white space of each line through the document" do
@@ -216,7 +219,7 @@ defmodule Expresso.Element.CodeTest do
 
       assert html =~ ~s(<span class="kd">defmodule </span>)
       assert html =~ "  c\n</span>"
-      assert html =~ ~s(<span class="line">\u200B\n</span>)
+      assert html =~ ~s(<span class="line"><span>\u200B\n</span></span>)
     end
 
     test "writes the rules of the token classes into the document", %{document: document} do
@@ -337,8 +340,12 @@ defmodule Expresso.Element.CodeTest do
   end
 
   describe "the line_numbers option" do
-    defp numbered(opts) do
-      [Builder.slide("one", elements: [Builder.code("js", opts)])]
+    defp numbered(opts), do: numbered("js", opts)
+
+    defp numbered(lang, opts) do
+      code = if lang, do: Builder.code(lang, opts), else: Builder.code(opts)
+
+      [Builder.slide("one", elements: [code])]
       |> Builder.deck()
       |> Expresso.Deck.render()
       |> Floki.parse_document!()
@@ -364,6 +371,23 @@ defmodule Expresso.Element.CodeTest do
       [plain] = numbered(text: "a\nb")
       assert Floki.find(plain, ".line-number") == []
       assert plain |> Floki.find("code") |> Floki.attribute("style") == []
+    end
+
+    test "puts the text of a line after its number, with no language and with no lexer" do
+      for lang <- [nil, "toml"] do
+        {[code], _warning} =
+          with_io(:stderr, fn -> numbered(lang, text: "a = 1\n\nb", line_numbers: true) end)
+
+        lines = Floki.find(code, "span.line")
+
+        assert Enum.map(lines, &Floki.text/1) == ["1a = 1\n", "2\u200B\n", "3b\n"],
+               inspect(lang)
+
+        for {"span", _attributes, children} <- lines do
+          assert [{"span", [{"class", "line-number"} | _], _number}, {"span", [], [_text]}] =
+                   children
+        end
+      end
     end
   end
 
