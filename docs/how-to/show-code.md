@@ -43,9 +43,23 @@ file, and a change to the file changes the slide.
 
 Without `lines`, the slide shows each line of the file.
 
-In the watch mode, a change to the file renders the deck again. A change above the lines
-moves them, so the slide then shows different lines. Look at the slide after a change to
-the file.
+A change above the lines moves them. To find the lines by their text, give the start of
+the first line and the start of the last line:
+
+```elixir
+code "elixir" do
+  src "lib/my_app/server.ex"
+  lines from: "def handle_call(", to: "\n  end"
+end
+```
+
+The compiler gives an error when a text is not in the file, and when the `from` text is in
+it more than one time. Give a longer text, such as `"def handle_call(:get"`, to make it
+one time.
+
+In the watch mode, a change to the file renders the deck again. With a range of line
+numbers, a change above the lines moves them, so the slide then shows different lines. Look
+at the slide after a change to the file.
 
 ## Show code from the project of the deck
 
@@ -129,19 +143,18 @@ end
 ```
 
 The first group is in focus at the first step of the code. To show the whole code first,
-put `pause()` in front of the code element:
+write `whole_first true`:
 
 ```elixir
-slide "the server" do
-  pause()
-
-  code "elixir" do
-    src "lib/my_app/server.ex"
-    lines 40..58
-    highlight [40..44, 45..52, 53..58]
-  end
+code "elixir" do
+  src "lib/my_app/server.ex"
+  lines 40..58
+  highlight [40..44, 45..52, 53..58]
+  whole_first true
 end
 ```
+
+The code then takes one step with no group in focus, as a `pause()` in front of it does.
 
 Use `reveal` to show new lines at each step, and `highlight` to point at lines that the
 audience already sees. A code element takes one of the two options.

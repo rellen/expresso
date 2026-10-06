@@ -7,6 +7,8 @@ defmodule Expresso.Element.CodeTest do
   alias Expresso.Element.{Code, Lines}
   alias Expresso.Overlay
 
+  doctest Expresso.Element.Code
+
   defmodule CodeDeck do
     use Expresso
 
@@ -339,6 +341,95 @@ defmodule Expresso.Element.CodeTest do
     end
   end
 
+  describe "the lines option with texts" do
+    @src "test/fixtures/code.js"
+
+    test "takes the lines from the line of the start text to the line of the end text" do
+      code = Builder.code("js", src: @src, lines: [from: "function sum(", to: "\n}"])
+
+      assert code.first == 9
+      assert code.text == "function sum(list) {\n  return list.reduce(add, 0);\n}"
+    end
+
+    test "takes the first end text after the start text, and an end text can start a line" do
+      code = Builder.code("js", src: @src, lines: [from: "function add(", to: "}"])
+
+      assert code.first == 5
+      assert code.text |> String.split("\n") |> length() == 3
+    end
+
+    test "starts at line 1 without from, and ends at the last line without to" do
+      assert Builder.code("js", src: @src, lines: [to: "const two"]).text ==
+               "// A file for the tests of the src option of the code element.\nconst one = 1;\nconst two = 2;"
+
+      code = Builder.code("js", src: @src, lines: [from: "export"])
+      assert code.first == 12
+      assert code.text == "export { sum };"
+    end
+
+    test "a reveal names the numbers of the file" do
+      code =
+        Builder.code("js",
+          src: @src,
+          lines: [from: "function sum(", to: "\n}"],
+          reveal: [9, 10..11]
+        )
+
+      assert [%Lines{numbers: [9]}, %Lines{numbers: [10, 11]}] = code.elements
+    end
+
+    test "raises for a text that is not in the file, a start text in it two times, and no end text after the start" do
+      assert_raise ArgumentError,
+                   ~r/the start text "def start\(" of the lines option is not in the file/,
+                   fn ->
+                     Builder.code("js", src: @src, lines: [from: "def start("])
+                   end
+
+      assert_raise ArgumentError,
+                   ~r/the start text "function" .* 2 times, and it must be in it one time/,
+                   fn ->
+                     Builder.code("js", src: @src, lines: [from: "function"])
+                   end
+
+      assert_raise ArgumentError,
+                   ~r/the end text "const one" of the lines option is not in the file .* after the start text/,
+                   fn ->
+                     Builder.code("js",
+                       src: @src,
+                       lines: [from: "function sum(", to: "const one"]
+                     )
+                   end
+    end
+
+    test "refuses another key, a key two times and an empty text" do
+      for value <- [[from: ""], [at: "x"], [from: "a", from: "b"], [from: 1], []] do
+        assert {:error, message} = Code.lines(value), inspect(value)
+        assert message =~ "or a start text and an end text"
+      end
+    end
+
+    test "the compiler gives the same error" do
+      source = """
+      defmodule Expresso.Element.CodeTest.MissingText do
+        use Expresso
+
+        slide "one" do
+          code "js" do
+            src "test/fixtures/code.js"
+            lines from: "def start("
+          end
+        end
+      end
+      """
+
+      assert_raise Spark.Error.DslError,
+                   ~r/the start text "def start\(" of the lines option/,
+                   fn ->
+                     Elixir.Code.compile_string(source)
+                   end
+    end
+  end
+
   describe "the line_numbers option" do
     defp numbered(opts), do: numbered("js", opts)
 
@@ -416,6 +507,40 @@ defmodule Expresso.Element.CodeTest do
       assert slide.metadata.max_step == 2
       assert Enum.map(code.elements, & &1.steps) == [nil, nil]
       assert [[1], [2]] = Enum.map(code.elements, fn %Lines{on: [on]} -> on.steps end)
+    end
+
+    test "whole_first gives one step with no group in focus before the first group" do
+      [slide] =
+        highlight_deck(Builder.code(text: "a\nb\nc", highlight: [1, 2..3], whole_first: true)).slides
+
+      [code] = slide.elements
+
+      assert slide.metadata.max_step == 3
+      assert [[2], [3]] = Enum.map(code.elements, fn %Lines{on: [on]} -> on.steps end)
+    end
+
+    test "whole_first gives the steps of a pause in front of the code element" do
+      text = "a\nb\nc\nd"
+      whole = Builder.code(text: text, highlight: [1, 2..3], whole_first: true)
+      paused = Builder.code(text: text, highlight: [1, 2..3])
+
+      steps = fn elements ->
+        [slide] = Builder.deck([Builder.slide("one", elements: elements)]).slides
+        code = List.last(slide.elements)
+
+        {slide.metadata.max_step,
+         Enum.map(code.elements, &Enum.map(&1.on, fn on -> on.steps end))}
+      end
+
+      assert steps.([whole]) == steps.([Builder.pause(), paused])
+    end
+
+    test "whole_first needs the highlight option" do
+      assert_raise ArgumentError,
+                   ~r/the whole_first option of a code element needs the highlight option/,
+                   fn ->
+                     Builder.code(text: "a", whole_first: true)
+                   end
     end
 
     test "dims each other line at the step of a group" do

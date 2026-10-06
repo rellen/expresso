@@ -14,6 +14,20 @@ defmodule Expresso.E2E.HighlightTest do
     end
   end
 
+  # The whole code shows at step 1. Line 2 is in focus at step 2, and lines 3
+  # and 4 at step 3.
+  defmodule WholeDeck do
+    use Expresso
+
+    slide "whole" do
+      code "elixir" do
+        highlight([2, 3..4])
+        whole_first(true)
+        text "a = 1\nb = 2\nc = 3\nd = 4\ne = 5\n"
+      end
+    end
+  end
+
   # Line 2 is in focus at step 1, so line 1, a comment, dims.
   defmodule CommentDeck do
     use Expresso
@@ -60,6 +74,25 @@ defmodule Expresso.E2E.HighlightTest do
     assert position(page) == "1.2"
     assert dim(page) == [true, true, false, false, true]
     assert Enum.map(bar_offsets(page), &(&1 < 0)) == [false, false, true, true, false]
+  end
+
+  test "whole_first shows the whole code with no bar at step 1, then each group", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(WholeDeck, tmp_dir))
+
+    assert position(page) == "1.1"
+    assert dim(page) == [false, false, false, false, false]
+    assert Enum.all?(bar_offsets(page), &(&1 >= 0))
+
+    press(page, "j")
+    assert position(page) == "1.2"
+    assert dim(page) == [true, false, true, true, true]
+
+    press(page, "j")
+    assert position(page) == "1.3"
+    assert dim(page) == [true, true, false, false, true]
   end
 
   test "a dimmed comment takes the dimmed color of the comments, and its line the dimmed color of the code text",

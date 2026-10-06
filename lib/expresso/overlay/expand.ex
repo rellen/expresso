@@ -11,7 +11,7 @@ defmodule Expresso.Overlay.Expand do
   `docs/overlays.md` gives the rules.
   """
 
-  alias Expresso.Element.{On, Pause}
+  alias Expresso.Element.{Code, On, Pause}
   alias Expresso.Overlay
   alias Expresso.Slide
   alias Shoddy.Result
@@ -113,6 +113,8 @@ defmodule Expresso.Overlay.Expand do
         {%On{on | at: at}, counter}
       end)
 
+    counter = counter + lead(element)
+
     children = reveal(element)
 
     {children, counter} =
@@ -127,6 +129,10 @@ defmodule Expresso.Overlay.Expand do
 
     {put(element, at, on, children), counter}
   end
+
+  # The steps that an element takes before its children, as a pause does.
+  defp lead(%Code{} = code), do: Code.lead(code)
+  defp lead(_element), do: 0
 
   # The implicit specification of the reveal option. It goes on each child of
   # the element that has no at option. The header of a table is the first

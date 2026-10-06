@@ -25,11 +25,12 @@ end
 | The first argument | The name of a language, such as `"elixir"` or `"js"` | The colors of the language. See [the languages](#the-languages). Without it, the code has no colors. |
 | `text` | A string | The source code. |
 | `src` | The path of a file, relative to the working directory of the command | The source code is the text of the file. |
-| `lines` | A range, such as `10..24` | The element shows only these lines of the `src` file. The default is each line. |
+| `lines` | A range, such as `10..24`, or texts, such as `[from: "def start(", to: "\n  end"]` | The element shows only these lines of the `src` file. See [lines from a text](#lines-from-a-text). The default is each line. |
 | `line_numbers` | `true` or `false` | Show the number of each line. The default is `false`. |
 | `reveal` | Line numbers and ranges, such as `[10..12, 13..20]` | Each group of lines shows at its own step. See [the overlay options](overlay-options.md). |
 | `dim` | `true` or `false` | Each group dims when a later group shows. |
 | `highlight` | Line numbers and ranges, such as `[10..12, 13..20]` | Each line shows at each step. Each group is in focus at its own step, and the other lines dim. |
+| `whole_first` | `true` or `false` | With `highlight`, the whole code shows in full color for one step before the first group. The default is `false`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 
 The element takes `text` or `src`, and not both. It takes `reveal` or `highlight`, and not
@@ -53,6 +54,21 @@ the element.
 - `mix expresso` reads the file each time that it renders the deck.
 - The watch mode renders the deck again after a change to the file.
 
+### Lines from a text
+
+A range of line numbers moves when a change adds or removes lines above it. The slide then
+shows other lines, and it gives no error. A `lines` option with texts finds the excerpt
+from the text of the file:
+
+| Key | Value | Effect |
+| --- | --- | --- |
+| `from` | The text of the first line, or a part of it | The excerpt starts at the line that holds the text. The default is line 1. |
+| `to` | The text of the last line, or a part of it | The excerpt ends at the line that holds the last character of the text. The text is the first one after the start of the `from` text. The default is the last line. |
+
+A text can hold a line break, such as `"\n  end"`, which is the first line of the file
+that starts with `  end`. The lines keep their numbers in the file, so the first line of
+the excerpt can be line 40. A `reveal` or a `highlight` uses those numbers.
+
 For the steps, see [Show code on a slide](../how-to/show-code.md).
 
 ## The errors
@@ -63,6 +79,9 @@ The compiler gives an error for:
 - a `lines` option without `src`,
 - a file that it cannot read,
 - a `lines` range that goes past the end of the file,
+- a `from` text that is not in the file, or that is in it more than one time,
+- a `to` text that is not in the file after the `from` text,
+- a `whole_first` option without `highlight`,
 - a number of `reveal` or `highlight` that the element does not show,
 - `reveal` and `highlight` together, and `highlight` with `dim`,
 - a line that is in two groups of `highlight`.
@@ -107,7 +126,8 @@ shows at each step. Each group is in focus at one step, in the order of the opti
 
 The groups take their steps from the counter of the slide, one step each, as the items of
 a list with `reveal true` do. The first group is thus in focus at the first step of the
-slide. A `pause()` in front of the code element gives one step with no line in focus. See
+slide. `whole_first true` gives the code element one step with no line in focus before the
+first group, as a `pause()` in front of the code element does. See
 [the overlay options](overlay-options.md).
 
 A line can be in one group only. A line in no group dims at each step of a group.
