@@ -88,6 +88,13 @@ With `line_numbers true`, each line starts with its number. The numbers stand in
 column, with the color of the comments of the theme. A screen reader does not read the
 numbers, and a copy of the text from the slide does not take them.
 
+## The place on the slide
+
+A code element that is alone in its parent takes the free height, and its code stays in the
+center. Code elements that share a parent, such as two excerpts in one column, take only
+the height of their lines. Their code starts at the left edge of the parent, so the lines
+of each excerpt align.
+
 ## The highlight option
 
 The `highlight` option takes groups of lines, in the same form as `reveal`. Each line

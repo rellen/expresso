@@ -400,6 +400,7 @@ A theme can set these custom properties:
 | Property | Effect |
 | --- | --- |
 | `--transition-dur` | The length of a transition. |
+| `--slide-padding` | The space between the edge of a slide and its content. The default is `0 1rem`. |
 | `--pace-behind-color`, `--pace-over-color` | The colors of the time left. |
 | `--progress-color`, `--progress-height` | The color and the height of the progress bar. |
 | `--slide-number-color`, `--slide-number-size` | The color and the size of the slide number. |

@@ -61,9 +61,10 @@ A rule of the deck can set or read these custom properties of the theme:
 - The timing: `--dur`, `--ease`, `--motion` and `--transition-dur`.
 - The overlays: `--x`, `--y`, `--scale`, `--rotate`, `--opacity`, `--color`, `--alert`,
   `--dim`, `--dimmed`, `--dim-opacity` and `--shown`.
-- The parts of the page: `--progress-color`, `--progress-height`, `--slide-number-color`,
-  `--slide-number-size`, `--slide-number-right`, `--slide-number-bottom`,
-  `--overview-color`, `--pace-behind-color` and `--pace-over-color`.
+- The parts of the page: `--slide-padding`, `--progress-color`, `--progress-height`,
+  `--slide-number-color`, `--slide-number-size`, `--slide-number-right`,
+  `--slide-number-bottom`, `--overview-color`, `--pace-behind-color` and
+  `--pace-over-color`.
 - The colors: each role of [the theme option](theme-option.md), such as `--text`,
   `--accent` and `--code-keyword`, and the dimmed color of each role of text, such as
   `--text-dim`. A role that a rule of the deck replaces gets no check of its contrast.
