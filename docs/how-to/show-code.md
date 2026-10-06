@@ -20,6 +20,10 @@ end
 
 Use the sigil `~S`, so `#{name}` stays text and Elixir does not run it.
 
+The compiler gives a warning for a language that no lexer registers, such as `"elixr"`,
+and the code then shows with no colors. The warning lists the languages that have a lexer.
+For the list, see [the languages](../reference/code-element.md#the-languages).
+
 ## Show lines of a file
 
 Use a file for code that your project holds. The slide then shows the code as it is in the
