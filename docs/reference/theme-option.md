@@ -140,7 +140,7 @@ how to add one.
 | Nord | 0.37 |
 
 A map of the colors of a scheme that is not built in still works, and the compiler then
-gives a warning for each color under its minimum.
+gives a warning for each color under its minimum. See [the warnings](#the-warnings).
 
 ## The minimums
 
@@ -163,6 +163,27 @@ contrast of each slide.
 
 An `alert` state draws an outline, and a link has a line under its text. Thus the color
 is not the only sign of these parts, as criterion 1.4.1 asks.
+
+## The warnings
+
+The compiler gives a warning for each role of a map that does not meet a minimum. The deck
+still compiles, and the colors of the map stay as you give them. Each warning gives the
+measure, the minimum, and the slot of the role with a color that passes. For the colors
+of `:default` with `base03: "#dddddd"`, one warning is:
+
+```text
+the theme gives code_comment a contrast of 1.28:1, and WCAG asks for 4.5:1. The color #727272 for base03 passes
+```
+
+- The color has the hue of the slot, with a different lightness. It meets the minimums on
+  each background of the roles of the slot, such as `base00` and `base01` for `base05`.
+- When no lightness passes, the warning says so. Then change the color by hand, or change
+  the background.
+- The role `dimmed_text` stands for the role of text with the lowest contrast, at the dim
+  opacity of the theme. It passes when each role of text passes.
+
+`Expresso.Palette.suggestions/1` returns the same colors, and `Expresso.Palette.problems/1`
+returns each role that fails.
 
 ## The roles
 

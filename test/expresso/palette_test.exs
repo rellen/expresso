@@ -175,6 +175,25 @@ defmodule Expresso.PaletteTest do
     end
   end
 
+  test "suggestions gives each slot of a failing role a color that passes on each background of the slot" do
+    palette = Palette.of(colors(%{base05: "#999999", base09: "#ffaa00"}))
+    suggestions = Palette.suggestions(palette)
+
+    assert Map.keys(suggestions) |> Enum.sort() == [:base05, :base09, :base0B]
+
+    fixed = Palette.of(colors(suggestions))
+    failing = fixed |> Palette.problems() |> Enum.map(&elem(&1, 0))
+
+    for {role, {slot, _on}} <- Palette.roles(),
+        Map.has_key?(suggestions, slot),
+        do: refute(role in failing, inspect(role))
+  end
+
+  test "suggestions leaves out a slot with no lightness that passes, and a palette that passes" do
+    assert Palette.suggestions(Palette.of(colors(%{base00: "#808080", base01: "#808080"}))) == %{}
+    assert Palette.suggestions(Builtin.fetch!(:dracula)) == %{}
+  end
+
   test "of reads a built-in name, a map, or the default for nil" do
     assert Palette.of(nil) == Builtin.fetch!(:default)
     assert Palette.of(:zenburn).name == "Zenburn"

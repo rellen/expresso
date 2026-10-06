@@ -110,6 +110,27 @@ defmodule Expresso.ThemeOptionTest do
     assert output =~ "and WCAG asks for 4.5:1"
     assert output =~ "the theme gives code_comment a lightness contrast of Lc"
     assert output =~ "and APCA asks for Lc 60"
+
+    %{base03: color} = colors |> Expresso.Palette.of() |> Expresso.Palette.suggestions()
+    assert output =~ "The color #{color} for base03 passes"
+    assert output =~ "the theme gives dimmed_text a contrast of"
+    assert output =~ "It passes when each role of text passes"
+
+    [example] =
+      Regex.run(~r/```text\n(.*)\n```/, File.read!("docs/reference/theme-option.md"),
+        capture: :all_but_first
+      )
+
+    assert output =~ example <> "\n"
+  end
+
+  test "a theme with no color that passes for a slot says so" do
+    colors = Map.merge(Builtin.fetch!(:default).colors, %{base00: "#808080", base01: "#808080"})
+
+    output = capture_io(:stderr, fn -> Builder.deck([Builder.slide("one")], theme: colors) end)
+
+    assert output =~ "the theme gives text a lightness contrast of Lc"
+    assert output =~ "No lightness of the color of base05 passes"
   end
 
   test "a name that is not a built-in theme stops the compile" do

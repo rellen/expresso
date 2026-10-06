@@ -6,6 +6,10 @@ defmodule Expresso.ThemeVerifier do
   meets each minimum of `Expresso.Palette`, so only a theme of 16 colors can
   fail. The verifier gives a warning for each role that fails, and the deck
   still compiles. The option itself refuses a value that is not a theme.
+
+  The warning of a role names the slot of its color, and a color for that
+  slot that passes, from `Expresso.Palette.suggestions/1`. The colors of the
+  map stay as the user gives them.
   """
 
   use Spark.Dsl.Verifier
@@ -20,21 +24,38 @@ defmodule Expresso.ThemeVerifier do
   @spec verify(map()) :: :ok | {:warn, [String.t()]}
   def verify(dsl_state) do
     case Verifier.get_option(dsl_state, [:deck], :theme, :default) do
-      colors when is_map(colors) -> colors |> Palette.of() |> Palette.problems() |> warnings()
+      colors when is_map(colors) -> colors |> Palette.of() |> warnings()
       _name -> :ok
     end
   end
 
-  defp warnings([]), do: :ok
+  defp warnings(palette) do
+    case Palette.problems(palette) do
+      [] -> :ok
+      problems -> {:warn, Enum.map(problems, &warning(&1, Palette.suggestions(palette)))}
+    end
+  end
 
-  defp warnings(problems) do
-    {:warn,
-     Enum.map(problems, fn
-       {role, :wcag, ratio, minimum} ->
-         "the theme gives #{role} a contrast of #{Float.round(ratio, 2)}:1, and WCAG asks for #{minimum}:1"
+  defp warning({role, measure, value, minimum}, suggestions),
+    do: measure(role, measure, value, minimum) <> ". " <> fix(role, suggestions)
 
-       {role, :apca, lc, minimum} ->
-         "the theme gives #{role} a lightness contrast of Lc #{round(lc)}, and APCA asks for Lc #{minimum}"
-     end)}
+  defp measure(role, :wcag, ratio, minimum),
+    do:
+      "the theme gives #{role} a contrast of #{Float.round(ratio, 2)}:1, and WCAG asks for #{minimum}:1"
+
+  defp measure(role, :apca, lc, minimum),
+    do:
+      "the theme gives #{role} a lightness contrast of Lc #{round(lc)}, and APCA asks for Lc #{minimum}"
+
+  # The dimmed text passes when each role of text passes.
+  defp fix(:dimmed_text, _suggestions), do: "It passes when each role of text passes"
+
+  defp fix(role, suggestions) do
+    {slot, _on} = Keyword.fetch!(Palette.roles(), role)
+
+    case Map.fetch(suggestions, slot) do
+      {:ok, color} -> "The color #{color} for #{slot} passes"
+      :error -> "No lightness of the color of #{slot} passes"
+    end
   end
 end
