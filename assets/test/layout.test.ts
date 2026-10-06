@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { broken, first, label, past, sentence } from "../src/layout.ts";
+import { broken, first, label, past, sentence, union } from "../src/layout.ts";
 import type { Problem } from "../src/layout.ts";
 
 const window = { left: 0, top: 0, right: 1920, bottom: 1080 };
@@ -37,6 +37,17 @@ test("past returns the edge with the largest distance, in whole pixels", () => {
       edge: "bottom",
       amount: 220,
     },
+  );
+});
+
+test("union returns the smallest box that holds each box, and null for no box", () => {
+  assert.equal(union([]), null);
+  assert.deepEqual(
+    union([
+      { left: 10, top: 20, right: 30, bottom: 40 },
+      { left: -5, top: 25, right: 15, bottom: 60 },
+    ]),
+    { left: -5, top: 20, right: 30, bottom: 60 },
   );
 });
 

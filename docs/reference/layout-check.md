@@ -27,8 +27,13 @@ The check measures these elements, and the content of each:
 - the heading of the slide,
 - a text box, a text area, an image, a list, a table, a quotation, a code element, a
   formula, a diagram, an embed, a `columns` element and a `column`,
-- the content of an element: a `math` element, an `img` element, an `svg` element and a
-  `pre` element.
+- the content of an element: a `math` element, an `img` element, an `svg` element, a
+  `pre` element, an `iframe` element and a `table` element.
+
+The check measures what an element shows, and not its box. A tag of the content shows its
+box. Each other element shows its text and its content, so the check measures the smallest
+box that holds them. A text box is as wide as the slide, so its box goes past an edge when
+it moves, while its text can stay in the window.
 
 An element that does not show at the step, as an overlay specifies, is not measured. A part
 of a diagram is not measured, because a part can move past the box of its diagram.
