@@ -59,6 +59,7 @@ spark_locals_without_parens = [
   match: 1,
   math: 1,
   math: 2,
+  meta: 1,
   mode: 1,
   mode: 2,
   move_to: 1,
@@ -86,6 +87,7 @@ spark_locals_without_parens = [
   slide: 1,
   slide: 2,
   slide_numbers: 1,
+  slide_template: 1,
   spacer: 0,
   spacer: 1,
   speed: 1,
@@ -104,6 +106,7 @@ spark_locals_without_parens = [
   theme: 1,
   title: 1,
   transition: 1,
+  whole_first: 1,
   width: 1
 ]
 

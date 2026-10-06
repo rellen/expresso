@@ -22,7 +22,7 @@ defmodule Expresso.E2E.HighlightTest do
     slide "whole" do
       code "elixir" do
         highlight([2, 3..4])
-        whole_first(true)
+        whole_first true
         text "a = 1\nb = 2\nc = 3\nd = 4\ne = 5\n"
       end
     end
