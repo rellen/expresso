@@ -57,6 +57,10 @@ no network. The page must be one file: a script, a style sheet or an image that 
 a relative path does not load. The watch mode renders the deck again after a change to the
 file.
 
+A data URI holds a file inside the page, such as a WebM video in
+`<video src="data:video/webm;base64,...">`. The document then holds the video one time.
+For the steps, see "Show a video" in [Show a web page in a slide](../how-to/show-a-web-page.md).
+
 ## Clicks, keys and the focus
 
 | `interactive` | A click on the page | A key |

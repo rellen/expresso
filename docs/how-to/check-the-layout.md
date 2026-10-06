@@ -48,6 +48,9 @@ column. Do one of these:
 
 - Give an image or a diagram a `width` option, such as `width "70%"`.
 - Move the element out of a `columns` element, so it gets the full width of the slide.
+- Give a smaller distance to an element that moves with `set: [x: ...]` or `set: [y: ...]`.
+  The check measures the text of the element, so the distance can be as large as the space
+  next to the text.
 - Put fewer elements on the slide, or divide the slide into two slides.
 
 ## Check a deck with no window
