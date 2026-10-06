@@ -10,7 +10,10 @@ defmodule Expresso.Element.Code do
   The `src` option takes a path that is relative to the working directory of
   the command, as for an image. The `lines` option takes a range of the lines
   of the file, such as `3086..3095`, and the element then shows only those
-  lines. `build/1` reads the file through `Expresso.DeckFile`, so the watch
+  lines. It can also take a start text and an end text, such as
+  `[from: "def start(", to: "\n  end"]`. The excerpt then starts at the line
+  of the start text and ends at the line of the end text, so a change above
+  the excerpt does not move it. `build/1` reads the file through `Expresso.DeckFile`, so the watch
   mode renders the deck again after a change to the file. The element takes
   `text` or `src`, and not both.
 
@@ -40,6 +43,11 @@ defmodule Expresso.Element.Code do
   slide. Each line in no group goes into one more group with no `on` entity.
   `spotlight/1` then gives each group the state `dim` at the steps of the
   other groups, before the render.
+
+  The `whole_first` option gives the code element one step before its first
+  group, as a `pause` in front of it does. At that step, no group is in focus,
+  so the whole code shows in full color. `Expresso.Overlay.Expand` reads the
+  option with `lead/1`.
   """
 
   use Expresso.Element
@@ -66,6 +74,7 @@ defmodule Expresso.Element.Code do
     :easing,
     dim: false,
     line_numbers: false,
+    whole_first: false,
     first: 1,
     on: [],
     elements: [],
@@ -78,7 +87,8 @@ defmodule Expresso.Element.Code do
   The transform of the `code` entity calls this function after it makes the
   struct, in the DSL and in `Expresso.Builder`. With `src`, the function reads
   the file, puts the lines of the `lines` option into `text`, and puts the
-  number of the first line into `first`. Then it puts one
+  number of the first line into `first`. A `lines` option with `from` and
+  `to` gives its range from the text of the file. Then it puts one
   `Expresso.Element.Lines` child into `elements` for each item of the
   `reveal` option, in order.
 
@@ -88,9 +98,12 @@ defmodule Expresso.Element.Code do
     * a `lines` option without `src`,
     * a file that it cannot read, or a range that goes past the end of the
       file,
+    * a start text that is not in the file or that is in it more than one
+      time, and an end text that is not in the file after the start text,
     * a line number of `reveal` that the element does not show. Such a group
       shows nothing, and it takes one step of the slide, so the deck gets a
       step at which nothing changes,
+    * a `whole_first` option without `highlight`,
     * an element with both `reveal` and `highlight`, a `highlight` with `dim`,
       a line number of `highlight` that the element does not show, and a line
       that is in two groups of `highlight`.
@@ -112,10 +125,69 @@ defmodule Expresso.Element.Code do
   defp source(%__MODULE__{src: nil} = code), do: {:ok, code}
 
   defp source(%__MODULE__{src: src, lines: lines} = code) do
+    with {:ok, bytes} <- read(src),
+         {:ok, range} <- range(bytes, lines, src) do
+      excerpt(code, split(bytes), range)
+    end
+  end
+
+  defp read(src) do
     case Expresso.DeckFile.read(src) do
-      {:ok, bytes} -> excerpt(code, split(bytes), lines)
+      {:ok, bytes} -> {:ok, bytes}
       {:error, reason} -> {:error, "cannot read the code file \"#{src}\": #{reason}"}
     end
+  end
+
+  # The range of a `lines` option with texts: from the line of the start text
+  # to the line of the last character of the end text. The end text is the
+  # first one after the start of the start text. Without `from`, the range
+  # starts at line 1, and without `to`, it ends at the last line.
+  defp range(bytes, lines, src) when is_list(lines) do
+    with {:ok, start} <- start(bytes, lines[:from], src),
+         {:ok, finish} <- finish(bytes, start, lines[:to], src) do
+      {:ok, line_of(bytes, start)..line_of(bytes, finish)//1}
+    end
+  end
+
+  defp range(_bytes, lines, _src), do: {:ok, lines}
+
+  defp start(_bytes, nil, _src), do: {:ok, 0}
+
+  # A start text that is in the file more than one time gives an error, so a
+  # new copy of the text above the excerpt cannot move the excerpt.
+  defp start(bytes, from, src) do
+    case :binary.matches(bytes, from) do
+      [{position, _length}] ->
+        {:ok, position}
+
+      [] ->
+        {:error,
+         "the start text #{inspect(from)} of the lines option is not in the file \"#{src}\""}
+
+      matches ->
+        {:error,
+         "the start text #{inspect(from)} of the lines option is in the file \"#{src}\" " <>
+           "#{length(matches)} times, and it must be in it one time"}
+    end
+  end
+
+  defp finish(bytes, _start, nil, _src), do: {:ok, max(byte_size(bytes) - 1, 0)}
+
+  defp finish(bytes, start, to, src) do
+    case :binary.match(bytes, to, scope: {start, byte_size(bytes) - start}) do
+      {position, length} ->
+        {:ok, position + length - 1}
+
+      :nomatch ->
+        {:error,
+         "the end text #{inspect(to)} of the lines option is not in the file \"#{src}\" " <>
+           "after the start text"}
+    end
+  end
+
+  # The number of the line that holds the byte at a position.
+  defp line_of(bytes, position) do
+    bytes |> binary_part(0, position) |> :binary.matches("\n") |> length() |> Kernel.+(1)
   end
 
   defp excerpt(%__MODULE__{} = code, all, nil),
@@ -135,6 +207,9 @@ defmodule Expresso.Element.Code do
        when reveal != nil and highlight != nil,
        do:
          {:error, "a code element takes the reveal option or the highlight option, and not both"}
+
+  defp groups(%__MODULE__{highlight: nil, whole_first: true}),
+    do: {:error, "the whole_first option of a code element needs the highlight option"}
 
   defp groups(%__MODULE__{highlight: highlight, dim: true}) when highlight != nil,
     do:
@@ -205,20 +280,51 @@ defmodule Expresso.Element.Code do
   defp split(text), do: text |> String.replace_suffix("\n", "") |> String.split("\n")
 
   @doc """
-  Make sure that a `lines` option is a range of line numbers
+  Make sure that a `lines` option is a range of line numbers, or a start text and an end text
 
-  This function is the custom type of the option. The range starts at 1 or
-  more, and it has a step of 1.
+  This function is the custom type of the option. A range starts at 1 or
+  more, and it has a step of 1. A keyword list has the key `from`, the key
+  `to` or both, one time each, and each value is a text that is not empty.
+
+      iex> Expresso.Element.Code.lines(10..24)
+      {:ok, 10..24}
+
+      iex> Expresso.Element.Code.lines(from: "def start(", to: "end")
+      {:ok, [from: "def start(", to: "end"]}
   """
-  @spec lines(term()) :: {:ok, Range.t()} | {:error, String.t()}
+  @spec lines(term()) :: {:ok, Range.t() | keyword(String.t())} | {:error, String.t()}
   def lines(first..last//1 = range) when is_integer(first) and first >= 1 and first <= last,
     do: {:ok, range}
 
-  def lines(_term),
-    do: {:error, "a lines option takes a range of line numbers, such as 10..24"}
+  def lines([_ | _] = texts) do
+    if Keyword.keyword?(texts) and texts?(texts), do: {:ok, texts}, else: lines(nil)
+  end
+
+  def lines(_term) do
+    {:error,
+     "a lines option takes a range of line numbers, such as 10..24, or a start text and " <>
+       "an end text, such as [from: \"def start(\", to: \"end\"]"}
+  end
+
+  defp texts?(texts) do
+    keys = Keyword.keys(texts)
+
+    keys -- [:from, :to] == [] and keys == Enum.uniq(keys) and
+      Enum.all?(Keyword.values(texts), &(is_binary(&1) and &1 != ""))
+  end
 
   defp numbers(line) when is_integer(line), do: [line]
   defp numbers(_first.._last//1 = range), do: Enum.to_list(range)
+
+  @doc """
+  Return the number of steps that a code element takes before its groups
+
+  The `whole_first` option gives one step, and the counter of the slide then
+  goes one further before the first group takes its step.
+  """
+  @spec lead(t()) :: 0 | 1
+  def lead(%__MODULE__{whole_first: true}), do: 1
+  def lead(%__MODULE__{}), do: 0
 
   @doc """
   Dim the lines of each code element that are not in focus

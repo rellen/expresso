@@ -715,6 +715,11 @@ With `src`, a line keeps its number in the file, and `reveal` uses that number. 
 author then reads the number of a group in the editor, and the slide shows the same number
 with `line_numbers`. A count from 1 in the excerpt would need a calculation for each group.
 
+A `lines` option with texts finds its range in the bytes of the file: from the line of the
+`from` text to the line of the last character of the first `to` text after it. A change
+above the excerpt then does not move it. The `from` text must be in the file one time, so
+a new copy of it above the excerpt gives an error, and not a different excerpt.
+
 Makeup lexes the text when a lexer package registers the language. `mix.exs` lists one
 package for each of these languages:
 

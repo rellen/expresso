@@ -284,7 +284,7 @@ defmodule Expresso.Extension do
           lines: [
             type: {:custom, Expresso.Element.Code, :lines, []},
             doc:
-              "The lines of the src file that the element shows, such as 10..24. The default is each line of the file."
+              "The lines of the src file that the element shows: a range, such as 10..24, or a start text and an end text, such as [from: \"def start(\", to: \"end\"]. The default is each line of the file. See docs/reference/code-element.md."
           ],
           line_numbers: [
             type: :boolean,
@@ -306,6 +306,12 @@ defmodule Expresso.Extension do
             type: {:custom, Expresso.Element.Code, :reveal, []},
             doc:
               "Line numbers and ranges, one group in focus at each step. Each line shows at each step, and the lines that are not in focus dim. See docs/reference/code-element.md."
+          ],
+          whole_first: [
+            type: :boolean,
+            default: false,
+            doc:
+              "With highlight, show the whole code in full color for one step before the first group comes into focus. The default is false."
           ]
         ]
   }
