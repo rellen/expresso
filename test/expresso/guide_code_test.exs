@@ -24,8 +24,11 @@ defmodule Expresso.GuideCodeTest do
     deck = "docs/reference/template-option.md" |> blocks() |> Enum.join("\n") |> deck()
     document = deck |> Expresso.Deck.render() |> Floki.parse_document!()
 
-    assert length(Floki.find(document, ".screen .my-header")) == 2
+    assert document |> Floki.find(".screen .my-header") |> Enum.map(&Floki.text/1) ==
+             ["Part 1", "my deck"]
+
     assert document |> Floki.find(".screen .my-slide h2") |> Floki.text() == "Hello"
+    assert length(Floki.find(document, ".screen .my-slide")) == 1
   end
 
   test "the code block of the theme option makes a deck with the colors of Dracula" do

@@ -52,13 +52,15 @@ defmodule Expresso do
       theme: option.(:theme, :default)
     }
 
-    # The deck template reads the key when it is present, so the key is
-    # present only for a template that the deck gives.
+    # The templates read a key when it is present, so the key is present only
+    # for a template that the deck gives.
     metadata =
-      case option.(:template, nil) do
-        nil -> metadata
-        template -> Map.put(metadata, :template, template)
-      end
+      Enum.reduce([:template, :slide_template], metadata, fn key, metadata ->
+        case option.(key, nil) do
+          nil -> metadata
+          template -> Map.put(metadata, key, template)
+        end
+      end)
 
     :name
     |> option.(nil)

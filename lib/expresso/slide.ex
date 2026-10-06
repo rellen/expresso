@@ -9,6 +9,7 @@ defmodule Expresso.Slide do
           :heading => String.t() | nil,
           :template => module() | {:builtins, atom()} | nil,
           :notes => String.t() | nil,
+          :meta => keyword() | nil,
           :steps => pos_integer() | nil,
           :handout => Expresso.Handout.t() | nil,
           :auto_reveal => boolean() | nil,
@@ -26,6 +27,7 @@ defmodule Expresso.Slide do
     :heading,
     :template,
     :notes,
+    :meta,
     :steps,
     :handout,
     :auto_reveal,
@@ -54,6 +56,7 @@ defmodule Expresso.Slide do
     :heading,
     :template,
     :notes,
+    :meta,
     :handout,
     :transition,
     :effect,
@@ -66,9 +69,10 @@ defmodule Expresso.Slide do
 
   The `slide` entity puts the `heading` option into the `heading` field, and
   the `notes` option into the `notes` field. The templates and the renderer
-  read each from the metadata. This function puts each option that is not
-  `nil` into the metadata, and it gives the metadata an empty map when the
-  field is `nil`.
+  read each from the metadata. The `meta` option holds the values of the
+  user, and they stay under the key `:meta`, so a value cannot replace a key
+  of Expresso. This function puts each option that is not `nil` into the
+  metadata, and it gives the metadata an empty map when the field is `nil`.
   """
   @spec put_options_in_metadata(t()) :: t()
   def put_options_in_metadata(%__MODULE__{} = slide) do

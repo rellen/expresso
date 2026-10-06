@@ -432,6 +432,11 @@ defmodule Expresso.Extension do
         type: :string,
         doc: "The notes of the speaker. The handout view shows them under each page."
       ],
+      meta: [
+        type: :keyword_list,
+        doc:
+          "Values of your own for the templates, such as [section: \"Part 3\"]. A template reads them from @metadata[:meta]. See docs/reference/template-option.md."
+      ],
       steps: [type: :pos_integer, doc: "The maximum step number of the slide."],
       handout: [
         type: {:custom, Expresso.Handout, :new, []},
@@ -535,6 +540,11 @@ defmodule Expresso.Extension do
         type: @template,
         doc:
           "The deck template, which gives the header and the footer: a module, or {:builtins, name}. See docs/architecture.md. The default is {:builtins, :default}."
+      ],
+      slide_template: [
+        type: @template,
+        doc:
+          "The slide template of each slide without a template option: a module, or {:builtins, name}. See docs/reference/template-option.md. The default is {:builtins, :default}."
       ],
       theme: [
         type: {:custom, Expresso.Palette, :validate, []},
