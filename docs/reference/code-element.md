@@ -22,7 +22,7 @@ end
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | The name of a language, such as `"elixir"` or `"js"` | The colors of the language. `Expresso.Highlight` names the languages. Without it, the code has no colors. |
+| The first argument | The name of a language, such as `"elixir"` or `"js"` | The colors of the language. See [the languages](#the-languages). Without it, the code has no colors. |
 | `text` | A string | The source code. |
 | `src` | The path of a file, relative to the working directory of the command | The source code is the text of the file. |
 | `lines` | A range, such as `10..24` | The element shows only these lines of the `src` file. The default is each line. |
@@ -34,6 +34,15 @@ end
 
 The element takes `text` or `src`, and not both. It takes `reveal` or `highlight`, and not
 both.
+
+## The languages
+
+A lexer gives the colors of a language. These names have a lexer:
+
+`c`, `css`, `diff`, `eex`, `elixir`, `erl`, `erlang`, `gleam`, `heex`, `html`, `html.eex`, `html_eex`, `iex`, `javascript`, `js`, `json`, `rust`, `sql`, `ts`, `typescript`
+
+`Expresso.Highlight.languages/0` returns the same list. A code element with another name
+shows its lines with no colors, as an element with no language does.
 
 ## Code from a file
 
@@ -59,6 +68,13 @@ The compiler gives an error for:
 - a line that is in two groups of `highlight`.
 
 `Expresso.Builder.code/2` raises an `ArgumentError` with the same message.
+
+## The warnings
+
+The compiler gives a warning for a language that no lexer registers, such as `"elixr"`.
+The warning names the slide and gives the list of the languages. The deck still compiles,
+and the element shows its lines with no colors. `Expresso.Builder.deck/2` writes the same
+warning to the standard error.
 
 ## The numbers of the lines
 

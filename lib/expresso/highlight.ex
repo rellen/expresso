@@ -6,6 +6,7 @@ defmodule Expresso.Highlight do
   lexes the text when a lexer package registers the language, and it escapes
   each token. Without a lexer for the language, or without a language, the
   function escapes each line and puts it in one `span`, with no class.
+  `Expresso.CodeVerifier` gives a warning for a language with no lexer.
 
   `stylesheet/0` gives the rules of the token classes, and the renderer writes
   them into the document.
@@ -83,8 +84,8 @@ defmodule Expresso.Highlight do
 
   The language is a name that a lexer package registers, such as `"elixir"`,
   `"erlang"`, `"gleam"`, `"heex"`, `"html"`, `"css"`, `"js"`, `"ts"`,
-  `"json"`, `"sql"`, `"c"`, `"rust"` or `"diff"`. A language with no lexer,
-  or no language, gives plain lines.
+  `"json"`, `"sql"`, `"c"`, `"rust"` or `"diff"`. `languages/0` returns each
+  name. A language with no lexer, or no language, gives plain lines.
 
   Each fragment starts with a `span` element and ends with one, and the last
   `span` holds the line break. Floki removes a text node of white space only,
@@ -115,6 +116,21 @@ defmodule Expresso.Highlight do
       :error ->
         lines(text, nil)
     end
+  end
+
+  @doc """
+  Return the name of each language that a lexer registers, in alphabetical order
+
+      iex> "elixir" in Expresso.Highlight.languages()
+      true
+
+      iex> "toml" in Expresso.Highlight.languages()
+      false
+  """
+  @spec languages() :: [String.t()]
+  def languages do
+    start_lexers()
+    Enum.sort(Makeup.Registry.supported_language_names())
   end
 
   defp start_lexers, do: Enum.each(@lexers, &Application.ensure_all_started/1)
