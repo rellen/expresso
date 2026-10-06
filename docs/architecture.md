@@ -241,6 +241,13 @@ The watch mode watches these files:
   `Expresso.DeckFile.track/1`. Thus the three modules need no code for the watch mode.
 - The custom templates in `./priv/templates/`. See "The templates".
 
+`Expresso.DeckFile.read/1` reads a relative path from the working directory of the
+command, and not from the directory of the deck file. A deck file is a script, and
+`Code.eval_file/1` gives it no base directory of its own. A deck that renders from any
+directory joins each path to `__DIR__`, which is the directory of the deck file in the
+script. "Show code from the project of the deck" in `docs/how-to/show-code.md` gives the
+steps.
+
 The watch mode does not see a file that the deck script reads by itself, for example with
 `File.read!/1` or `Code.require_file/1`. A failed render can stop before it reads each file
 of the deck, so the watch mode also keeps the files of the earlier renders.
@@ -472,6 +479,21 @@ The change of a color is the difference of `L`. The comment of Dracula in the ta
 change of 0.22. `Expresso.Palette.Builtin` refuses a scheme with a change of more than
 0.4, because a larger change gives a color that the reader does not know as a color of the
 scheme.
+
+#### A color that passes, for a theme from a map
+
+A theme from a map is not adjusted, because its colors are the choice of the user.
+`Expresso.ThemeVerifier` gives a warning for each role that fails, and
+`Expresso.Palette.suggestions/1` puts a color that passes into each warning. The user can
+then copy the color into the map.
+
+The map gives a color to a slot, and a slot can color more than one role, such as
+`base05` for `text` on `base00` and for `code_text` on `base01`. The function therefore
+adjusts the color of the slot against each background of its roles in turn, and it keeps
+the color only when the color meets the minimums on each of them. The two backgrounds of
+a scheme usually have almost the same lightness, so the second adjustment moves the color
+in the same direction as the first one. When no lightness passes, the warning says so, and the
+user must change the background or the hue.
 
 #### The dimmed colors
 
@@ -735,8 +757,17 @@ package for each of these languages:
 - C and Rust
 - diff
 
-Without a lexer for the language, the fragment is one `span` with the escaped text. `Expresso.Highlight`
-writes a rule for each token class, and the renderer writes them into the document in
+Without a lexer for the language, the fragment is one `span` with the escaped text. A
+line of a lexer is a sequence of `span` elements, so each line starts and ends with an
+element. Floki removes the white space of the template between two elements, so that white
+space does not join the text of a line.
+
+`Expresso.CodeVerifier` gives a compile warning for a language that no lexer registers,
+with the list of `Expresso.Highlight.languages/0`. A misspelled name, such as `"elixr"`,
+otherwise gives code with no colors and no message. It is a warning and not an error,
+because the code still shows its text.
+
+`Expresso.Highlight` writes a rule for each token class, and the renderer writes them into the document in
 their own `style` element. Each rule reads a role of the theme, such as `--code-keyword`,
 so the code gets the colors of the theme.
 
@@ -769,6 +800,13 @@ is only white space. A line of code holds such nodes: an indentation, a space be
 tokens, a line break. Therefore `Expresso.Highlight` puts each white space token into the
 span of the token before it. A line that has no other character gets a zero width space.
 An element that writes text with significant white space must do the same.
+
+A code element that is alone in its parent grows, and its code stays in the center, as a
+text box does. Two code elements in one parent, such as two excerpts in a column, would
+each take half of the free height, and each would center its own lines. Their lines then
+start at two different places, and a large gap separates them. Therefore code elements
+that share a parent do not grow, and their code starts at the left edge of the parent. The
+rule `.code:has(~ .code), .code ~ .code` of `assets/style.css` finds them.
 
 ### The columns
 
@@ -919,16 +957,24 @@ In the present view, the style sheet puts the number in the corner of the window
 
 ### The transformer and the verifiers
 
-The extension imports nothing, and it lists five modules:
+The extension imports nothing, and it lists one transformer and seven verifiers:
 
 - `Expresso.Overlay.Transformer` expands the overlay specifications of each slide at
   compile time.
+- `Expresso.GotoVerifier` refuses a `goto` option that names no slide. See "The links".
 - `Expresso.Overlay.Verifier` reports a specification that breaks a rule.
 - `Expresso.Overlay.PropertyVerifier` gives a warning for a custom property that neither
   the theme nor the CSS of the deck uses.
 - `Expresso.Overlay.EffectVerifier` reads the `css` option of the deck. It gives an error
   for an effect without a rule in the theme or in that style sheet.
 - `Expresso.Overlay.SizeVerifier` gives a warning for a slide of very many steps.
+- `Expresso.ThemeVerifier` gives a warning for each role of a theme from a map that does
+  not meet its minimum, with a color that passes. See "The contrast of a theme".
+- `Expresso.CodeVerifier` gives a warning for a language that no lexer registers. See
+  "The code".
+
+A verifier gives errors or warnings, and not both, so each kind of warning has its own
+verifier.
 
 After the transformer, each element and each `on` entity holds its step numbers in the
 `steps` field. The metadata of the slide holds the maximum step number in `max_step`.
