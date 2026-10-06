@@ -110,4 +110,33 @@ defmodule Expresso.E2E.EmbedTest do
            getComputedStyle(document.querySelector(".handout-page .embed-fallback")).display
            """) != "none"
   end
+
+  # The pattern of "Show a video" in docs/how-to/show-a-web-page.md: a local
+  # page holds the video as a data URI. The page of the test also sends the
+  # time of the video, because the sandbox does not let the deck read it.
+  test "a local page plays a video from a data URI", %{page: page, tmp_dir: tmp_dir} do
+    video = "test/fixtures/clip.webm" |> File.read!() |> Base.encode64()
+    html = Path.join(tmp_dir, "video.html")
+
+    File.write!(html, """
+    <!doctype html>
+    <video src="data:video/webm;base64,#{video}" autoplay loop muted playsinline></video>
+    <script>
+      const video = document.querySelector("video");
+      setInterval(() => parent.postMessage({ time: video.currentTime }, "*"), 100);
+    </script>
+    """)
+
+    embed = Expresso.Builder.embed(html, title: "A video", fallback: "test/fixtures/dot.png")
+    deck = Expresso.Builder.deck([Expresso.Builder.slide("video", elements: [embed])])
+    page = open(page, render(deck, tmp_dir))
+
+    js(page, """
+    window.addEventListener("message", (event) => {
+      if (typeof event.data?.time === "number") window.videoTime = event.data.time;
+    })
+    """)
+
+    wait_for(page, "(window.videoTime ?? 0) > 0.3")
+  end
 end
