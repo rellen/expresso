@@ -166,6 +166,63 @@ defmodule Expresso.Palette do
   end
 
   @doc """
+  Return a color that passes for each slot with a role of text that fails
+
+  A slot can color more than one role, such as `base05` for `text` on
+  `base00` and for `code_text` on `base01`. The color of the slot changes
+  its lightness with `Expresso.Color.adjust/4` against each background in
+  turn, and it must then meet the minimums on each one. A slot with no such
+  color is not in the map. `Expresso.ThemeVerifier` puts the color into its
+  warning.
+
+      iex> colors = Expresso.Palette.Builtin.fetch!(:default).colors
+      iex> palette = Expresso.Palette.of(%{colors | base03: "#dddddd"})
+      iex> %{base03: color} = Expresso.Palette.suggestions(palette)
+      iex> problems = Expresso.Palette.problems(Expresso.Palette.of(%{colors | base03: color}))
+      iex> Enum.filter(problems, &(elem(&1, 0) == :code_comment))
+      []
+  """
+  @spec suggestions(t()) :: %{slot() => Color.t()}
+  def suggestions(%__MODULE__{colors: colors, roles: roles} = palette) do
+    failing = for {role, _measure, _value, _minimum} <- problems(palette), do: role
+
+    for {role, {slot, _on}} <- @roles, role in failing, uniq: true do
+      slot
+    end
+    |> Enum.flat_map(fn slot ->
+      backgrounds = for {_role, {^slot, on}} <- @roles, on != nil, do: roles[on]
+
+      case suggestion(colors[slot], backgrounds) do
+        {:ok, color} -> [{slot, color}]
+        :error -> []
+      end
+    end)
+    |> Map.new()
+  end
+
+  defp suggestion(color, backgrounds) do
+    adjusted =
+      Enum.reduce_while(backgrounds, {:ok, color}, fn background, {:ok, color} ->
+        case Color.adjust(color, background, @text_ratio, @text_lc) do
+          {:ok, color, _change} -> {:cont, {:ok, color}}
+          :error -> {:halt, :error}
+        end
+      end)
+
+    with {:ok, color} <- adjusted,
+         true <- Enum.all?(backgrounds, &meets?(color, &1)) do
+      {:ok, color}
+    else
+      _failure -> :error
+    end
+  end
+
+  defp meets?(color, background),
+    do:
+      Color.contrast(color, background) >= @text_ratio and
+        Color.lightness_contrast(color, background) >= @text_lc
+
+  @doc """
   Change the lightness of each role that fails, until each role meets its minimum
 
   The function keeps the hue of each color and each background. It returns
