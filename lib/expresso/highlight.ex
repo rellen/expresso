@@ -5,7 +5,7 @@ defmodule Expresso.Highlight do
   `lines/2` makes one HTML fragment for each line of a source text. Makeup
   lexes the text when a lexer package registers the language, and it escapes
   each token. Without a lexer for the language, or without a language, the
-  function escapes each line and adds no markup.
+  function escapes each line and puts it in one `span`, with no class.
 
   `stylesheet/0` gives the rules of the token classes, and the renderer writes
   them into the document.
@@ -83,14 +83,22 @@ defmodule Expresso.Highlight do
 
   The language is a name that a lexer package registers, such as `"elixir"`,
   `"erlang"`, `"gleam"`, `"heex"`, `"html"`, `"css"`, `"js"`, `"ts"`,
-  `"json"`, `"sql"`, `"c"`, `"rust"` or `"diff"`. A fragment holds no line
-  break.
+  `"json"`, `"sql"`, `"c"`, `"rust"` or `"diff"`. A language with no lexer,
+  or no language, gives plain lines.
+
+  Each fragment starts with a `span` element and ends with one, and the last
+  `span` holds the line break. Floki removes a text node of white space only,
+  so the white space of a template around a fragment does not join the text
+  of the line.
+
+      iex> Expresso.Highlight.lines("a < 1", nil)
+      ["<span>a &lt; 1\n</span>"]
   """
   @spec lines(String.t(), String.t() | nil) :: [String.t()]
   def lines(text, nil), do: text |> String.split("\n") |> Enum.map(&plain/1)
 
   def lines(text, language) do
-    Enum.each(@lexers, &Application.ensure_all_started/1)
+    start_lexers()
 
     case Makeup.Registry.fetch_lexer_by_name(language) do
       # `Makeup.Lexer.split_into_lines/1` gives the tokens of a last line with
@@ -109,6 +117,8 @@ defmodule Expresso.Highlight do
     end
   end
 
+  defp start_lexers, do: Enum.each(@lexers, &Application.ensure_all_started/1)
+
   # A lexer gives each pair of delimiters, such as `(` and `)`, a group id in
   # `data-group-id`. The id starts with a prefix, and without the option the
   # lexer makes a random prefix. Then two renders of the same deck are not
@@ -126,7 +136,9 @@ defmodule Expresso.Highlight do
   defp text_of({_type, _meta, value}), do: text_of(value)
   defp text_of(values) when is_list(values), do: Enum.map_join(values, &text_of/1)
 
-  defp plain(text), do: text |> visible() |> Kernel.<>("\n") |> escape()
+  # A plain line is one `span`, as a line of a lexer is a sequence of them.
+  defp plain(text),
+    do: "<span>" <> (text |> visible() |> Kernel.<>("\n") |> escape()) <> "</span>"
 
   defp visible(text), do: if(String.trim(text) == "", do: @zero_width_space <> text, else: text)
 
