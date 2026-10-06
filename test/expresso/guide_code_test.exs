@@ -75,4 +75,25 @@ defmodule Expresso.GuideCodeTest do
     assert html =~ "# line 58"
     refute html =~ "# line 59"
   end
+
+  test "the warnings of the guide to colors of your own come from its map, and its deck takes each color" do
+    text = File.read!("docs/how-to/use-colors-of-your-own.md")
+    [map] = Regex.run(~r/theme (%\{.*?\})\n   ```/s, text, capture: :all_but_first)
+    {start, _bindings} = Code.eval_string(map)
+
+    output =
+      ExUnit.CaptureIO.capture_io(:stderr, fn ->
+        Expresso.Builder.deck([Expresso.Builder.slide("one")], theme: start)
+      end)
+
+    [warnings] = Regex.run(~r/```text\n(.*?)\n```/s, text, capture: :all_but_first)
+    for line <- String.split(warnings, "\n"), do: assert(output =~ line <> "\n", line)
+
+    {value, _bindings} = Code.eval_file("examples/animations/theme_map.exs")
+    {:ok, deck} = Expresso.to_deck(value)
+    fixed = Map.merge(start, start |> Expresso.Palette.of() |> Expresso.Palette.suggestions())
+
+    assert deck.metadata.theme == fixed
+    assert fixed |> Expresso.Palette.of() |> Expresso.Palette.problems() == []
+  end
 end
