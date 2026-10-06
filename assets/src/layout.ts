@@ -5,7 +5,9 @@
 // problem:
 //
 // - `outside`: an element goes past an edge of the window, so a part of it
-//   does not show.
+//   does not show. The check measures what the element shows: its text and
+//   its content, and not its box. A text box is as wide as the slide, so its
+//   box goes past an edge when it moves, while its text stays in the window.
 // - `wrap`: a line of a code element is too long for its box, so the browser
 //   breaks it into two or more lines on the slide.
 //
@@ -45,6 +47,19 @@ const TOLERANCE = 1;
 // A line of code that is more than this number of times its line height is a
 // broken line. A line with no break is one line height.
 const BROKEN = 1.5;
+
+// The smallest box that holds each box. No box returns null.
+export function union(boxes: readonly Box[]): Box | null {
+  if (boxes.length === 0) {
+    return null;
+  }
+  return {
+    left: Math.min(...boxes.map((box) => box.left)),
+    top: Math.min(...boxes.map((box) => box.top)),
+    right: Math.max(...boxes.map((box) => box.right)),
+    bottom: Math.max(...boxes.map((box) => box.bottom)),
+  };
+}
 
 // The edge that a box goes past by the largest distance, with that distance.
 // A box inside the area returns null.
@@ -100,10 +115,11 @@ export function sentence(problem: Problem): string {
 const ELEMENTS =
   ".slide-heading-container, .text-box, .text-area, .image, .list, .table, .quotation, .code, .math, .diagram, .embed, .columns, .column";
 
-// The check also measures the content of an element. The content can be
-// wider than the box of its element, and the box then stays inside the
-// window while the content goes past an edge.
-const MEASURED = `${ELEMENTS}, math, img, svg, pre`;
+// The content of an element: the tags that show their box. The content can
+// be wider than the box of its element, so the check also measures each one.
+const CONTENT = "math, img, svg, pre, iframe, table";
+
+const MEASURED = `${ELEMENTS}, ${CONTENT}`;
 
 // The kind of an element for the report, from its first class.
 function kind(element: Element): string {
@@ -137,6 +153,38 @@ function shown(element: Element): boolean {
   return style.visibility !== "hidden" && style.display !== "none";
 }
 
+// The box of what an element shows. A tag of the content shows its box. Each
+// other element shows its text and its content, so its box is the union of
+// the boxes of each text and each tag of its content that show. An element
+// that shows nothing returns null.
+function extent(element: Element): Box | null {
+  if (element.matches(CONTENT)) {
+    return element.getBoundingClientRect();
+  }
+  const boxes: Box[] = [];
+  const range = document.createRange();
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+    const parent = node.parentElement;
+    if (
+      (node.textContent ?? "").trim() !== "" &&
+      parent !== null &&
+      shown(parent)
+    ) {
+      range.selectNodeContents(node);
+      boxes.push(range.getBoundingClientRect());
+    }
+  }
+  for (const content of Array.from(element.querySelectorAll(CONTENT))) {
+    if (shown(content)) {
+      boxes.push(content.getBoundingClientRect());
+    }
+  }
+  return union(
+    boxes.filter((box) => box.right > box.left || box.bottom > box.top),
+  );
+}
+
 // The problems of the slide that shows now. An element that goes past an edge
 // counts only when no element inside it goes past the same edge, so the
 // report names the innermost element. The height of a line comes from
@@ -151,7 +199,8 @@ function measure(slide: HTMLElement, number: number, step: number): Problem[] {
   const elements = Array.from(slide.querySelectorAll(MEASURED)).filter(shown);
   const outside = new Map<Element, { edge: Edge; amount: number }>();
   for (const element of elements) {
-    const found = past(element.getBoundingClientRect(), area);
+    const box = extent(element);
+    const found = box === null ? null : past(box, area);
     if (found !== null) {
       outside.set(element, found);
     }
