@@ -8,7 +8,8 @@
 # - lint: `mix compile --warnings-as-errors`, `mix credo`, `mix sobelow`,
 #   `mix hex.audit`, the check of unused dependencies, `mix docs`,
 #   `mix doctor` and `mix dialyzer`
-# - test: `mix test` and `mix test --only e2e`, the browser tests
+# - test: `mix test`, `mix test --only e2e`, the browser tests, and
+#   `mix test --only dependency`, the test of Expresso as a dependency
 # - presenter: `npm run check` and `npm test`
 # - gifs: `mix expresso.gifs`, the GIFs and the stills of the example decks
 #   of the guides and of the README
@@ -125,7 +126,9 @@ jobs:
   # The browser tests open each deck in the Chromium of the Playwright version of
   # `package-lock.json`. `.github/actions/setup-playwright` installs Node, the
   # packages and the headless browser, from a cache when it can. The browser
-  # tests run also when a unit test fails.
+  # tests run also when a unit test fails. The test of `test/dependency/` makes
+  # a project that takes Expresso as a dev dependency, and it fetches the
+  # dependencies of that project from Hex and GitHub.
   test:
     name: test
     runs-on: ubuntu-latest
@@ -142,6 +145,8 @@ jobs:
       - run: mix test
       - if: ${{ !cancelled() }}
         run: mix test --only e2e
+      - if: ${{ !cancelled() }}
+        run: mix test --only dependency
 
   # The presenter script needs Node only.
   presenter:

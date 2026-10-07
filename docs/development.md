@@ -103,6 +103,7 @@ mix sobelow --exit --skip
 mix hex.audit                  # the advisories and the retirements of the dependencies
 mix test
 mix test --only e2e            # the browser tests, see "The browser tests"
+mix test --only dependency     # Expresso as a dependency, see "The dependency test"
 mix test --only release        # the tests of the binary, see "The release tests"
 ```
 
@@ -117,13 +118,14 @@ Each result above comes from Erlang/OTP 29.1, Elixir 1.20.4 and Zig 0.16.0, whic
 versions. Therefore a check that passes in a session also passes on your machine and in the
 workflow.
 
-`mix check` also runs the browser tests and the release tests. Before the release tests,
+`mix check` also runs the browser tests, the dependency test and the release tests. Before
+the release tests,
 it makes the binary for the target of the computer: `macos_arm`, `macos_x86`, `linux_x86`
 or `linux_arm`. `.check.exs` finds the target. Therefore `mix check` needs Node, the
 Chromium of Playwright, Zig, `xz` and `timeout`. It does not run the two `npm` commands.
 
-The browser tests start after the unit tests, and the release tests start after the
-browser tests and a release that succeeded. `.check.exs` gives `retry: false`, so each run
+The browser tests start after the unit tests. The dependency test and the release tests
+start after the browser tests, and the release tests also need a release that succeeded. `.check.exs` gives `retry: false`, so each run
 of `mix check` runs each tool. In the retry mode, a run after a failure runs only the
 failed tools. A failed tool with a dependency that does not run is then skipped, and a
 skipped tool does not fail the run.
@@ -182,6 +184,21 @@ npx playwright install --only-shell chromium
 The workflow runs the same command in `.github/actions/setup-playwright`, and a cache
 keeps the browser from one run to the next. The runner image already has each system
 library of the headless browser, so the workflow does not use `--with-deps`.
+
+### The dependency test
+
+The test of `test/dependency/` makes a new Mix project in the temporary directory of the
+system. The project takes Expresso as a dev dependency from the path of the repository, as
+`docs/how-to/render-a-deck-in-your-project.md` tells a user to do from GitHub. The test
+runs `mix deps.get`, then `mix expresso` on a deck of the project with the `root` option.
+
+```sh
+mix test --only dependency
+```
+
+`mix test` excludes this test, because it needs the network for the dependencies of the
+project, and it takes approximately 100 seconds. The test uses the code of the working
+tree, so it finds a change that breaks Expresso as a dependency before a merge.
 
 ### The release tests
 
@@ -252,7 +269,7 @@ The jobs run in parallel on Linux, so the slowest of them gives their time:
 - `format`: the formatter.
 - `lint`: the compiler with warnings as errors, Credo, Sobelow, `mix hex.audit`, the check
   of unused dependencies, `mix docs`, Doctor and Dialyzer.
-- `test`: the unit tests and the browser tests.
+- `test`: the unit tests, the browser tests and the dependency test.
 - `presenter`: `npm run check` and `npm test`.
 - `binary`: the binary for Linux and the release tests, in two jobs. The job
   `binary (linux_x86)` runs on x86_64, and the job `binary (linux_arm)` runs on an arm64
