@@ -157,4 +157,73 @@ defmodule Expresso.ThemeOptionTest do
 
     assert output =~ "the theme gives text a contrast of"
   end
+
+  describe "the keyword form" do
+    @pale Map.merge(Builtin.fetch!(:default).colors, %{base03: "#dddddd"})
+
+    defp warnings(theme) do
+      capture_io(:stderr, fn -> Builder.deck([Builder.slide("one")], theme: theme) end)
+    end
+
+    test "adjust true gives a map no warning, and the roles that pass" do
+      assert warnings(colors: @pale) =~ "the theme gives code_comment a contrast of"
+      assert warnings(colors: @pale, adjust: true) == ""
+
+      deck = Builder.deck([Builder.slide("one")], theme: [colors: @pale, adjust: true])
+      html = Expresso.Deck.render(deck)
+
+      refute html =~ "--code-comment: #dddddd;"
+    end
+
+    test "a warning names the variant of a map, and a built-in variant gets no check" do
+      output = warnings(dark: :dracula, light: @pale)
+
+      assert output =~ "the light theme gives code_comment a contrast of"
+      refute output =~ "the dark theme"
+    end
+
+    test "an adjustment of more than 0.4 gives a warning" do
+      gray = Map.merge(Builtin.fetch!(:default).colors, %{base05: "#ffffff", base03: "#ffffff"})
+
+      assert warnings(colors: gray, adjust: true) =~
+               ~r/the adjustment changes a color of the theme by 0\.\d+ in lightness, more than 0.4/
+    end
+
+    test "two variants give the light roles, the dark roles of a dark screen, the rules of the key t, and paper" do
+      deck = Builder.deck([Builder.slide("one")], theme: [dark: :dracula, light: :default])
+      html = Expresso.Deck.render(deck)
+      dracula = Expresso.Palette.declarations(Builtin.fetch!(:dracula))
+      default = Expresso.Palette.declarations(Builtin.fetch!(:default))
+
+      assert html =~ ":root { #{default} }"
+      assert html =~ "@media (prefers-color-scheme: dark) { :root { #{dracula} } }"
+      assert html =~ ~s(:root[data-scheme="light"] { #{default} })
+      assert html =~ ~s(:root[data-scheme="dark"] { #{dracula} })
+      assert html =~ "@media print { :root, :root[data-scheme] { #{default} } }"
+      assert html =~ ~s(<html lang="en" data-variants="data-variants">)
+    end
+
+    test "one variant writes no rule of a scheme and no data-variants" do
+      html = [Builder.slide("one")] |> Builder.deck(theme: :dracula) |> Expresso.Deck.render()
+
+      refute html =~ "@media (prefers-color-scheme: dark)"
+      assert html =~ ~s(<html lang="en"><head>)
+    end
+
+    test "the DSL takes the keyword form" do
+      [{module, _bytecode}] =
+        Code.compile_string("""
+        defmodule Expresso.ThemeOptionTest.Variants do
+          use Expresso
+
+          theme dark: :dracula, light: :solarized_light
+
+          slide "one" do
+          end
+        end
+        """)
+
+      assert Expresso.parse(module).metadata.theme == [dark: :dracula, light: :solarized_light]
+    end
+  end
 end

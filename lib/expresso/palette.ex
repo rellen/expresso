@@ -284,21 +284,74 @@ defmodule Expresso.Palette do
 
   defp property(role), do: role |> Atom.to_string() |> String.replace("_", "-")
 
+  @typedoc """
+  The value of the `theme` option of a deck
+
+  A name of a built-in theme, a map with a color for each slot, or a keyword
+  list. The keyword list has `colors` for one theme, or `dark` and `light` for
+  two variants, and `adjust` to adjust each map.
+  """
+  @type theme :: atom() | %{slot() => Color.t()} | keyword()
+
   @doc """
-  Return the palette of the `theme` option of a deck
+  Return the palette of one theme of the `theme` option of a deck
 
   The option is the name of a built-in theme, or a map with a `#rrggbb` color
   for each slot of base16. A palette of a map is not adjusted. Its variant is
-  dark when its background is dark.
+  dark when its background is dark. A keyword list returns its first variant
+  from `variants/1`.
   """
-  @spec of(atom() | %{slot() => Color.t()} | nil) :: t()
+  @spec of(theme() | nil) :: t()
   def of(nil), do: Expresso.Palette.Builtin.fetch!(:default)
   def of(name) when is_atom(name), do: Expresso.Palette.Builtin.fetch!(name)
+  def of(options) when is_list(options), do: options |> variants() |> hd() |> elem(1)
 
   def of(colors) when is_map(colors) do
     variant = if Color.luminance(colors.base00) < 0.18, do: :dark, else: :light
     new("Custom", variant, colors)
   end
+
+  @doc """
+  Return the palette of each variant of the `theme` option of a deck
+
+  A theme with one variant returns `[{nil, palette}]`. A keyword list with
+  `dark` and `light` returns `[light: palette, dark: palette]`. With
+  `adjust: true`, the palette of each map gets `adjust/1`, as a built-in theme
+  does. A map that no lightness can adjust keeps its colors, and
+  `Expresso.ThemeVerifier` then gives a warning for each role that fails.
+
+      iex> [{nil, palette}] = Expresso.Palette.variants(:dracula)
+      iex> palette.name
+      "Dracula"
+
+      iex> Expresso.Palette.variants(dark: :dracula, light: :default) |> Keyword.keys()
+      [:light, :dark]
+  """
+  @spec variants(theme() | nil) :: [{:light | :dark | nil, t()}]
+  def variants(options) when is_list(options) do
+    adjust = Keyword.get(options, :adjust, false)
+
+    case Keyword.fetch(options, :colors) do
+      {:ok, colors} ->
+        [{nil, scheme(colors, adjust)}]
+
+      :error ->
+        [light: scheme(options[:light], adjust), dark: scheme(options[:dark], adjust)]
+    end
+  end
+
+  def variants(theme), do: [{nil, of(theme)}]
+
+  defp scheme(colors, true) when is_map(colors) do
+    palette = of(colors)
+
+    case adjust(palette) do
+      {:ok, adjusted} -> adjusted
+      :error -> palette
+    end
+  end
+
+  defp scheme(theme, _adjust), do: of(theme)
 
   @doc """
   Validate the value of the `theme` option, for the schema of the DSL
@@ -307,6 +360,19 @@ defmodule Expresso.Palette do
   slots of base16 and a `#rrggbb` color for each one. The contrast is not part
   of the validation: `Expresso.ThemeVerifier` gives a warning for it.
 
+  The value can also be a keyword list:
+
+    * `colors` with a name or a map, for one theme, or
+    * `dark` and `light`, each with a name or a map, for two variants,
+    * and `adjust` with `true` or `false`, optional.
+
+      iex> Expresso.Palette.validate(dark: :dracula, light: :default, adjust: true)
+      {:ok, [dark: :dracula, light: :default, adjust: true]}
+
+      iex> {:error, message} = Expresso.Palette.validate(dark: :dracula)
+      iex> message =~ "needs colors, or both dark and light"
+      true
+
       iex> Expresso.Palette.validate(:dracula)
       {:ok, :dracula}
 
@@ -314,8 +380,47 @@ defmodule Expresso.Palette do
       iex> message =~ "is not a built-in theme"
       true
   """
-  @spec validate(term()) :: {:ok, atom() | map()} | {:error, String.t()}
-  def validate(name) when is_atom(name) do
+  @spec validate(term()) :: {:ok, theme()} | {:error, String.t()}
+  def validate([_ | _] = options) do
+    keys = if Keyword.keyword?(options), do: Keyword.keys(options), else: nil
+
+    cond do
+      keys == nil ->
+        validate(nil)
+
+      keys != Enum.uniq(keys) ->
+        {:error, "the theme has a key two times"}
+
+      keys -- [:colors, :dark, :light, :adjust] != [] ->
+        {:error,
+         "the theme takes the keys colors, dark, light and adjust, not " <>
+           inspect(keys -- [:colors, :dark, :light, :adjust])}
+
+      not one_form?(keys) ->
+        {:error, "the theme needs colors, or both dark and light, and not both forms"}
+
+      not is_boolean(Keyword.get(options, :adjust, false)) ->
+        {:error, "the adjust key of the theme takes true or false"}
+
+      true ->
+        options
+        |> Enum.map(fn
+          {:adjust, adjust} -> {:ok, {:adjust, adjust}}
+          {key, value} -> one(value) |> Shoddy.Result.map_ok(&{key, &1})
+        end)
+        |> Shoddy.Result.collect()
+    end
+  end
+
+  def validate(value), do: one(value)
+
+  # One theme with `colors`, or two variants with `dark` and `light`.
+  defp one_form?(keys) do
+    variants = Enum.count(keys, &(&1 in [:dark, :light]))
+    if :colors in keys, do: variants == 0, else: variants == 2
+  end
+
+  defp one(name) when is_atom(name) and name != nil do
     if name in Expresso.Palette.Builtin.names(),
       do: {:ok, name},
       else:
@@ -323,7 +428,7 @@ defmodule Expresso.Palette do
          "#{inspect(name)} is not a built-in theme. The built-in themes are #{Enum.map_join(Expresso.Palette.Builtin.names(), ", ", &inspect/1)}"}
   end
 
-  def validate(colors) when is_map(colors) do
+  defp one(colors) when is_map(colors) do
     missing = @slots -- Map.keys(colors)
     extra = Map.keys(colors) -- @slots
     bad = for {slot, color} <- colors, slot in @slots, not hex?(color), do: slot
@@ -336,10 +441,10 @@ defmodule Expresso.Palette do
     end
   end
 
-  def validate(value),
+  defp one(value),
     do:
       {:error,
-       "the theme must be the name of a built-in theme or a map of 16 colors, not #{inspect(value)}"}
+       "the theme must be the name of a built-in theme, a map of 16 colors or a keyword list, not #{inspect(value)}"}
 
   defp hex?(color), do: is_binary(color) and Regex.match?(~r/\A#[0-9a-fA-F]{6}\z/, color)
 

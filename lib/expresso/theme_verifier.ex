@@ -10,6 +10,11 @@ defmodule Expresso.ThemeVerifier do
   The warning of a role names the slot of its color, and a color for that
   slot that passes, from `Expresso.Palette.suggestions/1`. The colors of the
   map stay as the user gives them.
+
+  The verifier checks each variant of the option that is a map, after the
+  adjustment of `adjust: true`, and the warning of a variant names it. An
+  adjustment that changes a color by more than the limit of a built-in theme
+  gives a warning too.
   """
 
   use Spark.Dsl.Verifier
@@ -23,29 +28,61 @@ defmodule Expresso.ThemeVerifier do
   @impl Verifier
   @spec verify(map()) :: :ok | {:warn, [String.t()]}
   def verify(dsl_state) do
-    case Verifier.get_option(dsl_state, [:deck], :theme, :default) do
-      colors when is_map(colors) -> colors |> Palette.of() |> warnings()
-      _name -> :ok
-    end
+    theme = Verifier.get_option(dsl_state, [:deck], :theme, :default)
+
+    warnings =
+      for {name, palette} <- Palette.variants(theme),
+          map?(theme, name),
+          warning <- warnings(palette, subject(name), adjust?(theme)),
+          do: warning
+
+    if warnings == [], do: :ok, else: {:warn, warnings}
   end
 
-  defp warnings(palette) do
-    case Palette.problems(palette) do
-      [] -> :ok
-      problems -> {:warn, Enum.map(problems, &warning(&1, Palette.suggestions(palette)))}
-    end
+  # A built-in theme meets each minimum, so the verifier checks a map only.
+  defp map?(theme, _name) when is_map(theme), do: true
+  defp map?(theme, nil) when is_list(theme), do: is_map(theme[:colors])
+  defp map?(theme, name) when is_list(theme), do: is_map(theme[name])
+  defp map?(_theme, _name), do: false
+
+  defp adjust?(theme), do: is_list(theme) and Keyword.get(theme, :adjust, false)
+
+  defp subject(nil), do: "the theme"
+  defp subject(name), do: "the #{name} theme"
+
+  defp warnings(palette, subject, adjust?) do
+    problems = Palette.problems(palette)
+    suggestions = Palette.suggestions(palette)
+
+    Enum.map(problems, &warning(&1, subject, suggestions)) ++ change(palette, subject, adjust?)
   end
 
-  defp warning({role, measure, value, minimum}, suggestions),
-    do: measure(role, measure, value, minimum) <> ". " <> fix(role, suggestions)
+  # The adjustment of a built-in theme stops at a change of 0.4, because a
+  # larger change gives a color that the reader does not know as a color of
+  # the scheme. A map gets the adjustment with no limit, and a warning.
+  defp change(%Palette{change: change}, subject, true) do
+    limit = Palette.Builtin.limit()
 
-  defp measure(role, :wcag, ratio, minimum),
-    do:
-      "the theme gives #{role} a contrast of #{Float.round(ratio, 2)}:1, and WCAG asks for #{minimum}:1"
+    if change > limit,
+      do: [
+        "the adjustment changes a color of #{subject} by #{Float.round(change, 2)} in " <>
+          "lightness, more than #{limit}, so the color can look different from the color of the map"
+      ],
+      else: []
+  end
 
-  defp measure(role, :apca, lc, minimum),
+  defp change(_palette, _subject, _adjust?), do: []
+
+  defp warning({role, measure, value, minimum}, subject, suggestions),
+    do: measure(subject, role, measure, value, minimum) <> ". " <> fix(role, suggestions)
+
+  defp measure(subject, role, :wcag, ratio, minimum),
     do:
-      "the theme gives #{role} a lightness contrast of Lc #{round(lc)}, and APCA asks for Lc #{minimum}"
+      "#{subject} gives #{role} a contrast of #{Float.round(ratio, 2)}:1, and WCAG asks for #{minimum}:1"
+
+  defp measure(subject, role, :apca, lc, minimum),
+    do:
+      "#{subject} gives #{role} a lightness contrast of Lc #{round(lc)}, and APCA asks for Lc #{minimum}"
 
   # The dimmed text passes when each role of text passes.
   defp fix(:dimmed_text, _suggestions), do: "It passes when each role of text passes"

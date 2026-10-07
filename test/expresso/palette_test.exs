@@ -194,6 +194,75 @@ defmodule Expresso.PaletteTest do
     assert Palette.suggestions(Builtin.fetch!(:dracula)) == %{}
   end
 
+  describe "the keyword form of the theme" do
+    # A dark scheme that fails 15 checks, from the guide to colors of your own.
+    @harbor %{
+      base00: "#13233a",
+      base01: "#1b2f4b",
+      base02: "#27405f",
+      base03: "#4f6a8a",
+      base04: "#8fa3bc",
+      base05: "#dfe7f1",
+      base06: "#eef3f9",
+      base07: "#ffffff",
+      base08: "#e0605a",
+      base09: "#e8964a",
+      base0A: "#e6c45c",
+      base0B: "#7cbf6e",
+      base0C: "#5fbfbf",
+      base0D: "#5c9ce6",
+      base0E: "#b48ae6",
+      base0F: "#c47a5a"
+    }
+
+    test "validate takes colors, or dark and light, with adjust" do
+      assert Palette.validate(colors: @harbor, adjust: true) ==
+               {:ok, [colors: @harbor, adjust: true]}
+
+      assert Palette.validate(dark: @harbor, light: :default) ==
+               {:ok, [dark: @harbor, light: :default]}
+    end
+
+    test "validate refuses a wrong key, a key two times, a missing variant, both forms and a bad value" do
+      for {value, text} <- [
+            {[colour: @harbor], "takes the keys colors, dark, light and adjust"},
+            {[colors: :default, colors: :dracula], "a key two times"},
+            {[dark: :dracula], "needs colors, or both dark and light"},
+            {[colors: :default, dark: :dracula], "needs colors, or both dark and light"},
+            {[colors: :default, adjust: "yes"], "takes true or false"},
+            {[dark: :plaid, light: :default], "is not a built-in theme"}
+          ] do
+        assert {:error, message} = Palette.validate(value), inspect(value)
+        assert message =~ text, inspect(value)
+      end
+    end
+
+    test "variants adjusts a map with adjust true, and keeps it without" do
+      assert [{nil, kept}] = Palette.variants(colors: @harbor)
+      assert length(Palette.problems(kept)) == 15
+
+      assert [{nil, adjusted}] = Palette.variants(colors: @harbor, adjust: true)
+      assert Palette.problems(adjusted) == []
+      assert adjusted.roles.background == @harbor.base00
+    end
+
+    test "variants gives the light variant first, and adjust applies to each map" do
+      assert [light: light, dark: dark] =
+               Palette.variants(dark: @harbor, light: :default, adjust: true)
+
+      assert light == Builtin.fetch!(:default)
+      assert Palette.problems(dark) == []
+      assert Palette.of(dark: @harbor, light: :default) == light
+    end
+
+    test "a map that no lightness can adjust keeps its colors" do
+      gray = Map.merge(@harbor, %{base00: "#808080", base01: "#808080"})
+
+      assert [{nil, palette}] = Palette.variants(colors: gray, adjust: true)
+      assert palette.roles == Palette.of(gray).roles
+    end
+  end
+
   test "of reads a built-in name, a map, or the default for nil" do
     assert Palette.of(nil) == Builtin.fetch!(:default)
     assert Palette.of(:zenburn).name == "Zenburn"

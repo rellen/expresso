@@ -39,13 +39,36 @@ defmodule Expresso.Renderer do
   # The custom properties of the theme of the deck. Paper gets the default
   # theme, because a printer gives a white sheet and a dark theme on it wastes
   # ink. `docs/reference/theme-option.md` gives the reasons.
+  #
+  # A theme with a light and a dark variant gives the light roles to `:root`,
+  # and the dark roles to a screen that asks for a dark scheme. The key `t`
+  # writes `data-scheme` on the `html` element, and that attribute wins over
+  # the scheme of the screen. The rule of paper names the attribute too, so it
+  # wins over each variant.
   defp theme(deck) do
-    palette = Expresso.Palette.of((deck.metadata || %{})[:theme])
     print = Expresso.Palette.Builtin.fetch!(:default)
 
-    ":root { #{Expresso.Palette.declarations(palette)} }\n" <>
-      "@media print { :root { #{Expresso.Palette.declarations(print)} } }"
+    roles =
+      case variants(deck) do
+        [{nil, palette}] ->
+          ":root { #{declarations(palette)} }"
+
+        [light: light, dark: dark] ->
+          ":root { #{declarations(light)} }\n" <>
+            "@media (prefers-color-scheme: dark) { :root { #{declarations(dark)} } }\n" <>
+            ":root[data-scheme=\"light\"] { #{declarations(light)} }\n" <>
+            ":root[data-scheme=\"dark\"] { #{declarations(dark)} }"
+      end
+
+    roles <> "\n@media print { :root, :root[data-scheme] { #{declarations(print)} } }"
   end
+
+  defp variants(deck), do: Expresso.Palette.variants((deck.metadata || %{})[:theme])
+
+  defp declarations(palette), do: Expresso.Palette.declarations(palette)
+
+  # The presenter changes the variant with the key `t` only in a document with two variants.
+  defp two_variants?(deck), do: length(variants(deck)) == 2
 
   defp deck_css(deck) do
     metadata = deck.metadata || %{}
@@ -215,7 +238,7 @@ defmodule Expresso.Renderer do
       # The language of the document. A screen reader reads the attribute, and
       # it selects a voice from the value. Each deck takes English at this
       # time, and a later version can give the `deck` section an option.
-      html lang: "en" do
+      html lang: "en", data_variants: two_variants?(@deck) do
         head do
           # The encoding goes in front of each other element of the head. A
           # browser reads the first 1024 bytes of a document for it. Without
