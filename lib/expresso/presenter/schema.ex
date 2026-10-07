@@ -198,6 +198,9 @@ defmodule Expresso.Presenter.Schema do
       {:written_embeds,
        "The source of each embed of a deck, in the order of the numbers of the elements, as the renderer writes it.",
        {:list, {:object, kind: {:enum, ["src", "srcdoc"]}, value: :string}}},
+      {:scheme,
+       "The variant of a theme with a light and a dark variant that the key t chose, or null for the variant of the screen.",
+       {:nullable, {:enum, ["light", "dark"]}}},
       {:message,
        "The message that one window of the presenter sends to the other window. The other window ignores a key that it does not know.",
        {:open_object,
@@ -205,6 +208,7 @@ defmodule Expresso.Presenter.Schema do
         slide: {:integer, nil},
         step: {:integer, nil},
         blank: :boolean,
+        scheme: {:ref, :scheme},
         time: {:number, nil, nil}}}
     ]
   end

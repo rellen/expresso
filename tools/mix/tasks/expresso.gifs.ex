@@ -89,6 +89,12 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "project-root", deck: "project_root.exs", actions: ["j"]},
     %{name: "css-files", deck: "css_files.exs", actions: ["j"]},
     %{name: "theme-variants", deck: "theme_variants.exs", actions: ["t"]},
+    %{
+      name: "theme-variants-speaker",
+      deck: "theme_variants.exs",
+      address: "?speaker",
+      actions: ["t"]
+    },
     %{name: "layout-check", deck: "layout_check.exs", address: "?check", still: true}
   ]
 

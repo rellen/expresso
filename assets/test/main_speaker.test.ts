@@ -57,6 +57,7 @@ test("a key moves the speaker view, and the present view gets the change", () =>
     slide: 1,
     step: 2,
     blank: false,
+    scheme: null,
   });
 });
 
@@ -64,7 +65,14 @@ test("the last step has no next step, and a slide without notes has no notes", (
   // The clock of the test starts at 0, so a time of one million is after each
   // change of the speaker view.
   page.receive(
-    { expresso: "position", slide: 2, step: 1, blank: false, time: 1_000_000 },
+    {
+      expresso: "position",
+      slide: 2,
+      step: 1,
+      blank: false,
+      scheme: null,
+      time: 1_000_000,
+    },
     opener,
   );
 
@@ -88,6 +96,7 @@ test("b gives a black screen to the present view", () => {
     slide: 2,
     step: 1,
     blank: true,
+    scheme: null,
   });
   assert.equal(text("speaker-position"), "Slide 2 of 2, black screen");
   page.press("x");

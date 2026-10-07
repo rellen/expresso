@@ -213,7 +213,7 @@ The present view knows these keys. `?` shows the same list in the browser.
 | `s` | Speaker view, in a second window |
 | `f` | Full screen on or off |
 | `g` | Progress bar on or off |
-| `t` | Light or dark variant of the theme |
+| `t` | Light or dark variant of the theme, in the two windows |
 | Click or tap the right two thirds, or swipe left | Next step |
 | Click or tap the left third, or swipe right | Previous step |
 | Click or tap a link | The slide and the step of the link |
@@ -281,6 +281,11 @@ transitions.
 The address of the document holds the slide and the step. For example, `deck.html#4.2` is
 step 2 of slide 4. A reload shows the same step, and a link can go to one slide.
 
+For a deck with a light and a dark variant, `?scheme=dark` or `?scheme=light` in the address
+chooses the variant, such as `deck.html?scheme=dark#4.2`. The key `t` shows the other
+variant in the two windows. See
+[Give a deck a light and a dark variant](docs/how-to/give-a-deck-two-variants.md).
+
 ### The speaker view
 
 The speaker view shows the current step, the next step, the notes of the slide, the
@@ -302,6 +307,7 @@ keys:
 | `b` | Black screen. The next key shows the slide again. |
 | `r` | Set the timer to 0:00 |
 | `f` | Full screen on or off |
+| `t` | Light or dark variant of the theme, in the two windows |
 | Click or tap the right two thirds, or swipe left | Next step |
 | Click or tap the left third, or swipe right | Previous step |
 | `o` | Overview of the slides. Only this window shows it. |

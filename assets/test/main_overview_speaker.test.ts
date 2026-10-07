@@ -29,6 +29,7 @@ test("a message from the present view moves the speaker view, and the overview s
       slide: 3,
       step: 1,
       blank: false,
+      scheme: null,
       time: Date.now() + 60_000,
     },
     audience,
@@ -48,5 +49,6 @@ test("Enter in the overview sends the new position to the present view", () => {
     slide: 1,
     step: 1,
     blank: false,
+    scheme: null,
   });
 });

@@ -24,25 +24,81 @@ test("current returns the entry of the state, and undefined for a deck with no s
   assert.equal(current(at(three, 1, 1), deckOf([])), undefined);
 });
 
-test("message holds the slide, the step, the black screen and the time", () => {
+test("message holds the slide, the step, the black screen, the variant and the time", () => {
   assert.deepEqual(
-    message({ ...at(three, 2, 3), blank: true, digits: "4" }, three, 17),
-    { expresso: "position", slide: 2, step: 3, blank: true, time: 17 },
+    message(
+      { ...at(three, 2, 3), blank: true, digits: "4" },
+      three,
+      17,
+      "dark",
+    ),
+    {
+      expresso: "position",
+      slide: 2,
+      step: 3,
+      blank: true,
+      scheme: "dark",
+      time: 17,
+    },
   );
 });
 
 test("isMessage accepts only a message of the presenter", () => {
-  assert.equal(isMessage(message(at(three, 1, 1), three, 1)), true);
+  assert.equal(isMessage(message(at(three, 1, 1), three, 1, null)), true);
   const others = [
     null,
     "position",
-    { expresso: "other", slide: 1, step: 1, blank: false, time: 1 },
-    { expresso: "position", slide: "1", step: 1, blank: false, time: 1 },
-    { expresso: "position", slide: 1.5, step: 1, blank: false, time: 1 },
-    { expresso: "position", slide: 1, step: 1, time: 1 },
-    { expresso: "position", slide: 1, step: 1, blank: false },
-    { expresso: "position", slide: 1, step: 1, blank: false, time: "1" },
-    { expresso: "position", slide: 1, step: 1, blank: false, time: NaN },
+    {
+      expresso: "other",
+      slide: 1,
+      step: 1,
+      blank: false,
+      scheme: null,
+      time: 1,
+    },
+    {
+      expresso: "position",
+      slide: "1",
+      step: 1,
+      blank: false,
+      scheme: null,
+      time: 1,
+    },
+    {
+      expresso: "position",
+      slide: 1.5,
+      step: 1,
+      blank: false,
+      scheme: null,
+      time: 1,
+    },
+    { expresso: "position", slide: 1, step: 1, scheme: null, time: 1 },
+    { expresso: "position", slide: 1, step: 1, blank: false, scheme: null },
+    {
+      expresso: "position",
+      slide: 1,
+      step: 1,
+      blank: false,
+      scheme: null,
+      time: "1",
+    },
+    {
+      expresso: "position",
+      slide: 1,
+      step: 1,
+      blank: false,
+      scheme: null,
+      time: NaN,
+    },
+    { expresso: "position", slide: 1, step: 1, blank: false, time: 1 },
+    {
+      expresso: "position",
+      slide: 1,
+      step: 1,
+      blank: false,
+      scheme: "sepia",
+      time: 1,
+    },
   ];
   for (const data of others) {
     assert.equal(isMessage(data), false, JSON.stringify(data));

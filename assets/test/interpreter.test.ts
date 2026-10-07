@@ -50,6 +50,7 @@ function apply(
         slide: first,
         step: second,
         blank: third,
+        scheme: null,
         time: 1,
       };
       return { state: follow(state, data, deck), effects: [] };

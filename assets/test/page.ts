@@ -102,6 +102,10 @@ type Options = {
   transitions?: Kind[];
   // True for a browser with the View Transitions API.
   viewTransitions?: boolean;
+  // True for a document with a light and a dark variant of its theme.
+  variants?: boolean;
+  // True for a screen that asks for a dark scheme.
+  dark?: boolean;
 };
 
 export type FakePage = {
@@ -109,7 +113,10 @@ export type FakePage = {
   pages: FakeElement[];
   body: FakeElement;
   location: { hash: string; search: string; readonly href: string };
-  document: { title: string };
+  document: {
+    title: string;
+    documentElement: { dataset: Record<string, string | undefined> };
+  };
   // The fragments that `history.replaceState` got, in sequence.
   written: string[];
   // The addresses that `window.open` got, and the windows that it gave.
@@ -334,6 +341,10 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     },
     documentElement: {
       dataset: {} as Record<string, string | undefined>,
+      // The renderer writes `data-variants` for a theme with a light and a
+      // dark variant.
+      hasAttribute: (name: string) =>
+        name === "data-variants" && options.variants === true,
       requestFullscreen: async () => {
         page.fullscreen = true;
       },
@@ -442,7 +453,9 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     innerWidth: 1200,
     getSelection: () => ({ isCollapsed: page.selection === "" }),
     matchMedia: (query: string) => ({
-      matches: query.includes("reduce") && page.reduced,
+      matches:
+        (query.includes("reduce") && page.reduced) ||
+        (query.includes("dark") && options.dark === true),
     }),
     opener: options.opener ?? null,
     open: (url: string, name: string) => {

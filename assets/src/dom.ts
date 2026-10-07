@@ -9,6 +9,8 @@ import { helpMode } from "./interpreter.ts";
 import type { Transition } from "./interpreter.ts";
 import { parse as parseProgram } from "./program.ts";
 import type { Program, Projections } from "./program.ts";
+import { fromAddress } from "./scheme.ts";
+import type { Scheme } from "./scheme.ts";
 import { position } from "./speaker.ts";
 import type { Pace } from "./speaker.ts";
 import { current } from "./state.ts";
@@ -165,6 +167,26 @@ export function timeLeft(value: string, current: Pace | null): void {
     delete element.dataset.pace;
   } else {
     element.dataset.pace = current;
+  }
+}
+
+// The variant that the key `t` chose for this document, or null for the
+// variant of the screen. `scheme.ts` gives the rules.
+export function scheme(): Scheme {
+  return fromAddress(document.documentElement.dataset.scheme ?? null);
+}
+
+// Show a variant of the theme, or the variant of the screen for null. A
+// document with one variant has no `data-variants`, and it keeps its theme.
+export function showScheme(value: Scheme): void {
+  const root = document.documentElement;
+  if (!root.hasAttribute("data-variants")) {
+    return;
+  }
+  if (value === null) {
+    delete root.dataset.scheme;
+  } else {
+    root.dataset.scheme = value;
   }
 }
 

@@ -25,6 +25,10 @@
 // The key `f` puts the document in full screen, or takes it out of full
 // screen. The key `Escape` of the browser also takes it out.
 //
+// The key `t` shows the other variant of a theme with a light and a dark
+// variant, in the two windows. `?scheme=light` or `?scheme=dark` in the
+// address chooses a variant at the load. `scheme.ts` gives the rules.
+//
 // The renderer writes the list of the steps into the document, and `deck.ts`
 // reads it. The state holds the index of the current step in that list.
 //
@@ -81,9 +85,12 @@ import {
   apply,
   deck as readDeck,
   program as readProgram,
+  scheme,
+  showScheme,
   text,
   timeLeft,
 } from "./dom.ts";
+import { fromAddress, next } from "./scheme.ts";
 
 const deck = readDeck();
 const program = readProgram();
@@ -123,12 +130,21 @@ function tick(): void {
 // The time of the state of this window. `state.ts` gives the rule of the time.
 let time = 0;
 
+// Send the position, the black screen and the variant of the theme to the
+// other window, with a new time.
+function send(): void {
+  time = stamp(time, Date.now());
+  if (partner !== null && !partner.closed) {
+    partner.postMessage(message(state, deck, time, scheme()), "*");
+  }
+}
+
 // Apply a new state, and write its fragment. `replaceState` adds no entry to
 // the history, so the back button of the browser does not go through the
-// steps. A change of this window goes to the other window with a new time. A
-// change from the other window does not go back to it. A message holds only
-// the position and the black screen. A change to other data, such as the
-// overview, sends no message.
+// steps. A change of this window goes to the other window. A change from the
+// other window does not go back to it. A message holds only the position, the
+// black screen and the variant of the theme. A change to other data, such as
+// the overview, sends no message.
 function show(changed: State, local = true): void {
   if (changed === state) {
     return;
@@ -142,10 +158,7 @@ function show(changed: State, local = true): void {
   animate(change, () => apply(state, deck, program));
   history.replaceState(null, "", toHash(state, deck));
   if (local && sent) {
-    time = stamp(time, Date.now());
-    if (partner !== null && !partner.closed) {
-      partner.postMessage(message(state, deck, time), "*");
-    }
+    send();
   }
   if (document.readyState === "complete") {
     embeds();
@@ -166,10 +179,17 @@ function embeds(): void {
 }
 
 // Open the speaker view, or show the window of the speaker view again. The
-// name of the window makes sure that a second `s` opens no second window.
+// name of the window makes sure that a second `s` opens no second window. The
+// address gives the variant of the theme that this window shows.
 function openSpeaker(): void {
   const address = new URL(location.href);
   address.searchParams.set("speaker", "");
+  const chosen = scheme();
+  if (chosen === null) {
+    address.searchParams.delete("scheme");
+  } else {
+    address.searchParams.set("scheme", chosen);
+  }
   address.hash = toHash(state, deck);
   partner = window.open(address.href, "expresso-speaker");
 }
@@ -184,21 +204,22 @@ function fullscreen(): void {
   }
 }
 
-// Show the other variant of a theme with a light and a dark variant. The
-// variant starts from the scheme of the screen, and `data-scheme` on the
-// `html` element wins over that scheme. A document with one variant has no
+// Show the other variant of a theme with a light and a dark variant, in this
+// window and in the other window. A document with one variant has no
 // `data-variants`, and the key then changes nothing.
 function switchScheme(): void {
-  const root = document.documentElement;
-  if (!root.hasAttribute("data-variants")) {
+  if (!document.documentElement.hasAttribute("data-variants")) {
     return;
   }
   const dark =
-    root.dataset.scheme === undefined
-      ? window.matchMedia?.("(prefers-color-scheme: dark)").matches === true
-      : root.dataset.scheme === "dark";
-  root.dataset.scheme = dark ? "light" : "dark";
+    window.matchMedia?.("(prefers-color-scheme: dark)").matches === true;
+  showScheme(next(scheme(), dark));
+  send();
 }
+
+// The address can choose a variant, such as `?scheme=dark`. The speaker view
+// gets the variant of the present view in this way.
+showScheme(fromAddress(parameters.get("scheme")));
 
 if (isSpeaker) {
   document.title = `Speaker view: ${document.title}`;
@@ -393,5 +414,6 @@ window.addEventListener("message", (event: MessageEvent) => {
     return;
   }
   time = event.data.time;
+  showScheme(event.data.scheme);
   show(follow(state, event.data, deck), false);
 });
