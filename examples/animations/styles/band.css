@@ -1,0 +1,6 @@
+/* A band behind the heading of each slide. The path of url() starts from the
+   directory of this file. */
+.slide-heading-container {
+  background: url(../../logo.png) center / cover;
+  color: #ffffff;
+}

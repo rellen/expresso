@@ -88,7 +88,8 @@ Some notes on this example:
 - `auto_reveal` shows each element of the slide one after the other.
 - `reveal` does the same for the items of a list.
 - An `image` reads the file and puts the bytes into the document. The document stays one
-  file. The path is relative to the working directory of the command.
+  file. The path is relative to the working directory of the command, or to the `root`
+  option of the deck.
 - `width` takes a CSS length, such as `900px`, or a percentage of the width of the slide,
   such as `60%`.
 - A slide also takes a `notes` option. The handout view shows the notes under each page of
@@ -179,6 +180,7 @@ Write an option in the deck to apply it to each slide:
 | `print_notes false` | Leave the notes out of the handout view and of the print. |
 | `css "deck.css"` | A style sheet, or the path of one. It applies after the theme. |
 | `effect`, `speed`, `easing` | The animation of each overlay. See `docs/how-to/animate-elements.md`. |
+| `root __DIR__` | The directory of each relative path of the deck. See [the root option](docs/reference/root-option.md). |
 | `template MyDeckTemplate` | A module that makes the header and the footer. See [the template option](docs/reference/template-option.md). |
 | `slide_template MySlideTemplate` | A module that makes the body of each slide. |
 | `theme :dracula` | The colors of the slides and of the code. Each built-in theme meets the contrast minimums of WCAG. See [the theme option](docs/reference/theme-option.md). |
@@ -431,24 +433,10 @@ the version of the release. A later binary of the same version runs that install
 and not its own. Therefore change the version in `mix.exs` for each binary that you give
 to other users. `<binary> maintenance uninstall` removes the installed release.
 
-### Render a deck of another project
-
-`mix expresso` runs only in the project of Expresso. A deck in another project uses the
-binary, which needs no Elixir:
-
-1. Make the binaries, as above. `burrito_out/` then holds one binary for each computer,
-   such as `burrito_out/expresso_cli_app_linux_x86`. `BURRITO_TARGET=linux_x86` in front
-   of the command makes only that binary.
-2. Copy the binary of your computer to a directory on your path, such as `~/.local/bin`.
-3. Render the deck from the directory of your project:
-
-   ```sh
-   expresso_cli_app_linux_x86 talk/deck.exs talk/deck.html
-   ```
-
-A relative path in the deck, such as the `src` of a code element, is relative to the
-working directory. To give each path from the deck file, see "Show code from the project of
-the deck" in [Show code on a slide](docs/how-to/show-code.md).
+`burrito_out/` holds one binary for each computer, such as
+`burrito_out/expresso_cli_app_linux_x86`. `BURRITO_TARGET=linux_x86` in front of the
+command makes only that binary. To render a deck in your own project with the binary or
+with `mix expresso`, see [Render a deck in your project](docs/how-to/render-a-deck-in-your-project.md).
 
 ## Develop
 
@@ -484,6 +472,8 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Show a web page in a slide](docs/how-to/show-a-web-page.md)
 - [Make templates of your own](docs/how-to/make-templates.md)
 - [Use colors of your own](docs/how-to/use-colors-of-your-own.md)
+- [Render a deck in your project](docs/how-to/render-a-deck-in-your-project.md)
+- [Put a picture or a font into the style sheet](docs/how-to/put-files-into-the-css.md)
 
 Reference pages describe each value of an option:
 
@@ -496,6 +486,7 @@ Reference pages describe each value of an option:
 - [The class option](docs/reference/class-option.md)
 - [The embed element](docs/reference/embed-element.md)
 - [The template option](docs/reference/template-option.md)
+- [The root option](docs/reference/root-option.md)
 - [The theme option](docs/reference/theme-option.md)
 
 Explanations give the design and its reasons:

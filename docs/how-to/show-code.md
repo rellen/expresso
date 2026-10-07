@@ -43,7 +43,9 @@ file, and a change to the file changes the slide.
    ```
 
 3. Render the deck from the directory of the project, because the path is relative to the
-   working directory of the command.
+   working directory of the command. With the `root` option, the path starts from the
+   directory of the option. See
+   [Show code from the project of the deck](#show-code-from-the-project-of-the-deck).
 
 Without `lines`, the slide shows each line of the file.
 
@@ -73,40 +75,28 @@ one time. A change above the excerpt then does not move it. The example in
 
 ## Show code from the project of the deck
 
-A relative path is relative to the working directory of the command, and not to the deck
-file. Give each path from the directory of the deck instead, so that the deck renders from
-any directory:
+A relative path starts from the working directory of the command. Give the deck the `root`
+option, and each path then starts from your project, so the deck renders from any
+directory:
 
-1. Put the deck file in your project, such as `talk/deck.exs`.
-2. Add a module attribute with the root of the project, from `__DIR__`. In the deck file,
-   `__DIR__` is the directory of the file.
-3. Join each path to the root:
+```elixir
+defmodule MyTalk.Deck do
+  use Expresso
 
-   ```elixir
-   defmodule MyTalk.Deck do
-     use Expresso
+  root Path.expand("..", __DIR__)
 
-     @root Path.expand("..", __DIR__)
+  slide "the server" do
+    code "elixir" do
+      src "lib/my_app/server.ex"
+      lines 40..58
+    end
+  end
+end
+```
 
-     slide "the server" do
-       code "elixir" do
-         src Path.join(@root, "lib/my_app/server.ex")
-         lines 40..58
-       end
-     end
-   end
-   ```
-
-4. Render the deck with the binary of Expresso, from any directory:
-
-   ```sh
-   expresso_cli_app_linux_x86 talk/deck.exs talk/deck.html
-   ```
-
-Each option of the DSL is an expression, so the same pattern works for an image, a
-diagram, an embed and the `css` option. A script of `Expresso.Builder` uses a variable,
-such as `root = Path.expand("..", __DIR__)`. To get the binary, see "Make a binary" in the
-README.
+In the deck file, `__DIR__` is the directory of the file, so `Path.expand("..", __DIR__)`
+is the project of a deck in `talk/`. For the steps, and for `mix expresso` in your
+project, see [Render a deck in your project](render-a-deck-in-your-project.md).
 
 ## Show the numbers of the lines
 

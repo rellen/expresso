@@ -68,7 +68,7 @@ defmodule Expresso.GuideCodeTest do
     File.mkdir_p!(Path.join(tmp_dir, "talk"))
     File.mkdir_p!(Path.join(tmp_dir, "lib/my_app"))
     File.write!(Path.join(tmp_dir, "lib/my_app/server.ex"), lines)
-    File.write!(Path.join(tmp_dir, "talk/deck.exs"), String.replace(code, ~r/^   /m, ""))
+    File.write!(Path.join(tmp_dir, "talk/deck.exs"), code)
 
     assert {:ok, html} = Expresso.render_file(Path.join(tmp_dir, "talk/deck.exs"))
     assert html =~ "# line 40"

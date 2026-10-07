@@ -20,7 +20,7 @@ end
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | An address that starts with `https://` or `http://`, or the path of a local `.html` or `.htm` file | The page. A path is relative to the working directory of the command. |
+| The first argument | An address that starts with `https://` or `http://`, or the path of a local `.html` or `.htm` file | The page. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. |
 | `title` | A string, required | The name of the page for a screen reader. The fallback image gets it as its `alt` text. |
 | `fallback` | The path of an image | The image that shows on paper, in the handout view, in the overview and while the page loads. |
 | `width` | A CSS width, such as `"900px"` or `"80%"` | The width of the page. A percentage is a part of the width of the slide. The default is `80%`. |

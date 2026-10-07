@@ -242,11 +242,20 @@ The watch mode watches these files:
 - The custom templates in `./priv/templates/`. See "The templates".
 
 `Expresso.DeckFile.read/1` reads a relative path from the working directory of the
-command, and not from the directory of the deck file. A deck file is a script, and
-`Code.eval_file/1` gives it no base directory of its own. A deck that renders from any
-directory joins each path to `__DIR__`, which is the directory of the deck file in the
-script. "Show code from the project of the deck" in `docs/how-to/show-code.md` gives the
-steps.
+command. A deck file is a script, and `Code.eval_file/1` gives it no base directory of its
+own. The `root` option of the deck gives one, such as `root __DIR__`, and
+`Expresso.PathTransformer` joins each relative path of the deck to it at compile time.
+`docs/reference/root-option.md` lists the paths.
+
+The option is a choice of the deck, and a deck without it keeps its paths from the working
+directory. A base from the deck file for each deck would change the paths of each deck
+that renders from the directory of its project, such as the examples of this repository.
+
+The transformer is the first place that knows the option. An entity of the DSL is made
+before the options of the deck are known, so an entity cannot join a path to the root.
+The image, the diagram, the embed and the style sheet read their files at render time, so
+the joined path is enough for them. The code element reads its file at compile time, as
+"The code" tells, so the transformer also reads that file.
 
 The watch mode does not see a file that the deck script reads by itself, for example with
 `File.read!/1` or `Code.require_file/1`. A failed render can stop before it reads each file
@@ -394,6 +403,13 @@ It reads them with `File.read!/1` at compile time. Each style sheet, and each so
 bundle under `assets/src/`, is an `@external_resource` of the module. Therefore a change to
 one of these files starts a new compile of `Expresso.Renderer`. Elixir compares the content
 of an external resource, and not its time, so a `touch` does not start a compile.
+
+The `css` option of a deck can name a font or a picture with `url()`. The document is one
+file, so `Expresso.Css.render/2` puts each local file of a `url()` into the style sheet as a
+data URI at render time, as `Expresso.Font` does for the font of the theme. A relative
+path resolves as in a browser: from the directory of a CSS file, or from the base of the
+deck for a style sheet in the option itself. The base is the `root` option, or the working
+directory. Thus a CSS file that works in a browser next to its files also works in a deck.
 
 `Expresso.Theme` reads `assets/style.css` in the same way, with `Expresso.Css.scan/1`. It
 gives the names of the custom properties and of the effects of the theme to two verifiers,
@@ -729,10 +745,14 @@ file that holds it. `Expresso.Highlight` makes one HTML fragment for each line a
 time.
 
 `Expresso.Element.Code.build/1` reads the file of `src`, and not the render function. The
-transform of the entity calls `build/1`, so the compiler of the DSL and
-`Expresso.Builder.code/2` both read the file. The check of the `reveal` option needs the
-lines, and the transform runs before the transformer gives the steps. The function reads
-the file through `Expresso.DeckFile`. Each render of the watch mode evaluates the deck
+check of the `reveal` option needs the lines, and the steps of the groups come from the
+transformer, so the file must be read before the overlay transformer runs. The transform
+of the entity calls `Expresso.Element.Code.check/1`, which checks the options and builds an
+element with `text`. `Expresso.PathTransformer` runs before the overlay transformer, and it
+calls `build/1` for each element with `src`, after it joins the path to the `root` option.
+`Expresso.Builder.deck/2` runs the same transformers, so the compiler of the DSL and the
+builder read the file in the same place. The function reads the file through
+`Expresso.DeckFile`. Each render of the watch mode evaluates the deck
 file again inside `Expresso.DeckFile.track/1`, so the watch mode also watches the file of
 the code.
 
@@ -957,8 +977,10 @@ In the present view, the style sheet puts the number in the corner of the window
 
 ### The transformer and the verifiers
 
-The extension imports nothing, and it lists one transformer and seven verifiers:
+The extension imports nothing, and it lists two transformers and seven verifiers:
 
+- `Expresso.PathTransformer` joins each relative path of the deck to the `root` option, and
+  it builds each code element with `src`. It runs first. See "The watch mode".
 - `Expresso.Overlay.Transformer` expands the overlay specifications of each slide at
   compile time.
 - `Expresso.GotoVerifier` refuses a `goto` option that names no slide. See "The links".

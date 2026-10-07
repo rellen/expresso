@@ -24,7 +24,7 @@ end
 | --- | --- | --- |
 | The first argument | The name of a language, such as `"elixir"` or `"js"` | The colors of the language. See [the languages](#the-languages). Without it, the code has no colors. |
 | `text` | A string | The source code. |
-| `src` | The path of a file, relative to the working directory of the command | The source code is the text of the file. |
+| `src` | The path of a file, relative to [the root option](root-option.md) of the deck, or to the working directory of the command | The source code is the text of the file. |
 | `lines` | A range, such as `10..24`, or texts, such as `[from: "def start(", to: "\n  end"]` | The element shows only these lines of the `src` file. See [lines from a text](#lines-from-a-text). The default is each line. |
 | `line_numbers` | `true` or `false` | Show the number of each line. The default is `false`. |
 | `reveal` | Line numbers and ranges, such as `[10..12, 13..20]` | Each group of lines shows at its own step. See [the overlay options](overlay-options.md). |
@@ -47,9 +47,10 @@ shows its lines with no colors, as an element with no language does.
 
 ## Code from a file
 
-The element reads the file of `src` when the deck compiles, and `Expresso.Builder.code/2`
-reads it when it makes the element. The text of the lines of `lines` is then the source of
-the element.
+The element reads the file of `src` when the deck compiles, after the deck gives its
+`root` option. `Expresso.Builder.deck/2` reads it in the same way, so the element of
+`Expresso.Builder.code/2` holds no text until it is in a deck. The text of the lines of
+`lines` is then the source of the element.
 
 - `mix expresso` reads the file each time that it renders the deck.
 - The watch mode renders the deck again after a change to the file.
@@ -86,7 +87,9 @@ The compiler gives an error for:
 - `reveal` and `highlight` together, and `highlight` with `dim`,
 - a line that is in two groups of `highlight`.
 
-`Expresso.Builder.code/2` raises an `ArgumentError` with the same message.
+`Expresso.Builder.code/2` raises an `ArgumentError` with the same message for an option.
+`Expresso.Builder.deck/2` raises a `Spark.Error.DslError` for an error of the file, such as a
+file that it cannot read.
 
 ## The warnings
 
