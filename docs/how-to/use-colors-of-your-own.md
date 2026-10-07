@@ -57,6 +57,22 @@ A slot that colors two roles, such as `base05` for the text and for the code, ge
 color that passes for each role. When a warning says that no lightness of a color passes,
 change the hue of the slot or the background.
 
+## Let Expresso correct the colors
+
+To keep the hue of each color and let Expresso find the lightness, give the map with
+`adjust: true`:
+
+```elixir
+theme colors: %{base00: "#13233a", ...}, adjust: true
+```
+
+1. Render the deck. The document gets each color that passes, as a built-in theme does.
+2. Read the warnings. A warning tells you when a color moves more than 0.4 in lightness,
+   because the color can then look different from your map.
+
+Your map stays as you write it, so the slides and your map can show different colors.
+Copy the colors of the warnings into the map, as above, to keep the two the same.
+
 ## The complete deck
 
 This deck has the map above with each color of the warnings. The compiler gives no
