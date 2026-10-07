@@ -412,9 +412,10 @@ deck for a style sheet in the option itself. The base is the `root` option, or t
 directory. Thus a CSS file that works in a browser next to its files also works in a deck.
 
 `Expresso.Theme` reads `assets/style.css` in the same way, with `Expresso.Css.scan/1`. It
-gives the names of the custom properties and of the effects of the theme to two verifiers,
-`Expresso.Overlay.PropertyVerifier` and `Expresso.Overlay.EffectVerifier`.
-`docs/overlays.md` gives the rules of those verifiers.
+gives the names of the custom properties, the effects and the transitions of the theme to
+three verifiers: `Expresso.Overlay.PropertyVerifier`, `Expresso.Overlay.EffectVerifier`
+and `Expresso.TransitionVerifier`. `docs/overlays.md` gives the rules of the first two, and
+"The transitions" gives the rules of the third.
 
 ### The colors
 
@@ -1007,7 +1008,7 @@ In the present view, the style sheet puts the number in the corner of the window
 
 ### The transformer and the verifiers
 
-The extension imports nothing, and it lists two transformers and seven verifiers:
+The extension imports nothing, and it lists two transformers and eight verifiers:
 
 - `Expresso.PathTransformer` joins each relative path of the deck to the `root` option, and
   it builds each code element with `src`. It runs first. See "The watch mode".
@@ -1019,6 +1020,8 @@ The extension imports nothing, and it lists two transformers and seven verifiers
   the theme nor the CSS of the deck uses.
 - `Expresso.Overlay.EffectVerifier` reads the `css` option of the deck. It gives an error
   for an effect without a rule in the theme or in that style sheet.
+- `Expresso.TransitionVerifier` gives an error for a transition without a rule in the theme
+  or in the CSS of the deck. See "The transitions".
 - `Expresso.Overlay.SizeVerifier` gives a warning for a slide of very many steps.
 - `Expresso.ThemeVerifier` gives a warning for each role of a theme from a map that does
   not meet its minimum, with a color that passes. See "The contrast of a theme".
@@ -1280,10 +1283,12 @@ overview or on paper. Its color is `--accent`, and a deck can set `--progress-co
 ### The transitions
 
 The `transition` option of the deck gives the transition from one slide to the next in the
-present view: `:fade`, `:slide`, `:zoom` or `:none`. The default is `:fade`. A slide can
-have the same option, and `Expresso.Slide.put_options_in_metadata/1` puts it into the
-metadata of the slide. The list of the steps gives the kind of each slide. The slide option
-comes first, then the deck option, then `fade`.
+present view: `:fade`, `:slide`, `:zoom`, `:none` or a transition of the CSS of the deck.
+The default is `:fade`. A slide can have the same option, and
+`Expresso.Slide.put_options_in_metadata/1` puts it into the metadata of the slide. The list
+of the steps gives the kind of each slide. The slide option comes first, then the deck
+option, then `fade`. `Expresso.Steps.kind/1` writes each underscore of the name as a
+hyphen, as the renderer does for an effect.
 
 `transition` in `interpreter.ts` decides if a change of state has a transition. Only a
 move to a different slide in the present view has one. A change of the step, a black
@@ -1303,6 +1308,23 @@ none. Therefore the progress bar and the other fixed parts do not move with the 
 style sheet gives each kind its keyframes on the pseudo-elements
 `::view-transition-old(slide)` and `::view-transition-new(slide)`. `fade` uses the
 animations of the browser. A theme can set `--transition-dur`.
+
+The set of kinds is open, with the same model as the effects. A kind is a name and some CSS
+rules, and the presenter does not know the names:
+
+- `Expresso.Css.scan/1` finds each name of a rule for `html[data-transition="..."]`.
+  `Expresso.Theme.transitions/0` gives the names of the theme, with `fade` and `none`,
+  which need no rule.
+- `Expresso.TransitionVerifier` makes sure that the transition of the deck and of each
+  slide has a rule in the theme or in the CSS of the deck. Without the verifier, a wrong
+  name fades with no error.
+- The schema of the program gives a kind as a string of letters, digits and hyphens.
+  `decodeKind` of `schema.ts` therefore takes a kind of the deck. It refuses a value that
+  the renderer does not write, such as `wipe_down`.
+- `Expresso.Presenter.Schema.transitions/0` gives the built-in kinds only. A test makes sure
+  that they agree with the rules of the theme.
+
+A deck struct from data does not go through the verifier, so a kind without a rule fades.
 
 ### The overview
 

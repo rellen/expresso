@@ -201,10 +201,10 @@ export const decodeWrittenProgram: Decoder<WrittenProgram> = /* @__PURE__ */ obj
   project: decodeWrittenProjections,
 });
 
-// The kind of the transition into a slide.
-export type Kind = "none" | "fade" | "slide" | "zoom";
-export const KINDS: readonly Kind[] = ["none", "fade", "slide", "zoom"];
-export const decodeKind: Decoder<Kind> = /* @__PURE__ */ oneOf(KINDS);
+// The kind of the transition into a slide: a built-in kind, or a transition of
+// the CSS of the deck.
+export type Kind = string;
+export const decodeKind: Decoder<Kind> = /* @__PURE__ */ string(/^[A-Za-z0-9-]+$/);
 
 // One slide of the deck: the index of its step 1, its number of steps, and the
 // transition into it.

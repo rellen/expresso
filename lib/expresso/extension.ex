@@ -4,7 +4,8 @@ defmodule Expresso.Extension do
 
   It gives the `deck` section, the `slide` entity and the entities of an element.
   The overlay transformer, the overlay verifiers, `Expresso.GotoVerifier`,
-  `Expresso.ThemeVerifier` and `Expresso.CodeVerifier` run for each deck module.
+  `Expresso.TransitionVerifier`, `Expresso.ThemeVerifier` and
+  `Expresso.CodeVerifier` run for each deck module.
   """
 
   # The overlay specification of an element. Each element entity merges this
@@ -451,7 +452,7 @@ defmodule Expresso.Extension do
         doc: "Show each element of the slide one after the other. See docs/overlays.md."
       ],
       transition: [
-        type: {:in, Expresso.Presenter.Schema.transitions()},
+        type: :atom,
         doc:
           "The transition between the slide before and this slide, in the two directions. The default is the transition of the deck."
       ],
@@ -509,10 +510,10 @@ defmodule Expresso.Extension do
           "The easing of each animation in a slide: #{Enum.map_join(@easings, ", ", &inspect/1)}. A slide, an element or its parent can replace it. Without the option, the theme gives :ease_in_out."
       ],
       transition: [
-        type: {:in, Expresso.Presenter.Schema.transitions()},
+        type: :atom,
         default: :fade,
         doc:
-          "The transition from one slide to the next in the present view: :fade, :slide, :zoom or :none. A slide can replace it."
+          "The transition from one slide to the next in the present view: :fade, :slide, :zoom, :none or a transition of the CSS of the deck. A slide can replace it. See docs/reference/transition-option.md."
       ],
       duration: [
         type: :pos_integer,
@@ -573,6 +574,7 @@ defmodule Expresso.Extension do
       Expresso.Overlay.Verifier,
       Expresso.Overlay.PropertyVerifier,
       Expresso.Overlay.EffectVerifier,
+      Expresso.TransitionVerifier,
       Expresso.Overlay.SizeVerifier,
       Expresso.ThemeVerifier,
       Expresso.CodeVerifier

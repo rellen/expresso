@@ -96,7 +96,7 @@ defmodule Expresso.Presenter.Schema do
   @spec builtins() :: [atom()]
   def builtins, do: @builtins
 
-  @doc "Return the kinds of the transition into a slide"
+  @doc "Return the built-in kinds of the transition into a slide"
   @spec transitions() :: [atom()]
   def transitions, do: @transitions
 
@@ -181,7 +181,9 @@ defmodule Expresso.Presenter.Schema do
         state: {:ref, :state},
         modes: {:list, {:ref, :written_mode}},
         project: {:ref, :written_projections}}},
-      {:kind, "The kind of the transition into a slide.", strings(@transitions)},
+      {:kind,
+       "The kind of the transition into a slide: a built-in kind, or a transition of the CSS of the deck.",
+       {:string, "^[A-Za-z0-9-]+$"}},
       {:slide,
        "One slide of the deck: the index of its step 1, its number of steps, and the transition into it.",
        {:object, first: {:integer, 0}, steps: {:integer, 1}, transition: {:ref, :kind}}},

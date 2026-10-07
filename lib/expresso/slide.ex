@@ -13,7 +13,7 @@ defmodule Expresso.Slide do
           :steps => pos_integer() | nil,
           :handout => Expresso.Handout.t() | nil,
           :auto_reveal => boolean() | nil,
-          :transition => :none | :fade | :slide | :zoom | nil,
+          :transition => atom() | nil,
           :effect => atom() | nil,
           :speed => atom() | pos_integer() | nil,
           :easing => atom() | nil,

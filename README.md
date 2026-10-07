@@ -172,7 +172,7 @@ Write an option in the deck to apply it to each slide:
 
 | Option | Effect |
 | --- | --- |
-| `transition :slide` | How each slide comes in: `:fade`, `:slide`, `:zoom` or `:none`. The default is `:fade`. |
+| `transition :slide` | How each slide comes in: `:fade`, `:slide`, `:zoom`, `:none` or a transition of the `css` option. The default is `:fade`. |
 | `duration 20` | The length of the talk in minutes. The speaker view then shows the time left. |
 | `progress false` | Hide the progress bar at the start. |
 | `slide_numbers true` | Show the number of each slide, such as `3 / 12`. |
@@ -268,6 +268,9 @@ plays the same kind in reverse. A move to a different step inside a slide uses t
 animations of the overlays.
 
 ![The second slide pushes the first slide out to the left, and a move back brings it in](https://raw.githubusercontent.com/rellen/expresso/media/transition-slide.gif)
+
+The `css` option of the deck can give a transition of your own. See
+[Make a transition of your own](docs/how-to/add-transitions.md#make-a-transition-of-your-own).
 
 The transitions need the View Transitions API of the browser. A browser without it, and a
 user who asks for reduced motion, get an instant change. The speaker view has no

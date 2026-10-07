@@ -47,7 +47,7 @@ test("validateDeck refuses a text that is not a list of the renderer", () => {
     JSON.stringify({ ...good, slides: [{ first: 0, steps: 1 }] }),
     JSON.stringify({
       ...good,
-      slides: [{ first: 0, steps: 1, transition: "wipe" }],
+      slides: [{ first: 0, steps: 1, transition: "wipe_down" }],
     }),
     JSON.stringify({
       ...good,
@@ -91,10 +91,10 @@ test("indexOf gives undefined for a slide or a step that the deck does not have"
 });
 
 test("isKind tells if a value is a kind of transition", () => {
-  for (const kind of ["none", "fade", "slide", "zoom"]) {
+  for (const kind of ["none", "fade", "slide", "zoom", "wipe-down", "Spin2"]) {
     assert.equal(isKind(kind), true, kind);
   }
-  for (const value of [undefined, null, 1, "", "Fade", "wipe", "fade "]) {
+  for (const value of [undefined, null, 1, "", "wipe_down", "fade ", '"]']) {
     assert.equal(isKind(value), false, String(value));
   }
 });
