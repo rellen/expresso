@@ -156,12 +156,20 @@ test("each change goes to the speaker view", () => {
     slide: 1,
     step: 1,
     blank: false,
+    scheme: null,
   });
 });
 
 test("a message from the speaker view moves the present view", () => {
   page.receive(
-    { expresso: "position", slide: 2, step: 2, blank: true, time: later() },
+    {
+      expresso: "position",
+      slide: 2,
+      step: 2,
+      blank: true,
+      scheme: null,
+      time: later(),
+    },
     nth(page.opened, 0).window,
   );
 
@@ -174,7 +182,14 @@ test("a message from the speaker view does not go back to it", () => {
   const speaker = nth(page.opened, 0).window;
   const count = speaker.received.length;
   page.receive(
-    { expresso: "position", slide: 1, step: 1, blank: false, time: later() },
+    {
+      expresso: "position",
+      slide: 1,
+      step: 1,
+      blank: false,
+      scheme: null,
+      time: later(),
+    },
     speaker,
   );
 
@@ -184,11 +199,25 @@ test("a message from the speaker view does not go back to it", () => {
 
 test("a message older than the state of the window has no effect", () => {
   page.receive(
-    { expresso: "position", slide: 2, step: 2, blank: true, time: later() },
+    {
+      expresso: "position",
+      slide: 2,
+      step: 2,
+      blank: true,
+      scheme: null,
+      time: later(),
+    },
     nth(page.opened, 0).window,
   );
   page.receive(
-    { expresso: "position", slide: 1, step: 1, blank: false, time: 1 },
+    {
+      expresso: "position",
+      slide: 1,
+      step: 1,
+      blank: false,
+      scheme: null,
+      time: 1,
+    },
     nth(page.opened, 0).window,
   );
 
@@ -199,7 +228,14 @@ test("a message older than the state of the window has no effect", () => {
 test("a message from another window has no effect", () => {
   page.press("x");
   page.receive(
-    { expresso: "position", slide: 1, step: 1, blank: false, time: later() },
+    {
+      expresso: "position",
+      slide: 1,
+      step: 1,
+      blank: false,
+      scheme: null,
+      time: later(),
+    },
     null,
   );
 

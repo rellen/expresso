@@ -535,12 +535,24 @@ renderer writes the roles of each:
    the default theme with each variant.
 
 The key `t` calls the built-in function `switch_scheme`, which writes `data-scheme` on the
-`html` element. The presenter does not hold the variant in its state, because the
-variant at the start comes from the screen, and the interpreter cannot read the screen. A
-field of the state would also need a change to the messages between the windows. The key
-therefore changes the variant of its own window only, and the default presenter gives it
-to the present view only. `data-variants` on the `html` element tells the function that the
+`html` element. `data-variants` on the `html` element tells the function that the
 document has two variants. Without it, the key changes nothing.
+
+The presenter does not hold the variant in its state, because the variant at the start
+comes from the screen, and the interpreter cannot read the screen. The two windows must
+still show the same variant, because the speaker view shows the slides that the audience
+sees. `main.ts` therefore keeps the choice outside the state:
+
+- Each message between the windows holds `scheme`: `"light"`, `"dark"`, or `null` for the
+  variant of the screen. The function reads it from `data-scheme`.
+- `switch_scheme` sends a message after the change, with a new time. The other window
+  takes a newer message as it takes a position, and it writes `data-scheme` from it.
+- A window that opens gets the variant from `?scheme=` in its address. The key `s` writes
+  that parameter for the speaker view. Without it, the first message of the speaker view
+  would hold `null`, and it would change the variant of the present view back.
+
+The default presenter binds `t` in the present view and in the speaker view.
+`scheme.ts` holds the rules, and `dom.ts` reads and writes the attribute.
 
 #### The dimmed colors
 
@@ -1388,7 +1400,8 @@ second, so the timer and the time left always give the length of the talk.
 
 Each window sends its position to the other window with `postMessage`. The message holds
 the slide, the step and the black screen, so `b` in the speaker view gives a black screen
-to the audience. A window accepts a message only from the other window. The present view
+to the audience. It also holds the variant of the theme that `t` chose. See "Two variants
+of a theme". A window accepts a message only from the other window. The present view
 gets the speaker view from `window.open`, and the speaker view gets the present view from
 `window.opener`. After a reload of the present view, the next message of the speaker view
 makes the connection again. `BroadcastChannel` is not in this design, because a browser
@@ -1415,6 +1428,9 @@ it at load and at each `hashchange` event. It writes the fragment with
 `history.replaceState` after each change, so the history of the browser gets no entry for
 a step. A fragment that gives no slide and step of the deck has no effect. `#4` is step 1
 of slide 4.
+
+The query of the address gives options of the window: `?speaker`, `?all`, `?check`,
+`?duration=` and `?scheme=`. `main.ts` reads them at load only, and it does not write them.
 
 ### The print
 

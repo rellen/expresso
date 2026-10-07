@@ -247,6 +247,11 @@ export const decodeWrittenEmbeds: Decoder<WrittenEmbeds> = /* @__PURE__ */ list(
   value: /* @__PURE__ */ string(),
 }));
 
+// The variant of a theme with a light and a dark variant that the key t chose,
+// or null for the variant of the screen.
+export type Scheme = "light" | "dark" | null;
+export const decodeScheme: Decoder<Scheme> = /* @__PURE__ */ nullable(/* @__PURE__ */ oneOf(["light", "dark"]));
+
 // The message that one window of the presenter sends to the other window. The
 // other window ignores a key that it does not know.
 export type Message = Readonly<{
@@ -254,6 +259,7 @@ export type Message = Readonly<{
   slide: number;
   step: number;
   blank: boolean;
+  scheme: Scheme;
   time: number;
 }>;
 export const decodeMessage: Decoder<Message> = /* @__PURE__ */ openObject({
@@ -261,5 +267,6 @@ export const decodeMessage: Decoder<Message> = /* @__PURE__ */ openObject({
   slide: /* @__PURE__ */ integer(),
   step: /* @__PURE__ */ integer(),
   blank: boolean,
+  scheme: decodeScheme,
   time: /* @__PURE__ */ number(),
 });

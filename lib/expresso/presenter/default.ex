@@ -92,7 +92,7 @@ defmodule Expresso.Presenter.Default do
     key "s", builtin(:open_speaker), "Speaker view, in a second window"
     key "f", builtin(:fullscreen), "Full screen on or off"
     key "g", toggle(:progress), "Progress bar on or off"
-    key "t", builtin(:switch_scheme), "Light or dark variant of the theme"
+    key "t", builtin(:switch_scheme), "Light or dark variant of the theme, in the two windows"
 
     event [click: :right, swipe: :left], step(1), "Next step",
       label: "Click or tap the right two thirds, or swipe left"
@@ -132,6 +132,7 @@ defmodule Expresso.Presenter.Default do
 
     key "r", builtin(:reset_timer), "Set the timer to 0:00"
     key "f", builtin(:fullscreen), "Full screen on or off"
+    key "t", builtin(:switch_scheme), "Light or dark variant of the theme, in the two windows"
 
     event [click: :right, swipe: :left], step(1), "Next step",
       label: "Click or tap the right two thirds, or swipe left"

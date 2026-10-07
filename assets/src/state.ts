@@ -12,7 +12,7 @@
 import { is } from "./decode.ts";
 import type { Deck, Entry } from "./deck.ts";
 import { decodeMessage } from "./schema.ts";
-import type { Direction, Message, Region, State } from "./schema.ts";
+import type { Direction, Message, Region, Scheme, State } from "./schema.ts";
 
 // The present view shows one slide at one step. The handout view shows one page
 // for each step of each slide. The speaker view shows the current step, the
@@ -61,7 +61,8 @@ export function swipe(dx: number, dy: number): Direction | undefined {
 // The message that one window of the presenter sends to the other window
 // after each change of its own. The speaker view and the present view then show
 // the same step, and the key `b` in either window gives a black screen to the
-// audience.
+// audience. The message also holds the variant of the theme that the key `t`
+// chose, so the two windows show the same variant.
 //
 // `time` is the time of the change in milliseconds. A window does not send a
 // position from the other window back, and it ignores a message that is older
@@ -73,13 +74,19 @@ export function swipe(dx: number, dy: number): Direction | undefined {
 // `schema.ts` declares `Message`.
 export type { Message } from "./schema.ts";
 
-export function message(state: State, deck: Deck, time: number): Message {
+export function message(
+  state: State,
+  deck: Deck,
+  time: number,
+  scheme: Scheme,
+): Message {
   const entry = current(state, deck);
   return {
     expresso: "position",
     slide: entry?.slide ?? 1,
     step: entry?.step ?? 1,
     blank: state.blank,
+    scheme,
     time,
   };
 }

@@ -145,6 +145,7 @@ test("the message decoder takes a message with other keys", () => {
     slide: 2,
     step: 1,
     blank: false,
+    scheme: null,
     time: 5,
   };
 

@@ -24,12 +24,29 @@ light room and a dark room. For each rule, see
 
 ## Change the variant during the talk
 
-1. Press `t` in the window of the audience. The document shows the other variant.
+1. Press `t` in the window of the audience or in the speaker view. The two windows show
+   the other variant.
 2. Press `t` again to go back.
 
-The key changes the window where you press it, so press it in the present view and not
-in the speaker view. A load of the document shows the variant of the screen again. Paper
-gets the default theme with each variant.
+A load of the document shows the variant of the screen again. Paper gets the default theme
+with each variant.
+
+In the speaker view, the key changes the two pages of the slides, as it changes the
+window of the audience:
+
+![The speaker view shows the light variant, and the key t shows the dark variant](https://raw.githubusercontent.com/rellen/expresso/media/theme-variants-speaker.gif)
+
+## Start the talk in one variant
+
+The projector of a room can need the dark variant on a computer with a light scheme.
+Add `?scheme=dark` to the address:
+
+```text
+file:///path/to/deck.html?scheme=dark
+```
+
+`?scheme=light` gives the light variant. The key `t` still shows the other variant. The
+key `s` opens the speaker view in the variant of the present view.
 
 ## The complete deck
 

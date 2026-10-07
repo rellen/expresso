@@ -215,12 +215,17 @@ variant:
 | --- | --- |
 | A screen with no preference, or with a light scheme | The light variant. |
 | A screen with a dark scheme, as `prefers-color-scheme: dark` gives | The dark variant. |
-| The key `t` in the present view | The other variant. It wins over the scheme of the screen until the next load of the document. |
+| `?scheme=light` or `?scheme=dark` at the end of the address | That variant. It wins over the scheme of the screen. |
+| The key `t` in the present view or in the speaker view | The other variant, in the two windows. It wins over the scheme of the screen and over the address until the next load of the document. |
 | Paper | The default theme, as for one theme. |
 
-The key `t` changes the variant of its own window only. In the speaker view, the key does
-nothing, so press it in the window of the audience. A deck with one variant ignores the
-key. For the steps, see
+- The two windows of the presenter show the same variant. The key `s` gives the variant of
+  the present view to the speaker view that it opens.
+- A load of the document shows the variant of the address, or of the screen. The key `t`
+  does not change the address.
+- A deck with one variant ignores the key and the address parameter.
+
+For the steps, see
 [Give a deck a light and a dark variant](../how-to/give-a-deck-two-variants.md).
 
 ## The roles

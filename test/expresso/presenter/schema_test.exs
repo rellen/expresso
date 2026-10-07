@@ -110,17 +110,21 @@ defmodule Expresso.Presenter.SchemaTest do
              )
   end
 
-  test "a message can hold other keys, and its time must be a number" do
+  test "a message can hold other keys, its time must be a number, and its scheme a variant or null" do
     message = %{
       "expresso" => "position",
       "slide" => 2,
       "step" => 1,
       "blank" => false,
+      "scheme" => nil,
       "time" => 5
     }
 
     assert Check.check(Map.put(message, "from", "x"), :message) == :ok
+    assert Check.check(%{message | "scheme" => "dark"}, :message) == :ok
     assert {:error, _message} = Check.check(%{message | "time" => "5"}, :message)
+    assert {:error, _message} = Check.check(%{message | "scheme" => "sepia"}, :message)
+    assert {:error, _message} = Check.check(Map.delete(message, "scheme"), :message)
   end
 
   defp refs({:ref, name}), do: [name]
