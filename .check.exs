@@ -33,6 +33,9 @@ burrito_target =
     # succeeded. `docs/development.md` gives the details in "The release tests".
     {:release, "mix release expresso_cli_app --overwrite",
      env: %{"MIX_ENV" => "prod", "BURRITO_TARGET" => burrito_target}},
+    # The test of Expresso as a dev dependency of a project. It fetches the
+    # dependencies of that project, so it needs the network.
+    {:dependency, "mix test --only dependency", deps: [:e2e]},
     {:release_tests, "mix test --only release",
      env: %{"EXPRESSO_BINARY" => "burrito_out/expresso_cli_app_" <> burrito_target},
      deps: [{:release, status: :ok}, :e2e]}

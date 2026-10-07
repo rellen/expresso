@@ -40,6 +40,7 @@ mix test
 npm run check
 npm test
 mix test --only e2e
+mix test --only dependency
 BURRITO_TARGET=linux_x86 MIX_ENV=prod mix release expresso_cli_app --overwrite
 EXPRESSO_BINARY=burrito_out/expresso_cli_app_linux_x86 mix test --only release
 ```
@@ -57,6 +58,10 @@ the release tests with that binary. `.check.exs` gives the tools.
 driver of `package.json` and Chromium. `mix test` excludes them. In a remote session, the
 hook sets `EXPRESSO_CHROMIUM` to the Chromium of the container. `docs/development.md` gives
 the details.
+
+`mix test --only dependency` runs the test of `test/dependency/`. It makes a project that
+takes Expresso as a dev dependency, and it runs `mix expresso` there. It needs the network
+for the dependencies of that project. `mix test` excludes it.
 
 `mix test --only release` runs the tests of `test/release/`. They run the binary that
 Burrito makes, and `EXPRESSO_BINARY` gives its path. `mix release` needs Zig, and the hook
