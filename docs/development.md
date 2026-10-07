@@ -676,9 +676,9 @@ The name of the theme is the name of its file, with underscores, such as
 
 ## Record the GIFs and the stills of the examples
 
-The how-to guides and the reference pages show a GIF of each example deck of
-`examples/animations/`. "Present a deck" in `README.md` shows a GIF or a still of each
-example deck of `examples/presenter/`. "The gallery" of `docs/reference/theme-option.md`
+The how-to guides and the reference pages show a GIF or a still of each example deck of
+`examples/animations/`, and each how-to guide shows at least one. "Present a deck" in
+`README.md` shows a GIF or a still of each example deck of `examples/presenter/`. "The gallery" of `docs/reference/theme-option.md`
 shows a still of `examples/themes/showcase.exs` for each built-in theme.
 `mix expresso.gifs` records them:
 
@@ -736,8 +736,8 @@ keys to the list of the task. Then show its code and its GIF in a guide. To add 
 of the README, write a deck in `examples/presenter/`, or use one of the decks there, and
 add the example to the list. Then show its file in the README.
 `test/expresso/examples_test.exs` makes sure that a how-to guide shows the code of each
-deck of the guides as it is in the file, that the guides show each of their files, and
-that the README shows each of its files.
+deck of the guides as it is in the file, that the guides show each of their files, that
+each how-to guide shows at least one file, and that the README shows each of its files.
 
 ## Look at a deck
 

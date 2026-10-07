@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Orders</title>
+<style>
+  body { margin: 0; padding: 24px; font: 20px system-ui, sans-serif; background: #f4f6fb; color: #1d2433; }
+  h1 { margin: 0 0 16px; font-size: 28px; }
+  p { margin: 0 0 16px; }
+  output { font-size: 64px; font-weight: 700; color: #2a62c9; display: block; }
+  button { font: inherit; padding: 8px 20px; border: 0; border-radius: 6px; background: #2a62c9; color: #fff; }
+</style>
+<h1>Orders today</h1>
+<p>A click on the button adds an order.</p>
+<output id="count">41</output>
+<button type="button" onclick="count.value = Number(count.value) + 1">Add an order</button>
+</html>

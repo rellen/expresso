@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 170" width="400" height="170">
+  <title>A paint line</title>
+  <line x1="20" y1="80" x2="380" y2="80" stroke="currentColor" stroke-width="2" stroke-dasharray="6 4"/>
+  <rect id="booth" x="30" y="50" width="90" height="60" rx="6" fill="none" stroke="#4a90d9" stroke-width="4"/>
+  <text x="75" y="140" text-anchor="middle" font-size="18" fill="currentColor">Booth</text>
+  <rect id="dryer" x="155" y="50" width="90" height="60" rx="6" fill="none" stroke="#d94a4a" stroke-width="4"/>
+  <text x="200" y="140" text-anchor="middle" font-size="18" fill="currentColor">Dryer</text>
+  <rect id="packer" x="280" y="50" width="90" height="60" rx="6" fill="none" stroke="#3aa55d" stroke-width="4"/>
+  <text x="325" y="140" text-anchor="middle" font-size="18" fill="currentColor">Packer</text>
+  <rect id="widget" x="5" y="10" width="30" height="30" rx="4" fill="#e8a33d"/>
+</svg>

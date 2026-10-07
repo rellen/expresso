@@ -143,3 +143,38 @@ h1 { text-align: left; }
 
 To change only some slides, put the class of those slides in front, such as
 `.dense h1 { text-align: left; }`.
+
+In this deck, each slide has less space at the sides. Only the slide with the class
+`aside` has its heading at the left:
+
+```elixir
+defmodule Examples.StyleHeading do
+  use Expresso
+
+  css ~S"""
+  :root { --slide-padding: 0 2rem; }
+  .aside h1 { text-align: left; }
+  """
+
+  slide "the plan" do
+    heading "The plan"
+
+    text_box do
+      text_area(text: "Each slide has its heading in the center")
+    end
+  end
+
+  slide "a note" do
+    class "aside"
+    heading "A note"
+
+    text_box do
+      text_area(text: "The class aside puts this heading at the left")
+    end
+  end
+end
+
+Examples.StyleHeading
+```
+
+![The first slide has its heading in the center, and the second slide has its heading at the left](https://raw.githubusercontent.com/rellen/expresso/media/style-heading.gif)

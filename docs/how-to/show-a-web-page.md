@@ -36,6 +36,42 @@ end
 The document of the deck then holds the page, so the talk needs no network. The page must
 be one file, with its scripts and its styles inside it.
 
+In this deck, the second slide shows the local page `examples/animations/demo.html`. The
+page has its style and its script inside it. `examples/animations/demo.png` is a
+screenshot of the page:
+
+```elixir
+defmodule Examples.EmbedPage do
+  use Expresso
+
+  slide "the problem" do
+    heading "The problem"
+
+    text_box do
+      text_area(text: "The team counts the orders by hand")
+    end
+  end
+
+  slide "the demonstration" do
+    heading "The demonstration"
+
+    embed "examples/animations/demo.html" do
+      title "The page of the orders"
+      fallback "examples/animations/demo.png"
+      interactive true
+      width "60%"
+    end
+  end
+end
+
+Examples.EmbedPage
+```
+
+![The second slide shows the page of the orders, with its number and its button](https://raw.githubusercontent.com/rellen/expresso/media/embed-page.gif)
+
+The page loads when its slide shows. During the talk, a click on the button adds an order,
+because the embed has `interactive true`.
+
 ## Show a video
 
 Expresso has no video element. A local page with the video inside it works, and the
