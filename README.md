@@ -183,7 +183,7 @@ Write an option in the deck to apply it to each slide:
 | `root __DIR__` | The directory of each relative path of the deck. See [the root option](docs/reference/root-option.md). |
 | `template MyDeckTemplate` | A module that makes the header and the footer. See [the template option](docs/reference/template-option.md). |
 | `slide_template MySlideTemplate` | A module that makes the body of each slide. |
-| `theme :dracula` | The colors of the slides and of the code. Each built-in theme meets the contrast minimums of WCAG. See [the theme option](docs/reference/theme-option.md). |
+| `theme :dracula` | The colors of the slides and of the code. Each built-in theme meets the contrast minimums of WCAG. `theme dark: :dracula, light: :default` gives two variants. See [the theme option](docs/reference/theme-option.md). |
 
 A slide takes `transition`, `handout`, `effect`, `speed` and `easing` too. An option on a
 slide replaces the option of the deck for that slide. The `template` option of a slide
@@ -475,6 +475,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Use colors of your own](docs/how-to/use-colors-of-your-own.md)
 - [Render a deck in your project](docs/how-to/render-a-deck-in-your-project.md)
 - [Put a picture or a font into the style sheet](docs/how-to/put-files-into-the-css.md)
+- [Give a deck a light and a dark variant](docs/how-to/give-a-deck-two-variants.md)
 
 Reference pages describe each value of an option:
 

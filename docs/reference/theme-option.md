@@ -25,9 +25,13 @@ end
 | `:default` | Black text on white, with the code colors of Tango. A deck without the option gets this theme. |
 | The name of a built-in theme, such as `:dracula` | That theme. The next section lists the built-in themes. |
 | A map with a `#rrggbb` color for each slot from `:base00` to `:base0F` | A base16 scheme of your own. The compiler gives a warning for each color that does not meet its minimum, and the deck compiles. |
+| `colors: map, adjust: true` | The map, with each color that does not meet its minimum adjusted. See [the adjustment of a map](#the-adjustment-of-a-map). |
+| `dark: theme, light: theme` | Two variants. Each value is a name or a map, and `adjust: true` applies to each map. See [two variants](#two-variants). |
 
 The compiler gives an error for a name that is not a built-in theme, and for a map with a
-missing slot, an unknown slot or a color that is not `#rrggbb`.
+missing slot, an unknown slot or a color that is not `#rrggbb`. It also gives an error for
+a keyword list with an unknown key, a key two times, or a form other than `colors` alone
+or `dark` with `light`.
 
 Paper always gets the default theme. A printer gives a white sheet, and a dark theme on
 it wastes ink.
@@ -185,6 +189,39 @@ the theme gives code_comment a contrast of 1.28:1, and WCAG asks for 4.5:1. The 
 `Expresso.Palette.suggestions/1` returns the same colors, and `Expresso.Palette.problems/1`
 returns each role that fails. For the steps, see
 [Use colors of your own](../how-to/use-colors-of-your-own.md).
+
+A warning of a variant names it, such as `the dark theme gives code_comment a contrast of
+...`. A built-in variant gets no warning, because it meets each minimum.
+
+## The adjustment of a map
+
+`adjust: true` changes the lightness of each role of a map that does not meet its minimum,
+as `Expresso.Palette.Builtin` does for a built-in theme. The hue of each color and each
+background stays the same. The map in the deck stays as you write it, and the document
+gets the adjusted colors.
+
+| Case | Result |
+| --- | --- |
+| Each role meets its minimum after the adjustment | No warning. |
+| A color moves more than 0.4 in lightness | A warning, because the color can then look different from the color of the map. A built-in theme with such a change is refused. |
+| No lightness gives a role its minimum, such as on a gray background | The map keeps its colors, and the compiler gives the warnings of a map with no adjustment. |
+
+## Two variants
+
+`theme dark: :dracula, light: :default` gives the document a dark variant and a light
+variant:
+
+| Screen or action | Variant |
+| --- | --- |
+| A screen with no preference, or with a light scheme | The light variant. |
+| A screen with a dark scheme, as `prefers-color-scheme: dark` gives | The dark variant. |
+| The key `t` in the present view | The other variant. It wins over the scheme of the screen until the next load of the document. |
+| Paper | The default theme, as for one theme. |
+
+The key `t` changes the variant of its own window only. In the speaker view, the key does
+nothing, so press it in the window of the audience. A deck with one variant ignores the
+key. For the steps, see
+[Give a deck a light and a dark variant](../how-to/give-a-deck-two-variants.md).
 
 ## The roles
 

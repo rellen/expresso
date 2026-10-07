@@ -511,6 +511,36 @@ a scheme usually have almost the same lightness, so the second adjustment moves 
 in the same direction as the first one. When no lightness passes, the warning says so, and the
 user must change the background or the hue.
 
+`adjust: true` applies `Expresso.Palette.adjust/1` to a map, as the build does for a
+built-in theme. It is an option, and not the default, because the colors of a map are a
+choice of the user, and a deck without the option keeps the colors that it gives. A
+built-in theme with a change of more than 0.4 is refused at compile time, because the
+repository chooses its built-in themes. A map with such a change still renders, because the
+user asked for the adjustment, and `Expresso.ThemeVerifier` gives a warning.
+
+#### Two variants of a theme
+
+A light room and a dark room ask for different colors, and the presenter often does
+not know the room before the talk. `theme dark: ..., light: ...` therefore puts both
+variants into the document. `Expresso.Palette.variants/1` returns their palettes, and the
+renderer writes the roles of each:
+
+1. `:root` gets the light roles.
+2. `@media (prefers-color-scheme: dark)` gives `:root` the dark roles.
+3. `:root[data-scheme="light"]` and `:root[data-scheme="dark"]` give the roles of each
+   variant. The attribute selector has more weight than `:root` alone, so it wins over
+   the scheme of the screen.
+4. `@media print` names `:root` and `:root[data-scheme]`, and it comes last, so paper gets
+   the default theme with each variant.
+
+The key `t` calls the built-in function `switch_scheme`, which writes `data-scheme` on the
+`html` element. The presenter does not hold the variant in its state, because the
+variant at the start comes from the screen, and the interpreter cannot read the screen. A
+field of the state would also need a change to the messages between the windows. The key
+therefore changes the variant of its own window only, and the default presenter gives it
+to the present view only. `data-variants` on the `html` element tells the function that the
+document has two variants. Without it, the key changes nothing.
+
 #### The dimmed colors
 
 An opacity `o` changes each channel of a color to `o × color + (1 - o) × background`, and
@@ -1077,8 +1107,8 @@ and the modes. For each key, click and swipe, `run` in `interpreter.ts` does the
 3. It applies the commands to the state, one after the other.
 
 A command changes a field of the state, goes to a step or a slide, or calls a built-in
-function. The built-in functions are `open_speaker`, `fullscreen` and `reset_timer`, and
-`main.ts` calls them. `main.ts` stops the default operation of the browser when the state
+function. The built-in functions are `open_speaker`, `fullscreen`, `reset_timer` and
+`switch_scheme`, and `main.ts` calls them. `main.ts` stops the default operation of the browser when the state
 changes or when the event calls a built-in function. The fragment of the address and the
 messages between the windows do not go through the modes.
 

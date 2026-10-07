@@ -82,7 +82,8 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "embed-video", deck: "embed_video.exs", actions: ["p"]},
     %{name: "theme-map", deck: "theme_map.exs", actions: ["j"]},
     %{name: "project-root", deck: "project_root.exs", actions: ["j"]},
-    %{name: "css-files", deck: "css_files.exs", actions: ["j"]}
+    %{name: "css-files", deck: "css_files.exs", actions: ["j"]},
+    %{name: "theme-variants", deck: "theme_variants.exs", actions: ["t"]}
   ]
 
   # The examples of "Present a deck" in README.md. The tour deck has ten

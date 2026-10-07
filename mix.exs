@@ -43,6 +43,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/use-colors-of-your-own.md",
         "docs/how-to/render-a-deck-in-your-project.md",
         "docs/how-to/put-files-into-the-css.md",
+        "docs/how-to/give-a-deck-two-variants.md",
         "docs/reference/transition-option.md",
         "docs/reference/overlay-options.md",
         "docs/reference/css-option.md",
