@@ -6,6 +6,8 @@ recording of it. The recording presses `j` for the next slide and `k` for the sl
 before.
 
 For the rules of each kind, see [The transition option](../reference/transition-option.md).
+To make a kind of your own, see
+[Make a transition of your own](#make-a-transition-of-your-own).
 
 ## Use the default fade
 
@@ -178,3 +180,86 @@ Examples.TransitionOverride
 ```
 
 ![Slide two slides in, and slide three fades in](https://raw.githubusercontent.com/rellen/expresso/media/transition-override.gif)
+
+## Make a transition of your own
+
+A transition of your own is a set of CSS rules in the `css` option of the deck. Do these
+steps:
+
+1. Choose a name, such as `wipe_down`. The style sheet writes it with hyphens:
+   `wipe-down`.
+2. Write a rule for `html[data-transition="wipe-down"]::view-transition-old(slide)`. Its
+   animation hides the slide that the presenter leaves.
+3. Write a rule for `html[data-transition="wipe-down"]::view-transition-new(slide)`. Its
+   animation shows the next slide.
+4. To change a move back, write the same two rules with `[data-direction="back"]` after
+   `[data-transition="wipe-down"]`.
+5. Write `transition :wipe_down` in the deck or in a slide.
+
+In this deck, the second slide comes in from the top, and the first slide goes out at the
+same line. A move back wipes up:
+
+```elixir
+defmodule Examples.TransitionCustom do
+  use Expresso
+
+  css ~S"""
+  html[data-transition="wipe-down"]::view-transition-old(slide) {
+    animation-name: wipe-down-old;
+  }
+  html[data-transition="wipe-down"]::view-transition-new(slide) {
+    animation-name: wipe-down-new;
+  }
+  html[data-transition="wipe-down"][data-direction="back"]::view-transition-old(slide) {
+    animation-name: wipe-up-old;
+  }
+  html[data-transition="wipe-down"][data-direction="back"]::view-transition-new(slide) {
+    animation-name: wipe-up-new;
+  }
+  @keyframes wipe-down-old {
+    from { clip-path: inset(0 0 0 0); }
+    to { clip-path: inset(100% 0 0 0); }
+  }
+  @keyframes wipe-down-new {
+    from { clip-path: inset(0 0 100% 0); }
+    to { clip-path: inset(0 0 0 0); }
+  }
+  @keyframes wipe-up-old {
+    from { clip-path: inset(0 0 0 0); }
+    to { clip-path: inset(0 0 100% 0); }
+  }
+  @keyframes wipe-up-new {
+    from { clip-path: inset(100% 0 0 0); }
+    to { clip-path: inset(0 0 0 0); }
+  }
+  """
+
+  transition :wipe_down
+
+  slide "one" do
+    heading "One"
+
+    text_box do
+      text_area(text: "The first slide")
+    end
+  end
+
+  slide "two" do
+    heading "Two"
+
+    text_box do
+      text_area(text: "The second slide")
+    end
+  end
+end
+
+Examples.TransitionCustom
+```
+
+![The second slide wipes down over the first slide, and a move back wipes up](https://raw.githubusercontent.com/rellen/expresso/media/transition-custom.gif)
+
+The compiler gives an error for a transition without a rule in the theme or in the CSS of
+the deck. The error gives the selector to write.
+
+Give each `@keyframes` rule for `clip-path` a `from` value and a `to` value. CSS cannot
+animate from `inset()` to `none`, so a rule with one value jumps at the half of the time.

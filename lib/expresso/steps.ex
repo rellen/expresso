@@ -35,9 +35,6 @@ defmodule Expresso.Steps do
   @typedoc "One slide of a deck"
   @type slide :: %{first: non_neg_integer(), steps: pos_integer(), transition: String.t()}
 
-  # The kinds of a transition. A slide without a kind fades.
-  @transitions Expresso.Presenter.Schema.transitions()
-
   # The number of decimal places of `fraction` and `done`. Four places are
   # sufficient for the width of the progress bar and for the pace.
   @places 4
@@ -90,9 +87,9 @@ defmodule Expresso.Steps do
 
     * `first` - the index of step 1 of the slide in the list of `entries/1`.
     * `steps` - the number of steps of the slide.
-    * `transition` - the kind of the transition into the slide: `"none"`,
-      `"fade"`, `"slide"` or `"zoom"`. The option of the slide comes first,
-      then the option of the deck, then `"fade"`.
+    * `transition` - the kind of the transition into the slide, such as
+      `"fade"` or `"wipe-down"`. The option of the slide comes first, then the
+      option of the deck, then `"fade"`. `kind/1` gives the name.
   """
   @spec slides(Deck.t()) :: [slide()]
   def slides(%Deck{slides: slides} = deck) do
@@ -157,11 +154,21 @@ defmodule Expresso.Steps do
     do: "Slide #{number} of #{count}, step #{step} of #{steps}"
 
   defp transition(deck, slide) do
-    Enum.find(
-      [(slide.metadata || %{})[:transition], (deck.metadata || %{})[:transition]],
-      :fade,
-      &(&1 in @transitions)
-    )
-    |> Atom.to_string()
+    [(slide.metadata || %{})[:transition], (deck.metadata || %{})[:transition]]
+    |> Enum.find(:fade, & &1)
+    |> kind()
   end
+
+  @doc """
+  Give the kind of a transition, as the presenter and the style sheet write it
+
+  The kind is the name of the atom with a hyphen for each underscore, as for
+  an effect. The style sheet then gives the rule for
+  `html[data-transition="wipe-down"]`.
+
+      iex> Expresso.Steps.kind(:wipe_down)
+      "wipe-down"
+  """
+  @spec kind(atom()) :: String.t()
+  def kind(transition), do: transition |> Atom.to_string() |> String.replace("_", "-")
 end

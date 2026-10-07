@@ -1,13 +1,14 @@
 defmodule Expresso.Theme do
   @moduledoc """
-  The custom properties and the effects of the theme
+  The custom properties, the effects and the transitions of the theme
 
   `assets/style.css` is the theme of this project, and the theme owns the
   custom properties. This module reads the file at compile time with
   `Expresso.Css.scan/1`, and it gives four answers. `uses?/1` tells you
   whether the theme uses a property. `declares?/1` tells you whether the theme
   gives the property a value. `syntax/1` gives the `syntax` descriptor of the
-  `@property` rule of the theme. `effects/0` gives the effects of the theme.
+  `@property` rule of the theme. `effects/0` gives the effects of the theme,
+  and `transitions/0` gives its transitions between slides.
 
   `Expresso.Overlay.Properties` reads the answers, and
   `Expresso.Overlay.PropertyVerifier` then gives a warning for a property that
@@ -23,10 +24,18 @@ defmodule Expresso.Theme do
   Give the names of the theme, for `Expresso.Css.merge/2`
 
   The fade has no rule, because each element with steps fades. The function
-  adds it to the effects.
+  adds it to the effects. The browser fades from one slide to the next
+  without a rule, and the kind `none` has no animation, so the function adds
+  the two to the transitions.
   """
   @spec names() :: Expresso.Css.names()
-  def names, do: %{@names | effects: MapSet.put(@names.effects, "fade")}
+  def names do
+    %{
+      @names
+      | effects: MapSet.put(@names.effects, "fade"),
+        transitions: MapSet.union(@names.transitions, MapSet.new(["fade", "none"]))
+    }
+  end
 
   @doc """
   Tell whether the theme uses the custom property of a name
@@ -62,4 +71,10 @@ defmodule Expresso.Theme do
   """
   @spec effects() :: MapSet.t(String.t())
   def effects, do: names().effects
+
+  @doc """
+  Give the transitions of the theme, with the fade and the kind `none`
+  """
+  @spec transitions() :: MapSet.t(String.t())
+  def transitions, do: names().transitions
 end

@@ -4,11 +4,27 @@ defmodule Expresso.E2E.TransitionTest do
   alias PlaywrightEx.{Browser, BrowserContext}
 
   # The deck fades. Slide two slides in, slide three has no transition, and
-  # slide four fades.
+  # slide four fades. Slide five wipes down with a transition of the CSS of the
+  # deck, and a move back wipes up.
   defmodule Deck do
     use Expresso
 
     name "transition deck"
+
+    css ~S"""
+    html[data-transition="wipe-down"]::view-transition-new(slide) {
+      animation-name: wipe-down;
+    }
+    html[data-transition="wipe-down"][data-direction="back"]::view-transition-new(slide) {
+      animation-name: wipe-up;
+    }
+    @keyframes wipe-down {
+      from { clip-path: inset(0 0 100% 0); }
+    }
+    @keyframes wipe-up {
+      from { clip-path: inset(100% 0 0 0); }
+    }
+    """
 
     slide "one" do
       text_box do
@@ -36,6 +52,14 @@ defmodule Expresso.E2E.TransitionTest do
     slide "four" do
       text_box do
         text_area(text: "Four")
+      end
+    end
+
+    slide "five" do
+      transition :wipe_down
+
+      text_box do
+        text_area(text: "Five")
       end
     end
   end
@@ -101,6 +125,25 @@ defmodule Expresso.E2E.TransitionTest do
     started(page)
     assert js(page, "document.documentElement.dataset.transition") == "fade"
     refute Enum.any?(animations(page), &String.starts_with?(&1, "expresso-"))
+
+    settle(page)
+    assert position(page) == "4.1"
+  end
+
+  test "a transition of the CSS of the deck runs its rules in the two directions", %{
+    moving: page
+  } do
+    page |> navigate("#4.1") |> press("j")
+
+    started(page)
+    assert js(page, "document.documentElement.dataset.transition") == "wipe-down"
+    assert "wipe-down" in animations(page)
+
+    page |> settle() |> press("k")
+
+    started(page)
+    assert js(page, "document.documentElement.dataset.direction") == "back"
+    assert "wipe-up" in animations(page)
 
     settle(page)
     assert position(page) == "4.1"

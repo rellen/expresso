@@ -169,14 +169,21 @@ defmodule Expresso.CssTest do
       end
     end
 
-    property "scan/1 finds each effect, use, declaration and registration of a style sheet" do
+    property "scan/1 finds each effect, transition, use, declaration and registration of a style sheet" do
       check all effects <- list_of(name(), max_length: 3),
+                transitions <- list_of(name(), max_length: 3),
                 declarations <- list_of(declaration(), max_length: 4),
                 reads <- list_of(name(), max_length: 3),
                 registered <-
                   list_of({name(), member_of(["<length>", "<number>", "<color>"])}, max_length: 2) do
         css =
           Enum.map_join(effects, "\n", &~s([data-effect="#{&1}"] { opacity: 1; })) <>
+            "\n" <>
+            Enum.map_join(
+              transitions,
+              "\n",
+              &~s|html[data-transition="#{&1}"]::view-transition-new(slide) { opacity: 1; }|
+            ) <>
             "\n.x { " <>
             Enum.map_join(declarations, " ", fn {name, value} -> "--#{name}: #{value};" end) <>
             " width: " <>
@@ -192,6 +199,7 @@ defmodule Expresso.CssTest do
           Enum.map(declarations, &elem(&1, 0)) ++ reads ++ Enum.map(registered, &elem(&1, 0))
 
         assert names.effects == MapSet.new(effects, &String.replace(&1, "-", "_"))
+        assert names.transitions == MapSet.new(transitions, &String.replace(&1, "-", "_"))
         assert names.used == MapSet.new(property_names)
         assert names.registered == Map.new(registered)
 

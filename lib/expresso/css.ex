@@ -15,7 +15,7 @@ defmodule Expresso.Css do
 
   `scan/1` gives the names of a style sheet that the compiler checks: the
   custom properties that it uses, declares and registers, and the effects
-  that it gives a rule. `Expresso.Theme` scans the theme in the same way, and
+  and the transitions that it gives a rule. `Expresso.Theme` scans the theme in the same way, and
   the verifiers join the two results.
   """
 
@@ -26,7 +26,8 @@ defmodule Expresso.Css do
           used: MapSet.t(String.t()),
           declared: MapSet.t(String.t()),
           registered: %{String.t() => String.t()},
-          effects: MapSet.t(String.t())
+          effects: MapSet.t(String.t()),
+          transitions: MapSet.t(String.t())
         }
 
   @doc """
@@ -206,6 +207,8 @@ defmodule Expresso.Css do
   - `effects` holds each effect with a rule for `[data-effect="..."]`, with
     underscores, as the deck writes the atom. The names stay strings, because
     a style sheet of a deck must not make atoms.
+  - `transitions` holds each transition with a rule for
+    `html[data-transition="..."]`, with underscores, as for the effects.
   """
   @spec scan(String.t()) :: names()
   def scan(css) do
@@ -213,7 +216,8 @@ defmodule Expresso.Css do
       used: used(css),
       declared: non_number_declarations(css),
       registered: property_syntaxes(css),
-      effects: effects(css)
+      effects: effects(css),
+      transitions: transitions(css)
     }
   end
 
@@ -226,7 +230,8 @@ defmodule Expresso.Css do
       used: MapSet.union(a.used, b.used),
       declared: MapSet.union(a.declared, b.declared),
       registered: Map.merge(a.registered, b.registered),
-      effects: MapSet.union(a.effects, b.effects)
+      effects: MapSet.union(a.effects, b.effects),
+      transitions: MapSet.union(a.transitions, b.transitions)
     }
   end
 
@@ -250,8 +255,12 @@ defmodule Expresso.Css do
         do: {name, hd(descriptor)}
   end
 
-  defp effects(css) do
-    for [name] <- Regex.scan(~r/\[data-effect="([\w-]+)"\]/, css, capture: :all_but_first),
+  defp effects(css), do: names(~r/\[data-effect="([\w-]+)"\]/, css)
+
+  defp transitions(css), do: names(~r/html\[data-transition="([\w-]+)"\]/, css)
+
+  defp names(regex, css) do
+    for [name] <- Regex.scan(regex, css, capture: :all_but_first),
         into: MapSet.new(),
         do: String.replace(name, "-", "_")
   end

@@ -194,8 +194,8 @@ defmodule Expresso.BuilderTest do
 
   describe "deck/2" do
     test "refuses a deck option with the message of the DSL" do
-      assert_raise ArgumentError, ~r/^deck: invalid value for :transition option/, fn ->
-        Builder.deck([], transition: :spin)
+      assert_raise ArgumentError, ~r/^deck: invalid value for :easing option/, fn ->
+        Builder.deck([], easing: :bounce)
       end
     end
 

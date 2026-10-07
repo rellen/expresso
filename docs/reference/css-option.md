@@ -2,7 +2,8 @@
 
 The `css` option of a deck adds a style sheet to the theme. The document puts the style
 sheet after the theme and after the generated rules. A rule of the deck can therefore
-replace each rule of the theme, and it can give new effects and new states.
+replace each rule of the theme, and it can give new effects, new transitions and new
+states.
 
 ## The forms
 
@@ -71,6 +72,15 @@ The theme plays `--enter-animation` when the element shows, and `--exit-animatio
 it hides, with the time and the easing of the element. A transition wins over an animation
 for the same property. Keyframes that change `transform` therefore play in full, but
 keyframes that change `opacity` have no effect during the fade.
+
+## New transitions
+
+A rule for `html[data-transition="name"]` gives the transition `:name` between slides. Write
+hyphens in the CSS and underscores in the deck, as `[data-transition="wipe-down"]` for
+`transition :wipe_down`. The rule animates `::view-transition-old(slide)` or
+`::view-transition-new(slide)`. The compiler gives an error for a transition without a rule
+in the theme or in the style sheet. For the selectors, see
+[The transition option](transition-option.md#a-transition-of-the-css-of-the-deck).
 
 ## New states
 

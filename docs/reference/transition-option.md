@@ -41,6 +41,32 @@ The next slide shows at once.
 
 ![An instant change to the next slide and back](https://raw.githubusercontent.com/rellen/expresso/media/transition-none.gif)
 
+### A transition of the CSS of the deck
+
+A rule in [the css option](css-option.md) for `html[data-transition="name"]` gives the
+transition `:name`. Write hyphens in the CSS and underscores in the deck, as
+`[data-transition="wipe-down"]` for `transition :wipe_down`.
+
+| Selector | Animates |
+| --- | --- |
+| `html[data-transition="wipe-down"]::view-transition-old(slide)` | The slide that the presenter leaves. |
+| `html[data-transition="wipe-down"]::view-transition-new(slide)` | The next slide. |
+| `html[data-transition="wipe-down"][data-direction="back"]::view-transition-old(slide)` | The slide that the presenter leaves, on a move back. |
+| `html[data-transition="wipe-down"][data-direction="back"]::view-transition-new(slide)` | The slide before, on a move back. |
+
+- The theme gives each of the two pseudo-elements `--transition-dur` as its duration and
+  `--ease` as its timing function. A rule of the deck can replace them.
+- A pseudo-element without a rule of the deck keeps the fade of the browser.
+- Without a rule for `[data-direction="back"]`, a move back plays the rules of a move
+  forward.
+- The compiler gives an error for a transition without a rule in the theme or in the CSS of
+  the deck. The error gives the selector to write.
+- The name has letters, digits and underscores only. The renderer writes each underscore as
+  a hyphen.
+
+For the steps and a complete deck, see
+[Make a transition of your own](../how-to/add-transitions.md#make-a-transition-of-your-own).
+
 ## Rules
 
 - Only a change of slide in the present view has a transition. A change of the step keeps the

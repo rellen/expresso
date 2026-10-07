@@ -6,6 +6,8 @@ defmodule Expresso.StepsTest do
   alias Expresso.Steps
   alias Expresso.Test.Steps, as: Document
 
+  doctest Expresso.Steps
+
   # A deck with the number of steps of each slide. The tests make the structs,
   # so a slide can have metadata that the DSL does not give.
   defp deck(counts, metadata \\ %{}) do
@@ -70,16 +72,16 @@ defmodule Expresso.StepsTest do
                [{0, 1}, {1, 3}, {4, 2}]
     end
 
-    test "gives the transition of the slide, then of the deck, then fade" do
+    test "gives the transition of the slide, then of the deck, then fade, with hyphens" do
       slides = [
         slide("one", %{}),
         slide("two", %{transition: :slide}),
-        slide("three", %{transition: :spin})
+        slide("three", %{transition: :spin_out})
       ]
 
       deck = "deck" |> Deck.new(%{transition: :zoom}, slides) |> Deck.number_slides()
 
-      assert Enum.map(Steps.slides(deck), & &1.transition) == ["zoom", "slide", "zoom"]
+      assert Enum.map(Steps.slides(deck), & &1.transition) == ["zoom", "slide", "spin-out"]
       assert Enum.map(Steps.slides(deck([1])), & &1.transition) == ["fade"]
     end
   end
