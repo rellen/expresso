@@ -68,8 +68,8 @@ export const decodeState: Decoder<State> = /* @__PURE__ */ object({
 });
 
 // A built-in function of the browser.
-export type Builtin = "open_speaker" | "fullscreen" | "reset_timer";
-export const BUILTINS: readonly Builtin[] = ["open_speaker", "fullscreen", "reset_timer"];
+export type Builtin = "open_speaker" | "fullscreen" | "reset_timer" | "switch_scheme";
+export const BUILTINS: readonly Builtin[] = ["open_speaker", "fullscreen", "reset_timer", "switch_scheme"];
 export const decodeBuiltin: Decoder<Builtin> = /* @__PURE__ */ oneOf(BUILTINS);
 
 // A part of the window under a click.

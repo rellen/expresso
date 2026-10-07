@@ -184,6 +184,22 @@ function fullscreen(): void {
   }
 }
 
+// Show the other variant of a theme with a light and a dark variant. The
+// variant starts from the scheme of the screen, and `data-scheme` on the
+// `html` element wins over that scheme. A document with one variant has no
+// `data-variants`, and the key then changes nothing.
+function switchScheme(): void {
+  const root = document.documentElement;
+  if (!root.hasAttribute("data-variants")) {
+    return;
+  }
+  const dark =
+    root.dataset.scheme === undefined
+      ? window.matchMedia?.("(prefers-color-scheme: dark)").matches === true
+      : root.dataset.scheme === "dark";
+  root.dataset.scheme = dark ? "light" : "dark";
+}
+
 if (isSpeaker) {
   document.title = `Speaker view: ${document.title}`;
   tick();
@@ -237,6 +253,9 @@ function call(builtin: Builtin): void {
     case "reset_timer":
       started = null;
       tick();
+      break;
+    case "switch_scheme":
+      switchScheme();
       break;
   }
 }
