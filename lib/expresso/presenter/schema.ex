@@ -79,7 +79,7 @@ defmodule Expresso.Presenter.Schema do
   ]
 
   @views [:present, :handout, :speaker]
-  @builtins [:open_speaker, :fullscreen, :reset_timer]
+  @builtins [:open_speaker, :fullscreen, :reset_timer, :switch_scheme]
   @transitions [:none, :fade, :slide, :zoom]
   @regions [:left_third, :right]
   @directions [:left, :right]

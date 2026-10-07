@@ -68,7 +68,8 @@ defmodule Expresso.Presenter.Commands do
   def go_typed, do: :go_typed
 
   @doc "Call a built-in function of the browser"
-  @spec builtin(:open_speaker | :fullscreen | :reset_timer) :: Definition.command()
+  @spec builtin(:open_speaker | :fullscreen | :reset_timer | :switch_scheme) ::
+          Definition.command()
   def builtin(name), do: {:builtin, name}
 
   @doc """

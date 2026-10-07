@@ -56,7 +56,7 @@ defmodule Expresso.Presenter.Definition do
     * `:go_typed` - goes to step 1 of the slide that the typed digits give, and
       removes the digits.
     * `{:builtin, name}` - calls a built-in function of the browser:
-      `:open_speaker`, `:fullscreen` or `:reset_timer`.
+      `:open_speaker`, `:fullscreen`, `:reset_timer` or `:switch_scheme`.
 
   A definition can hold two symbols in place of a number: `:last_slide` and
   `{:columns, sign}`. `Expresso.Presenter.Program` changes each symbol into a
@@ -80,7 +80,7 @@ defmodule Expresso.Presenter.Definition do
           | {:select, pos_integer() | :last_slide}
           | {:select_by, integer() | {:columns, 1 | -1}}
           | :go_typed
-          | {:builtin, :open_speaker | :fullscreen | :reset_timer}
+          | {:builtin, :open_speaker | :fullscreen | :reset_timer | :switch_scheme}
 
   @typedoc "An event of a binding"
   @type event ::
