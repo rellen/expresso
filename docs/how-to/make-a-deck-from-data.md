@@ -48,6 +48,10 @@ end
 Examples.TalkFromData
 ```
 
+The deck has one slide for each topic, and the items of each slide show one at a time:
+
+![The three points of the first topic show one at a time, then the slide of the second topic shows](https://raw.githubusercontent.com/rellen/expresso/media/talk-from-data.gif)
+
 The data must be available when the module compiles. In a script, the module compiles when
 the script runs, so the script can read the data from a file.
 

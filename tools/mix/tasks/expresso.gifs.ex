@@ -73,6 +73,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "overlay-dim-color", deck: "overlay_dim_color.exs", actions: ["j", "j"]},
     %{name: "overlay-row", deck: "overlay_row.exs", actions: ["j", "j"]},
     %{name: "overlay-diagram", deck: "overlay_diagram.exs", actions: ["j", "j"]},
+    %{name: "diagram-move-to", deck: "diagram_move_to.exs", actions: ["j", "j", "j"]},
     %{name: "overlay-effects", deck: "overlay_effects.exs", actions: ["j", "j", "j", "j", "j"]},
     %{name: "overlay-effect-list", deck: "overlay_effect_list.exs", actions: ["j", "j", "k"]},
     %{name: "overlay-speed", deck: "overlay_speed.exs", actions: ["j"]},
@@ -80,11 +81,15 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "overlay-custom", deck: "overlay_custom.exs", actions: ["j", "j", "j"]},
     %{name: "code-whole-first", deck: "code_whole_first.exs", actions: ["j", "j"]},
     %{name: "template-section", deck: "template_section.exs", actions: ["j", "j"]},
+    %{name: "embed-page", deck: "embed_page.exs", actions: ["j"]},
     %{name: "embed-video", deck: "embed_video.exs", actions: ["p"]},
+    %{name: "talk-from-data", deck: "talk_from_data.exs", actions: ["j", "j", "j"]},
+    %{name: "style-heading", deck: "style_heading.exs", actions: ["j"]},
     %{name: "theme-map", deck: "theme_map.exs", actions: ["j"]},
     %{name: "project-root", deck: "project_root.exs", actions: ["j"]},
     %{name: "css-files", deck: "css_files.exs", actions: ["j"]},
-    %{name: "theme-variants", deck: "theme_variants.exs", actions: ["t"]}
+    %{name: "theme-variants", deck: "theme_variants.exs", actions: ["t"]},
+    %{name: "layout-check", deck: "layout_check.exs", address: "?check", still: true}
   ]
 
   # The examples of "Present a deck" in README.md. The tour deck has ten

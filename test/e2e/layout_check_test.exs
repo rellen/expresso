@@ -128,6 +128,10 @@ defmodule Expresso.E2E.LayoutCheckTest do
     assert result["layout"] == "ok"
   end
 
+  # The example of "Read a report" in docs/how-to/check-the-layout.md has two
+  # problems on purpose, and the guide shows its report.
+  @broken "examples/animations/layout_check.exs"
+
   # The size of the GIFs of the guides, of the README and of the themes.
   test "each example deck fits a window of 1280 × 720", %{browser: browser, tmp_dir: tmp_dir} do
     {:ok, context} =
@@ -149,6 +153,10 @@ defmodule Expresso.E2E.LayoutCheckTest do
             page |> open(render(value, tmp_dir) <> "?check") |> report() |> Map.fetch!("problems"),
           do: {deck, problem}
 
+    {broken, problems} = Enum.split_with(problems, &(elem(&1, 0) == @broken))
+
     assert problems == []
+
+    assert Enum.map(broken, fn {_deck, [position, _text]} -> position end) == ["#1.1", "#2.2"]
   end
 end

@@ -56,6 +56,12 @@ defmodule Expresso.ExamplesTest do
     end
   end
 
+  test "each how-to guide shows the GIF or the still of an example deck" do
+    for guide <- Path.wildcard("docs/how-to/*.md") do
+      assert shown(File.read!(guide)) != [], "#{guide} shows no example. Add one."
+    end
+  end
+
   test "the guides show each file of the guides and of the themes, and no file that the task does not record" do
     files = Enum.map(of(:guides) ++ of(:themes), &Gifs.file/1)
 

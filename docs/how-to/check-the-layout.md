@@ -24,6 +24,45 @@ presenter finds them at each step. For each value of the check, see
 
 The console of the browser gets the same lines as the report.
 
+## Read a report
+
+This deck has two problems. The code of slide 1 has a line that is too long, and the box of
+slide 2 moves too far at step 2:
+
+```elixir
+defmodule Examples.LayoutCheck do
+  use Expresso
+
+  slide "a long line" do
+    heading "A long line"
+
+    code "elixir" do
+      text ~S"""
+      def total(orders), do: orders |> Enum.filter(&paid?/1) |> Enum.map(& &1.amount) |> Enum.sum()
+      """
+    end
+  end
+
+  slide "a long move" do
+    heading "A long move"
+
+    text_box do
+      on 2, set: [x: "12rem"]
+      text_area(text: "This box moves past the right edge at step 2")
+    end
+  end
+end
+
+Examples.LayoutCheck
+```
+
+The check gives one line for each problem, with the slide and the step:
+
+![The report in the lower right corner gives a line of code that breaks on slide 1, and a text that goes 407 px past the right edge at step 2 of slide 2](https://raw.githubusercontent.com/rellen/expresso/media/layout-check.png)
+
+To correct the deck, put a line break into the code, and give the box a smaller distance,
+such as `x: "4rem"`. The next two sections give more ways.
+
 ## Correct a line of code that breaks
 
 A line breaks when it is longer than the width of its code element. Do one of these:
