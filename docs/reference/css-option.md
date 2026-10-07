@@ -9,7 +9,7 @@ replace each rule of the theme, and it can give new effects and new states.
 | Value | Style sheet |
 | --- | --- |
 | `css ~S"""` and the rules on the next lines | The rules. A value with a brace or a line break is a style sheet. |
-| `css "deck.css"` | The file at this path, relative to the working directory of the command. |
+| `css "deck.css"` | The file at this path, relative to [the root option](root-option.md) of the deck, or to the working directory of the command without it. |
 
 A rule of the style sheet applies to each slide. To style one slide or one element, give it
 a class name with [the class option](class-option.md), and write a rule for that class.
@@ -20,6 +20,35 @@ renderer reads the file.
 
 The text `</` can close the `style` element, so the renderer writes `<\/`. CSS reads the
 two forms in the same way in a string, a comment or a URL.
+
+## Files in the style sheet
+
+The document is one file, so the renderer puts each local file of a `url()` into the style
+sheet as a data URI. A rule can thus use a font or a picture of the deck:
+
+```css
+@font-face {
+  font-family: "Talk";
+  src: url(fonts/talk.woff2) format("woff2");
+}
+```
+
+| `url()` in | Start of a relative path |
+| --- | --- |
+| A CSS file, such as `css "styles/deck.css"` | The directory of that file, as in a browser. |
+| A style sheet in the option itself | [The root option](root-option.md) of the deck, or the working directory without it. |
+
+- These types go into the document: `.woff2`, `.woff`, `.ttf` and `.otf` fonts, and the
+  image types of the `image` element.
+- An address, such as `https://example.com/font.woff2`, a `data:` URI and a fragment, such
+  as `url(#shadow)`, stay as they are.
+- A query of the path, such as `?v=2`, is not part of the file name. A fragment of a file,
+  such as `icons.svg#arrow`, stays after the data URI.
+- The renderer raises an `ArgumentError` for a file that it cannot read, and for a file of
+  another type.
+- The watch mode renders the deck again after a change to a file of `url()`.
+
+For the steps, see [Put a picture or a font into the style sheet](../how-to/put-files-into-the-css.md).
 
 ## New effects
 
