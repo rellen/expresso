@@ -1,5 +1,9 @@
 defmodule Expresso.ThemeOptionTest do
-  use ExUnit.Case, async: true
+  # `capture_io(:stderr)` replaces the standard error of each process. A test
+  # that runs at the same time can then write its warning into a capture of
+  # this module, and some tests here make sure that a warning does not occur.
+  # Therefore this module runs alone, after the async modules.
+  use ExUnit.Case, async: false
 
   import ExUnit.CaptureIO
 
