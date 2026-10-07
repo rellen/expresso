@@ -62,6 +62,13 @@ defmodule Expresso.Element.CodeTest do
 
   defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
 
+  # The code element of a deck of one slide. `Expresso.PathTransformer` reads
+  # the file of `src` when the deck runs its transformers.
+  defp built(code) do
+    [slide] = Builder.deck([Builder.slide("one", elements: [code])]).slides
+    hd(slide.elements)
+  end
+
   describe "Expresso.Builder.code/2" do
     test "makes a code element and its groups of lines" do
       code = Builder.code(text: "a\nb\nc", lang: "elixir", reveal: [1, 2..3])
@@ -235,14 +242,14 @@ defmodule Expresso.Element.CodeTest do
     @src "test/fixtures/code.js"
 
     test "reads each line of the file, and the first line is line 1" do
-      code = Builder.code("js", src: @src)
+      code = built(Builder.code("js", src: @src))
 
       assert code.text == @src |> File.read!() |> String.trim_trailing("\n")
       assert code.first == 1
     end
 
     test "takes the lines of a range, and a reveal names the numbers of the file" do
-      code = Builder.code("js", src: @src, lines: 5..11, reveal: [5..7, 9..11], dim: true)
+      code = built(Builder.code("js", src: @src, lines: 5..11, reveal: [5..7, 9..11], dim: true))
 
       assert code.text |> String.split("\n") |> hd() == "function add(a, b) {"
       assert code.first == 5
@@ -265,7 +272,7 @@ defmodule Expresso.Element.CodeTest do
     end
 
     test "records the file for the watch mode" do
-      {_code, paths} = Expresso.DeckFile.track(fn -> Builder.code("js", src: @src) end)
+      {_code, paths} = Expresso.DeckFile.track(fn -> built(Builder.code("js", src: @src)) end)
 
       assert paths == [@src]
     end
@@ -285,21 +292,20 @@ defmodule Expresso.Element.CodeTest do
     end
 
     test "gives an error for a file that it cannot read, and for lines past the end" do
-      assert_raise ArgumentError,
-                   ~s(code: cannot read the code file "no/such.js": enoent),
-                   fn -> Builder.code(src: "no/such.js") end
+      assert_raise Spark.Error.DslError,
+                   ~r/deck -> slide -> one :\n  cannot read the code file "no\/such.js": enoent/,
+                   fn -> built(Builder.code(src: "no/such.js")) end
 
-      assert_raise ArgumentError,
-                   ~s(code: the lines option ends at the line 40, and the file "#{@src}" has 12 lines),
-                   fn -> Builder.code(src: @src, lines: 10..40) end
+      assert_raise Spark.Error.DslError,
+                   ~r/the lines option ends at the line 40, and the file ".*code.js" has 12 lines/,
+                   fn -> built(Builder.code(src: @src, lines: 10..40)) end
     end
 
     test "gives an error for a reveal number that the element does not show" do
-      message =
-        "code: the reveal option has the line 4, and the code element shows the lines 5 to 7"
+      message = ~r/the reveal option has the line 4, and the code element shows the lines 5 to 7/
 
-      assert_raise ArgumentError, message, fn ->
-        Builder.code(src: @src, lines: 5..7, reveal: [4..5])
+      assert_raise Spark.Error.DslError, message, fn ->
+        built(Builder.code(src: @src, lines: 5..7, reveal: [4..5]))
       end
     end
 
@@ -345,58 +351,62 @@ defmodule Expresso.Element.CodeTest do
     @src "test/fixtures/code.js"
 
     test "takes the lines from the line of the start text to the line of the end text" do
-      code = Builder.code("js", src: @src, lines: [from: "function sum(", to: "\n}"])
+      code = built(Builder.code("js", src: @src, lines: [from: "function sum(", to: "\n}"]))
 
       assert code.first == 9
       assert code.text == "function sum(list) {\n  return list.reduce(add, 0);\n}"
     end
 
     test "takes the first end text after the start text, and an end text can start a line" do
-      code = Builder.code("js", src: @src, lines: [from: "function add(", to: "}"])
+      code = built(Builder.code("js", src: @src, lines: [from: "function add(", to: "}"]))
 
       assert code.first == 5
       assert code.text |> String.split("\n") |> length() == 3
     end
 
     test "starts at line 1 without from, and ends at the last line without to" do
-      assert Builder.code("js", src: @src, lines: [to: "const two"]).text ==
+      assert built(Builder.code("js", src: @src, lines: [to: "const two"])).text ==
                "// A file for the tests of the src option of the code element.\nconst one = 1;\nconst two = 2;"
 
-      code = Builder.code("js", src: @src, lines: [from: "export"])
+      code = built(Builder.code("js", src: @src, lines: [from: "export"]))
       assert code.first == 12
       assert code.text == "export { sum };"
     end
 
     test "a reveal names the numbers of the file" do
       code =
-        Builder.code("js",
-          src: @src,
-          lines: [from: "function sum(", to: "\n}"],
-          reveal: [9, 10..11]
+        built(
+          Builder.code("js",
+            src: @src,
+            lines: [from: "function sum(", to: "\n}"],
+            reveal: [9, 10..11]
+          )
         )
 
       assert [%Lines{numbers: [9]}, %Lines{numbers: [10, 11]}] = code.elements
     end
 
     test "raises for a text that is not in the file, a start text in it two times, and no end text after the start" do
-      assert_raise ArgumentError,
+      assert_raise Spark.Error.DslError,
                    ~r/the start text "def start\(" of the lines option is not in the file/,
                    fn ->
-                     Builder.code("js", src: @src, lines: [from: "def start("])
+                     built(Builder.code("js", src: @src, lines: [from: "def start("]))
                    end
 
-      assert_raise ArgumentError,
+      assert_raise Spark.Error.DslError,
                    ~r/the start text "function" .* 2 times, and it must be in it one time/,
                    fn ->
-                     Builder.code("js", src: @src, lines: [from: "function"])
+                     built(Builder.code("js", src: @src, lines: [from: "function"]))
                    end
 
-      assert_raise ArgumentError,
+      assert_raise Spark.Error.DslError,
                    ~r/the end text "const one" of the lines option is not in the file .* after the start text/,
                    fn ->
-                     Builder.code("js",
-                       src: @src,
-                       lines: [from: "function sum(", to: "const one"]
+                     built(
+                       Builder.code("js",
+                         src: @src,
+                         lines: [from: "function sum(", to: "const one"]
+                       )
                      )
                    end
     end
@@ -570,7 +580,8 @@ defmodule Expresso.Element.CodeTest do
     end
 
     test "uses the numbers of the file with src" do
-      code = Builder.code("js", src: "test/fixtures/code.js", lines: 5..11, highlight: [9..11])
+      code =
+        built(Builder.code("js", src: "test/fixtures/code.js", lines: 5..11, highlight: [9..11]))
 
       assert [%Lines{numbers: [9, 10, 11]}, %Lines{numbers: [5, 6, 7, 8]}] = code.elements
     end

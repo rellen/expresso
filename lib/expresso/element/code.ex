@@ -8,12 +8,13 @@ defmodule Expresso.Element.Code do
   line at render time, and it names the languages.
 
   The `src` option takes a path that is relative to the working directory of
-  the command, as for an image. The `lines` option takes a range of the lines
+  the command or to the `root` option of the deck, as for an image. The `lines` option takes a range of the lines
   of the file, such as `3086..3095`, and the element then shows only those
   lines. It can also take a start text and an end text, such as
   `[from: "def start(", to: "\n  end"]`. The excerpt then starts at the line
   of the start text and ends at the line of the end text, so a change above
-  the excerpt does not move it. `build/1` reads the file through `Expresso.DeckFile`, so the watch
+  the excerpt does not move it. `build/1` reads the file through
+  `Expresso.DeckFile`, so the watch
   mode renders the deck again after a change to the file. The element takes
   `text` or `src`, and not both.
 
@@ -84,8 +85,9 @@ defmodule Expresso.Element.Code do
   @doc """
   Read the source, and make the groups of lines from the `reveal` option
 
-  The transform of the `code` entity calls this function after it makes the
-  struct, in the DSL and in `Expresso.Builder`. With `src`, the function reads
+  `check/1` calls this function for an element with `text`, and
+  `Expresso.PathTransformer` calls it for an element with `src`, after it
+  joins the path to the `root` option of the deck. With `src`, the function reads
   the file, puts the lines of the `lines` option into `text`, and puts the
   number of the first line into `first`. A `lines` option with `from` and
   `to` gives its range from the text of the file. Then it puts one
@@ -110,8 +112,26 @@ defmodule Expresso.Element.Code do
   """
   @spec build(t()) :: {:ok, t()} | {:error, String.t()}
   def build(%__MODULE__{} = code) do
-    with {:ok, code} <- source(code), do: groups(code)
+    with {:ok, code} <- source(code),
+         :ok <- options(code),
+         do: groups(code)
   end
+
+  @doc """
+  Check the options of a code element, and build an element with `text`
+
+  The transform of the `code` entity calls this function after it makes the
+  struct, in the DSL and in `Expresso.Builder`. An element with `src` keeps
+  its file until `Expresso.PathTransformer` runs, because the `root` option
+  of the deck can change the path. The function checks each option that needs
+  no file, so the error of such an option comes from the entity.
+  """
+  @spec check(t()) :: {:ok, t()} | {:error, String.t()}
+  def check(%__MODULE__{text: nil, src: src} = code) when is_binary(src) do
+    with :ok <- options(code), do: {:ok, code}
+  end
+
+  def check(%__MODULE__{} = code), do: build(code)
 
   defp source(%__MODULE__{text: text, src: src}) when is_binary(text) and is_binary(src),
     do: {:error, "a code element takes the text option or the src option, and not both"}
@@ -203,18 +223,21 @@ defmodule Expresso.Element.Code do
     end
   end
 
-  defp groups(%__MODULE__{reveal: reveal, highlight: highlight})
+  # The rules of the options that need no text.
+  defp options(%__MODULE__{reveal: reveal, highlight: highlight})
        when reveal != nil and highlight != nil,
        do:
          {:error, "a code element takes the reveal option or the highlight option, and not both"}
 
-  defp groups(%__MODULE__{highlight: nil, whole_first: true}),
+  defp options(%__MODULE__{highlight: nil, whole_first: true}),
     do: {:error, "the whole_first option of a code element needs the highlight option"}
 
-  defp groups(%__MODULE__{highlight: highlight, dim: true}) when highlight != nil,
+  defp options(%__MODULE__{highlight: highlight, dim: true}) when highlight != nil,
     do:
       {:error,
        "the highlight option dims the other lines itself, so the code element takes no dim option"}
+
+  defp options(%__MODULE__{}), do: :ok
 
   defp groups(%__MODULE__{reveal: nil, highlight: nil} = code), do: {:ok, code}
 

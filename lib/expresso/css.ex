@@ -7,11 +7,19 @@ defmodule Expresso.Css do
   document after the theme and after the generated rules, so a rule of the
   deck can replace each rule of the theme.
 
+  The document is one file, so `render/2` also puts each local file of a
+  `url()`, such as a font or an image, into the style sheet as a data URI. A
+  `url()` resolves as in a browser: in a file, from the directory of the file,
+  and in a style sheet of the option itself, from the `root` option of the
+  deck or from the working directory.
+
   `scan/1` gives the names of a style sheet that the compiler checks: the
   custom properties that it uses, declares and registers, and the effects
   that it gives a rule. `Expresso.Theme` scans the theme in the same way, and
   the verifiers join the two results.
   """
+
+  alias Shoddy.Result
 
   @typedoc "The names of a style sheet"
   @type names :: %{
@@ -26,13 +34,141 @@ defmodule Expresso.Css do
 
   A value with a brace or a line break is a style sheet. A different value is
   the path of a file, relative to the working directory of the command, as the
-  path of an image is. `nil` gives an empty style sheet.
+  path of an image is. `Expresso.PathTransformer` joins the path to the `root`
+  option of the deck. `nil` gives an empty style sheet.
   """
   @spec resolve(String.t() | nil) :: {:ok, String.t()} | {:error, String.t()}
   def resolve(nil), do: {:ok, ""}
 
   def resolve(css) when is_binary(css) do
     if inline?(css), do: {:ok, css}, else: read(css)
+  end
+
+  # The media types of the files that a `url()` can name: the images of
+  # `Expresso.Image`, and the fonts.
+  @fonts %{
+    ".otf" => "font/otf",
+    ".ttf" => "font/ttf",
+    ".woff" => "font/woff",
+    ".woff2" => "font/woff2"
+  }
+
+  @extensions @fonts
+              |> Map.keys()
+              |> Enum.concat(Expresso.Image.extensions())
+              |> Enum.sort()
+              |> Enum.join(", ")
+
+  # A `url()` with a quoted or an unquoted value.
+  @url ~r/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)"'\s]+))\s*\)/
+
+  @doc """
+  Give the style sheet of a `css` option, with each local file of a `url()` as a data URI
+
+  `root` is the `root` option of the deck, or `nil`. A `url()` of a file
+  resolves from the directory of the file. A `url()` of a style sheet in the
+  option resolves from `root`, or from the working directory without it. An
+  address, such as `https://example.com/font.woff2`, a `data:` URI and a
+  fragment, such as `#shadow`, stay as they are.
+  """
+  @spec render(String.t() | nil, Path.t() | nil) :: {:ok, String.t()} | {:error, String.t()}
+  def render(css, root) do
+    with {:ok, text} <- resolve(css), do: embed(text, base(css, root))
+  end
+
+  defp base(css, root) do
+    cond do
+      css != nil and not inline?(css) -> Path.dirname(css)
+      root != nil -> root
+      true -> "."
+    end
+  end
+
+  @doc """
+  Put each local file of a `url()` into a style sheet as a data URI
+
+  `base` is the directory that a relative path starts from. A query or a
+  fragment of the path, such as `font.woff2?v=2`, is not part of the file
+  name. The function gives an error tuple for a file that it cannot read, and
+  for a file of a type that it does not know.
+
+      iex> Expresso.Css.embed("a { background: url(#shadow); }", ".")
+      {:ok, "a { background: url(#shadow); }"}
+  """
+  @spec embed(String.t(), Path.t()) :: {:ok, String.t()} | {:error, String.t()}
+  def embed(css, base) do
+    @url
+    |> Regex.split(css, include_captures: true)
+    |> Enum.map(&part(&1, base))
+    |> Result.collect()
+    |> Result.map_ok(&IO.iodata_to_binary/1)
+  end
+
+  # A part of the split is a `url()` or the text between two of them.
+  defp part(text, base) do
+    case Regex.run(@url, text, capture: :all_but_first) do
+      nil ->
+        {:ok, text}
+
+      groups ->
+        case url(Enum.find(groups, "", &(&1 != "")), base) do
+          {:ok, nil} -> {:ok, text}
+          {:ok, uri} -> {:ok, "url(\"" <> uri <> "\")"}
+          {:error, message} -> {:error, message}
+        end
+    end
+  end
+
+  # The data URI of a local file, or `nil` for a value that names no local file.
+  defp url(value, base) do
+    if Regex.match?(~r/\A(?:[a-zA-Z][a-zA-Z0-9+.-]*:|\/\/|#)/, value) or value == "" do
+      {:ok, nil}
+    else
+      [name | _rest] = String.split(value, ["?", "#"], parts: 2)
+      fragment = fragment(value)
+      path = Path.expand(name, base)
+
+      with {:ok, media_type} <- media_type(path),
+           {:ok, bytes} <- read_url(path) do
+        {:ok, "data:#{media_type};base64,#{Base.encode64(bytes)}#{fragment}"}
+      end
+    end
+  end
+
+  # A fragment, such as `#icon` of `icons.svg#icon`, names a part of the file.
+  defp fragment(value) do
+    case String.split(value, "#", parts: 2) do
+      [_name, fragment] -> "#" <> fragment
+      [_name] -> ""
+    end
+  end
+
+  defp media_type(path) do
+    case Map.fetch(@fonts, path |> Path.extname() |> String.downcase()) do
+      {:ok, media_type} ->
+        {:ok, media_type}
+
+      :error ->
+        case Expresso.Image.media_type(path) do
+          {:ok, media_type} ->
+            {:ok, media_type}
+
+          {:error, _message} ->
+            {:error,
+             "the url() #{inspect(path)} of the CSS is not a font or an image of a type that " <>
+               "Expresso knows: expected one of #{@extensions}"}
+        end
+    end
+  end
+
+  defp read_url(path) do
+    case Expresso.DeckFile.read(path) do
+      {:ok, bytes} ->
+        {:ok, bytes}
+
+      {:error, reason} ->
+        {:error, "cannot read the file \"#{path}\" of a url() of the CSS: #{reason}"}
+    end
   end
 
   @doc """

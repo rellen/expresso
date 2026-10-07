@@ -3,7 +3,8 @@ defmodule Expresso.Element.Diagram do
   An element that shows an SVG file as a diagram
 
   The `src` option gives the path of the SVG file, and the path is relative to
-  the working directory of the command, as for an image. The render function
+  the working directory of the command or to the `root` option of the deck, as
+  for an image. The render function
   puts the SVG into the document as an element, and not as a data URI as
   `Expresso.Element.Image` does. Therefore the rules of the theme reach the
   parts of the diagram, and a part can show at a step.

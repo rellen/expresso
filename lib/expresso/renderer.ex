@@ -48,7 +48,9 @@ defmodule Expresso.Renderer do
   end
 
   defp deck_css(deck) do
-    case Expresso.Css.resolve((deck.metadata || %{})[:css]) do
+    metadata = deck.metadata || %{}
+
+    case Expresso.Css.render(metadata[:css], metadata[:root]) do
       {:ok, ""} -> nil
       {:ok, css} -> Expresso.Css.escape(css)
       {:error, message} -> raise ArgumentError, message

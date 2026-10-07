@@ -4,7 +4,10 @@ defmodule Expresso.CssTest do
 
   import Spark.Test, only: [dsl_errors: 1, dsl_warnings: 1, refute_dsl_warnings: 1]
 
+  alias Expresso.Builder
   alias Expresso.Css
+
+  doctest Expresso.Css
 
   @moduletag :tmp_dir
 
@@ -57,6 +60,72 @@ defmodule Expresso.CssTest do
     test "gives an error for a file that it cannot read" do
       assert {:error, message} = Css.resolve("no/such/deck.css")
       assert message =~ ~s(cannot read the CSS file "no/such/deck.css")
+    end
+  end
+
+  describe "the files of url()" do
+    @png "data:image/png;base64," <> Base.encode64(File.read!("test/fixtures/dot.png"))
+
+    test "embed/2 puts a local file into the style sheet, with or without quotes" do
+      for value <- ["dot.png", ~s("dot.png"), "'dot.png'", " dot.png "] do
+        assert Css.embed("a { background: url(#{value}); }", "test/fixtures") ==
+                 {:ok, ~s|a { background: url("#{@png}"); }|},
+               value
+      end
+    end
+
+    test "embed/2 keeps an address, a data URI and a fragment, and keeps the fragment of a file" do
+      for css <- [
+            "a { background: url(https://example.com/a.png); }",
+            "a { background: url(//example.com/a.png); }",
+            ~s|a { background: url("data:image/png;base64,AA"); }|,
+            "a { filter: url(#shadow); }"
+          ] do
+        assert Css.embed(css, "test/fixtures") == {:ok, css}
+      end
+
+      assert {:ok, css} = Css.embed("a { mask: url(flow.svg#arrow?v=1); }", "test/fixtures")
+      assert css =~ ~r|url\("data:image/svg\+xml;base64,[^"]+#arrow\?v=1"\)|
+    end
+
+    test "embed/2 gives a font its media type, and an error for a missing file or an unknown type" do
+      File.write!(Path.join(System.tmp_dir!(), "expresso-css-font.woff2"), "font")
+
+      assert {:ok, "src: url(\"data:font/woff2;base64,Zm9udA==\");"} =
+               Css.embed("src: url(expresso-css-font.woff2);", System.tmp_dir!())
+
+      assert {:error, message} = Css.embed("a { background: url(none.png); }", "test/fixtures")
+      assert message =~ ~s|cannot read the file "|
+      assert message =~ ~s|none.png" of a url() of the CSS: enoent|
+
+      assert {:error, message} = Css.embed("a { background: url(code.js); }", "test/fixtures")
+      assert message =~ "is not a font or an image of a type that Expresso knows"
+    end
+
+    test "render/2 resolves the url() of a file from its directory, and of a style sheet from the root",
+         %{tmp_dir: tmp_dir} do
+      File.mkdir_p!(Path.join(tmp_dir, "styles"))
+      File.cp!("test/fixtures/dot.png", Path.join(tmp_dir, "styles/dot.png"))
+      File.cp!("test/fixtures/dot.png", Path.join(tmp_dir, "root.png"))
+      file = Path.join(tmp_dir, "styles/deck.css")
+      File.write!(file, "a { background: url(dot.png); }")
+
+      assert Css.render(file, nil) == {:ok, ~s|a { background: url("#{@png}"); }|}
+
+      assert Css.render("b { background: url(root.png); }", tmp_dir) ==
+               {:ok, ~s|b { background: url("#{@png}"); }|}
+
+      assert Css.render("b { background: url(test/fixtures/dot.png); }", nil) ==
+               {:ok, ~s|b { background: url("#{@png}"); }|}
+    end
+
+    test "the document holds the file of a url() of the css option" do
+      html =
+        [Builder.slide("one")]
+        |> Builder.deck(css: "h1 { background: url(test/fixtures/dot.png); }")
+        |> Expresso.Deck.render()
+
+      assert html =~ ~s|h1 { background: url("#{@png}"); }|
     end
   end
 

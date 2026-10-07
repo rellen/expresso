@@ -22,6 +22,10 @@ defmodule Expresso.Image do
 
   @extensions @media_types |> Map.keys() |> Enum.sort() |> Enum.join(", ")
 
+  @doc "Return the extensions of the image types that Expresso knows"
+  @spec extensions() :: [String.t()]
+  def extensions, do: @media_types |> Map.keys() |> Enum.sort()
+
   @doc """
   Give the media type of an image path
 
@@ -47,8 +51,10 @@ defmodule Expresso.Image do
   @doc """
   Make the data URI of an image path
 
-  The path is relative to the working directory of the command. The function
-  reads the file, and it gives an error tuple for a file that it cannot read.
+  A relative path starts from the working directory of the command.
+  `Expresso.PathTransformer` already joined the path of an image to the
+  `root` option of the deck. The function reads the file, and it gives an
+  error tuple for a file that it cannot read.
   """
   @spec data_uri(Path.t()) :: {:ok, String.t()} | {:error, String.t()}
   def data_uri(path) do
@@ -80,7 +86,8 @@ defmodule Expresso.Image do
       {:error, reason} ->
         {:error,
          "Expresso cannot read the image #{inspect(path)}: #{:file.format_error(reason)}. " <>
-           "A path is relative to the working directory of the command."}
+           "A path is relative to the working directory of the command, or to the root " <>
+           "option of the deck."}
     end
   end
 end
