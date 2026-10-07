@@ -3,7 +3,8 @@ defmodule Expresso.Element.Image do
   An element that shows an image
 
   The `src` option gives the path of the image file, and the path is relative
-  to the working directory of the command. `Expresso.Image` reads the file at
+  to the working directory of the command, or to the `root` option of the
+  deck through `Expresso.PathTransformer`. `Expresso.Image` reads the file at
   render time and makes a data URI, so the document of the deck stays one file.
 
   The `alt` option gives the text of the image for a screen reader. An image

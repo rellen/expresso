@@ -102,7 +102,8 @@ defmodule Expresso.Extension do
           src: [
             type: :string,
             required: true,
-            doc: "The path of the image file, from the working directory of the command."
+            doc:
+              "The path of the image file, from the root option of the deck or from the working directory of the command."
           ],
           alt: [type: :string, doc: "The text of the image for a screen reader."],
           width: [
@@ -263,7 +264,7 @@ defmodule Expresso.Extension do
     target: Expresso.Element.Code,
     args: [{:optional, :lang}],
     entities: [on: [@on]],
-    transform: {Expresso.Element.Code, :build, []},
+    transform: {Expresso.Element.Code, :check, []},
     schema:
       @overlay_schema ++
         @class_schema ++
@@ -279,7 +280,7 @@ defmodule Expresso.Extension do
           src: [
             type: :string,
             doc:
-              "The path of a file that holds the source code, from the working directory of the command. See docs/reference/code-element.md."
+              "The path of a file that holds the source code, from the root option of the deck or from the working directory of the command. See docs/reference/code-element.md."
           ],
           lines: [
             type: {:custom, Expresso.Element.Code, :lines, []},
@@ -349,7 +350,8 @@ defmodule Expresso.Extension do
           src: [
             type: :string,
             required: true,
-            doc: "The path of the SVG file, from the working directory of the command."
+            doc:
+              "The path of the SVG file, from the root option of the deck or from the working directory of the command."
           ],
           width: [
             type: :string,
@@ -485,6 +487,11 @@ defmodule Expresso.Extension do
         doc:
           "A style sheet, or the path of a file that holds one. The document puts it after the theme, so it can replace each rule of the theme and give new effects and states. See docs/reference/css-option.md."
       ],
+      root: [
+        type: :string,
+        doc:
+          "The directory of each relative path of the deck, such as __DIR__. Without it, a path is relative to the working directory of the command. See docs/reference/root-option.md."
+      ],
       effect: [
         type: :atom,
         default: :fade,
@@ -560,7 +567,7 @@ defmodule Expresso.Extension do
   use Spark.Dsl.Extension,
     sections: @sections,
     imports: [],
-    transformers: [Expresso.Overlay.Transformer],
+    transformers: [Expresso.PathTransformer, Expresso.Overlay.Transformer],
     verifiers: [
       Expresso.GotoVerifier,
       Expresso.Overlay.Verifier,

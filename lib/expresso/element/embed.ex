@@ -7,7 +7,7 @@ defmodule Expresso.Element.Embed do
     * An address that starts with `https://` or `http://`. The browser loads
       the page from the network.
     * The path of a local HTML file, relative to the working directory of the
-      command. `sources/1` reads the file, and the document holds its text.
+      command or to the `root` option of the deck. `sources/1` reads the file, and the document holds its text.
       The deck then stays one file, and the page works with no network.
 
   The `title` option names the page for a screen reader, and it is required.

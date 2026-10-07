@@ -80,6 +80,7 @@ spark_locals_without_parens = [
   quotation: 1,
   quotation: 2,
   reveal: 1,
+  root: 1,
   row: 1,
   row: 2,
   set: 1,
