@@ -29,7 +29,7 @@ defmodule Expresso.Lexers.Haskell do
   character =
     string("'")
     |> choice([
-      string("\\") |> ascii_string([not: ?'], min: 1),
+      string("\\") |> utf8_string([not: ?', not: ?\n], min: 1),
       utf8_string([not: ?', not: ?\n], 1)
     ])
     |> string("'")

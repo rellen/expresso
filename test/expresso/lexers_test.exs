@@ -27,15 +27,69 @@ defmodule Expresso.LexersTest do
   # The text of the tokens joined together.
   defp joined(lexer, text), do: Enum.map_join(lexer.lex(text), fn {_, _, value} -> value end)
 
-  property "each lexer reads each text, and its tokens give the text back" do
-    check all text <- string(:printable, max_length: 80),
-              lines <- list_of(member_of(["", "\n", "\n  ", "[a]\n", "# x\n"]), max_length: 3) do
-      text = Enum.join(lines) <> text
+  # Pieces of the syntax of the languages, so that a random text holds the
+  # marks of comments, strings and escapes, and characters of more than one
+  # byte.
+  @pieces [
+    "\n",
+    "\r\n",
+    "\t",
+    " ",
+    "*",
+    "/",
+    "=",
+    "`",
+    "$",
+    "\\",
+    "#",
+    "..",
+    "::",
+    ":",
+    "-",
+    "--",
+    "{-",
+    "-}",
+    "\"",
+    "'",
+    "''",
+    "[",
+    "]",
+    "<",
+    ">",
+    "@",
+    "_",
+    "~",
+    "|",
+    "a",
+    "Ab",
+    "1",
+    "0x",
+    "{",
+    "}",
+    "(",
+    ")",
+    "%",
+    ";",
+    ",",
+    "λ",
+    "é"
+  ]
 
+  property "each lexer reads each text, and its tokens give the text back" do
+    check all text <-
+                one_of([
+                  string(:printable, max_length: 80),
+                  map(list_of(member_of(@pieces), max_length: 40), &Enum.join/1)
+                ]),
+              max_runs: 300 do
       for lexer <- @lexers do
         assert joined(lexer, text) == text, inspect(lexer)
       end
     end
+  end
+
+  test "Haskell: an escape before a character of more than one byte" do
+    assert joined(Lexers.Haskell, "'\\é") == "'\\é"
   end
 
   test "each lexer reads an empty text" do
