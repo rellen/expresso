@@ -146,8 +146,12 @@ defmodule Expresso.Highlight do
     {Expresso.Lexers.Fennel, ["fennel", "fnl"], ["fnl"]},
     {Expresso.Lexers.Haskell, ["haskell", "hs"], ["hs"]},
     {Expresso.Lexers.Kdl, ["kdl"], ["kdl"]},
+    {Expresso.Lexers.Latex, ["latex", "tex"], ["tex"]},
     {Expresso.Lexers.Nix, ["nix"], ["nix"]},
+    {Expresso.Lexers.Org, ["org", "orgmode"], ["org"]},
+    {Expresso.Lexers.Rst, ["rst", "restructuredtext"], ["rst"]},
     {Expresso.Lexers.Toml, ["toml"], ["toml"]},
+    {Expresso.Lexers.Typst, ["typst", "typ"], ["typ"]},
     {Expresso.Lexers.Yaml, ["yaml", "yml"], ["yaml", "yml"]}
   ]
 

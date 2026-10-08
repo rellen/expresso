@@ -40,7 +40,7 @@ both.
 
 A lexer gives the colors of a language. These names have a lexer:
 
-`c`, `cabal`, `css`, `d2`, `dhall`, `diff`, `eex`, `elisp`, `elixir`, `emacs-lisp`, `erl`, `erlang`, `fennel`, `fnl`, `gleam`, `haskell`, `heex`, `hs`, `html`, `html.eex`, `html_eex`, `iex`, `javascript`, `js`, `json`, `kdl`, `nix`, `rust`, `sql`, `toml`, `ts`, `typescript`, `yaml`, `yml`
+`c`, `cabal`, `css`, `d2`, `dhall`, `diff`, `eex`, `elisp`, `elixir`, `emacs-lisp`, `erl`, `erlang`, `fennel`, `fnl`, `gleam`, `haskell`, `heex`, `hs`, `html`, `html.eex`, `html_eex`, `iex`, `javascript`, `js`, `json`, `kdl`, `latex`, `nix`, `org`, `orgmode`, `restructuredtext`, `rst`, `rust`, `sql`, `tex`, `toml`, `ts`, `typ`, `typescript`, `typst`, `yaml`, `yml`
 
 A Makeup package of Hex gives the lexer of most of these languages. Expresso gives its own
 lexer for these languages:
@@ -54,8 +54,12 @@ lexer for these languages:
 | Fennel | `fennel`, `fnl` | special forms, the name of a definition, built-ins of Lua, keywords such as `:key`, `$1`, comments |
 | Haskell | `haskell`, `hs` | keywords, the name at the start of a line, types and constructors, pragmas, functions in backticks, characters, comments |
 | KDL | `kdl` | node names, properties, type annotations, `#true` and the other constants, `/-`, strings, comments |
+| LaTeX | `latex`, `tex` | commands, the commands of the structure, environments, math, escapes, comments |
 | Nix | `nix` | keywords, attributes, paths, built-ins, strings, comments |
+| Org | `org`, `orgmode` | headings with their state, keyword lines, drawers, lists, `*bold*` and the other markup, links, dates, comments |
+| reStructuredText | `rst`, `restructuredtext` | section titles, directives, fields, lists, `**strong**` and the other markup, roles, links, comments |
 | TOML | `toml` | table headers, keys, dates, strings, constants, comments |
+| Typst | `typst`, `typ` | headings, `*strong*` and the other markup, keywords and functions after `#`, labels, references, math, numbers with a unit, comments |
 | YAML | `yaml`, `yml` | keys, document markers, anchors, aliases, tags, constants, strings, comments |
 
 Such a lexer finds the parts that a slide colors, and not each rule of the language.

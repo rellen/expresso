@@ -838,6 +838,10 @@ a short list of rules, and `Expresso.Lexer` gives the parts:
 - `Expresso.Lexers.Lisp` holds the rules that Emacs Lisp and Fennel share: comments,
   strings, keywords such as `:key`, symbols, and the name after a definer such as `defun`.
   Each Lisp gives its own characters, definers and tables of words.
+- `inline/3` matches a span of markup that opens and closes on one line, such as `*bold*`.
+  Without its closing mark, the rule does not match, so a lone `*` stays text. The lexers of
+  Org, reStructuredText, LaTeX and Typst color the structure of a document, and each other
+  word stays text: a word of a sentence is not a keyword.
 - `line_start/1` matches only at the start of a line, such as the table header of TOML. The
   rule starts with the line break before the line, and `lex/2` puts a line break before the
   text. With `indent: false`, it matches only at the first column, such as the name of a
