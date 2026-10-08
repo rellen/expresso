@@ -40,12 +40,24 @@ both.
 
 A lexer gives the colors of a language. These names have a lexer:
 
-`c`, `cabal`, `css`, `d2`, `dhall`, `diff`, `eex`, `elixir`, `erl`, `erlang`, `gleam`, `heex`, `html`, `html.eex`, `html_eex`, `iex`, `javascript`, `js`, `json`, `kdl`, `nix`, `rust`, `sql`, `toml`, `ts`, `typescript`, `yaml`, `yml`
+`c`, `cabal`, `css`, `d2`, `dhall`, `diff`, `eex`, `elisp`, `elixir`, `emacs-lisp`, `erl`, `erlang`, `fennel`, `fnl`, `gleam`, `heex`, `html`, `html.eex`, `html_eex`, `iex`, `javascript`, `js`, `json`, `kdl`, `nix`, `rust`, `sql`, `toml`, `ts`, `typescript`, `yaml`, `yml`
 
 A Makeup package of Hex gives the lexer of most of these languages. Expresso gives its own
-lexer for `cabal`, `d2`, `dhall`, `kdl`, `nix`, `toml` and `yaml` (or `yml`). Such a lexer
-finds the parts that a slide colors, such as the comments, the strings, the keys and the
-keywords, and not each rule of the language.
+lexer for these languages:
+
+| Language | Names | The parts with a color |
+| --- | --- | --- |
+| Cabal | `cabal` | fields, sections, versions, conditions, comments |
+| D2 | `d2` | reserved keys such as `shape`, keys, connections, strings, block strings, comments |
+| Dhall | `dhall` | keywords, built-in types and functions, fields, imports, strings, comments |
+| Emacs Lisp | `elisp`, `emacs-lisp` | special forms, the name of a definition, built-ins, keywords such as `:key`, characters, quotations, comments |
+| Fennel | `fennel`, `fnl` | special forms, the name of a definition, built-ins of Lua, keywords such as `:key`, `$1`, comments |
+| KDL | `kdl` | node names, properties, type annotations, `#true` and the other constants, `/-`, strings, comments |
+| Nix | `nix` | keywords, attributes, paths, built-ins, strings, comments |
+| TOML | `toml` | table headers, keys, dates, strings, constants, comments |
+| YAML | `yaml`, `yml` | keys, document markers, anchors, aliases, tags, constants, strings, comments |
+
+Such a lexer finds the parts that a slide colors, and not each rule of the language.
 
 `Expresso.Highlight.languages/0` returns the same list. A code element with another name
 shows its lines with no colors, as an element with no language does.

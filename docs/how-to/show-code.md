@@ -180,8 +180,8 @@ Examples.CodeWholeFirst
 ## Show a configuration file
 
 Give the name of the language of the file, such as `"toml"`, `"yaml"` or `"nix"`. Expresso
-has lexers for `cabal`, `d2`, `dhall`, `kdl`, `nix`, `toml` and `yaml`, as well as the
-languages of programs. For each name, see [the languages](../reference/code-element.md#the-languages).
+has lexers for many such languages, as well as the languages of programs. For each name, see
+[the languages](../reference/code-element.md#the-languages).
 
 This deck shows a TOML file, and it puts the table of the server, then the table of the
 database, in focus:

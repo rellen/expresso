@@ -8,6 +8,8 @@ defmodule Expresso.LexersTest do
     Lexers.Cabal,
     Lexers.D2,
     Lexers.Dhall,
+    Lexers.Elisp,
+    Lexers.Fennel,
     Lexers.Kdl,
     Lexers.Nix,
     Lexers.Toml,
@@ -135,6 +137,44 @@ defmodule Expresso.LexersTest do
     assert {:string_heredoc, "|md # T|"} in tokens
   end
 
+  test "Emacs Lisp: a definition, a keyword, a built-in, a character and a quotation" do
+    tokens =
+      tokens(
+        Lexers.Elisp,
+        "; c\n(defun f (x)\n  (let ((y ?a)) (message \"%s\" :k 'x #'f nil (+ 1 x))))"
+      )
+
+    assert {:comment_single, "; c"} in tokens
+    assert {:keyword, "defun"} in tokens
+    assert {:name_function, "f"} in tokens
+    assert {:keyword, "let"} in tokens
+    assert {:string_char, "?a"} in tokens
+    assert {:name_builtin, "message"} in tokens
+    assert {:string_symbol, ":k"} in tokens
+    assert {:operator, "'"} in tokens
+    assert {:operator, "#'"} in tokens
+    assert {:keyword_constant, "nil"} in tokens
+    assert {:operator, "+"} in tokens
+    assert {:number, "1"} in tokens
+  end
+
+  test "Fennel: a definition, a local, a built-in, a keyword string and an argument" do
+    tokens =
+      tokens(
+        Lexers.Fennel,
+        "(fn greet [n] (print (.. \"hi \" n)))\n(local x :a)\n(hashfn (* $1 2))"
+      )
+
+    assert {:keyword, "fn"} in tokens
+    assert {:name_function, "greet"} in tokens
+    assert {:name_builtin, "print"} in tokens
+    assert {:operator, ".."} in tokens
+    assert {:keyword, "local"} in tokens
+    assert {:name_function, "x"} in tokens
+    assert {:string_symbol, ":a"} in tokens
+    assert {:name_variable, "$1"} in tokens
+  end
+
   test "Expresso.Highlight colors each new language" do
     for {language, text} <- [
           {"toml", "a = 1"},
@@ -144,7 +184,11 @@ defmodule Expresso.LexersTest do
           {"nix", "a = 1;"},
           {"dhall", "let a = 1 in a"},
           {"cabal", "name: a"},
-          {"d2", "a -> b"}
+          {"d2", "a -> b"},
+          {"elisp", "(defun a ())"},
+          {"emacs-lisp", "(setq a 1)"},
+          {"fennel", "(fn a [])"},
+          {"fnl", "(local a 1)"}
         ] do
       assert language in Expresso.Highlight.languages()
       assert [line] = Expresso.Highlight.lines(text, language)
