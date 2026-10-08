@@ -142,6 +142,8 @@ defmodule Expresso.Highlight do
     {Expresso.Lexers.Cabal, ["cabal"], ["cabal"]},
     {Expresso.Lexers.D2, ["d2"], ["d2"]},
     {Expresso.Lexers.Dhall, ["dhall"], ["dhall"]},
+    {Expresso.Lexers.Elisp, ["elisp", "emacs-lisp"], ["el"]},
+    {Expresso.Lexers.Fennel, ["fennel", "fnl"], ["fnl"]},
     {Expresso.Lexers.Kdl, ["kdl"], ["kdl"]},
     {Expresso.Lexers.Nix, ["nix"], ["nix"]},
     {Expresso.Lexers.Toml, ["toml"], ["toml"]},

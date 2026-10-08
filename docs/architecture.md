@@ -821,10 +821,11 @@ each of these languages:
 - diff
 
 Hex has no Makeup lexer for many other languages. The modules of `Expresso.Lexers` are
-lexers of this project, for Cabal, D2, Dhall, KDL, Nix, TOML and YAML. Each one is pure
-Elixir with NimbleParsec, so the binary of Burrito needs no native library. A package with
-a native library, such as `makeup_syntect`, was the other choice. It also registers
-approximately 200 names, and some of those names would replace the lexers of Hex.
+lexers of this project, and "The languages" in `docs/reference/code-element.md` lists them.
+Each one is pure Elixir with NimbleParsec, so the binary of Burrito needs no native
+library. A package with a native library, such as `makeup_syntect`, was the other choice.
+It also registers approximately 200 names, and some of those names would replace the
+lexers of Hex.
 
 A slide needs clear colors, not a parser of each rule of a language. Therefore each lexer is
 a short list of rules, and `Expresso.Lexer` gives the parts:
@@ -834,6 +835,9 @@ a short list of rules, and `Expresso.Lexer` gives the parts:
   tokens of each lexer give the text back.
 - A rule makes one token, such as a comment, a string, a number, a word or a key before
   `=` or `:`. A table then gives a word its type, such as `:keyword` for `let`.
+- `Expresso.Lexers.Lisp` holds the rules that Emacs Lisp and Fennel share: comments,
+  strings, keywords such as `:key`, symbols, and the name after a definer such as `defun`.
+  Each Lisp gives its own characters, definers and tables of words.
 - `line_start/1` matches only at the start of a line, such as the table header of TOML. The
   rule starts with the line break before the line, and `lex/2` puts a line break before the
   text. A condition in `pre_traverse/3` does not work here, because its error stops the
