@@ -74,58 +74,8 @@ because the embed has `interactive true`.
 
 ## Show a video
 
-Expresso has no video element. A local page with the video inside it works, and the
-document holds the video one time. An `image` with a GIF is larger, and the document holds
-a copy of it for each view.
-
-1. Save the video as a WebM file, such as `demo/demo.webm`. A browser plays WebM with no
-   plugin.
-2. Take a screenshot of the video as a PNG file, such as `demo/demo.png`, for paper.
-3. Make a page that holds the video as a data URI:
-
-   ```sh
-   printf '<!doctype html>\n<video src="data:video/webm;base64,%s" autoplay loop muted playsinline style="width:100%%"></video>\n' \
-     "$(base64 < demo/demo.webm | tr -d '\n')" > demo/video.html
-   ```
-
-4. Write an `embed` element with the page and the screenshot:
-
-   ```elixir
-   embed "demo/video.html" do
-     title "The demonstration"
-     fallback "demo/demo.png"
-   end
-   ```
-
-The video starts when its slide shows, and it plays again from the start at the end. A
-browser starts a video automatically only when it has no sound, so `autoplay` needs
-`muted`. The handout view and paper show the screenshot.
-
-The deck below shows a video in this way. The command of step 3 made
-`examples/animations/clip.html` from `examples/animations/clip.webm`, and
-`examples/animations/clip.png` is a frame of the video. The key `p` opens the handout view,
-which shows the screenshot and the notes:
-
-```elixir
-defmodule Examples.EmbedVideo do
-  use Expresso
-
-  slide "the demonstration" do
-    heading "The demonstration"
-    notes "The handout view and paper show the screenshot in place of the video."
-
-    embed "examples/animations/clip.html" do
-      title "A test pattern that moves"
-      fallback "examples/animations/clip.png"
-      width "60%"
-    end
-  end
-end
-
-Examples.EmbedVideo
-```
-
-![The video plays in the slide, and the handout view shows the screenshot and the notes](https://raw.githubusercontent.com/rellen/expresso/media/embed-video.gif)
+Use the `video` element. The document holds the video file one time, and the presenter
+plays it in the present view. See [Show a video](show-a-video.md).
 
 ## Let the audience see you use the page
 

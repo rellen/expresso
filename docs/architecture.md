@@ -997,6 +997,28 @@ for the user. These are the reasons for its design:
   deck cannot take it back from a page of a different origin. Without `interactive`, the
   frame has `pointer-events: none` and `tabindex="-1"`, so the focus stays on the deck.
 
+### The video
+
+A `video` plays a WebM or an MP4 file. `docs/reference/video-element.md` gives the options
+for the user. It follows the design of the embed, with these differences:
+
+- **The file goes into the document as a data URI, one time.** `Expresso.Element.Video`
+  gives each file a number, and two elements with the same file share it. Each copy of the
+  slide holds only `data-video` and the poster, and the renderer writes the files into the
+  element `expresso-videos`. The form `written_videos` of `Expresso.Presenter.Schema`
+  describes it.
+- **The step decides when it plays.** `video.ts` runs after each change of the state. A
+  video plays while its slide shows in the present view and each parent with an overlay
+  shows at the step, so `at` gives the step where it starts.
+- **A cover pauses it, and a new visit starts it again.** A black screen, the menu and the
+  overview pause the video, and it goes on after them. A move to another slide and back
+  starts it from the start, because the presenter shows it again from the beginning.
+- **It has no sound.** A browser plays a video automatically only when it is muted. With
+  `controls`, the video takes the clicks, and the presenter can turn the sound on.
+- **It uses the box of an embed.** The element has the classes of an embed, so the size,
+  the poster under the video, and the rules that hide the frame in the handout view and in
+  the menu apply to it.
+
 ## The DSL
 
 `Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a

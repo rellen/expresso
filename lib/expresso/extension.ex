@@ -157,6 +157,55 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @video %Spark.Dsl.Entity{
+    name: :video,
+    target: Expresso.Element.Video,
+    args: [:src],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          src: [
+            type: {:custom, Expresso.Element.Video, :source, []},
+            required: true,
+            doc:
+              "The path of a .webm or a .mp4 file. The document holds the video one time. See docs/reference/video-element.md."
+          ],
+          title: [
+            type: :string,
+            required: true,
+            doc: "The name of the video for a screen reader."
+          ],
+          poster: [
+            type: :string,
+            required: true,
+            doc:
+              "The path of an image that shows on paper, in the handout view, in the speaker view and while the video loads."
+          ],
+          width: [
+            type: :string,
+            doc: "The width of the video, such as 900px or 80%. The default is 80%."
+          ],
+          aspect: [
+            type: {:custom, Expresso.Element.Embed, :aspect, []},
+            doc:
+              "The ratio of the width to the height, such as \"16/9\". The default is \"16/9\"."
+          ],
+          loop: [
+            type: :boolean,
+            default: true,
+            doc: "Play the video again from the start at its end."
+          ],
+          controls: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Show the controls of the browser, so the presenter can turn the sound on. The default is false, so the clicks of the presenter work on the slide."
+          ]
+        ]
+  }
+
   # A list holds items, and an item holds one nested list. Spark cannot nest
   # two entities inside each other without a limit, so the extension builds
   # three levels. The item of the deepest list holds no list.
@@ -372,7 +421,8 @@ defmodule Expresso.Extension do
     @code,
     @math,
     @diagram,
-    @embed
+    @embed,
+    @video
   ]
 
   @column %Spark.Dsl.Entity{

@@ -243,6 +243,20 @@ defmodule Expresso.Renderer do
     end
   end
 
+  # The videos, one time each. The presenter gives a video its source when it
+  # plays. A deck with no video has no such element.
+  # `Expresso.Element.Video.json/1` escapes each `<`.
+  # sobelow_skip ["XSS.Raw"]
+  defp videos(assigns) do
+    temple do
+      if json = Expresso.Element.Video.json(@deck) do
+        script id: "expresso-videos", type: "application/json" do
+          Phoenix.HTML.raw(json)
+        end
+      end
+    end
+  end
+
   # The list of keys of each mode. The key `?` shows the element, and the script
   # shows only the list of the current mode. Temple escapes each text.
   defp help_lists(assigns) do
@@ -289,6 +303,7 @@ defmodule Expresso.Renderer do
           |> Expresso.Element.Code.spotlight()
           |> Expresso.Element.Diagram.place()
           |> Expresso.Element.Embed.number()
+          |> Expresso.Element.Video.number()
           |> Expresso.Overlay.Render.identify()
           |> Expresso.Goto.resolve())
       )
@@ -416,6 +431,8 @@ defmodule Expresso.Renderer do
           end
 
           c(&embeds/1, deck: @deck)
+
+          c(&videos/1, deck: @deck)
 
           script do
             Phoenix.HTML.raw(presenter())

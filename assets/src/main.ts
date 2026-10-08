@@ -51,6 +51,11 @@
 // present view, after the load of the document. The speaker view and the
 // handout view load no page. `embed.ts` gives the rules.
 //
+// A video of the video element plays while its slide and its step show in the
+// present view, and a black screen, the menu and the overview pause it. The
+// speaker view and the handout view show its poster. `video.ts` gives the
+// rules.
+//
 // `?check` in the address of the present view runs the layout check after the
 // load of the document and of its fonts. The check shows each step, finds the
 // elements that go past an edge of the window and the lines of code that
@@ -68,6 +73,7 @@ import type { Event } from "./interpreter.ts";
 import { commands } from "./program.ts";
 import type { Builtin } from "./program.ts";
 import { load as loadEmbeds } from "./embed.ts";
+import { play as playVideos } from "./video.ts";
 import { audit, report } from "./layout.ts";
 import { clock, left, pace, talkLength } from "./speaker.ts";
 import {
@@ -164,6 +170,7 @@ function show(changed: State, local = true): void {
   if (document.readyState === "complete") {
     embeds();
   }
+  videos();
   if (isSpeaker && moved && started === null) {
     started = Date.now();
     tick();
@@ -177,6 +184,19 @@ function embeds(): void {
   if (!isSpeaker && state.view === "present" && entry !== undefined) {
     loadEmbeds(entry.slide);
   }
+}
+
+// Play the videos of the current slide. Only the present view of this window
+// plays them, so the speaker view and the handout view show the poster.
+// `video.ts` gives the rules.
+function videos(): void {
+  const entry = current(state, deck);
+  const present = !isSpeaker && state.view === "present";
+  playVideos(
+    present && entry !== undefined ? entry.slide : null,
+    entry?.step ?? 1,
+    state.blank || state.menu || state.overview,
+  );
 }
 
 // Open the speaker view, or show the window of the speaker view again. The
@@ -232,6 +252,10 @@ if (isSpeaker) {
 apply(state, deck, program);
 
 show(fromHash(program, state, location.hash, deck));
+
+// `show` does nothing when the fragment gives no new step, so the video of the
+// first step needs its own call.
+videos();
 
 // The pages load after the document, so the slides show at once. A page that
 // loads slowly then does not hold the load of the document.

@@ -280,6 +280,11 @@ export const decodeWrittenEmbeds: Decoder<WrittenEmbeds> = /* @__PURE__ */ list(
   value: /* @__PURE__ */ string(),
 }));
 
+// The data URI of each video of a deck, in the order of the numbers of the
+// elements, as the renderer writes it.
+export type WrittenVideos = readonly string[];
+export const decodeWrittenVideos: Decoder<WrittenVideos> = /* @__PURE__ */ list(/* @__PURE__ */ string(/^data:video\/(webm|mp4);base64,/));
+
 // The variant of a theme with a light and a dark variant that the key t chose,
 // or null for the variant of the screen.
 export type Scheme = "light" | "dark" | null;
