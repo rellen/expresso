@@ -840,8 +840,9 @@ a short list of rules, and `Expresso.Lexer` gives the parts:
   Each Lisp gives its own characters, definers and tables of words.
 - `line_start/1` matches only at the start of a line, such as the table header of TOML. The
   rule starts with the line break before the line, and `lex/2` puts a line break before the
-  text. A condition in `pre_traverse/3` does not work here, because its error stops the
-  whole parse, and the next rule does not get a chance.
+  text. With `indent: false`, it matches only at the first column, such as the name of a
+  definition at the top level of Haskell. A condition in `pre_traverse/3` does not work
+  here, because its error stops the whole parse, and the next rule does not get a chance.
 
 The types of the tokens are the types of Makeup, so the rules of the theme give them their
 colors. A string of several lines is `:string_heredoc`, because the theme gives

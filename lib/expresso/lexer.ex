@@ -129,13 +129,19 @@ defmodule Expresso.Lexer do
   The rule starts with the line break before the line, and `lex/2` puts a
   line break before the text, so the first line has one too. The line break
   and the indentation become tokens of white space. Put such a rule before
-  `whitespace/0`.
+  `whitespace/0`. With `indent: false`, the rule matches only at the first
+  column, such as a definition at the top level of Haskell.
   """
-  @spec line_start(combinator()) :: combinator()
-  def line_start(combinator) do
+  @spec line_start(combinator(), keyword()) :: combinator()
+  def line_start(combinator, opts \\ []) do
+    indentation =
+      if Keyword.get(opts, :indent, true),
+        do: optional(ascii_string(@spaces, min: 1) |> token(:whitespace)),
+        else: empty()
+
     line_break()
     |> token(:whitespace)
-    |> optional(ascii_string(@spaces, min: 1) |> token(:whitespace))
+    |> concat(indentation)
     |> concat(combinator)
   end
 

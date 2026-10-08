@@ -10,6 +10,7 @@ defmodule Expresso.LexersTest do
     Lexers.Dhall,
     Lexers.Elisp,
     Lexers.Fennel,
+    Lexers.Haskell,
     Lexers.Kdl,
     Lexers.Nix,
     Lexers.Toml,
@@ -175,6 +176,32 @@ defmodule Expresso.LexersTest do
     assert {:name_variable, "$1"} in tokens
   end
 
+  test "Haskell: a pragma, a definition, a type, a keyword, a character and an operator" do
+    tokens =
+      tokens(
+        Lexers.Haskell,
+        "{-# LANGUAGE GADTs #-}\nimport Data.Map\nf :: Int -> Int\nf x = x `div` 2 -- c\n  where y' = 'a'\n"
+      )
+
+    assert {:comment_preproc, "{-# LANGUAGE GADTs #-}"} in tokens
+    assert {:keyword, "import"} in tokens
+    assert {:keyword_type, "Data"} in tokens
+    assert {:name_function, "f"} in tokens
+    assert {:operator, "::"} in tokens
+    assert {:keyword_type, "Int"} in tokens
+    assert {:operator, "->"} in tokens
+    assert {:operator, "`div`"} in tokens
+    assert {:comment_single, "-- c"} in tokens
+    assert {:keyword, "where"} in tokens
+    assert {:name, "y'"} in tokens
+    assert {:string_char, "'a'"} in tokens
+  end
+
+  test "Haskell: an operator that starts with two dashes is not a comment" do
+    assert {:operator, "-->"} in tokens(Lexers.Haskell, "a --> b")
+    assert {:comment_single, "--- c"} in tokens(Lexers.Haskell, "a --- c")
+  end
+
   test "Expresso.Highlight colors each new language" do
     for {language, text} <- [
           {"toml", "a = 1"},
@@ -188,7 +215,9 @@ defmodule Expresso.LexersTest do
           {"elisp", "(defun a ())"},
           {"emacs-lisp", "(setq a 1)"},
           {"fennel", "(fn a [])"},
-          {"fnl", "(local a 1)"}
+          {"fnl", "(local a 1)"},
+          {"haskell", "main = print 1"},
+          {"hs", "data A = A"}
         ] do
       assert language in Expresso.Highlight.languages()
       assert [line] = Expresso.Highlight.lines(text, language)
