@@ -3,8 +3,8 @@ defmodule Expresso.Highlight do
   The highlighting of a code element
 
   `lines/2` makes one HTML fragment for each line of a source text. Makeup
-  lexes the text when a lexer package registers the language, and it escapes
-  each token. Without a lexer for the language, or without a language, the
+  lexes the text when a lexer package or a lexer of `Expresso.Lexers`
+  registers the language, and it escapes each token. Without a lexer for the language, or without a language, the
   function escapes each line and puts it in one `span`, with no class.
   `Expresso.CodeVerifier` gives a warning for a language with no lexer.
 
@@ -82,10 +82,9 @@ defmodule Expresso.Highlight do
   @doc """
   Make one HTML fragment for each line of the text
 
-  The language is a name that a lexer package registers, such as `"elixir"`,
-  `"erlang"`, `"gleam"`, `"heex"`, `"html"`, `"css"`, `"js"`, `"ts"`,
-  `"json"`, `"sql"`, `"c"`, `"rust"` or `"diff"`. `languages/0` returns each
-  name. A language with no lexer, or no language, gives plain lines.
+  The language is a name that a lexer package or `Expresso.Lexers`
+  registers, such as `"elixir"`, `"js"`, `"rust"` or `"toml"`.
+  `languages/0` returns each name. A language with no lexer, or no language, gives plain lines.
 
   Each fragment starts with a `span` element and ends with one, and the last
   `span` holds the line break. Floki removes a text node of white space only,
@@ -125,6 +124,9 @@ defmodule Expresso.Highlight do
       true
 
       iex> "toml" in Expresso.Highlight.languages()
+      true
+
+      iex> "cobol" in Expresso.Highlight.languages()
       false
   """
   @spec languages() :: [String.t()]
@@ -133,7 +135,29 @@ defmodule Expresso.Highlight do
     Enum.sort(Makeup.Registry.supported_language_names())
   end
 
-  defp start_lexers, do: Enum.each(@lexers, &Application.ensure_all_started/1)
+  # The lexers of `Expresso.Lexers`, with their names and the extensions of
+  # their files. Each one is a module of this project, and no application
+  # registers it, so `start_lexers/0` registers it.
+  @own_lexers [
+    {Expresso.Lexers.Cabal, ["cabal"], ["cabal"]},
+    {Expresso.Lexers.D2, ["d2"], ["d2"]},
+    {Expresso.Lexers.Dhall, ["dhall"], ["dhall"]},
+    {Expresso.Lexers.Kdl, ["kdl"], ["kdl"]},
+    {Expresso.Lexers.Nix, ["nix"], ["nix"]},
+    {Expresso.Lexers.Toml, ["toml"], ["toml"]},
+    {Expresso.Lexers.Yaml, ["yaml", "yml"], ["yaml", "yml"]}
+  ]
+
+  defp start_lexers do
+    Enum.each(@lexers, &Application.ensure_all_started/1)
+
+    # The registry is in the environment of the `makeup` application, so a
+    # new start of that application empties it.
+    if Makeup.Registry.fetch_lexer_by_name("toml") == :error do
+      for {lexer, names, extensions} <- @own_lexers,
+          do: Makeup.Registry.register_lexer(lexer, names: names, extensions: extensions)
+    end
+  end
 
   # A lexer gives each pair of delimiters, such as `(` and `)`, a group id in
   # `data-group-id`. The id starts with a prefix, and without the option the

@@ -808,8 +808,8 @@ A `lines` option with texts finds its range in the bytes of the file: from the l
 above the excerpt then does not move it. The `from` text must be in the file one time, so
 a new copy of it above the excerpt gives an error, and not a different excerpt.
 
-Makeup lexes the text when a lexer package registers the language. `mix.exs` lists one
-package for each of these languages:
+Makeup lexes the text when a lexer registers the language. `mix.exs` lists one package for
+each of these languages:
 
 - Elixir, Erlang and Gleam
 - EEx and HEEx
@@ -819,6 +819,30 @@ package for each of these languages:
 - SQL
 - C and Rust
 - diff
+
+Hex has no Makeup lexer for many other languages. The modules of `Expresso.Lexers` are
+lexers of this project, for Cabal, D2, Dhall, KDL, Nix, TOML and YAML. Each one is pure
+Elixir with NimbleParsec, so the binary of Burrito needs no native library. A package with
+a native library, such as `makeup_syntect`, was the other choice. It also registers
+approximately 200 names, and some of those names would replace the lexers of Hex.
+
+A slide needs clear colors, not a parser of each rule of a language. Therefore each lexer is
+a short list of rules, and `Expresso.Lexer` gives the parts:
+
+- `deflexer/3` defines the callbacks of `Makeup.Lexer`. It adds a last rule that takes any
+  one character, so a lexer reads each text to its end. A property test makes sure that the
+  tokens of each lexer give the text back.
+- A rule makes one token, such as a comment, a string, a number, a word or a key before
+  `=` or `:`. A table then gives a word its type, such as `:keyword` for `let`.
+- `line_start/1` matches only at the start of a line, such as the table header of TOML. The
+  rule starts with the line break before the line, and `lex/2` puts a line break before the
+  text. A condition in `pre_traverse/3` does not work here, because its error stops the
+  whole parse, and the next rule does not get a chance.
+
+The types of the tokens are the types of Makeup, so the rules of the theme give them their
+colors. A string of several lines is `:string_heredoc`, because the theme gives
+`:string_doc` the color of a comment. No application registers these lexers, so
+`Expresso.Highlight` registers them when it starts the lexer packages.
 
 Without a lexer for the language, the fragment is one `span` with the escaped text. A
 line of a lexer is a sequence of `span` elements, so each line starts and ends with an
