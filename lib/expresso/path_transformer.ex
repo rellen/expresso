@@ -5,8 +5,9 @@ defmodule Expresso.PathTransformer do
   It runs one time for each deck module at compile time, and before
   `Expresso.Overlay.Transformer`. When the deck has the `root` option, it
   joins each relative path of the deck to that directory: the `src` of an
-  image, a diagram, a code element and a local embed, the `fallback` of an
-  embed, and the `css` option when it is a path. An absolute path and the
+  image, a diagram, a code element, a local embed and a video, the `fallback`
+  of an embed, the `poster` of a video, and the `css` option when it is a
+  path. An absolute path and the
   address of an embed stay as they are. The option itself becomes an absolute
   path, so the renderer can resolve a `url()` of an inline style sheet.
 
@@ -21,7 +22,7 @@ defmodule Expresso.PathTransformer do
 
   use Spark.Dsl.Transformer
 
-  alias Expresso.Element.{Code, Diagram, Embed, Image}
+  alias Expresso.Element.{Code, Diagram, Embed, Image, Video}
   alias Shoddy.Result
   alias Spark.Dsl.Transformer
 
@@ -102,6 +103,9 @@ defmodule Expresso.PathTransformer do
     src = if Embed.address?(src), do: src, else: path(src, root)
     {:ok, %Embed{embed | src: src, fallback: path(fallback, root)}}
   end
+
+  defp own(%Video{src: src, poster: poster} = video, root),
+    do: {:ok, %Video{video | src: path(src, root), poster: path(poster, root)}}
 
   defp own(element, _root), do: {:ok, element}
 

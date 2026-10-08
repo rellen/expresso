@@ -21,6 +21,7 @@ spark_locals_without_parens = [
   column: 1,
   columns: 0,
   columns: 1,
+  controls: 1,
   css: 1,
   diagram: 1,
   diagram: 2,
@@ -55,6 +56,7 @@ spark_locals_without_parens = [
   lines: 1,
   list: 0,
   list: 1,
+  loop: 1,
   mark: 4,
   mark: 5,
   match: 1,
@@ -74,6 +76,7 @@ spark_locals_without_parens = [
   part: 2,
   pause: 0,
   pause: 1,
+  poster: 1,
   print_notes: 1,
   progress: 1,
   property: 2,
@@ -110,6 +113,8 @@ spark_locals_without_parens = [
   theme: 1,
   title: 1,
   transition: 1,
+  video: 1,
+  video: 2,
   whole_first: 1,
   width: 1
 ]
