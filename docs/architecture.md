@@ -1077,7 +1077,9 @@ A verifier gives errors or warnings, and not both, so each kind of warning has i
 verifier.
 
 After the transformer, each element and each `on` entity holds its step numbers in the
-`steps` field. The metadata of the slide holds the maximum step number in `max_step`.
+`steps` field. The metadata of the slide holds the maximum step number in `max_step`. It
+holds the step labels in `labels`, a map from a step number to its name. The `labels`
+option of the slide and the `label` option of each `pause` give them.
 `docs/overlays.md` gives the rules.
 
 ## The presenter
@@ -1131,7 +1133,8 @@ the script can read it at load. The list holds the values that the script needs 
 deck:
 
 - `steps` has one entry for each step of each slide, in sequence. An entry gives the
-  slide, the step, `fraction`, `done` and the position text of the speaker view.
+  slide, the step, `fraction`, `done` and the position text of the speaker view. The
+  position text ends with the label of the step, when the step has one.
 - `slides` has one object for each slide. It gives the index of step 1 of the slide in
   `steps`, the number of steps and the kind of the transition.
 - `duration_ms` gives the length of the talk in milliseconds, or `null`.

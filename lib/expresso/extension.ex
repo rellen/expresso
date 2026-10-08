@@ -408,7 +408,14 @@ defmodule Expresso.Extension do
 
   @pause %Spark.Dsl.Entity{
     name: :pause,
-    target: Expresso.Element.Pause
+    target: Expresso.Element.Pause,
+    schema: [
+      label: [
+        type: :string,
+        doc:
+          "The name of the step that the pause starts. The speaker view shows it. See docs/reference/step-labels.md."
+      ]
+    ]
   }
 
   @slide_elements [elements: [@text_box, @columns] ++ @inner_elements ++ [@pause]]
@@ -441,6 +448,11 @@ defmodule Expresso.Extension do
           "Values of your own for the templates, such as [section: \"Part 3\"]. A template reads them from @metadata[:meta]. See docs/reference/template-option.md."
       ],
       steps: [type: :pos_integer, doc: "The maximum step number of the slide."],
+      labels: [
+        type: {:list, {:or, [:string, nil]}},
+        doc:
+          "The name of each step, from step 1, such as [\"The question\", nil, \"The answer\"]. nil gives a step no name. See docs/reference/step-labels.md."
+      ],
       handout: [
         type: {:custom, Expresso.Handout, :new, []},
         doc:

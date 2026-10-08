@@ -290,10 +290,11 @@ variant in the two windows. See
 ### The speaker view
 
 The speaker view shows the current step, the next step, the notes of the slide, the
-position and a timer. Put this window on your screen, and put the first window on the
-projector. The keys operate in either window, and the two windows show the same step. `b`
-in the speaker view gives a black screen to the audience. The speaker view knows these
-keys:
+position and a timer. The position ends with the label of the step, when the slide gives
+one. See [Step labels](docs/reference/step-labels.md). Put this window on your screen, and
+put the first window on the projector. The keys operate in either window, and the two
+windows show the same step. `b` in the speaker view gives a black screen to the audience.
+The speaker view knows these keys:
 
 <!-- keys speaker -->
 

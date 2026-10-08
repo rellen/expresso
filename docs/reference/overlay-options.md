@@ -158,6 +158,9 @@ after the other.
 element by itself. An element after it reads the new value with `:next`. Write the
 parentheses, because Elixir reads a bare `pause` as a variable.
 
+`pause label: "The restart"` also gives a name to the step after the pause. The speaker
+view shows it. See [Step labels](step-labels.md).
+
 ## `speed`
 
 The time of each animation of an element: its effect, the changes of its `on` entities

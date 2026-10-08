@@ -574,3 +574,31 @@ Examples.OverlayDimCode
 ```
 
 ![Each group of lines dims when the next group shows](https://raw.githubusercontent.com/rellen/expresso/media/overlay-dim-code.gif)
+
+## Name the steps of a slide
+
+Write `labels` in the slide, with one name for each step. The speaker view shows the name
+of the current step after the position. A `pause` takes a name with `label`. See
+[Step labels](../reference/step-labels.md).
+
+```elixir
+defmodule Examples.StepLabels do
+  use Expresso
+
+  slide "restart" do
+    heading "A worker stops"
+    labels ["The tree", "The error", "The restart"]
+
+    list do
+      reveal true
+      item "The supervisor starts three workers"
+      item "One worker stops with an error"
+      item "The supervisor starts it again"
+    end
+  end
+end
+
+Examples.StepLabels
+```
+
+![The speaker view shows the name of each step after the position](https://raw.githubusercontent.com/rellen/expresso/media/step-labels.gif)

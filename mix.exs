@@ -46,6 +46,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/give-a-deck-two-variants.md",
         "docs/reference/transition-option.md",
         "docs/reference/overlay-options.md",
+        "docs/reference/step-labels.md",
         "docs/reference/css-option.md",
         "docs/reference/goto-option.md",
         "docs/reference/code-element.md",

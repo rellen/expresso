@@ -52,6 +52,8 @@ defmodule Expresso.Steps do
       the time of the talk.
     * `position` - the text of the speaker view, such as
       `"Slide 4 of 13, step 2 of 3"`. A slide with one step gets no step part.
+      A step with a label gets the label after a colon, such as
+      `"Slide 4 of 13, step 2 of 3: The restart"`.
 
   The presenter adds ", black screen" to the position while the screen is black.
   """
@@ -62,20 +64,21 @@ defmodule Expresso.Steps do
     positions =
       for {slide, number} <- Enum.with_index(slides, 1),
           steps = Render.max_step(slide),
+          labels = (slide.metadata || %{})[:labels] || %{},
           step <- 1..steps//1,
-          do: {number, step, steps}
+          do: {number, step, steps, labels[step]}
 
     total = length(positions)
 
     positions
     |> Enum.with_index()
-    |> Enum.map(fn {{number, step, steps}, index} ->
+    |> Enum.map(fn {{number, step, steps, label}, index} ->
       %{
         slide: number,
         step: step,
         fraction: part(index, total - 1),
         done: part(index, total),
-        position: position(number, count, step, steps)
+        position: position(number, count, step, steps) <> label(label)
       }
     end)
   end
@@ -147,6 +150,9 @@ defmodule Expresso.Steps do
   # The part `index / total`. A total of 0 occurs for a deck with one step.
   defp part(_index, 0), do: 0.0
   defp part(index, total), do: Float.round(index / total, @places)
+
+  defp label(nil), do: ""
+  defp label(label), do: ": " <> label
 
   defp position(number, count, _step, 1), do: "Slide #{number} of #{count}"
 

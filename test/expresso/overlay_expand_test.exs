@@ -101,6 +101,54 @@ defmodule Expresso.Overlay.ExpandTest do
     end
   end
 
+  describe "the labels of the steps" do
+    test "a pause names the step that it starts, after each :next before it" do
+      slide =
+        expand([
+          %TextBox{at: spec(:next)},
+          %Pause{label: "The answer"},
+          %TextBox{at: spec(:next)},
+          %Pause{},
+          %TextBox{at: spec(:next)}
+        ])
+
+      assert slide.metadata.labels == %{3 => "The answer"}
+      assert slide.metadata.max_step == 5
+    end
+
+    test "the labels option names each step from step 1, and nil gives a step no name" do
+      slide = expand([%TextBox{at: spec(1..3)}], labels: ["Question", nil, "Answer"])
+
+      assert slide.metadata.labels == %{1 => "Question", 3 => "Answer"}
+    end
+
+    test "the two forms can name different steps of one slide" do
+      slide = expand([%Pause{label: "Two"}, %TextBox{at: spec(:next)}], labels: ["One"])
+
+      assert slide.metadata.labels == %{1 => "One", 2 => "Two"}
+    end
+
+    test "a slide with no label has no labels in its metadata" do
+      refute Map.has_key?(expand([%Pause{}, %TextBox{at: spec(:next)}]).metadata, :labels)
+    end
+
+    test "a label of a step that the slide does not have is an error" do
+      assert {:error, "step 3 has a label, and the slide has 2 steps"} =
+               Expand.slide(%Slide{elements: [%TextBox{at: spec(2)}], labels: [nil, nil, "x"]})
+
+      assert {:error, "step 2 has a label, and the slide has 1 steps"} =
+               Expand.slide(%Slide{elements: [%Pause{label: "x"}], steps: 1})
+    end
+
+    test "a step with two labels is an error" do
+      assert {:error, "step 2 has two labels" <> _rest} =
+               Expand.slide(%Slide{
+                 elements: [%Pause{label: "a"}, %TextBox{at: spec(:next)}],
+                 labels: [nil, "b"]
+               })
+    end
+  end
+
   describe "the auto_reveal option" do
     defp auto(elements), do: expand(elements, auto_reveal: true)
 
