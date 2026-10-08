@@ -144,6 +144,7 @@ defmodule Expresso.Highlight do
     {Expresso.Lexers.Dhall, ["dhall"], ["dhall"]},
     {Expresso.Lexers.Elisp, ["elisp", "emacs-lisp"], ["el"]},
     {Expresso.Lexers.Fennel, ["fennel", "fnl"], ["fnl"]},
+    {Expresso.Lexers.Haskell, ["haskell", "hs"], ["hs"]},
     {Expresso.Lexers.Kdl, ["kdl"], ["kdl"]},
     {Expresso.Lexers.Nix, ["nix"], ["nix"]},
     {Expresso.Lexers.Toml, ["toml"], ["toml"]},
