@@ -75,7 +75,8 @@ defmodule Expresso.Presenter.Schema do
     progress: :boolean,
     every: :boolean,
     overview: :boolean,
-    selected: :slide
+    selected: :slide,
+    undim: :boolean
   ]
 
   @views [:present, :handout, :speaker]
@@ -208,6 +209,7 @@ defmodule Expresso.Presenter.Schema do
         slide: {:integer, nil},
         step: {:integer, nil},
         blank: :boolean,
+        undim: :boolean,
         scheme: {:ref, :scheme},
         time: {:number, nil, nil}}}
     ]

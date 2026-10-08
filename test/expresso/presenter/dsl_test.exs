@@ -10,7 +10,7 @@ defmodule Expresso.Presenter.DslTest do
 
   @state """
   state index: 0, view: :present, blank: false, help: false, digits: "",
-        overview: false, selected: 1, progress: true, every: false
+        overview: false, selected: 1, progress: true, every: false, undim: false
 
   sync [:index, :blank]
   """
@@ -114,7 +114,7 @@ defmodule Expresso.Presenter.DslTest do
       message =
         error("""
         state index: 0, view: :stage, blank: false, help: false, digits: "",
-              overview: false, selected: 1, progress: true, every: false
+              overview: false, selected: 1, progress: true, every: false, undim: false
         sync [:index]
         """)
 
@@ -126,6 +126,7 @@ defmodule Expresso.Presenter.DslTest do
         state =
           [index: "0", view: ":present", blank: "false", help: "false", digits: ~s("")]
           |> Keyword.merge(overview: "false", selected: "1", progress: "true", every: "false")
+          |> Keyword.put(:undim, "false")
           |> Keyword.put(field, value)
           |> Enum.map_join(", ", fn {key, text} -> "#{key}: #{text}" end)
 

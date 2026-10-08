@@ -281,8 +281,8 @@ defmodule Expresso.Presenter.InterpreterTest do
   end
 
   describe "the messages" do
-    defp message(slide, step, blank \\ false),
-      do: {:message, %{slide: slide, step: step, blank: blank}}
+    defp message(slide, step, blank \\ false, undim \\ false),
+      do: {:message, %{slide: slide, step: step, blank: blank, undim: undim}}
 
     test "a message moves to its position, with its black screen" do
       assert run(@three, at(1, 1, :speaker), message(3, 2, true)) ==

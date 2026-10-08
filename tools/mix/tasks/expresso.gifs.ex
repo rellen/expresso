@@ -81,6 +81,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "overlay-custom", deck: "overlay_custom.exs", actions: ["j", "j", "j"]},
     %{name: "code-whole-first", deck: "code_whole_first.exs", actions: ["j", "j"]},
     %{name: "code-config", deck: "code_config.exs", actions: ["j"]},
+    %{name: "code-undim", deck: "code_undim.exs", actions: ["d", "j"]},
     %{name: "template-section", deck: "template_section.exs", actions: ["j", "j"]},
     %{name: "embed-page", deck: "embed_page.exs", actions: ["j"]},
     %{name: "embed-video", deck: "embed_video.exs", actions: ["p"]},

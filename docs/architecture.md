@@ -1108,8 +1108,8 @@ The TypeScript part is under `assets/src/`. It has these modules:
 - `program.ts` reads the program of the presenter, and it trusts the renderer.
 - `interpreter.ts` runs the program. It applies one event to the state, and it does not
   touch the document.
-- `state.ts` holds the state: the index of the current step, the view, the black screen
-  and the digits of a slide number. It also holds the messages between the windows, and
+- `state.ts` holds the state: the index of the current step, the view, the black screen,
+  the digits of a slide number and `undim`, the dimming of code. It also holds the messages between the windows, and
   the side of a click and the direction of a swipe.
 - `speaker.ts` makes the texts of the speaker view.
 - `dom.ts` reads the document. It applies a state with the projections of the program,
@@ -1244,6 +1244,12 @@ The tables do not give these rules:
 - The key after `b` or `?` closes the black screen or the list of keys, and it does
   nothing more.
 - A second `s` shows the window of the speaker view again, and it opens no second window.
+- `d` toggles the field `undim`. The projection of the attribute `data-undim` writes it on
+  the `body`, and the attribute is present only while the field is true. While the attribute is present, a rule of the style sheet
+  sets `--dim` and `--dimmed` to 0 on each element of a code element in the present view.
+  The rules of a step select the slide by its id, so this rule needs `!important`. The two
+  interpreters set `undim` to `false` at each change of the index, so the next step dims the
+  code again, and the presenter does not have to press `d` again after an answer.
 
 `f` calls the full screen functions of the browser, and `Escape` of the browser also takes
 the document out of full screen.
@@ -1433,8 +1439,9 @@ second, so the timer and the time left always give the length of the talk.
 
 Each window sends its position to the other window with `postMessage`. The message holds
 the slide, the step and the black screen, so `b` in the speaker view gives a black screen
-to the audience. It also holds the variant of the theme that `t` chose. See "Two variants
-of a theme". A window accepts a message only from the other window. The present view
+to the audience. It holds `undim`, so `d` in the speaker view changes the code of the
+audience. It also holds the variant of the theme that `t` chose. See "Two variants of a
+theme". A window accepts a message only from the other window. The present view
 gets the speaker view from `window.open`, and the speaker view gets the present view from
 `window.opener`. After a reload of the present view, the next message of the speaker view
 makes the connection again. `BroadcastChannel` is not in this design, because a browser

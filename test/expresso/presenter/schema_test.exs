@@ -116,6 +116,7 @@ defmodule Expresso.Presenter.SchemaTest do
       "slide" => 2,
       "step" => 1,
       "blank" => false,
+      "undim" => false,
       "scheme" => nil,
       "time" => 5
     }

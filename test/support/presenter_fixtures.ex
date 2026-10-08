@@ -22,7 +22,7 @@ defmodule Expresso.Test.PresenterFixtures do
 
   An event is one of these arrays: `["key", key]`, `["click", region,
   commands]`, `["swipe", direction]`, `["hash", fragment]` and `["message",
-  slide, step, blank]`. The commands of a click are the commands of the page
+  slide, step, blank, undim]`. The commands of a click are the commands of the page
   of the overview or of the link under the click, or `null`. A result is `[state, prevented, effects,
   transition]`.
   """
@@ -33,7 +33,7 @@ defmodule Expresso.Test.PresenterFixtures do
   @path "assets/test/fixtures/presenter.json"
 
   # The fields of the state, in the order of each state array.
-  @fields [:index, :view, :blank, :digits, :help, :progress, :every, :overview, :selected]
+  @fields [:index, :view, :blank, :digits, :help, :progress, :every, :overview, :selected, :undim]
 
   # The decks of the tests of `main.ts`.
   @decks [
@@ -46,7 +46,7 @@ defmodule Expresso.Test.PresenterFixtures do
     {[1, 2, 1, 1], [:fade, :slide, :none, :zoom]}
   ]
 
-  @keys ~w(j k ArrowRight ArrowLeft ArrowUp ArrowDown PageDown PageUp Home End Enter b p s r f g a o ? Escape x Tab) ++
+  @keys ~w(j k ArrowRight ArrowLeft ArrowUp ArrowDown PageDown PageUp Home End Enter b d p s r f g a o ? Escape x Tab) ++
           [" "] ++ Enum.map(0..9, &Integer.to_string/1)
 
   @kinds [:none, :fade, :slide, :zoom]
@@ -186,8 +186,11 @@ defmodule Expresso.Test.PresenterFixtures do
         {["hash", hash], {:hash, hash}}
 
       _message ->
-        {slide, step, blank} = {near(slides), near(6), pick([true, false])}
-        {["message", slide, step, blank], {:message, %{slide: slide, step: step, blank: blank}}}
+        {slide, step} = {near(slides), near(6)}
+        {blank, undim} = {pick([true, false]), pick([true, false])}
+
+        {["message", slide, step, blank, undim],
+         {:message, %{slide: slide, step: step, blank: blank, undim: undim}}}
     end
   end
 

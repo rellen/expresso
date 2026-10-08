@@ -42,6 +42,20 @@ defmodule Expresso.E2E.HighlightTest do
     end
   end
 
+  # The first item dims at step 2, when the second item shows.
+  defmodule ListDeck do
+    use Expresso
+
+    slide "list" do
+      list do
+        reveal true
+        dim true
+        item "One"
+        item "Two"
+      end
+    end
+  end
+
   # The horizontal offset of the shadow of the bar, the last shadow of each line.
   defp bar_offsets(page) do
     js(page, """
@@ -74,6 +88,50 @@ defmodule Expresso.E2E.HighlightTest do
     assert position(page) == "1.2"
     assert dim(page) == [true, true, false, false, true]
     assert Enum.map(bar_offsets(page), &(&1 < 0)) == [false, false, true, true, false]
+  end
+
+  test "d shows each line in full and keeps the bar, and the next step dims again", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(Deck, tmp_dir))
+
+    press(page, "d")
+    assert js(page, "document.body.dataset.undim") == "true"
+    assert dim(page) == [false, false, false, false, false]
+    assert Enum.map(bar_offsets(page), &(&1 < 0)) == [false, true, false, false, false]
+
+    press(page, "j")
+    assert position(page) == "1.2"
+    assert js(page, "document.body.dataset.undim") == nil
+    assert dim(page) == [true, true, false, false, true]
+  end
+
+  test "d does not change the dimming of a list", %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(ListDeck, tmp_dir))
+    first = "getComputedStyle(document.querySelector('.screen .item')).color"
+
+    press(page, "j")
+    dimmed = js(page, first)
+    assert rgb(dimmed) != "rgb(0, 0, 0)"
+
+    press(page, "d")
+    assert js(page, "document.body.dataset.undim") == "true"
+    assert js(page, first) == dimmed
+  end
+
+  test "d does not change the dimming of the handout view", %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(Deck, tmp_dir))
+    press(page, "d")
+    press(page, "p")
+
+    colors =
+      js(page, """
+      Array.from(document.querySelectorAll(".handout-page[data-step='1'] .code .line"))
+        .map((line) => getComputedStyle(line).color)
+      """)
+
+    assert Enum.map(colors, &(rgb(&1) != "rgb(0, 0, 0)")) == [true, false, true, true, true]
   end
 
   test "whole_first shows the whole code with no bar at step 1, then each group", %{

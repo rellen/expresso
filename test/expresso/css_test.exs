@@ -145,14 +145,18 @@ defmodule Expresso.CssTest do
     defp declaration do
       map(
         {name(),
-         one_of([map(integer(0..9), &Integer.to_string/1), member_of(["2rem", "red", "300ms"])])},
+         one_of([
+           map(integer(0..9), &Integer.to_string/1),
+           map(integer(0..9), &"#{&1} !important"),
+           member_of(["2rem", "red", "300ms", "2rem !important"])
+         ])},
         fn {name, value} ->
           {name, value}
         end
       )
     end
 
-    defp number?(value), do: value =~ ~r/^\d+$/
+    defp number?(value), do: value =~ ~r/^\d+( !important)?$/
 
     property "escape/1 leaves no </, and its result can be read back" do
       check all css <- text() do

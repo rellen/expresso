@@ -25,7 +25,7 @@ function apply(
   state: State,
   event: unknown[],
 ): Result {
-  const [kind, first, second, third] = event;
+  const [kind, first, second, third, fourth] = event;
   switch (kind) {
     case "key":
       return run(program, deck, state, { kind: "key", key: first as string });
@@ -50,6 +50,7 @@ function apply(
         slide: first,
         step: second,
         blank: third,
+        undim: fourth,
         scheme: null,
         time: 1,
       };

@@ -56,6 +56,7 @@ test("a message from the speaker view changes the variant", () => {
       slide: 2,
       step: 1,
       blank: false,
+      undim: false,
       scheme: null,
       time: Date.now() + 60_000,
     },

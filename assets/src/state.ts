@@ -61,8 +61,9 @@ export function swipe(dx: number, dy: number): Direction | undefined {
 // The message that one window of the presenter sends to the other window
 // after each change of its own. The speaker view and the present view then show
 // the same step, and the key `b` in either window gives a black screen to the
-// audience. The message also holds the variant of the theme that the key `t`
-// chose, so the two windows show the same variant.
+// audience. The message also holds the dimming of code that the key `d` turns
+// off, and the variant of the theme that the key `t` chose, so the two windows
+// show the same code and the same variant.
 //
 // `time` is the time of the change in milliseconds. A window does not send a
 // position from the other window back, and it ignores a message that is older
@@ -86,6 +87,7 @@ export function message(
     slide: entry?.slide ?? 1,
     step: entry?.step ?? 1,
     blank: state.blank,
+    undim: state.undim,
     scheme,
     time,
   };

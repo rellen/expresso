@@ -24,9 +24,10 @@ defmodule Expresso.Presenter.Default do
         overview: false,
         selected: 1,
         progress: true,
-        every: false
+        every: false,
+        undim: false
 
-  sync [:index, :blank]
+  sync [:index, :blank, :undim]
 
   # The attributes of the `body`. The style sheet reads them.
   attribute :view, "data-view"
@@ -36,6 +37,7 @@ defmodule Expresso.Presenter.Default do
   attribute :overview, "data-overview", flag: true
   attribute :help, "data-help", flag: true
   attribute :digits, "data-digits"
+  attribute :undim, "data-undim", flag: true
 
   # The style sheet sets the width of the progress bar from the part of the
   # deck before the current step.
@@ -93,6 +95,7 @@ defmodule Expresso.Presenter.Default do
     key "f", builtin(:fullscreen), "Full screen on or off"
     key "g", toggle(:progress), "Progress bar on or off"
     key "t", builtin(:switch_scheme), "Light or dark variant of the theme, in the two windows"
+    key "d", toggle(:undim), "Code in full color until the next step, in the two windows"
 
     event [click: :right, swipe: :left], step(1), "Next step",
       label: "Click or tap the right two thirds, or swipe left"
@@ -133,6 +136,7 @@ defmodule Expresso.Presenter.Default do
     key "r", builtin(:reset_timer), "Set the timer to 0:00"
     key "f", builtin(:fullscreen), "Full screen on or off"
     key "t", builtin(:switch_scheme), "Light or dark variant of the theme, in the two windows"
+    key "d", toggle(:undim), "Code in full color until the next step, in the two windows"
 
     event [click: :right, swipe: :left], step(1), "Next step",
       label: "Click or tap the right two thirds, or swipe left"
