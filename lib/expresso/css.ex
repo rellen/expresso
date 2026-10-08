@@ -202,7 +202,8 @@ defmodule Expresso.Css do
     `@property` rule. Each of the three forms holds the name after two
     hyphens.
   - `declared` holds each custom property that the style sheet gives a value
-    that is not a number, such as `--dur: 300ms`.
+    that is not a number, such as `--dur: 300ms`. A number with
+    `!important`, such as `--dim: 0 !important`, is a number.
   - `registered` gives the `syntax` descriptor of each `@property` rule.
   - `effects` holds each effect with a rule for `[data-effect="..."]`, with
     underscores, as the deck writes the atom. The names stay strings, because
@@ -242,7 +243,7 @@ defmodule Expresso.Css do
   defp non_number_declarations(css) do
     for [name, value] <-
           Regex.scan(~r/--([\w-]+)\s*:\s*([^;}]*)/, css, capture: :all_but_first),
-        not Regex.match?(~r/^-?\d+(\.\d+)?$/, String.trim(value)),
+        not Regex.match?(~r/^-?\d+(\.\d+)?(\s*!important)?$/, String.trim(value)),
         into: MapSet.new(),
         do: name
   end

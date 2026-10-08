@@ -130,8 +130,8 @@ function tick(): void {
 // The time of the state of this window. `state.ts` gives the rule of the time.
 let time = 0;
 
-// Send the position, the black screen and the variant of the theme to the
-// other window, with a new time.
+// Send the position, the black screen, the dimming of code and the variant of
+// the theme to the other window, with a new time.
 function send(): void {
   time = stamp(time, Date.now());
   if (partner !== null && !partner.closed) {
@@ -143,14 +143,15 @@ function send(): void {
 // the history, so the back button of the browser does not go through the
 // steps. A change of this window goes to the other window. A change from the
 // other window does not go back to it. A message holds only the position, the
-// black screen and the variant of the theme. A change to other data, such as
-// the overview, sends no message.
+// black screen, the dimming of code and the variant of the theme. A change to
+// other data, such as the overview, sends no message.
 function show(changed: State, local = true): void {
   if (changed === state) {
     return;
   }
   const moved = changed.index !== state.index;
-  const sent = moved || changed.blank !== state.blank;
+  const sent =
+    moved || changed.blank !== state.blank || changed.undim !== state.undim;
   const change = transition(state, changed, deck);
   state = changed;
   // The browser runs the update of a transition later. The update then reads

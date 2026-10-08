@@ -57,6 +57,7 @@ test("a key moves the speaker view, and the present view gets the change", () =>
     slide: 1,
     step: 2,
     blank: false,
+    undim: false,
     scheme: null,
   });
 });
@@ -70,6 +71,7 @@ test("the last step has no next step, and a slide without notes has no notes", (
       slide: 2,
       step: 1,
       blank: false,
+      undim: false,
       scheme: null,
       time: 1_000_000,
     },
@@ -96,6 +98,7 @@ test("b gives a black screen to the present view", () => {
     slide: 2,
     step: 1,
     blank: true,
+    undim: false,
     scheme: null,
   });
   assert.equal(text("speaker-position"), "Slide 2 of 2, black screen");

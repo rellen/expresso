@@ -132,6 +132,7 @@ test("the state decoder takes exactly the fields of the state", () => {
     every: false,
     overview: false,
     selected: 1,
+    undim: false,
   };
 
   assert.deepEqual(decodeState(state), state);
@@ -145,6 +146,7 @@ test("the message decoder takes a message with other keys", () => {
     slide: 2,
     step: 1,
     blank: false,
+    undim: false,
     scheme: null,
     time: 5,
   };

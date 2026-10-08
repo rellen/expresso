@@ -158,3 +158,17 @@ first group, as a `pause()` in front of the code element does. See
 A line can be in one group only. A line in no group dims at each step of a group.
 
 The bar is a shadow at the left of the line. It takes no space, so the text does not move.
+
+### The key d
+
+The key `d` turns off the dimming of each code element in the present view, until the next
+change of the step. It works in the present view and in the speaker view, and the two
+windows show the same result.
+
+- The lines that dim show in full color. The bar stays on the group in focus.
+- A line that `reveal` hides stays hidden.
+- Each other element, such as a list with `dim true`, keeps its dimming.
+- The handout view and paper keep the dimming of each step.
+
+For the steps, see
+[Show each line during a question](../how-to/show-code.md#show-each-line-during-a-question).

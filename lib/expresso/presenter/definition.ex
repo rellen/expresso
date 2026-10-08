@@ -65,7 +65,16 @@ defmodule Expresso.Presenter.Definition do
 
   @typedoc "A field of the state"
   @type field ::
-          :index | :view | :blank | :help | :digits | :overview | :selected | :progress | :every
+          :index
+          | :view
+          | :blank
+          | :help
+          | :digits
+          | :overview
+          | :selected
+          | :progress
+          | :every
+          | :undim
 
   @typedoc "A command of a definition. The section \"The commands\" of the module documentation tells what each command does."
   @type command ::

@@ -29,13 +29,13 @@ export const VIEWS: readonly View[] = ["present", "handout", "speaker"];
 export const decodeView: Decoder<View> = /* @__PURE__ */ oneOf(VIEWS);
 
 // A field of the state.
-export type Field = "index" | "view" | "blank" | "digits" | "help" | "progress" | "every" | "overview" | "selected";
-export const FIELDS: readonly Field[] = ["index", "view", "blank", "digits", "help", "progress", "every", "overview", "selected"];
+export type Field = "index" | "view" | "blank" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim";
+export const FIELDS: readonly Field[] = ["index", "view", "blank", "digits", "help", "progress", "every", "overview", "selected", "undim"];
 export const decodeField: Decoder<Field> = /* @__PURE__ */ oneOf(FIELDS);
 
 // A field of the state that holds true or false.
-export type BooleanField = "blank" | "help" | "progress" | "every" | "overview";
-export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "help", "progress", "every", "overview"];
+export type BooleanField = "blank" | "help" | "progress" | "every" | "overview" | "undim";
+export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "help", "progress", "every", "overview", "undim"];
 export const decodeBooleanField: Decoder<BooleanField> = /* @__PURE__ */ oneOf(BOOLEAN_FIELDS);
 
 // A field of the state that holds a number.
@@ -54,6 +54,7 @@ export type State = Readonly<{
   every: boolean;
   overview: boolean;
   selected: number;
+  undim: boolean;
 }>;
 export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   index: /* @__PURE__ */ integer(0),
@@ -65,6 +66,7 @@ export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   every: boolean,
   overview: boolean,
   selected: /* @__PURE__ */ integer(1),
+  undim: boolean,
 });
 
 // A built-in function of the browser.
@@ -94,6 +96,7 @@ export type Command =
   | readonly ["set", "every", boolean]
   | readonly ["set", "overview", boolean]
   | readonly ["set", "selected", number]
+  | readonly ["set", "undim", boolean]
   | readonly ["toggle", BooleanField]
   | readonly ["clear", Field]
   | readonly ["assign", "selected", readonly ["entry", "slide"]]
@@ -116,6 +119,7 @@ export const decodeCommand: Decoder<Command> = /* @__PURE__ */ union(
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("every"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("overview"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("selected"), /* @__PURE__ */ integer(1)),
+  /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("undim"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("toggle"), decodeBooleanField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("clear"), decodeField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("assign"), /* @__PURE__ */ literal("selected"), /* @__PURE__ */ tuple(/* @__PURE__ */ literal("entry"), /* @__PURE__ */ literal("slide"))),
@@ -147,6 +151,7 @@ export type WrittenMode = Readonly<{
     every?: boolean;
     overview?: boolean;
     selected?: number;
+    undim?: boolean;
   }>;
   any: Commands | null;
   other: Commands | null;
@@ -167,6 +172,7 @@ export const decodeWrittenMode: Decoder<WrittenMode> = /* @__PURE__ */ object({
     every: boolean,
     overview: boolean,
     selected: /* @__PURE__ */ integer(1),
+    undim: boolean,
   }),
   any: /* @__PURE__ */ nullable(decodeCommands),
   other: /* @__PURE__ */ nullable(decodeCommands),
@@ -259,6 +265,7 @@ export type Message = Readonly<{
   slide: number;
   step: number;
   blank: boolean;
+  undim: boolean;
   scheme: Scheme;
   time: number;
 }>;
@@ -267,6 +274,7 @@ export const decodeMessage: Decoder<Message> = /* @__PURE__ */ openObject({
   slide: /* @__PURE__ */ integer(),
   step: /* @__PURE__ */ integer(),
   blank: boolean,
+  undim: boolean,
   scheme: decodeScheme,
   time: /* @__PURE__ */ number(),
 });

@@ -530,6 +530,18 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
     calc(var(--highlight, 0) * -0.4rem) 0 0 var(--accent);
 }
 /*
+ * The key `d` turns off the dimming of code until the next change of the step,
+ * so the presenter can show a dimmed line when the audience asks about it. The
+ * presenter writes `data-undim` on the `body`. Only the present view changes:
+ * the handout view and paper keep the dimming of each step. A rule of a step
+ * selects the slide with its id, so the rule needs `!important`. The bar of
+ * `highlight` and the lines that `reveal` hides stay as they are.
+ */
+body[data-view="present"][data-undim] .screen .code [data-el] {
+  --dim: 0 !important;
+  --dimmed: 0 !important;
+}
+/*
  * The number of a line, from the option `line_numbers`. The renderer sets
  * `--line-number-width` to the width of the widest number, so the numbers
  * stand in one column. The color of the comments meets the contrast minimum

@@ -177,6 +177,42 @@ Examples.CodeWholeFirst
 
 ![The whole function shows at step 1, then line 13 and line 14 come into focus](https://raw.githubusercontent.com/rellen/expresso/media/code-whole-first.gif)
 
+## Show each line during a question
+
+A question from the audience can be about a line that dims. Press `d` in the present view
+or in the speaker view. Each line of code then shows in full color, and the step does not
+change:
+
+1. Press `d`. The dimmed lines of code show in full color.
+2. Answer the question.
+3. Press `j` to go on. The next step dims the lines again, so you do not press `d` again.
+
+`d` changes code only, so a list with `dim true` stays dimmed. The bar of `highlight` stays
+on the group in focus, and the handout view keeps the dimming of each step.
+
+In this deck, line 14 dims at the first step. The recording presses `d`, then `j`:
+
+```elixir
+defmodule Examples.CodeUndim do
+  use Expresso
+
+  slide "the counter" do
+    heading "The counter"
+
+    code "elixir" do
+      src "examples/animations/counter.ex"
+      lines from: "def handle_call(", to: "\n  end"
+      line_numbers true
+      highlight [13, 14]
+    end
+  end
+end
+
+Examples.CodeUndim
+```
+
+![The dimmed lines show in full color after d, and the next step dims them again](https://raw.githubusercontent.com/rellen/expresso/media/code-undim.gif)
+
 ## Show a configuration file
 
 Give the name of the language of the file, such as `"toml"`, `"yaml"` or `"nix"`. Expresso

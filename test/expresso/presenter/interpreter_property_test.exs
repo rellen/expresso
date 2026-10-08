@@ -46,8 +46,11 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
   end
 
   defp message(program) do
-    gen all slide <- near(slides(program)), step <- near(6), blank <- boolean() do
-      {:message, %{slide: slide, step: step, blank: blank}}
+    gen all slide <- near(slides(program)),
+            step <- near(6),
+            blank <- boolean(),
+            undim <- boolean() do
+      {:message, %{slide: slide, step: step, blank: blank, undim: undim}}
     end
   end
 
@@ -152,15 +155,18 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "a message of a state goes to the step and the black screen of that state" do
+  property "a message of a state goes to the step, the black screen and the dimming of that state" do
     check all program <- decks(),
               sender <- state_in(program),
               receiver <- state_in(program),
               max_runs: @runs do
       {slide, step} = where(program, sender)
-      message = {:message, %{slide: slide, step: step, blank: sender.blank}}
+
+      message =
+        {:message, %{slide: slide, step: step, blank: sender.blank, undim: sender.undim}}
+
       read = run(program, receiver, message)
-      assert {read.index, read.blank} == {sender.index, sender.blank}
+      assert {read.index, read.blank, read.undim} == {sender.index, sender.blank, sender.undim}
     end
   end
 
@@ -298,11 +304,30 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
       chosen = run(program, state, {:click, :right, Program.element(slide)})
 
       if {slide, 1} in Tuple.to_list(program.steps) do
-        assert %{chosen | index: state.index} == %{state | overview: false}
+        # A change of the step also turns the dimming of code on again.
+        undim = state.undim and chosen.index == state.index
+        assert %{chosen | index: state.index} == %{state | overview: false, undim: undim}
         assert where(program, chosen) == {slide, 1}
       else
         assert chosen == %{state | overview: false}
       end
+    end
+  end
+
+  property "a change of the step turns the dimming of code on again, and d turns it off" do
+    check all {program, state} <- shown(),
+              key <- member_of(["j", "k", "Home", "End", "d"]),
+              max_runs: @runs do
+      state = %{state | undim: true, view: :present, blank: false, help: false, overview: false}
+      after_key = run(program, state, {:key, key})
+
+      cond do
+        key == "d" -> assert after_key.undim == false and after_key.index == state.index
+        after_key.index != state.index -> assert after_key.undim == false
+        true -> assert after_key.undim == true
+      end
+
+      assert run(program, %{state | undim: false}, {:key, "d"}).undim == true
     end
   end
 

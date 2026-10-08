@@ -102,7 +102,16 @@ export function run(
       after = apply(program, deck, after, each, event);
     }
   }
+  after = dimAgain(state, after);
   return { state: same(state, after) ? state : after, effects };
+}
+
+// A change of the step turns the dimming of code on again, so the key that
+// turns it off holds only for the step where the presenter pressed it.
+function dimAgain(before: State, after: State): State {
+  return after.index === before.index || !after.undim
+    ? after
+    : { ...after, undim: false };
 }
 
 // Return true when `main.ts` must stop the default operation of the browser:
@@ -195,16 +204,17 @@ function position(
   slide: number,
   step: number,
   blank: boolean,
+  undim: boolean,
   deck: Deck,
 ): State {
   const index = indexOf(deck, slide, step);
   if (index === undefined) {
     return state;
   }
-  if (index === state.index && blank === state.blank) {
+  if (index === state.index && blank === state.blank && undim === state.undim) {
     return state;
   }
-  return { ...state, index, blank, digits: "" };
+  return { ...state, index, blank, undim, digits: "" };
 }
 
 // The fragment of the address for a state, such as `#4.2` for step 2 of slide
@@ -225,7 +235,7 @@ export function fromHash(state: State, hash: string, deck: Deck): State {
   }
   const slide = Number(match[1]);
   const step = match[2] === undefined ? 1 : Number(match[2]);
-  return position(state, slide, step, false, deck);
+  return position(state, slide, step, false, false, deck);
 }
 
 // Go to the position and the black screen of a message from the other window.
@@ -235,7 +245,7 @@ export function follow(state: State, data: unknown, deck: Deck): State {
   if (!isMessage(data)) {
     return state;
   }
-  return position(state, data.slide, data.step, data.blank, deck);
+  return position(state, data.slide, data.step, data.blank, data.undim, deck);
 }
 
 // The state at the next step, or null at the last step of the deck. The

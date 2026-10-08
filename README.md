@@ -214,6 +214,7 @@ The present view knows these keys. `?` shows the same list in the browser.
 | `f` | Full screen on or off |
 | `g` | Progress bar on or off |
 | `t` | Light or dark variant of the theme, in the two windows |
+| `d` | Code in full color until the next step, in the two windows |
 | Click or tap the right two thirds, or swipe left | Next step |
 | Click or tap the left third, or swipe right | Previous step |
 | Click or tap a link | The slide and the step of the link |
@@ -308,6 +309,7 @@ keys:
 | `r` | Set the timer to 0:00 |
 | `f` | Full screen on or off |
 | `t` | Light or dark variant of the theme, in the two windows |
+| `d` | Code in full color until the next step, in the two windows |
 | Click or tap the right two thirds, or swipe left | Next step |
 | Click or tap the left third, or swipe right | Previous step |
 | `o` | Overview of the slides. Only this window shows it. |
