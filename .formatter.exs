@@ -49,6 +49,7 @@ spark_locals_without_parens = [
   key: 3,
   key: 4,
   label: 1,
+  labels: 1,
   lang: 1,
   line_numbers: 1,
   lines: 1,

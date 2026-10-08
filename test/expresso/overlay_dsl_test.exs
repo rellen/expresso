@@ -55,6 +55,59 @@ defmodule Expresso.OverlayDslTest do
     end
   end
 
+  defmodule LabelDeck do
+    use Expresso
+
+    slide "labels" do
+      labels ["The question"]
+
+      text_box do
+        text_area do
+          text "the question"
+        end
+      end
+
+      pause label: "The answer"
+
+      text_box do
+        at :next
+
+        text_area do
+          text "the answer"
+        end
+      end
+    end
+  end
+
+  describe "the labels of the steps" do
+    test "the labels option and the label of a pause name the steps of the slide" do
+      [slide] = Expresso.parse(LabelDeck).slides
+
+      assert slide.metadata.labels == %{1 => "The question", 2 => "The answer"}
+    end
+
+    test "the builder gives the same labels" do
+      alias Expresso.Builder
+
+      text = fn words -> Builder.text_box(elements: [Builder.text_area(text: words)]) end
+
+      deck =
+        Builder.deck([
+          Builder.slide("labels",
+            labels: ["The question"],
+            elements: [
+              text.("the question"),
+              Builder.pause(label: "The answer"),
+              Builder.text_box(at: :next, elements: [Builder.text_area(text: "the answer")])
+            ]
+          )
+        ])
+
+      assert hd(deck.slides).metadata.labels ==
+               hd(Expresso.parse(LabelDeck).slides).metadata.labels
+    end
+  end
+
   setup do
     [slide] = Expresso.parse(OverlayDeck).slides
     {:ok, slide: slide}

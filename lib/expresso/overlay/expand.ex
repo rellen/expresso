@@ -55,18 +55,71 @@ defmodule Expresso.Overlay.Expand do
   The function gives an error when a specification has a step number that is
   more than the maximum. It gives the same error for a step of the `handout`
   option of the slide. That option does not change the maximum.
+
+  The `label` option of a `pause` names the step that the pause starts, and
+  the `labels` option of the slide names each step from step 1. The function
+  writes the names into `metadata.labels`, a map from a step number to its
+  name. It gives an error for a name of a step that the slide does not have,
+  and for a step with two names.
   """
   @spec slide(Slide.t()) :: {:ok, Slide.t()} | {:error, String.t()}
   def slide(%Slide{} = slide) do
     elements = auto_reveal(slide.elements || [], slide.auto_reveal)
+    paused = pause_labels(elements, 1)
     {elements, _counter} = resolve(elements, 1)
     max = slide.steps || max_step(elements) || 1
 
     with {:ok, elements} <- expand(elements, max),
-         {:ok, _steps} <- handout(slide.handout, max) do
-      metadata = Map.put(slide.metadata || %{}, :max_step, max)
+         {:ok, _steps} <- handout(slide.handout, max),
+         {:ok, labels} <- labels(slide.labels, paused, max) do
+      metadata =
+        (slide.metadata || %{})
+        |> Map.put(:max_step, max)
+        |> then(&if labels == %{}, do: &1, else: Map.put(&1, :labels, labels))
+
       {:ok, %Slide{slide | elements: elements, metadata: metadata}}
     end
+  end
+
+  # The step that each pause with a label starts. The walk gives the counter
+  # as `resolve/2` does, and it keeps only the labels.
+  defp pause_labels([], _counter), do: []
+
+  defp pause_labels([%Pause{label: label} | rest], counter) do
+    named = if label, do: [{counter + 1, label}], else: []
+    named ++ pause_labels(rest, counter + 1)
+  end
+
+  defp pause_labels([element | rest], counter) do
+    {_element, counter} = resolve_element(element, counter)
+    pause_labels(rest, counter)
+  end
+
+  # The names of the steps: the labels option of the slide from step 1, and
+  # the label of each pause.
+  defp labels(list, paused, max) do
+    listed =
+      for {label, step} <- Enum.with_index(List.wrap(list), 1), label != nil, do: {step, label}
+
+    all = listed ++ paused
+
+    cond do
+      step = Enum.find_value(all, fn {step, _label} -> step > max && step end) ->
+        {:error, "step #{step} has a label, and the slide has #{max} steps"}
+
+      step = all |> Enum.map(&elem(&1, 0)) |> duplicate() ->
+        {:error,
+         "step #{step} has two labels. Give it a label in the labels option or in a pause, and not in both"}
+
+      true ->
+        {:ok, Map.new(all)}
+    end
+  end
+
+  defp duplicate(steps) do
+    steps
+    |> Enum.frequencies()
+    |> Enum.find_value(fn {step, count} -> count > 1 && step end)
   end
 
   # The handout option can name a step only after the maximum is known. A step

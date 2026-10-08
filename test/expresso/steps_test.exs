@@ -40,6 +40,21 @@ defmodule Expresso.StepsTest do
                [0.0, 0.1667, 0.3333, 0.5, 0.6667, 0.8333]
     end
 
+    test "position ends with the label of a step that has one" do
+      slides = [
+        slide("one", %{max_step: 1, labels: %{1 => "Title"}}),
+        slide("two", %{max_step: 2, labels: %{2 => "The answer"}})
+      ]
+
+      deck = "deck" |> Deck.new(%{}, slides) |> Deck.number_slides()
+
+      assert Enum.map(Steps.entries(deck), & &1.position) == [
+               "Slide 1 of 2: Title",
+               "Slide 2 of 2, step 1 of 2",
+               "Slide 2 of 2, step 2 of 2: The answer"
+             ]
+    end
+
     test "position gives the slide, and the step of a slide with more than one step" do
       assert Enum.map(Steps.entries(deck(@three)), & &1.position) == [
                "Slide 1 of 3",
