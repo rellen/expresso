@@ -89,6 +89,67 @@ defmodule Expresso.Renderer do
   defp page_commands(slide),
     do: slide.metadata.slide_number |> Program.element() |> Program.json_commands()
 
+  # The menu of the slides and their steps. `m` shows it. A row of a slide
+  # holds a small copy of the last step of the slide, and the overlay rules
+  # show that step because the copy is a `section` with `data-step`. A row of
+  # a step holds its number and its label. A slide with one step and no label
+  # gets `data-single` on the row of its step, and the style sheet puts that
+  # row over the row of the slide. A click on a row runs its
+  # `data-commands`, which go to the step and close the menu. The marks of the
+  # program write `data-cursor` and `data-current` on the rows of the steps.
+  defp menu(assigns) do
+    temple do
+      nav id: "menu", aria_label: "Slides and steps" do
+        ol do
+          for {slide, %{first: first, steps: steps}} <-
+                Enum.zip(@deck.slides, Expresso.Steps.slides(@deck)),
+              labels = slide.metadata[:labels] || %{} do
+            li class: "menu-group" do
+              div class: "menu-slide", data_commands: menu_commands(first) do
+                section class: Expresso.Element.classes("menu-thumb", slide.metadata[:class]),
+                        data_step: steps,
+                        aria_hidden: "true" do
+                  c(&slide_parts/1, deck: @deck, slide: slide)
+                end
+
+                span class: "menu-number" do
+                  slide.metadata.slide_number
+                end
+
+                span class: "menu-name" do
+                  menu_name(slide)
+                end
+              end
+
+              ol class: "menu-steps" do
+                for step <- 1..steps//1 do
+                  li class: "menu-step",
+                     data_index: first + step - 1,
+                     data_single: steps == 1 and labels[step] == nil,
+                     data_commands: menu_commands(first + step - 1) do
+                    span class: "menu-number" do
+                      step
+                    end
+
+                    span class: "menu-label" do
+                      labels[step] || ""
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+
+  defp menu_commands(index), do: index |> Program.menu() |> Program.json_commands()
+
+  # The name of a slide in the menu: its heading, its name, or its number.
+  defp menu_name(slide),
+    do: slide.metadata[:heading] || slide.name || "Slide #{slide.metadata.slide_number}"
+
   # The columns of the overview and the zoom of each page in it. Each page is as
   # large as the window, and the style sheet scales it with `zoom`. The padding
   # and the gaps of the grid are 1vw wide and 1vh high. The number of rows is not
@@ -337,6 +398,8 @@ defmodule Expresso.Renderer do
           # from `--fraction`, which the script writes on the `body`.
           div id: "progress" do
           end
+
+          c(&menu/1, deck: @deck)
 
           c(&help_lists/1, rows: Help.rows(Definition.presenter()))
 

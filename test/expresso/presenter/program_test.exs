@@ -89,8 +89,13 @@ defmodule Expresso.Presenter.ProgramTest do
                "data-speaker",
                ".handout-page",
                "index",
-               [["current", "index", 0], ["next", "index", 1]]
+               [["current", "index", 0], ["next", "index", 1]],
+               false
              ] in project["marks"]
+
+      assert ["data-cursor", ".menu-step[data-index]", "index", [["", "cursor", 0]], true] in project[
+               "marks"
+             ]
     end
 
     test "writes the first state and each mode in the order of the interpreter" do
@@ -100,7 +105,7 @@ defmodule Expresso.Presenter.ProgramTest do
       assert data["state"]["selected"] == 1
 
       assert Enum.map(data["modes"], & &1["name"]) ==
-               ~w(blank help overview present speaker handout)
+               ~w(blank help overview menu present speaker handout)
     end
 
     test "puts the events with the same commands in one pair" do

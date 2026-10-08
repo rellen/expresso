@@ -305,10 +305,11 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
   handle({ kind: "key", key: event.key }, event);
 });
 
-// The two kinds of element that hold commands: a link of the `goto` option and
-// a page of the overview.
+// The three kinds of element that hold commands: a link of the `goto` option,
+// a page of the overview and a row of the menu.
 const LINK = "a.goto[data-commands]";
 const PAGE = ".handout-page[data-commands]";
+const ROW = "#menu :is(.menu-slide, .menu-step)[data-commands]";
 
 // The elements that use a click themselves.
 const INTERACTIVE =
@@ -335,14 +336,14 @@ function ignores(event: MouseEvent): boolean {
 
 // The commands of the nearest element under a click that holds commands, or
 // null. The renderer writes them on the page of the last step of each slide,
-// for the overview, and on each link of the `goto` option. The script reads
-// commands only from these two kinds of element. Thus the script does not run
+// for the overview, on each link of the `goto` option, and on each row of the
+// menu. The script reads commands only from these three kinds of element. Thus the script does not run
 // an attribute `data-commands` from the HTML of a deck. In the overview, the
 // style sheet stops a click on the content of a page, so the click finds the
 // page and not a link on it.
 function element(event: MouseEvent) {
   const target = event.target as Element | null;
-  const holder = target?.closest?.(`${LINK}, ${PAGE}`) as
+  const holder = target?.closest?.(`${LINK}, ${PAGE}, ${ROW}`) as
     HTMLElement | null | undefined;
   const text = holder?.dataset.commands;
   return text === undefined ? null : commands(text);

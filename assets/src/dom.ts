@@ -117,7 +117,8 @@ function project(rules: Projections, state: State, deck: Deck): void {
   for (const { name, entry: key } of rules.properties) {
     body.style.setProperty(name, String(entry?.[key] ?? 0));
   }
-  for (const { attribute, selector, key, values } of rules.marks) {
+  for (const { attribute, selector, key, values, scroll } of rules.marks) {
+    let first: Element | null = null;
     for (const element of document.querySelectorAll(selector)) {
       const number = Number(element.getAttribute(`data-${key}`));
       const found = values.find(
@@ -127,7 +128,13 @@ function project(rules: Projections, state: State, deck: Deck): void {
         element.removeAttribute(attribute);
       } else {
         element.setAttribute(attribute, found[0]);
+        first ??= element;
       }
+    }
+    // `nearest` scrolls only when the element is not in view, so a move of
+    // the cursor inside the view does not move the list.
+    if (scroll && first !== null && first.checkVisibility?.() !== false) {
+      first.scrollIntoView?.({ block: "nearest" });
     }
   }
 }

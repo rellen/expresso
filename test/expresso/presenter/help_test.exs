@@ -13,7 +13,7 @@ defmodule Expresso.Presenter.HelpTest do
   describe "rows/1" do
     test "returns a list for each mode that has bindings, in the order of the definition" do
       assert Definition.presenter() |> Help.rows() |> Keyword.keys() ==
-               [:overview, :present, :speaker, :handout]
+               [:overview, :menu, :present, :speaker, :handout]
     end
 
     test "returns a row for each binding of a mode" do

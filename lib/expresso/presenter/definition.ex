@@ -55,6 +55,12 @@ defmodule Expresso.Presenter.Definition do
       deck makes no change.
     * `:go_typed` - goes to step 1 of the slide that the typed digits give, and
       removes the digits.
+    * `{:copy, to, from}` - sets a field that holds the index of a step to the
+      value of another such field. The menu puts its cursor on the current
+      step with `{:copy, :cursor, :index}`.
+    * `{:move, field, count}` - adds a number to a field that holds the index of
+      a step. A move past the first step or the last step makes no change.
+    * `{:go, field}` - goes to the step at the index that a field holds.
     * `{:builtin, name}` - calls a built-in function of the browser:
       `:open_speaker`, `:fullscreen`, `:reset_timer` or `:switch_scheme`.
 
@@ -75,6 +81,8 @@ defmodule Expresso.Presenter.Definition do
           | :progress
           | :every
           | :undim
+          | :menu
+          | :cursor
 
   @typedoc "A command of a definition. The section \"The commands\" of the module documentation tells what each command does."
   @type command ::
@@ -88,6 +96,9 @@ defmodule Expresso.Presenter.Definition do
           | {:goto_slide, :selected | pos_integer()}
           | {:select, pos_integer() | :last_slide}
           | {:select_by, integer() | {:columns, 1 | -1}}
+          | {:copy, field(), field()}
+          | {:move, field(), integer()}
+          | {:go, field()}
           | :go_typed
           | {:builtin, :open_speaker | :fullscreen | :reset_timer | :switch_scheme}
 

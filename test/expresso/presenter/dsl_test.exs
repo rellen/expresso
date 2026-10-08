@@ -10,7 +10,8 @@ defmodule Expresso.Presenter.DslTest do
 
   @state """
   state index: 0, view: :present, blank: false, help: false, digits: "",
-        overview: false, selected: 1, progress: true, every: false, undim: false
+        overview: false, selected: 1, progress: true, every: false, undim: false,
+        menu: false, cursor: 0
 
   sync [:blank]
   reset [:undim]
@@ -97,7 +98,7 @@ defmodule Expresso.Presenter.DslTest do
 
     test "Expresso.Presenter.Default holds each mode of the presenter" do
       assert Enum.map(Definition.presenter().modes, & &1.name) ==
-               [:blank, :help, :overview, :present, :speaker, :handout]
+               [:blank, :help, :overview, :menu, :present, :speaker, :handout]
     end
   end
 
@@ -116,7 +117,8 @@ defmodule Expresso.Presenter.DslTest do
       message =
         error("""
         state index: 0, view: :stage, blank: false, help: false, digits: "",
-              overview: false, selected: 1, progress: true, every: false, undim: false
+              overview: false, selected: 1, progress: true, every: false, undim: false,
+        menu: false, cursor: 0
         sync []
         """)
 
@@ -128,7 +130,7 @@ defmodule Expresso.Presenter.DslTest do
         state =
           [index: "0", view: ":present", blank: "false", help: "false", digits: ~s("")]
           |> Keyword.merge(overview: "false", selected: "1", progress: "true", every: "false")
-          |> Keyword.put(:undim, "false")
+          |> Keyword.merge(undim: "false", menu: "false", cursor: "0")
           |> Keyword.put(field, value)
           |> Enum.map_join(", ", fn {key, text} -> "#{key}: #{text}" end)
 
@@ -264,7 +266,7 @@ defmodule Expresso.Presenter.DslTest do
             {~s(attribute :view, "view"), "must start with data-"},
             {~s(property "fraction", :fraction), "is not valid"},
             {~s(mark "data-a", ".page", :slide, [{"", :view, 0}]), "is not valid"},
-            {~s(mark "data-a", ".page", :slide, []), "is not valid"},
+            {~s(mark "data-a", ".page", :slide, [], []), "is not valid"},
             {~s(mark "a", ".page", :slide, [{"", :selected, 0}]), "must start with data-"}
           ] do
         assert error("""

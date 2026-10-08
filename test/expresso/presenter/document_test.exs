@@ -34,12 +34,70 @@ defmodule Expresso.Presenter.DocumentTest do
     end
   end
 
+  describe "the menu" do
+    test "holds a row for each slide and a row for each step, with the index and the commands of the step" do
+      menu = document() |> Floki.find("nav#menu")
+
+      assert menu |> Floki.find(".menu-slide") |> length() == 3
+
+      steps = Floki.find(menu, ".menu-step")
+
+      assert Enum.map(steps, &Floki.attribute(&1, "data-index")) ==
+               Enum.map(0..5, &[to_string(&1)])
+
+      for {step, index} <- Enum.with_index(steps) do
+        assert Floki.attribute(step, "data-commands") == [
+                 index |> Program.menu() |> Program.json_commands()
+               ]
+      end
+
+      firsts =
+        menu |> Floki.find(".menu-slide") |> Enum.flat_map(&Floki.attribute(&1, "data-commands"))
+
+      assert firsts == Enum.map([0, 1, 4], &(&1 |> Program.menu() |> Program.json_commands()))
+    end
+
+    test "a row of a slide holds a copy of its last step, and its name" do
+      menu = document() |> Floki.find("nav#menu")
+
+      assert menu
+             |> Floki.find("section.menu-thumb")
+             |> Enum.flat_map(&Floki.attribute(&1, "data-step")) ==
+               ["1", "3", "2"]
+
+      assert menu |> Floki.find(".menu-name") |> Enum.map(&Floki.text/1) ==
+               ["slide 1", "slide 2", "slide 3"]
+    end
+
+    test "a step shows its label, and only a slide with one step and no label has data-single" do
+      deck =
+        Builder.deck([
+          Builder.slide("one", heading: "The start", steps: 1),
+          Builder.slide("two", steps: 1, labels: ["Named"]),
+          Builder.slide("three", steps: 2, labels: [nil, "Second"])
+        ])
+
+      menu = deck |> Expresso.Deck.render() |> Floki.parse_document!() |> Floki.find("nav#menu")
+
+      assert menu |> Floki.find(".menu-name") |> Enum.map(&Floki.text/1) ==
+               ["The start", "two", "three"]
+
+      assert menu |> Floki.find(".menu-label") |> Enum.map(&Floki.text/1) ==
+               ["", "Named", "", "Second"]
+
+      assert menu
+             |> Floki.find(".menu-step[data-single]")
+             |> Enum.flat_map(&Floki.attribute(&1, "data-index")) ==
+               ["0"]
+    end
+  end
+
   describe "the list of keys" do
     test "holds a hidden list for each mode, with the rows of Help.rows/1" do
       lists = Floki.find(document(), "#help > div")
 
       assert Enum.map(lists, &Floki.attribute(&1, "data-mode")) ==
-               [["overview"], ["present"], ["speaker"], ["handout"]]
+               [["overview"], ["menu"], ["present"], ["speaker"], ["handout"]]
 
       assert Enum.all?(lists, &(Floki.attribute(&1, "hidden") != []))
 

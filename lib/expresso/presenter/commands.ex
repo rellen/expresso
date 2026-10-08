@@ -63,6 +63,18 @@ defmodule Expresso.Presenter.Commands do
   @spec select_by(integer() | {:columns, 1 | -1}) :: Definition.command()
   def select_by(count), do: {:select_by, count}
 
+  @doc "Set a field that holds the index of a step to the value of another such field"
+  @spec copy(Definition.field(), Definition.field()) :: Definition.command()
+  def copy(to, from), do: {:copy, to, from}
+
+  @doc "Move a field that holds the index of a step by a number of steps"
+  @spec move(Definition.field(), integer()) :: Definition.command()
+  def move(field, count), do: {:move, field, count}
+
+  @doc "Go to the step at the index that a field holds"
+  @spec go(Definition.field()) :: Definition.command()
+  def go(field), do: {:go, field}
+
   @doc "Go to step 1 of the slide that the typed digits give, and remove the digits"
   @spec go_typed() :: Definition.command()
   def go_typed, do: :go_typed

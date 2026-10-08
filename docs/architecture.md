@@ -1182,9 +1182,9 @@ examines no value. These parts find a defect of the program:
   the decoders of `assets/src/schema.ts`. It runs only in the tests, and the bundle does
   not hold it.
 - The interpreter throws for a command that it does not know.
-- The click handler reads commands only from a link of the `goto` option and from a page
-  of the overview. Thus the script does not run an attribute `data-commands` from the
-  HTML of a deck.
+- The click handler reads commands only from a link of the `goto` option, from a page of
+  the overview and from a row of the menu. Thus the script does not run an attribute
+  `data-commands` from the HTML of a deck.
 
 `Expresso.Presenter.Schema` describes each value that Elixir writes for the script, and
 `assets/src/schema.ts` holds the TypeScript type and the decoder of each value. A test
@@ -1421,6 +1421,39 @@ in the window.
 
 In the speaker view, the overview replaces the grid of the speaker view while it shows. A
 deck can set `--overview-color` for the outline of the selected slide, which has the color `--accent`.
+
+### The menu
+
+The menu lists each slide with a small copy of its last step, and a row for each step
+under it. A row of a step shows the number and the label of the step. See "Step labels"
+in `docs/reference/step-labels.md`. The overview shows the slides and the menu shows the
+steps, so the two have different keys: `o` and `m`.
+
+The state holds `menu` and `cursor`, the index of a step. `m` opens the menu with
+`copy(:cursor, :index)`, so the cursor starts at the current step. While the menu shows,
+the state matches the mode `menu`:
+
+- `j` and `k` run `move(:cursor, 1)` and `move(:cursor, -1)`. A move past the first step
+  or the last step makes no change.
+- `Enter` runs `go(:cursor)`, which goes to the step of the cursor, and it closes the menu.
+- A click on a row runs the commands of the row, which go to the step and close the menu.
+  The row of a slide goes to step 1 of the slide.
+- `m` and `Escape` close the menu, and the step does not change.
+
+The step of the audience changes only at `Enter` or at a click. `menu` and `cursor` are
+not in the option `sync`, so the menu shows only in the window that opens it, as the
+overview does.
+
+The renderer writes the menu in `nav#menu`. The copy of a slide is a `section` with
+`data-step` at the last step, so the overlay rules show that step, as they do on a page of
+the handout view. The copy is as large as the window, and `--menu-zoom` scales it. A
+frame of an embed in a copy gets no source, so a copy shows the fallback.
+
+Two marks write `data-cursor` and `data-current` on the rows of the steps. The mark of the
+cursor has `scroll: true`, so the script scrolls its row into the view of the menu after
+each change. A slide with one step and no label gets `data-single` on the row of its step,
+and the style sheet puts that row over the row of the slide. A deck can set `--menu-color`
+for the marks, which have the color `--accent`.
 
 ### The handout view
 

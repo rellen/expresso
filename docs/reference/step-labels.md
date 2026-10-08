@@ -1,7 +1,8 @@
 # Step labels
 
 A step label is a short name for one step of a slide, such as "The restart". The speaker
-view shows the label of the current step after the position.
+view shows the label of the current step after the position, and the menu of `m` shows
+the label of each step. See "The menu" in the README.
 
 ```elixir
 slide "restart" do

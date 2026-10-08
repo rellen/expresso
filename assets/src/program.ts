@@ -45,7 +45,8 @@ export type Mode = Readonly<{
 // field is true. A property writes a value of the current entry into a custom
 // property of the `body`. A mark writes an attribute on each element of a
 // selector whose `data-slide` or `data-index` agrees with a field plus an
-// offset.
+// offset. With `scroll`, `dom.ts` scrolls the first marked element into the
+// view of its container.
 export type Attribute = Readonly<{ field: Field; name: string; flag: boolean }>;
 export type Property = Readonly<{ name: string; entry: "fraction" | "done" }>;
 export type Mark = Readonly<{
@@ -53,6 +54,7 @@ export type Mark = Readonly<{
   selector: string;
   key: "slide" | "index";
   values: readonly (readonly [string, Field, number])[];
+  scroll: boolean;
 }>;
 export type Projections = Readonly<{
   attributes: readonly Attribute[];
@@ -109,12 +111,15 @@ export function fromWritten({
         flag,
       })),
       properties: project.properties.map(([name, entry]) => ({ name, entry })),
-      marks: project.marks.map(([attribute, selector, key, values]) => ({
-        attribute,
-        selector,
-        key,
-        values,
-      })),
+      marks: project.marks.map(
+        ([attribute, selector, key, values, scroll]) => ({
+          attribute,
+          selector,
+          key,
+          values,
+          scroll,
+        }),
+      ),
     },
   };
 }

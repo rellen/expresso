@@ -76,7 +76,9 @@ defmodule Expresso.Presenter.Schema do
     every: :boolean,
     overview: :boolean,
     selected: :slide,
-    undim: :boolean
+    undim: :boolean,
+    menu: :boolean,
+    cursor: :index
   ]
 
   @views [:present, :handout, :speaker]
@@ -136,6 +138,8 @@ defmodule Expresso.Presenter.Schema do
        strings(fields_of([:boolean]))},
       {:number_field, "A field of the state that holds a number.",
        strings(fields_of([:index, :slide]))},
+      {:index_field, "A field of the state that holds the index of a step.",
+       strings(fields_of([:index]))},
       {:state, "The state of the presenter. The program holds its first value.",
        {:object, for({field, kind} <- @fields, do: {field, kind(kind)})}},
       {:builtin, "A built-in function of the browser.", strings(@builtins)},
@@ -175,7 +179,8 @@ defmodule Expresso.Presenter.Schema do
               attribute(),
               :string,
               {:enum, ["slide", "index"]},
-              {:list, {:tuple, [:string, {:ref, :number_field}, {:integer, nil}]}}
+              {:list, {:tuple, [:string, {:ref, :number_field}, {:integer, nil}]}},
+              :boolean
             ]}}}},
       {:written_program, "The program of the presenter for one deck, as the renderer writes it.",
        {:object,
@@ -238,6 +243,9 @@ defmodule Expresso.Presenter.Schema do
         {:tuple, [{:literal, "goto_slide"}, {:union, [{:literal, "selected"}, {:integer, 1}]}]},
         {:tuple, [{:literal, "select"}, {:integer, 0}]},
         {:tuple, [{:literal, "select_by"}, {:integer, nil}]},
+        {:tuple, [{:literal, "copy"}, {:ref, :index_field}, {:ref, :index_field}]},
+        {:tuple, [{:literal, "move"}, {:ref, :index_field}, {:integer, nil}]},
+        {:tuple, [{:literal, "go"}, {:ref, :index_field}]},
         {:tuple, [{:literal, "go_typed"}]},
         {:tuple, [{:literal, "builtin"}, {:ref, :builtin}]}
       ]

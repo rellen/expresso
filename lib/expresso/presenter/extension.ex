@@ -149,6 +149,11 @@ defmodule Expresso.Presenter.Extension do
         type: {:list, {:tuple, [:string, :atom, :integer]}},
         required: true,
         doc: "Each text of the attribute, with a field of the state and an offset."
+      ],
+      scroll: [
+        type: :boolean,
+        default: false,
+        doc: "Scroll the first marked element into the view of its container."
       ]
     ]
   }

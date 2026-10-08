@@ -23,7 +23,8 @@ defmodule Expresso.Presenter.Projection do
 
   A mark can have more than one value. The script writes on an element the
   first value whose field, plus the offset, agrees with the number of the
-  element.
+  element. With `scroll: true`, the script then scrolls the first marked
+  element into its container, so the cursor of the menu stays in view.
   """
 
   defmodule Attribute do
@@ -58,10 +59,11 @@ defmodule Expresso.Presenter.Projection do
             attribute: String.t(),
             selector: String.t(),
             key: :slide | :index,
-            values: [{String.t(), atom(), integer()}]
+            values: [{String.t(), atom(), integer()}],
+            scroll: boolean()
           }
 
-    defstruct [:attribute, :selector, :key, values: [], __spark_metadata__: nil]
+    defstruct [:attribute, :selector, :key, values: [], scroll: false, __spark_metadata__: nil]
   end
 
   @typedoc "The projections of a definition"
@@ -113,7 +115,8 @@ defmodule Expresso.Presenter.Projection do
             Atom.to_string(mark.key),
             Enum.map(mark.values, fn {text, field, offset} ->
               [text, Atom.to_string(field), offset]
-            end)
+            end),
+            mark.scroll
           ]
         end)
     }

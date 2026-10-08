@@ -1025,6 +1025,123 @@ body[data-view="handout"][data-print-notes="false"] .notes {
       var(--overview-color, var(--accent));
   }
 }
+/*
+ * The menu of the slides and their steps. `m` shows it in the present view
+ * or in the speaker view, at the left side over the slide. Each slide has a
+ * row with a small copy of its last step, and a row for each step under it.
+ * The copy is as large as the window, and `--menu-zoom` scales it, as the
+ * overview scales its pages. The program marks the row of the cursor with
+ * `data-cursor` and the row of the current step with `data-current`. A deck
+ * can set `--menu-color` for the marks, which have the color `--accent`.
+ */
+#menu {
+  display: none;
+}
+@media screen {
+  body[data-menu="true"] #menu {
+    display: block;
+    position: fixed;
+    top: 2vh;
+    bottom: 2vh;
+    left: 2vh;
+    width: min(42vw, 13rem);
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 0.15rem;
+    font-size: 0.3rem;
+    color: var(--text);
+    background-color: var(--background);
+    border: 1px solid color-mix(in srgb, var(--text) 25%, transparent);
+    border-radius: 0.2rem;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.4);
+    z-index: 9;
+  }
+  #menu ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .menu-slide {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.1rem;
+    border-radius: 0.1rem;
+    cursor: pointer;
+  }
+  .menu-thumb {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    justify-content: stretch;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    zoom: var(--menu-zoom, 0.1);
+    background-color: var(--background);
+    outline: calc(1px / var(--menu-zoom, 0.1)) solid
+      color-mix(in srgb, var(--text) 30%, transparent);
+  }
+  /* A click on the content of a copy, such as a link, goes to the row. */
+  .menu-thumb * {
+    pointer-events: none;
+  }
+  .menu-thumb .embed-frame {
+    display: none;
+  }
+  .menu-slide:has(+ .menu-steps [data-current]) .menu-thumb {
+    outline: calc(2px / var(--menu-zoom, 0.1)) solid
+      var(--menu-color, var(--accent));
+  }
+  .menu-name {
+    font-weight: 700;
+  }
+  .menu-slide:has(+ .menu-steps [data-current]) .menu-name {
+    color: var(--menu-color, var(--accent));
+  }
+  /* The one step of a slide with no label lies over the row of the slide, so
+   * the cursor, a click and the scroll use the row of the slide. */
+  .menu-group {
+    position: relative;
+  }
+  .menu-step[data-single] {
+    position: absolute;
+    inset: 0;
+  }
+  .menu-step[data-single] > * {
+    visibility: hidden;
+  }
+  .menu-number {
+    min-width: 1.5em;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+  .menu-steps {
+    margin: 0 0 0.1rem 2.2em;
+  }
+  .menu-step {
+    display: flex;
+    gap: 0.2rem;
+    padding: 0.05rem 0.1rem;
+    border-radius: 0.1rem;
+    cursor: pointer;
+  }
+  .menu-step[data-current] {
+    font-weight: 700;
+  }
+  .menu-step[data-current] .menu-number {
+    color: var(--menu-color, var(--accent));
+  }
+  .menu-step[data-cursor] {
+    background-color: color-mix(
+      in srgb,
+      var(--menu-color, var(--accent)) 25%,
+      transparent
+    );
+    outline: 2px solid var(--menu-color, var(--accent));
+  }
+}
 /* The list of keys. `?` shows it, and the next key closes it. */
 #help {
   display: none;
