@@ -27,7 +27,8 @@ defmodule Expresso.Presenter.Default do
         every: false,
         undim: false
 
-  sync [:index, :blank, :undim]
+  sync [:blank, :undim]
+  reset [:undim]
 
   # The attributes of the `body`. The style sheet reads them.
   attribute :view, "data-view"

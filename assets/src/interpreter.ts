@@ -102,16 +102,21 @@ export function run(
       after = apply(program, deck, after, each, event);
     }
   }
-  after = dimAgain(state, after);
+  after = reset(program, state, after);
   return { state: same(state, after) ? state : after, effects };
 }
 
-// A change of the step turns the dimming of code on again, so the key that
-// turns it off holds only for the step where the presenter pressed it.
-function dimAgain(before: State, after: State): State {
-  return after.index === before.index || !after.undim
-    ? after
-    : { ...after, undim: false };
+// A change of the step gives each field of the option `reset` its first value.
+// Thus the key `d`, which turns off the dimming of code, holds only for the
+// step where the presenter pressed it.
+function reset(program: Program, before: State, after: State): State {
+  if (after.index === before.index) {
+    return after;
+  }
+  const first = Object.fromEntries(
+    program.reset.map((field) => [field, program.state[field]]),
+  );
+  return { ...after, ...first };
 }
 
 // Return true when `main.ts` must stop the default operation of the browser:
@@ -196,25 +201,24 @@ function slideOf(state: State, deck: Deck): number {
   return current(state, deck)?.slide ?? 1;
 }
 
-// Go to a slide and a step, and set the black screen. A slide and a step that
-// the deck does not have make no change, and the current position also makes
-// no change.
+// Go to a slide and a step, and set the fields of a fragment or of a message.
+// A change of the step resets the fields of the option `reset` before the
+// fields apply. A slide and a step that the deck does not have make no change,
+// and the current position with the same fields also makes no change.
 function position(
+  program: Program,
   state: State,
   slide: number,
   step: number,
-  blank: boolean,
-  undim: boolean,
+  fields: Partial<State>,
   deck: Deck,
 ): State {
   const index = indexOf(deck, slide, step);
   if (index === undefined) {
     return state;
   }
-  if (index === state.index && blank === state.blank && undim === state.undim) {
-    return state;
-  }
-  return { ...state, index, blank, undim, digits: "" };
+  const moved = { ...reset(program, state, { ...state, index }), ...fields };
+  return same(state, moved) ? state : { ...moved, digits: "" };
 }
 
 // The fragment of the address for a state, such as `#4.2` for step 2 of slide
@@ -228,24 +232,40 @@ export function toHash(state: State, deck: Deck): string {
 // Go to the slide and the step of a fragment. The fragment `#4` is step 1 of
 // slide 4, and a fragment removes a black screen. A fragment with no slide and
 // step of the deck makes no change.
-export function fromHash(state: State, hash: string, deck: Deck): State {
+export function fromHash(
+  program: Program,
+  state: State,
+  hash: string,
+  deck: Deck,
+): State {
   const match = /^#(\d+)(?:\.(\d+))?$/.exec(hash);
   if (match === null) {
     return state;
   }
   const slide = Number(match[1]);
   const step = match[2] === undefined ? 1 : Number(match[2]);
-  return position(state, slide, step, false, false, deck);
+  return position(program, state, slide, step, { blank: false }, deck);
 }
 
-// Go to the position and the black screen of a message from the other window.
-// Data that is not a message, or that has no slide and step of the deck, makes
-// no change.
-export function follow(state: State, data: unknown, deck: Deck): State {
+// Go to the position of a message from the other window, and take its fields
+// of the option `sync`. Data that is not a message, or that has no slide and
+// step of the deck, makes no change. The other fields of the message have no
+// effect.
+export function follow(
+  program: Program,
+  state: State,
+  data: unknown,
+  deck: Deck,
+): State {
   if (!isMessage(data)) {
     return state;
   }
-  return position(state, data.slide, data.step, data.blank, data.undim, deck);
+  const fields = Object.fromEntries(
+    program.sync.flatMap((field) =>
+      field in data.fields ? [[field, data.fields[field]]] : [],
+    ),
+  );
+  return position(program, state, data.slide, data.step, fields, deck);
 }
 
 // The state at the next step, or null at the last step of the deck. The

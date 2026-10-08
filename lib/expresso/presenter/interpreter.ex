@@ -20,8 +20,9 @@ defmodule Expresso.Presenter.Interpreter do
   changes nothing goes to the browser, so the arrow keys still scroll the pages
   of the handout view.
 
-  A change of the step sets `undim` to `false`, so the key that turns off the
-  dimming of code holds only for the step where the presenter pressed it.
+  A change of the step gives each field of the option `reset` of the
+  presenter its first value. Thus the key `d`, which turns off the dimming of
+  code, holds only for the step where the presenter pressed it.
 
   The fragment of the address and the messages between the two windows do not
   go through the modes. They go to a slide and a step of the deck directly.
@@ -36,8 +37,9 @@ defmodule Expresso.Presenter.Interpreter do
   An event
 
   A click can hold the commands of the element under it, such as a page of the
-  overview. A message holds the slide, the step and the black screen of the
-  other window, and the script already made sure of their types.
+  overview. A message holds the slide and the step of the other window, and
+  its fields of the option `sync`, such as the black screen. The script
+  already made sure of their types.
   """
   @type event ::
           {:key, String.t()}
@@ -45,7 +47,7 @@ defmodule Expresso.Presenter.Interpreter do
           | {:click, :left_third | :right, [term()] | nil}
           | {:swipe, :left | :right}
           | {:hash, String.t()}
-          | {:message, %{slide: integer(), step: integer(), blank: boolean(), undim: boolean()}}
+          | {:message, %{slide: integer(), step: integer(), fields: map()}}
 
   @typedoc "The kind and the direction of a transition"
   @type transition :: %{kind: String.t(), direction: :forward | :back}
@@ -69,18 +71,18 @@ defmodule Expresso.Presenter.Interpreter do
   def run(program, state, {:hash, fragment}) do
     case Regex.run(~r/^#(\d+)(?:\.(\d+))?$/, fragment) do
       [_all, slide] ->
-        {position(program, state, number(slide), 1, false, false), []}
+        {position(program, state, number(slide), 1, %{blank: false}), []}
 
       [_all, slide, step] ->
-        {position(program, state, number(slide), number(step), false, false), []}
+        {position(program, state, number(slide), number(step), %{blank: false}), []}
 
       nil ->
         {state, []}
     end
   end
 
-  def run(program, state, {:message, %{slide: slide, step: step, blank: blank, undim: undim}}),
-    do: {position(program, state, slide, step, blank, undim), []}
+  def run(program, state, {:message, %{slide: slide, step: step, fields: fields}}),
+    do: {position(program, state, slide, step, Map.take(fields, program.sync)), []}
 
   def run(program, state, {:click, region}), do: run(program, state, {:click, region, nil})
 
@@ -95,14 +97,16 @@ defmodule Expresso.Presenter.Interpreter do
           |> commands(event)
           |> Enum.reduce({state, []}, &apply_command(program, event, &1, &2))
 
-        {dim_again(state, after_event), effects}
+        {reset(program, state, after_event), effects}
     end
   end
 
-  # A change of the step turns the dimming of code on again, so the key that
-  # turns it off holds only for the step where the presenter pressed it.
-  defp dim_again(%{index: index}, %{index: index} = after_event), do: after_event
-  defp dim_again(_before, after_event), do: %{after_event | undim: false}
+  # A change of the step gives each field of the option `reset` its first
+  # value.
+  defp reset(_program, %{index: index}, %{index: index} = after_event), do: after_event
+
+  defp reset(program, _before, after_event),
+    do: Map.merge(after_event, Map.take(program.state, program.reset))
 
   @doc """
   Tell if the browser must not use an event
@@ -245,19 +249,17 @@ defmodule Expresso.Presenter.Interpreter do
 
   defp select(_program, state, _slide), do: state
 
-  # Go to a slide and a step, and set the black screen and the dimming of code.
-  # A slide and a step that the deck does not have make no change, and the
-  # current position also makes no change.
-  defp position(program, state, slide, step, blank, undim) do
-    case index_of(program, slide, step) do
-      nil ->
-        state
-
-      index when index == state.index and blank == state.blank and undim == state.undim ->
-        state
-
-      index ->
-        %{state | index: index, blank: blank, undim: undim, digits: ""}
+  # Go to a slide and a step, and set the fields of a fragment or of a message.
+  # A change of the step resets the fields of the option `reset` before the
+  # fields apply. A slide and a step that the deck does not have make no
+  # change, and the current position with the same fields also makes no change.
+  defp position(program, state, slide, step, fields) do
+    with index when index != nil <- index_of(program, slide, step),
+         moved = program |> reset(state, %{state | index: index}) |> Map.merge(fields),
+         true <- moved != state do
+      %{moved | digits: ""}
+    else
+      _no_change -> state
     end
   end
 

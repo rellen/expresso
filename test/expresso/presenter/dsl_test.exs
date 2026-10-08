@@ -12,7 +12,8 @@ defmodule Expresso.Presenter.DslTest do
   state index: 0, view: :present, blank: false, help: false, digits: "",
         overview: false, selected: 1, progress: true, every: false, undim: false
 
-  sync [:index, :blank]
+  sync [:blank]
+  reset [:undim]
   """
 
   # Compile a module that uses the DSL, with a body. Each module gets its own
@@ -59,7 +60,8 @@ defmodule Expresso.Presenter.DslTest do
       definition = Definition.from(module)
 
       assert definition.state.view == :present
-      assert definition.sync == [:index, :blank]
+      assert definition.sync == [:blank]
+      assert definition.reset == [:undim]
 
       assert [blank, present] = definition.modes
       assert blank.when == [blank: true]
@@ -104,7 +106,7 @@ defmodule Expresso.Presenter.DslTest do
       message =
         error("""
         state index: 0
-        sync [:index]
+        sync []
         """)
 
       assert message =~ "the state must hold exactly the fields"
@@ -115,7 +117,7 @@ defmodule Expresso.Presenter.DslTest do
         error("""
         state index: 0, view: :stage, blank: false, help: false, digits: "",
               overview: false, selected: 1, progress: true, every: false, undim: false
-        sync [:index]
+        sync []
         """)
 
       assert message =~ "the field view cannot have the value :stage"
@@ -130,19 +132,24 @@ defmodule Expresso.Presenter.DslTest do
           |> Keyword.put(field, value)
           |> Enum.map_join(", ", fn {key, text} -> "#{key}: #{text}" end)
 
-        message = error("state #{state}\nsync [:index]\n")
+        message = error("state #{state}\nsync []\n")
 
         assert message =~ "the field #{field} cannot have the value"
       end
     end
 
-    test "refuses an unknown field in the option sync" do
-      message =
-        error("""
-        #{String.replace(@state, "sync [:index, :blank]", "sync [:index, :color]")}
-        """)
+    test "refuses an unknown field in the option sync or in the option reset" do
+      for {option, fields} <- [sync: "sync [:blank]", reset: "reset [:undim]"] do
+        message = error(String.replace(@state, fields, "#{option} [:blank, :color]"))
+        assert message =~ "the option #{option} names the unknown fields [:color]"
+      end
+    end
 
-      assert message =~ "the option sync names the unknown fields [:color]"
+    test "refuses the field index in the option sync or in the option reset" do
+      for {option, fields} <- [sync: "sync [:blank]", reset: "reset [:undim]"] do
+        message = error(String.replace(@state, fields, "#{option} [:index]"))
+        assert message =~ "the option #{option} cannot name the field index"
+      end
     end
 
     test "refuses two modes with the same name" do

@@ -1109,8 +1109,8 @@ The TypeScript part is under `assets/src/`. It has these modules:
 - `interpreter.ts` runs the program. It applies one event to the state, and it does not
   touch the document.
 - `state.ts` holds the state: the index of the current step, the view, the black screen,
-  the digits of a slide number and `undim`, the dimming of code. It also holds the messages between the windows, and
-  the side of a click and the direction of a swipe.
+  the digits of a slide number and `undim`, the dimming of code. It also holds the
+  messages between the windows, and the side of a click and the direction of a swipe.
 - `speaker.ts` makes the texts of the speaker view.
 - `dom.ts` reads the document. It applies a state with the projections of the program,
   and it shows the slide of the current step with the inline `style.display` property and
@@ -1212,6 +1212,21 @@ The renderer writes each part that does not change during the talk. Examples are
 The script still writes the parts that need the document: the slide of the current step,
 the list of keys of the mode, and the texts of the speaker view.
 
+### The options sync and reset
+
+Two options of `Expresso.Presenter.Default` tell what happens to a field outside the
+commands:
+
+| Option | Example | Effect |
+| --- | --- | --- |
+| `sync` | `sync [:blank, :undim]` | The message to the other window holds these fields, after the slide and the step. The other window takes them, and it ignores each other field of the message. |
+| `reset` | `reset [:undim]` | Each change of the step gives these fields their first value. A message to another step applies its own fields after the reset. |
+
+The program holds the two lists, and the two interpreters read them. A field with one of
+these rules is therefore a change to `Expresso.Presenter.Default` only, and neither
+interpreter changes. Neither option can name `index`: the message always holds the slide
+and the step, and a change of `index` starts the reset.
+
 ### The tests and the bundle
 
 The unit tests of `assets/test/` test these modules with no browser. The browser tests of
@@ -1247,9 +1262,10 @@ The tables do not give these rules:
 - `d` toggles the field `undim`. The projection of the attribute `data-undim` writes it on
   the `body`, and the attribute is present only while the field is true. While the attribute is present, a rule of the style sheet
   sets `--dim` and `--dimmed` to 0 on each element of a code element in the present view.
-  The rules of a step select the slide by its id, so this rule needs `!important`. The two
-  interpreters set `undim` to `false` at each change of the index, so the next step dims the
-  code again, and the presenter does not have to press `d` again after an answer.
+  The rules of a step select the slide by its id, so this rule needs `!important`. The
+  option `reset [:undim]` sets `undim` to `false` at each change of the step, so the next
+  step dims the code again. The presenter does not have to press `d` again after an
+  answer. See "The options sync and reset".
 
 `f` calls the full screen functions of the browser, and `Escape` of the browser also takes
 the document out of full screen.
@@ -1438,9 +1454,9 @@ second, so the timer and the time left always give the length of the talk.
 ### The messages between the windows
 
 Each window sends its position to the other window with `postMessage`. The message holds
-the slide, the step and the black screen, so `b` in the speaker view gives a black screen
-to the audience. It holds `undim`, so `d` in the speaker view changes the code of the
-audience. It also holds the variant of the theme that `t` chose. See "Two variants of a
+the slide, the step and the fields of the option `sync`. Thus `b` in the speaker view
+gives a black screen to the audience, and `d` changes the code of the audience. The
+message also holds the variant of the theme that `t` chose. See "Two variants of a
 theme". A window accepts a message only from the other window. The present view
 gets the speaker view from `window.open`, and the speaker view gets the present view from
 `window.opener`. After a reload of the present view, the next message of the speaker view

@@ -7,7 +7,9 @@ defmodule Expresso.Presenter.Verifier do
 
     * The option `state` does not hold exactly the fields of
       `Expresso.Presenter.Definition`, or a value has the wrong type.
-    * The option `sync` or the option `match` of a mode names an unknown field.
+    * The option `sync`, the option `reset` or the option `match` of a mode
+      names an unknown field. The option `sync` or the option `reset` names
+      `index`.
     * Two modes have the same name.
     * A command is not a command of `Expresso.Presenter.Definition`, or it gives
       a field a value of the wrong type.
@@ -51,12 +53,14 @@ defmodule Expresso.Presenter.Verifier do
     module = Verifier.get_persisted(dsl_state, :module)
     state = Verifier.get_option(dsl_state, [:presenter], :state)
     sync = Verifier.get_option(dsl_state, [:presenter], :sync)
+    reset = Verifier.get_option(dsl_state, [:presenter], :reset, [])
     entities = Verifier.get_entities(dsl_state, [:presenter])
     modes = for %Mode{} = mode <- entities, do: mode
 
     result =
       with :ok <- state(state),
-           :ok <- sync(sync),
+           :ok <- fields(:sync, sync),
+           :ok <- fields(:reset, reset),
            :ok <- names(modes),
            :ok <- projections(Projection.from(entities)) do
         modes
@@ -95,10 +99,18 @@ defmodule Expresso.Presenter.Verifier do
     end
   end
 
-  defp sync(sync) do
-    case Enum.reject(sync, &Map.has_key?(@fields, &1)) do
-      [] -> :ok
-      unknown -> {:error, "the option sync names the unknown fields #{inspect(unknown)}"}
+  # A message always holds the slide and the step, and a change of the step
+  # is the event of `reset`. Thus neither option can hold `index`.
+  defp fields(option, fields) do
+    case {Enum.reject(fields, &Map.has_key?(@fields, &1)), :index in fields} do
+      {[], false} ->
+        :ok
+
+      {[], true} ->
+        {:error, "the option #{option} cannot name the field index"}
+
+      {unknown, _index} ->
+        {:error, "the option #{option} names the unknown fields #{inspect(unknown)}"}
     end
   end
 

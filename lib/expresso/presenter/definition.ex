@@ -121,7 +121,13 @@ defmodule Expresso.Presenter.Definition do
   alias Expresso.Presenter.{Binding, Mode, Projection}
 
   @typedoc "The definition of the presenter"
-  @type t :: %{state: map(), sync: [field()], modes: [mode()], project: Projection.t()}
+  @type t :: %{
+          state: map(),
+          sync: [field()],
+          reset: [field()],
+          modes: [mode()],
+          project: Projection.t()
+        }
 
   @doc """
   Return the definition of the presenter
@@ -143,6 +149,7 @@ defmodule Expresso.Presenter.Definition do
     %{
       state: module |> Spark.Dsl.Extension.get_opt([:presenter], :state) |> Map.new(),
       sync: Spark.Dsl.Extension.get_opt(module, [:presenter], :sync),
+      reset: Spark.Dsl.Extension.get_opt(module, [:presenter], :reset, []),
       modes: for(%Mode{} = mode <- entities, do: mode(mode)),
       project: Projection.from(entities)
     }

@@ -25,7 +25,7 @@ function apply(
   state: State,
   event: unknown[],
 ): Result {
-  const [kind, first, second, third, fourth] = event;
+  const [kind, first, second, third] = event;
   switch (kind) {
     case "key":
       return run(program, deck, state, { kind: "key", key: first as string });
@@ -43,18 +43,20 @@ function apply(
         direction: first as "left" | "right",
       });
     case "hash":
-      return { state: fromHash(state, first as string, deck), effects: [] };
+      return {
+        state: fromHash(program, state, first as string, deck),
+        effects: [],
+      };
     case "message": {
       const data = {
         expresso: "position",
         slide: first,
         step: second,
-        blank: third,
-        undim: fourth,
+        fields: third,
         scheme: null,
         time: 1,
       };
-      return { state: follow(state, data, deck), effects: [] };
+      return { state: follow(program, state, data, deck), effects: [] };
     }
   }
   throw new Error(`An unknown event: ${String(kind)}`);

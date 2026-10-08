@@ -282,7 +282,7 @@ defmodule Expresso.Presenter.InterpreterTest do
 
   describe "the messages" do
     defp message(slide, step, blank \\ false, undim \\ false),
-      do: {:message, %{slide: slide, step: step, blank: blank, undim: undim}}
+      do: {:message, %{slide: slide, step: step, fields: %{blank: blank, undim: undim}}}
 
     test "a message moves to its position, with its black screen" do
       assert run(@three, at(1, 1, :speaker), message(3, 2, true)) ==
@@ -295,6 +295,16 @@ defmodule Expresso.Presenter.InterpreterTest do
       for event <- [message(2, 2), message(4, 1), message(2, 4), message(0, 1)] do
         assert run(@three, state, event) == state, inspect(event)
       end
+    end
+
+    test "a message to another step keeps its own fields after the reset of that step" do
+      assert run(@three, at(1, 1), message(2, 1, false, true)) == %{at(2, 1) | undim: true}
+      assert run(@three, %{at(1, 1) | undim: true}, message(2, 1)) == at(2, 1)
+    end
+
+    test "a message changes only the fields of the option sync" do
+      event = {:message, %{slide: 2, step: 1, fields: %{view: :handout, index: 0, help: true}}}
+      assert run(@three, at(1, 1), event) == at(2, 1)
     end
   end
 
