@@ -2,6 +2,7 @@ import { test, before } from "node:test";
 import assert from "node:assert/strict";
 import { fakePage, last } from "./page.ts";
 import { nth } from "./nth.ts";
+import { position } from "./messages.ts";
 
 // The present view of a deck with a light and a dark variant, on a screen with
 // a dark scheme. The address chooses the light variant.
@@ -50,18 +51,7 @@ test("a move sends the variant of the window", () => {
 
 test("a message from the speaker view changes the variant", () => {
   const speaker = nth(page.opened, 0).window;
-  page.receive(
-    {
-      expresso: "position",
-      slide: 2,
-      step: 1,
-      blank: false,
-      undim: false,
-      scheme: null,
-      time: Date.now() + 60_000,
-    },
-    speaker,
-  );
+  page.receive(position({ slide: 2, time: Date.now() + 60_000 }), speaker);
 
   assert.equal(root.dataset.scheme, undefined);
 });

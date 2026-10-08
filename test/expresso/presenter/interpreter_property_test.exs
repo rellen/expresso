@@ -45,12 +45,12 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     ])
   end
 
+  # Each field of the option `sync` holds true or false.
   defp message(program) do
     gen all slide <- near(slides(program)),
             step <- near(6),
-            blank <- boolean(),
-            undim <- boolean() do
-      {:message, %{slide: slide, step: step, blank: blank, undim: undim}}
+            fields <- fixed_map(Map.new(program.sync, &{&1, boolean()})) do
+      {:message, %{slide: slide, step: step, fields: fields}}
     end
   end
 
@@ -155,18 +155,16 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "a message of a state goes to the step, the black screen and the dimming of that state" do
+  property "a message of a state goes to the step and to the fields of sync of that state" do
     check all program <- decks(),
               sender <- state_in(program),
               receiver <- state_in(program),
               max_runs: @runs do
       {slide, step} = where(program, sender)
 
-      message =
-        {:message, %{slide: slide, step: step, blank: sender.blank, undim: sender.undim}}
-
-      read = run(program, receiver, message)
-      assert {read.index, read.blank, read.undim} == {sender.index, sender.blank, sender.undim}
+      fields = Map.take(sender, program.sync)
+      read = run(program, receiver, {:message, %{slide: slide, step: step, fields: fields}})
+      assert Map.take(read, [:index | program.sync]) == Map.take(sender, [:index | program.sync])
     end
   end
 

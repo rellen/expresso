@@ -60,8 +60,13 @@ export type Projections = Readonly<{
   marks: readonly Mark[];
 }>;
 
+// `sync` holds the fields that a message to the other window holds, after the
+// slide and the step. `reset` holds the fields that take their first value
+// again at each change of the step.
 export type Program = Readonly<{
   state: WrittenProgram["state"];
+  sync: WrittenProgram["sync"];
+  reset: WrittenProgram["reset"];
   modes: readonly Mode[];
   project: Projections;
 }>;
@@ -82,11 +87,15 @@ function map(pairs: Pairs): ReadonlyMap<string, readonly Command[]> {
 // text, and the tests read a program that `decodeWrittenProgram` returns.
 export function fromWritten({
   state,
+  sync,
+  reset,
   modes,
   project,
 }: WrittenProgram): Program {
   return {
     state,
+    sync,
+    reset,
     modes: modes.map((mode) => ({
       ...mode,
       keys: map(mode.keys),

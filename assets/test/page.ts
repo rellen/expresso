@@ -483,12 +483,11 @@ export function last(window: FakeWindow): unknown {
   return window.received[window.received.length - 1];
 }
 
-// The last message that a fake window got, with no time. The time comes from
-// the clock, so a test reads the position and the black screen only, and it
-// makes sure that the time is a number.
+// The last message that a fake window got, with the time 1. The time comes
+// from the clock, so the function makes sure that the time is a number, and a
+// test compares the message with `position` of `messages.ts`.
 export function lastPosition(window: FakeWindow): unknown {
   const message = last(window) as Record<string, unknown>;
-  const { time, ...position } = message;
-  assert.equal(typeof time, "number", "a message with no time");
-  return position;
+  assert.equal(typeof message["time"], "number", "a message with no time");
+  return { ...message, time: 1 };
 }

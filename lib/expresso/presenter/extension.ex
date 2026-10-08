@@ -2,7 +2,7 @@ defmodule Expresso.Presenter.Extension do
   @moduledoc """
   The Spark DSL extension of the presenter definition
 
-  It gives the options `state` and `sync`, the `mode` entity, and the `key` and
+  It gives the options `state`, `sync` and `reset`, the `mode` entity, and the `key` and
   `event` entities of a mode. The entities `attribute`, `property` and `mark`
   give the projections of `Expresso.Presenter.Projection`. It imports
   `Expresso.Presenter.Commands`, so a binding can write `step(1)` in place of
@@ -167,7 +167,13 @@ defmodule Expresso.Presenter.Extension do
       sync: [
         type: {:list, :atom},
         required: true,
-        doc: "The fields that a window sends to the other window."
+        doc:
+          "The fields that a window sends to the other window. The message always holds the slide and the step, so the list does not hold index."
+      ],
+      reset: [
+        type: {:list, :atom},
+        default: [],
+        doc: "The fields that take their first value again at each change of the step."
       ]
     ]
   }

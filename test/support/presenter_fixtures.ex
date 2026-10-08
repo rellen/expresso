@@ -22,18 +22,19 @@ defmodule Expresso.Test.PresenterFixtures do
 
   An event is one of these arrays: `["key", key]`, `["click", region,
   commands]`, `["swipe", direction]`, `["hash", fragment]` and `["message",
-  slide, step, blank, undim]`. The commands of a click are the commands of the page
-  of the overview or of the link under the click, or `null`. A result is `[state, prevented, effects,
-  transition]`.
+  slide, step, fields]`. The fields of a message are an object with a value
+  for each field of the option `sync`. The commands of a click are the
+  commands of the page of the overview or of the link under the click, or
+  `null`. A result is `[state, prevented, effects, transition]`.
   """
 
   alias Expresso.Builder
-  alias Expresso.Presenter.{Definition, Help, Interpreter, Program}
+  alias Expresso.Presenter.{Definition, Help, Interpreter, Program, Schema}
 
   @path "assets/test/fixtures/presenter.json"
 
   # The fields of the state, in the order of each state array.
-  @fields [:index, :view, :blank, :digits, :help, :progress, :every, :overview, :selected, :undim]
+  @fields Keyword.keys(Schema.fields())
 
   # The decks of the tests of `main.ts`.
   @decks [
@@ -187,10 +188,11 @@ defmodule Expresso.Test.PresenterFixtures do
 
       _message ->
         {slide, step} = {near(slides), near(6)}
-        {blank, undim} = {pick([true, false]), pick([true, false])}
+        # Each field of the option `sync` holds true or false.
+        fields = Map.new(Definition.presenter().sync, &{&1, pick([true, false])})
 
-        {["message", slide, step, blank, undim],
-         {:message, %{slide: slide, step: step, blank: blank, undim: undim}}}
+        {["message", slide, step, fields],
+         {:message, %{slide: slide, step: step, fields: fields}}}
     end
   end
 

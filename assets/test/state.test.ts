@@ -13,8 +13,14 @@ import {
   side,
   stamp,
   swipe,
+  synced,
 } from "../src/state.ts";
 import { at, deckOf } from "./decks.ts";
+import { load, raw } from "./fixtures.ts";
+import { position } from "./messages.ts";
+
+// The program of the presenter. Each deck of the fixtures has the same `sync`.
+const { program } = load(Object.keys(raw.decks)[0] ?? "");
 
 // Three slides. Slide 2 has three steps, and slide 3 has two steps.
 const three = deckOf([1, 3, 2]);
@@ -24,95 +30,46 @@ test("current returns the entry of the state, and undefined for a deck with no s
   assert.equal(current(at(three, 1, 1), deckOf([])), undefined);
 });
 
-test("message holds the slide, the step, the black screen, the variant and the time", () => {
+test("message holds the slide, the step, the fields of sync, the variant and the time", () => {
   assert.deepEqual(
     message(
+      program,
       { ...at(three, 2, 3), blank: true, digits: "4" },
       three,
       17,
       "dark",
     ),
-    {
-      expresso: "position",
-      slide: 2,
-      step: 3,
-      blank: true,
-      undim: false,
-      scheme: "dark",
-      time: 17,
-    },
+    position({ slide: 2, step: 3, blank: true, scheme: "dark", time: 17 }),
   );
 });
 
+test("synced is true for a change of the step or of a field of sync only", () => {
+  const state = at(three, 2, 1);
+  assert.equal(synced(program, state, at(three, 2, 2)), true);
+  assert.equal(synced(program, state, { ...state, blank: true }), true);
+  assert.equal(synced(program, state, { ...state, undim: true }), true);
+  assert.equal(synced(program, state, { ...state, overview: true }), false);
+  assert.equal(synced(program, state, { ...state, digits: "2" }), false);
+});
+
 test("isMessage accepts only a message of the presenter", () => {
-  assert.equal(isMessage(message(at(three, 1, 1), three, 1, null)), true);
+  const good = message(program, at(three, 1, 1), three, 1, null);
+  assert.equal(isMessage(good), true);
+  const { fields, time, scheme, ...rest } = good;
   const others = [
     null,
     "position",
-    {
-      expresso: "other",
-      slide: 1,
-      step: 1,
-      blank: false,
-      undim: false,
-      scheme: null,
-      time: 1,
-    },
-    {
-      expresso: "position",
-      slide: "1",
-      step: 1,
-      blank: false,
-      undim: false,
-      scheme: null,
-      time: 1,
-    },
-    {
-      expresso: "position",
-      slide: 1.5,
-      step: 1,
-      blank: false,
-      undim: false,
-      scheme: null,
-      time: 1,
-    },
-    { expresso: "position", slide: 1, step: 1, scheme: null, time: 1 },
-    {
-      expresso: "position",
-      slide: 1,
-      step: 1,
-      blank: false,
-      undim: false,
-      scheme: null,
-    },
-    {
-      expresso: "position",
-      slide: 1,
-      step: 1,
-      blank: false,
-      undim: false,
-      scheme: null,
-      time: "1",
-    },
-    {
-      expresso: "position",
-      slide: 1,
-      step: 1,
-      blank: false,
-      undim: false,
-      scheme: null,
-      time: NaN,
-    },
-    { expresso: "position", slide: 1, step: 1, blank: false, time: 1 },
-    {
-      expresso: "position",
-      slide: 1,
-      step: 1,
-      blank: false,
-      undim: false,
-      scheme: "sepia",
-      time: 1,
-    },
+    { ...good, expresso: "other" },
+    { ...good, slide: "1" },
+    { ...good, slide: 1.5 },
+    { ...rest, time, scheme },
+    { ...rest, fields, scheme },
+    { ...good, time: "1" },
+    { ...good, time: NaN },
+    { ...rest, fields, time },
+    { ...good, scheme: "sepia" },
+    { ...good, fields: { blank: 1 } },
+    { ...good, fields: { color: true } },
   ];
   for (const data of others) {
     assert.equal(isMessage(data), false, JSON.stringify(data));

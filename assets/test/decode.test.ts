@@ -19,6 +19,7 @@ import {
 } from "../src/decode.ts";
 import type { Decoder } from "../src/decode.ts";
 import { decodeCommand, decodeMessage, decodeState } from "../src/schema.ts";
+import { position } from "./messages.ts";
 
 // The message of the error that a decoder throws for a value.
 function error<T>(decoder: Decoder<T>, value: unknown): string {
@@ -141,15 +142,7 @@ test("the state decoder takes exactly the fields of the state", () => {
 });
 
 test("the message decoder takes a message with other keys", () => {
-  const message = {
-    expresso: "position",
-    slide: 2,
-    step: 1,
-    blank: false,
-    undim: false,
-    scheme: null,
-    time: 5,
-  };
+  const message = position({ slide: 2, time: 5 });
 
   assert.ok(is(decodeMessage, { ...message, from: "an extension" }));
   assert.equal(is(decodeMessage, { ...message, expresso: "other" }), false);

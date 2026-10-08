@@ -198,11 +198,15 @@ export const decodeWrittenProjections: Decoder<WrittenProjections> = /* @__PURE_
 // The program of the presenter for one deck, as the renderer writes it.
 export type WrittenProgram = Readonly<{
   state: State;
+  sync: readonly Field[];
+  reset: readonly Field[];
   modes: readonly WrittenMode[];
   project: WrittenProjections;
 }>;
 export const decodeWrittenProgram: Decoder<WrittenProgram> = /* @__PURE__ */ object({
   state: decodeState,
+  sync: /* @__PURE__ */ list(decodeField),
+  reset: /* @__PURE__ */ list(decodeField),
   modes: /* @__PURE__ */ list(decodeWrittenMode),
   project: decodeWrittenProjections,
 });
@@ -258,14 +262,25 @@ export const decodeWrittenEmbeds: Decoder<WrittenEmbeds> = /* @__PURE__ */ list(
 export type Scheme = "light" | "dark" | null;
 export const decodeScheme: Decoder<Scheme> = /* @__PURE__ */ nullable(/* @__PURE__ */ oneOf(["light", "dark"]));
 
-// The message that one window of the presenter sends to the other window. The
-// other window ignores a key that it does not know.
+// The message that one window of the presenter sends to the other window.
+// `fields` holds the fields of the option `sync` of the presenter. The other
+// window ignores a key that it does not know.
 export type Message = Readonly<{
   expresso: "position";
   slide: number;
   step: number;
-  blank: boolean;
-  undim: boolean;
+  fields: Readonly<{
+    index?: number;
+    view?: View;
+    blank?: boolean;
+    digits?: string;
+    help?: boolean;
+    progress?: boolean;
+    every?: boolean;
+    overview?: boolean;
+    selected?: number;
+    undim?: boolean;
+  }>;
   scheme: Scheme;
   time: number;
 }>;
@@ -273,8 +288,18 @@ export const decodeMessage: Decoder<Message> = /* @__PURE__ */ openObject({
   expresso: /* @__PURE__ */ literal("position"),
   slide: /* @__PURE__ */ integer(),
   step: /* @__PURE__ */ integer(),
-  blank: boolean,
-  undim: boolean,
+  fields: /* @__PURE__ */ partial({
+    index: /* @__PURE__ */ integer(0),
+    view: decodeView,
+    blank: boolean,
+    digits: /* @__PURE__ */ string(/^[0-9]*$/),
+    help: boolean,
+    progress: boolean,
+    every: boolean,
+    overview: boolean,
+    selected: /* @__PURE__ */ integer(1),
+    undim: boolean,
+  }),
   scheme: decodeScheme,
   time: /* @__PURE__ */ number(),
 });

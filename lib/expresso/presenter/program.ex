@@ -44,13 +44,14 @@ defmodule Expresso.Presenter.Program do
   @type t :: %__MODULE__{
           state: map(),
           sync: [Definition.field()],
+          reset: [Definition.field()],
           modes: [mode()],
           project: Projection.t(),
           steps: tuple(),
           slides: tuple()
         }
 
-  @enforce_keys [:state, :sync, :modes, :project, :steps, :slides]
+  @enforce_keys [:state, :sync, :reset, :modes, :project, :steps, :slides]
   defstruct @enforce_keys
 
   @doc """
@@ -67,6 +68,7 @@ defmodule Expresso.Presenter.Program do
     %__MODULE__{
       state: Map.put(definition.state, :progress, progress(deck)),
       sync: definition.sync,
+      reset: definition.reset,
       modes: Enum.map(definition.modes, &mode(&1, slides)),
       project: definition.project,
       steps: deck |> Steps.entries() |> Enum.map(&{&1.slide, &1.step}) |> List.to_tuple(),
@@ -77,9 +79,13 @@ defmodule Expresso.Presenter.Program do
   @doc """
   Return the program as JSON for the `script` element
 
-  The JSON object has three keys:
+  The JSON object has five keys:
 
     * `"state"` - the first value of each field of the state.
+    * `"sync"` - the fields that a message to the other window holds, after
+      the slide and the step.
+    * `"reset"` - the fields that take their first value again at each change
+      of the step.
     * `"modes"` - the modes, in the order that the interpreter examines them.
       A mode holds its `"name"`, its condition `"when"`, its `"any"` commands
       or `null`, its `"other"` commands or `null`, and its `"element"` commands
@@ -101,6 +107,8 @@ defmodule Expresso.Presenter.Program do
     %{
       "state" =>
         Map.new(program.state, fn {field, value} -> {Atom.to_string(field), value(value)} end),
+      "sync" => Enum.map(program.sync, &Atom.to_string/1),
+      "reset" => Enum.map(program.reset, &Atom.to_string/1),
       "modes" => Enum.map(program.modes, &mode_json/1),
       "project" => Projection.json(program.project)
     }

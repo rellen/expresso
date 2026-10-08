@@ -78,6 +78,7 @@ import {
   side,
   stamp,
   swipe,
+  synced,
 } from "./state.ts";
 import type { State } from "./state.ts";
 import {
@@ -130,12 +131,12 @@ function tick(): void {
 // The time of the state of this window. `state.ts` gives the rule of the time.
 let time = 0;
 
-// Send the position, the black screen, the dimming of code and the variant of
-// the theme to the other window, with a new time.
+// Send the position, the fields of the option `sync` and the variant of the
+// theme to the other window, with a new time.
 function send(): void {
   time = stamp(time, Date.now());
   if (partner !== null && !partner.closed) {
-    partner.postMessage(message(state, deck, time, scheme()), "*");
+    partner.postMessage(message(program, state, deck, time, scheme()), "*");
   }
 }
 
@@ -143,15 +144,14 @@ function send(): void {
 // the history, so the back button of the browser does not go through the
 // steps. A change of this window goes to the other window. A change from the
 // other window does not go back to it. A message holds only the position, the
-// black screen, the dimming of code and the variant of the theme. A change to
-// other data, such as the overview, sends no message.
+// fields of the option `sync` and the variant of the theme. A change to other
+// data, such as the overview, sends no message.
 function show(changed: State, local = true): void {
   if (changed === state) {
     return;
   }
   const moved = changed.index !== state.index;
-  const sent =
-    moved || changed.blank !== state.blank || changed.undim !== state.undim;
+  const sent = synced(program, state, changed);
   const change = transition(state, changed, deck);
   state = changed;
   // The browser runs the update of a transition later. The update then reads
@@ -231,7 +231,7 @@ if (isSpeaker) {
 // The first application of the state gives the progress bar its width.
 apply(state, deck, program);
 
-show(fromHash(state, location.hash, deck));
+show(fromHash(program, state, location.hash, deck));
 
 // The pages load after the document, so the slides show at once. A page that
 // loads slowly then does not hold the load of the document.
@@ -397,7 +397,7 @@ document.addEventListener(
 
 // The presenter can also type a fragment into the address bar.
 window.addEventListener("hashchange", () => {
-  show(fromHash(state, location.hash, deck));
+  show(fromHash(program, state, location.hash, deck));
 });
 
 // A message from the other window. A message from each other window has no
@@ -416,5 +416,5 @@ window.addEventListener("message", (event: MessageEvent) => {
   }
   time = event.data.time;
   showScheme(event.data.scheme);
-  show(follow(state, event.data, deck), false);
+  show(follow(program, state, event.data, deck), false);
 });

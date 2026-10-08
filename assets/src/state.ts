@@ -11,6 +11,7 @@
 
 import { is } from "./decode.ts";
 import type { Deck, Entry } from "./deck.ts";
+import type { Program } from "./program.ts";
 import { decodeMessage } from "./schema.ts";
 import type { Direction, Message, Region, Scheme, State } from "./schema.ts";
 
@@ -61,9 +62,10 @@ export function swipe(dx: number, dy: number): Direction | undefined {
 // The message that one window of the presenter sends to the other window
 // after each change of its own. The speaker view and the present view then show
 // the same step, and the key `b` in either window gives a black screen to the
-// audience. The message also holds the dimming of code that the key `d` turns
-// off, and the variant of the theme that the key `t` chose, so the two windows
-// show the same code and the same variant.
+// audience. `fields` holds each field of the option `sync` of the presenter,
+// such as the dimming of code that the key `d` turns off. The message also
+// holds the variant of the theme that the key `t` chose, so the two windows
+// show the same variant.
 //
 // `time` is the time of the change in milliseconds. A window does not send a
 // position from the other window back, and it ignores a message that is older
@@ -76,6 +78,7 @@ export function swipe(dx: number, dy: number): Direction | undefined {
 export type { Message } from "./schema.ts";
 
 export function message(
+  program: Program,
   state: State,
   deck: Deck,
   time: number,
@@ -86,11 +89,21 @@ export function message(
     expresso: "position",
     slide: entry?.slide ?? 1,
     step: entry?.step ?? 1,
-    blank: state.blank,
-    undim: state.undim,
+    fields: Object.fromEntries(
+      program.sync.map((field) => [field, state[field]]),
+    ),
     scheme,
     time,
   };
+}
+
+// Tell if a change of this window goes to the other window: a change of the
+// step, or of a field of the option `sync`.
+export function synced(program: Program, before: State, after: State): boolean {
+  return (
+    after.index !== before.index ||
+    program.sync.some((field) => after[field] !== before[field])
+  );
 }
 
 // The time of a change of this window: the clock, or one more than the time of
