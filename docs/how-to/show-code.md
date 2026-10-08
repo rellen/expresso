@@ -183,6 +183,9 @@ Give the name of the language of the file, such as `"toml"`, `"yaml"` or `"nix"`
 has lexers for many such languages, as well as the languages of programs. For each name, see
 [the languages](../reference/code-element.md#the-languages).
 
+A document in Org, reStructuredText, LaTeX or Typst works in the same way. Its lexer colors
+the headings, the markup, the commands and the comments.
+
 This deck shows a TOML file, and it puts the table of the server, then the table of the
 database, in focus:
 

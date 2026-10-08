@@ -12,8 +12,12 @@ defmodule Expresso.LexersTest do
     Lexers.Fennel,
     Lexers.Haskell,
     Lexers.Kdl,
+    Lexers.Latex,
     Lexers.Nix,
+    Lexers.Org,
+    Lexers.Rst,
     Lexers.Toml,
+    Lexers.Typst,
     Lexers.Yaml
   ]
 
@@ -28,8 +32,8 @@ defmodule Expresso.LexersTest do
   defp joined(lexer, text), do: Enum.map_join(lexer.lex(text), fn {_, _, value} -> value end)
 
   # Pieces of the syntax of the languages, so that a random text holds the
-  # marks of comments, strings and escapes, and characters of more than one
-  # byte.
+  # marks of comments, strings, markup and escapes, and characters of more
+  # than one byte.
   @pieces [
     "\n",
     "\r\n",
@@ -39,9 +43,11 @@ defmodule Expresso.LexersTest do
     "/",
     "=",
     "`",
+    "``",
     "$",
     "\\",
     "#",
+    "#+",
     "..",
     "::",
     ":",
@@ -54,6 +60,7 @@ defmodule Expresso.LexersTest do
     "''",
     "[",
     "]",
+    "[[",
     "<",
     ">",
     "@",
@@ -256,6 +263,89 @@ defmodule Expresso.LexersTest do
     assert {:comment_single, "--- c"} in tokens(Lexers.Haskell, "a --- c")
   end
 
+  test "Org: a heading with a state, a keyword line, a drawer, markup, a link and a date" do
+    tokens =
+      tokens(
+        Lexers.Org,
+        "#+TITLE: T\n* TODO Write\n  :END:\n  - a *b* /c/ =d= ~e~ [[x][y]] <2026-10-08 Thu>\n"
+      )
+
+    assert {:comment_preproc, "#+TITLE: T"} in tokens
+    assert {:generic_heading, "* "} in tokens
+    assert {:keyword, "TODO"} in tokens
+    assert {:generic_heading, " Write"} in tokens
+    assert {:name_attribute, ":END:"} in tokens
+    assert {:keyword, "- "} in tokens
+    assert {:generic_strong, "*b*"} in tokens
+    assert {:generic_emph, "/c/"} in tokens
+    assert {:string_backtick, "=d="} in tokens
+    assert {:string_backtick, "~e~"} in tokens
+    assert {:string_other, "[[x][y]]"} in tokens
+    assert {:literal_date, "<2026-10-08 Thu>"} in tokens
+  end
+
+  test "Org: a star with no closing star is text" do
+    refute Enum.any?(tokens(Lexers.Org, "a * b"), &match?({:generic_strong, _}, &1))
+  end
+
+  test "rst: a title, a field, a directive, a comment, markup, a role and a link" do
+    tokens =
+      tokens(
+        Lexers.Rst,
+        "Title\n=====\n\n:author: R\n\n**a** *b* ``c`` :ref:`d` `e <f>`_\n\n.. note::\n\n.. c\n"
+      )
+
+    assert {:generic_heading, "Title"} in tokens
+    assert {:generic_heading, "====="} in tokens
+    assert {:name_attribute, ":author:"} in tokens
+    assert {:generic_strong, "**a**"} in tokens
+    assert {:generic_emph, "*b*"} in tokens
+    assert {:string_backtick, "``c``"} in tokens
+    assert {:name_builtin, ":ref:"} in tokens
+    assert {:string_other, "`d`"} in tokens
+    assert {:string_other, "`e <f>`_"} in tokens
+    assert {:keyword, ".. note::"} in tokens
+    assert {:comment_single, ".. c"} in tokens
+  end
+
+  test "LaTeX: a command, a structure command, an environment, math, an escape and a comment" do
+    tokens =
+      tokens(
+        Lexers.Latex,
+        "\\section{A}\n\\begin{itemize} \\textbf{b} $x^2$ 50\\% % c\n\\end{itemize}"
+      )
+
+    assert {:keyword, "\\section"} in tokens
+    assert {:keyword, "\\begin"} in tokens
+    assert {:name_tag, "{itemize}"} in tokens
+    assert {:name_function, "\\textbf"} in tokens
+    assert {:string, "$x^2$"} in tokens
+    assert {:string_escape, "\\%"} in tokens
+    assert {:comment_single, "% c"} in tokens
+    assert {:keyword, "\\end"} in tokens
+  end
+
+  test "Typst: a heading, markup, a keyword, a function, a label, a reference and a unit" do
+    tokens =
+      tokens(
+        Lexers.Typst,
+        "= Title\n*a* and _b_ `c` $x$ <l> @l\n#set text(size: 12pt)\n#figure()\n// c\n"
+      )
+
+    assert {:generic_heading, "= Title"} in tokens
+    assert {:generic_strong, "*a*"} in tokens
+    assert {:name, "and"} in tokens
+    assert {:generic_emph, "_b_"} in tokens
+    assert {:string_backtick, "`c`"} in tokens
+    assert {:string, "$x$"} in tokens
+    assert {:name_label, "<l>"} in tokens
+    assert {:name_label, "@l"} in tokens
+    assert {:keyword, "#set"} in tokens
+    assert {:number, "12pt"} in tokens
+    assert {:name_function, "#figure"} in tokens
+    assert {:comment_single, "// c"} in tokens
+  end
+
   test "Expresso.Highlight colors each new language" do
     for {language, text} <- [
           {"toml", "a = 1"},
@@ -271,7 +361,15 @@ defmodule Expresso.LexersTest do
           {"fennel", "(fn a [])"},
           {"fnl", "(local a 1)"},
           {"haskell", "main = print 1"},
-          {"hs", "data A = A"}
+          {"hs", "data A = A"},
+          {"org", "* A"},
+          {"orgmode", "* A"},
+          {"rst", ".. note::"},
+          {"restructuredtext", ".. note::"},
+          {"latex", "\\section{A}"},
+          {"tex", "\\section{A}"},
+          {"typst", "= A"},
+          {"typ", "#set a()"}
         ] do
       assert language in Expresso.Highlight.languages()
       assert [line] = Expresso.Highlight.lines(text, language)

@@ -188,6 +188,22 @@ defmodule Expresso.Lexer do
     |> token(type)
   end
 
+  @doc """
+  A rule for a span of markup on one line, such as `*bold*` or `` `code` ``
+
+  The span must close on the same line, and its text cannot start with a
+  space. Otherwise the rule does not match, and `open` stays plain text.
+  """
+  @spec inline(String.t(), String.t(), atom()) :: combinator()
+  def inline(open, close, type) do
+    string(open)
+    |> lookahead_not(ascii_char([?\s, ?\t, ?\n]))
+    |> times(lookahead_not(one_of([string(close), string("\n")])) |> utf8_string([], 1), min: 1)
+    |> string(close)
+    |> lexeme()
+    |> token(type)
+  end
+
   # The characters of a word. A word starts with a letter or `_`.
   @first [?a..?z, ?A..?Z, ?_]
   @rest [?a..?z, ?A..?Z, ?0..?9, ?_]
