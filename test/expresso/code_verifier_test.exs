@@ -28,9 +28,9 @@ defmodule Expresso.CodeVerifierTest do
   end
 
   test "a language that no lexer registers compiles with a warning that names the languages" do
-    output = compile(Toml, "toml")
+    output = compile(Cobol, "cobol")
 
-    assert output =~ ~s(deck -> slide -> one: no lexer registers the language "toml")
+    assert output =~ ~s(deck -> slide -> one: no lexer registers the language "cobol")
     assert output =~ "The languages with a lexer are: " <> Enum.join(Highlight.languages(), ", ")
   end
 

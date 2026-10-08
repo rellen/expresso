@@ -40,7 +40,12 @@ both.
 
 A lexer gives the colors of a language. These names have a lexer:
 
-`c`, `css`, `diff`, `eex`, `elixir`, `erl`, `erlang`, `gleam`, `heex`, `html`, `html.eex`, `html_eex`, `iex`, `javascript`, `js`, `json`, `rust`, `sql`, `ts`, `typescript`
+`c`, `cabal`, `css`, `d2`, `dhall`, `diff`, `eex`, `elixir`, `erl`, `erlang`, `gleam`, `heex`, `html`, `html.eex`, `html_eex`, `iex`, `javascript`, `js`, `json`, `kdl`, `nix`, `rust`, `sql`, `toml`, `ts`, `typescript`, `yaml`, `yml`
+
+A Makeup package of Hex gives the lexer of most of these languages. Expresso gives its own
+lexer for `cabal`, `d2`, `dhall`, `kdl`, `nix`, `toml` and `yaml` (or `yml`). Such a lexer
+finds the parts that a slide colors, such as the comments, the strings, the keys and the
+keywords, and not each rule of the language.
 
 `Expresso.Highlight.languages/0` returns the same list. A code element with another name
 shows its lines with no colors, as an element with no language does.

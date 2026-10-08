@@ -177,6 +177,45 @@ Examples.CodeWholeFirst
 
 ![The whole function shows at step 1, then line 13 and line 14 come into focus](https://raw.githubusercontent.com/rellen/expresso/media/code-whole-first.gif)
 
+## Show a configuration file
+
+Give the name of the language of the file, such as `"toml"`, `"yaml"` or `"nix"`. Expresso
+has lexers for `cabal`, `d2`, `dhall`, `kdl`, `nix`, `toml` and `yaml`, as well as the
+languages of programs. For each name, see [the languages](../reference/code-element.md#the-languages).
+
+This deck shows a TOML file, and it puts the table of the server, then the table of the
+database, in focus:
+
+```elixir
+defmodule Examples.CodeConfig do
+  use Expresso
+
+  slide "the configuration" do
+    heading "The configuration"
+
+    code "toml" do
+      text ~S"""
+      # The server
+      [server]
+      host = "localhost"
+      port = 8080
+
+      [database]
+      url = "postgres://localhost/app"
+      pool = 10
+      """
+
+      line_numbers true
+      highlight [2..4, 6..8]
+    end
+  end
+end
+
+Examples.CodeConfig
+```
+
+![The table of the server is in focus, then the table of the database](https://raw.githubusercontent.com/rellen/expresso/media/code-config.gif)
+
 ## Make sure that the lines fit
 
 A long line breaks on the slide, and the reader then sees two lines with one number. Open

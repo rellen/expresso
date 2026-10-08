@@ -475,7 +475,7 @@ defmodule Expresso.Element.CodeTest do
     end
 
     test "puts the text of a line after its number, with no language and with no lexer" do
-      for lang <- [nil, "toml"] do
+      for lang <- [nil, "cobol"] do
         {[code], _warning} =
           with_io(:stderr, fn -> numbered(lang, text: "a = 1\n\nb", line_numbers: true) end)
 

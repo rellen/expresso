@@ -3,7 +3,7 @@ defmodule Expresso.E2E.CodeLinesTest do
 
   import ExUnit.CaptureIO
 
-  # Each code element has three lines. "toml" has no lexer, so its element
+  # Each code element has three lines. "cobol" has no lexer, so its element
   # shows plain text, as the element with no language does.
   defmodule Deck do
     use Expresso
@@ -53,17 +53,17 @@ defmodule Expresso.E2E.CodeLinesTest do
     page: page,
     tmp_dir: tmp_dir
   } do
-    {path, _warning} = with_io(:stderr, fn -> render(toml_deck(), tmp_dir) end)
+    {path, _warning} = with_io(:stderr, fn -> render(cobol_deck(), tmp_dir) end)
     page = open(page, path)
 
     assert [lines] = heights(page)
     assert Enum.all?(lines, &(&1 > 0.8 and &1 < 2)), inspect(lines)
   end
 
-  defp toml_deck do
+  defp cobol_deck do
     [
-      Expresso.Builder.slide("toml",
-        elements: [Expresso.Builder.code("toml", text: "a = 1\n\nb = 2", line_numbers: true)]
+      Expresso.Builder.slide("cobol",
+        elements: [Expresso.Builder.code("cobol", text: "a = 1\n\nb = 2", line_numbers: true)]
       )
     ]
     |> Expresso.Builder.deck()
