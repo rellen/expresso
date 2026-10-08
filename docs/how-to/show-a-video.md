@@ -55,23 +55,33 @@ which is approximately a third larger than the file.
 ## Start a video at a step
 
 Write `at` in the video, as for each other element. The video shows and starts to play at
-that step:
+that step. In this deck, the key `j` shows the video at step 2:
 
 ```elixir
-slide "the demonstration" do
-  steps 2
+defmodule Examples.VideoAt do
+  use Expresso
 
-  text_box do
-    text_area(text: "Watch the counter.")
-  end
+  slide "the restart" do
+    heading "The restart"
+    steps 2
 
-  video "demo/demo.webm" do
-    at 2
-    title "The counter restarts"
-    poster "demo/demo.png"
+    text_box do
+      text_area(text: "Watch the test pattern.")
+    end
+
+    video "examples/animations/clip.webm" do
+      at 2
+      title "A test pattern that moves"
+      poster "examples/animations/clip.png"
+      width "50%"
+    end
   end
 end
+
+Examples.VideoAt
 ```
+
+![Step 1 shows the text, and the video shows and plays at step 2](https://raw.githubusercontent.com/rellen/expresso/media/video-at.gif)
 
 A black screen, the menu and the overview pause the video, and it goes on from the same
 time after them. A move to another slide pauses it, and a move back starts it from the
@@ -83,12 +93,25 @@ A browser starts a video with sound only after a click, so the video has no soun
 `controls true` to show the controls of the browser:
 
 ```elixir
-video "demo/demo.webm" do
-  title "The demonstration"
-  poster "demo/demo.png"
-  controls true
+defmodule Examples.VideoControls do
+  use Expresso
+
+  slide "the demonstration" do
+    heading "The demonstration"
+
+    video "examples/animations/clip.webm" do
+      title "A test pattern that moves"
+      poster "examples/animations/clip.png"
+      width "60%"
+      controls true
+    end
+  end
 end
+
+Examples.VideoControls
 ```
+
+![The video shows the controls of the browser, with the button of the sound](https://raw.githubusercontent.com/rellen/expresso/media/video-controls.png)
 
 The controls take the clicks on the video, so a click on the video does not go to the next
 step. A click on another part of the slide still does.

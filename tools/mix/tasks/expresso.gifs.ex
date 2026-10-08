@@ -86,6 +86,8 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "template-section", deck: "template_section.exs", actions: ["j", "j"]},
     %{name: "embed-page", deck: "embed_page.exs", actions: ["j"]},
     %{name: "video", deck: "video.exs", actions: ["p"]},
+    %{name: "video-at", deck: "video_at.exs", actions: ["j"]},
+    %{name: "video-controls", deck: "video_controls.exs", still: true},
     %{name: "talk-from-data", deck: "talk_from_data.exs", actions: ["j", "j", "j"]},
     %{name: "style-heading", deck: "style_heading.exs", actions: ["j"]},
     %{name: "theme-map", deck: "theme_map.exs", actions: ["j"]},
