@@ -53,7 +53,7 @@ defmodule Expresso.ThemeOptionTest do
     refute Expresso.Highlight.stylesheet() =~ ~r/#[0-9a-fA-F]{3,6}\b/
   end
 
-  test "the style sheet takes its colors from the roles, except the black screen and the shadow of the list of keys" do
+  test "the style sheet takes its colors from the roles, except the black screen and the shadows of the menu and the list of keys" do
     css = File.read!("assets/style.css")
 
     for role <- [:text, :background, :muted, :accent, :warning, :danger],
@@ -67,6 +67,7 @@ defmodule Expresso.ThemeOptionTest do
 
     assert Regex.scan(~r/#[0-9a-fA-F]{3,6}\b|rgba?\([^)]*\)/, css) == [
              ["#000"],
+             ["rgba(0, 0, 0, 0.4)"],
              ["rgba(0, 0, 0, 0.4)"]
            ]
   end

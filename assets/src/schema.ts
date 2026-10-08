@@ -29,19 +29,24 @@ export const VIEWS: readonly View[] = ["present", "handout", "speaker"];
 export const decodeView: Decoder<View> = /* @__PURE__ */ oneOf(VIEWS);
 
 // A field of the state.
-export type Field = "index" | "view" | "blank" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim";
-export const FIELDS: readonly Field[] = ["index", "view", "blank", "digits", "help", "progress", "every", "overview", "selected", "undim"];
+export type Field = "index" | "view" | "blank" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim" | "menu" | "cursor";
+export const FIELDS: readonly Field[] = ["index", "view", "blank", "digits", "help", "progress", "every", "overview", "selected", "undim", "menu", "cursor"];
 export const decodeField: Decoder<Field> = /* @__PURE__ */ oneOf(FIELDS);
 
 // A field of the state that holds true or false.
-export type BooleanField = "blank" | "help" | "progress" | "every" | "overview" | "undim";
-export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "help", "progress", "every", "overview", "undim"];
+export type BooleanField = "blank" | "help" | "progress" | "every" | "overview" | "undim" | "menu";
+export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "help", "progress", "every", "overview", "undim", "menu"];
 export const decodeBooleanField: Decoder<BooleanField> = /* @__PURE__ */ oneOf(BOOLEAN_FIELDS);
 
 // A field of the state that holds a number.
-export type NumberField = "index" | "selected";
-export const NUMBER_FIELDS: readonly NumberField[] = ["index", "selected"];
+export type NumberField = "index" | "selected" | "cursor";
+export const NUMBER_FIELDS: readonly NumberField[] = ["index", "selected", "cursor"];
 export const decodeNumberField: Decoder<NumberField> = /* @__PURE__ */ oneOf(NUMBER_FIELDS);
+
+// A field of the state that holds the index of a step.
+export type IndexField = "index" | "cursor";
+export const INDEX_FIELDS: readonly IndexField[] = ["index", "cursor"];
+export const decodeIndexField: Decoder<IndexField> = /* @__PURE__ */ oneOf(INDEX_FIELDS);
 
 // The state of the presenter. The program holds its first value.
 export type State = Readonly<{
@@ -55,6 +60,8 @@ export type State = Readonly<{
   overview: boolean;
   selected: number;
   undim: boolean;
+  menu: boolean;
+  cursor: number;
 }>;
 export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   index: /* @__PURE__ */ integer(0),
@@ -67,6 +74,8 @@ export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   overview: boolean,
   selected: /* @__PURE__ */ integer(1),
   undim: boolean,
+  menu: boolean,
+  cursor: /* @__PURE__ */ integer(0),
 });
 
 // A built-in function of the browser.
@@ -97,6 +106,8 @@ export type Command =
   | readonly ["set", "overview", boolean]
   | readonly ["set", "selected", number]
   | readonly ["set", "undim", boolean]
+  | readonly ["set", "menu", boolean]
+  | readonly ["set", "cursor", number]
   | readonly ["toggle", BooleanField]
   | readonly ["clear", Field]
   | readonly ["assign", "selected", readonly ["entry", "slide"]]
@@ -106,6 +117,9 @@ export type Command =
   | readonly ["goto_slide", "selected" | number]
   | readonly ["select", number]
   | readonly ["select_by", number]
+  | readonly ["copy", IndexField, IndexField]
+  | readonly ["move", IndexField, number]
+  | readonly ["go", IndexField]
   | readonly ["go_typed"]
   | readonly ["builtin", Builtin];
 export const decodeCommand: Decoder<Command> = /* @__PURE__ */ union(
@@ -120,6 +134,8 @@ export const decodeCommand: Decoder<Command> = /* @__PURE__ */ union(
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("overview"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("selected"), /* @__PURE__ */ integer(1)),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("undim"), boolean),
+  /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("menu"), boolean),
+  /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("cursor"), /* @__PURE__ */ integer(0)),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("toggle"), decodeBooleanField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("clear"), decodeField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("assign"), /* @__PURE__ */ literal("selected"), /* @__PURE__ */ tuple(/* @__PURE__ */ literal("entry"), /* @__PURE__ */ literal("slide"))),
@@ -129,6 +145,9 @@ export const decodeCommand: Decoder<Command> = /* @__PURE__ */ union(
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("goto_slide"), /* @__PURE__ */ union("\"selected\" | number", /* @__PURE__ */ literal("selected"), /* @__PURE__ */ integer(1))),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("select"), /* @__PURE__ */ integer(0)),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("select_by"), /* @__PURE__ */ integer()),
+  /* @__PURE__ */ tuple(/* @__PURE__ */ literal("copy"), decodeIndexField, decodeIndexField),
+  /* @__PURE__ */ tuple(/* @__PURE__ */ literal("move"), decodeIndexField, /* @__PURE__ */ integer()),
+  /* @__PURE__ */ tuple(/* @__PURE__ */ literal("go"), decodeIndexField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("go_typed")),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("builtin"), decodeBuiltin),
 );
@@ -152,6 +171,8 @@ export type WrittenMode = Readonly<{
     overview?: boolean;
     selected?: number;
     undim?: boolean;
+    menu?: boolean;
+    cursor?: number;
   }>;
   any: Commands | null;
   other: Commands | null;
@@ -173,6 +194,8 @@ export const decodeWrittenMode: Decoder<WrittenMode> = /* @__PURE__ */ object({
     overview: boolean,
     selected: /* @__PURE__ */ integer(1),
     undim: boolean,
+    menu: boolean,
+    cursor: /* @__PURE__ */ integer(0),
   }),
   any: /* @__PURE__ */ nullable(decodeCommands),
   other: /* @__PURE__ */ nullable(decodeCommands),
@@ -187,12 +210,12 @@ export const decodeWrittenMode: Decoder<WrittenMode> = /* @__PURE__ */ object({
 export type WrittenProjections = Readonly<{
   attributes: readonly (readonly [BooleanField, string, true] | readonly [Field, string, false])[];
   properties: readonly (readonly [string, "fraction" | "done"])[];
-  marks: readonly (readonly [string, string, "slide" | "index", readonly (readonly [string, NumberField, number])[]])[];
+  marks: readonly (readonly [string, string, "slide" | "index", readonly (readonly [string, NumberField, number])[], boolean])[];
 }>;
 export const decodeWrittenProjections: Decoder<WrittenProjections> = /* @__PURE__ */ object({
   attributes: /* @__PURE__ */ list(/* @__PURE__ */ union("readonly [BooleanField, string, true] | readonly [Field, string, false]", /* @__PURE__ */ tuple(decodeBooleanField, /* @__PURE__ */ string(/^data-/), /* @__PURE__ */ literal(true)), /* @__PURE__ */ tuple(decodeField, /* @__PURE__ */ string(/^data-/), /* @__PURE__ */ literal(false)))),
   properties: /* @__PURE__ */ list(/* @__PURE__ */ tuple(/* @__PURE__ */ string(/^--/), /* @__PURE__ */ oneOf(["fraction", "done"]))),
-  marks: /* @__PURE__ */ list(/* @__PURE__ */ tuple(/* @__PURE__ */ string(/^data-/), /* @__PURE__ */ string(), /* @__PURE__ */ oneOf(["slide", "index"]), /* @__PURE__ */ list(/* @__PURE__ */ tuple(/* @__PURE__ */ string(), decodeNumberField, /* @__PURE__ */ integer())))),
+  marks: /* @__PURE__ */ list(/* @__PURE__ */ tuple(/* @__PURE__ */ string(/^data-/), /* @__PURE__ */ string(), /* @__PURE__ */ oneOf(["slide", "index"]), /* @__PURE__ */ list(/* @__PURE__ */ tuple(/* @__PURE__ */ string(), decodeNumberField, /* @__PURE__ */ integer())), boolean)),
 });
 
 // The program of the presenter for one deck, as the renderer writes it.
@@ -280,6 +303,8 @@ export type Message = Readonly<{
     overview?: boolean;
     selected?: number;
     undim?: boolean;
+    menu?: boolean;
+    cursor?: number;
   }>;
   scheme: Scheme;
   time: number;
@@ -299,6 +324,8 @@ export const decodeMessage: Decoder<Message> = /* @__PURE__ */ openObject({
     overview: boolean,
     selected: /* @__PURE__ */ integer(1),
     undim: boolean,
+    menu: boolean,
+    cursor: /* @__PURE__ */ integer(0),
   }),
   scheme: decodeScheme,
   time: /* @__PURE__ */ number(),

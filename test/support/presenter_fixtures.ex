@@ -47,7 +47,7 @@ defmodule Expresso.Test.PresenterFixtures do
     {[1, 2, 1, 1], [:fade, :slide, :none, :zoom]}
   ]
 
-  @keys ~w(j k ArrowRight ArrowLeft ArrowUp ArrowDown PageDown PageUp Home End Enter b d p s r f g a o ? Escape x Tab) ++
+  @keys ~w(j k ArrowRight ArrowLeft ArrowUp ArrowDown PageDown PageUp Home End Enter b d m p s r f g a o ? Escape x Tab) ++
           [" "] ++ Enum.map(0..9, &Integer.to_string/1)
 
   @kinds [:none, :fade, :slide, :zoom]
@@ -170,11 +170,13 @@ defmodule Expresso.Test.PresenterFixtures do
         region = pick([:right, :left_third])
         {["click", Atom.to_string(region), nil], {:click, region}}
 
-      # A click on a page of the overview, or on a link of `Expresso.Goto`.
+      # A click on a page of the overview, on a link of `Expresso.Goto`, or on
+      # a row of the menu.
       16 ->
         region = pick([:right, :left_third])
         link = Program.link(:rand.uniform(slides * 3 + 1) - 1)
-        commands = pick([Program.element(near(slides)), link])
+        row = Program.menu(:rand.uniform(slides * 3 + 1) - 1)
+        commands = pick([Program.element(near(slides)), link, row])
         json = commands |> Program.json_commands() |> JSON.decode!()
         {["click", Atom.to_string(region), json], {:click, region, commands}}
 

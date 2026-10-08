@@ -25,7 +25,9 @@ defmodule Expresso.Presenter.Default do
         selected: 1,
         progress: true,
         every: false,
-        undim: false
+        undim: false,
+        menu: false,
+        cursor: 0
 
   sync [:blank, :undim]
   reset [:undim]
@@ -39,6 +41,7 @@ defmodule Expresso.Presenter.Default do
   attribute :help, "data-help", flag: true
   attribute :digits, "data-digits"
   attribute :undim, "data-undim", flag: true
+  attribute :menu, "data-menu", flag: true
 
   # The style sheet sets the width of the progress bar from the part of the
   # deck before the current step.
@@ -48,6 +51,11 @@ defmodule Expresso.Presenter.Default do
   # the page of the current step and the page of the next step.
   mark "data-selected", ".handout-page[data-thumbnail]", :slide, [{"", :selected, 0}]
   mark "data-speaker", ".handout-page", :index, [{"current", :index, 0}, {"next", :index, 1}]
+
+  # The menu marks the row of its cursor and the row of the current step. The
+  # script keeps the row of the cursor in view.
+  mark "data-cursor", ".menu-step[data-index]", :index, [{"", :cursor, 0}], scroll: true
+  mark "data-current", ".menu-step[data-index]", :index, [{"", :index, 0}]
 
   # A black screen or the list of keys closes at the next event, and the event
   # does no more.
@@ -68,6 +76,20 @@ defmodule Expresso.Presenter.Default do
     key "Enter", [goto_slide(:selected), set(:overview, false)], "Step 1 of the selected slide"
     event :element, [], "Step 1 of that slide", label: "Click or tap a slide"
     key ["o", "Escape"], set(:overview, false), "Close the overview. The step does not change."
+  end
+
+  # The menu lists each slide with its steps. The cursor starts at the current
+  # step, and the step changes only at `Enter` or at a click.
+  mode :menu do
+    match menu: true
+    element true
+
+    key "?", set(:help, true), @help
+    key ["j", "ArrowDown"], move(:cursor, 1), "Move the cursor to the next step"
+    key ["k", "ArrowUp"], move(:cursor, -1), "Move the cursor to the previous step"
+    key "Enter", [go(:cursor), set(:menu, false)], "The step of the cursor"
+    event :element, [], "That step", label: "Click or tap a step or a slide"
+    key ["m", "Escape"], set(:menu, false), "Close the menu. The step does not change."
   end
 
   # Each key except a digit and `Enter` removes the typed digits. A click on a
@@ -110,6 +132,10 @@ defmodule Expresso.Presenter.Default do
         [set(:overview, true), assign(:selected, entry(:slide))],
         "Overview of the slides. Only this window shows it."
 
+    key "m",
+        [set(:menu, true), copy(:cursor, :index)],
+        "Menu of the slides and their steps. Only this window shows it."
+
     key "?", set(:help, true), @help
   end
 
@@ -148,6 +174,10 @@ defmodule Expresso.Presenter.Default do
     key "o",
         [set(:overview, true), assign(:selected, entry(:slide))],
         "Overview of the slides. Only this window shows it."
+
+    key "m",
+        [set(:menu, true), copy(:cursor, :index)],
+        "Menu of the slides and their steps. Only this window shows it."
 
     key "?", set(:help, true), @help
   end

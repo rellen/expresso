@@ -159,6 +159,17 @@ function apply(
       return select(state, command[1], deck);
     case "select_by":
       return select(state, state.selected + command[1], deck);
+    case "copy":
+      return { ...state, [command[1]]: state[command[2]] };
+    case "move": {
+      // A move past the first step or the last step makes no change.
+      const value = state[command[1]] + command[2];
+      return value < 0 || value >= deck.steps.length
+        ? state
+        : { ...state, [command[1]]: value };
+    }
+    case "go":
+      return goto(state, state[command[1]], deck);
     case "go_typed":
       return state.digits === ""
         ? state

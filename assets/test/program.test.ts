@@ -24,9 +24,9 @@ test("parse reads the program that the renderer writes", () => {
   assert.equal(program.state.view, "present");
   assert.deepEqual(
     program.modes.map((mode) => mode.name),
-    ["blank", "help", "overview", "present", "speaker", "handout"],
+    ["blank", "help", "overview", "menu", "present", "speaker", "handout"],
   );
-  const mode = program.modes[3];
+  const mode = program.modes[4];
   assert.deepEqual(mode?.keys.get("j"), [
     ["clear", "digits"],
     ["step", 1],
@@ -38,7 +38,11 @@ test("parse reads the program that the renderer writes", () => {
   ]);
   assert.deepEqual(mode?.element, [["clear", "digits"]]);
   assert.deepEqual(program.modes[2]?.element, []);
-  assert.equal(program.modes[4]?.element, null);
+  assert.deepEqual(program.modes[3]?.keys.get("Enter"), [
+    ["go", "cursor"],
+    ["set", "menu", false],
+  ]);
+  assert.equal(program.modes[5]?.element, null);
 });
 
 test("validate refuses a program that the renderer does not write", () => {
@@ -93,16 +97,19 @@ test("parse reads the projections that the renderer writes", () => {
     { name: "--fraction", entry: "fraction" },
   ]);
   assert.deepEqual(
-    project.marks.map((mark) => [mark.attribute, mark.values]),
+    project.marks.map((mark) => [mark.attribute, mark.values, mark.scroll]),
     [
-      ["data-selected", [["", "selected", 0]]],
+      ["data-selected", [["", "selected", 0]], false],
       [
         "data-speaker",
         [
           ["current", "index", 0],
           ["next", "index", 1],
         ],
+        false,
       ],
+      ["data-cursor", [["", "cursor", 0]], true],
+      ["data-current", [["", "index", 0]], false],
     ],
   );
 });

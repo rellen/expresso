@@ -179,6 +179,17 @@ defmodule Expresso.Presenter.Program do
   def element(slide), do: [{:goto_slide, slide}, {:set, :overview, false}]
 
   @doc """
+  Return the commands that a row of the menu holds for the step at an index
+
+  A click on the row goes to the step, and it closes the menu.
+
+      iex> Expresso.Presenter.Program.menu(4)
+      [{:goto, 4}, {:set, :menu, false}]
+  """
+  @spec menu(non_neg_integer()) :: [Definition.command()]
+  def menu(index), do: [{:goto, index}, {:set, :menu, false}]
+
+  @doc """
   Return the commands of a link to the step at an index, for `Expresso.Goto`
 
       iex> Expresso.Presenter.Program.link(7)

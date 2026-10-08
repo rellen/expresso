@@ -222,6 +222,19 @@ defmodule Expresso.Presenter.Interpreter do
   defp command(program, _event, {:select_by, by}, state),
     do: select(program, state, state.selected + by)
 
+  defp command(_program, _event, {:copy, to, from}, state), do: %{state | to => state[from]}
+
+  # A move past the first step or the last step makes no change.
+  defp command(program, _event, {:move, field, by}, state) do
+    value = state[field] + by
+
+    if value >= 0 and value < tuple_size(program.steps),
+      do: %{state | field => value},
+      else: state
+  end
+
+  defp command(program, _event, {:go, field}, state), do: goto(program, state, state[field])
+
   defp command(_program, _event, :go_typed, %{digits: ""} = state), do: state
 
   defp command(program, _event, :go_typed, state),

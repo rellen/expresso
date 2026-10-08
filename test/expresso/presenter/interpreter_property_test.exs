@@ -15,7 +15,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
   @kinds [:none, :fade, :slide, :zoom]
   @forward ["j", "ArrowRight", "ArrowDown", "PageDown", " "]
   @digits Enum.map(0..9, &Integer.to_string/1)
-  @keys ~w(j k ArrowRight ArrowLeft ArrowUp ArrowDown PageDown PageUp Home End Enter b p s r f g a o ? Escape) ++
+  @keys ~w(j k ArrowRight ArrowLeft ArrowUp ArrowDown PageDown PageUp Home End Enter b d m p s r f g a o ? Escape) ++
           [" "] ++ @digits
 
   # A deck of 1 to 12 slides, each with 1 to 6 steps and a kind of transition.
@@ -60,6 +60,10 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
       {1, map(member_of([:right, :left_third]), &{:click, &1})},
       {1, map(member_of([:left, :right]), &{:swipe, &1})},
       {1, map(near(slides(program)), fn slide -> {:click, :right, Program.element(slide)} end)},
+      {1,
+       map(integer(0..(tuple_size(program.steps) - 1)), fn index ->
+         {:click, :right, Program.menu(index)}
+       end)},
       {1, map(fragment(program), &{:hash, &1})},
       {1, message(program)}
     ])
@@ -78,9 +82,11 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     gen(all program <- decks(), state <- state_in(program), do: {program, state})
   end
 
-  # A reachable state with no black screen and no list of keys.
+  # A reachable state with no black screen, no list of keys and no menu.
   defp shown do
-    map(reachable(), fn {program, state} -> {program, %{state | blank: false, help: false}} end)
+    map(reachable(), fn {program, state} ->
+      {program, %{state | blank: false, help: false, menu: false}}
+    end)
   end
 
   defp upcoming_all(program, state) do
@@ -92,6 +98,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
   property "a reachable state stays inside the deck" do
     check all {program, state} <- reachable(), max_runs: @runs do
       assert state.index in 0..(tuple_size(program.steps) - 1)
+      assert state.cursor in 0..(tuple_size(program.steps) - 1)
       assert state.selected in 1..slides(program)
       assert state.digits =~ ~r/^\d*$/
     end
@@ -326,6 +333,64 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
       end
 
       assert run(program, %{state | undim: false}, {:key, "d"}).undim == true
+    end
+  end
+
+  property "m opens the menu with the cursor at the current step, and the step does not change" do
+    check all {program, state} <- shown(),
+              view <- member_of([:present, :speaker]),
+              max_runs: @runs do
+      state = %{state | view: view, blank: false, help: false, overview: false, menu: false}
+      opened = run(program, state, {:key, "m"})
+
+      assert opened.menu and opened.cursor == state.index
+      assert opened.index == state.index
+    end
+  end
+
+  property "in the menu, j and k move the cursor inside the deck, and the step does not change" do
+    check all {program, state} <- shown(),
+              keys <- list_of(member_of(["j", "k", "ArrowDown", "ArrowUp"]), max_length: 12),
+              max_runs: @runs do
+      state = %{
+        state
+        | blank: false,
+          help: false,
+          overview: false,
+          menu: true,
+          cursor: state.index
+      }
+
+      moved =
+        Enum.reduce(keys, state, fn key, state ->
+          after_key = run(program, state, {:key, key})
+          step = if key in ["j", "ArrowDown"], do: 1, else: -1
+          expected = state.cursor + step
+
+          if expected in 0..(tuple_size(program.steps) - 1)//1,
+            do: assert(after_key.cursor == expected),
+            else: assert(after_key.cursor == state.cursor)
+
+          after_key
+        end)
+
+      assert moved.index == state.index and moved.menu
+    end
+  end
+
+  property "in the menu, Enter goes to the step of the cursor and closes the menu, and m closes it with no move" do
+    check all {program, state} <- shown(),
+              cursor <- integer(0..(tuple_size(program.steps) - 1)),
+              max_runs: @runs do
+      state = %{state | blank: false, help: false, overview: false, menu: true, cursor: cursor}
+
+      gone = run(program, state, {:key, "Enter"})
+      assert gone.index == cursor and not gone.menu
+
+      for key <- ["m", "Escape"] do
+        closed = run(program, state, {:key, key})
+        assert closed.index == state.index and not closed.menu
+      end
     end
   end
 

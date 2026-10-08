@@ -113,6 +113,12 @@ defmodule Mix.Tasks.Expresso.Gifs do
       actions: ["o", "j", "j", "Enter"]
     },
     %{
+      name: "present-menu",
+      deck: "tour.exs",
+      address: "#2",
+      actions: ["m", "j", "j", "Enter"]
+    },
+    %{
       name: "present-speaker",
       deck: "tour.exs",
       address: "?speaker&duration=10#2.1",

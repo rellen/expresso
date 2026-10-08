@@ -219,6 +219,7 @@ The present view knows these keys. `?` shows the same list in the browser.
 | Click or tap the left third, or swipe right | Previous step |
 | Click or tap a link | The slide and the step of the link |
 | `o` | Overview of the slides. Only this window shows it. |
+| `m` | Menu of the slides and their steps. Only this window shows it. |
 | `?` | This list of keys. The next key closes it. |
 
 <!-- /keys -->
@@ -260,6 +261,29 @@ speaker view, only the speaker window shows the overview. The overview knows the
 <!-- /keys -->
 
 ![The overview opens, the selection moves two slides, and Enter goes to that slide](https://raw.githubusercontent.com/rellen/expresso/media/present-overview.gif)
+
+### The menu
+
+The menu lists each slide with a small picture of its last step, and the steps of each
+slide under it. A step shows its number and its label. See
+[Step labels](docs/reference/step-labels.md). `m` opens the menu with the cursor at the
+current step, and the step of the audience changes only at `Enter` or at a click. In the
+speaker view, only the speaker window shows the menu. The menu knows these keys:
+
+<!-- keys menu -->
+
+| Key | Action |
+| --- | --- |
+| `?` | This list of keys. The next key closes it. |
+| `j`, `↓` | Move the cursor to the next step |
+| `k`, `↑` | Move the cursor to the previous step |
+| `Enter` | The step of the cursor |
+| Click or tap a step or a slide | That step |
+| `m`, `Esc` | Close the menu. The step does not change. |
+
+<!-- /keys -->
+
+![The menu opens, the cursor moves two steps, and Enter goes to that step](https://raw.githubusercontent.com/rellen/expresso/media/present-menu.gif)
 
 ### The transitions
 
@@ -314,6 +338,7 @@ The speaker view knows these keys:
 | Click or tap the right two thirds, or swipe left | Next step |
 | Click or tap the left third, or swipe right | Previous step |
 | `o` | Overview of the slides. Only this window shows it. |
+| `m` | Menu of the slides and their steps. Only this window shows it. |
 | `?` | This list of keys. The next key closes it. |
 
 <!-- /keys -->

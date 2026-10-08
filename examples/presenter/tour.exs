@@ -17,6 +17,7 @@ defmodule Examples.Tour do
   slide "steps" do
     heading "Steps"
     auto_reveal true
+    labels ["A slide can have steps", "One more element", "A move back"]
     notes "Each box is one step of this slide."
 
     text_box do
@@ -34,6 +35,7 @@ defmodule Examples.Tour do
 
   slide "list" do
     heading "A list"
+    labels ["The first item", "The second item", "The third item"]
     notes "The items come one after the other."
 
     list do

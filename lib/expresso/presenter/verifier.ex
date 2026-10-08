@@ -214,6 +214,9 @@ defmodule Expresso.Presenter.Verifier do
   defp command?({:assign, :selected, {:entry, :slide}}), do: true
   defp command?({:append, :digits}), do: true
   defp command?({:step, count}), do: is_integer(count)
+  defp command?({:copy, to, from}), do: @fields[to] == :index and @fields[from] == :index
+  defp command?({:move, field, count}), do: @fields[field] == :index and is_integer(count)
+  defp command?({:go, field}), do: @fields[field] == :index
   defp command?({:goto, :last_slide}), do: true
   defp command?({:goto, index}), do: type?(:index, index)
   defp command?({:goto_slide, :selected}), do: true

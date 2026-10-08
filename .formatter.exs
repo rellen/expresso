@@ -85,6 +85,7 @@ spark_locals_without_parens = [
   root: 1,
   row: 1,
   row: 2,
+  scroll: 1,
   set: 1,
   slide: 0,
   slide: 1,
