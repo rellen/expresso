@@ -155,16 +155,33 @@ defmodule Expresso.Highlight do
     {Expresso.Lexers.Yaml, ["yaml", "yml"], ["yaml", "yml"]}
   ]
 
+  # The first name of the last lexer of the list. The function registers the
+  # lexers in the order of the list, so this name is present only when each
+  # lexer is.
+  @last_name @own_lexers |> List.last() |> elem(1) |> hd()
+
   defp start_lexers do
     Enum.each(@lexers, &Application.ensure_all_started/1)
 
     # The registry is in the environment of the `makeup` application, so a
-    # new start of that application empties it.
-    if Makeup.Registry.fetch_lexer_by_name("toml") == :error do
+    # new start of that application empties it. A registration reads the
+    # registry and writes it again, so two processes that register at the same
+    # time can lose a name. The lock lets one process at a time register, and
+    # the second check inside the lock skips the work that a process before
+    # did.
+    if registered?() == false do
+      :global.trans({{__MODULE__, :lexers}, self()}, &register_own_lexers/0)
+    end
+  end
+
+  defp register_own_lexers do
+    if registered?() == false do
       for {lexer, names, extensions} <- @own_lexers,
           do: Makeup.Registry.register_lexer(lexer, names: names, extensions: extensions)
     end
   end
+
+  defp registered?, do: Makeup.Registry.fetch_lexer_by_name(@last_name) != :error
 
   # A lexer gives each pair of delimiters, such as `(` and `)`, a group id in
   # `data-group-id`. The id starts with a prefix, and without the option the
