@@ -678,6 +678,7 @@ An element is the content of a slide. These are the elements at this time:
 - `Expresso.Element.Math`
 - `Expresso.Element.Diagram`, with `Expresso.Element.Part`
 - `Expresso.Element.Embed`
+- `Expresso.Element.Video`
 
 ### The parts of an element module
 
@@ -728,7 +729,9 @@ option is decorative, and the render function writes an empty `alt` attribute.
 The `width` option gives the width of the image. The render function writes the value into
 the custom property `--image-width` on the root tag, and the theme reads that property with
 `var(--image-width, auto)`. A custom property inherits, so an `on` entity can also set the
-property, and the width then changes with the step.
+property, and the width then changes with the step. This works only for an image with no
+`width` option: the option writes a `style` attribute, and that attribute takes priority
+over the rule of the `on` entity.
 
 An image with no `width` option takes its natural size, and the theme makes it smaller for
 a slide that is too small. Use a length, such as `900px`, or a percentage, such as `60%`,
@@ -752,9 +755,9 @@ would take the width zero.
 
 ### The list
 
-A `list` holds `item` elements, and an item holds text and one optional nested `list`. The
-DSL accepts three levels of lists, because Spark cannot nest two entities inside each
-other without a limit. `Expresso.Extension` builds the three levels with a loop. The
+A `list` holds `item` elements, and an item holds text and one optional nested `list`.
+`Expresso.Extension` builds three levels of the entities with a loop. The DSL accepts a
+fourth level too, and `Expresso.ElementPagesTest` makes sure of it. The
 `ordered` option gives an `ol` element, and the default is a `ul` element. The `reveal`
 option shows the items one after the other, and `docs/overlays.md` gives its rules. The
 text of an item goes into one block element, as in a text area, and it can contain HTML.
@@ -912,8 +915,9 @@ elements as a text box. The theme makes the element a flex row. A column without
 `width "30%"`, takes that width. The render function writes the custom properties
 `--column-width` and `--column-grow` on the column, and the theme reads them.
 
-A column takes the `at` option and the `on` entity. A column cannot hold a `columns`
-element, because Spark cannot nest two entities inside each other without a limit.
+A column takes the `at` option and the `on` entity. The extension does not give `columns`
+or `text_box` as a child of a column, but the DSL accepts both in a column, and they
+render in the column. `Expresso.ElementPagesTest` makes sure of it.
 
 ### The math
 
