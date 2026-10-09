@@ -91,6 +91,15 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "qr-code", deck: "qr_code.exs", still: true},
     %{name: "qr-code-at", deck: "qr_code_at.exs", actions: ["j"]},
     %{name: "qr-code-colors", deck: "qr_code_colors.exs", still: true},
+    %{name: "footnote", deck: "footnote.exs", still: true},
+    %{name: "footnote-at", deck: "footnote_at.exs", actions: ["j"]},
+    %{
+      name: "footnote-sources",
+      deck: "footnote_sources.exs",
+      actions: ["p"],
+      still: true,
+      height: 2160
+    },
     %{name: "talk-from-data", deck: "talk_from_data.exs", actions: ["j", "j", "j"]},
     %{name: "style-heading", deck: "style_heading.exs", actions: ["j"]},
     %{name: "theme-map", deck: "theme_map.exs", actions: ["j"]},

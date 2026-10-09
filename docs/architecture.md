@@ -680,6 +680,7 @@ An element is the content of a slide. These are the elements at this time:
 - `Expresso.Element.Embed`
 - `Expresso.Element.Video`
 - `Expresso.Element.QrCode`
+- `Expresso.Element.Footnote`
 
 ### The parts of an element module
 
@@ -1045,6 +1046,26 @@ design:
 
 The `size` option goes into the custom property `--qr-size`, with the rule of the width of
 an image: `Expresso.Element.Image.viewport_unit/1` writes a percentage as `vw`.
+
+### The footnote
+
+A `footnote` gives a source at the bottom of a slide. It shows nothing in its place:
+`Expresso.Template.render_elements/1` skips it, as it skips a `pause`. The renderer
+collects the footnotes of a slide with `Expresso.Element.Footnote.of_slide/1`, and it
+writes them as one `ol` after the slide template, in the slide parts. These are the reasons
+for this design:
+
+- **The renderer places the list, and not the template.** A custom slide template then
+  gets the footnotes with no change. A list in the place of the element would put a
+  source in the middle of the slide.
+- **The browser gives the numbers.** The list is an `ol`, so the number of a footnote is
+  its position. A footnote at a later step keeps its space and its number, because the
+  overlay hides it with `visibility` and not with `display`.
+- **`auto_reveal` skips a footnote.** A footnote supports a text, and a step of its own
+  would show the source after the text, at a step with no other change.
+- **One page of the sources.** The handout view gets a `section` with the class `sources`
+  after the last page. It is not a `handout-page`, so the script does not count it as a
+  step, and the style sheet hides it in the speaker view and in the overview.
 
 ## The DSL
 
