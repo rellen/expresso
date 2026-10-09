@@ -9,7 +9,7 @@ a small script. Open the document in a browser, and present from there.
 
 Expresso is at an early stage. It has 27 built-in themes and these elements: `text_box`,
 `text_area`, `image`, `list`, `table`, `quotation`, `spacer`, `code`, `columns`, `math`,
-`diagram`, `embed`, `video`, `audio`, `qr_code`, `footnote` and `shape`.
+`diagram`, `embed`, `video`, `audio`, `qr_code`, `footnote`, `shape` and `chart`.
 
 Overlays are the steps inside one slide. A slide takes steps, and an element shows at a set
 of steps. The document also holds a handout view for a printer. `docs/overlays.md` gives
@@ -516,6 +516,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Add transitions between slides](docs/how-to/add-transitions.md)
 - [Animate elements in a slide](docs/how-to/animate-elements.md)
 - [Make a deck from data](docs/how-to/make-a-deck-from-data.md)
+- [Show data in a chart](docs/how-to/show-data-in-a-chart.md)
 - [Show code on a slide](docs/how-to/show-code.md)
 - [Check that a deck fits the screen](docs/how-to/check-the-layout.md)
 - [Style one slide or one element](docs/how-to/style-one-slide.md)
@@ -564,6 +565,7 @@ These pages describe each element:
 - [QR code](docs/reference/qr-code-element.md)
 - [Footnote](docs/reference/footnote-element.md)
 - [Shape](docs/reference/shape-element.md)
+- [Chart](docs/reference/chart-element.md)
 
 Explanations give the design and its reasons:
 
