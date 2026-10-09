@@ -15,6 +15,7 @@ defmodule Expresso.Renderer do
 
   use Temple.Component
 
+  alias Expresso.Element.Footnote
   alias Expresso.Presenter.{Definition, Help, Program}
 
   @external_resource "./assets/style.css"
@@ -213,6 +214,10 @@ defmodule Expresso.Renderer do
         c(&Expresso.Template.render_slide_template/1, deck: @deck, slide: @slide)
       end
 
+      # The footnotes of the slide go under the slide template, so each
+      # template gets them. `Expresso.Element.Footnote` gives the reasons.
+      c(&footnotes/1, footnotes: Footnote.of_slide(@slide))
+
       # The number of the slide goes into the row of the footer, so a page of
       # the handout view shows it above the notes. The style sheet puts it in
       # the right corner of that row.
@@ -227,6 +232,65 @@ defmodule Expresso.Renderer do
         end
       end
     end
+  end
+
+  defp footnotes(assigns) do
+    temple do
+      if @footnotes != [] do
+        ol class: "footnotes" do
+          for footnote <- @footnotes do
+            c(&Footnote.render/1,
+              rest!: footnote |> Footnote.get_assigns() |> Map.put(:class, footnote.class)
+            )
+          end
+        end
+      end
+    end
+  end
+
+  # The page of the sources: the footnotes of each slide, after the last page
+  # of the handout view. The style sheet hides it in the speaker view and in
+  # the overview. A deck with no footnote gets no page.
+  defp sources(assigns) do
+    temple do
+      if @slides != [] do
+        section class: "sources" do
+          h2 do
+            "Sources"
+          end
+
+          for {slide, footnotes} <- @slides do
+            c(&slide_sources/1, slide: slide, footnotes: footnotes)
+          end
+        end
+      end
+    end
+  end
+
+  defp slide_sources(assigns) do
+    temple do
+      h3 do
+        "#{@slide.metadata.slide_number}. #{menu_name(@slide)}"
+      end
+
+      ol do
+        for footnote <- @footnotes do
+          li do
+            div do
+              Footnote.html(footnote)
+            end
+          end
+        end
+      end
+    end
+  end
+
+  # The slides with footnotes, each with its footnotes.
+  defp footnoted(deck) do
+    for slide <- deck.slides,
+        footnotes = Footnote.of_slide(slide),
+        footnotes != [],
+        do: {slide, footnotes}
   end
 
   # The sources of the embeds. The presenter gives a frame its source when its
@@ -491,6 +555,8 @@ defmodule Expresso.Renderer do
                 end
               end
             end
+
+            c(&sources/1, slides: footnoted(@deck))
 
             # The four elements of the speaker view. They go into the handout
             # view, because the style sheet places them in the grid of that

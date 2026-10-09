@@ -373,6 +373,43 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   object-fit: contain;
 }
 /*
+ * The footnotes of a slide: a numbered list under the slide template, in a
+ * small size and in the color `--muted`. A deck can set `--footnote-color`.
+ */
+.footnotes {
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.25rem 1rem 0.25rem 2.5rem;
+  font-size: 0.45rem;
+  text-align: left;
+  color: var(--footnote-color, var(--muted));
+}
+.footnote::marker {
+  font-variant-numeric: tabular-nums;
+}
+/*
+ * The page of the sources, after the last page of the handout view. It holds
+ * the footnotes of each slide under the number and the name of the slide.
+ */
+.sources {
+  box-sizing: border-box;
+  padding: 1rem 2rem;
+  font-size: 0.6rem;
+  text-align: left;
+  break-before: page;
+}
+.sources h2 {
+  margin-top: 0;
+}
+.sources h3 {
+  margin-bottom: 0.25rem;
+  font-size: 0.7rem;
+}
+.sources ol {
+  margin-top: 0;
+}
+/*
  * The QR code element. A scanner reads a dark code on a light ground best, so
  * the code keeps its own two colors in each theme, and a deck can change them
  * with `--qr-color` and `--qr-background`. The code is square, and it takes
@@ -646,7 +683,8 @@ body[data-view="present"][data-undim] .screen .code [data-el] {
 .column,
 .math,
 .diagram,
-.qr-code {
+.qr-code,
+.footnote {
   transform: translate(
       calc(var(--x) + (1 - var(--shown)) * var(--enter-x)),
       calc(var(--y) + (1 - var(--shown)) * var(--enter-y))
@@ -868,7 +906,8 @@ body[data-view="handout"]:not([data-every="true"]) .handout-page[data-omit] {
 body[data-view="handout"]
   .handout-page:not([data-omit])
   ~ .handout-page:not([data-omit]),
-body[data-view="handout"][data-every="true"] .handout-page ~ .handout-page {
+body[data-view="handout"][data-every="true"] .handout-page ~ .handout-page,
+body[data-view="handout"] .sources {
   border-top: 1px solid currentColor;
 }
 /*
@@ -943,7 +982,8 @@ body[data-view="handout"][data-print-notes="false"] .notes {
       "notes left";
     overflow: hidden;
   }
-  body[data-view="speaker"] .handout-page {
+  body[data-view="speaker"] .handout-page,
+  body[data-view="speaker"] .sources {
     display: none;
   }
   body[data-view="speaker"] .handout-page[data-speaker] {
@@ -1021,7 +1061,8 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   body[data-overview="true"] #speaker-timer,
   body[data-overview="true"] #speaker-left,
   body[data-overview="true"] .handout-page:not([data-thumbnail]),
-  body[data-overview="true"] .handout-page .notes {
+  body[data-overview="true"] .handout-page .notes,
+  body[data-overview="true"] .sources {
     display: none;
   }
   body[data-overview="true"] .handout {

@@ -9,7 +9,7 @@ a small script. Open the document in a browser, and present from there.
 
 Expresso is at an early stage. It has 27 built-in themes and these elements: `text_box`,
 `text_area`, `image`, `list`, `table`, `quotation`, `spacer`, `code`, `columns`, `math`,
-`diagram`, `embed`, `video` and `qr_code`.
+`diagram`, `embed`, `video`, `qr_code` and `footnote`.
 
 Overlays are the steps inside one slide. A slide takes steps, and an element shows at a set
 of steps. The document also holds a handout view for a printer. `docs/overlays.md` gives
@@ -523,6 +523,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Show a web page in a slide](docs/how-to/show-a-web-page.md)
 - [Show a video](docs/how-to/show-a-video.md)
 - [Share the slides with a QR code](docs/how-to/share-the-slides-with-a-qr-code.md)
+- [Cite your sources](docs/how-to/cite-your-sources.md)
 - [Make templates of your own](docs/how-to/make-templates.md)
 - [Use colors of your own](docs/how-to/use-colors-of-your-own.md)
 - [Render a deck in your project](docs/how-to/render-a-deck-in-your-project.md)
@@ -558,6 +559,7 @@ These pages describe each element:
 - [Embed](docs/reference/embed-element.md)
 - [Video](docs/reference/video-element.md)
 - [QR code](docs/reference/qr-code-element.md)
+- [Footnote](docs/reference/footnote-element.md)
 
 Explanations give the design and its reasons:
 
