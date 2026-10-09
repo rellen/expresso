@@ -410,6 +410,63 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   margin-top: 0;
 }
 /*
+ * The shape element. The shapes of a slide are in one layer over the whole
+ * slide, so a percentage is a part of the slide. The layer takes no click,
+ * so a click goes to the slide. A shape draws with `currentColor`, and its
+ * `--color` is `--shape-color`, so `set: [color: ...]` and the state `dim`
+ * change it as they change a text. A deck can set `--shape-color` and
+ * `--shape-width`.
+ */
+:is(.slide, .handout-page, .menu-thumb) {
+  position: relative;
+}
+.shapes {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.shape {
+  --color: var(--shape-color, var(--accent));
+  position: absolute;
+  box-sizing: border-box;
+  color: var(--color);
+}
+.shape-rect,
+.shape-ellipse {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.25rem;
+  border: var(--shape-width, 0.15rem) solid currentColor;
+  font-size: 0.7em;
+  text-align: center;
+}
+.shape-rect {
+  border-radius: 0.25rem;
+}
+.shape-ellipse {
+  border-radius: 50%;
+}
+.shape[data-fill] {
+  background-color: color-mix(in srgb, currentColor 15%, transparent);
+}
+.shape-line {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.shape-line line {
+  stroke: currentColor;
+  stroke-width: var(--shape-width, 0.15rem);
+  stroke-linecap: round;
+}
+.shape-line marker path {
+  fill: currentColor;
+}
+/*
  * The audio element. The present view shows the controls of the browser only
  * with `controls true`, and nothing in the place of the element without them.
  * The handout view and paper cannot play a sound, so each of their pages
@@ -707,7 +764,8 @@ body[data-view="present"][data-undim] .screen .code [data-el] {
 .diagram,
 .qr-code,
 .footnote,
-.audio {
+.audio,
+.shape {
   transform: translate(
       calc(var(--x) + (1 - var(--shown)) * var(--enter-x)),
       calc(var(--y) + (1 - var(--shown)) * var(--enter-y))

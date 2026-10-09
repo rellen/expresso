@@ -544,6 +544,54 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @shape %Spark.Dsl.Entity{
+    name: :shape,
+    target: Expresso.Element.Shape,
+    args: [:kind],
+    entities: [on: [@on]],
+    transform: {Expresso.Element.Shape, :check, []},
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          kind: [
+            type: {:in, Expresso.Element.Shape.kinds()},
+            required: true,
+            doc:
+              "The kind of the shape: :rect, :ellipse, :line or :arrow. See docs/reference/shape-element.md."
+          ],
+          x: [
+            type: :string,
+            doc:
+              "The left edge of a rectangle or an ellipse, such as 10%. A percentage is a part of the width of the slide."
+          ],
+          y: [
+            type: :string,
+            doc:
+              "The top edge of a rectangle or an ellipse, such as 20%. A percentage is a part of the height of the slide."
+          ],
+          width: [type: :string, doc: "The width of a rectangle or an ellipse, such as 30%."],
+          height: [type: :string, doc: "The height of a rectangle or an ellipse, such as 15%."],
+          from: [
+            type: {:custom, Expresso.Element.Shape, :point, []},
+            doc: "The start of a line or an arrow, such as [\"10%\", \"50%\"]."
+          ],
+          to: [
+            type: {:custom, Expresso.Element.Shape, :point, []},
+            doc: "The end of a line or an arrow. The head of an arrow is at this point."
+          ],
+          text: [
+            type: :string,
+            doc: "A short text in the center of a rectangle or an ellipse."
+          ],
+          fill: [
+            type: :boolean,
+            default: false,
+            doc: "Fill a rectangle or an ellipse with a light tint of its color."
+          ]
+        ]
+  }
+
   @pause %Spark.Dsl.Entity{
     name: :pause,
     target: Expresso.Element.Pause,
@@ -556,7 +604,9 @@ defmodule Expresso.Extension do
     ]
   }
 
-  @slide_elements [elements: [@text_box, @columns] ++ @inner_elements ++ [@footnote, @pause]]
+  @slide_elements [
+    elements: [@text_box, @columns] ++ @inner_elements ++ [@footnote, @shape, @pause]
+  ]
 
   @slide %Spark.Dsl.Entity{
     name: :slide,

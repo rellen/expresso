@@ -38,14 +38,17 @@ spark_locals_without_parens = [
   event: 3,
   event: 4,
   fallback: 1,
+  fill: 1,
   flag: 1,
   footnote: 1,
   footnote: 2,
+  from: 1,
   goto: 1,
   group: 1,
   handout: 1,
   header: 1,
   heading: 1,
+  height: 1,
   highlight: 1,
   image: 1,
   image: 2,
@@ -98,6 +101,8 @@ spark_locals_without_parens = [
   row: 2,
   scroll: 1,
   set: 1,
+  shape: 1,
+  shape: 2,
   size: 1,
   slide: 0,
   slide: 1,
@@ -121,11 +126,14 @@ spark_locals_without_parens = [
   text_box: 1,
   theme: 1,
   title: 1,
+  to: 1,
   transition: 1,
   video: 1,
   video: 2,
   whole_first: 1,
-  width: 1
+  width: 1,
+  x: 1,
+  y: 1
 ]
 
 [
