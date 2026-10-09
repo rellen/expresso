@@ -109,12 +109,13 @@ defmodule Expresso.Presenter.Definition do
           | {:swipe, :left | :right}
           | :element
 
-  @typedoc "A binding: its events, its commands and its row in the list of keys"
+  @typedoc "A binding: its events, its commands, and its row and its group in the list of keys"
   @type binding :: %{
           on: [event()],
           commands: [command()],
           text: String.t(),
           label: String.t() | nil,
+          group: String.t() | nil,
           each: boolean()
         }
 
@@ -179,5 +180,5 @@ defmodule Expresso.Presenter.Definition do
   end
 
   defp binding_map(%Binding{} = binding),
-    do: Map.take(binding, [:on, :commands, :text, :label, :each])
+    do: Map.take(binding, [:on, :commands, :text, :label, :group, :each])
 end

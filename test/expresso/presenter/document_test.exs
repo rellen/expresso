@@ -93,22 +93,55 @@ defmodule Expresso.Presenter.DocumentTest do
   end
 
   describe "the list of keys" do
-    test "holds a hidden list for each mode, with the rows of Help.rows/1" do
-      lists = Floki.find(document(), "#help > div")
+    test "is a dialog with a search field and a closed section for each mode" do
+      [dialog] = Floki.find(document(), "dialog#help")
 
-      assert Enum.map(lists, &Floki.attribute(&1, "data-mode")) ==
+      assert Floki.attribute(dialog, "open") == []
+      assert Floki.attribute(dialog, "closedby") == ["any"]
+      assert [_field] = Floki.find(dialog, "input#help-filter[type=text][autofocus]")
+
+      sections = Floki.find(dialog, "details[data-mode]")
+
+      assert Enum.map(sections, &Floki.attribute(&1, "data-mode")) ==
                [["overview"], ["menu"], ["present"], ["speaker"], ["handout"]]
 
-      assert Enum.all?(lists, &(Floki.attribute(&1, "hidden") != []))
+      assert Enum.all?(sections, &(Floki.attribute(&1, "open") == []))
+    end
 
-      for {list, {_mode, rows}} <- Enum.zip(lists, Help.rows(Definition.presenter())) do
+    test "holds the rows of Help.groups/1, with a heading for each group and the words of each row" do
+      sections = Floki.find(document(), "details[data-mode]")
+
+      for {section, {mode, groups}} <- Enum.zip(sections, Help.groups(Definition.presenter())) do
+        assert section |> Floki.find("summary .help-mode") |> Floki.text() == Help.title(mode)
+
+        headings = for {heading, _rows} <- groups, heading, do: heading
+        assert section |> Floki.find(".help-group") |> Enum.map(&Floki.text/1) == headings
+
+        rows = Enum.flat_map(groups, fn {_heading, rows} -> rows end)
+
         found =
-          for row <- Floki.find(list, "div > div") do
-            {row |> Floki.find("kbd") |> Floki.text(), row |> Floki.find("span") |> Floki.text()}
+          for row <- Floki.find(section, "li") do
+            {Floki.attribute(row, "data-words"),
+             Floki.find(row, "kbd") |> Enum.map(&Floki.text/1),
+             row |> Floki.find(".help-action") |> Floki.text()}
           end
 
-        assert found == rows
+        # A row with a label shows the label and no key.
+        assert found ==
+                 Enum.map(rows, &{[&1.words], if(&1.label, do: [], else: &1.keys), &1.text})
       end
+    end
+
+    test "groups the rows of the present view under their headings" do
+      present = Help.groups(Definition.presenter())[:present]
+
+      assert Enum.map(present, &elem(&1, 0)) == [
+               "Move through the talk",
+               "Find a slide",
+               "Change the screen",
+               "Views and windows",
+               "Mouse and touch"
+             ]
     end
   end
 

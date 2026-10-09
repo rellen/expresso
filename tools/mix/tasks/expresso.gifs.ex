@@ -108,6 +108,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
   # at the times below: it is behind from three minutes, and over from ten.
   @readme [
     %{name: "present-keys", deck: "tour.exs", actions: ["j", "j", "j", "k", "b", "b", "End"]},
+    %{name: "present-help", deck: "tour.exs", address: "#2", actions: ["/", "d", "a", "r", "k"]},
     %{
       name: "present-overview",
       deck: "tour.exs",

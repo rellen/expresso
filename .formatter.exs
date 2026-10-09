@@ -38,6 +38,7 @@ spark_locals_without_parens = [
   fallback: 1,
   flag: 1,
   goto: 1,
+  group: 1,
   handout: 1,
   header: 1,
   heading: 1,

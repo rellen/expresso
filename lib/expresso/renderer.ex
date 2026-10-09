@@ -257,24 +257,116 @@ defmodule Expresso.Renderer do
     end
   end
 
-  # The list of keys of each mode. The key `?` shows the element, and the script
-  # shows only the list of the current mode. Temple escapes each text.
+  # The list of keys: a `dialog` with a search field, and a section for each
+  # mode. The key `?` or `/` opens it, and the script opens the section of the
+  # mode under it. Each row holds its words in lower case, and the filter of
+  # the script looks for the typed text in them. Temple escapes each text.
   defp help_lists(assigns) do
     temple do
-      div id: "help" do
-        for {mode, rows} <- @rows do
-          div data_mode: mode, hidden: true do
-            # Temple reads `text` as the name of an element, so the variables
-            # have other names.
-            for {keys_names, description} <- rows do
-              div do
-                kbd(do: keys_names)
-                span(do: description)
+      dialog id: "help", aria_labelledby: "help-title", closedby: "any" do
+        h2 id: "help-title", class: "help-hidden" do
+          "Keys and commands"
+        end
+
+        label class: "help-search" do
+          span class: "help-hidden" do
+            "Search the keys"
+          end
+
+          # A field of the type `search` clears its text at the first
+          # `Escape`, and the dialog then stays open. A field of text closes it.
+          input type: "text",
+                id: "help-filter",
+                role: "searchbox",
+                enterkeyhint: "search",
+                autocomplete: "off",
+                autofocus: true,
+                placeholder: "Type a key or a word, such as dark or next"
+        end
+
+        div class: "help-body" do
+          for {mode, groups} <- @groups do
+            details data_mode: mode do
+              summary do
+                span class: "help-mode" do
+                  Help.title(mode)
+                end
+
+                span class: "help-count" do
+                  count(groups)
+                end
+              end
+
+              for {heading, rows} <- groups do
+                c(&help_group/1, heading: heading, rows: rows)
+              end
+            end
+          end
+
+          p class: "help-none" do
+            "No key matches the search."
+          end
+        end
+
+        p class: "help-footer" do
+          kbd(do: "Esc")
+          " closes the list."
+        end
+      end
+    end
+  end
+
+  # A group holds its heading and its rows, so the style sheet hides the two
+  # together when no row matches the search.
+  defp help_group(assigns) do
+    temple do
+      div class: "help-set" do
+        if @heading do
+          h3 class: "help-group" do
+            @heading
+          end
+        end
+
+        ul do
+          for row <- @rows do
+            li data_words: row.words do
+              c(&help_keys/1, row: row)
+
+              span class: "help-action" do
+                row.text
               end
             end
           end
         end
       end
+    end
+  end
+
+  # A row with a label shows the label in place of its keys.
+  defp help_keys(%{row: %{label: label}} = assigns) when is_binary(label) do
+    temple do
+      span class: "help-keys" do
+        span class: "help-label" do
+          @row.label
+        end
+      end
+    end
+  end
+
+  defp help_keys(assigns) do
+    temple do
+      span class: "help-keys" do
+        for key <- @row.keys do
+          kbd(do: key)
+        end
+      end
+    end
+  end
+
+  defp count(groups) do
+    case groups |> Enum.map(fn {_heading, rows} -> length(rows) end) |> Enum.sum() do
+      1 -> "1 row"
+      rows -> "#{rows} rows"
     end
   end
 
@@ -416,7 +508,7 @@ defmodule Expresso.Renderer do
 
           c(&menu/1, deck: @deck)
 
-          c(&help_lists/1, rows: Help.rows(Definition.presenter()))
+          c(&help_lists/1, groups: Help.groups(Definition.presenter()))
 
           # The list of the steps. The presenter reads it at load, so it comes
           # before the script. `Expresso.Steps.json/1` escapes each `<`.

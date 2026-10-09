@@ -14,7 +14,15 @@ defmodule Expresso.Presenter.Default do
   use Expresso.Presenter.Dsl
 
   @digits ~w(0 1 2 3 4 5 6 7 8 9)
-  @help "This list of keys. The next key closes it."
+  @help "The search of the keys and commands. Esc closes it."
+
+  # The groups of the rows in the list of keys of the present view and of the
+  # speaker view.
+  @move "Move through the talk"
+  @find "Find a slide"
+  @screen "Change the screen"
+  @views "Views and windows"
+  @pointer "Mouse and touch"
 
   state index: 0,
         view: :present,
@@ -66,7 +74,7 @@ defmodule Expresso.Presenter.Default do
     match overview: true
     element true
 
-    key "?", set(:help, true), @help
+    key ["?", "/"], set(:help, true), @help
     key ["j", "ArrowRight", "PageDown", " "], select_by(1), "Select the next slide"
     key ["k", "ArrowLeft", "PageUp"], select_by(-1), "Select the previous slide"
     key "ArrowDown", select_by(columns(1)), "Select the slide below"
@@ -84,7 +92,7 @@ defmodule Expresso.Presenter.Default do
     match menu: true
     element true
 
-    key "?", set(:help, true), @help
+    key ["?", "/"], set(:help, true), @help
     key ["j", "ArrowDown"], move(:cursor, 1), "Move the cursor to the next step"
     key ["k", "ArrowUp"], move(:cursor, -1), "Move the cursor to the previous step"
     key "Enter", [go(:cursor), set(:menu, false)], "The step of the cursor"
@@ -102,41 +110,60 @@ defmodule Expresso.Presenter.Default do
 
     key ["j", "ArrowRight", "ArrowDown", "PageDown", " "],
         step(1),
-        "Next step, or the first step of the next slide"
+        "Next step, or the first step of the next slide",
+        group: @move
 
     key ["k", "ArrowLeft", "ArrowUp", "PageUp"],
         step(-1),
-        "Previous step, or the last step of the previous slide"
+        "Previous step, or the last step of the previous slide",
+        group: @move
 
-    key "Home", goto(0), "First slide"
-    key "End", goto(last_slide()), "Step 1 of the last slide"
-    key @digits, append(:digits), "Type a slide number", label: "0 to 9", each: false
-    key "Enter", go_typed(), "Step 1 of the slide that you typed", each: false
-    key "b", set(:blank, true), "Black screen. The next key shows the slide again."
-    key "p", set(:view, :handout), "Handout view"
-    key "s", builtin(:open_speaker), "Speaker view, in a second window"
-    key "f", builtin(:fullscreen), "Full screen on or off"
-    key "g", toggle(:progress), "Progress bar on or off"
-    key "t", builtin(:switch_scheme), "Light or dark variant of the theme, in the two windows"
-    key "d", toggle(:undim), "Code in full color until the next step, in the two windows"
+    key "Home", goto(0), "First slide", group: @move
+    key "End", goto(last_slide()), "Step 1 of the last slide", group: @move
 
-    event [click: :right, swipe: :left], step(1), "Next step",
-      label: "Click or tap the right two thirds, or swipe left"
+    key @digits, append(:digits), "Type a slide number",
+      label: "0 to 9",
+      each: false,
+      group: @move
 
-    event [click: :left_third, swipe: :right], step(-1), "Previous step",
-      label: "Click or tap the left third, or swipe right"
-
-    event :element, [], "The slide and the step of the link", label: "Click or tap a link"
+    key "Enter", go_typed(), "Step 1 of the slide that you typed", each: false, group: @move
 
     key "o",
         [set(:overview, true), assign(:selected, entry(:slide))],
-        "Overview of the slides. Only this window shows it."
+        "Overview of the slides. Only this window shows it.",
+        group: @find
 
     key "m",
         [set(:menu, true), copy(:cursor, :index)],
-        "Menu of the slides and their steps. Only this window shows it."
+        "Menu of the slides and their steps. Only this window shows it.",
+        group: @find
 
-    key "?", set(:help, true), @help
+    key "b", set(:blank, true), "Black screen. The next key shows the slide again.",
+      group: @screen
+
+    key "d", toggle(:undim), "Code in full color until the next step, in the two windows",
+      group: @screen
+
+    key "t", builtin(:switch_scheme), "Light or dark variant of the theme, in the two windows",
+      group: @screen
+
+    key "g", toggle(:progress), "Progress bar on or off", group: @screen
+    key "f", builtin(:fullscreen), "Full screen on or off", group: @screen
+    key "s", builtin(:open_speaker), "Speaker view, in a second window", group: @views
+    key "p", set(:view, :handout), "Handout view", group: @views
+    key ["?", "/"], set(:help, true), @help, group: @views
+
+    event [click: :right, swipe: :left], step(1), "Next step",
+      label: "Click or tap the right two thirds, or swipe left",
+      group: @pointer
+
+    event [click: :left_third, swipe: :right], step(-1), "Previous step",
+      label: "Click or tap the left third, or swipe right",
+      group: @pointer
+
+    event :element, [], "The slide and the step of the link",
+      label: "Click or tap a link",
+      group: @pointer
   end
 
   # The speaker view knows the keys of the present view, except `p`, `s` and
@@ -148,38 +175,54 @@ defmodule Expresso.Presenter.Default do
 
     key ["j", "ArrowRight", "ArrowDown", "PageDown", " "],
         step(1),
-        "Next step, or the first step of the next slide"
+        "Next step, or the first step of the next slide",
+        group: @move
 
     key ["k", "ArrowLeft", "ArrowUp", "PageUp"],
         step(-1),
-        "Previous step, or the last step of the previous slide"
+        "Previous step, or the last step of the previous slide",
+        group: @move
 
-    key "Home", goto(0), "First slide"
-    key "End", goto(last_slide()), "Step 1 of the last slide"
-    key @digits, append(:digits), "Type a slide number", label: "0 to 9", each: false
-    key "Enter", go_typed(), "Step 1 of the slide that you typed", each: false
-    key "b", set(:blank, true), "Black screen. The next key shows the slide again."
+    key "Home", goto(0), "First slide", group: @move
+    key "End", goto(last_slide()), "Step 1 of the last slide", group: @move
 
-    key "r", builtin(:reset_timer), "Set the timer to 0:00"
-    key "f", builtin(:fullscreen), "Full screen on or off"
-    key "t", builtin(:switch_scheme), "Light or dark variant of the theme, in the two windows"
-    key "d", toggle(:undim), "Code in full color until the next step, in the two windows"
+    key @digits, append(:digits), "Type a slide number",
+      label: "0 to 9",
+      each: false,
+      group: @move
 
-    event [click: :right, swipe: :left], step(1), "Next step",
-      label: "Click or tap the right two thirds, or swipe left"
-
-    event [click: :left_third, swipe: :right], step(-1), "Previous step",
-      label: "Click or tap the left third, or swipe right"
+    key "Enter", go_typed(), "Step 1 of the slide that you typed", each: false, group: @move
 
     key "o",
         [set(:overview, true), assign(:selected, entry(:slide))],
-        "Overview of the slides. Only this window shows it."
+        "Overview of the slides. Only this window shows it.",
+        group: @find
 
     key "m",
         [set(:menu, true), copy(:cursor, :index)],
-        "Menu of the slides and their steps. Only this window shows it."
+        "Menu of the slides and their steps. Only this window shows it.",
+        group: @find
 
-    key "?", set(:help, true), @help
+    key "b", set(:blank, true), "Black screen. The next key shows the slide again.",
+      group: @screen
+
+    key "d", toggle(:undim), "Code in full color until the next step, in the two windows",
+      group: @screen
+
+    key "t", builtin(:switch_scheme), "Light or dark variant of the theme, in the two windows",
+      group: @screen
+
+    key "f", builtin(:fullscreen), "Full screen on or off", group: @screen
+    key "r", builtin(:reset_timer), "Set the timer to 0:00", group: @views
+    key ["?", "/"], set(:help, true), @help, group: @views
+
+    event [click: :right, swipe: :left], step(1), "Next step",
+      label: "Click or tap the right two thirds, or swipe left",
+      group: @pointer
+
+    event [click: :left_third, swipe: :right], step(-1), "Previous step",
+      label: "Click or tap the left third, or swipe right",
+      group: @pointer
   end
 
   # The handout view knows only these keys. The browser gets each other key,
@@ -197,6 +240,6 @@ defmodule Expresso.Presenter.Default do
         toggle(:every),
         "Every step, or the steps of the handout option. A print shows the same."
 
-    key "?", set(:help, true), @help
+    key ["?", "/"], set(:help, true), @help
   end
 end

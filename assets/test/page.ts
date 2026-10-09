@@ -58,6 +58,8 @@ type Key = {
   ctrlKey?: boolean;
   altKey?: boolean;
   metaKey?: boolean;
+  // The element that has the focus, such as a field of text.
+  target?: unknown;
 };
 
 // A click. The window of the fake page is 1200 pixels wide.
@@ -218,11 +220,17 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   const code = JSON.parse(found.program);
   code.state.progress = options.progress !== "false";
   program.textContent = JSON.stringify(code);
-  // The renderer writes a list of keys for each mode, and it hides each list.
-  const help = element("help");
-  for (const [mode, rows] of raw.help) {
-    const panel = element("", "", { mode });
-    panel.hidden = true;
+  // The renderer writes the list of keys as a `dialog` with a section for each
+  // mode. The fake dialog and its sections have the parts that `dom.ts` and
+  // `search.ts` use.
+  const panels = raw.help.map(([mode, rows]) => {
+    const panel = Object.assign(element("", "", { mode }), {
+      open: false,
+      toggleAttribute: (name: string, on: boolean) => {
+        if (on) panel.setAttribute(name, "");
+        else panel.removeAttribute(name);
+      },
+    });
     for (const [names, text] of rows) {
       const row = element("");
       const kbd = element("");
@@ -233,6 +241,27 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
       row.appendChild(span);
       panel.appendChild(row);
     }
+    return panel;
+  });
+  const closers: (() => void)[] = [];
+  const help = Object.assign(element("help"), {
+    open: false,
+    showModal: () => {
+      help.open = true;
+    },
+    close: () => {
+      help.open = false;
+      for (const closer of closers) closer();
+    },
+    toggleAttribute: () => undefined,
+    addEventListener: (name: string, listener: () => void) => {
+      if (name === "close") closers.push(listener);
+    },
+    querySelector: () => null,
+    querySelectorAll: (selector: string) =>
+      selector === "details[data-mode]" ? panels : [],
+  });
+  for (const panel of panels) {
     help.appendChild(panel);
   }
   const handout = element("", "handout");
@@ -437,8 +466,11 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     },
     element: (id) => all().find((each) => each.id === id),
     keys: () => {
-      const shown = help.children.filter((list) => !list.hidden);
-      assert.equal(shown.length, 1, "not exactly one list of keys shows");
+      assert.ok(help.open, "the list of keys is not open");
+      const shown = panels.filter(
+        (panel) => panel.dataset.current !== undefined,
+      );
+      assert.equal(shown.length, 1, "not exactly one list of keys is current");
       return (shown[0]?.children ?? []).map((row) => ({
         names: row.children[0]?.textContent ?? "",
         text: row.children[1]?.textContent ?? "",

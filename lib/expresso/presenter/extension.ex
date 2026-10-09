@@ -29,6 +29,10 @@ defmodule Expresso.Presenter.Extension do
       commands: [type: @commands, required: true, doc: "The commands of the keys."],
       text: [type: :string, required: true, doc: "The text in the list of keys."],
       label: [type: :string, doc: "The name of the keys in the list. The default names each key."],
+      group: [
+        type: :string,
+        doc: "The heading of the row in the list of keys, such as \"Move through the talk\"."
+      ],
       each: [
         type: :boolean,
         default: true,
@@ -58,6 +62,10 @@ defmodule Expresso.Presenter.Extension do
       commands: [type: @commands, required: true, doc: "The commands of the events."],
       text: [type: :string, required: true, doc: "The text in the list of keys."],
       label: [type: :string, required: true, doc: "The name of the events in the list."],
+      group: [
+        type: :string,
+        doc: "The heading of the row in the list of keys, such as \"Move through the talk\"."
+      ],
       each: [
         type: :boolean,
         default: true,

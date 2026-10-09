@@ -16,10 +16,11 @@ defmodule Expresso.Presenter.Binding do
           commands: [Definition.command()],
           text: String.t(),
           label: String.t() | nil,
+          group: String.t() | nil,
           each: boolean()
         }
 
-  defstruct [:keys, :commands, :text, :label, on: [], each: true, __spark_metadata__: nil]
+  defstruct [:keys, :commands, :text, :label, :group, on: [], each: true, __spark_metadata__: nil]
 
   @doc """
   Make the events of a `key` entity from its keys

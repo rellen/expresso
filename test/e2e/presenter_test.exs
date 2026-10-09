@@ -104,17 +104,73 @@ defmodule Expresso.E2E.PresenterTest do
     assert position(page) == "1.1"
   end
 
-  test "? shows the list of keys, and the next key closes it", %{page: page} do
-    page |> press("Shift+Slash")
-    assert js(page, "getComputedStyle(document.getElementById('help')).display") == "grid"
+  describe "the list of keys" do
+    defp open?(page), do: js(page, "document.getElementById('help').matches(':modal')")
 
-    names = js(page, "[...document.querySelectorAll('#help kbd')].map((key) => key.textContent)")
-    assert "s" in names
-    assert "?" in names
+    defp shown(page) do
+      js(page, """
+      [...document.querySelectorAll('#help li')]
+        .filter((row) => row.checkVisibility())
+        .map((row) => row.querySelector('.help-action').textContent)
+      """)
+    end
 
-    page |> press("j")
-    assert js(page, "getComputedStyle(document.getElementById('help')).display") == "none"
-    assert position(page) == "1.1"
+    test "? opens it as a modal dialog at the keys of the view, with the focus in the search", %{
+      page: page
+    } do
+      page |> press("Shift+Slash")
+
+      assert open?(page)
+      assert js(page, "document.activeElement.id") == "help-filter"
+
+      assert js(page, "document.querySelector('#help details[data-current]').dataset.mode") ==
+               "present"
+
+      names =
+        js(
+          page,
+          "[...document.querySelectorAll('#help [data-current] kbd')].map((key) => key.textContent)"
+        )
+
+      assert "s" in names
+      assert "?" in names and "/" in names
+    end
+
+    test "typing searches the keys of each view, and the slide does not move", %{page: page} do
+      page |> press("Slash") |> keys(["d", "a", "r", "k"])
+
+      assert js(page, "document.getElementById('help-filter').value") == "dark"
+
+      assert shown(page) |> Enum.uniq() == [
+               "Light or dark variant of the theme, in the two windows"
+             ]
+
+      assert position(page) == "1.1"
+
+      page |> keys(["Backspace", "Backspace", "Backspace", "Backspace", "o", "v", "e", "r"])
+      assert "Close the overview. The step does not change." in shown(page)
+    end
+
+    test "a search with no match shows a line", %{page: page} do
+      page |> press("Slash") |> keys(["q", "q", "q"])
+
+      assert shown(page) == []
+      assert js(page, "getComputedStyle(document.querySelector('.help-none')).display") == "block"
+    end
+
+    test "Esc closes it at the same step, and the next ? opens it with an empty search", %{
+      page: page
+    } do
+      page |> press("Shift+Slash") |> keys(["d", "Escape"])
+
+      refute open?(page)
+      assert js(page, "document.body.dataset.help") == nil
+      assert position(page) == "1.1"
+
+      page |> press("Shift+Slash")
+      assert js(page, "document.getElementById('help-filter').value") == ""
+      assert length(shown(page)) > 5
+    end
   end
 
   test "the progress bar follows the step, and g hides it", %{page: page} do
