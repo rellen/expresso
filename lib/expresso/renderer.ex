@@ -321,6 +321,19 @@ defmodule Expresso.Renderer do
     end
   end
 
+  # The sounds, one time each, with the rules of the videos.
+  # `Expresso.Element.Audio.json/1` escapes each `<`.
+  # sobelow_skip ["XSS.Raw"]
+  defp audios(assigns) do
+    temple do
+      if json = Expresso.Element.Audio.json(@deck) do
+        script id: "expresso-audios", type: "application/json" do
+          Phoenix.HTML.raw(json)
+        end
+      end
+    end
+  end
+
   # The list of keys: a `dialog` with a search field, and a section for each
   # mode. The key `?` or `/` opens it, and the script opens the section of the
   # mode under it. Each row holds its words in lower case, and the filter of
@@ -460,6 +473,7 @@ defmodule Expresso.Renderer do
           |> Expresso.Element.Diagram.place()
           |> Expresso.Element.Embed.number()
           |> Expresso.Element.Video.number()
+          |> Expresso.Element.Audio.number()
           |> Expresso.Overlay.Render.identify()
           |> Expresso.Goto.resolve())
       )
@@ -591,6 +605,7 @@ defmodule Expresso.Renderer do
           c(&embeds/1, deck: @deck)
 
           c(&videos/1, deck: @deck)
+          c(&audios/1, deck: @deck)
 
           script do
             Phoenix.HTML.raw(presenter())

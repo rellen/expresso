@@ -11,6 +11,8 @@ spark_locals_without_parens = [
   at: 1,
   attribute: 2,
   attribute: 3,
+  audio: 1,
+  audio: 2,
   auto_reveal: 1,
   by: 1,
   class: 1,

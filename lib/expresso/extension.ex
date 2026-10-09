@@ -206,6 +206,40 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @audio %Spark.Dsl.Entity{
+    name: :audio,
+    target: Expresso.Element.Audio,
+    args: [:src],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          src: [
+            type: {:custom, Expresso.Element.Audio, :source, []},
+            required: true,
+            doc:
+              "The path of a .mp3, .m4a, .ogg, .oga or .wav file. The document holds the sound one time. See docs/reference/audio-element.md."
+          ],
+          title: [
+            type: :string,
+            required: true,
+            doc: "The name of the sound for a screen reader. The handout view and paper show it."
+          ],
+          loop: [
+            type: :boolean,
+            default: false,
+            doc: "Play the sound again from the start at its end."
+          ],
+          controls: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Show the controls of the browser on the slide. The default is false, so the present view shows nothing in the place of the element."
+          ]
+        ]
+  }
+
   @qr_code %Spark.Dsl.Entity{
     name: :qr_code,
     target: Expresso.Element.QrCode,
@@ -457,6 +491,7 @@ defmodule Expresso.Extension do
     @diagram,
     @embed,
     @video,
+    @audio,
     @qr_code
   ]
 
