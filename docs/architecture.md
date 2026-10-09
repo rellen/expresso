@@ -682,6 +682,7 @@ An element is the content of a slide. These are the elements at this time:
 - `Expresso.Element.Audio`
 - `Expresso.Element.QrCode`
 - `Expresso.Element.Footnote`
+- `Expresso.Element.Shape`
 
 ### The parts of an element module
 
@@ -1086,6 +1087,33 @@ for this design:
 - **One page of the sources.** The handout view gets a `section` with the class `sources`
   after the last page. It is not a `handout-page`, so the script does not count it as a
   step, and the style sheet hides it in the speaker view and in the overview.
+
+### The shape
+
+A `shape` draws a rectangle, an ellipse, a line or an arrow over a slide. It shows nothing
+in its place, as a footnote does. The renderer collects the shapes of a slide with
+`Expresso.Element.Shape.of_slide/1`, and it writes them into one `div` with the class
+`shapes`, in the slide parts. These are the reasons for this design:
+
+- **One layer over the slide.** The theme gives many elements a `transform`, and an element
+  with a `transform` is the box of each child with `position: absolute`. A shape in its
+  place would therefore take its percentages from its parent. In the layer, a percentage is
+  always a part of the slide. The style sheet gives `position: relative` to a slide, to a
+  page of the handout view and to a slide of the menu, so the layer covers each one.
+- **A box is HTML, and a line is SVG.** A rectangle and an ellipse are a `div` with a
+  border, so their text wraps as text. A line and an arrow are an `svg` over the whole
+  layer, with a `line` from point to point. A percentage of a `line` is a part of the
+  width or of the height of the `svg`, so it keeps its meaning in each direction, and the
+  head of an arrow keeps its shape.
+- **The head of an arrow has a new id in each copy.** A browser draws a `marker` from the
+  first element with its id, and a marker in a hidden view does not paint. Each render of
+  an arrow therefore gets an id from `System.unique_integer/1`, as each copy of a diagram
+  gets new ids.
+- **The color is `--color`.** A shape draws with `currentColor`, and its `--color` is
+  `--shape-color`. The rules of the overlays mix `--color` with the dimmed color, so
+  `set: [color: ...]` and the state `dim` change a shape with no new rule.
+- **The layer takes no click.** `pointer-events: none` sends a click on a shape to the
+  slide, so a click still shows the next step.
 
 ## The DSL
 

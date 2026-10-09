@@ -113,11 +113,14 @@ export function sentence(problem: Problem): string {
 // The elements of a slide. A part of a diagram is not one of them, because a
 // part can move past the box of its diagram.
 const ELEMENTS =
-  ".slide-heading-container, .text-box, .text-area, .image, .list, .table, .quotation, .code, .math, .diagram, .embed, .columns, .column";
+  ".slide-heading-container, .text-box, .text-area, .image, .list, .table, .quotation, .code, .math, .diagram, .embed, .columns, .column, .shape";
 
 // The content of an element: the tags that show their box. The content can
 // be wider than the box of its element, so the check also measures each one.
-const CONTENT = "math, img, svg, pre, iframe, table";
+// The `svg` of a line or an arrow covers the whole slide, so the check
+// measures its `line`, and not the `svg`.
+const CONTENT =
+  "math, img, svg:not(.shape-line), pre, iframe, table, .shape-line line";
 
 const MEASURED = `${ELEMENTS}, ${CONTENT}`;
 
