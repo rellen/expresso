@@ -37,6 +37,8 @@ spark_locals_without_parens = [
   event: 4,
   fallback: 1,
   flag: 1,
+  footnote: 1,
+  footnote: 2,
   goto: 1,
   group: 1,
   handout: 1,

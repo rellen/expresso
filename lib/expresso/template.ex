@@ -87,7 +87,8 @@ defmodule Expresso.Template do
   @spec render_elements(map()) :: Phoenix.HTML.safe()
   def render_elements(assigns) do
     temple do
-      for %module{} = element <- assigns.elements, module != Expresso.Element.Pause do
+      for %module{} = element <- assigns.elements,
+          module not in [Expresso.Element.Pause, Expresso.Element.Footnote] do
         c(&do_render_element(module, &1),
           rest!: element |> module.get_assigns() |> Map.put(:class, Map.get(element, :class))
         )

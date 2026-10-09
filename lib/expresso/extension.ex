@@ -491,6 +491,24 @@ defmodule Expresso.Extension do
     schema: @overlay_schema ++ @class_schema
   }
 
+  @footnote %Spark.Dsl.Entity{
+    name: :footnote,
+    target: Expresso.Element.Footnote,
+    args: [:text],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          text: [
+            type: :string,
+            required: true,
+            doc:
+              "The text of the footnote, such as a source. It can contain HTML. The renderer puts it at the bottom of the slide, with a number. See docs/reference/footnote-element.md."
+          ]
+        ]
+  }
+
   @pause %Spark.Dsl.Entity{
     name: :pause,
     target: Expresso.Element.Pause,
@@ -503,7 +521,7 @@ defmodule Expresso.Extension do
     ]
   }
 
-  @slide_elements [elements: [@text_box, @columns] ++ @inner_elements ++ [@pause]]
+  @slide_elements [elements: [@text_box, @columns] ++ @inner_elements ++ [@footnote, @pause]]
 
   @slide %Spark.Dsl.Entity{
     name: :slide,
