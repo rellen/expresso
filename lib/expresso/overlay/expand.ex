@@ -133,6 +133,7 @@ defmodule Expresso.Overlay.Expand do
 
   defp auto_reveal(elements, true) do
     Enum.map(elements, fn
+      %Expresso.Element.Footnote{} = footnote -> footnote
       %{at: nil} = element -> %{element | at: Overlay.from_next()}
       element -> element
     end)
