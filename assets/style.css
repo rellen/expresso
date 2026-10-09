@@ -373,6 +373,38 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   object-fit: contain;
 }
 /*
+ * The QR code element. A scanner reads a dark code on a light ground best, so
+ * the code keeps its own two colors in each theme, and a deck can change them
+ * with `--qr-color` and `--qr-background`. The code is square, and it takes
+ * the width of `--qr-size`, or less when the slide is not high enough.
+ */
+.qr-code {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 0;
+  margin: 0;
+}
+.qr-code svg {
+  width: var(--qr-size, 40vh);
+  max-width: 100%;
+  max-height: 100%;
+  min-height: 0;
+  aspect-ratio: 1;
+}
+.qr-background {
+  fill: var(--qr-background, #ffffff);
+}
+.qr-modules {
+  fill: var(--qr-color, #000000);
+}
+.qr-code figcaption {
+  font-size: 0.8em;
+}
+/*
  * The embed element: a web page in a frame. The box keeps the ratio of
  * `--embed-aspect`, and it takes the width of `--embed-width`, or less when
  * the slide is not high enough. The fallback image or the placeholder is
@@ -613,7 +645,8 @@ body[data-view="present"][data-undim] .screen .code [data-el] {
 .columns,
 .column,
 .math,
-.diagram {
+.diagram,
+.qr-code {
   transform: translate(
       calc(var(--x) + (1 - var(--shown)) * var(--enter-x)),
       calc(var(--y) + (1 - var(--shown)) * var(--enter-y))

@@ -206,6 +206,40 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @qr_code %Spark.Dsl.Entity{
+    name: :qr_code,
+    target: Expresso.Element.QrCode,
+    args: [:text],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          text: [
+            type: :string,
+            required: true,
+            doc:
+              "The text of the code, such as the address of the slides. See docs/reference/qr-code-element.md."
+          ],
+          size: [
+            type: :string,
+            doc:
+              "The width and the height of the code, such as 300px or 25%. A percentage is a part of the width of the slide."
+          ],
+          label: [type: :string, doc: "A line of text under the code."],
+          title: [
+            type: :string,
+            doc: "The name of the code for a screen reader. The default is the text of the code."
+          ],
+          level: [
+            type: {:in, Expresso.Element.QrCode.levels()},
+            default: :m,
+            doc:
+              "The error correction level: :l, :m, :q or :h. A higher level makes a larger code that a scanner reads when a part of it is not clear."
+          ]
+        ]
+  }
+
   # A list holds items, and an item holds one nested list. Spark cannot nest
   # two entities inside each other without a limit, so the extension builds
   # three levels. The item of the deepest list holds no list.
@@ -422,7 +456,8 @@ defmodule Expresso.Extension do
     @math,
     @diagram,
     @embed,
-    @video
+    @video,
+    @qr_code
   ]
 
   @column %Spark.Dsl.Entity{

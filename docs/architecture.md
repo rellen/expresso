@@ -679,6 +679,7 @@ An element is the content of a slide. These are the elements at this time:
 - `Expresso.Element.Diagram`, with `Expresso.Element.Part`
 - `Expresso.Element.Embed`
 - `Expresso.Element.Video`
+- `Expresso.Element.QrCode`
 
 ### The parts of an element module
 
@@ -1022,6 +1023,28 @@ for the user. It follows the design of the embed, with these differences:
 - **It uses the box of an embed.** The element has the classes of an embed, so the size,
   the poster under the video, and the rules that hide the frame in the handout view and in
   the menu apply to it.
+
+### The QR code
+
+A `qr_code` shows a QR code of a text. `Expresso.Element.QrCode` calls `EQRCode.encode/2`
+at render time, and it writes the matrix of the code as SVG. These are the reasons for this
+design:
+
+- **One path, and not a square for each module.** The function joins the dark modules
+  that touch in a row into one rectangle. A code for an address then has approximately
+  300 rectangles in one `path`, and the document stays small.
+- **SVG in the document, and not an image.** The code needs no file, and it prints at each
+  size with sharp edges. `shape-rendering="crispEdges"` stops the browser from blurring the
+  edges of the modules.
+- **Its own colors.** A scanner reads a dark code on a light ground best, and a phone can
+  fail on a light code on a dark ground. The theme therefore gives the code the custom
+  properties `--qr-color` and `--qr-background`, black and white by default, and not the
+  colors of the slide.
+- **The quiet zone of the standard.** `EQRCode` draws a light border of two modules. The
+  render function removes it and draws a border of four modules, as the standard asks.
+
+The `size` option goes into the custom property `--qr-size`, with the rule of the width of
+an image: `Expresso.Element.Image.viewport_unit/1` writes a percentage as `vw`.
 
 ## The DSL
 
