@@ -40,6 +40,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/move-a-diagram-part.md",
         "docs/how-to/show-a-web-page.md",
         "docs/how-to/show-a-video.md",
+        "docs/how-to/share-the-slides-with-a-qr-code.md",
         "docs/how-to/make-templates.md",
         "docs/how-to/use-colors-of-your-own.md",
         "docs/how-to/render-a-deck-in-your-project.md",
@@ -60,6 +61,7 @@ defmodule Expresso.MixProject do
         "docs/reference/columns-element.md",
         "docs/reference/math-element.md",
         "docs/reference/diagram-element.md",
+        "docs/reference/qr-code-element.md",
         "docs/reference/code-element.md",
         "docs/reference/layout-check.md",
         "docs/reference/class-option.md",
@@ -148,6 +150,10 @@ defmodule Expresso.MixProject do
 
       # the presenter bundle
       {:esbuild, "~> 0.10", runtime: false},
+
+      # the QR code element. The package makes the matrix of a code, and
+      # `Expresso.Element.QrCode` writes it as SVG.
+      {:eqrcode, "~> 0.2"},
 
       # the highlighting of a code element. Each lexer package registers its
       # languages when its application starts.

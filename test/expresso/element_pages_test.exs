@@ -7,7 +7,7 @@ defmodule Expresso.ElementPagesTest do
 
   # The reference pages of the elements whose code blocks are slides. The code
   # element, the embed element and the video element have tests of their own.
-  @pages ~w(text-box text-area image list table quotation spacer columns math diagram)
+  @pages ~w(text-box text-area image list table quotation spacer columns math diagram qr-code)
 
   # The Elixir code blocks of a page, in order.
   defp blocks(page) do
