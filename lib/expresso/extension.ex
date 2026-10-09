@@ -274,6 +274,76 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @series %Spark.Dsl.Entity{
+    name: :series,
+    target: Expresso.Element.Series,
+    args: [:name, :values],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          name: [type: :string, required: true, doc: "The name of the series."],
+          values: [
+            type: {:list, {:or, [:integer, :float]}},
+            required: true,
+            doc: "One number for each category of the chart, in the order of the categories."
+          ]
+        ]
+  }
+
+  @chart %Spark.Dsl.Entity{
+    name: :chart,
+    target: Expresso.Element.Chart,
+    args: [:kind],
+    entities: [elements: [@series], on: [@on]],
+    transform: {Expresso.Element.Chart, :check, []},
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          kind: [
+            type: {:in, Expresso.Element.Chart.kinds()},
+            required: true,
+            doc:
+              "The kind of the chart: :bar, :line or :pie. See docs/reference/chart-element.md."
+          ],
+          title: [
+            type: :string,
+            required: true,
+            doc: "The name of the chart for a screen reader, and the caption of its table."
+          ],
+          categories: [
+            type: {:list, :string},
+            doc: "The name of each category, such as [\"2023\", \"2024\"]."
+          ],
+          src: [
+            type: :string,
+            doc:
+              "The path of a CSV file with the categories and the series, from the root option of the deck or from the working directory of the command."
+          ],
+          width: [
+            type: :string,
+            doc: "The width of the chart, such as 900px or 70%. The default is 80%."
+          ],
+          values: [
+            type: :boolean,
+            default: true,
+            doc: "Show the value of each bar. The default is true."
+          ],
+          reveal: [
+            type: :boolean,
+            default: false,
+            doc: "Show the series one after the other. A pie takes no reveal option."
+          ],
+          dim: [
+            type: :boolean,
+            default: false,
+            doc: "Dim each series when a later series shows."
+          ]
+        ]
+  }
+
   # A list holds items, and an item holds one nested list. Spark cannot nest
   # two entities inside each other without a limit, so the extension builds
   # three levels. The item of the deepest list holds no list.
@@ -492,7 +562,8 @@ defmodule Expresso.Extension do
     @embed,
     @video,
     @audio,
-    @qr_code
+    @qr_code,
+    @chart
   ]
 
   @column %Spark.Dsl.Entity{

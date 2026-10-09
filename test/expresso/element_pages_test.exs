@@ -9,7 +9,7 @@ defmodule Expresso.ElementPagesTest do
   # element, the embed element and the video element have tests of their own.
   # The test copies the files that the code blocks read into the root of the
   # deck.
-  @pages ~w(text-box text-area image list table quotation spacer columns math diagram qr-code footnote audio shape)
+  @pages ~w(text-box text-area image list table quotation spacer columns math diagram qr-code footnote audio shape chart)
 
   # The Elixir code blocks of a page, in order.
   defp blocks(page) do
@@ -23,6 +23,7 @@ defmodule Expresso.ElementPagesTest do
     File.cp!("examples/logo.png", Path.join(root, "map.png"))
     File.cp!("examples/flow.svg", Path.join(root, "flow.svg"))
     File.cp!("examples/animations/chime.ogg", Path.join(root, "chime.ogg"))
+    File.cp!("examples/animations/visitors.csv", Path.join(root, "visitors.csv"))
   end
 
   for page <- @pages do
