@@ -262,7 +262,8 @@ defmodule Expresso.Palette do
 
   Each role gets a property, such as `--text`. Each role of text also gets
   the property of its dimmed color, such as `--text-dim`. `--dim-opacity`
-  holds the dim opacity of the palette.
+  holds the dim opacity of the palette, and `--chart-1` to `--chart-8` hold
+  the colors of the series of a chart for the variant of the palette.
 
       iex> palette = Expresso.Palette.Builtin.fetch!(:default)
       iex> Expresso.Palette.declarations(palette) =~ "--text: #000000;"
@@ -271,7 +272,7 @@ defmodule Expresso.Palette do
       true
   """
   @spec declarations(t()) :: String.t()
-  def declarations(%__MODULE__{roles: roles, dimmed: dimmed, dim_opacity: opacity}) do
+  def declarations(%__MODULE__{roles: roles, dimmed: dimmed, dim_opacity: opacity} = palette) do
     colors = for {role, _slot} <- @roles, do: "--#{property(role)}: #{roles[role]};"
 
     dimmed =
@@ -279,7 +280,33 @@ defmodule Expresso.Palette do
           Map.has_key?(dimmed, role),
           do: "--#{property(role)}-dim: #{elem(dimmed[role], 1)};"
 
-    Enum.join(colors ++ dimmed ++ ["--dim-opacity: #{opacity};"], " ")
+    Enum.join(colors ++ dimmed ++ ["--dim-opacity: #{opacity};"] ++ chart(palette), " ")
+  end
+
+  # The colors of the series of a chart, in a fixed order. The colors of a
+  # theme are colors of text, and in many themes two of them look the same to
+  # a reader with a deficit of color vision. A chart therefore takes these two
+  # sets, which keep each pair of neighbors apart for such a reader and keep
+  # 19 or more of Delta E OKLab for each reader. The variant of the palette
+  # selects the set. `docs/architecture.md` gives the measures.
+  @chart_light ~w(#2a78d6 #eb6834 #1baf7a #eda100 #e87ba4 #008300 #6250d6 #e34948)
+  @chart_dark ~w(#3987e5 #d95926 #199e70 #c98500 #d55181 #008300 #9085e9 #e66767)
+
+  @doc """
+  Return the colors of the series of a chart for a variant, in order
+
+      iex> Expresso.Palette.chart_colors(:light) |> length()
+      8
+  """
+  @spec chart_colors(:light | :dark) :: [String.t()]
+  def chart_colors(:light), do: @chart_light
+  def chart_colors(:dark), do: @chart_dark
+
+  defp chart(%__MODULE__{variant: variant}) do
+    variant
+    |> chart_colors()
+    |> Enum.with_index(1)
+    |> Enum.map(fn {color, index} -> "--chart-#{index}: #{color};" end)
   end
 
   defp property(role), do: role |> Atom.to_string() |> String.replace("_", "-")

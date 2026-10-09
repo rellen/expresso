@@ -22,7 +22,7 @@ defmodule Expresso.PathTransformer do
 
   use Spark.Dsl.Transformer
 
-  alias Expresso.Element.{Audio, Code, Diagram, Embed, Image, Video}
+  alias Expresso.Element.{Audio, Chart, Code, Diagram, Embed, Image, Video}
   alias Shoddy.Result
   alias Spark.Dsl.Transformer
 
@@ -93,6 +93,9 @@ defmodule Expresso.PathTransformer do
 
   defp own(%Code{text: nil, src: src} = code, root) when is_binary(src),
     do: Code.build(%Code{code | src: path(src, root)})
+
+  defp own(%Chart{src: src} = chart, root) when is_binary(src),
+    do: Chart.build(%Chart{chart | src: path(src, root)})
 
   defp own(%Image{src: src} = image, root), do: {:ok, %Image{image | src: path(src, root)}}
 

@@ -410,6 +410,107 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   margin-top: 0;
 }
 /*
+ * The chart element. The palette of the theme gives `--chart-1` to
+ * `--chart-8`, and the class `chart-c1` to `chart-c8` of a series gives the
+ * color to its marks as `--series`. Text keeps the colors of text, and only a
+ * mark has the color of its series. The grid and the axis are thin and in the
+ * color `--muted`. A line and the edge of a mark keep their width when the
+ * SVG scales. The SVG takes the width of `--chart-width` and at most the
+ * height of `--chart-height`, and the chart fits inside that box. The
+ * default height leaves room for the heading of the default template.
+ */
+.chart {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  margin: 0;
+}
+.chart svg {
+  width: var(--chart-width, 80vw);
+  max-width: 100%;
+  max-height: var(--chart-height, 72vh);
+  overflow: visible;
+  font-size: 20px;
+}
+.chart-c1 {
+  --series: var(--chart-1);
+}
+.chart-c2 {
+  --series: var(--chart-2);
+}
+.chart-c3 {
+  --series: var(--chart-3);
+}
+.chart-c4 {
+  --series: var(--chart-4);
+}
+.chart-c5 {
+  --series: var(--chart-5);
+}
+.chart-c6 {
+  --series: var(--chart-6);
+}
+.chart-c7 {
+  --series: var(--chart-7);
+}
+.chart-c8 {
+  --series: var(--chart-8);
+}
+.chart-bar,
+.chart-swatch,
+.chart-slice,
+.chart-dot {
+  fill: var(--series);
+}
+.chart-slice,
+.chart-dot {
+  stroke: var(--background);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+.chart-line {
+  fill: none;
+  stroke: var(--series);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.chart-grid,
+.chart-base {
+  stroke: var(--muted);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+.chart-grid {
+  stroke-opacity: 0.3;
+}
+.chart-tick,
+.chart-category {
+  fill: var(--muted);
+}
+.chart-value,
+.chart-end,
+.chart-name {
+  fill: var(--text);
+}
+.chart-value {
+  font-size: 18px;
+}
+.chart-series {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.chart-table {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+/*
  * The shape element. The shapes of a slide are in one layer over the whole
  * slide, so a percentage is a part of the slide. The layer takes no click,
  * so a click goes to the slide. A shape draws with `currentColor`, and its
@@ -765,7 +866,9 @@ body[data-view="present"][data-undim] .screen .code [data-el] {
 .qr-code,
 .footnote,
 .audio,
-.shape {
+.shape,
+.chart,
+.chart-series {
   transform: translate(
       calc(var(--x) + (1 - var(--shown)) * var(--enter-x)),
       calc(var(--y) + (1 - var(--shown)) * var(--enter-y))

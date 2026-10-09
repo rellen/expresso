@@ -683,6 +683,7 @@ An element is the content of a slide. These are the elements at this time:
 - `Expresso.Element.QrCode`
 - `Expresso.Element.Footnote`
 - `Expresso.Element.Shape`
+- `Expresso.Element.Chart`, with `Expresso.Element.Series`
 
 ### The parts of an element module
 
@@ -1114,6 +1115,39 @@ in its place, as a footnote does. The renderer collects the shapes of a slide wi
   `set: [color: ...]` and the state `dim` change a shape with no new rule.
 - **The layer takes no click.** `pointer-events: none` sends a click on a shape to the
   slide, so a click still shows the next step.
+
+### The chart
+
+A `chart` draws a bar chart, a line chart or a pie chart as SVG in the document.
+`Expresso.Element.Chart` writes the SVG, and `Expresso.Element.Chart.Plot` holds the
+arithmetic: the ticks, the numbers, the bars and the slices. A series is an entity in the
+chart, so the `reveal` and `dim` options of the overlays apply to the series as they apply
+to the items of a list. These are the reasons for this design:
+
+- **SVG at render time, and not a library of charts.** The chart needs no script, it shows
+  on paper and in the handout view, and the overlays show and dim each series with the
+  rules that they use for each other element.
+- **A box of 800 by 450 units.** The SVG scales the box to the width of the element. The
+  width is `--chart-width`, and `--chart-height` limits the height, so the chart fits
+  under the heading. A line, the edge of a mark and a line of the grid keep their width in
+  pixels with `vector-effect: non-scaling-stroke`.
+- **Colors of their own.** The colors of a theme are colors of text. A measure of five
+  colors of each built-in theme, with a simulation of each deficit of color vision in
+  OKLab, showed that most themes have two neighbors that such a reader cannot tell apart. The palette therefore writes `--chart-1` to `--chart-8` from two fixed sets, one
+  for a light variant and one for a dark variant. On the background of each built-in
+  theme, each pair of neighbors keeps a Delta E OKLab of 8.4 or more for each deficit of
+  color vision, and 19.3 or more with full color vision. A few colors have less than 3:1
+  of contrast on some backgrounds, so each bar has a label with its value, and each line
+  has a label at its end.
+- **One axis from zero.** A bar starts at zero, so its length is its value. The axis holds
+  each value of each series, so it does not change when a series shows.
+- **The legend is in the series.** Each item of the legend goes into the group of its
+  series, so the legend does not name a series before the series shows.
+- **A table for a screen reader.** The SVG has `role="img"` and the title. The table with
+  the class `chart-table` holds each value, and the style sheet hides it from the eye.
+- **A CSV file at compile time.** `Expresso.PathTransformer` joins the path to the `root`
+  option, and `Expresso.Element.Chart.build/1` reads the file, as for a code element. The
+  series of the file are then entities, so `reveal` applies to them.
 
 ## The DSL
 

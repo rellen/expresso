@@ -118,9 +118,10 @@ const ELEMENTS =
 // The content of an element: the tags that show their box. The content can
 // be wider than the box of its element, so the check also measures each one.
 // The `svg` of a line or an arrow covers the whole slide, so the check
-// measures its `line`, and not the `svg`.
+// measures its `line`, and not the `svg`. The table of a chart is for a
+// screen reader, and the eye does not see it.
 const CONTENT =
-  "math, img, svg:not(.shape-line), pre, iframe, table, .shape-line line";
+  "math, img, svg:not(.shape-line), pre, iframe, table:not(.chart-table), .shape-line line";
 
 const MEASURED = `${ELEMENTS}, ${CONTENT}`;
 
