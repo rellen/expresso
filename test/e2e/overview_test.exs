@@ -167,7 +167,8 @@ defmodule Expresso.E2E.OverviewTest do
     refute help =~ "Handout view"
 
     page |> press("Escape")
-    assert js(page, "document.body.dataset.help") == nil
+    # The browser fires the event `close` in a later task, so wait for it.
+    wait_for(page, "document.body.dataset.help === undefined")
     assert overview?(page)
     assert position(page) == "1.1"
   end
