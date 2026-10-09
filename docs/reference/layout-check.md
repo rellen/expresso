@@ -26,9 +26,12 @@ The check measures these elements, and the content of each:
 
 - the heading of the slide,
 - a text box, a text area, an image, a list, a table, a quotation, a code element, a
-  formula, a diagram, an embed, a `columns` element and a `column`,
+  formula, a diagram, an embed, a `columns` element, a `column` and a shape,
 - the content of an element: a `math` element, an `img` element, an `svg` element, a
   `pre` element, an `iframe` element and a `table` element.
+
+The `svg` element of a line or an arrow of [the shape element](shape-element.md) covers the
+whole slide, so the check measures its `line` element, and not the `svg` element.
 
 The check measures what an element shows, and not its box. A tag of the content shows its
 box. Each other element shows its text and its content, so the check measures the smallest

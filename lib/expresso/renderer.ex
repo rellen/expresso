@@ -15,7 +15,7 @@ defmodule Expresso.Renderer do
 
   use Temple.Component
 
-  alias Expresso.Element.Footnote
+  alias Expresso.Element.{Footnote, Shape}
   alias Expresso.Presenter.{Definition, Help, Program}
 
   @external_resource "./assets/style.css"
@@ -218,6 +218,10 @@ defmodule Expresso.Renderer do
       # template gets them. `Expresso.Element.Footnote` gives the reasons.
       c(&footnotes/1, footnotes: Footnote.of_slide(@slide))
 
+      # The shapes of the slide go into one layer over the whole slide.
+      # `Expresso.Element.Shape` gives the reasons.
+      c(&shapes/1, shapes: Shape.of_slide(@slide))
+
       # The number of the slide goes into the row of the footer, so a page of
       # the handout view shows it above the notes. The style sheet puts it in
       # the right corner of that row.
@@ -241,6 +245,20 @@ defmodule Expresso.Renderer do
           for footnote <- @footnotes do
             c(&Footnote.render/1,
               rest!: footnote |> Footnote.get_assigns() |> Map.put(:class, footnote.class)
+            )
+          end
+        end
+      end
+    end
+  end
+
+  defp shapes(assigns) do
+    temple do
+      if @shapes != [] do
+        div class: "shapes" do
+          for shape <- @shapes do
+            c(&Shape.render/1,
+              rest!: shape |> Shape.get_assigns() |> Map.put(:class, shape.class)
             )
           end
         end
