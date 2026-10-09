@@ -178,7 +178,8 @@ defmodule Expresso.E2E.PointerTest do
     assert help =~ "Click or tap the right two thirds, or swipe left"
     assert help =~ "Click or tap the left third, or swipe right"
 
-    page |> click(1000, 360)
+    # A click outside the dialog closes it.
+    page |> click(1250, 360)
 
     assert js(page, "document.body.dataset.help") == nil
     assert position(page) == "1.1"

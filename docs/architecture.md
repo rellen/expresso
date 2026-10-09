@@ -1265,8 +1265,8 @@ compiles `lib/`. `docs/typescript.md` gives the design.
 
 ### The keys
 
-`Expresso.Presenter.Default` holds the keys of each mode. The list of keys that `?` shows
-comes from it, and so do the tables of keys in `README.md`. `Expresso.Test.KeyTables`
+`Expresso.Presenter.Default` holds the keys of each mode. The list of keys that `?` or `/`
+shows comes from it, and so do the tables of keys in `README.md`. `Expresso.Test.KeyTables`
 writes each table between two comments, such as `<!-- keys present -->` and
 `<!-- /keys -->`. A test fails when a table does not agree with the module. This command
 writes the tables again:
@@ -1281,8 +1281,7 @@ The tables do not give these rules:
   the digits. The projection `attribute :digits, "data-digits"` writes the digits on the
   `body`, and the style sheet shows them in the top right corner. A theme can set
   `--digits-color` and `--digits-background`.
-- The key after `b` or `?` closes the black screen or the list of keys, and it does
-  nothing more.
+- The key after `b` closes the black screen, and it does nothing more.
 - A second `s` shows the window of the speaker view again, and it opens no second window.
 - `d` toggles the field `undim`. The projection of the attribute `data-undim` writes it on
   the `body`, and the attribute is present only while the field is true. While the attribute is present, a rule of the style sheet
@@ -1291,6 +1290,31 @@ The tables do not give these rules:
   option `reset [:undim]` sets `undim` to `false` at each change of the step, so the next
   step dims the code again. The presenter does not have to press `d` again after an
   answer. See "The options sync and reset".
+
+### The list of keys
+
+The list of keys is a `<dialog>` with a search field. The renderer writes it, and the
+script operates it with little code:
+
+- `Expresso.Presenter.Help.groups/1` returns the rows of each mode in groups. The `group`
+  option of a `key` or an `event` gives the heading of the row. The renderer writes one
+  `<details data-mode>` for each mode, and a heading and a list for each group.
+- Each row has `data-words`: its keys, its label and its text, in lower case.
+- `?` and `/` set the field `help`. `dom.ts` then marks the section of the current mode
+  with `data-current`, opens it and calls `showModal()`. The browser moves the focus to
+  the field with `autofocus`, puts the rest of the page behind a backdrop and closes the
+  dialog with `Esc` or a click outside it (`closedby="any"`).
+- The `close` event of the dialog sets `help` to `false`, so the state agrees with the
+  browser.
+- `search.ts` hides each row whose `data-words` does not hold the typed text, and opens
+  each section with a match. The style sheet hides a group or a section with no row that
+  shows, and shows the line "No key matches the search." when no row shows.
+- The keydown handler of `main.ts` ignores a key in an `input`, a `textarea`, a `select`
+  or an element with `contenteditable`. Thus the text in the field does not operate the
+  deck.
+
+The field has `type="text"` and `role="searchbox"`. A field with `type="search"` clears its
+text at the first `Esc`, and the dialog then stays open.
 
 `f` calls the full screen functions of the browser, and `Escape` of the browser also takes
 the document out of full screen.
@@ -1479,7 +1503,7 @@ for the marks, which have the color `--accent`.
 
 ### The handout view
 
-The handout view knows only `j`, `k`, `p`, `a` and `?`. `j` and `k` change the state, and
+The handout view knows only `j`, `k`, `p`, `a`, `?` and `/`. `j` and `k` change the state, and
 `p` then shows that step in the present view. The browser keeps each other key, so the
 arrow keys and the space bar scroll the pages. A key with the Control, Alt or Meta
 modifier always goes to the browser. `main.ts` stops the default operation of a key only

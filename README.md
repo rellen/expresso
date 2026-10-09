@@ -196,7 +196,7 @@ Open the HTML document in a browser.
 
 ### The keys
 
-The present view knows these keys. `?` shows the same list in the browser.
+The present view knows these keys. `?` or `/` shows the same list in the browser.
 
 <!-- keys present -->
 
@@ -208,19 +208,19 @@ The present view knows these keys. `?` shows the same list in the browser.
 | `End` | Step 1 of the last slide |
 | 0 to 9 | Type a slide number |
 | `Enter` | Step 1 of the slide that you typed |
+| `o` | Overview of the slides. Only this window shows it. |
+| `m` | Menu of the slides and their steps. Only this window shows it. |
 | `b` | Black screen. The next key shows the slide again. |
-| `p` | Handout view |
-| `s` | Speaker view, in a second window |
-| `f` | Full screen on or off |
-| `g` | Progress bar on or off |
-| `t` | Light or dark variant of the theme, in the two windows |
 | `d` | Code in full color until the next step, in the two windows |
+| `t` | Light or dark variant of the theme, in the two windows |
+| `g` | Progress bar on or off |
+| `f` | Full screen on or off |
+| `s` | Speaker view, in a second window |
+| `p` | Handout view |
+| `?`, `/` | The search of the keys and commands. Esc closes it. |
 | Click or tap the right two thirds, or swipe left | Next step |
 | Click or tap the left third, or swipe right | Previous step |
 | Click or tap a link | The slide and the step of the link |
-| `o` | Overview of the slides. Only this window shows it. |
-| `m` | Menu of the slides and their steps. Only this window shows it. |
-| `?` | This list of keys. The next key closes it. |
 
 <!-- /keys -->
 
@@ -230,6 +230,19 @@ to slide 12. The number shows in the top right corner until `Enter`.
 A presentation remote sends `Page Down` and `Page Up`, so it works with the deck.
 
 ![Three steps forward, one step back, a black screen, and the last slide](https://raw.githubusercontent.com/rellen/expresso/media/present-keys.gif)
+
+### Find a key
+
+Press `?` or `/` to open the list of keys. The keys of the current view come first, in
+groups. The keys of each other view are in a closed section below them.
+
+1. Type a key or a word into the search field, such as `d` or `dark`.
+2. Read the rows that agree with the text. The list opens each section that has a row.
+3. Press `Esc` to close the list. A click outside the list also closes it.
+
+The next open of the list shows each row again.
+
+![The list of keys opens, and the word dark leaves the rows of the theme key](https://raw.githubusercontent.com/rellen/expresso/media/present-help.gif)
 
 ### The mouse and the touch screen
 
@@ -247,7 +260,7 @@ speaker view, only the speaker window shows the overview. The overview knows the
 
 | Key | Action |
 | --- | --- |
-| `?` | This list of keys. The next key closes it. |
+| `?`, `/` | The search of the keys and commands. Esc closes it. |
 | `j`, `→`, `Page Down`, `Space` | Select the next slide |
 | `k`, `←`, `Page Up` | Select the previous slide |
 | `↓` | Select the slide below |
@@ -274,7 +287,7 @@ speaker view, only the speaker window shows the menu. The menu knows these keys:
 
 | Key | Action |
 | --- | --- |
-| `?` | This list of keys. The next key closes it. |
+| `?`, `/` | The search of the keys and commands. Esc closes it. |
 | `j`, `↓` | Move the cursor to the next step |
 | `k`, `↑` | Move the cursor to the previous step |
 | `Enter` | The step of the cursor |
@@ -330,16 +343,16 @@ The speaker view knows these keys:
 | `End` | Step 1 of the last slide |
 | 0 to 9 | Type a slide number |
 | `Enter` | Step 1 of the slide that you typed |
-| `b` | Black screen. The next key shows the slide again. |
-| `r` | Set the timer to 0:00 |
-| `f` | Full screen on or off |
-| `t` | Light or dark variant of the theme, in the two windows |
-| `d` | Code in full color until the next step, in the two windows |
-| Click or tap the right two thirds, or swipe left | Next step |
-| Click or tap the left third, or swipe right | Previous step |
 | `o` | Overview of the slides. Only this window shows it. |
 | `m` | Menu of the slides and their steps. Only this window shows it. |
-| `?` | This list of keys. The next key closes it. |
+| `b` | Black screen. The next key shows the slide again. |
+| `d` | Code in full color until the next step, in the two windows |
+| `t` | Light or dark variant of the theme, in the two windows |
+| `f` | Full screen on or off |
+| `r` | Set the timer to 0:00 |
+| `?`, `/` | The search of the keys and commands. Esc closes it. |
+| Click or tap the right two thirds, or swipe left | Next step |
+| Click or tap the left third, or swipe right | Previous step |
 
 <!-- /keys -->
 
@@ -392,7 +405,7 @@ no key. In this view, only these keys operate, so the other keys scroll the page
 | `k` | Previous step. The present view then shows it. |
 | `p` | Present view |
 | `a` | Every step, or the steps of the handout option. A print shows the same. |
-| `?` | This list of keys. The next key closes it. |
+| `?`, `/` | The search of the keys and commands. Esc closes it. |
 
 <!-- /keys -->
 

@@ -74,6 +74,7 @@ import { commands } from "./program.ts";
 import type { Builtin } from "./program.ts";
 import { load as loadEmbeds } from "./embed.ts";
 import { play as playVideos } from "./video.ts";
+import { search } from "./search.ts";
 import { audit, report } from "./layout.ts";
 import { clock, left, pace, talkLength } from "./speaker.ts";
 import {
@@ -322,11 +323,35 @@ function handle(input: Event, event?: UIEvent): void {
   }
 }
 
+// A key with Control, Alt or Meta goes to the browser, and so does a key in a
+// field of text, such as the search of the list of keys. `Escape` in that
+// field closes the dialog, and the browser then sends `close`.
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.ctrlKey || event.altKey || event.metaKey) {
     return;
   }
+  if ((event.target as Element | null)?.closest?.(EDITABLE)) {
+    return;
+  }
   handle({ kind: "key", key: event.key }, event);
+});
+
+const EDITABLE = "input, textarea, select, [contenteditable]";
+
+// The list of keys is a `dialog`. The browser closes it at `Escape` and at a
+// click outside it, and the state then follows. The search runs at each
+// change of the text.
+const keys = document.getElementById("help");
+keys?.addEventListener("close", () => {
+  if (state.help) {
+    show({ ...state, help: false });
+  }
+});
+keys?.addEventListener("input", (event: globalThis.Event) => {
+  const field = event.target as HTMLInputElement | null;
+  if (field?.id === "help-filter") {
+    search(keys, field.value);
+  }
 });
 
 // The three kinds of element that hold commands: a link of the `goto` option,
@@ -351,6 +376,12 @@ function ignores(event: MouseEvent): boolean {
     return true;
   }
   const target = event.target as Element | null;
+  // A click inside the list of keys goes to the browser. A click on its
+  // backdrop has the dialog itself as its target, and it closes the list.
+  const list = target?.closest?.("#help");
+  if (list && list !== target) {
+    return true;
+  }
   const interactive = target?.closest?.(INTERACTIVE);
   if (interactive && !interactive.matches(LINK)) {
     return true;

@@ -6,6 +6,7 @@
 import { parse } from "./deck.ts";
 import type { Deck } from "./deck.ts";
 import { helpMode } from "./interpreter.ts";
+import { search } from "./search.ts";
 import type { Transition } from "./interpreter.ts";
 import { parse as parseProgram } from "./program.ts";
 import type { Program, Projections } from "./program.ts";
@@ -78,9 +79,7 @@ function slide(number: number): HTMLElement {
 // the speaker view writes the texts of its elements.
 export function apply(state: State, deck: Deck, program: Program): void {
   project(program.project, state, deck);
-  if (state.help) {
-    help(helpMode(program, state));
-  }
+  help(state.help ? helpMode(program, state) : undefined);
   for (let number = 1; number <= deck.slides.length; number++) {
     slide(number).style.display = "none";
   }
@@ -150,15 +149,36 @@ function speaker(state: State, deck: Deck): void {
   text("speaker-position", position(current(state, deck), state.blank));
 }
 
-// Show the list of keys of one mode. The renderer writes the element `help`
-// with one list for each mode, and each list has the name of its mode in
-// `data-mode`. The style sheet shows the element while the `body` has
-// `data-help`.
+// Open the list of keys at the section of a mode, or close it with no mode.
+// The renderer writes the `dialog` element `help` with a `details` element for
+// each mode, and each one has the name of its mode in `data-mode`.
+// `showModal` makes the slide inert and moves the focus to the search field.
+// The list opens with an empty search and with only the section of the mode
+// open. `main.ts` writes the state again when the browser closes the dialog,
+// such as at `Escape`.
 function help(name: string | undefined): void {
-  const lists = document.getElementById("help")?.children ?? [];
-  for (const list of Array.from(lists) as HTMLElement[]) {
-    list.hidden = list.dataset.mode !== name;
+  const dialog = document.getElementById("help") as HTMLDialogElement | null;
+  if (dialog === null || dialog.showModal === undefined) {
+    return;
   }
+  if (name === undefined) {
+    if (dialog.open) {
+      dialog.close();
+    }
+    return;
+  }
+  if (dialog.open) {
+    return;
+  }
+  search(dialog, "");
+  for (const section of dialog.querySelectorAll<HTMLDetailsElement>(
+    "details[data-mode]",
+  )) {
+    const current = section.dataset.mode === name;
+    section.open = current;
+    section.toggleAttribute("data-current", current);
+  }
+  dialog.showModal();
 }
 
 // Write the time left and the pace into the element `speaker-left`. The style

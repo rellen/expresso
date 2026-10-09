@@ -47,7 +47,7 @@ defmodule Expresso.Test.PresenterFixtures do
     {[1, 2, 1, 1], [:fade, :slide, :none, :zoom]}
   ]
 
-  @keys ~w(j k ArrowRight ArrowLeft ArrowUp ArrowDown PageDown PageUp Home End Enter b d m p s r f g a o ? Escape x Tab) ++
+  @keys ~w(j k ArrowRight ArrowLeft ArrowUp ArrowDown PageDown PageUp Home End Enter b d m p s r f g a o ? / Escape x Tab) ++
           [" "] ++ Enum.map(0..9, &Integer.to_string/1)
 
   @kinds [:none, :fade, :slide, :zoom]

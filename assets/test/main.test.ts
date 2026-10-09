@@ -194,14 +194,14 @@ test("a message from another window has no effect", () => {
   assert.deepEqual(displays(), ["none", "flex"]);
 });
 
-test("? shows the list of keys of the present view, and the next key closes it", () => {
+test("? shows the list of keys of the present view, and a key outside its search closes it", () => {
   const before = displays();
   assert.equal(page.press("?"), true);
 
   assert.equal(body.dataset.help, "true");
   const names = page.keys().map((row) => row.names);
   assert.ok(names.includes("s"));
-  assert.ok(names.includes("?"));
+  assert.ok(names.includes("?, /"));
 
   page.press("j");
   assert.equal("help" in body.dataset, false);
@@ -215,6 +215,22 @@ test("s on the list of keys closes it, and opens no window", () => {
 
   assert.equal("help" in body.dataset, false);
   assert.equal(page.opened.length, count);
+});
+
+test("/ shows the list of keys too, and the close of the dialog closes it in the state", () => {
+  page.press("/");
+  assert.equal(body.dataset.help, "true");
+
+  (page.element("help") as unknown as { close: () => void }).close();
+  assert.equal("help" in body.dataset, false);
+});
+
+test("a key in a field of text goes to the browser", () => {
+  const field = {
+    closest: (selector: string) => (selector.includes("input") ? field : null),
+  };
+  assert.equal(page.press({ key: "j", target: field }), false);
+  assert.equal("help" in body.dataset, false);
 });
 
 test("the progress bar follows the step, and g hides and shows it", () => {

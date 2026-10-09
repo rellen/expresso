@@ -156,17 +156,17 @@ defmodule Expresso.E2E.OverviewTest do
     assert position(page) == "4.1"
   end
 
-  test "? lists the keys of the overview, and the next key closes only the list", %{
+  test "? lists the keys of the overview first, and Esc closes only the list", %{
     page: page
   } do
     page |> press("o") |> press("Shift+Slash")
 
-    help = js(page, "document.getElementById('help').innerText")
+    help = js(page, "document.querySelector('#help details[data-current]').innerText")
     assert help =~ "Select the next slide"
     assert help =~ "Click or tap a slide"
     refute help =~ "Handout view"
 
-    page |> press("Enter")
+    page |> press("Escape")
     assert js(page, "document.body.dataset.help") == nil
     assert overview?(page)
     assert position(page) == "1.1"

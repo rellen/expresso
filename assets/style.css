@@ -1142,43 +1142,145 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     outline: 2px solid var(--menu-color, var(--accent));
   }
 }
-/* The list of keys. `?` shows it, and the next key closes it. */
+/*
+ * The list of keys: a `dialog` that `?` or `/` opens with `showModal`. The
+ * browser then puts it over each other element, makes the slide inert and
+ * moves the focus to the search field. The renderer writes a section for
+ * each mode, and the script opens the section of the mode under the list and
+ * marks it with `data-current`. The section of the current mode comes first,
+ * with no summary. The script hides each row that does not match the search,
+ * and these rules hide each empty list, heading and section.
+ */
 #help {
+  box-sizing: border-box;
+  width: min(90vw, 17rem);
+  max-height: 88vh;
+  padding: 0;
+  font-size: 0.36rem;
+  color: var(--text);
+  background-color: var(--background);
+  border: 2px solid var(--text);
+  border-radius: 0.15rem;
+}
+#help[open] {
+  display: flex;
+  flex-direction: column;
+}
+#help::backdrop {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+.help-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.help-search {
+  display: flex;
+  padding: 0.25rem 0.35rem;
+  border-bottom: 1px solid var(--muted);
+}
+.help-search input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+.help-body {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 0.1rem 0.35rem 0.25rem;
+}
+#help details[data-current] {
+  order: -1;
+}
+#help details[data-current] > summary {
   display: none;
 }
-@media screen {
-  body[data-help="true"] #help {
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: 0.2rem 0.6rem;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow: auto;
-    box-sizing: border-box;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.4rem;
-    color: var(--text);
-    background-color: var(--background);
-    border: 2px solid var(--text);
-    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.4);
-    z-index: 10;
-  }
-  /* The renderer writes a list for each mode, and the script shows one of
-   * them. Each row of the list holds a key and its function. */
-  #help > div,
-  #help > div > div {
-    display: contents;
-  }
-  #help > div[hidden] {
+#help summary {
+  display: flex;
+  gap: 0.3rem;
+  align-items: baseline;
+  padding: 0.12rem 0;
+  cursor: pointer;
+}
+.help-mode {
+  font-weight: 700;
+}
+.help-count,
+.help-group,
+.help-label,
+.help-footer {
+  color: var(--muted);
+}
+.help-count {
+  margin-left: auto;
+  font-size: 0.8em;
+}
+.help-group {
+  margin: 0.25rem 0 0.05rem;
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+#help ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#help li {
+  display: grid;
+  grid-template-columns: 6rem 1fr;
+  gap: 0.3rem;
+  align-items: baseline;
+  padding: 0.06rem 0;
+}
+.help-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem;
+}
+#help kbd {
+  padding: 0 0.12em;
+  font-family: inherit;
+  font-weight: 700;
+  border: 1px solid var(--muted);
+  border-bottom-width: 2px;
+  border-radius: 0.1em;
+}
+/* A `:has()` cannot hold another `:has()`, and one selector that a browser
+ * cannot read drops its whole rule, so each rule here has one selector. */
+#help li[hidden] {
+  display: none;
+}
+.help-set:not(:has(li:not([hidden]))) {
+  display: none;
+}
+#help[data-searching] details:not(:has(li:not([hidden]))) {
+  display: none;
+}
+.help-none {
+  display: none;
+  color: var(--muted);
+}
+.help-body:not(:has(li:not([hidden]))) .help-none {
+  display: block;
+}
+.help-footer {
+  margin: 0;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.8em;
+  border-top: 1px solid var(--muted);
+}
+@media print {
+  #help {
     display: none;
-  }
-  #help kbd {
-    font-family: inherit;
-    font-weight: 700;
   }
 }
 /*
