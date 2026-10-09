@@ -528,20 +528,34 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Put a picture or a font into the style sheet](docs/how-to/put-files-into-the-css.md)
 - [Give a deck a light and a dark variant](docs/how-to/give-a-deck-two-variants.md)
 
-Reference pages describe each value of an option:
+Reference pages describe each value of an option. These pages describe the options of the
+deck and of a slide:
 
 - [The transition option](docs/reference/transition-option.md)
 - [The overlay options](docs/reference/overlay-options.md)
 - [The css option](docs/reference/css-option.md)
 - [The goto option](docs/reference/goto-option.md)
-- [The code element](docs/reference/code-element.md)
 - [The layout check](docs/reference/layout-check.md)
 - [The class option](docs/reference/class-option.md)
-- [The embed element](docs/reference/embed-element.md)
-- [The video element](docs/reference/video-element.md)
 - [The template option](docs/reference/template-option.md)
 - [The root option](docs/reference/root-option.md)
 - [The theme option](docs/reference/theme-option.md)
+
+These pages describe each element:
+
+- [Text box](docs/reference/text-box-element.md)
+- [Text area](docs/reference/text-area-element.md)
+- [Image](docs/reference/image-element.md)
+- [List](docs/reference/list-element.md)
+- [Table](docs/reference/table-element.md)
+- [Quotation](docs/reference/quotation-element.md)
+- [Spacer](docs/reference/spacer-element.md)
+- [Columns](docs/reference/columns-element.md)
+- [Code](docs/reference/code-element.md)
+- [Math](docs/reference/math-element.md)
+- [Diagram](docs/reference/diagram-element.md)
+- [Embed](docs/reference/embed-element.md)
+- [Video](docs/reference/video-element.md)
 
 Explanations give the design and its reasons:
 
