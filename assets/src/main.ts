@@ -54,7 +54,8 @@
 // A video of the video element plays while its slide and its step show in the
 // present view, and a black screen, the menu and the overview pause it. The
 // speaker view and the handout view show its poster. `video.ts` gives the
-// rules.
+// rules. A sound of the audio element plays with the same rules, and
+// `audio.ts` gives the rest.
 //
 // `?check` in the address of the present view runs the layout check after the
 // load of the document and of its fonts. The check shows each step, finds the
@@ -74,6 +75,7 @@ import { commands } from "./program.ts";
 import type { Builtin } from "./program.ts";
 import { load as loadEmbeds } from "./embed.ts";
 import { play as playVideos } from "./video.ts";
+import { play as playAudios } from "./audio.ts";
 import { search } from "./search.ts";
 import { audit, report } from "./layout.ts";
 import { clock, left, pace, talkLength } from "./speaker.ts";
@@ -187,17 +189,16 @@ function embeds(): void {
   }
 }
 
-// Play the videos of the current slide. Only the present view of this window
-// plays them, so the speaker view and the handout view show the poster.
-// `video.ts` gives the rules.
+// Play the videos and the sounds of the current slide. Only the present view
+// of this window plays them, so the speaker view and the handout view show
+// the poster of a video and play no sound. `media.ts` gives the rules.
 function videos(): void {
   const entry = current(state, deck);
   const present = !isSpeaker && state.view === "present";
-  playVideos(
-    present && entry !== undefined ? entry.slide : null,
-    entry?.step ?? 1,
-    state.blank || state.menu || state.overview,
-  );
+  const slide = present && entry !== undefined ? entry.slide : null;
+  const covered = state.blank || state.menu || state.overview;
+  playVideos(slide, entry?.step ?? 1, covered);
+  playAudios(slide, entry?.step ?? 1, covered);
 }
 
 // Open the speaker view, or show the window of the speaker view again. The

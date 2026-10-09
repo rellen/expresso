@@ -9,12 +9,10 @@ defmodule Expresso.Element.Video do
   poster shows on paper, in the handout view, in the speaker view, in the
   overview, in the menu and while the video loads.
 
-  The document holds a copy of each slide for the present view and one for
-  each page of the handout view. A video in each copy would make the document
-  many times larger, so no copy holds the video. The `video` element holds
-  only `data-video`, the number of the element in the deck, and the renderer
-  writes each video one time, as a data URI, into the element
-  `expresso-videos`. The presenter gives a video its source when it plays.
+  The `video` element holds only `data-video`, the number of the element in
+  the deck, and the renderer writes each video one time, as a data URI, into
+  the element `expresso-videos`. `Expresso.Media` gives the reasons. The
+  presenter gives a video its source when it plays.
 
   The video plays in the present view only, while its slide shows and the
   element shows at the current step. Thus `at` gives the step where it
@@ -68,104 +66,37 @@ defmodule Expresso.Element.Video do
       iex> {:error, _message} = Expresso.Element.Video.source("demo/demo.mov")
   """
   @spec source(term()) :: {:ok, String.t()} | {:error, String.t()}
-  def source(value) when is_binary(value) do
-    if Map.has_key?(@types, extension(value)) and not String.contains?(value, ":"),
-      do: {:ok, value},
-      else: {:error, @source_error}
-  end
-
-  def source(_value), do: {:error, @source_error}
-
-  defp extension(path), do: path |> Path.extname() |> String.downcase()
+  def source(value), do: Expresso.Media.source(value, @types, @source_error)
 
   @doc """
   Give each video of a deck its number
 
-  Each file gets a number in document order, from 0, and two elements with
-  the same file get the same number. `sources/1` writes the file at that
-  position, so the document holds each file one time. The render function
-  writes the number into `data-video`. `Expresso.Renderer` calls this
-  function before the render.
+  `Expresso.Renderer` calls this function before the render, and the render
+  function writes the number into `data-video`. `Expresso.Media.number/2`
+  gives the rules.
   """
   @spec number(Expresso.Deck.t()) :: Expresso.Deck.t()
-  def number(%Expresso.Deck{slides: slides} = deck) do
-    {slides, _files} =
-      Enum.map_reduce(slides, %{}, fn slide, files ->
-        {elements, files} = number_all(slide.elements || [], files)
-        {%{slide | elements: elements}, files}
-      end)
-
-    %Expresso.Deck{deck | slides: slides}
-  end
-
-  defp number_all(elements, files) do
-    Enum.map_reduce(elements, files, fn
-      %__MODULE__{src: src} = video, files ->
-        files = Map.put_new(files, src, map_size(files))
-        {%__MODULE__{video | index: files[src]}, files}
-
-      %{elements: children} = element, files when is_list(children) ->
-        {children, files} = number_all(children, files)
-        {%{element | elements: children}, files}
-
-      element, files ->
-        {element, files}
-    end)
-  end
+  def number(deck), do: Expresso.Media.number(deck, __MODULE__)
 
   @doc """
   Return the data URI of each file of the videos of a deck, in the order of
   their numbers
 
-  The function reads each file through `Expresso.DeckFile`, so the watch mode
-  renders the deck again after a change to the file. It raises for a file
-  that it cannot read.
+  It raises for a file that it cannot read. `Expresso.Media.sources/4` gives
+  the rules.
   """
   @spec sources(Expresso.Deck.t()) :: [String.t()]
-  def sources(%Expresso.Deck{slides: slides}) do
-    slides
-    |> Enum.flat_map(&videos(&1.elements || []))
-    |> Enum.uniq_by(& &1.index)
-    |> Enum.sort_by(& &1.index)
-    |> Enum.map(&data_uri/1)
-  end
-
-  defp videos(elements) do
-    Enum.flat_map(elements, fn
-      %__MODULE__{} = video -> [video]
-      %{elements: children} when is_list(children) -> videos(children)
-      _element -> []
-    end)
-  end
-
-  defp data_uri(%__MODULE__{src: src}) do
-    case Expresso.DeckFile.read(src) do
-      {:ok, bytes} ->
-        "data:#{Map.fetch!(@types, extension(src))};base64," <> Base.encode64(bytes)
-
-      {:error, reason} ->
-        raise ArgumentError,
-              "cannot read the video \"#{src}\": #{:file.format_error(reason)}. " <>
-                "A path is relative to the working directory of the command, or to the " <>
-                "root option of the deck."
-    end
-  end
+  def sources(deck), do: Expresso.Media.sources(deck, __MODULE__, @types, "video")
 
   @doc """
   Write the videos of a deck as JSON, or return `nil`
 
   The value is a list with the data URI of each video, in the order of their
-  numbers. The renderer writes it into a `script` element. A data URI holds
-  no `<`, and the function escapes each `<` as for the list of the steps. A
-  deck with no video gets `nil`, and the document then holds no such element.
+  numbers. A deck with no video gets `nil`, and the document then holds no
+  element `expresso-videos`.
   """
   @spec json(Expresso.Deck.t()) :: String.t() | nil
-  def json(deck) do
-    case sources(deck) do
-      [] -> nil
-      sources -> sources |> JSON.encode!() |> String.replace("<", "\\u003c")
-    end
-  end
+  def json(deck), do: deck |> sources() |> Expresso.Media.json()
 
   @doc """
   Make the assigns of the render function from the struct

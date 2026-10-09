@@ -679,6 +679,7 @@ An element is the content of a slide. These are the elements at this time:
 - `Expresso.Element.Diagram`, with `Expresso.Element.Part`
 - `Expresso.Element.Embed`
 - `Expresso.Element.Video`
+- `Expresso.Element.Audio`
 - `Expresso.Element.QrCode`
 - `Expresso.Element.Footnote`
 
@@ -1008,12 +1009,13 @@ for the user. These are the reasons for its design:
 A `video` plays a WebM or an MP4 file. `docs/reference/video-element.md` gives the options
 for the user. It follows the design of the embed, with these differences:
 
-- **The file goes into the document as a data URI, one time.** `Expresso.Element.Video`
-  gives each file a number, and two elements with the same file share it. Each copy of the
+- **The file goes into the document as a data URI, one time.** `Expresso.Media` gives
+  each file a number, and two elements with the same file share it. Each copy of the
   slide holds only `data-video` and the poster, and the renderer writes the files into the
   element `expresso-videos`. The form `written_videos` of `Expresso.Presenter.Schema`
   describes it.
-- **The step decides when it plays.** `video.ts` runs after each change of the state. A
+- **The step decides when it plays.** The player of `media.ts` runs after each change of
+  the state. A
   video plays while its slide shows in the present view and each parent with an overlay
   shows at the step, so `at` gives the step where it starts.
 - **A cover pauses it, and a new visit starts it again.** A black screen, the menu and the
@@ -1024,6 +1026,24 @@ for the user. It follows the design of the embed, with these differences:
 - **It uses the box of an embed.** The element has the classes of an embed, so the size,
   the poster under the video, and the rules that hide the frame in the handout view and in
   the menu apply to it.
+
+### The audio
+
+An `audio` element plays a sound file. `docs/reference/audio-element.md` gives the options
+for the user. It shares the design of the video: `Expresso.Media` numbers the files and
+writes them into the element `expresso-audios`, and the player of `media.ts` plays them
+with the rules of a video. `video.ts` and `audio.ts` each make one player from it. These
+are the differences:
+
+- **It has sound.** A browser refuses to play a sound before the first key or click of the
+  user in the document. The player then leaves the sound paused, and the next change of
+  the state tries again. A key of the presenter is such a change, so a sound of the first
+  slide starts at the first key.
+- **It shows nothing in the present view.** A sound has no picture, so the element shows
+  only the controls of the browser with `controls true`. The handout view and paper cannot
+  play it, and each of their pages shows the title with a note symbol, in a `figcaption`.
+- **It does not loop by default.** A signal or a clip of speech plays one time. A video
+  loops by default, because a video of a demonstration usually repeats.
 
 ### The QR code
 
