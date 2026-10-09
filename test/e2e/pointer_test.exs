@@ -181,7 +181,8 @@ defmodule Expresso.E2E.PointerTest do
     # A click outside the dialog closes it.
     page |> click(1250, 360)
 
-    assert js(page, "document.body.dataset.help") == nil
+    # The browser fires the event `close` in a later task, so wait for it.
+    wait_for(page, "document.body.dataset.help === undefined")
     assert position(page) == "1.1"
   end
 
