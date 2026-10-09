@@ -410,6 +410,28 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   margin-top: 0;
 }
 /*
+ * The audio element. The present view shows the controls of the browser only
+ * with `controls true`, and nothing in the place of the element without them.
+ * The handout view and paper cannot play a sound, so each of their pages
+ * shows the title with a note symbol, in the color `--muted`.
+ */
+.audio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+}
+.audio audio:not([controls]),
+.audio figcaption,
+.handout-page .audio audio {
+  display: none;
+}
+.handout-page .audio figcaption {
+  display: block;
+  font-size: 0.6em;
+  color: var(--muted);
+}
+/*
  * The QR code element. A scanner reads a dark code on a light ground best, so
  * the code keeps its own two colors in each theme, and a deck can change them
  * with `--qr-color` and `--qr-background`. The code is square, and it takes
@@ -684,7 +706,8 @@ body[data-view="present"][data-undim] .screen .code [data-el] {
 .math,
 .diagram,
 .qr-code,
-.footnote {
+.footnote,
+.audio {
   transform: translate(
       calc(var(--x) + (1 - var(--shown)) * var(--enter-x)),
       calc(var(--y) + (1 - var(--shown)) * var(--enter-y))

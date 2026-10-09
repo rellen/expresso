@@ -7,7 +7,9 @@ defmodule Expresso.ElementPagesTest do
 
   # The reference pages of the elements whose code blocks are slides. The code
   # element, the embed element and the video element have tests of their own.
-  @pages ~w(text-box text-area image list table quotation spacer columns math diagram qr-code footnote)
+  # The test copies the files that the code blocks read into the root of the
+  # deck.
+  @pages ~w(text-box text-area image list table quotation spacer columns math diagram qr-code footnote audio)
 
   # The Elixir code blocks of a page, in order.
   defp blocks(page) do
@@ -20,6 +22,7 @@ defmodule Expresso.ElementPagesTest do
     File.cp!("examples/logo.png", Path.join(root, "logo.png"))
     File.cp!("examples/logo.png", Path.join(root, "map.png"))
     File.cp!("examples/flow.svg", Path.join(root, "flow.svg"))
+    File.cp!("examples/animations/chime.ogg", Path.join(root, "chime.ogg"))
   end
 
   for page <- @pages do
