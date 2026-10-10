@@ -269,15 +269,21 @@ window.addEventListener("online", embeds);
 
 // The layout check measures each step, and then it shows the current step
 // again. The images of a document load after the script, so the check waits
-// for the load of the document.
+// for the load of the document. An error of the check shows the current step
+// again and goes to the console, as each problem of the check does.
 function check(): void {
-  document.fonts.ready.then(() => {
-    const problems = audit(deck.steps, (index) =>
-      apply({ ...state, index }, deck, program),
-    );
-    apply(state, deck, program);
-    report(problems);
-  });
+  document.fonts.ready
+    .then(() => {
+      const problems = audit(deck.steps, (index) =>
+        apply({ ...state, index }, deck, program),
+      );
+      apply(state, deck, program);
+      report(problems);
+    })
+    .catch((reason: unknown) => {
+      apply(state, deck, program);
+      console.error("Expresso layout check failed:", reason);
+    });
 }
 
 if (parameters.has("check") && !isSpeaker) {

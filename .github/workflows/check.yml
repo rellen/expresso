@@ -10,7 +10,8 @@
 #   `mix doctor` and `mix dialyzer`
 # - test: `mix test`, `mix test --only e2e`, the browser tests, and
 #   `mix test --only dependency`, the test of Expresso as a dependency
-# - presenter: `npm run check` and `npm test`
+# - presenter: `npm run check`, `npm run lint`, `npm run format:check` and
+#   `npm test`
 # - gifs: `mix expresso.gifs`, the GIFs and the stills of the example decks
 #   of the guides and of the README
 # - binary: `mix release expresso_cli_app` for Linux on x86_64 and on
@@ -148,7 +149,9 @@ jobs:
       - if: ${{ !cancelled() }}
         run: mix test --only dependency
 
-  # The presenter script needs Node only.
+  # The presenter script needs Node only. Each step after the install runs
+  # also when a step before it fails, so one run reports each defect, as
+  # `mix check` does.
   presenter:
     name: presenter
     runs-on: ubuntu-latest
@@ -160,7 +163,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
-      - run: npm test
+      - if: ${{ !cancelled() }}
+        run: npm run lint
+      - if: ${{ !cancelled() }}
+        run: npm run format:check
+      - if: ${{ !cancelled() }}
+        run: npm test
 
   # The GIFs of the example decks. The job records them for each pull request
   # too, so an example that does not render fails the check. The artifact

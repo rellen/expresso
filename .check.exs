@@ -24,6 +24,15 @@ burrito_target =
     # The security advisories and the retirements of the dependencies on Hex.
     {:hex_audit, "mix hex.audit"},
 
+    # The presenter script in TypeScript: the type check, the lint, the format
+    # and the tests of `assets/test`. They need Node and `npm install`, as the
+    # browser tests do. `docs/development.md` gives the details in "Check the
+    # presenter script".
+    {:tsc, "npm run check"},
+    {:oxlint, "npm run lint"},
+    {:prettier, "npm run format:check"},
+    {:node_test, "npm test"},
+
     # The browser tests. They start after the unit tests, so fewer tools use the
     # processor while a browser test waits for the page.
     {:e2e, "mix test --only e2e", deps: [:ex_unit]},
