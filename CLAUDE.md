@@ -38,6 +38,8 @@ mix hex.audit
 mix dialyzer
 mix test
 npm run check
+npm run lint
+npm run format:check
 npm test
 mix test --only e2e
 mix test --only dependency
@@ -46,12 +48,11 @@ EXPRESSO_BINARY=burrito_out/expresso_cli_app_linux_x86 mix test --only release
 ```
 
 Each command above passes at this time, and `mix check` passes as a whole. Keep them so. The
-two `npm` commands need Node, and the hook runs `npm install`. `mix compile`
+four `npm` commands need Node and `npm install`, and the hook runs `npm install`. `mix compile`
 does not need Node. It needs Zig, because Zigler compiles the GIF encoder of `tools/` in
 dev and in test.
 
-`mix check` runs each command above, except the two `npm` commands. It runs the formatter
-with `--check-formatted`. It makes the binary for the target of the computer, and it runs
+`mix check` runs each command above. It runs the formatter with `--check-formatted`. It makes the binary for the target of the computer, and it runs
 the release tests with that binary. `.check.exs` gives the tools.
 
 `mix test --only e2e` runs the browser tests of `test/e2e/`. They need Node, the Playwright

@@ -105,6 +105,10 @@ mix test
 mix test --only e2e            # the browser tests, see "The browser tests"
 mix test --only dependency     # Expresso as a dependency, see "The dependency test"
 mix test --only release        # the tests of the binary, see "The release tests"
+npm run check                  # tsc, the type check of the presenter script
+npm run lint                   # oxlint, see "The lint and the format of the script"
+npm run format:check           # prettier --check
+npm test                       # the tests of the presenter script
 ```
 
 Each command above passes, and `mix check` passes as a whole. `mix doctor` passes with a
@@ -122,7 +126,8 @@ workflow.
 the release tests,
 it makes the binary for the target of the computer: `macos_arm`, `macos_x86`, `linux_x86`
 or `linux_arm`. `.check.exs` finds the target. Therefore `mix check` needs Node, the
-Chromium of Playwright, Zig, `xz` and `timeout`. It does not run the two `npm` commands.
+Chromium of Playwright, Zig, `xz` and `timeout`. It also runs the four `npm` commands, so it
+needs `npm install` first. The hook runs `npm install` in a remote session.
 
 The browser tests start after the unit tests. The dependency test and the release tests
 start after the browser tests, and the release tests also need a release that succeeded. `.check.exs` gives `retry: false`, so each run
@@ -270,15 +275,15 @@ The jobs run in parallel on Linux, so the slowest of them gives their time:
 - `lint`: the compiler with warnings as errors, Credo, Sobelow, `mix hex.audit`, the check
   of unused dependencies, `mix docs`, Doctor and Dialyzer.
 - `test`: the unit tests, the browser tests and the dependency test.
-- `presenter`: `npm run check` and `npm test`.
+- `presenter`: `npm run check`, `npm run lint`, `npm run format:check` and `npm test`.
 - `binary`: the binary for Linux and the release tests, in two jobs. The job
   `binary (linux_x86)` runs on x86_64, and the job `binary (linux_arm)` runs on an arm64
   runner. Each job makes the binary for its own architecture, so it can run the binary.
   Neither job publishes the binary. `.github/actions/setup-zig` installs Zig, as "Zig in
   the workflow" below tells.
 
-Together they run each tool of `mix check`, the two npm commands, the browser tests and
-the release tests. They make and test the binary for `linux_x86` and `linux_arm`. No job
+Together they run each tool of `mix check`, with the four npm commands, the browser tests
+and the release tests. They make and test the binary for `linux_x86` and `linux_arm`. No job
 makes a binary for macOS.
 
 The jobs do not run `mix check`, because that command runs the tools one after the other
@@ -293,8 +298,8 @@ A job compiles the project for one environment. Therefore the tools that need th
 build share one job, and the project compiles two times for the development environment,
 in `lint` and in `gifs`. It compiles three times for the test environment, in `test` and in
 the two `binary` jobs, and two times for the production environment, in the two `binary`
-jobs. A step of `lint` or of `test` runs also when a step before it fails, so one run
-reports each defect.
+jobs. A step of `lint`, of `test` or of `presenter` runs also when a step before it fails,
+so one run reports each defect.
 
 `lint` also runs Dialyzer, because Dialyzer needs the same build. The cache of `lint` holds
 the PLT. With the PLT, Dialyzer takes approximately 30 seconds, and `lint` still finishes
@@ -499,6 +504,7 @@ the Chromium of the container, and that Chromium can be older than the new versi
 - `assets/test/property.ts` — `RUNS`, the number of runs of each property.
 - `assets/test/nth.ts` — the item at an index, for the tests.
 - `assets/tsconfig.json` — the options of the type check.
+- `.oxlintrc.json` — the rules of the lint.
 - `package.json` — the tools, with a pinned version of each.
 - `config/config.exs` — the esbuild profile.
 - `Mix.Tasks.Compile.Presenter` in `mix.exs` — the compiler that makes the bundle.
@@ -511,11 +517,15 @@ content change to a source makes a new bundle and a new compile of `Expresso.Ren
 The commands are:
 
 ```sh
-npm install      # the hook runs this command in a remote session
-npm run check    # tsc, the type check
-npm test         # node --test, which runs a .ts file directly
-npm run format   # prettier
+npm install            # the hook runs this command in a remote session
+npm run check          # tsc, the type check
+npm run lint           # oxlint with the type-aware rules
+npm run format:check   # prettier --check, which changes no file
+npm run format         # prettier --write, which formats each file
+npm test               # node --test, which runs a .ts file directly
 ```
+
+`mix check` runs each of these commands except `npm run format`.
 
 `fast-check` gives the property tests. It is a development dependency, and the bundle does
 not import it. "Property tests" above tells how `stream_data` does the same for the Elixir
@@ -546,6 +556,48 @@ file at a time. These options refuse code that is unused, unreachable or incompl
 `nth` of `assets/test/nth.ts`, which stops the test for a missing item.
 `exactOptionalPropertyTypes` refuses `undefined` for an optional property. The options do
 not change the bundle.
+
+### The lint and the format of the script
+
+Three tools check the presenter script, and each has one job:
+
+| Tool | Command | Its job |
+| --- | --- | --- |
+| `tsc` of TypeScript 7 | `npm run check` | The types, and the options of `assets/tsconfig.json`. |
+| `oxlint` with `oxlint-tsgolint` | `npm run lint` | Defects that the types allow, such as a promise that nothing handles. |
+| Prettier | `npm run format:check` | The layout of `assets/`. `.prettierignore` names the files of a generator. |
+
+`.oxlintrc.json` turns on the category `correctness` and these rules, which need the
+types:
+
+- `typescript/no-floating-promises` — each promise is awaited, ends with `.catch`, or has
+  `void`. A call of `test` or `describe` of `node:test` returns a promise that Node
+  handles, so the rule allows it.
+- `typescript/no-misused-promises` — a promise does not go where a value or a function
+  with no promise goes, such as the condition of an `if`.
+- `typescript/await-thenable` — `await` gets a promise.
+
+To fix a finding of `no-floating-promises`, give the promise a `.catch` that handles the
+error. A promise whose error is not important gets `void`, with a comment that tells why.
+`main.ts` writes an error of the layout check to the console, as the check writes each
+problem.
+
+These are the reasons for the choice of the tools:
+
+- **oxlint, and not ESLint.** The rules that need the types come from `tsgolint`, which
+  is built on TypeScript 7.0.2, the version of `package.json`. `typescript-eslint` does not
+  support TypeScript 7, because TypeScript 7.0 has no programmatic API. The version of
+  `oxlint-tsgolint` follows the version of TypeScript: 7.0.2003 is the fourth release for
+  TypeScript 7.0.2. Change the two versions together.
+- **Few rules.** The category `suspicious` reported each type assertion of the document,
+  such as the result of `querySelector`, and `strict` with the other options of
+  `tsconfig.json` already refuses most of the defects of the other categories. A rule
+  that reports correct code teaches you to ignore the lint. Add a rule when it finds a
+  real defect in this code.
+- **Prettier, and not oxfmt.** oxfmt, the formatter of the same project as oxlint, is
+  approximately 30 times faster. On 2026-10-10 it was at version 0.72, and with a width of
+  80 it changed the layout of 3 files. Prettier takes approximately one second for
+  `assets/`. Look at oxfmt again after its version 1.0.
 
 ### The schema of the presenter
 
