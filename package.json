@@ -4,12 +4,16 @@
   "description": "The tools for the presenter script. mix compile does not need them.",
   "scripts": {
     "check": "tsc -p assets",
+    "lint": "oxlint --tsconfig assets/tsconfig.json assets/src assets/test",
     "test": "node --test \"assets/test/**/*.test.ts\"",
-    "format": "prettier --write assets"
+    "format": "prettier --write assets",
+    "format:check": "prettier --check assets"
   },
   "devDependencies": {
     "@types/node": "24.19.0",
     "fast-check": "4.10.2",
+    "oxlint": "1.87.0",
+    "oxlint-tsgolint": "7.0.2003",
     "playwright": "1.63.0",
     "prettier": "3.9.9",
     "typescript": "7.0.2"

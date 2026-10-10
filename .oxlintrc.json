@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "options": {
+    "typeAware": true
+  },
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "typescript/no-floating-promises": [
+      "error",
+      {
+        "allowForKnownSafeCalls": [
+          {
+            "from": "package",
+            "name": ["test", "describe"],
+            "package": "node:test"
+          }
+        ]
+      }
+    ],
+    "typescript/no-misused-promises": "error",
+    "typescript/await-thenable": "error"
+  },
+  "ignorePatterns": [
+    "assets/src/schema.ts",
+    "assets/test/fixtures/**",
+    "priv/**"
+  ]
+}

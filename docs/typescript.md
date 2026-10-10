@@ -326,3 +326,10 @@ lines with no dependency. `Expresso.Presenter.Schema` describes each value, and 
 writes `assets/src/schema.ts`, which holds the type and the decoder of each value. The
 bundle holds only the decoder of the message. On 2026-10-01, this change made the bundle
 go from 8,979 to 9,846 bytes minified, and from 3,702 to 4,054 bytes gzipped.
+
+## The lint
+
+On 2026-10-10, `npm run lint` added oxlint with the type-aware rules of `tsgolint`, and
+`mix check` began to run the four `npm` commands. The first run found one promise that
+nothing handled: the layout check in `main.ts`. "The lint and the format of the script" in
+`docs/development.md` gives the rules and the reasons.
