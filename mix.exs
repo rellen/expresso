@@ -35,6 +35,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/animate-elements.md",
         "docs/how-to/make-a-deck-from-data.md",
         "docs/how-to/show-data-in-a-chart.md",
+        "docs/how-to/show-a-change-over-time-in-a-chart.md",
         "docs/how-to/show-code.md",
         "docs/how-to/check-the-layout.md",
         "docs/how-to/style-one-slide.md",

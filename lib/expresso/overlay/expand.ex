@@ -158,6 +158,7 @@ defmodule Expresso.Overlay.Expand do
   defp resolve_element(%Pause{} = pause, counter), do: {pause, counter}
 
   defp resolve_element(element, counter) do
+    entry = counter
     spec = at(element)
     {at, counter} = resolve_spec(spec, counter)
 
@@ -171,18 +172,53 @@ defmodule Expresso.Overlay.Expand do
 
     children = reveal(element)
 
-    {children, counter} =
+    {children, counter, local} =
       if reveals?(element) and absolute?(spec) do
-        {children, _local} =
-          Enum.map_reduce(children, Overlay.first_step(spec), &resolve_element/2)
-
-        {children, counter}
+        first = Overlay.first_step(spec)
+        {children, local} = Enum.map_reduce(children, first, &resolve_element/2)
+        {children, counter, {first, local}}
       else
-        Enum.map_reduce(children, counter, &resolve_element/2)
+        {children, after_children} = Enum.map_reduce(children, counter, &resolve_element/2)
+        {children, after_children, nil}
       end
 
-    {put(element, at, on, children), counter}
+    element = put(element, at, on, children)
+
+    cond do
+      frames(element) == [] ->
+        {element, counter}
+
+      absolute?(spec) ->
+        {first, last} = local || {Overlay.first_step(spec), Overlay.first_step(spec)}
+        {element, _local} = resolve_frames(element, first, last)
+        {element, counter}
+
+      true ->
+        resolve_frames(element, entry, counter)
+    end
   end
+
+  # The frames of a chart. The first frame shows at the steps of the series,
+  # and each later frame takes the next value of the counter. When nothing of
+  # the chart took a step, the first frame takes one, so the second frame does
+  # not show at the first step of the chart. The frames of a chart with an
+  # absolute specification read a counter that starts at the first step of
+  # the chart, as the children of such an element do, and the counter of the
+  # slide does not change.
+  defp resolve_frames(element, entry, counter) do
+    counter = if counter == entry, do: counter + 1, else: counter
+    [first | rest] = frames(element)
+
+    {rest, counter} =
+      Enum.map_reduce(rest, counter, fn frame, counter ->
+        {at, counter} = Overlay.resolve_next(Overlay.from_next(), counter)
+        {%{frame | at: at}, counter}
+      end)
+
+    {%{element | timeline: [first | rest]}, counter}
+  end
+
+  defp frames(element), do: Map.get(element, :timeline) || []
 
   # The steps that an element takes before its children, as a pause does.
   defp lead(%Code{} = code), do: Code.lead(code)
@@ -234,7 +270,8 @@ defmodule Expresso.Overlay.Expand do
   defp specs(element) do
     at = List.wrap(at(element))
     on = Enum.map(on(element), & &1.at)
-    at ++ on ++ Enum.flat_map(children(element), &specs/1)
+    timeline = for %{at: %Overlay{} = at} <- frames(element), do: at
+    at ++ on ++ timeline ++ Enum.flat_map(children(element), &specs/1)
   end
 
   # The expansion into step numbers
@@ -250,9 +287,35 @@ defmodule Expresso.Overlay.Expand do
   defp expand_element(element, max) do
     with {:ok, steps} <- expand_spec(at(element), max),
          {:ok, on} <- expand_on(on(element), max),
-         {:ok, children} <- expand(children(element), max) do
+         {:ok, children} <- expand(children(element), max),
+         {:ok, element} <- expand_frames(element, max) do
       element = put(element, at(element), on, dim(element, children))
       {:ok, %{element | steps: steps}}
+    end
+  end
+
+  # The steps of each frame after the first: from its first step to the step
+  # before the next frame, or to the maximum. The first frame has no steps,
+  # and it shows at each step at which no later frame shows.
+  defp expand_frames(element, max) do
+    case frames(element) do
+      [] -> {:ok, element}
+      [first | rest] -> frame_steps(element, first, rest, max)
+    end
+  end
+
+  defp frame_steps(element, first, rest, max) do
+    firsts = Enum.map(rest, &Overlay.first_step(&1.at))
+    lasts = Enum.map(Enum.drop(firsts, 1), &(&1 - 1)) ++ [max]
+
+    if Enum.any?(firsts, &(&1 > max)) do
+      {:error, "the step #{Enum.max(firsts)} is more than the maximum step #{max}"}
+    else
+      rest =
+        for {frame, from, to} <- Enum.zip([rest, firsts, lasts]),
+            do: %{frame | steps: Enum.to_list(from..to//1)}
+
+      {:ok, %{element | timeline: [first | rest]}}
     end
   end
 

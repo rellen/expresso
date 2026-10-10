@@ -57,6 +57,9 @@
 // rules. A sound of the audio element plays with the same rules, and
 // `audio.ts` gives the rest.
 //
+// A number of a chart with the `count` option counts from one frame to the
+// next after each change of the step. `chart.ts` gives the rules.
+//
 // `?check` in the address of the present view runs the layout check after the
 // load of the document and of its fonts. The check shows each step, finds the
 // elements that go past an edge of the window and the lines of code that
@@ -76,6 +79,7 @@ import type { Builtin } from "./program.ts";
 import { load as loadEmbeds } from "./embed.ts";
 import { play as playVideos } from "./video.ts";
 import { play as playAudios } from "./audio.ts";
+import { count } from "./chart.ts";
 import { search } from "./search.ts";
 import { audit, report } from "./layout.ts";
 import { clock, left, pace, talkLength } from "./speaker.ts";
@@ -165,7 +169,10 @@ function show(changed: State, local = true): void {
   state = changed;
   // The browser runs the update of a transition later. The update then reads
   // the state of that time, so a fast second key does not show an old state.
-  animate(change, () => apply(state, deck, program));
+  animate(change, () => {
+    apply(state, deck, program);
+    count();
+  });
   history.replaceState(null, "", toHash(state, deck));
   if (local && sent) {
     send();
@@ -250,8 +257,10 @@ if (isSpeaker) {
   setInterval(tick, 250);
 }
 
-// The first application of the state gives the progress bar its width.
+// The first application of the state gives the progress bar its width. The
+// numbers of a chart with the `count` option get the values of their step.
 apply(state, deck, program);
+count();
 
 show(fromHash(program, state, location.hash, deck));
 
