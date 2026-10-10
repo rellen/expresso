@@ -171,7 +171,7 @@ defmodule Expresso.MixProject do
       {:makeup_erlang, "~> 1.1"},
       {:makeup_gleam, "~> 1.0"},
       {:makeup_eex, "~> 2.0"},
-      {:makeup_html, "~> 0.2"},
+      {:makeup_html, "~> 1.0"},
       {:makeup_css, "~> 0.2"},
       {:makeup_ts, "~> 0.2"},
       {:makeup_json, "~> 1.0"},
