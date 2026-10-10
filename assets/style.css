@@ -511,6 +511,146 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   clip-path: inset(50%);
 }
 /*
+ * The marks of a chart that moves: a chart with frames, or with the effect
+ * `grow`. `Expresso.Element.Chart.Motion` draws each mark at the origin, and
+ * the style attribute of the mark gives its place in `--chart-u` and
+ * `--chart-v`, from a custom property of the frame. The generated style block
+ * changes that property at the steps of each frame. The four properties have a
+ * registration as numbers, so they have a transition, and the mark moves from
+ * one frame to the next with the time and the easing of the element.
+ *
+ * A line of a line chart is a row of segments. Each segment is a line from 0
+ * to 1, and a matrix moves its ends to `--chart-v` and `--chart-w`. The ends
+ * of two segments then stay together while they move.
+ *
+ * A slice of a pie that moves is a dash of a circle with a wide stroke. The
+ * dash is `--chart-v` long, and the circle turns to the start of the slice,
+ * `--chart-w` degrees from the top. A line in the color of the background parts
+ * two slices.
+ *
+ * The effect `grow` sets `--chart-shown` from `--shown`, and the places of the
+ * marks read it, so a bar grows from the base line and a pie opens from the
+ * top. A clip opens a line from the left: it reads `--chart-u`, because a
+ * browser can change the clip at once in place of a transition. The chart does
+ * not change its size.
+ */
+@property --chart-u {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+@property --chart-v {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+@property --chart-w {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+@property --chart-n {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+.chart-mark,
+.chart-segment,
+.chart-arc,
+.chart-gap,
+.chart-count {
+  transition:
+    --chart-u var(--dur) var(--ease),
+    --chart-v var(--dur) var(--ease),
+    --chart-w var(--dur) var(--ease),
+    --chart-n var(--dur) var(--ease);
+}
+.chart-mark {
+  transform: translate(calc(var(--chart-u) * 1px), calc(var(--chart-v) * 1px));
+}
+.chart-segment {
+  transform: matrix(
+    var(--chart-dx),
+    calc(var(--chart-w) - var(--chart-v)),
+    0,
+    1,
+    var(--chart-x),
+    var(--chart-v)
+  );
+}
+.chart-arc {
+  fill: none;
+  stroke: var(--series);
+  stroke-dasharray: calc(var(--chart-v) * 1px) 2000px;
+  transform: rotate(calc(var(--chart-w) * 1deg - 90deg));
+  transform-box: view-box;
+}
+.chart-gap {
+  stroke: var(--background);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+  transform: rotate(calc(var(--chart-w) * 1deg));
+  transform-box: view-box;
+}
+.chart-clip {
+  clip-path: var(--chart-clip) view-box;
+}
+.chart-fade {
+  transition: opacity var(--dur) var(--ease);
+}
+.chart-frame {
+  fill: var(--muted);
+  font-size: 32px;
+  font-weight: bold;
+}
+:is(.chart, .chart-series)[data-effect="grow"] {
+  --enter-scale: 1;
+  --chart-shown: var(--shown);
+}
+.chart-trace {
+  --chart-u: var(--chart-shown, 1);
+  clip-path: inset(
+    -1rem calc((1 - var(--chart-u)) * (100% + 2rem) - 1rem) -1rem -1rem
+  );
+  transition: --chart-u var(--dur) var(--ease);
+}
+/*
+ * Paper and the handout view show each frame of a chart as a small chart in a
+ * grid, and not the chart that moves. Each small chart has the axis of the
+ * whole chart, so the charts compare. The present view, the speaker view and
+ * the overview show the chart that moves.
+ */
+.chart-frames {
+  display: none;
+  width: var(--chart-width, 80vw);
+  max-width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.5rem 1rem;
+}
+.chart-copy {
+  margin: 0;
+  text-align: center;
+  font-size: 0.6em;
+}
+.chart .chart-copy svg {
+  width: 100%;
+  max-height: none;
+}
+body[data-view="handout"] .chart:has(.chart-frames) > svg {
+  display: none;
+}
+body[data-view="handout"] .chart-frames {
+  display: grid;
+}
+@media print {
+  .chart:has(.chart-frames) > svg {
+    display: none;
+  }
+  .chart-frames {
+    display: grid;
+  }
+}
+/*
  * The shape element. The shapes of a slide are in one layer over the whole
  * slide, so a percentage is a part of the slide. The layer takes no click,
  * so a click goes to the slide. A shape draws with `currentColor`, and its

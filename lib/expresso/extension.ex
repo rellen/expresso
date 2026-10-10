@@ -292,11 +292,25 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @frame %Spark.Dsl.Entity{
+    name: :frame,
+    target: Expresso.Element.Frame,
+    args: [:label],
+    entities: [elements: [@series]],
+    schema: [
+      label: [
+        type: :string,
+        required: true,
+        doc: "The name of the point in time, such as \"2024\"."
+      ]
+    ]
+  }
+
   @chart %Spark.Dsl.Entity{
     name: :chart,
     target: Expresso.Element.Chart,
     args: [:kind],
-    entities: [elements: [@series], on: [@on]],
+    entities: [elements: [@series], timeline: [@frame], on: [@on]],
     transform: {Expresso.Element.Chart, :check, []},
     schema:
       @overlay_schema ++
@@ -340,6 +354,34 @@ defmodule Expresso.Extension do
             type: :boolean,
             default: false,
             doc: "Dim each series when a later series shows."
+          ],
+          frames: [
+            type: :string,
+            doc:
+              "The heading of the column of a CSV file that names the frame of each row. Requires the src option."
+          ],
+          frame_label: [
+            type: {:in, [:top_right, :top_left, :none]},
+            default: :top_right,
+            doc: "The place of the label of the frame in a chart with frames."
+          ],
+          sort: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Put the categories of a bar chart in order of their totals, from the largest, in each frame."
+          ],
+          count: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Count each value from the value of one frame to the value of the next. The default is a fade."
+          ],
+          thumbnail: [
+            type: {:or, [{:in, [:first, :last]}, :pos_integer]},
+            default: :first,
+            doc:
+              "The frame that the overview and the menu of the slides show: :first, :last or the number of a frame."
           ]
         ]
   }

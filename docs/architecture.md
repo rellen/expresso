@@ -1149,6 +1149,51 @@ to the items of a list. These are the reasons for this design:
   option, and `Expresso.Element.Chart.build/1` reads the file, as for a code element. The
   series of the file are then entities, so `reveal` applies to them.
 
+### The motion of a chart
+
+A chart with frames moves its marks from the values of one frame to the values of the next,
+and a chart with the effect `:grow` grows its marks when it shows.
+`Expresso.Element.Chart.Motion` draws these marks, and the style sheet moves them. The
+browser runs no script for a mark. These are the reasons for this design:
+
+- **A frame is a step of the overlays.** `Expresso.Overlay.Expand` gives each frame after
+  the first the next value of the counter, after the series of the chart. Therefore
+  `reveal`, `pause` and the absolute steps work with frames as they work with each other
+  element, and the step of a frame goes into the list of the steps of the presenter.
+- **The marks read channels.** The renderer draws each mark one time, at the origin of the
+  SVG, and a CSS transform moves it to its place. The place comes from a custom property of
+  the chart, a channel, such as `--b1-3` for the top of a bar. The style attribute of the
+  mark reads the channel with the value of the first frame as its fallback. The generated
+  style block sets the channels of each later frame at the steps of that frame, as it sets
+  the properties of an `on` entity.
+- **Registered numbers move the marks.** A mark copies its channels into `--chart-u`,
+  `--chart-v` and `--chart-w`. The theme registers them as numbers and gives them a
+  transition, so a mark moves with the `speed` and the `easing` of the element, and a reader
+  who asks for reduced motion sees the new frame at once. A change of `d` or of `points`
+  does not move in each browser, and a transition of `clip-path` can change at once. A
+  number moves in Chrome 85, Safari 16.4 and Firefox 128.
+- **A line is a row of segments.** Each segment is a line from 0 to 1, and a matrix moves
+  its ends to the two points. The two ends of a point read the same registered number, so
+  two segments stay together while they move.
+- **A slice is a dash.** A slice of a pie that moves is a circle with a stroke as wide as
+  the radius. The dash of the stroke is the slice, and a turn of the circle is its start.
+  The dash and the turn are numbers, so they move.
+- **A bar is a long shape with a clip.** A bar is a shape with round corners at its end,
+  longer than the plot. A clip at the base line cuts it, so the bar moves with a
+  translation and its corners keep their size. The clip is a CSS `inset()` in the box of
+  the SVG, because a `clipPath` with an `id` fails in the copies of a slide in the overview
+  and in the menu.
+- **A text that changes has a copy for each frame.** The channel `--k<n>` is 1 at frame
+  `n`, and the copies fade. With `count true`, a number has one copy, and its registered
+  number `--chart-n` moves. `assets/src/chart.ts` writes that number as the text at each
+  frame of the browser while a transition of a number runs. The style sheet still gives
+  the time, so the count and the bar finish together.
+- **Paper shows each frame.** A printed page shows one step, so a chart with frames also
+  holds a small chart of each frame without motion. On paper and in the handout view, the
+  small charts show in a grid, and the chart that moves does not show. The overview and the
+  menu show the frame of the `thumbnail` option, because they show the last step of the
+  slide.
+
 ## The DSL
 
 `Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a

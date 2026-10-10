@@ -11,7 +11,7 @@ defmodule Expresso.Overlay.Render do
   """
 
   alias Expresso.Deck
-  alias Expresso.Element.{On, Pause}
+  alias Expresso.Element.{Chart, On, Pause}
   alias Expresso.Slide
 
   @doc """
@@ -72,8 +72,8 @@ defmodule Expresso.Overlay.Render do
         {pause, position}
 
       element, position ->
-        el = if on(element) == [], do: nil, else: "#{prefix}-e#{position}"
         values = nearest(values, element)
+        el = if identity?(struct(element, values)), do: "#{prefix}-e#{position}"
 
         {children, position} =
           identify_elements(children(element), prefix, position + 1, values)
@@ -81,6 +81,12 @@ defmodule Expresso.Overlay.Render do
         {struct(element, [el: el, elements: children] ++ Map.to_list(values)), position}
     end)
   end
+
+  # An element with an `on` entity has an identity. A chart whose marks move
+  # also has one, because the rules of its frames and the clips of its bars
+  # name it.
+  defp identity?(%Chart{} = chart), do: on(chart) != [] or Chart.moves?(chart)
+  defp identity?(element), do: on(element) != []
 
   @doc """
   Make the overlay attributes of one element
@@ -134,7 +140,7 @@ defmodule Expresso.Overlay.Render do
   @doc """
   Make the generated style block of a deck
 
-  The block has three parts:
+  The block has these parts:
 
   - One `@property` rule for each state of the deck. It registers the custom
     property as a number with the initial value 0.
@@ -147,6 +153,9 @@ defmodule Expresso.Overlay.Render do
     properties of the entity on the element, at each step of the entity. A
     `dim` value also sets `--dimmed`, which the theme reads for the dimmed
     colors.
+  - The rules of the frames of each chart, from
+    `Expresso.Element.Chart.rules/1`. Each rule sets the custom properties
+    of a frame at the steps of that frame.
   - One rule for each speed in milliseconds of the deck, such as
     `[data-speed="450"] { --speed: 450ms; }`. The theme gives the presets.
 
@@ -157,8 +166,18 @@ defmodule Expresso.Overlay.Render do
   def style(%Deck{slides: slides}) do
     ons = Enum.flat_map(slides, &ons/1)
 
-    (properties(ons) ++ reveals(slides) ++ Enum.map(ons, &rule/1) ++ speeds(slides))
+    (properties(ons) ++
+       reveals(slides) ++ Enum.map(ons, &rule/1) ++ charts(slides) ++ speeds(slides))
     |> Enum.join("\n")
+  end
+
+  # The rules of the frames of each chart. `Expresso.Element.Chart.rules/1`
+  # writes them.
+  defp charts(slides) do
+    for slide <- slides,
+        %Chart{} = chart <- elements(slide.elements || []),
+        rule <- Chart.rules(chart),
+        do: rule
   end
 
   # A speed in milliseconds has no preset in the theme, so the block gives it

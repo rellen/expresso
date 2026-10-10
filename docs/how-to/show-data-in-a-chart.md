@@ -102,3 +102,6 @@ Examples.ChartPie
 
 A pie shows parts of one whole. To compare values that are close, use a bar chart: an eye
 compares the lengths of bars better than the angles of slices.
+
+To move the bars, the lines or the slices of a chart from one point in time to the next, see
+[Show a change over time in a chart](show-a-change-over-time-in-a-chart.md).
