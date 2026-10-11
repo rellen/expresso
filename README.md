@@ -190,6 +190,7 @@ Write an option in the deck to apply it to each slide:
 | `root __DIR__` | The directory of each relative path of the deck. See [the root option](docs/reference/root-option.md). |
 | `template MyDeckTemplate` | A module that makes the header and the footer. See [the template option](docs/reference/template-option.md). |
 | `slide_template MySlideTemplate` | A module that makes the body of each slide. |
+| `icons logo: "assets/logo.svg"` | SVG files of your own for the `icon` element and for `:icon:name:` in a text. See [the icon element](docs/reference/icon-element.md). |
 | `theme :dracula` | The colors of the slides and of the code. Each built-in theme meets the contrast minimums of WCAG. `theme dark: :dracula, light: :default` gives two variants. See [the theme option](docs/reference/theme-option.md). |
 
 A slide takes `transition`, `morph`, `handout`, `effect`, `speed` and `easing` too. An option on a
@@ -565,6 +566,7 @@ deck and of a slide:
 - [The transition option](docs/reference/transition-option.md)
 - [The morph option](docs/reference/morph-option.md)
 - [The overlay options](docs/reference/overlay-options.md)
+- [Step labels](docs/reference/step-labels.md)
 - [The css option](docs/reference/css-option.md)
 - [The goto option](docs/reference/goto-option.md)
 - [The layout check](docs/reference/layout-check.md)
