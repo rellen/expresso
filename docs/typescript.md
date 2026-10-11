@@ -1,7 +1,7 @@
 # TypeScript for the presenter script
 
-This document gives a plan for the presenter script in TypeScript. The code does not
-contain this plan yet. The document ends with five decisions.
+This document gave a plan for the presenter script in TypeScript. The code contains the
+plan, and "Progress" gives the date of each step. The document ends with five decisions.
 
 ## The constraint
 
@@ -13,16 +13,16 @@ Nothing else holds. The structure of the script today, and the form of the `scri
 element today, are results of a small first version. They are not constraints. The plan
 below changes both.
 
-## The script today
+## The script before the conversion
 
-`assets/main.js` is the presenter. It holds the number of the current slide, and it reads
-the keys `j`, `k` and `p`. It shows a slide with the inline `style.display` property. It
-has approximately 35 lines in one file. It has no `import` and no `export`.
+Until 2026-09-13, `assets/main.js` was the presenter. It held the number of the current
+slide, and it read the keys `j`, `k` and `p`. It showed a slide with the inline
+`style.display` property. It had approximately 35 lines in one file, with no `import` and
+no `export`.
 
-`Expresso.Renderer` reads the file with `File.read!/1` at compile time. It writes the text
-into one `script` element. The file is an `@external_resource` of the renderer. No build
-step exists, and no test exists. `docs/development.md` gives a Playwright recipe that a
-person runs by hand.
+`Expresso.Renderer` read the file with `File.read!/1` at compile time, and it wrote the
+text into one `script` element. The file was an `@external_resource` of the renderer. No
+build step existed, and no test existed. A person ran a Playwright recipe by hand.
 
 ## Why now
 
@@ -185,7 +185,7 @@ came from the work, and the plan above did not give them:
 - Elixir compares the content of an `@external_resource`, and not its time. A `touch` of a
   source does not start a compile of the renderer. A content change does.
 
-The bundle of the presenter today is 662 bytes. Chromium reports `CSS1Compat`, and the
+On 2026-09-13, the bundle of the presenter was 662 bytes. Chromium reports `CSS1Compat`, and the
 keys `j`, `k` and `p` give the same result as the script before the conversion.
 
 ## The steps
@@ -256,8 +256,9 @@ a reason appears.
 
 ### 4. Is the order of the work correct?
 
-The decision is to do this conversion before the overlay code. In `docs/architecture.md`,
-this conversion is item 2 of "Open work", and the overlay code is item 3.
+The decision is to do this conversion before the overlay code. At the time of the
+decision, this conversion was item 2 of "Open work" in `docs/architecture.md`, and the
+overlay code was item 3.
 
 ### 5. Does the bundle take a runtime dependency from npm?
 
@@ -269,8 +270,8 @@ reasons are:
   `npm ci`.
 - The renderer writes the bundle into each deck, and each deck is one HTML file. Thus each
   byte of the bundle goes into each deck.
-- `state.ts` is already a functional core. `next` is a pure function, and each change
-  makes a new object. An invalid input gives the same state.
+- `state.ts` was already a functional core at that time. Its `next` was a pure function,
+  and each change made a new object. Today `run` in `interpreter.ts` is that function. An invalid input gives the same state.
 - fp-ts gets only maintenance, because its author went to Effect. Effect 4 is a release
   candidate (`4.0.0-rc.117`), and the `latest` tag of Effect is `3.22.2`.
 
@@ -300,8 +301,8 @@ types. The project gets both at no cost to the bundle:
 
 With `strict`, the types `T | undefined` and `T | null` do the work of an `Option`,
 because the compiler makes each caller handle the missing value. A `Result` is useful when
-a function must tell its caller why it failed. A survey of `assets/src/` found no such
-function:
+a function must tell its caller why it failed. A survey of `assets/src/` at the time of
+the decision found no such function. Some of these names are no longer in the code:
 
 - `fromHash`, `follow`, `choose`, `move`, `go`, `position` and `select` give the same state
   for an invalid input.

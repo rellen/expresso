@@ -78,6 +78,8 @@ of the deck holds the options of the deck:
 | `speed` | `nil` |
 | `easing` | `nil` |
 | `css` | `nil` |
+| `morph` | `:auto` |
+| `theme` | `:default` |
 
 The renderer puts the style sheet of `css` into the document after the theme.
 
@@ -244,10 +246,10 @@ same step. `--port` gives a different port, and the binary takes the same option
 The watch mode watches these files:
 
 - The deck file.
-- Each image, diagram and style sheet that the last render read. `Expresso.Image`,
-  `Expresso.Element.Diagram` and `Expresso.Css` read these files with
-  `Expresso.DeckFile.read/1`, which records the path only inside
-  `Expresso.DeckFile.track/1`. Thus the three modules need no code for the watch mode.
+- Each file that the last render read: an image, a diagram, a page of an embed, a video, a
+  sound, a chart file, a code file, an icon file and a style sheet. Each module that reads
+  one of these files calls `Expresso.DeckFile.read/1`, which records the path only inside
+  `Expresso.DeckFile.track/1`. Thus no module needs code for the watch mode.
 - The custom templates in `./priv/templates/`. See "The templates".
 
 `Expresso.DeckFile.read/1` reads a relative path from the working directory of the
@@ -344,21 +346,26 @@ the doctype comes from `Expresso.Renderer.render/1`:
 
 ```
 <!DOCTYPE html>
-html
+html               lang "en", and data-variants for a theme with two variants
   head
+    meta             charset "utf-8"
     title            the name of the deck
     style            assets/fonts.css, with the bytes of each font file in it
-    style            assets/style.css
+    style            the roles of the theme, then assets/style.css
     style            the rules of the token classes of a code element, from Makeup
     style            the generated rules of the overlays, from Expresso.Overlay.Render
+    style            the css option of the deck, when the deck has one
     body           data-view "present", and data-progress and data-print-notes
                    from the deck, and a style with --overview-columns and
                    --overview-zoom
       div            the present view, class "screen"
         section      one for each slide, class "slide", id "slide-<number>",
-                     data-step "1", data-max-step from the slide
+                     data-step "1", data-max-step from the slide, data-morph
+                     from the slide or the deck
           div        the header, from the deck template
           div        the body, from the slide template
+          ol         the footnotes of the slide, class "footnotes", when it has some
+          div        the shapes of the slide, class "shapes", when it has some
           div        the footer, from the deck template
             span     the slide number, class "slide-number", with slide_numbers: true
       div            the handout view, class "handout"
@@ -368,19 +375,28 @@ html
                      steps, data-omit when the handout option does not select
                      the step, data-thumbnail and data-commands on the page of
                      the last step of the slide
-          div        the same three parts as a slide of the present view
+          div        the same parts as a slide of the present view
           aside      the notes of the slide, class "notes", when the slide has notes
+        section      the page of the sources, class "sources", when a slide has
+                     footnotes
         div          the four elements of the speaker view: speaker-notes,
                      speaker-position, speaker-timer and speaker-left
       div            the progress bar, id "progress"
-      div            the list of keys, id "help"
-        div          one for each mode that has bindings, data-mode from the
-                     mode, hidden
-          div        one for each binding, with a kbd and a span
+      nav            the menu of the slides and the steps, id "menu"
+      dialog         the list of keys, id "help"
+        h2           the title of the list
+        label        the field of the search, with an input
+        details      one for each mode that has bindings, data-mode from the mode
+          div        one for each group of bindings, class "help-set"
+            ul
+              li     one for each binding, data-words with the words of the search
       script         the list of the steps as JSON, id "expresso-deck",
                      type "application/json", from Expresso.Steps
       script         the program of the presenter as JSON, id "expresso-program",
                      type "application/json", from Expresso.Presenter.Program
+      script         the sources of the embeds, the videos and the sounds as JSON,
+                     ids "expresso-embeds", "expresso-videos" and
+                     "expresso-audios", when the deck has such an element
       script         priv/static/presenter.js, the presenter bundle
 ```
 
@@ -407,9 +423,10 @@ URIs take approximately 147 kilobytes of the document.
 
 ### The style sheets and the bundle
 
-The renderer holds the two style sheets and the presenter bundle in module attributes.
-It reads them with `File.read!/1` at compile time. Each style sheet, and each source of the
-bundle under `assets/src/`, is an `@external_resource` of the module. Therefore a change to
+The renderer holds `assets/style.css` and the presenter bundle in module attributes.
+It reads them with `File.read!/1` at compile time. The style sheet, and each source of the
+bundle under `assets/src/`, is an `@external_resource` of the module. `Expresso.Font` does
+the same for `assets/fonts.css` and the font files. Therefore a change to
 one of these files starts a new compile of `Expresso.Renderer`. Elixir compares the content
 of an external resource, and not its time, so a `touch` does not start a compile.
 
@@ -736,8 +753,8 @@ custom element that writes text from the deck must do the same.
 
 An `image` shows an image file. The document of a deck is one file, so the image cannot be
 a second file. `Expresso.Image` reads the file at render time, and it makes a data URI from
-the bytes. The `src` option gives the path, and the path is relative to the working
-directory of the command. The extension of the path gives the media type, and
+the bytes. The `src` option gives the path, and the path is relative to the `root`
+option of the deck, or to the working directory of the command without it. The extension of the path gives the media type, and
 `Expresso.Image` accepts `.avif`, `.gif`, `.jpeg`, `.jpg`, `.png`, `.svg` and `.webp`. A
 file that the function cannot read stops the render with a message that names the path.
 
@@ -1335,8 +1352,8 @@ the elements at compile time. These are the reasons for this design:
   an element does not know the deck. The transformer reads the files once, with the `root`
   of the deck, and it puts the SVG into each element. A name that no icon has is then an
   error of the compiler, with three names that are near.
-- **`currentColor` in each file.** The renderer replaces each color of a file of the deck
-  with `currentColor`, so an icon of the deck takes the color of its role or of its text,
+- **`currentColor` in each file.** `Expresso.Icon.svg_file/1` replaces each color of a file
+  of the deck with `currentColor` when the transformer reads the file, so an icon of the deck takes the color of its role or of its text,
   as a Lucide icon does.
 - **A marker in the text.** The text of a text area is HTML, so the transformer replaces
   `:icon:name:` with the SVG. The marker has no meaning in HTML, so it cannot change a text
@@ -1349,15 +1366,15 @@ top level section. The section holds `slide` entities.
 
 ### The entities
 
-- A `slide` holds `text_box` and `pause` entities. It also holds `image`, `list`, `table`,
-  `quotation`, `spacer`, `code`, `math`, `diagram` and `columns` entities.
-- A `text_box` holds `text_area` and `on` entities, and each element entity of a slide
-  except `text_box` and `pause`.
-- A `text_area` holds `on` entities.
-- A `list` holds `item` entities.
-- A `table` holds `row` entities.
-- A `diagram` holds `part` entities.
-- A `columns` element holds `column` entities, which hold the elements of a text box.
+- A `slide` holds the definition of each element entity, and the `pause` entity.
+- A `text_box`, a `column`, a `callout` and an `item` declare the key `elements` with no
+  definitions. Their blocks use the macros of the slide. See "The definitions of the
+  elements".
+- A `list` holds `item` entities, a `table` holds `row` entities, a `diagram` holds `part`
+  entities, and a `columns` element holds `column` entities.
+- A `chart` holds `series` entities, and `frame` entities in `timeline`. A `frame` holds
+  `series` entities.
+- Each element entity holds `on` entities.
 
 The `slide` entity takes an optional name as its first argument. The DSL accepts `slide do`
 and `slide "name" do`.
@@ -1403,8 +1420,8 @@ block, is lost before the check, with no error.
 
 - Each element has an `at` option.
 - A slide has a `steps` option and an `auto_reveal` option.
-- A list and a table have a `reveal` option.
-- A code element has a `reveal` option with a list of lines.
+- A list, a table, a chart and a toc have a `reveal` option and a `dim` option.
+- A code element has a `reveal` option with a list of lines, and a `dim` option.
 
 A slide also has a `heading` option, a `notes` option and a `handout` option, and
 `Expresso.Slide.put_options_in_metadata/1` puts each into the metadata of the slide. The
@@ -1500,9 +1517,12 @@ The TypeScript part is under `assets/src/`. It has these modules:
 - `program.ts` reads the program of the presenter, and it trusts the renderer.
 - `interpreter.ts` runs the program. It applies one event to the state, and it does not
   touch the document.
-- `state.ts` holds the state: the index of the current step, the view, the black screen,
-  the digits of a slide number and `undim`, the dimming of code. It also holds the
-  messages between the windows, and the side of a click and the direction of a swipe.
+- `schema.ts` declares the type and the decoder of each value that Elixir writes for the
+  script, the state among them. `decode.ts` makes its decoders.
+- `state.ts` makes and changes the state: the index of the current step, the view, the
+  black screen, the digits of a slide number, `undim`, and the fields of the list of keys,
+  the progress bar, the overview and the menu. It also holds the messages between the
+  windows, and the side of a click and the direction of a swipe.
 - `speaker.ts` makes the texts of the speaker view.
 - `dom.ts` reads the document. It applies a state with the projections of the program,
   and it shows the slide of the current step with the inline `style.display` property and
@@ -1511,6 +1531,11 @@ The TypeScript part is under `assets/src/`. It has these modules:
   the fragment of the address.
 - `layout.ts` makes the layout check of `?check`. It shows each step with `dom.ts`, it
   measures the elements of the slide, and it writes a report into the document.
+- `search.ts` filters the list of keys, and `scheme.ts` changes the variant of a theme.
+- `morph.ts` finds the elements that two slides share. See "The morph".
+- `chart.ts` writes the numbers that count, of a chart and of a stat.
+- `media.ts`, `video.ts`, `audio.ts` and `embed.ts` give the sources of the media and of
+  the frames to their elements.
 
 The first slide is slide 1, and the first step is step 1. `docs/overlays.md` gives the
 rules of a step.
@@ -1743,11 +1768,11 @@ definition. The interpreter runs the same bindings, so the list shows each key t
 operates, and no other key. A binding of a click or a swipe has a label, and the list
 shows the label in place of a key.
 
-The renderer writes one list for each mode into the element `help`. Each list has the name
-of its mode in `data-mode`, and the renderer hides it. `helpMode` in `interpreter.ts`
-finds the mode under the list of keys, and `dom.ts` shows only the list of that mode. The
-style sheet shows the element while the `body` has `data-help`. A printer does not get the
-list.
+The renderer writes the `dialog` element `help`, with one `details` element for each mode.
+Each `details` element has the name of its mode in `data-mode`. `helpMode` in
+`interpreter.ts` finds the mode under the list of keys. `dom.ts` opens the `details` element
+of that mode, gives it `data-current`, and opens the dialog with `showModal`. A printer does
+not get the list.
 
 ### The progress bar
 
@@ -1929,7 +1954,7 @@ next step. A mark writes `data-speaker` on these two pages, and the style sheet 
 in a grid and scales them with `zoom`. The notes of the current page, the position and a
 timer go into three elements that the renderer writes into the handout view. The style
 sheet hides them in each other view and on paper. The speaker view knows the keys of the
-present view, but `p` and `s` have no function in it. `r` sets the timer back to `0:00`,
+present view, but `p`, `s` and `g` have no function in it. `r` sets the timer back to `0:00`,
 and the timer then starts at the next change of the step.
 
 The `duration` option of the deck gives the length of the talk in minutes. The list of the

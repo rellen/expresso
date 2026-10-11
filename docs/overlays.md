@@ -45,8 +45,9 @@ inside the block of the element, `at 3`, in the form of Spark. Spark does not ac
 option as a keyword in front of the block, so `text_box at: 3 do` is not a form.
 
 A call of the DSL has no parentheses, and `.formatter.exs` lists each call so that
-`mix format` adds none. `pause()` is the one exception. Elixir reads a bare `pause` as a
-variable, and the compile stops with an error. Each step
+`mix format` adds none. A call with no argument, such as `pause()`, `spacer()` and `toc()`,
+is the exception. Elixir reads a bare `pause` as a variable, and the compile stops with an
+error. Each step
 number is 1 or more, and a range
 goes up with a step of 1.
 
@@ -64,7 +65,7 @@ Each slide has a counter. The counter starts at 1.
 Two constructions change the counter:
 
 - The `pause` entity increments the counter.
-- A `+` in a specification takes the current value of the counter. Then the `+`
+- A `:next` in a specification takes the current value of the counter. Then the `:next`
   increments the counter.
 
 This rule lets an element move in the slide without a change to a number. It also lets an
@@ -78,7 +79,7 @@ An element without an `at` option shows at each step of the slide. The renderer 
 this rule for an element at the level of the slide. See "The auto_reveal option".
 
 Therefore a `pause` entity alone reveals no element. A `pause` changes the counter only. An
-element must contain a `+` to read the new value of the counter. This behavior is different
+element must contain a `:next` to read the new value of the counter. This behavior is different
 from `\pause` in Beamer, which reveals the content after it.
 
 This explicit rule is the default. An author who wants the behavior of Beamer writes
@@ -207,7 +208,7 @@ These rules apply with the option:
 
 ### The dim option
 
-A `list`, a `table` or a `code` element also takes `dim true`. Each child then gets the
+A `list`, a `table`, a `code` element, a `chart` or a `toc` also takes `dim true`. Each child then gets the
 state `dim` from the first step of a later child. The earlier items stay on the slide, and
 the newest item has the attention of the audience.
 
@@ -375,7 +376,7 @@ The transformer runs one time for each slide. It does these operations:
 2. Read the elements of the slide in document order.
 3. Increment the counter at each `pause` entity, and after the `on` entities of a code
    element with `whole_first`.
-4. Replace each `+` with the current value of the counter, and increment the counter.
+4. Replace each `:next` with the current value of the counter, and increment the counter.
 5. Expand each specification into an explicit list of step numbers.
 6. Write the maximum step number into `slide.metadata`.
 7. Remove each `pause` entity from the elements of the slide.
@@ -402,7 +403,7 @@ keeps `nil` in that field, and it shows at each step of its parent. Step 1 gives
 option to an element at the level of the slide when the slide has the `auto_reveal`
 option.
 
-`Expresso.Overlay.Expand.slide/1` does the six operations on one `Expresso.Slide` struct,
+`Expresso.Overlay.Expand.slide/1` does the seven operations on one `Expresso.Slide` struct,
 and it is a pure function. `Expresso.Overlay.Transformer` calls it for each slide of the
 DSL state. When the expansion gives an error, the transformer makes a
 `Spark.Error.DslError` with the path of the slide.
@@ -416,6 +417,7 @@ The verifier gives an error for these conditions:
 - A specification contains a step number that is less than 1.
 - An `on` entity has a specification that no step of the `at` option contains.
 - A `pause` entity is inside a container element.
+- An `on` entity with `move_to` is not in a part of a diagram, or it also sets `x` or `y`.
 - A child element has a step that its parent does not contain.
 
 The first condition needs a maximum step number that comes from a different source than
@@ -424,11 +426,12 @@ absolute step number always raises the maximum, and the condition is unreachable
 `steps` option of the slide is that source. See the decisions.
 
 The transformer reports the first condition, because the expansion of an open
-specification needs the maximum. `Expresso.Overlay.Check.slide/1` reports the other four
+specification needs the maximum. `Expresso.Overlay.Check.slide/1` reports the other five
 conditions on one expanded `Expresso.Slide` struct, and it is a pure function.
-`Expresso.Overlay.Verifier` calls it for each slide. The DSL does not accept a `pause`
-inside an element, and `Expresso.Overlay.new/1` does not accept a step below 1. Therefore
-the check of those two conditions applies to a slide that a script builds.
+`Expresso.Overlay.Verifier` calls it for each slide. The DSL accepts a `pause` inside an
+element, because the macros of the slide stay in scope in each nested block, and the check
+refuses it. `Expresso.Overlay.new/1` does not accept a step below 1, so the check of that
+condition applies to a slide that a script builds.
 
 Spark runs a verifier in an `@after_verify` callback of the module. Elixir reports an
 error from that callback as a compile warning, and `mix compile --warnings-as-errors`
@@ -558,8 +561,9 @@ For an overlay, the JavaScript code writes the `data-step` attribute. It does no
 operation.
 
 `Expresso.Overlay.Render` writes this contract. `identify/1` gives each element with an
-`on` entity its `data-el` value, in the `el` field of the struct. `attributes/1` makes the
-two attributes of one element, and the render function of the element puts them on its
+`on` entity, and each chart that moves, its `data-el` value, in the `el` field of the
+struct. `attributes/1` makes the overlay attributes of one element: `data-on`,
+`data-effect`, `data-el`, `data-speed`, `data-easing` and `data-morph-key`, and the render function of the element puts them on its
 root tag. `style/1` makes the generated style block. The base rule and the registration
 of `--x`, `--y`, `--scale`, `--rotate` and `--opacity` are in `assets/style.css`, because
 the theme owns them. The base rule also sets `visibility: hidden`, and the reveal rule sets
@@ -596,7 +600,8 @@ The `data-on` attribute is not sufficient for the `on` entity. Two elements can 
 the same step and can hold different values. A selector on `data-on` alone applies both
 values to both elements.
 
-Therefore the renderer gives a `data-el` attribute to each element with an `on` entity.
+Therefore the renderer gives a `data-el` attribute to each element with an `on` entity, and
+to each chart that moves.
 The value is unique in the document. The renderer makes the value from the number of the
 slide and the position of the element in the tree. Therefore the value is stable between
 two renders of the same deck. A rule for one `on` entity uses this attribute:
@@ -768,7 +773,8 @@ The design needs these constructions:
 
 - A `prefers-reduced-motion` block that sets each duration to zero. `assets/style.css`
   has this block, and it sets `--dur` and `--motion` to zero.
-- A handout view for a screen reader and for a printer. The code does not have this view.
+- A handout view for a screen reader and for a printer. The renderer and `assets/style.css`
+  give this view.
 
 The handout view is not a simple override of the base rule. An override that shows each
 element at the same time puts the elements of all the steps on one page. An element that
@@ -803,7 +809,8 @@ rules. The key `a` of the handout view shows each page again, for a print of eve
 A `data-el` value is unique in one view. The handout view holds the same value as the
 present view. A rule keeps its correct element, because the `data-step` of the `section`
 selects one page. A `section` of the handout view does not get the class
-`slide` or an identifier, because `dom.ts` counts the class and reads the identifier.
+`slide` or an identifier, because the script finds a slide of the present view by its
+identifier `slide-<number>`.
 
 The `aria-hidden` attribute is not part of this design. An attribute is not a CSS
 property, and CSS cannot write it. Only JavaScript can write it, and the design gives
@@ -815,8 +822,7 @@ theme must also set `visibility: hidden` after the transition.
 ## Changes to the current code
 
 This section lists the work that this design made necessary. Each item is done, and the
-section "Progress" gives the date of each. The handout view of the section
-"Accessibility" is the one open item.
+section "Progress" gives the date of each.
 
 ### The extension
 
@@ -860,7 +866,8 @@ block element. `docs/architecture.md` gives the rule in the section "The element
 
 `Expresso.Renderer` reads `assets/style.css` with `File.read!/1` at compile time. The step
 rules depend on the deck, and the module attribute cannot hold them. Therefore the
-renderer writes a third `style` element, after the fonts and the theme. It holds the
+renderer writes a fourth `style` element, after the fonts, the theme and the rules of the
+code tokens, and before the style sheet of the `css` option. It holds the
 result of `Expresso.Overlay.Render.style/1`.
 
 The renderer writes `data-step="1"` and `data-max-step` on each `section` element. A slide
@@ -901,14 +908,14 @@ imperative API keep parity with the DSL?" gives the reasons.
 
 ## The test plan
 
-The code has each test below. The tests of `Expresso.Overlay` and of its four modules
-are in `test/expresso/overlay_*_test.exs`, and the tests of the presenter are in
-`assets/test/state.test.ts`.
+The code has each test below. The tests of `Expresso.Overlay` and of its modules
+are in `test/expresso/overlay_*_test.exs`. The tests of the presenter are in
+`assets/test/interpreter.test.ts` and `assets/test/state.test.ts`.
 
 - Tests for `Expresso.Overlay`. Each row of the table in "The specification" is one test
   of `new/1`, and a different term gives an error. `resolve_next/2`, `max_step/1` and
   `steps/2` get a test for each rule of the counter and of an open range.
-- Transformer tests. A slide with a `pause` and a `+` gives the correct step number for each
+- Transformer tests. A slide with a `pause` and a `:next` gives the correct step number for each
   element. An open range expands to the maximum step number of the slide. The transformer
   removes each `pause` entity.
 - Verifier tests. Each condition in the section "The verifier" gives an error.
@@ -961,7 +968,7 @@ change needs a new decision, and this document then records it.
 
 Each slide has one counter, and the transformer reads the tree in document order, depth
 first. A `pause` increments the counter for each element after it, at each level of the
-tree. An author reads the file from the top to the bottom, and a `+` gives the next number
+tree. An author reads the file from the top to the bottom, and a `:next` gives the next number
 in that order. This is the behavior of `\pause` in Beamer. A counter for each level of the
 tree can give the same step number to two elements in two subtrees. A slide has one
 sequence of steps.
