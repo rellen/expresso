@@ -1,8 +1,10 @@
 defmodule Expresso.E2E.ChartHierarchyTest do
   use Expresso.E2E, async: false
 
-  # A treemap and a sunburst with two frames, and a treemap with the effect
-  # grow at step 2.
+  alias PlaywrightEx.{Browser, BrowserContext}
+
+  # A treemap and a sunburst with two frames, and a treemap and a sunburst
+  # with the effect grow at step 2.
   defmodule Deck do
     use Expresso
 
@@ -43,6 +45,16 @@ defmodule Expresso.E2E.ChartHierarchyTest do
         effect :grow
         at 2
         series "S", [3, 1]
+      end
+    end
+
+    slide "sunburst grow" do
+      chart :sunburst do
+        title "Grow"
+        categories ["Production/Press", "Production/Paint", "Support/Stops"]
+        effect :grow
+        at 2
+        series "Hours", [60, 40, 20]
       end
     end
   end
@@ -100,5 +112,44 @@ defmodule Expresso.E2E.ChartHierarchyTest do
 
     press(page, "j")
     assert Enum.all?(area(page, 3), &(&1 > 0))
+  end
+
+  describe "with motion" do
+    # Each change lasts 2 seconds, so the test can read the page in the middle
+    # of a change.
+    setup %{browser: browser, tmp_dir: tmp_dir} do
+      {:ok, context} =
+        Browser.new_context(browser.guid,
+          timeout: 10_000,
+          viewport: %{width: 1280, height: 720},
+          reduced_motion: "no-preference"
+        )
+
+      on_exit(fn -> BrowserContext.close(context.guid, timeout: 10_000) end)
+      {:ok, page} = BrowserContext.new_page(context.guid, timeout: 10_000)
+      %{slow: page, url: render(Deck, tmp_dir)}
+    end
+
+    test "the names of a sunburst with the effect grow show after the arcs grow", %{
+      slow: page,
+      url: url
+    } do
+      # The address shows the slide with a transition, and a key during that
+      # transition changes the step with no motion.
+      page = open(page, url <> "#4")
+      Process.sleep(1000)
+      js(page, "document.documentElement.style.setProperty('--dur', '2s')")
+      press(page, "j")
+      Process.sleep(800)
+
+      # The arcs grow, and no name shows.
+      [arc | _rest] = values(page, 4, ".chart-ring", "--chart-v")
+      assert arc > 0
+      assert Enum.all?(values(page, 4, ".chart-label", "opacity"), &(&1 == 0))
+
+      # After the growth and the fade, the names that fit show.
+      Process.sleep(3600)
+      assert Enum.any?(values(page, 4, ".chart-label", "opacity"), &(&1 == 1))
+    end
   end
 end
