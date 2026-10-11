@@ -150,9 +150,7 @@ defmodule Expresso.Test.DeckTree do
   defp columns do
     map(at(), fn at ->
       column = fn text ->
-        entity(:column, [], [],
-          elements: [entity(:text_box, [], [], elements: [entity(:text_area, [], text: text)])]
-        )
+        entity(:column, [], [], elements: [entity(:text_area, [], text: text)])
       end
 
       entity(:columns, [], at, elements: [column.("left"), column.("right")])

@@ -155,10 +155,8 @@ defmodule DslDeck do
       column do
         at from: :next
 
-        text_box do
-          text_area do
-            text "A column that takes the rest, and shows at the next step."
-          end
+        text_area do
+          text "A column that takes the rest, and shows at the next step."
         end
       end
     end

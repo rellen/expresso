@@ -19,7 +19,8 @@ defmodule Expresso.ShapeElementTest do
   test "the shapes of a slide go into one layer over the slide, and not in their place" do
     html =
       document([
-        Builder.text_box(elements: [Builder.text_area(text: "Text"), box(:rect)]),
+        Builder.text_box(elements: [Builder.text_area(text: "Text")]),
+        box(:rect),
         Builder.shape(:arrow, from: ["5%", "50%"], to: ["40%", "60%"])
       ])
 
