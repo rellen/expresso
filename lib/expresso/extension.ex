@@ -320,7 +320,7 @@ defmodule Expresso.Extension do
             type: {:in, Expresso.Element.Chart.kinds()},
             required: true,
             doc:
-              "The kind of the chart: :bar, :line or :pie. See docs/reference/chart-element.md."
+              "The kind of the chart: :bar, :line, :pie, :treemap or :sunburst. See docs/reference/chart-element.md."
           ],
           title: [
             type: :string,

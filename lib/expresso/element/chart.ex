@@ -1,9 +1,12 @@
 defmodule Expresso.Element.Chart do
   @moduledoc """
-  An element that draws a bar chart, a line chart or a pie chart
+  An element that draws a bar chart, a line chart, a pie chart, a treemap or
+  a sunburst
 
-  The `chart` entity takes the kind as its first argument: `:bar`, `:line` or
-  `:pie`. The `categories` option gives the names of the categories, and each
+  The `chart` entity takes the kind as its first argument: `:bar`, `:line`,
+  `:pie`, `:treemap` or `:sunburst`. A slash in a category of a treemap or a
+  sunburst names a part of a group, and `Expresso.Element.Chart.Hierarchy`
+  draws them. The `categories` option gives the names of the categories, and each
   `series` entity gives a name and one value for each category. The `src`
   option gives a CSV file in place of the two: the first row holds the names
   of the series, and each other row holds a category and its values.
@@ -27,13 +30,16 @@ defmodule Expresso.Element.Chart do
 
   use Expresso.Element
 
-  alias Expresso.Element.Chart.{Csv, Motion, Plot}
+  alias Expresso.Element.Chart.{Csv, Hierarchy, Motion, Plot}
   alias Expresso.Element.{Frame, Series}
 
   @typedoc "The struct of a chart"
   @type t :: %__MODULE__{}
 
-  @kinds [:bar, :line, :pie]
+  @kinds [:bar, :line, :pie, :treemap, :sunburst]
+
+  # The kinds of one series, which take no reveal option.
+  @single [:pie, :treemap, :sunburst]
 
   # The colors of a palette for the series, so the most series of a chart.
   @colors 8
@@ -73,7 +79,7 @@ defmodule Expresso.Element.Chart do
   Return the kinds of a chart
 
       iex> Expresso.Element.Chart.kinds()
-      [:bar, :line, :pie]
+      [:bar, :line, :pie, :treemap, :sunburst]
   """
   @spec kinds() :: [atom()]
   def kinds, do: @kinds
@@ -146,7 +152,7 @@ defmodule Expresso.Element.Chart do
     with {:ok, chart} <- options(chart),
          :ok <- categories(chart),
          :ok <- series(chart),
-         {:ok, chart} <- pie(chart),
+         {:ok, chart} <- single(chart),
          do: later_frames(chart)
   end
 
@@ -158,8 +164,8 @@ defmodule Expresso.Element.Chart do
 
   defp first_frame(chart), do: chart
 
-  defp options(%__MODULE__{kind: :pie, reveal: true}),
-    do: {:error, "a pie has one series, so it takes no reveal option. Give it an at option."}
+  defp options(%__MODULE__{kind: kind, reveal: true}) when kind in @single,
+    do: {:error, "a #{kind} has one series, so it takes no reveal option. Give it an at option."}
 
   defp options(%__MODULE__{kind: kind, sort: true}) when kind != :bar,
     do:
@@ -207,7 +213,7 @@ defmodule Expresso.Element.Chart do
 
       true ->
         with :ok <- series(%__MODULE__{chart | elements: elements}),
-             {:ok, _chart} <- pie(%__MODULE__{chart | elements: elements}),
+             {:ok, _chart} <- single(%__MODULE__{chart | elements: elements}),
              do: :ok
     end
   end
@@ -243,25 +249,32 @@ defmodule Expresso.Element.Chart do
   defp values?(values, count),
     do: is_list(values) and length(values) == count and Enum.all?(values, &is_number/1)
 
-  defp pie(
-         %__MODULE__{kind: :pie, elements: [%Series{values: values}], categories: categories} =
+  # The checks of a chart of one series: a pie, a treemap or a sunburst.
+  defp single(
+         %__MODULE__{kind: kind, elements: [%Series{values: values}], categories: categories} =
            chart
-       ) do
+       )
+       when kind in @single do
     cond do
-      length(categories) > @colors ->
+      Enum.any?(values, &(&1 < 0)) or Enum.sum(values) <= 0 ->
+        {:error, "the values of a #{kind} are zero or more, and their sum is more than zero"}
+
+      kind == :pie and length(categories) > @colors ->
         {:error,
          "a pie has at most #{@colors} parts, one for each color. Put the smallest into a part \"Other\"."}
 
-      Enum.any?(values, &(&1 < 0)) or Enum.sum(values) <= 0 ->
-        {:error, "the values of a pie are zero or more, and their sum is more than zero"}
+      kind == :pie ->
+        {:ok, chart}
 
       true ->
-        {:ok, chart}
+        with :ok <- Hierarchy.check(categories), do: {:ok, chart}
     end
   end
 
-  defp pie(%__MODULE__{kind: :pie}), do: {:error, "a pie has one series"}
-  defp pie(chart), do: {:ok, chart}
+  defp single(%__MODULE__{kind: kind}) when kind in @single,
+    do: {:error, "a #{kind} has one series"}
+
+  defp single(chart), do: {:ok, chart}
 
   @doc """
   Make the assigns of the render function from the struct
@@ -390,7 +403,7 @@ defmodule Expresso.Element.Chart do
       for {series, values} <- Enum.zip(assigns.series, frame.values),
           do: %{series | values: values}
 
-    %{assigns | series: series, moves: false}
+    %{assigns | series: series, moves: false, frames: [frame]}
   end
 
   # The table holds one column for each series in each frame.
@@ -448,6 +461,9 @@ defmodule Expresso.Element.Chart do
   end
 
   # The kinds of a chart. Each one writes the content of the SVG.
+  defp plot(%{kind: kind} = assigns) when kind in [:treemap, :sunburst],
+    do: Motion.render(assigns)
+
   defp plot(%{kind: :pie, moves: true} = assigns), do: Motion.render(assigns)
   defp plot(%{kind: :pie} = assigns), do: pie_plot(assigns)
   defp plot(assigns), do: axis_plot(assigns)
@@ -456,6 +472,13 @@ defmodule Expresso.Element.Chart do
   # the function from a value to its coordinate, and the legend. A pie has no
   # axis.
   defp layout(%{kind: :pie} = assigns), do: Map.put(assigns, :legend_item, &legend_item/1)
+  defp layout(%{kind: :sunburst} = assigns), do: assigns
+
+  # A treemap fills the SVG. The label of the frame takes a row at the top.
+  defp layout(%{kind: :treemap} = assigns) do
+    top = if label?(assigns), do: 52, else: 4
+    Map.put(assigns, :box, %{left: 4, right: @width - 4, top: top, bottom: @height - 4})
+  end
 
   defp layout(assigns) do
     ticks = assigns.frames |> Enum.flat_map(& &1.values) |> List.flatten() |> Plot.ticks()

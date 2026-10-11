@@ -518,6 +518,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Make a deck from data](docs/how-to/make-a-deck-from-data.md)
 - [Show data in a chart](docs/how-to/show-data-in-a-chart.md)
 - [Show a change over time in a chart](docs/how-to/show-a-change-over-time-in-a-chart.md)
+- [Show the parts of a whole in a treemap or a sunburst](docs/how-to/show-parts-of-a-whole-in-a-treemap-or-a-sunburst.md)
 - [Show code on a slide](docs/how-to/show-code.md)
 - [Check that a deck fits the screen](docs/how-to/check-the-layout.md)
 - [Style one slide or one element](docs/how-to/style-one-slide.md)

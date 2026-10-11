@@ -1149,6 +1149,30 @@ to the items of a list. These are the reasons for this design:
   option, and `Expresso.Element.Chart.build/1` reads the file, as for a code element. The
   series of the file are then entities, so `reveal` applies to them.
 
+### The treemap and the sunburst
+
+A treemap and a sunburst show the parts of a whole in groups.
+`Expresso.Element.Chart.Hierarchy` builds the tree, places the parts and draws them. These
+are the reasons for this design:
+
+- **A slash names the group.** A category such as `"Production/Press"` holds its path. The
+  categories, the one series, the CSV file and the frames of the other charts therefore
+  give the data of a treemap, and the data needs no format of its own.
+- **The squarified layout.** The layout of Bruls, Huizing and van Wijk gives rectangles that
+  are close to squares, so a reader can compare their areas. The parts of each frame keep
+  the order of the first frame, so a part moves and changes its size from frame to frame,
+  and it does not jump to a different place.
+- **The channels of the other charts.** A box is a square of one unit, and a transform
+  gives it its place and its size from four registered numbers. An arc is a dash of a
+  circle with a wide stroke, as a slice of a pie. Therefore the frames, the effect `:grow`
+  and the count of the numbers work with no new mechanism. One renderer draws a chart that
+  moves and a chart that does not move.
+- **Tints for the levels.** A group of the top level has a color of the palette, and its
+  parts have tints of that color, lighter for a deeper level. The text of a label has the
+  color of text, and a tint keeps the contrast of that text.
+- **A label shows only when it fits.** The renderer estimates the width of the text of each
+  label in each frame, and a channel hides a label that does not fit.
+
 ### The motion of a chart
 
 A chart with frames moves its marks from the values of one frame to the values of the next,

@@ -94,6 +94,8 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "chart-frames", deck: "chart_frames.exs", actions: ["j", "j"]},
     %{name: "chart-frames-csv", deck: "chart_frames_csv.exs", actions: ["j"]},
     %{name: "chart-grow", deck: "chart_grow.exs", actions: ["j"]},
+    %{name: "chart-treemap", deck: "chart_treemap.exs", actions: ["j"]},
+    %{name: "chart-sunburst", deck: "chart_sunburst.exs", actions: ["j"]},
     %{name: "shape", deck: "shape.exs", actions: ["j"]},
     %{name: "shape-move", deck: "shape_move.exs", actions: ["j", "j"]},
     %{name: "shape-color", deck: "shape_color.exs", actions: ["j", "j"]},
