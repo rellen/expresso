@@ -9,8 +9,8 @@ a small script. Open the document in a browser, and present from there.
 
 Expresso is at an early stage. It has 27 built-in themes and these elements: `text_box`,
 `text_area`, `image`, `list`, `table`, `quotation`, `spacer`, `code`, `columns`, `math`,
-`diagram`, `embed`, `video`, `audio`, `qr_code`, `footnote`, `shape`, `chart` and
-`callout`.
+`diagram`, `embed`, `video`, `audio`, `qr_code`, `footnote`, `shape`, `chart`, `callout`
+and `toc`.
 
 Overlays are the steps inside one slide. A slide takes steps, and an element shows at a set
 of steps. The document also holds a handout view for a printer. `docs/overlays.md` gives
@@ -95,6 +95,8 @@ Some notes on this example:
   such as `60%`.
 - A slide also takes a `notes` option. The handout view shows the notes under each page of
   the slide, and the speaker view shows them too.
+- A slide also takes a `section` option, which starts a section of the talk. A `toc`
+  element lists the sections. See [the toc element](docs/reference/toc-element.md).
 - A text area, an image or an item takes a `goto` option, such as `goto: [slide: 5]` or
   `goto: [slide: "summary"]`. The element is then a link to that slide. See
   [the goto option](docs/reference/goto-option.md).
@@ -534,6 +536,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Share the slides with a QR code](docs/how-to/share-the-slides-with-a-qr-code.md)
 - [Cite your sources](docs/how-to/cite-your-sources.md)
 - [Draw attention with a callout](docs/how-to/draw-attention-with-a-callout.md)
+- [Show the plan of a talk](docs/how-to/show-the-plan-of-a-talk.md)
 - [Make templates of your own](docs/how-to/make-templates.md)
 - [Use colors of your own](docs/how-to/use-colors-of-your-own.md)
 - [Render a deck in your project](docs/how-to/render-a-deck-in-your-project.md)
@@ -574,6 +577,7 @@ These pages describe each element:
 - [Shape](docs/reference/shape-element.md)
 - [Chart](docs/reference/chart-element.md)
 - [Callout](docs/reference/callout-element.md)
+- [Table of contents](docs/reference/toc-element.md)
 
 Explanations give the design and its reasons:
 
