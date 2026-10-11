@@ -3,14 +3,20 @@ defmodule Expresso.DevDependencyTest do
 
   # A project of a user that takes Expresso as a dev dependency, as
   # `docs/how-to/render-a-deck-in-your-project.md` tells. The test makes the
-  # project in a new directory, fetches the dependencies, and runs
-  # `mix expresso` there. It takes the repository from its path, so it tests the
-  # code of the working tree, and it needs the network for the dependencies of
-  # Expresso. `mix test --only dependency` runs it.
+  # project, fetches the dependencies, and runs `mix expresso` there. It takes
+  # the repository from its path, so it tests the code of the working tree, and
+  # it needs the network for the dependencies of Expresso.
+  # `mix test --only dependency` runs it.
+  #
+  # The project is in `_build/dependency_project`, and the test keeps it. The
+  # next run then compiles only the files that changed, and the cache of the
+  # workflow keeps the directory with `_build`. The project gets the lockfile of
+  # Expresso, so its dependencies have the versions of Expresso.
   @moduletag :dependency
   @moduletag timeout: :timer.minutes(15)
 
   @root Path.expand("../..", __DIR__)
+  @project Path.join([@root, "_build", "dependency_project"])
 
   defp mix(project, args) do
     System.cmd("mix", args,
@@ -20,13 +26,23 @@ defmodule Expresso.DevDependencyTest do
     )
   end
 
-  setup do
-    project = Path.join(System.tmp_dir!(), "expresso-user-#{System.unique_integer([:positive])}")
-    File.mkdir_p!(Path.join(project, "lib"))
-    File.mkdir_p!(Path.join(project, "talk"))
-    on_exit(fn -> File.rm_rf!(project) end)
+  # Write a file of the project when its text changed. A file with the same
+  # text keeps its time, so Mix does not compile it again.
+  defp write(project, path, text) do
+    path = Path.join(project, path)
+    File.mkdir_p!(Path.dirname(path))
 
-    File.write!(Path.join(project, "mix.exs"), """
+    if File.read(path) != {:ok, text} do
+      File.write!(path, text)
+    end
+  end
+
+  setup do
+    project = @project
+    write(project, "mix.lock", File.read!(Path.join(@root, "mix.lock")))
+    File.rm_rf!(Path.join(project, "talk/deck.html"))
+
+    write(project, "mix.exs", """
     defmodule UserProject.MixProject do
       use Mix.Project
 
@@ -40,13 +56,13 @@ defmodule Expresso.DevDependencyTest do
     end
     """)
 
-    File.write!(Path.join(project, "lib/server.ex"), """
+    write(project, "lib/server.ex", """
     defmodule UserProject.Server do
       def start, do: :ok
     end
     """)
 
-    File.write!(Path.join(project, "talk/deck.exs"), """
+    write(project, "talk/deck.exs", """
     defmodule UserProject.Talk do
       use Expresso
 
