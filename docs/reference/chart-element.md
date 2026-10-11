@@ -247,9 +247,10 @@ The compiler gives an error for these:
   quote or a line break;
 - a `thumbnail` with the number of a frame that the chart does not have.
 
-The render gives an error for a file that it cannot read, for a quote with no closing
+The compiler gives an error for a file that it cannot read, for a quote with no closing
 quote, for text after a closing quote, and for a row with a cell that is not a number. The
-message names the line.
+message names the line. `Expresso.Builder.deck/2` raises a `Spark.Error.DslError` with the
+same message.
 
 ## The colors
 

@@ -43,6 +43,10 @@ directory.
 | A code file | The `src` option of `code`. |
 | A local page | The first argument of `embed`, when it is not an address. |
 | The image of an embed | The `fallback` option of `embed`. |
+| A video | The first argument and the `poster` option of `video`. |
+| A sound | The first argument of `audio`. |
+| A chart file | The `src` option of `chart`. |
+| An icon | Each path of the `icons` option of the deck. |
 | A style sheet | The `css` option of the deck, when it is a path. |
 | A file of `url()` | A `url()` of a style sheet in the `css` option itself. A `url()` of a CSS file starts from the directory of that file. See [the css option](css-option.md#files-in-the-style-sheet). |
 
@@ -55,9 +59,10 @@ These paths stay as they are:
 
 ## The errors
 
-The compiler gives an error for a code file that it cannot read, with the full path from the
-root. The renderer raises an `ArgumentError` for an image, a diagram, a page, a style sheet
-or a file of `url()` that it cannot read, with the full path.
+The compiler gives an error for a code file, a chart file or an icon file that it cannot
+read, with the full path from the root. The renderer raises an `ArgumentError` for an image,
+a diagram, a page, a video, a poster, a sound, a style sheet or a file of `url()` that it
+cannot read, with the full path.
 
 The watch mode watches each file at its full path, so a change to a file of the project
 renders the deck again.

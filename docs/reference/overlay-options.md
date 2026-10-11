@@ -127,6 +127,8 @@ each role, such as `--text-dim`, and a deck can replace one in its `css` option.
 | `list` | `true` | Each item shows at its own step. |
 | `table` | `true` | Each row shows at its own step. |
 | `code` | a list of line numbers and ranges, such as `[1..3, 5..6]` | Each group of lines shows at its own step. A line that does not show keeps its space. With `src`, a number is the number of the line in the file. See [the code element](code-element.md). |
+| `chart` | `true` | Each series shows at its own step. A pie, a treemap and a sunburst take no `reveal`. See [the chart element](chart-element.md). |
+| `toc` | `true` | Each entry shows at its own step. See [the toc element](toc-element.md). |
 
 ![The items of a list, one at each step](https://raw.githubusercontent.com/rellen/expresso/media/overlay-list.gif)
 
@@ -134,7 +136,7 @@ each role, such as `--text-dim`, and a deck can replace one in its `css` option.
 
 ## `dim`
 
-`dim true` on a `list`, a `table` or a `code` element gives each child the state `dim` from
+`dim true` on a `list`, a `table`, a `code` element, a `chart` or a `toc` gives each child the state `dim` from
 the first step of a later child. The newest child then shows in full, and the earlier
 children show in their dimmed colors. The option reads the steps of the children, so it
 works with `reveal` and with an `at` option on each child. A child without steps, such as
