@@ -119,8 +119,8 @@ defmodule Expresso do
   input path, the function reads the script from the standard input.
 
   With `nil` as the input path, the function writes the usage text to the
-  standard error and returns an error tuple. The mix task gives `nil` when the
-  command has no argument.
+  standard error and returns an error tuple. The commands do not give `nil`:
+  `Expresso.CommandLine` writes the usage text for a command with no argument.
 
   For each other error, the function writes the message to the standard error
   and returns an error tuple. The standard output then holds no text. A failed
