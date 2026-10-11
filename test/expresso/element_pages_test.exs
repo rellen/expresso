@@ -9,7 +9,7 @@ defmodule Expresso.ElementPagesTest do
   # element, the embed element and the video element have tests of their own.
   # The test copies the files that the code blocks read into the root of the
   # deck.
-  @pages ~w(text-box text-area image list table quotation spacer columns math diagram qr-code footnote audio shape chart)
+  @pages ~w(text-box text-area image list table quotation spacer columns math diagram qr-code footnote audio shape chart callout)
 
   # The Elixir code blocks of a page, in order.
   defp blocks(page) do

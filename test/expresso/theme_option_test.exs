@@ -56,10 +56,10 @@ defmodule Expresso.ThemeOptionTest do
   test "the style sheet takes its colors from the roles, except the QR code, the black screen and the shadows of the menu and the list of keys" do
     css = File.read!("assets/style.css")
 
-    for role <- [:text, :background, :muted, :accent, :warning, :danger],
+    for role <- [:text, :background, :muted, :accent, :warning, :danger, :success, :emphasis],
         do: assert(css =~ "var(#{property(role)})", "#{role}")
 
-    for role <- [:text, :muted, :accent, :code_comment],
+    for role <- [:text, :muted, :accent, :code_comment, :success, :emphasis, :warning, :danger],
         do: assert(css =~ "var(#{property(role)}-dim)", "#{role}")
 
     assert css =~ "var(--dimmed)"

@@ -237,10 +237,12 @@ option of the deck comes after them, so a deck can replace a role.
 | --- | --- | --- |
 | `--background` | `base00` | The page |
 | `--text` | `base05` | The text |
-| `--muted` | `base04` | The slide numbers |
-| `--accent` | `base0D` | The links, the progress bar and the selected page of the overview |
-| `--warning` | `base09` | A talk that is behind its pace |
-| `--danger` | `base08` | A talk that is over its time |
+| `--muted` | `base04` | The slide numbers, and a callout of the kind `:definition` |
+| `--accent` | `base0D` | The links, the progress bar, the selected page of the overview and a callout of the kind `:note` |
+| `--warning` | `base09` | A talk that is behind its pace, and a callout of the kind `:warning` |
+| `--danger` | `base08` | A talk that is over its time, and a callout of the kind `:caution` |
+| `--success` | `base0B` | A callout of the kind `:tip` or `:example` |
+| `--emphasis` | `base0E` | A callout of the kind `:important` |
 | `--code-background` | `base01` | A code block |
 | `--code-text` | `base05` | Operators, variables and punctuation |
 | `--code-comment` | `base03` | Comments and documentation |

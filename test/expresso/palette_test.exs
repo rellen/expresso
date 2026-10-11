@@ -239,7 +239,7 @@ defmodule Expresso.PaletteTest do
 
     test "variants adjusts a map with adjust true, and keeps it without" do
       assert [{nil, kept}] = Palette.variants(colors: @harbor)
-      assert length(Palette.problems(kept)) == 15
+      assert length(Palette.problems(kept)) == 17
 
       assert [{nil, adjusted}] = Palette.variants(colors: @harbor, adjust: true)
       assert Palette.problems(adjusted) == []

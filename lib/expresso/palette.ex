@@ -79,6 +79,8 @@ defmodule Expresso.Palette do
     accent: {:base0D, :background},
     warning: {:base09, :background},
     danger: {:base08, :background},
+    success: {:base0B, :background},
+    emphasis: {:base0E, :background},
     code_background: {:base01, nil},
     code_text: {:base05, :code_background},
     code_comment: {:base03, :code_background},
