@@ -34,7 +34,7 @@ defmodule Expresso.Element.Chart.Motion do
   import Temple
   use Temple.Component
 
-  alias Expresso.Element.Chart.Plot
+  alias Expresso.Element.Chart.{Hierarchy, Plot}
 
   # The length of the shape of a bar, in the units of the SVG. A clip at the
   # base line cuts it, so the shape is longer than the highest bar.
@@ -114,11 +114,15 @@ defmodule Expresso.Element.Chart.Motion do
         :bar -> c(&bars/1, rest!: assigns)
         :line -> c(&lines/1, rest!: assigns)
         :pie -> c(&pie/1, rest!: assigns)
+        _hierarchy -> Hierarchy.render(assigns)
       end
     end
   end
 
   # The places of the marks of each frame, and the channels that hold them.
+
+  defp scene(%{kind: kind} = assigns) when kind in [:treemap, :sunburst],
+    do: Hierarchy.scene(assigns)
 
   defp scene(%{kind: :pie} = assigns), do: pie_scene(assigns)
   defp scene(%{kind: :line} = assigns), do: line_scene(assigns)
@@ -127,7 +131,11 @@ defmodule Expresso.Element.Chart.Motion do
   # The value of series `s` in category `i` in each frame.
   defp values(frames, s, i), do: Enum.map(frames, &(&1.values |> Enum.at(s) |> Enum.at(i)))
 
-  defp flags(frames) do
+  @doc """
+  Return the channel `--k<n>` of each frame `n`: 1 at frame `n`, else 0
+  """
+  @spec flags([map()]) :: [{String.t(), [0 | 1]}]
+  def flags(frames) do
     count = length(frames)
     for k <- 1..count, do: {"k#{k}", for(j <- 1..count, do: if(j == k, do: 1, else: 0))}
   end
@@ -261,24 +269,40 @@ defmodule Expresso.Element.Chart.Motion do
     %{marks: marks, channels: channels}
   end
 
-  # The value of a channel in a style attribute: the custom property with the
-  # value of the first frame as its fallback, or the value alone when no frame
-  # changes it.
-  defp ref(name, [first | _rest] = values) do
+  @doc """
+  Return the value of a channel for a style attribute
+
+  The value is the custom property with the value of the first frame as its
+  fallback, or the value alone when no frame changes it.
+  """
+  @spec ref(String.t(), [number()]) :: String.t()
+  def ref(name, [first | _rest] = values) do
     if values |> Enum.uniq() |> length() == 1,
       do: Plot.f(first),
       else: "var(--#{name}, #{Plot.f(first)})"
   end
 
-  # A place that the effect `:grow` moves from `from`.
-  defp grow(value, from),
+  @doc """
+  Return a place that the effect `:grow` moves from `from`
+  """
+  @spec grow(String.t(), number()) :: String.t()
+  def grow(value, from),
     do: "calc(#{Plot.f(from)} + (#{value} - #{Plot.f(from)}) * var(--chart-shown, 1))"
 
-  defp style(pairs), do: Enum.map_join(pairs, " ", fn {key, value} -> "#{key}: #{value};" end)
+  @doc """
+  Write pairs of a property and a value as the text of a style attribute
+  """
+  @spec style([{String.t(), String.t() | number()}]) :: String.t()
+  def style(pairs), do: Enum.map_join(pairs, " ", fn {key, value} -> "#{key}: #{value};" end)
 
-  # A text that changes from frame to frame. It has one copy for each frame
-  # that fades, or one copy with a number that the script counts.
-  defp changing(assigns) do
+  @doc """
+  Draw a text that changes from frame to frame
+
+  The text has one copy for each frame that fades, or one copy with a number
+  that the script counts. `text_assigns/4` makes the assigns.
+  """
+  @spec changing(map()) :: Phoenix.HTML.safe()
+  def changing(assigns) do
     temple do
       cond do
         Enum.uniq(@texts) |> length() == 1 ->
@@ -324,7 +348,14 @@ defmodule Expresso.Element.Chart.Motion do
     |> Enum.max()
   end
 
-  defp text_assigns(texts, numbers, name, opts) do
+  @doc """
+  Make the assigns of `changing/1`
+
+  `texts` holds the text of each frame, `numbers` the number of each frame for
+  the `count` option, and `name` the channel of the number.
+  """
+  @spec text_assigns([String.t()], [number()], String.t(), keyword()) :: map()
+  def text_assigns(texts, numbers, name, opts) do
     Map.merge(
       %{
         texts: texts,
@@ -349,7 +380,7 @@ defmodule Expresso.Element.Chart.Motion do
   defp frame_label(assigns) do
     {x, anchor} =
       case {assigns.kind, assigns.frame_label} do
-        {:pie, _place} -> {784, "end"}
+        {kind, _place} when kind in [:pie, :sunburst] -> {784, "end"}
         {_kind, :top_left} -> {assigns.box.left, "start"}
         {_kind, :top_right} -> {assigns.box.right, "end"}
       end

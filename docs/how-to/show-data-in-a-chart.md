@@ -105,3 +105,6 @@ compares the lengths of bars better than the angles of slices.
 
 To move the bars, the lines or the slices of a chart from one point in time to the next, see
 [Show a change over time in a chart](show-a-change-over-time-in-a-chart.md).
+
+To show the parts of a whole in groups, see
+[Show the parts of a whole in a treemap or a sunburst](show-parts-of-a-whole-in-a-treemap-or-a-sunburst.md).

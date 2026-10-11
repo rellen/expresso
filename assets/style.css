@@ -554,16 +554,31 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   inherits: false;
   initial-value: 0;
 }
+@property --chart-h {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
 .chart-mark,
 .chart-segment,
 .chart-arc,
+.chart-ring,
 .chart-gap,
-.chart-count {
+.chart-count,
+.chart-tile,
+.chart-group {
   transition:
     --chart-u var(--dur) var(--ease),
     --chart-v var(--dur) var(--ease),
     --chart-w var(--dur) var(--ease),
+    --chart-h var(--dur) var(--ease),
     --chart-n var(--dur) var(--ease);
+}
+.chart-label {
+  transition:
+    opacity var(--dur) var(--ease),
+    --chart-u var(--dur) var(--ease),
+    --chart-v var(--dur) var(--ease);
 }
 .chart-mark {
   transform: translate(calc(var(--chart-u) * 1px), calc(var(--chart-v) * 1px));
@@ -594,6 +609,53 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 }
 .chart-clip {
   clip-path: var(--chart-clip) view-box;
+}
+/*
+ * A treemap and a sunburst. A box of a treemap is a square of one unit, and a
+ * transform moves it to its place and gives it its size. A ring of a sunburst
+ * is a circle with a stroke as wide as the ring, as a slice of a pie. The
+ * parts of a top-level group have tints of its color, lighter for a deeper
+ * level, so a text in the color of text stays readable on them.
+ */
+.chart-tile,
+.chart-group {
+  transform: translate(calc(var(--chart-u) * 1px), calc(var(--chart-v) * 1px))
+    scale(var(--chart-w), var(--chart-h));
+}
+.chart-tile {
+  fill: color-mix(in oklab, var(--series) 55%, var(--background));
+}
+.chart-group {
+  fill: color-mix(in oklab, var(--series) 20%, var(--background));
+}
+.chart-ring {
+  fill: none;
+  stroke: color-mix(in oklab, var(--series) var(--tint), var(--background));
+  stroke-dasharray: calc(var(--chart-v) * 1px) 3000px;
+  transform: rotate(calc(var(--chart-w) * 1deg - 90deg));
+  transform-box: view-box;
+}
+.chart-depth-1 {
+  --tint: 80%;
+}
+.chart-depth-2 {
+  --tint: 55%;
+}
+.chart-depth-3 {
+  --tint: 35%;
+}
+.chart-part,
+.chart-part-value,
+.chart-head {
+  fill: var(--text);
+}
+.chart-part {
+  font-size: 18px;
+  font-weight: bold;
+}
+.chart-part-value,
+.chart-head {
+  font-size: 16px;
 }
 .chart-fade {
   transition: opacity var(--dur) var(--ease);
