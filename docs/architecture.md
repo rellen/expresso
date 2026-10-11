@@ -1440,7 +1440,7 @@ The extension imports nothing, and it lists five transformers and eight verifier
 - `Expresso.PlacementTransformer` refuses an element in a wrong place. It runs first, and it
   changes nothing. See "The definitions of the elements".
 - `Expresso.PathTransformer` joins each relative path of the deck to the `root` option, and
-  it builds each code element with `src`. See "The watch mode".
+  it builds each code element and each chart with `src`. See "The watch mode".
 - `Expresso.IconTransformer` reads the files of the `icons` option of the deck, and it puts
   the SVG of each icon into its element and into the text of each text area and item. See
   "The icons".
