@@ -256,13 +256,16 @@ defmodule Expresso.BuilderTest do
   end
 
   defp diagram_ids(html) do
-    numbers =
-      for [svg] <- Regex.scan(~r/<svg.*?<\/svg>/s, html),
-          [_id, number] <- Regex.scan(~r/ id="[^"]+-(\d+)"/, svg),
-          uniq: true,
-          do: number
-
-    Enum.reduce(numbers, html, &String.replace(&2, ~r/-#{&1}(?=[")])/, "-N"))
+    # The function changes the numbers inside each SVG only, so a small number
+    # does not change a custom property such as `var(--chart-3)` or the id of
+    # a slide.
+    Regex.replace(~r/<svg.*?<\/svg>/s, html, fn svg ->
+      ~r/ id="[^"]+-(\d+)"/
+      |> Regex.scan(svg, capture: :all_but_first)
+      |> List.flatten()
+      |> Enum.uniq()
+      |> Enum.reduce(svg, &String.replace(&2, ~r/-#{&1}(?=[")])/, "-N"))
+    end)
   end
 
   defp descendants(entities) do
