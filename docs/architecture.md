@@ -1157,6 +1157,14 @@ to the items of a list. These are the reasons for this design:
 - **A CSV file at compile time.** `Expresso.PathTransformer` joins the path to the `root`
   option, and `Expresso.Element.Chart.build/1` reads the file, as for a code element. The
   series of the file are then entities, so `reveal` applies to them.
+- **A reader of its own, for the files of a spreadsheet.** `Expresso.Element.Chart.Csv`
+  reads the quotes of RFC 4180, a tab for a `.tsv` file and the `delimiter` option. A
+  spreadsheet writes these forms, so a file from a spreadsheet needs no change. The reader
+  is small, and it keeps the number of the first line of each row for the message of an
+  error, so Expresso adds no dependency for it.
+- **Numbers with a period as the decimal mark.** A cell such as `"1,250"` is a number,
+  because a spreadsheet writes the groups of digits so. A comma as the decimal mark, such as
+  `12,5`, is an error and not a number, because `1,250` then has two meanings.
 
 ### The treemap and the sunburst
 

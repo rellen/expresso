@@ -335,7 +335,12 @@ defmodule Expresso.Extension do
           src: [
             type: :string,
             doc:
-              "The path of a CSV file with the categories and the series, from the root option of the deck or from the working directory of the command."
+              "The path of a CSV file with the categories and the series, from the root option of the deck or from the working directory of the command. A file that ends in .tsv has a tab between two cells."
+          ],
+          delimiter: [
+            type: :string,
+            doc:
+              "The character between two cells of the src file, such as \";\" or \"|\". The default is a comma, or a tab for a file that ends in .tsv. Requires the src option."
           ],
           width: [
             type: :string,

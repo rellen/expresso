@@ -2,20 +2,31 @@ defmodule Expresso.Element.Chart.Csv do
   @moduledoc """
   The reader of the CSV file of a chart
 
-  A cell is the text between two commas, with no quotes. The first row holds
-  the headings, and each other row holds a category and one number for each
-  series. `table/3` reads a file without frames. `frames/4` reads a file with
-  a column that names the frame of each row. Each function returns the text
-  of an error for a file that it cannot read, and `Expresso.Element.Chart`
-  gives that error to the author.
+  A delimiter, a comma by default, divides the cells of a row. A cell in
+  double quotes can hold the delimiter, a line break and a quote, which two
+  quotes give. The first row holds the headings, and each other row holds a
+  category and one number for each series. `table/3` reads a file without
+  frames. `frames/4` reads a file with a column that names the frame of each
+  row. Each function returns the text of an error for a file that it cannot
+  read, and `Expresso.Element.Chart` gives that error to the author.
 
-  For a treemap or a sunburst, the `levels` argument can name the columns
-  that hold the levels of a category, from the top level down. The category
-  of a row is then the list of its levels, and an empty cell at the end of
-  the list ends the category at a higher level.
+  For a treemap or a sunburst, the `levels` option can name the columns that
+  hold the levels of a category, from the top level down. The category of a
+  row is then the list of its levels, and an empty cell at the end of the
+  list ends the category at a higher level.
   """
 
   alias Expresso.Element.{Frame, Series}
+
+  # A number with a comma between each group of three digits, such as
+  # 1,250 or 12,500.5. A spreadsheet writes it in quotes.
+  @grouped ~r/\A[+-]?\d{1,3}(,\d{3})+(\.\d+)?\z/
+
+  @typedoc """
+  The options of a reader: `levels`, the headings of the columns that hold
+  the levels of a category, and `delimiter`, the character between two cells.
+  """
+  @type opts :: [levels: [String.t()] | nil, delimiter: String.t()]
 
   @doc """
   Read a CSV file of categories and series
@@ -25,11 +36,19 @@ defmodule Expresso.Element.Chart.Csv do
 
       iex> Expresso.Element.Chart.Csv.table("year,Orders\\n2024,180\\n2025,240\\n", "a.csv")
       {:ok, ["2024", "2025"], [%Expresso.Element.Series{name: "Orders", values: [180, 240]}]}
+
+  A cell in quotes can hold the delimiter, and a number in quotes can have a
+  comma between each group of three digits:
+
+      iex> text = ~s(Plant,Orders\\n"Leeds, Line 4","1,250"\\n)
+      iex> Expresso.Element.Chart.Csv.table(text, "a.csv")
+      {:ok, ["Leeds, Line 4"], [%Expresso.Element.Series{name: "Orders", values: [1250]}]}
   """
-  @spec table(String.t(), String.t(), [String.t()] | nil) ::
+  @spec table(String.t(), String.t(), opts()) ::
           {:ok, [String.t() | [String.t()]], [Series.t()]} | {:error, String.t()}
-  def table(text, src, levels \\ nil) do
-    with {:ok, rows} <- levels(rows(text), levels, src),
+  def table(text, src, opts \\ []) do
+    with {:ok, rows} <- rows(text, src, opts),
+         {:ok, rows} <- levels(rows, opts[:levels], src),
          [{_number, [_heading | names]} | data] when names != [] and data != [] <- rows,
          {:ok, columns} <- columns(data, length(names), src) do
       categories = Enum.map(data, fn {_number, [category | _values]} -> category end)
@@ -54,10 +73,11 @@ defmodule Expresso.Element.Chart.Csv do
       iex> {categories, second.label, hd(second.elements).values}
       {["North", "South"], "2025", [3, 4]}
   """
-  @spec frames(String.t(), String.t(), String.t(), [String.t()] | nil) ::
+  @spec frames(String.t(), String.t(), String.t(), opts()) ::
           {:ok, [String.t() | [String.t()]], [Frame.t()]} | {:error, String.t()}
-  def frames(text, column, src, levels \\ nil) do
-    with {:ok, rows} <- levels(rows(text), levels, src),
+  def frames(text, column, src, opts \\ []) do
+    with {:ok, rows} <- rows(text, src, opts),
+         {:ok, rows} <- levels(rows, opts[:levels], src),
          [{_number, heading} | data] when data != [] <- rows,
          {:ok, index} <- column(heading, column, src),
          [_category | names] when names != [] <- List.delete_at(heading, index),
@@ -228,15 +248,124 @@ defmodule Expresso.Element.Chart.Csv do
     for {name, values} <- Enum.zip(names, columns), do: %Series{name: name, values: values}
   end
 
-  defp rows(text) do
-    text
-    |> String.split(["\r\n", "\n"])
-    |> Enum.with_index(1)
-    |> Enum.reject(fn {line, _number} -> String.trim(line) == "" end)
-    |> Enum.map(fn {line, number} ->
-      {number, line |> String.split(",") |> Enum.map(&String.trim/1)}
-    end)
+  @doc """
+  Divide the text of a chart file into rows of cells
+
+  Each row has the number of its first line. The function trims the spaces
+  around a cell without quotes, and it keeps the text in quotes as it is. It
+  skips a line with only white space.
+
+      iex> Expresso.Element.Chart.Csv.rows("a; b\\n\\n\\"x\\"\\"y\\";\\"1\\n2\\"\\n", "a.csv", delimiter: ";")
+      {:ok, [{1, ["a", "b"]}, {3, [~s(x"y), "1\\n2"]}]}
+  """
+  @spec rows(String.t(), String.t(), opts()) ::
+          {:ok, [{pos_integer(), [String.t()]}]} | {:error, String.t()}
+  def rows(text, src, opts \\ []) do
+    delimiter = Keyword.get(opts, :delimiter, ",")
+
+    case read_rows(text, delimiter, 1, []) do
+      {:ok, rows} -> {:ok, rows}
+      {:error, line, problem} -> {:error, "line #{line} of the chart file \"#{src}\" #{problem}"}
+    end
   end
+
+  defp read_rows("", _delimiter, _line, rows), do: {:ok, Enum.reverse(rows)}
+
+  defp read_rows(text, delimiter, line, rows) do
+    case blank(text) do
+      {:blank, rest} ->
+        read_rows(rest, delimiter, line + 1, rows)
+
+      :row ->
+        case read_cells(text, delimiter, line, line, []) do
+          {:ok, cells, rest, next} -> read_rows(rest, delimiter, next, [{line, cells} | rows])
+          error -> error
+        end
+    end
+  end
+
+  # A line with only spaces and tabs, and the text after it.
+  defp blank(text) do
+    case Regex.run(~r/\A[ \t]*(?:\r?\n|\z)/, text) do
+      [match] -> {:blank, binary_part(text, byte_size(match), byte_size(text) - byte_size(match))}
+      nil -> :row
+    end
+  end
+
+  # The cells of one row, the text after the row and the number of the next
+  # line. `line` is the line of the current cell, which a cell in quotes with
+  # a line break moves on.
+  defp read_cells(text, delimiter, start, line, cells) do
+    case read_cell(skip_spaces(text, delimiter), delimiter, line) do
+      {:ok, cell, rest, line} ->
+        cells = [cell | cells]
+
+        case next(rest, delimiter) do
+          {:cell, rest} -> read_cells(rest, delimiter, start, line, cells)
+          {:end, rest} -> {:ok, Enum.reverse(cells), rest, line + 1}
+          :other -> {:error, line, "has text after the closing quote of a cell"}
+        end
+
+      {:error, :quote} ->
+        {:error, start, "has a quote with no closing quote"}
+    end
+  end
+
+  defp read_cell(<<?", rest::binary>>, delimiter, line), do: quoted(rest, delimiter, line, [])
+
+  defp read_cell(text, delimiter, line) do
+    {cell, rest} = plain(text, delimiter, [])
+    {:ok, String.trim(cell), rest, line}
+  end
+
+  # The text of a cell in quotes. Two quotes give one quote.
+  defp quoted(<<?", ?", rest::binary>>, delimiter, line, acc),
+    do: quoted(rest, delimiter, line, [?" | acc])
+
+  defp quoted(<<?", rest::binary>>, delimiter, line, acc),
+    do: {:ok, acc |> Enum.reverse() |> IO.iodata_to_binary(), skip_spaces(rest, delimiter), line}
+
+  defp quoted(<<?\r, ?\n, rest::binary>>, delimiter, line, acc),
+    do: quoted(rest, delimiter, line + 1, [?\n | acc])
+
+  defp quoted(<<?\n, rest::binary>>, delimiter, line, acc),
+    do: quoted(rest, delimiter, line + 1, [?\n | acc])
+
+  defp quoted(<<char::utf8, rest::binary>>, delimiter, line, acc),
+    do: quoted(rest, delimiter, line, [<<char::utf8>> | acc])
+
+  defp quoted(_text, _delimiter, _line, _acc), do: {:error, :quote}
+
+  # The text of a cell without quotes, to the delimiter or the end of the line.
+  defp plain("", _delimiter, acc), do: {acc |> Enum.reverse() |> IO.iodata_to_binary(), ""}
+
+  defp plain(<<char::utf8, rest::binary>> = text, delimiter, acc) do
+    if String.starts_with?(text, delimiter) or char in [?\r, ?\n],
+      do: {acc |> Enum.reverse() |> IO.iodata_to_binary(), text},
+      else: plain(rest, delimiter, [<<char::utf8>> | acc])
+  end
+
+  defp next("", _delimiter), do: {:end, ""}
+  defp next(<<?\r, ?\n, rest::binary>>, _delimiter), do: {:end, rest}
+  defp next(<<?\n, rest::binary>>, _delimiter), do: {:end, rest}
+  defp next(<<?\r, rest::binary>>, _delimiter), do: {:end, rest}
+
+  defp next(text, delimiter) do
+    if String.starts_with?(text, delimiter),
+      do:
+        {:cell, binary_part(text, byte_size(delimiter), byte_size(text) - byte_size(delimiter))},
+      else: :other
+  end
+
+  # The spaces before a cell or after a closing quote. A space or a tab that
+  # is the delimiter is not one of them.
+  defp skip_spaces(<<?\s, rest::binary>>, delimiter) when delimiter != " ",
+    do: skip_spaces(rest, delimiter)
+
+  defp skip_spaces(<<?\t, rest::binary>>, delimiter) when delimiter != "\t",
+    do: skip_spaces(rest, delimiter)
+
+  defp skip_spaces(text, _delimiter), do: text
 
   defp columns(data, count, src) do
     data
@@ -263,6 +392,9 @@ defmodule Expresso.Element.Chart.Csv do
   defp numbers(_cells, _count), do: :error
 
   defp number(text) do
+    text = String.trim(text)
+    text = if text =~ @grouped, do: String.replace(text, ",", ""), else: text
+
     case Integer.parse(text) do
       {integer, ""} ->
         integer
