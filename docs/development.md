@@ -396,9 +396,9 @@ the new lockfile.
 
 ### Zig in the workflow
 
-The jobs `lint`, `test`, `gifs` and `binary` get Zig from
-`.github/actions/setup-zig`. The first three jobs compile the GIF encoder of `tools/`, and
-the `binary` jobs also make the binary. This action uses
+The jobs `lint`, `test`, `e2e`, `dependency`, `gifs` and `binary` get Zig from
+`.github/actions/setup-zig`. The jobs before `binary` compile the GIF encoder of `tools/`,
+and the `binary` jobs also make the binary. This action uses
 the shell and `actions/cache`, and it has no code of its own for Node.js. The jobs used
 `mlugg/setup-zig` before. Its last release, v2.2.1 of 2026-01-19, targets Node.js 20, and
 GitHub gave a warning for each job that used it.
