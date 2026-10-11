@@ -8,8 +8,10 @@
 # - lint: `mix compile --warnings-as-errors`, `mix credo`, `mix sobelow`,
 #   `mix hex.audit`, the check of unused dependencies, `mix docs`,
 #   `mix doctor` and `mix dialyzer`
-# - test: `mix test`, `mix test --only e2e`, the browser tests, and
-#   `mix test --only dependency`, the test of Expresso as a dependency
+# - test: `mix test`
+# - e2e: `mix test --only e2e`, the browser tests
+# - dependency: `mix test --only dependency`, the test of Expresso as a
+#   dependency
 # - presenter: `npm run check`, `npm run lint`, `npm run format:check` and
 #   `npm test`
 # - gifs: `mix expresso.gifs`, the GIFs and the stills of the example decks
@@ -38,9 +40,10 @@
 # A job compiles the project for one environment, so the tools that need the
 # same build share one job. `lint` also runs Dialyzer, which needs the same
 # build. With the PLT in the cache, Dialyzer takes approximately 30 seconds,
-# and `lint` still finishes before the slowest job. The unit tests and the
-# browser tests share the build of the test
-# environment in the same way. `format` and `presenter` compile nothing, and
+# and `lint` still finishes before the slowest job. The unit tests, the
+# browser tests and the test of Expresso as a dependency each compile the test
+# environment in a job of their own, so each one shows its own result and the
+# three run at the same time. `format` and `presenter` compile nothing, and
 # they stay alone, so a defect in them shows in a few seconds.
 #
 # The last job needs each other job, and it fails when one of them does not
@@ -124,18 +127,14 @@ jobs:
         with:
           path: doc
 
-  # The browser tests open each deck in the Chromium of the Playwright version of
-  # `package-lock.json`. `.github/actions/setup-playwright` installs Node, the
-  # packages and the headless browser, from a cache when it can. The browser
-  # tests run also when a unit test fails. The test of `test/dependency/` makes
-  # a project that takes Expresso as a dev dependency, and it fetches the
-  # dependencies of that project from Hex and GitHub.
+  # Each job of the tests compiles the GIF encoder of `tools/` in the test
+  # environment, so it needs Zig. The three jobs run in parallel, and each one
+  # reports its own result.
   test:
     name: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-playwright
       - uses: ./.github/actions/setup-elixir
         with:
           cache: test
@@ -144,10 +143,41 @@ jobs:
           version: ${{ env.ZIG_VERSION }}
           cache: test
       - run: mix test
-      - if: ${{ !cancelled() }}
-        run: mix test --only e2e
-      - if: ${{ !cancelled() }}
-        run: mix test --only dependency
+
+  # The browser tests open each deck in the Chromium of the Playwright version of
+  # `package-lock.json`. `.github/actions/setup-playwright` installs Node, the
+  # packages and the headless browser, from a cache when it can.
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-playwright
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: e2e
+      - uses: ./.github/actions/setup-zig
+        with:
+          version: ${{ env.ZIG_VERSION }}
+          cache: e2e
+      - run: mix test --only e2e
+
+  # The test of `test/dependency/` makes a project that takes Expresso as a dev
+  # dependency, and it fetches the dependencies of that project from Hex and
+  # GitHub.
+  dependency:
+    name: dependency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: dependency
+      - uses: ./.github/actions/setup-zig
+        with:
+          version: ${{ env.ZIG_VERSION }}
+          cache: dependency
+      - run: mix test --only dependency
 
   # The presenter script needs Node only. Each step after the install runs
   # also when a step before it fails, so one run reports each defect, as
@@ -294,7 +324,7 @@ jobs:
   all:
     name: Erlang/OTP 29, Elixir 1.20, Node 24
     if: always()
-    needs: [format, lint, test, presenter, gifs, binary]
+    needs: [format, lint, test, e2e, dependency, presenter, gifs, binary]
     runs-on: ubuntu-latest
     steps:
       - name: Fail when a check does not succeed
