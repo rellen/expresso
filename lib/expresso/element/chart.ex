@@ -41,6 +41,9 @@ defmodule Expresso.Element.Chart do
   # The kinds of one series, which take no reveal option.
   @single [:pie, :treemap, :sunburst]
 
+  # The kinds that show the parts of a whole in groups.
+  @parts [:treemap, :sunburst]
+
   # The colors of a palette for the series, so the most series of a chart.
   @colors 8
 
@@ -62,6 +65,8 @@ defmodule Expresso.Element.Chart do
     :speed,
     :easing,
     :frames,
+    :levels,
+    separator: "/",
     values: true,
     reveal: false,
     dim: false,
@@ -102,6 +107,12 @@ defmodule Expresso.Element.Chart do
   def check(%__MODULE__{frames: frames}) when is_binary(frames),
     do: {:error, "the frames option names a column of a CSV file, so it needs the src option"}
 
+  def check(%__MODULE__{levels: [_ | _]}),
+    do:
+      {:error,
+       "the levels option names columns of a CSV file, so it needs the src option. " <>
+         "Give a list of levels in the categories option, such as [\"Production\", \"Press\"]."}
+
   def check(%__MODULE__{timeline: [_ | _], elements: [_ | _]}),
     do: {:error, "a chart with frames holds its series in each frame, and not in the chart"}
 
@@ -119,14 +130,14 @@ defmodule Expresso.Element.Chart do
   @spec build(t()) :: {:ok, t()} | {:error, String.t()}
   def build(%__MODULE__{src: src, frames: nil} = chart) when is_binary(src) do
     with {:ok, text} <- read(src),
-         {:ok, categories, series} <- Csv.table(text, src) do
+         {:ok, categories, series} <- Csv.table(text, src, chart.levels) do
       validate(%__MODULE__{chart | categories: categories, elements: series})
     end
   end
 
   def build(%__MODULE__{src: src} = chart) when is_binary(src) do
     with {:ok, text} <- read(src),
-         {:ok, categories, timeline} <- Csv.frames(text, chart.frames, src) do
+         {:ok, categories, timeline} <- Csv.frames(text, chart.frames, src, chart.levels) do
       %__MODULE__{chart | categories: categories, timeline: timeline}
       |> first_frame()
       |> validate()
@@ -166,6 +177,14 @@ defmodule Expresso.Element.Chart do
 
   defp options(%__MODULE__{kind: kind, reveal: true}) when kind in @single,
     do: {:error, "a #{kind} has one series, so it takes no reveal option. Give it an at option."}
+
+  defp options(%__MODULE__{kind: kind, levels: [_ | _]}) when kind not in @parts,
+    do:
+      {:error,
+       "the levels option gives the groups of a treemap or a sunburst, so a #{kind} chart takes no levels option"}
+
+  defp options(%__MODULE__{separator: ""}),
+    do: {:error, "the separator option needs at least one character"}
 
   defp options(%__MODULE__{kind: kind, sort: true}) when kind != :bar,
     do:
@@ -218,10 +237,24 @@ defmodule Expresso.Element.Chart do
     end
   end
 
-  defp categories(%__MODULE__{categories: [_ | _] = categories}) do
-    if Enum.all?(categories, &is_binary/1),
-      do: :ok,
-      else: {:error, "the categories of a chart are strings"}
+  defp categories(%__MODULE__{kind: kind, categories: [_ | _] = categories}) do
+    cond do
+      Enum.all?(categories, &is_binary/1) ->
+        :ok
+
+      kind not in @parts ->
+        {:error,
+         "a category of a #{kind} chart is a string. A list of levels is for a treemap or a sunburst."}
+
+      Enum.all?(
+        categories,
+        &(is_binary(&1) or (is_list(&1) and Enum.all?(&1, fn level -> is_binary(level) end)))
+      ) ->
+        :ok
+
+      true ->
+        {:error, "a category is a string or a list of strings"}
+    end
   end
 
   defp categories(_chart), do: {:error, "a chart needs the categories option or the src option"}
@@ -267,7 +300,7 @@ defmodule Expresso.Element.Chart do
         {:ok, chart}
 
       true ->
-        with :ok <- Hierarchy.check(categories), do: {:ok, chart}
+        with :ok <- Hierarchy.check(categories, chart.separator), do: {:ok, chart}
     end
   end
 
@@ -315,6 +348,7 @@ defmodule Expresso.Element.Chart do
       count: chart.count,
       sort: chart.sort,
       frame_label: chart.frame_label,
+      separator: chart.separator,
       thumbnail: chart.thumbnail,
       overlay: Expresso.Overlay.Render.attributes(chart) ++ width
     }
@@ -445,7 +479,7 @@ defmodule Expresso.Element.Chart do
           for {category, index} <- Enum.with_index(@categories) do
             tr do
               th scope: "row" do
-                category
+                if is_list(category), do: Enum.join(category, " / "), else: category
               end
 
               for {_name, values} <- @columns do

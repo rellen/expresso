@@ -4,10 +4,15 @@ defmodule Expresso.Element.Chart.Csv do
 
   A cell is the text between two commas, with no quotes. The first row holds
   the headings, and each other row holds a category and one number for each
-  series. `table/2` reads a file without frames. `frames/3` reads a file with
+  series. `table/3` reads a file without frames. `frames/4` reads a file with
   a column that names the frame of each row. Each function returns the text
   of an error for a file that it cannot read, and `Expresso.Element.Chart`
   gives that error to the author.
+
+  For a treemap or a sunburst, the `levels` argument can name the columns
+  that hold the levels of a category, from the top level down. The category
+  of a row is then the list of its levels, and an empty cell at the end of
+  the list ends the category at a higher level.
   """
 
   alias Expresso.Element.{Frame, Series}
@@ -21,10 +26,11 @@ defmodule Expresso.Element.Chart.Csv do
       iex> Expresso.Element.Chart.Csv.table("year,Orders\\n2024,180\\n2025,240\\n", "a.csv")
       {:ok, ["2024", "2025"], [%Expresso.Element.Series{name: "Orders", values: [180, 240]}]}
   """
-  @spec table(String.t(), String.t()) ::
-          {:ok, [String.t()], [Series.t()]} | {:error, String.t()}
-  def table(text, src) do
-    with [{_number, [_heading | names]} | data] when names != [] and data != [] <- rows(text),
+  @spec table(String.t(), String.t(), [String.t()] | nil) ::
+          {:ok, [String.t() | [String.t()]], [Series.t()]} | {:error, String.t()}
+  def table(text, src, levels \\ nil) do
+    with {:ok, rows} <- levels(rows(text), levels, src),
+         [{_number, [_heading | names]} | data] when names != [] and data != [] <- rows,
          {:ok, columns} <- columns(data, length(names), src) do
       categories = Enum.map(data, fn {_number, [category | _values]} -> category end)
       {:ok, categories, series(names, columns)}
@@ -48,10 +54,11 @@ defmodule Expresso.Element.Chart.Csv do
       iex> {categories, second.label, hd(second.elements).values}
       {["North", "South"], "2025", [3, 4]}
   """
-  @spec frames(String.t(), String.t(), String.t()) ::
-          {:ok, [String.t()], [Frame.t()]} | {:error, String.t()}
-  def frames(text, column, src) do
-    with [{_number, heading} | data] when data != [] <- rows(text),
+  @spec frames(String.t(), String.t(), String.t(), [String.t()] | nil) ::
+          {:ok, [String.t() | [String.t()]], [Frame.t()]} | {:error, String.t()}
+  def frames(text, column, src, levels \\ nil) do
+    with {:ok, rows} <- levels(rows(text), levels, src),
+         [{_number, heading} | data] when data != [] <- rows,
          {:ok, index} <- column(heading, column, src),
          [_category | names] when names != [] <- List.delete_at(heading, index),
          data = Enum.map(data, fn {number, cells} -> {number, cells, index} end),
@@ -68,6 +75,67 @@ defmodule Expresso.Element.Chart.Csv do
          "the chart file \"#{src}\" needs a row of names and a row of values, with a column " <>
            "for the frame, a column for the category and a column for each series"}
     end
+  end
+
+  @doc """
+  Join the columns of the levels of each row into one category
+
+  The category is the first cell of the row, and the other cells keep their
+  order. Without levels, the function returns the rows as they are.
+
+      iex> rows = [{1, ["Division", "Team", "Hours"]}, {2, ["Production", "Press", "62"]}, {3, ["Office", "", "20"]}]
+      iex> Expresso.Element.Chart.Csv.levels(rows, ["Division", "Team"], "a.csv")
+      {:ok, [{1, ["Division/Team", "Hours"]}, {2, [["Production", "Press"], "62"]}, {3, [["Office"], "20"]}]}
+  """
+  @spec levels([{pos_integer(), [String.t()]}], [String.t()] | nil, String.t()) ::
+          {:ok, [{pos_integer(), [term()]}]} | {:error, String.t()}
+  def levels(rows, nil, _src), do: {:ok, rows}
+  def levels([], _levels, _src), do: {:ok, []}
+
+  def levels([{number, heading} | data], levels, src) do
+    case Enum.find(levels, &(&1 not in heading)) do
+      nil ->
+        indices = Enum.map(levels, &index(heading, &1))
+        rest = &others(&1, indices)
+
+        with {:ok, rows} <- join_levels(data, indices, rest, src),
+             do: {:ok, [{number, [Enum.join(levels, "/") | rest.(heading)]} | rows]}
+
+      level ->
+        {:error, "the chart file \"#{src}\" has no column \"#{level}\" for the levels"}
+    end
+  end
+
+  defp index(heading, level), do: Enum.find_index(heading, &(&1 == level))
+
+  # The cells of a row that are not levels, in their order.
+  defp others(cells, indices),
+    do: for({cell, i} <- Enum.with_index(cells), i not in indices, do: cell)
+
+  defp join_levels(data, indices, rest, src) do
+    data
+    |> Enum.reduce_while({:ok, []}, fn {line, cells}, {:ok, rows} ->
+      case path(Enum.map(indices, &(Enum.at(cells, &1) || ""))) do
+        {:ok, path} ->
+          {:cont, {:ok, [{line, [path | rest.(cells)]} | rows]}}
+
+        :error ->
+          {:halt,
+           {:error,
+            "line #{line} of the chart file \"#{src}\" has an empty level before a level with a name"}}
+      end
+    end)
+    |> case do
+      {:ok, rows} -> {:ok, Enum.reverse(rows)}
+      error -> error
+    end
+  end
+
+  # The names of the levels of a row, with no empty name at the end. An empty
+  # name before a name, or no name at all, is an error.
+  defp path(cells) do
+    path = cells |> Enum.reverse() |> Enum.drop_while(&(&1 == "")) |> Enum.reverse()
+    if path == [] or "" in path, do: :error, else: {:ok, path}
   end
 
   defp column(heading, column, src) do
