@@ -433,7 +433,9 @@ defmodule Expresso.Element.Chart.Hierarchy do
 
   # The name and the value of a leaf at its top left, or the name of a group
   # in its strip. A label that does not fit its box in a frame does not show
-  # in that frame.
+  # in that frame: `--chart-h` holds 1 or 0. With the effect `:grow`, a label
+  # shows after its box grows: the theme moves `--chart-w` of the label from 0
+  # to 1 after the time of the growth.
   defp treemap_label(assigns) do
     %{part: part, scene: scene} = assigns
     numbers = Enum.map(scene.values, &value(part, &1))
@@ -442,7 +444,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
       Motion.style([
         {"--chart-u", Motion.ref("rx#{part.id}", boxes(scene, part, :x))},
         {"--chart-v", Motion.ref("ry#{part.id}", boxes(scene, part, :y))},
-        {"opacity", Motion.ref("ro#{part.id}", shown(scene, part))}
+        {"--chart-h", Motion.ref("ro#{part.id}", shown(scene, part))}
       ])
 
     assigns = Map.merge(assigns, %{label_style: style, numbers: numbers})
@@ -535,7 +537,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
               Motion.style([
                 {"--chart-u", Motion.ref("su#{part.id}", arcs(scene, part, :x))},
                 {"--chart-v", Motion.ref("sv#{part.id}", arcs(scene, part, :y))},
-                {"opacity", Motion.ref("so#{part.id}", sun_shown(scene, part))}
+                {"--chart-h", Motion.ref("so#{part.id}", sun_shown(scene, part))}
               ]) do
             text x: 0, y: 6, text_anchor: "middle", class: "chart-part" do
               part.name

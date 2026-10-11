@@ -107,7 +107,8 @@ chart that moves.
 
 A chart or a series with the effect `:grow` grows at the step at which it shows. A bar grows
 from the base line, a line opens from the left, and a pie and a sunburst open clockwise from
-the top. A box of a treemap grows from its top left corner. The
+the top. A box of a treemap grows from its top left corner. The labels of a treemap and of a
+sunburst show after their boxes and arcs grow. The
 chart does not change its size. With `count true`, a number counts from zero.
 
 ## The browsers

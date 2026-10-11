@@ -574,11 +574,23 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
     --chart-h var(--dur) var(--ease),
     --chart-n var(--dur) var(--ease);
 }
+/*
+ * A label of a treemap or a sunburst. `--chart-h` is 1 in a frame in which
+ * the label fits, and 0 in another frame. With the effect `grow`,
+ * `--chart-w` follows `--chart-shown` after a delay of the time of the
+ * growth, so a label shows after its box or its arc reaches it. The opacity
+ * is the product of the two registered numbers, and the numbers have the
+ * transitions. A transition of `opacity` would go to the end value of
+ * `--chart-w` at once, and it would ignore the delay.
+ */
 .chart-label {
+  --chart-w: var(--chart-shown, 1);
+  opacity: calc(var(--chart-h) * var(--chart-w));
   transition:
-    opacity var(--dur) var(--ease),
     --chart-u var(--dur) var(--ease),
-    --chart-v var(--dur) var(--ease);
+    --chart-v var(--dur) var(--ease),
+    --chart-h var(--dur) var(--ease),
+    --chart-w var(--dur) var(--ease) var(--dur);
 }
 .chart-mark {
   transform: translate(calc(var(--chart-u) * 1px), calc(var(--chart-v) * 1px));
