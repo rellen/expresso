@@ -2,8 +2,8 @@ defmodule Expresso.Element.List do
   @moduledoc """
   An element that shows a list of items
 
-  A list holds `item` entities, and an item holds text and one optional nested
-  `list`. The DSL accepts three levels of lists. The `ordered` option gives a
+  A list holds `item` entities, and an item holds text and nested lists. A
+  list can nest to each depth. The `ordered` option gives a
   numbered list, and the default is a bulleted list.
 
   The `reveal` option shows the items one after the other, one item at each

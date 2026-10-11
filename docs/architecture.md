@@ -773,9 +773,10 @@ would take the width zero.
 
 ### The list
 
-A `list` holds `item` elements, and an item holds text and one optional nested `list`.
-`Expresso.Extension` builds three levels of the entities with a loop. The DSL accepts a
-fourth level too, and `Expresso.ElementPagesTest` makes sure of it. The
+A `list` holds `item` elements, and an item holds text and nested lists. A list can nest
+to each depth, because the `list` macro of the slide stays in scope in the block of an
+item. See "The definitions of the elements" below. `Expresso.ElementPagesTest` makes sure
+of a fourth level. The
 `ordered` option gives an `ol` element, and the default is a `ul` element. The `reveal`
 option shows the items one after the other, and `docs/overlays.md` gives its rules. The
 text of an item goes into one block element, as in a text area, and it can contain HTML.
@@ -1266,9 +1267,10 @@ in a body. These are the reasons for this design:
 - **A paragraph for the header, and not a heading.** A heading in a callout would change the
   outline of the headings of the slide. The role `note` tells a screen reader that the box
   is a part of the slide that it can skip.
-- **The elements of a text box, and no nest.** Spark cannot nest an entity inside itself
-  without a limit, so a callout holds no callout and no `columns`. A slide, a text box and a
-  column hold a callout.
+- **The elements of a text box, and no nest.** A callout is for the elements of a text
+  box, and not for a callout or `columns`. A slide, a text box and a column hold a callout.
+  The DSL does not refuse a callout or `columns` in a callout, because the macros of the
+  slide stay in scope. See "The definitions of the elements".
 
 ### The table of contents
 
@@ -1359,6 +1361,30 @@ top level section. The section holds `slide` entities.
 
 The `slide` entity takes an optional name as its first argument. The DSL accepts `slide do`
 and `slide "name" do`.
+
+### The definitions of the elements
+
+`Expresso.Extension` defines each element one time, as a child of the `slide` entity. A
+container, such as `text_box`, `column`, `callout` and `item`, declares the key `elements`
+with no definitions. An entity that only one parent holds, such as `column`, `item`, `row`,
+`series` and `part`, stays a child of that parent.
+
+The block of a container then uses the macros of the slide. Spark imports the macros of
+an entity in its block, and an import in Elixir is lexical, so the macros of the slide stay
+in scope in each nested block. Spark records a child by the key of its parent, such as
+`elements`, and not by the module of the macro. Therefore a `text_area` in a callout and a
+`text_area` in a slide give the same struct in the same place.
+
+Spark makes a module for each entity at each place in the tree of the definitions. Each
+module holds a copy of its entity, with the definitions of each child. When each container
+held the definitions of its elements, Spark made 882 modules of 25 MB, and
+`lib/expresso/extension.ex` took approximately 2 minutes to compile. With one definition of
+each element, Spark makes 120 modules of 2.3 MB, and the file takes a few seconds.
+
+The tree of the definitions does not give the rules of the places, because the macros of
+the outer entities are in scope in each nested block. Until 2026-10-11, each container held
+the definitions of its elements, and the DSL accepted the same places. `Expresso.Overlay.Check`
+refuses a `pause` inside an element.
 
 ### The options of the overlays
 

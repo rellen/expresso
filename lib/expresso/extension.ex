@@ -410,50 +410,47 @@ defmodule Expresso.Extension do
         ]
   }
 
-  # A list holds items, and an item holds one nested list. Spark cannot nest
-  # two entities inside each other without a limit, so the extension builds
-  # three levels. The item of the deepest list holds no list.
-  @list_levels 3
+  # A list holds items, and an item holds nested lists. The item declares the
+  # key of its children without their definitions: in the block of an item,
+  # the `list` macro of the slide stays in scope, so a list can nest to each
+  # depth. See "The definitions of the elements" in docs/architecture.md.
+  @item %Spark.Dsl.Entity{
+    name: :item,
+    target: Expresso.Element.Item,
+    args: [:text],
+    entities: [elements: [], on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        @goto_schema ++
+        [text: [type: :string, required: true, doc: "The text of the item."]]
+  }
 
-  @list Enum.reduce(1..@list_levels, nil, fn _level, inner ->
-          item = %Spark.Dsl.Entity{
-            name: :item,
-            target: Expresso.Element.Item,
-            args: [:text],
-            entities: [elements: List.wrap(inner), on: [@on]],
-            schema:
-              @overlay_schema ++
-                @class_schema ++
-                @goto_schema ++
-                [text: [type: :string, required: true, doc: "The text of the item."]]
-          }
-
-          %Spark.Dsl.Entity{
-            name: :list,
-            target: Expresso.Element.List,
-            entities: [elements: [item], on: [@on]],
-            schema:
-              @overlay_schema ++
-                @class_schema ++
-                [
-                  ordered: [
-                    type: :boolean,
-                    default: false,
-                    doc: "Number the items. The default is a bullet for each item."
-                  ],
-                  reveal: [
-                    type: :boolean,
-                    default: false,
-                    doc: "Show the items one after the other. See docs/overlays.md."
-                  ],
-                  dim: [
-                    type: :boolean,
-                    default: false,
-                    doc: "Dim each child when a later child shows. See docs/overlays.md."
-                  ]
-                ]
-          }
-        end)
+  @list %Spark.Dsl.Entity{
+    name: :list,
+    target: Expresso.Element.List,
+    entities: [elements: [@item], on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          ordered: [
+            type: :boolean,
+            default: false,
+            doc: "Number the items. The default is a bullet for each item."
+          ],
+          reveal: [
+            type: :boolean,
+            default: false,
+            doc: "Show the items one after the other. See docs/overlays.md."
+          ],
+          dim: [
+            type: :boolean,
+            default: false,
+            doc: "Dim each child when a later child shows. See docs/overlays.md."
+          ]
+        ]
+  }
 
   @row %Spark.Dsl.Entity{
     name: :row,
@@ -736,7 +733,7 @@ defmodule Expresso.Extension do
     name: :callout,
     target: Expresso.Element.Callout,
     args: [:kind],
-    entities: [elements: @inner_elements, on: [@on]],
+    entities: [elements: [], on: [@on]],
     schema:
       @overlay_schema ++
         @class_schema ++
@@ -758,7 +755,7 @@ defmodule Expresso.Extension do
   @column %Spark.Dsl.Entity{
     name: :column,
     target: Expresso.Element.Column,
-    entities: [elements: @inner_elements ++ [@callout, @toc], on: [@on]],
+    entities: [elements: [], on: [@on]],
     schema:
       @overlay_schema ++
         @class_schema ++
@@ -770,8 +767,6 @@ defmodule Expresso.Extension do
         ]
   }
 
-  # A column cannot hold a columns element, because Spark cannot nest two
-  # entities inside each other without a limit.
   @columns %Spark.Dsl.Entity{
     name: :columns,
     target: Expresso.Element.Columns,
@@ -782,7 +777,7 @@ defmodule Expresso.Extension do
   @text_box %Spark.Dsl.Entity{
     name: :text_box,
     target: Expresso.Element.TextBox,
-    entities: [elements: @inner_elements ++ [@columns, @callout, @toc], on: [@on]],
+    entities: [elements: [], on: [@on]],
     schema: @overlay_schema ++ @class_schema
   }
 
