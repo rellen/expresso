@@ -1,7 +1,7 @@
 # Show data in a chart
 
-This guide shows how to draw a bar chart, a line chart and a pie chart, and how to show the
-series of a chart one at a time. For each option, see
+This guide shows how to draw a bar chart, a line chart and a pie chart, how to show the
+series of a chart one at a time, and how to read the file of a spreadsheet. For each option, see
 [The chart element](../reference/chart-element.md).
 
 ## Draw a bar chart and show each series at a step
@@ -74,6 +74,65 @@ Examples.ChartLine
 ```
 
 ![The line of the web shows first, then the phone and the shop, and the earlier lines dim](https://raw.githubusercontent.com/rellen/expresso/media/chart-line.gif)
+
+## Draw a chart from a file of a spreadsheet
+
+A spreadsheet can save its table as a CSV file or as a TSV file. You can also copy the cells
+and paste them into a text file, which then has a tab between two cells. Give the name of a
+TSV file an ending of `.tsv`, and the chart reads a tab between two cells:
+
+```
+Plant	Orders	Returns
+Leeds, Line 4	1,250	84
+Leeds, Line 7	980	61
+York	1,420	95
+Hull	760	40
+```
+
+The commas in a category and between the groups of three digits of a number need no change:
+
+```elixir
+defmodule Examples.ChartTsv do
+  use Expresso
+
+  root __DIR__
+
+  slide "plants" do
+    heading "Orders at each plant"
+
+    chart :bar do
+      title "Orders and returns at each plant this year"
+      src "orders_by_plant.tsv"
+    end
+  end
+end
+
+Examples.ChartTsv
+```
+
+![A bar chart of the orders and the returns at four plants](https://raw.githubusercontent.com/rellen/expresso/media/chart-tsv.png)
+
+A spreadsheet puts a cell in double quotes when the cell holds the delimiter. The chart reads
+these quotes, so a CSV file can hold the same table:
+
+```
+Plant,Orders,Returns
+"Leeds, Line 4","1,250",84
+```
+
+A spreadsheet with a comma as the decimal mark puts a semicolon between two cells. Give the
+`delimiter` option for that file, or for a file with a different character:
+
+```elixir
+chart :bar do
+  title "Orders and returns at each plant this year"
+  src "orders_by_plant.csv"
+  delimiter ";"
+end
+```
+
+The chart does not read a comma as a decimal mark. Change the numbers of such a file to a
+period, such as `12.5`, before you give the file to the chart.
 
 ## Draw a pie chart
 

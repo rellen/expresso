@@ -179,11 +179,13 @@ defmodule Expresso.ChartHierarchyTest do
     end
 
     test "the reader gives an error for a missing column and an empty level before a name" do
-      assert {:error, message} = Csv.table("Division,Hours\nA,1\n", "a.csv", ["Division", "Team"])
+      assert {:error, message} =
+               Csv.table("Division,Hours\nA,1\n", "a.csv", levels: ["Division", "Team"])
+
       assert message =~ "has no column \"Team\" for the levels"
 
       assert {:error, message} =
-               Csv.table("Division,Team,Hours\n,Press,1\n", "a.csv", ["Division", "Team"])
+               Csv.table("Division,Team,Hours\n,Press,1\n", "a.csv", levels: ["Division", "Team"])
 
       assert message =~
                "line 2 of the chart file \"a.csv\" has an empty level before a level with a name"

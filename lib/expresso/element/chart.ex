@@ -66,6 +66,7 @@ defmodule Expresso.Element.Chart do
     :easing,
     :frames,
     :levels,
+    :delimiter,
     separator: "/",
     values: true,
     reveal: false,
@@ -101,11 +102,16 @@ defmodule Expresso.Element.Chart do
     if chart.categories != nil or chart.elements != [] or chart.timeline != [],
       do:
         {:error, "a chart takes the src option, or categories and series or frames, and not both"},
-      else: options(chart)
+      else: with(:ok <- delimiter_option(chart.delimiter), do: options(chart))
   end
 
   def check(%__MODULE__{frames: frames}) when is_binary(frames),
     do: {:error, "the frames option names a column of a CSV file, so it needs the src option"}
+
+  def check(%__MODULE__{delimiter: delimiter}) when is_binary(delimiter),
+    do:
+      {:error,
+       "the delimiter option gives the character between two cells of a chart file, so it needs the src option"}
 
   def check(%__MODULE__{levels: [_ | _]}),
     do:
@@ -123,21 +129,22 @@ defmodule Expresso.Element.Chart do
 
   The first row holds a heading for the categories, then the name of each
   series. Each other row holds a category, then one number for each series.
-  A cell is the text between two commas, with no quotes. The function reads
-  the file through `Expresso.DeckFile`, so the watch mode renders the deck
-  again after a change to the file.
+  A comma divides the cells, or a tab in a file that ends in `.tsv`, or the
+  `delimiter` option. `Expresso.Element.Chart.Csv` tells the rules. The
+  function reads the file through `Expresso.DeckFile`, so the watch mode
+  renders the deck again after a change to the file.
   """
   @spec build(t()) :: {:ok, t()} | {:error, String.t()}
   def build(%__MODULE__{src: src, frames: nil} = chart) when is_binary(src) do
     with {:ok, text} <- read(src),
-         {:ok, categories, series} <- Csv.table(text, src, chart.levels) do
+         {:ok, categories, series} <- Csv.table(text, src, reader(chart)) do
       validate(%__MODULE__{chart | categories: categories, elements: series})
     end
   end
 
   def build(%__MODULE__{src: src} = chart) when is_binary(src) do
     with {:ok, text} <- read(src),
-         {:ok, categories, timeline} <- Csv.frames(text, chart.frames, src, chart.levels) do
+         {:ok, categories, timeline} <- Csv.frames(text, chart.frames, src, reader(chart)) do
       %__MODULE__{chart | categories: categories, timeline: timeline}
       |> first_frame()
       |> validate()
@@ -145,6 +152,23 @@ defmodule Expresso.Element.Chart do
   end
 
   def build(%__MODULE__{} = chart), do: {:ok, chart}
+
+  defp delimiter_option(nil), do: :ok
+
+  defp delimiter_option(delimiter) do
+    if String.length(delimiter) == 1 and delimiter not in ["\"", "\n", "\r"],
+      do: :ok,
+      else: {:error, "the delimiter option is one character, and not a quote or a line break"}
+  end
+
+  defp reader(chart), do: [levels: chart.levels, delimiter: delimiter(chart)]
+
+  # The delimiter option, else a tab for a file that ends in .tsv, else a
+  # comma.
+  defp delimiter(%__MODULE__{delimiter: delimiter}) when is_binary(delimiter), do: delimiter
+
+  defp delimiter(%__MODULE__{src: src}),
+    do: if(String.downcase(Path.extname(src)) == ".tsv", do: "\t", else: ",")
 
   defp read(src) do
     case Expresso.DeckFile.read(src) do

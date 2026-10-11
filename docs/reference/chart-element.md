@@ -25,7 +25,8 @@ end
 | The first argument | `:bar`, `:line`, `:pie`, `:treemap` or `:sunburst` | The kind of the chart. |
 | `title` | A string, required | The name of the chart for a screen reader, and the caption of its table. |
 | `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels. |
-| `src` | The path of a CSV file | The categories and the series, in place of `categories` and `series`. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. |
+| `src` | The path of a CSV file or a TSV file | The categories and the series, in place of `categories` and `series`. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. |
+| `delimiter` | One character, such as `";"` | The character between two cells of the `src` file. The default is a tab for a file that ends in `.tsv`, and a comma for each other file. Requires `src`. |
 | `values` | `true` or `false` | Show the value of each bar. The default is `true`. |
 | `reveal` | `true` or `false` | Show each series at its own step. The default is `false`. A pie takes no `reveal`. |
 | `dim` | `true` or `false` | Dim each series when a later series shows. The default is `false`. |
@@ -172,14 +173,24 @@ the frame in a row above the boxes.
 ## The CSV file
 
 The first row holds a heading for the categories, then the name of each series. Each other
-row holds a category, then one number for each series. A cell is the text between two
-commas, with no quotes:
+row holds a category, then one number for each series. A comma divides two cells:
 
 ```
 Month,Web,Phone,Shop
 Jan,420,310,150
 Feb,450,360,140
 ```
+
+These rules apply to each file:
+
+- A file that ends in `.tsv` has a tab between two cells. The `delimiter` option gives a
+  different character, such as `";"` or `"|"`.
+- A cell in double quotes can hold the delimiter, a line break, and a quote, which two
+  quotes give: `"The ""new"" line"`. The text in the quotes stays as it is.
+- The spaces around a cell do not count. A line with only spaces is not a row.
+- A number can have a comma between each group of three digits, such as `1,250` or
+  `12,500.5`. A CSV file holds such a number in quotes. A period is the decimal mark.
+- The message of an error names the first line of the row.
 
 The categories of a treemap and of a sunburst hold the separator in the same column, such as
 `Production/Press,62`. A file needs no other change.
@@ -230,10 +241,13 @@ The compiler gives an error for these:
 - a series of a later frame with an overlay option or a `class`;
 - `sort` on a line chart or a pie, `count` on a chart without frames, and `frames` without
   `src`;
+- `delimiter` without `src`, and a `delimiter` that is not one character, or that is a
+  quote or a line break;
 - a `thumbnail` with the number of a frame that the chart does not have.
 
-The render gives an error for a CSV file that it cannot read, and for a row with a cell
-that is not a number. The message names the line.
+The render gives an error for a file that it cannot read, for a quote with no closing
+quote, for text after a closing quote, and for a row with a cell that is not a number. The
+message names the line.
 
 ## The colors
 
