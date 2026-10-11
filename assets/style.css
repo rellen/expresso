@@ -1019,6 +1019,58 @@ body[data-view="handout"] .chart-frames {
   flex-grow: 0;
   text-align: start;
 }
+/*
+ * A table of contents is a numbered list in the center of its box. An entry
+ * has the color of the text, and the entry of the current section has the
+ * accent color. Each color mixes with its dimmed color through `--dimmed`,
+ * so the `dim` option and the state `dim` dim an entry. The class of the
+ * `progress` option dims, checks or strikes the other entries.
+ */
+.toc {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: start;
+}
+.toc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  margin: 0;
+  padding-inline-start: 1.5em;
+}
+.toc-entry {
+  color: color-mix(
+    in srgb,
+    var(--text-dim) calc(var(--dimmed) * 100%),
+    var(--text)
+  );
+}
+.toc-entry.toc-current {
+  font-weight: 700;
+  color: color-mix(
+    in srgb,
+    var(--accent-dim) calc(var(--dimmed) * 100%),
+    var(--accent)
+  );
+}
+.toc-dim-rest .toc-earlier,
+.toc-dim-rest .toc-later,
+.toc-dim-earlier .toc-earlier {
+  color: var(--text-dim);
+}
+.toc a.toc-link {
+  color: inherit;
+  text-decoration: none;
+}
+.toc-check-earlier .toc-earlier .toc-link::after {
+  content: "\00a0\2713";
+}
+.toc-strike-earlier .toc-earlier .toc-link {
+  text-decoration: line-through;
+}
 .spacer {
   flex-grow: 1;
 }
@@ -1150,6 +1202,8 @@ body[data-view="present"][data-undim] .screen .code [data-el] {
 .diagram,
 .qr-code,
 .callout,
+.toc,
+.toc-entry,
 .footnote,
 .audio,
 .shape,

@@ -694,6 +694,7 @@ An element is the content of a slide. These are the elements at this time:
 - `Expresso.Element.Shape`
 - `Expresso.Element.Chart`, with `Expresso.Element.Series`
 - `Expresso.Element.Callout`
+- `Expresso.Element.Toc`, with `Expresso.Element.TocEntry`
 
 ### The parts of an element module
 
@@ -1267,6 +1268,32 @@ in a body. These are the reasons for this design:
   without a limit, so a callout holds no callout and no `columns`. A slide, a text box and a
   column hold a callout.
 
+### The table of contents
+
+A `toc` lists the sections of the deck. A slide with the `section` option starts a section.
+`Expresso.SectionTransformer` puts one `Expresso.Element.TocEntry` for each section into
+each toc, and `Expresso.Element.Toc` writes a `nav` with an `ol`. These are the reasons for
+this design:
+
+- **A section option, and not a list of entries.** The title of a section is on the slide
+  where the section starts, so a new slide or a moved slide changes the toc with no other
+  change. A list in the toc would repeat the structure of the deck, and it could differ
+  from it.
+- **The entries are children, made by a transformer.** A toc needs each slide of the deck,
+  and an entity knows only its own options. The transformer runs after the whole deck is
+  known, and before the overlay transformer. The entries are then children of the toc, as
+  the series are children of a chart, so `reveal`, `dim` and the state `dim` work with no
+  new mechanism.
+- **Each entry is a link of the goto option.** The entry holds an `Expresso.Goto` with the
+  number of the first slide of its section, and `Expresso.Goto.resolve/1` writes its
+  commands as for each other link. The handout view and the print show the same list.
+- **The place of an entry is a class.** The transformer knows the section of the slide of
+  the toc, so each entry gets `toc-earlier`, `toc-current`, `toc-later` or `toc-none`. The
+  class of the `progress` option selects the rules that dim, check or strike, and a deck
+  can write rules of its own for the same classes.
+- **The metadata holds the section of each slide.** A template reads `:section` and writes
+  it in a header. The `meta` option of a slide can still give a value of its own.
+
 ## The DSL
 
 `Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a
@@ -1297,7 +1324,9 @@ and `slide "name" do`.
 - A code element has a `reveal` option with a list of lines.
 
 A slide also has a `heading` option, a `notes` option and a `handout` option, and
-`Expresso.Slide.put_options_in_metadata/1` puts each into the metadata of the slide.
+`Expresso.Slide.put_options_in_metadata/1` puts each into the metadata of the slide. The
+`section` option starts a section, and `Expresso.SectionTransformer` puts the section of
+each slide into its metadata.
 
 ### The notes
 
@@ -1323,10 +1352,13 @@ In the present view, the style sheet puts the number in the corner of the window
 
 ### The transformer and the verifiers
 
-The extension imports nothing, and it lists two transformers and eight verifiers:
+The extension imports nothing, and it lists three transformers and eight verifiers:
 
 - `Expresso.PathTransformer` joins each relative path of the deck to the `root` option, and
   it builds each code element with `src`. It runs first. See "The watch mode".
+- `Expresso.SectionTransformer` puts the section of each slide into its metadata, and the
+  entries into each `toc`. It runs before the overlay transformer. See "The table of
+  contents".
 - `Expresso.Overlay.Transformer` expands the overlay specifications of each slide at
   compile time.
 - `Expresso.GotoVerifier` refuses a `goto` option that names no slide. See "The links".

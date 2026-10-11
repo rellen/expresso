@@ -625,6 +625,33 @@ defmodule Expresso.Extension do
     @chart
   ]
 
+  @toc %Spark.Dsl.Entity{
+    name: :toc,
+    target: Expresso.Element.Toc,
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          reveal: [
+            type: :boolean,
+            default: false,
+            doc: "Show the entries one after the other, one at each step."
+          ],
+          dim: [
+            type: :boolean,
+            default: false,
+            doc: "Dim each entry when a later entry shows."
+          ],
+          progress: [
+            type: {:in, Expresso.Element.Toc.progress_values()},
+            default: :dim_rest,
+            doc:
+              "How the entries other than the current section look: :dim_rest, :dim_earlier, :check_earlier or :strike_earlier. See docs/reference/toc-element.md."
+          ]
+        ]
+  }
+
   # A callout holds the elements of a text box, and not a callout or columns.
   @callout %Spark.Dsl.Entity{
     name: :callout,
@@ -652,7 +679,7 @@ defmodule Expresso.Extension do
   @column %Spark.Dsl.Entity{
     name: :column,
     target: Expresso.Element.Column,
-    entities: [elements: @inner_elements ++ [@callout], on: [@on]],
+    entities: [elements: @inner_elements ++ [@callout, @toc], on: [@on]],
     schema:
       @overlay_schema ++
         @class_schema ++
@@ -676,7 +703,7 @@ defmodule Expresso.Extension do
   @text_box %Spark.Dsl.Entity{
     name: :text_box,
     target: Expresso.Element.TextBox,
-    entities: [elements: @inner_elements ++ [@columns, @callout], on: [@on]],
+    entities: [elements: @inner_elements ++ [@columns, @callout, @toc], on: [@on]],
     schema: @overlay_schema ++ @class_schema
   }
 
@@ -759,7 +786,8 @@ defmodule Expresso.Extension do
   }
 
   @slide_elements [
-    elements: [@text_box, @columns, @callout] ++ @inner_elements ++ [@footnote, @shape, @pause]
+    elements:
+      [@text_box, @columns, @callout, @toc] ++ @inner_elements ++ [@footnote, @shape, @pause]
   ]
 
   @slide %Spark.Dsl.Entity{
@@ -775,6 +803,11 @@ defmodule Expresso.Extension do
           "CSS class names for the slide, such as \"dense\". The present view and each page of the handout view get them. See docs/reference/class-option.md."
       ],
       heading: [type: :string, doc: "The heading that the slide template shows."],
+      section: [
+        type: :string,
+        doc:
+          "The title of the section that starts at this slide. The section runs to the next slide with a section. A toc lists the sections. See docs/reference/toc-element.md."
+      ],
       template: [
         type: @template,
         doc:
@@ -922,7 +955,11 @@ defmodule Expresso.Extension do
   use Spark.Dsl.Extension,
     sections: @sections,
     imports: [],
-    transformers: [Expresso.PathTransformer, Expresso.Overlay.Transformer],
+    transformers: [
+      Expresso.PathTransformer,
+      Expresso.SectionTransformer,
+      Expresso.Overlay.Transformer
+    ],
     verifiers: [
       Expresso.GotoVerifier,
       Expresso.Overlay.Verifier,
