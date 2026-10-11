@@ -60,6 +60,9 @@ width, and `y` and the second length are parts of the height. The point `["0%", 
 the top left corner of the slide, and `["100%", "100%"]` is the bottom right corner. The
 place does not depend on the other elements of the slide.
 
+Write a shape at the level of the slide. The compiler refuses a shape inside an element,
+such as a text box. See [The places of the elements](placement.md).
+
 A shape shows nothing in the place where you write it. The renderer puts the shapes of a
 slide into one layer over the whole slide, in the order of the deck. A shape thus covers
 the content under it. The layer takes no click, so a click on a shape goes to the slide.

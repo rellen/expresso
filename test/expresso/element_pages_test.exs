@@ -62,9 +62,9 @@ defmodule Expresso.ElementPagesTest do
     end
   end
 
-  # The pages give no limit to these nests, and `docs/architecture.md` tells
-  # that the extension does not give some of them.
-  test "a list of four levels, a text box in a text box and columns in a column render in place" do
+  # The pages give no limit to the levels of a list, and `docs/architecture.md`
+  # tells that the extension gives one definition of the list.
+  test "a list of four levels renders in place" do
     code = """
     defmodule Expresso.ElementPagesTest.Nests do
       use Expresso
@@ -87,23 +87,6 @@ defmodule Expresso.ElementPagesTest do
           end
         end
 
-        text_box do
-          text_box do
-            text_area(text: "inner")
-          end
-        end
-
-        columns do
-          column do
-            text_box do
-              columns do
-                column do
-                  text_area(text: "deep")
-                end
-              end
-            end
-          end
-        end
       end
     end
     """
@@ -113,7 +96,5 @@ defmodule Expresso.ElementPagesTest do
     html = deck |> Expresso.Deck.render() |> Floki.parse_document!()
 
     assert html |> Floki.find(".screen ul ul ul ul") |> length() == 1
-    assert html |> Floki.find(".screen .text-box .text-box") |> length() == 1
-    assert html |> Floki.find(".screen .column .text-box .columns .column") |> length() == 1
   end
 end

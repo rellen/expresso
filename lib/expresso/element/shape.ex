@@ -112,19 +112,11 @@ defmodule Expresso.Element.Shape do
   @doc """
   Return the shapes of a slide, in the order of the deck
 
-  A shape can be at the level of the slide or inside an element that holds
-  elements, such as a text box.
+  A shape is at the level of the slide. `Expresso.PlacementTransformer` refuses a
+  shape inside an element.
   """
   @spec of_slide(map()) :: [t()]
-  def of_slide(slide), do: collect(slide.elements || [])
-
-  defp collect(elements) do
-    Enum.flat_map(elements, fn
-      %__MODULE__{} = shape -> [shape]
-      %{elements: [_ | _] = children} -> collect(children)
-      _element -> []
-    end)
-  end
+  def of_slide(slide), do: for(%__MODULE__{} = shape <- slide.elements || [], do: shape)
 
   @doc """
   Make the assigns of the render function from the struct

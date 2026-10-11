@@ -18,10 +18,8 @@ slide "two sides" do
     column do
       at from: 2
 
-      text_box do
-        text_area do
-          text "A column that takes the rest, and shows at step 2."
-        end
+      text_area do
+        text "A column that takes the rest, and shows at step 2."
       end
     end
   end

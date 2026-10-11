@@ -58,6 +58,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/put-files-into-the-css.md",
         "docs/how-to/give-a-deck-two-variants.md",
         "docs/reference/transition-option.md",
+        "docs/reference/placement.md",
         "docs/reference/morph-option.md",
         "docs/reference/overlay-options.md",
         "docs/reference/step-labels.md",
