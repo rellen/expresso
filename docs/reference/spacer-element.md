@@ -29,6 +29,7 @@ Write `spacer()` with the parentheses. Elixir reads a bare `spacer` as a variabl
 | Option | Value | Effect |
 | --- | --- | --- |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).

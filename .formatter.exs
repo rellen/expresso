@@ -91,6 +91,7 @@ spark_locals_without_parens = [
   meta: 1,
   mode: 1,
   mode: 2,
+  morph: 1,
   move_to: 1,
   name: 1,
   notes: 1,

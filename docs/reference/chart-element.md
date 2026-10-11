@@ -39,6 +39,7 @@ end
 | `thumbnail` | `:first`, `:last` or the number of a frame | The frame that the overview and the menu of the slides show. The default is `:first`. |
 | `width` | A CSS width, such as `"900px"` or `"70%"` | The width of the chart. A percentage is a part of the width of the slide. The default is `80%`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The chart also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).
@@ -50,6 +51,7 @@ The chart also takes the overlay options, such as `at`, `effect` and the `on` en
 | The first argument | A string | The name of the series. |
 | The second argument | A list of numbers | One value for each category, in the order of the categories. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 A series also takes the overlay options, so a series can show at its own step without
 `reveal`.

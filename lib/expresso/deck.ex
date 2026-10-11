@@ -26,6 +26,12 @@ defmodule Expresso.Deck do
   that slide. A deck without the key fades. The DSL makes sure that a
   transition has a rule, and a struct of this module does not.
 
+  The metadata can also hold `:morph`, how the elements of two neighbor
+  slides move from one slide to the next: `:auto`, `:named` or `:off`. The
+  metadata of a slide can hold `:morph` too, and it replaces the value of the
+  deck for the move into that slide. A deck without the key uses `:auto`.
+  `docs/reference/morph-option.md` gives the rules.
+
   The metadata can also hold `:effect`, the way in which an element with steps
   shows and hides, such as `:grow`. The metadata of a slide and the `effect`
   field of an element can hold it too, and the nearest value applies. A deck

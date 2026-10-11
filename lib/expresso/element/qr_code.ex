@@ -42,6 +42,7 @@ defmodule Expresso.Element.QrCode do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     level: :m,
     on: [],

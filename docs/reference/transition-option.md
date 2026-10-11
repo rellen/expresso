@@ -79,5 +79,7 @@ For the steps and a complete deck, see
 - The browser must have the View Transitions API. A browser without it shows the next slide at
   once.
 - A reader who asks for reduced motion gets no transition.
+- The elements that two slides share can move from one slide to the next. See
+  [the morph option](morph-option.md).
 - A theme can set `--transition-dur`. The default is 400 ms. The `speed` option of the
   overlays does not change it.

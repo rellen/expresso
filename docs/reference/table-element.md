@@ -29,6 +29,7 @@ end
 | `reveal` | `true` or `false` | Shows each row at its own step. The header shows with the table. The default is `false`. See [the overlay options](overlay-options.md#reveal). |
 | `dim` | `true` or `false` | Dims each row when a later row shows. The header does not dim. The default is `false`. See [the overlay options](overlay-options.md#dim). |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 ## The options of a row
 
@@ -36,6 +37,7 @@ end
 | --- | --- | --- |
 | The first argument | A list of strings | The text of each cell. A cell can contain HTML. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 A table and a row each take the overlay options, such as `at`, `effect` and the `on`
 entity. See [the overlay options](overlay-options.md).

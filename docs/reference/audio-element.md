@@ -24,6 +24,7 @@ end
 | `loop` | `true` or `false` | Play the sound again from the start at its end. The default is `false`. |
 | `controls` | `true` or `false` | Show the controls of the browser on the slide. The default is `false`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element also takes the overlay options, such as `at` and `effect`. See
 [the overlay options](overlay-options.md).

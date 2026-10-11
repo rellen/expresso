@@ -181,6 +181,25 @@ a.goto {
   animation-duration: var(--transition-dur);
   animation-timing-function: var(--ease);
 }
+/*
+ * The morph. `assets/src/morph.ts` gives each pair of elements of two slides
+ * one name, so each pair is a group of its own. The group moves and changes
+ * its size from the old element to the new element, and the old and the new
+ * pictures cross-fade, in the time and the easing of the transition. Each
+ * picture keeps its shape in the center of the group, so two boxes of two
+ * shapes do not stretch the content or move it apart.
+ */
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: var(--transition-dur);
+  animation-timing-function: var(--ease);
+}
+::view-transition-old(*),
+::view-transition-new(*) {
+  height: 100%;
+  object-fit: contain;
+}
 html[data-transition="slide"]::view-transition-old(slide) {
   animation-name: expresso-out-left;
 }

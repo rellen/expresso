@@ -22,6 +22,7 @@ defmodule Expresso.Element.TocEntry do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     place: :none,
     on: [],

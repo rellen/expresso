@@ -23,6 +23,7 @@ end
 | `text` | A string | The text. The document holds it as HTML, so `<`, `>` and `&` need an entity, such as `&lt;`, to show as characters. |
 | `goto` | A slide and a step, such as `[slide: 5]` or `[slide: "summary"]` | Makes the element a link to that slide and step. See [the goto option](goto-option.md). |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).

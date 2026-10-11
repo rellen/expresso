@@ -10,5 +10,16 @@ defmodule Expresso.Element.Part do
   @typedoc "The struct of a part"
   @type t :: %__MODULE__{}
 
-  defstruct [:id, :at, :steps, :el, :effect, :speed, :easing, on: [], __spark_metadata__: nil]
+  defstruct [
+    :id,
+    :at,
+    :steps,
+    :el,
+    :effect,
+    :speed,
+    :morph,
+    :easing,
+    on: [],
+    __spark_metadata__: nil
+  ]
 end

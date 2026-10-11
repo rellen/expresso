@@ -114,9 +114,15 @@ defmodule Expresso.Overlay.Render do
         el -> [{"data-el", el}]
       end
 
+    morph =
+      case Map.get(element, :morph) do
+        nil -> []
+        key -> [{"data-morph-key", key}]
+      end
+
     case on ++ el do
-      [] -> []
-      attributes -> attributes ++ timing(element)
+      [] -> morph
+      attributes -> attributes ++ timing(element) ++ morph
     end
   end
 

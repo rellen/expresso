@@ -12,7 +12,18 @@ defmodule Expresso.Element.Spacer do
   @typedoc "The struct of a spacer"
   @type t :: %__MODULE__{}
 
-  defstruct [:class, :at, :steps, :el, :effect, :speed, :easing, on: [], __spark_metadata__: nil]
+  defstruct [
+    :class,
+    :at,
+    :steps,
+    :el,
+    :effect,
+    :speed,
+    :morph,
+    :easing,
+    on: [],
+    __spark_metadata__: nil
+  ]
 
   @doc """
   Make the assigns of the render function from the struct

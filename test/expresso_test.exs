@@ -76,6 +76,7 @@ defmodule ExpressoTest do
                slide_numbers: false,
                duration: nil,
                transition: :fade,
+               morph: :auto,
                effect: :fade,
                speed: nil,
                easing: nil,

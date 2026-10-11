@@ -16,6 +16,7 @@ defmodule Expresso.Slide do
           :handout => Expresso.Handout.t() | nil,
           :auto_reveal => boolean() | nil,
           :transition => atom() | nil,
+          :morph => :auto | :named | :off | nil,
           :effect => atom() | nil,
           :speed => atom() | pos_integer() | nil,
           :easing => atom() | nil,
@@ -36,6 +37,7 @@ defmodule Expresso.Slide do
     :handout,
     :auto_reveal,
     :transition,
+    :morph,
     :effect,
     :speed,
     :easing,
@@ -63,6 +65,7 @@ defmodule Expresso.Slide do
     :meta,
     :handout,
     :transition,
+    :morph,
     :effect,
     :speed,
     :easing

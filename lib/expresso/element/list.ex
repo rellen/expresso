@@ -29,6 +29,7 @@ defmodule Expresso.Element.List do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     ordered: false,
     reveal: false,

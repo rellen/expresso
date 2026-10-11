@@ -1771,6 +1771,50 @@ rules, and the presenter does not know the names:
 
 A deck struct from data does not go through the verifier, so a kind without a rule fades.
 
+### The morph
+
+The morph moves each element that two neighbor slides share from its old box to its new
+box, inside the view transition of the slide change. The browser does the move, when the
+two elements have the same `view-transition-name`.
+
+The renderer writes three values:
+
+- `data-morph` on each `section.slide`: the mode of the slide, or the mode of the deck,
+  else `auto`. `Expresso.Slide.put_options_in_metadata/1` puts the option of a slide into
+  its metadata.
+- `data-morph-key` on an element with the `morph` option, through
+  `Expresso.Overlay.Render.attributes/1`.
+- `data-language` on a code element, so the morph can compare two codes.
+
+`pairs` in `morph.ts` finds the partners of two slides:
+
+1. It pairs each key that occurs one time on each slide.
+2. With the mode `auto`, it pairs each signature that occurs one time on each slide. A
+   signature is the kind of an element and its content, such as the label of a stat.
+   `KINDS` gives the kinds by class, and the heading of a slide is the kind `heading`. It
+   skips an element inside an element with a partner, because the element moves with its
+   parent.
+3. For each pair of codes, it pairs the tokens of the two codes by their longest common
+   subsequence. A token is a span of the highlight without a span inside it. A code with
+   more than `MAX_TOKENS` tokens gets no token pairs, because each pair is a group of the
+   view transition.
+
+Each pair gets the name `expresso-morph-N`. `modeOf` takes the mode of the slide with the
+higher number, as `transition` in `interpreter.ts` takes the kind.
+
+`morphs` in `main.ts` computes the pairs before `show` applies the new state, and it gives
+them to `animate` in `dom.ts`. `animate` keeps the pairs whose old element shows. When a
+pair stays, it sets the kind `fade` and names each old element. Inside the update, it
+removes the old names, applies the state and names each new element that shows. The browser
+then takes the new boxes. When the transition ends, it removes the new names. Therefore no
+element keeps a name between two transitions, and two names never occur in the document
+at the same time.
+
+The style sheet gives each `::view-transition-group` of a morph the duration and the easing
+of the transition. The old and the new image of a group have `object-fit: contain` and the
+full height of the group, so an element that changes its aspect ratio does not show two
+images of different sizes.
+
 ### The overview
 
 The overview shows the page of the last step of each slide in a grid. The state holds

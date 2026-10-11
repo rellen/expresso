@@ -80,6 +80,8 @@ import { load as loadEmbeds } from "./embed.ts";
 import { play as playVideos } from "./video.ts";
 import { play as playAudios } from "./audio.ts";
 import { count } from "./chart.ts";
+import { modeOf, pairs } from "./morph.ts";
+import type { Pair } from "./morph.ts";
 import { search } from "./search.ts";
 import { audit, report } from "./layout.ts";
 import { clock, left, pace, talkLength } from "./speaker.ts";
@@ -153,6 +155,20 @@ function send(): void {
   }
 }
 
+// The pairs of the morph from the slide of one state to the slide of another.
+// `assets/src/morph.ts` gives the rules.
+function morphs(before: State, after: State): Pair[] {
+  const from = current(before, deck)?.slide;
+  const to = current(after, deck)?.slide;
+  const old =
+    from === undefined ? null : document.getElementById(`slide-${from}`);
+  const next = to === undefined ? null : document.getElementById(`slide-${to}`);
+  if (from === undefined || to === undefined || old === null || next === null) {
+    return [];
+  }
+  return pairs(old, next, modeOf(old, next, from, to));
+}
+
 // Apply a new state, and write its fragment. `replaceState` adds no entry to
 // the history, so the back button of the browser does not go through the
 // steps. A change of this window goes to the other window. A change from the
@@ -166,13 +182,18 @@ function show(changed: State, local = true): void {
   const moved = changed.index !== state.index;
   const sent = synced(program, state, changed);
   const change = transition(state, changed, deck);
+  const pairs = change === null ? [] : morphs(state, changed);
   state = changed;
   // The browser runs the update of a transition later. The update then reads
   // the state of that time, so a fast second key does not show an old state.
-  animate(change, () => {
-    apply(state, deck, program);
-    count();
-  });
+  animate(
+    change,
+    () => {
+      apply(state, deck, program);
+      count();
+    },
+    pairs,
+  );
   history.replaceState(null, "", toHash(state, deck));
   if (local && sent) {
     send();

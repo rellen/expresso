@@ -52,6 +52,7 @@ defmodule Expresso.Element.Callout do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     title: nil,
     on: [],

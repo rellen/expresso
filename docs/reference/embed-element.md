@@ -27,6 +27,7 @@ end
 | `aspect` | Two numbers with a slash, such as `"16/9"` | The ratio of the width to the height. The default is `16/9`. |
 | `interactive` | `true` or `false` | Let the page take clicks and keys. The default is `false`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element also takes the overlay options, such as `at` and `effect`. See
 [the overlay options](overlay-options.md).

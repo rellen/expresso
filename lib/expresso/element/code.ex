@@ -72,6 +72,7 @@ defmodule Expresso.Element.Code do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     dim: false,
     line_numbers: false,
@@ -441,6 +442,7 @@ defmodule Expresso.Element.Code do
 
     %{
       lines: lines,
+      lang: lang,
       numbers: width(code.line_numbers, lines),
       overlay: Expresso.Overlay.Render.attributes(code)
     }
@@ -472,7 +474,9 @@ defmodule Expresso.Element.Code do
   # sobelow_skip ["XSS.Raw"]
   def render(assigns) do
     temple do
-      div class: Expresso.Element.classes("code", assigns[:class]), rest!: @overlay do
+      div class: Expresso.Element.classes("code", assigns[:class]),
+          data_language: @lang,
+          rest!: @overlay do
         pre do
           code class: "highlight", style: @numbers && "--line-number-width: #{@numbers}ch" do
             for {number, html, attributes} <- @lines do

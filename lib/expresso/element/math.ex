@@ -24,6 +24,7 @@ defmodule Expresso.Element.Math do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     on: [],
     __spark_metadata__: nil

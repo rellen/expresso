@@ -63,6 +63,7 @@ defmodule Expresso.Element.Chart do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     :frames,
     :levels,

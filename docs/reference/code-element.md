@@ -32,6 +32,7 @@ end
 | `highlight` | Line numbers and ranges, such as `[10..12, 13..20]` | Each line shows at each step. Each group is in focus at its own step, and the other lines dim. |
 | `whole_first` | `true` or `false` | With `highlight`, the whole code shows in full color for one step before the first group. The default is `false`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element takes `text` or `src`, and not both. It takes `reveal` or `highlight`, and not
 both.

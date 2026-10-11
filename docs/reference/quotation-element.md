@@ -20,6 +20,7 @@ end
 | The first argument | A string | The text of the quotation. It can contain HTML. |
 | `by` | A string | The name of the source. The document writes it as text, so HTML in it shows as characters. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).

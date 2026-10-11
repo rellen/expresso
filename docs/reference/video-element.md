@@ -29,6 +29,7 @@ end
 | `controls` | `true` or `false` | Show the controls of the browser, so the presenter can turn the sound on. The default is `false`. |
 | `at`, `on`, `effect`, `speed`, `easing` | See [the overlay options](overlay-options.md) | The steps of the video, as for each other element. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The box of a video is the box of an embed. A deck can set `--embed-width` and
 `--embed-aspect` in a rule of its CSS.

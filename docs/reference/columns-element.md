@@ -36,6 +36,7 @@ end
 | Option | Value | Effect |
 | --- | --- | --- |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 ## The options of a column
 
@@ -43,6 +44,7 @@ end
 | --- | --- | --- |
 | `width` | A CSS width, such as `"30%"` or `"400px"` | The width of the column. The default is an equal part of the free space. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The columns element and a column each take the overlay options, such as `at`, `effect`
 and the `on` entity. See [the overlay options](overlay-options.md).

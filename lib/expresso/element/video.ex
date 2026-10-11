@@ -42,6 +42,7 @@ defmodule Expresso.Element.Video do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     loop: true,
     controls: false,

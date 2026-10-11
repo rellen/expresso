@@ -28,6 +28,7 @@ end
 | The first argument | The path of an `.svg` file | The diagram. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. |
 | `width` | A CSS width, such as `"900px"` or `"60%"` | The width of the diagram. A percentage is a part of the width of the slide. The default is the width that the file gives. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 ## The options of a part
 
