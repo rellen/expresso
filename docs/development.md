@@ -209,7 +209,7 @@ The project is in `_build/dependency_project`, and the test keeps it. The projec
 `mix.lock` of Expresso, so its dependencies have the same versions. The first run compiles
 each dependency and takes approximately 200 seconds. A later run compiles only the files
 that changed, and takes approximately 10 seconds. A change to an element struct compiles
-`lib/expresso/extension.ex` again, and that takes approximately 2 minutes. The job
+`lib/expresso/extension.ex` again, and that takes approximately 10 seconds. The job
 `dependency` of the workflow has its own cache, which keeps the project. To start from a
 new project, remove the directory:
 
@@ -290,6 +290,8 @@ The jobs run in parallel on Linux, so the slowest of them gives their time:
 - `e2e`: the browser tests, in three jobs, `e2e (1/3)` to `e2e (3/3)`.
 - `dependency`: the dependency test.
 - `presenter`: `npm run check`, `npm run lint`, `npm run format:check` and `npm test`.
+- `gifs`: `mix expresso.gifs`, the GIFs and the stills of the example decks. The artifact
+  `gifs` holds them.
 - `binary`: the binary for Linux and the release tests, in two jobs. The job
   `binary (linux_x86)` runs on x86_64, and the job `binary (linux_arm)` runs on an arm64
   runner. Each job makes the binary for its own architecture, so it can run the binary.
@@ -375,12 +377,13 @@ latest 29.1.x. After the release of OTP 29.1.1 on 2026-09-22, the jobs then ran 
 and each other place gave 29.1. Burrito found no ERTS for 29.1.1, and the job `release`,
 now `binary`, failed.
 
-The workflow keeps `deps` and `_build` in a cache for each job. The key holds the name of
+The workflow keeps `deps` and `_build` in a cache. The key holds the name of the cache of
 the job, `mix.lock`, the two versions and the commit. Therefore each run saves the build
 of its commit, and the next run compiles only the files that changed after it. A run with
 no cache of its commit reads the latest cache of the same `mix.lock`, and then the latest
-cache of the job. Each job has its own cache, because a job that compiles nothing, such as
-`format`, must not give the other jobs a cache with no build. For a result from a full
+cache of the same name. Each job has a cache of its own name, except the jobs of `test`
+and `e2e`, which share the cache `test`. A job that compiles nothing, such as `format`,
+must not give the other jobs a cache with no build. For a result from a full
 compile, run `mix compile --warnings-as-errors --force` on your machine.
 
 Dialyzer comes with the Erlang archive of `builds.hex.pm`, and an apt package is not
@@ -455,7 +458,7 @@ keeps the build cache of Zig. In this container, the build of the binary took 14
 with an empty build cache, and 47 seconds with the cache of an earlier build. A build cache
 of more than 1 GB goes, and the job starts a new one.
 
-The key of the build cache holds the name of the job and `mix.lock`, and a job saves the
+The key of the build cache holds the name of the cache of the job and `mix.lock`, and a job saves the
 build cache only when no cache has its key. Therefore each job saves it one time for each
 version of the lockfile. A job that does not make the binary has its own key, so its cache
 does not take the place of a cache with the wrapper of Burrito. Only the `binary` jobs keep
@@ -533,6 +536,15 @@ file. To take a later version:
 - `assets/src/dom.ts` — the code that reads the document and writes to it.
 - `assets/src/main.ts` — the entry, which esbuild bundles.
 - `assets/src/layout.ts` — the layout check of `?check` in the address.
+- `assets/src/deck.ts` — the list of the steps of the deck.
+- `assets/src/speaker.ts` — the texts of the speaker view.
+- `assets/src/search.ts` — the search of the list of keys.
+- `assets/src/scheme.ts` — the variant of a theme with a light and a dark variant.
+- `assets/src/morph.ts` — the morph between two slides.
+- `assets/src/chart.ts` — the numbers that count, of a chart and of a stat.
+- `assets/src/media.ts`, `assets/src/video.ts` and `assets/src/audio.ts` — the media of the
+  video element and of the audio element.
+- `assets/src/embed.ts` — the frames of the embed element.
 - `assets/test/interpreter.test.ts` — the test that runs the fixtures of the Elixir
   interpreter. "The fixtures of the interpreter" below tells how to write them again.
 - `assets/test/validate.ts` — examines a program of the presenter and a list of the
@@ -552,7 +564,7 @@ file. To take a later version:
 `mix compile` makes `priv/static/presenter.js` with esbuild, in front of the Elixir
 compiler. The first `mix compile` downloads the esbuild binary from the npm registry, and
 the download passes the proxy of the remote container. Git does not hold the bundle. A
-content change to a source makes a new bundle and a new compile of `Expresso.Renderer`.
+source newer than the bundle makes a new bundle and a new compile of `Expresso.Renderer`.
 
 The commands are:
 
@@ -842,8 +854,9 @@ mix expresso examples/dsl_deck.exs /tmp/dsl.html
 ```
 
 `examples/line4/line4.exs` is a full talk about an isometric factory in one HTML file. It
-uses each feature of Expresso: a deck template, a slide template, a theme from a map, the
-`css` option, each element and each overlay option. Its SVG diagrams are in the same
+uses many features of Expresso: a deck template, a slide template, a theme from a map, the
+`css` option, the text, code, math, diagram, table and embed elements, and the overlay
+options. Its SVG diagrams are in the same
 directory. Use it to look at a change to the style sheet on real slides:
 
 ```sh
