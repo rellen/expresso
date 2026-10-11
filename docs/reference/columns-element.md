@@ -56,7 +56,8 @@ and the `on` entity. See [the overlay options](overlay-options.md).
 | Each column has a `width` | Each column takes its width. |
 
 The document writes the custom properties `--column-width` and `--column-grow` on each
-column, and the theme reads them.
+column with a `width` option, and the theme reads them. A column without the option gets
+the defaults of the theme: it grows, and its base width is 0%.
 
 ## The children
 

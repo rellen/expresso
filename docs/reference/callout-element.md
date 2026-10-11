@@ -47,8 +47,8 @@ keeps the color of the text.
 ## The content
 
 A callout holds the elements that a text box holds: `text_area`, `image`, `list`, `table`,
-`quotation`, `spacer`, `code`, `math`, `diagram`, `embed`, `video`, `audio`, `qr_code` and
-`chart`. A callout cannot hold a callout or a `columns` element.
+`quotation`, `spacer`, `code`, `math`, `diagram`, `embed`, `video`, `audio`, `qr_code`,
+`chart`, `stat` and `icon`. A callout cannot hold a callout or a `columns` element.
 
 ```elixir
 slide "the release" do
