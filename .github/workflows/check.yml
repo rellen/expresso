@@ -8,8 +8,8 @@
 # - lint: `mix compile --warnings-as-errors`, `mix credo`, `mix sobelow`,
 #   `mix hex.audit`, the check of unused dependencies, `mix docs`,
 #   `mix doctor` and `mix dialyzer`
-# - test: `mix test`
-# - e2e: `mix test --only e2e`, the browser tests
+# - test: `mix test`, in two partitions
+# - e2e: `mix test --only e2e`, the browser tests, in three partitions
 # - dependency: `mix test --only dependency`, the test of Expresso as a
 #   dependency
 # - presenter: `npm run check`, `npm run lint`, `npm run format:check` and
@@ -41,9 +41,8 @@
 # same build share one job. `lint` also runs Dialyzer, which needs the same
 # build. With the PLT in the cache, Dialyzer takes approximately 30 seconds,
 # and `lint` still finishes before the slowest job. The unit tests, the
-# browser tests and the test of Expresso as a dependency each compile the test
-# environment in a job of their own, so each one shows its own result and the
-# three run at the same time. `format` and `presenter` compile nothing, and
+# browser tests and the test of Expresso as a dependency run in jobs of their
+# own, at the same time, and they share the cache of the test build. `format` and `presenter` compile nothing, and
 # they stay alone, so a defect in them shows in a few seconds.
 #
 # The last job needs each other job, and it fails when one of them does not
@@ -128,11 +127,24 @@ jobs:
           path: doc
 
   # Each job of the tests compiles the GIF encoder of `tools/` in the test
-  # environment, so it needs Zig. The three jobs run in parallel, and each one
-  # reports its own result.
+  # environment, so it needs Zig. The jobs run in parallel, and each one
+  # reports its own result. They compile the same build, so they share the
+  # cache `test`: each job reads the build of the commit before, and compiles
+  # only the files that changed. The first job to finish saves the build of
+  # its commit. The other jobs find the key, and they do not save it again.
+  #
+  # `mix test --partitions` gives each test file to one of the partitions, and
+  # `MIX_TEST_PARTITION` selects the partition of the job. The test of
+  # `test/dependency/` is one test, so it has no partitions.
   test:
-    name: test
+    name: test (${{ matrix.partition }}/2)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [1, 2]
+    env:
+      MIX_TEST_PARTITION: ${{ matrix.partition }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-elixir
@@ -142,25 +154,31 @@ jobs:
         with:
           version: ${{ env.ZIG_VERSION }}
           cache: test
-      - run: mix test
+      - run: mix test --partitions 2
 
   # The browser tests open each deck in the Chromium of the Playwright version of
   # `package-lock.json`. `.github/actions/setup-playwright` installs Node, the
   # packages and the headless browser, from a cache when it can.
   e2e:
-    name: e2e
+    name: e2e (${{ matrix.partition }}/3)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [1, 2, 3]
+    env:
+      MIX_TEST_PARTITION: ${{ matrix.partition }}
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-playwright
       - uses: ./.github/actions/setup-elixir
         with:
-          cache: e2e
+          cache: test
       - uses: ./.github/actions/setup-zig
         with:
           version: ${{ env.ZIG_VERSION }}
-          cache: e2e
-      - run: mix test --only e2e
+          cache: test
+      - run: mix test --only e2e --partitions 3
 
   # The test of `test/dependency/` makes a project that takes Expresso as a dev
   # dependency, and it fetches the dependencies of that project from Hex and
@@ -172,11 +190,11 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-elixir
         with:
-          cache: dependency
+          cache: test
       - uses: ./.github/actions/setup-zig
         with:
           version: ${{ env.ZIG_VERSION }}
-          cache: dependency
+          cache: test
       - run: mix test --only dependency
 
   # The presenter script needs Node only. Each step after the install runs
