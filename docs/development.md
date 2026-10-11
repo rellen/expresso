@@ -477,6 +477,19 @@ Read the breaking changes of a major version before a merge. A new version of Pl
 also needs a new browser. The workflow installs it. A session with `EXPRESSO_CHROMIUM` uses
 the Chromium of the container, and that Chromium can be older than the new version needs.
 
+### The icons
+
+`priv/icons/lucide.json` holds the Lucide icons, from the file `icon-nodes.json` of the npm
+package `lucide-static`. `priv/icons/SOURCE` gives the version. Dependabot does not see the
+file. To take a later version:
+
+1. Run `npm pack lucide-static` in an empty directory, and unpack the archive.
+2. Write `icon-nodes.json` into `priv/icons/lucide.json` with no white space.
+3. Copy the `LICENSE` of the package into `priv/icons/LICENSE`.
+4. Write the new version into `priv/icons/SOURCE` and `docs/reference/icon-element.md`.
+
+`Expresso.Icon` reads the file at compile time, so `mix compile` takes the new icons.
+
 ## The presenter script
 
 `docs/typescript.md` gives the design. The parts are:

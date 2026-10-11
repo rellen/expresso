@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24">
+  <!-- A cup of espresso, drawn for the examples of Expresso. -->
+  <path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z" fill="#6b3e26"/>
+  <path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16" fill="none" stroke="#6b3e26" stroke-width="2"/>
+  <path d="M3 21h14" fill="none" stroke="#6b3e26" stroke-width="2" stroke-linecap="round"/>
+  <path d="M8 3c0 1.5 1.5 1.5 1.5 3M12 3c0 1.5 1.5 1.5 1.5 3" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

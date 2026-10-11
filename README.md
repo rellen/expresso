@@ -10,7 +10,7 @@ a small script. Open the document in a browser, and present from there.
 Expresso is at an early stage. It has 27 built-in themes and these elements: `text_box`,
 `text_area`, `image`, `list`, `table`, `quotation`, `spacer`, `code`, `columns`, `math`,
 `diagram`, `embed`, `video`, `audio`, `qr_code`, `footnote`, `shape`, `chart`, `callout`,
-`toc` and `stat`.
+`toc`, `stat` and `icon`.
 
 Overlays are the steps inside one slide. A slide takes steps, and an element shows at a set
 of steps. The document also holds a handout view for a printer. `docs/overlays.md` gives
@@ -538,6 +538,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Draw attention with a callout](docs/how-to/draw-attention-with-a-callout.md)
 - [Show the plan of a talk](docs/how-to/show-the-plan-of-a-talk.md)
 - [Show a key number](docs/how-to/show-a-key-number.md)
+- [Add icons to a slide](docs/how-to/add-icons-to-a-slide.md)
 - [Make templates of your own](docs/how-to/make-templates.md)
 - [Use colors of your own](docs/how-to/use-colors-of-your-own.md)
 - [Render a deck in your project](docs/how-to/render-a-deck-in-your-project.md)
@@ -580,6 +581,7 @@ These pages describe each element:
 - [Callout](docs/reference/callout-element.md)
 - [Table of contents](docs/reference/toc-element.md)
 - [Stat](docs/reference/stat-element.md)
+- [Icon](docs/reference/icon-element.md)
 
 Explanations give the design and its reasons:
 
@@ -600,3 +602,8 @@ The built-in theme uses Atkinson Hyperlegible, Copyright 2020 Braille Institute 
 America, Inc. That font is under the SIL Open Font License, Version 1.1, and
 `assets/fonts/OFL.txt` holds the license. Each document that Expresso makes holds the
 bytes of the font, so the document needs no network.
+
+Expresso holds the Lucide icons, Copyright Lucide Icons and Contributors, under the ISC
+license. The icons that come from Feather are Copyright Cole Bemis, under the MIT license.
+`priv/icons/LICENSE` holds the two licenses. A document holds the SVG of each icon that
+its deck uses.
