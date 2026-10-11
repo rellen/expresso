@@ -33,7 +33,8 @@ The check measures these elements, and the content of each:
 The `svg` element of a line or an arrow of [the shape element](shape-element.md) covers the
 whole slide, so the check measures its `line` element, and not the `svg` element. The check
 measures the `svg` element of [the chart element](chart-element.md). The table of a chart
-is for a screen reader, so the check does not measure it.
+is for a screen reader, so the check does not measure it. The check also skips the text of
+[a stat](stat-element.md) for a screen reader, for the same reason.
 
 The check measures what an element shows, and not its box. A tag of the content shows its
 box. Each other element shows its text and its content, so the check measures the smallest

@@ -9,8 +9,8 @@ a small script. Open the document in a browser, and present from there.
 
 Expresso is at an early stage. It has 27 built-in themes and these elements: `text_box`,
 `text_area`, `image`, `list`, `table`, `quotation`, `spacer`, `code`, `columns`, `math`,
-`diagram`, `embed`, `video`, `audio`, `qr_code`, `footnote`, `shape`, `chart`, `callout`
-and `toc`.
+`diagram`, `embed`, `video`, `audio`, `qr_code`, `footnote`, `shape`, `chart`, `callout`,
+`toc` and `stat`.
 
 Overlays are the steps inside one slide. A slide takes steps, and an element shows at a set
 of steps. The document also holds a handout view for a printer. `docs/overlays.md` gives
@@ -537,6 +537,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Cite your sources](docs/how-to/cite-your-sources.md)
 - [Draw attention with a callout](docs/how-to/draw-attention-with-a-callout.md)
 - [Show the plan of a talk](docs/how-to/show-the-plan-of-a-talk.md)
+- [Show a key number](docs/how-to/show-a-key-number.md)
 - [Make templates of your own](docs/how-to/make-templates.md)
 - [Use colors of your own](docs/how-to/use-colors-of-your-own.md)
 - [Render a deck in your project](docs/how-to/render-a-deck-in-your-project.md)
@@ -578,6 +579,7 @@ These pages describe each element:
 - [Chart](docs/reference/chart-element.md)
 - [Callout](docs/reference/callout-element.md)
 - [Table of contents](docs/reference/toc-element.md)
+- [Stat](docs/reference/stat-element.md)
 
 Explanations give the design and its reasons:
 

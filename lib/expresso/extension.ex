@@ -607,6 +607,46 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @stat %Spark.Dsl.Entity{
+    name: :stat,
+    target: Expresso.Element.Stat,
+    args: [:value],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          value: [
+            type: {:or, [:integer, :float]},
+            required: true,
+            doc: "The number, such as 1250 or 99.5. See docs/reference/stat-element.md."
+          ],
+          label: [type: :string, doc: "The text under the number, such as \"orders this year\"."],
+          prefix: [type: :string, doc: "The text before the number, such as \"$\"."],
+          suffix: [type: :string, doc: "The text after the number, such as \"%\" or \"k\"."],
+          decimals: [
+            type: :non_neg_integer,
+            doc:
+              "The number of digits after the point. The default is the decimals of the value: 0 for an integer."
+          ],
+          group: [
+            type: :boolean,
+            default: true,
+            doc: "Put a comma between each group of three digits, such as 1,250."
+          ],
+          count: [
+            type: :boolean,
+            default: false,
+            doc: "Count from the from option to the value when the stat shows."
+          ],
+          from: [
+            type: {:or, [:integer, :float]},
+            default: 0,
+            doc: "The number at the start of the count. The default is 0."
+          ]
+        ]
+  }
+
   # The elements that a text box and a column hold
   @inner_elements [
     @text_area,
@@ -622,7 +662,8 @@ defmodule Expresso.Extension do
     @video,
     @audio,
     @qr_code,
-    @chart
+    @chart,
+    @stat
   ]
 
   @toc %Spark.Dsl.Entity{

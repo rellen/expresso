@@ -152,6 +152,10 @@ function name(measured: Element): string {
   return label(kind(element), element.textContent ?? "");
 }
 
+// The texts for a screen reader. The style sheet hides each from the eye in a
+// box of 1 px, and its text runs out of that box, so the check skips them.
+const SCREEN_READER = ".chart-table, .stat-text";
+
 function shown(element: Element): boolean {
   const style = getComputedStyle(element);
   return style.visibility !== "hidden" && style.display !== "none";
@@ -173,7 +177,8 @@ function extent(element: Element): Box | null {
     if (
       (node.textContent ?? "").trim() !== "" &&
       parent !== null &&
-      shown(parent)
+      shown(parent) &&
+      parent.closest(SCREEN_READER) === null
     ) {
       range.selectNodeContents(node);
       boxes.push(range.getBoundingClientRect());

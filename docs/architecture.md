@@ -695,6 +695,7 @@ An element is the content of a slide. These are the elements at this time:
 - `Expresso.Element.Chart`, with `Expresso.Element.Series`
 - `Expresso.Element.Callout`
 - `Expresso.Element.Toc`, with `Expresso.Element.TocEntry`
+- `Expresso.Element.Stat`
 
 ### The parts of an element module
 
@@ -1293,6 +1294,29 @@ this design:
   can write rules of its own for the same classes.
 - **The metadata holds the section of each slide.** A template reads `:section` and writes
   it in a header. The `meta` option of a slide can still give a value of its own.
+
+### The stat
+
+A `stat` is a big number with a label. `Expresso.Element.Stat` writes a `figure`, and the
+style sheet and `assets/src/chart.ts` make the count. These are the reasons for this
+design:
+
+- **A number, and not a text.** The value is a number, so the count can go from `from` to
+  the value, and the renderer writes the commas and the decimals. A text such as `"$1.2M"`
+  goes into the `prefix`, the number and the `suffix`.
+- **The count of a chart.** The number reads the registered property `--chart-n`, and the
+  script that writes the numbers of a chart with frames writes it too. The format of a
+  stat keeps each decimal and the commas, so the script writes the same text as the
+  renderer at the end of the count.
+- **`@starting-style` for a count when the slide shows.** A slide shows with `display`,
+  and a transition does not run from `display: none`. `@starting-style` gives the start
+  of the count to a stat that shows with its slide. A stat with steps copies `--shown`
+  into `--stat-shown`, so it counts at its step.
+- **A text for a screen reader.** The number that counts is hidden from a screen reader,
+  and a text that the style sheet hides from the eye holds the value. A screen reader
+  thus never reads a number in the middle of the count.
+- **A size from the box.** The number is at most a quarter of the width of its box, with a
+  container query, so three stats fit in the columns of a slide without a change of size.
 
 ## The DSL
 

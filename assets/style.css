@@ -1071,6 +1071,70 @@ body[data-view="handout"] .chart-frames {
 .toc-strike-earlier .toc-earlier .toc-link {
   text-decoration: line-through;
 }
+/*
+ * A stat is a big number in the accent color, with a label in the muted
+ * color under it. The number of a stat with `count` reads `--chart-n`, which
+ * goes from `--stat-from` to `--stat-to` as `--stat-shown` goes from 0 to 1.
+ * A stat with steps copies `--shown` into `--stat-shown`, so the count runs at
+ * the step of the stat. `@starting-style` starts the count at `--stat-from`
+ * when the slide shows, so a stat without steps counts when its slide shows.
+ * `assets/src/chart.ts` writes the value of `--chart-n` as the text. The
+ * count lasts three times the time of the element, so the eye can follow it.
+ * The number is at most a quarter of the width of the stat, so three stats fit
+ * in a row of columns.
+ */
+.stat {
+  --stat-shown: 1;
+  container-type: inline-size;
+  flex-grow: 1;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
+  text-align: center;
+}
+.stat[data-on] {
+  --stat-shown: var(--shown);
+}
+.stat-value {
+  margin: 0;
+  font-size: min(var(--stat-size, 3em), 24cqi);
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(
+    in srgb,
+    var(--accent-dim) calc(var(--dimmed) * 100%),
+    var(--accent)
+  );
+}
+.stat-label {
+  color: color-mix(
+    in srgb,
+    var(--muted-dim) calc(var(--dimmed) * 100%),
+    var(--muted)
+  );
+}
+.stat-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.stat-count {
+  --chart-n: calc(
+    var(--stat-from) + (var(--stat-to) - var(--stat-from)) * var(--stat-shown)
+  );
+  transition: --chart-n calc(var(--dur) * 3) var(--ease);
+}
+@starting-style {
+  .stat-count {
+    --chart-n: var(--stat-from);
+  }
+}
 .spacer {
   flex-grow: 1;
 }
@@ -1202,6 +1266,7 @@ body[data-view="present"][data-undim] .screen .code [data-el] {
 .diagram,
 .qr-code,
 .callout,
+.stat,
 .toc,
 .toc-entry,
 .footnote,
