@@ -96,6 +96,65 @@ Examples.ChartSunburst
 
 The legend gives each group in percent of the whole.
 
+## Give the levels in columns of a CSV file
+
+A file from a spreadsheet often has a column for each level. Give the headings of these
+columns in the `levels` option, from the top level down. An empty cell at the end of a row ends
+the category at a higher level, so `Office,,20` is a part of the top level:
+
+```
+Division,Team,Hours
+Production,Press,62
+Production,Paint,48
+Production,Pack,30
+R&D/Test,Lab,26
+R&D/Test,Field,14
+Office,,20
+```
+
+The name of a level can then hold a slash, such as "R&D/Test":
+
+```elixir
+defmodule Examples.ChartLevels do
+  use Expresso
+
+  root __DIR__
+
+  slide "teams" do
+    heading "Hours by team"
+
+    chart :treemap do
+      title "The hours of a week, by division and by team"
+      src "hours_by_team.csv"
+      levels ["Division", "Team"]
+    end
+  end
+end
+
+Examples.ChartLevels
+```
+
+![A treemap of three divisions, with the teams of each division in its box](https://raw.githubusercontent.com/rellen/expresso/media/chart-levels.png)
+
+The `frames` option works with the `levels` option. The file then holds the column of the
+frame, the columns of the levels and the column of the values.
+
+## Use a different separator, or a list of levels
+
+When the names of your categories hold a slash, give a different text between two levels in
+the `separator` option:
+
+```elixir
+categories ["I/O > Disks", "I/O > Network", "CPU"]
+separator " > "
+```
+
+You can also give each category as a list of its levels. A list needs no separator:
+
+```elixir
+categories [["I/O", "Disks"], ["I/O", "Network"], ["CPU"]]
+```
+
 ## Choose the kind
 
 - Use a treemap when the parts are many, or when the reader compares the sizes of parts.

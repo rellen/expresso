@@ -328,8 +328,9 @@ defmodule Expresso.Extension do
             doc: "The name of the chart for a screen reader, and the caption of its table."
           ],
           categories: [
-            type: {:list, :string},
-            doc: "The name of each category, such as [\"2023\", \"2024\"]."
+            type: {:list, {:or, [:string, {:list, :string}]}},
+            doc:
+              "The name of each category, such as [\"2023\", \"2024\"]. A category of a treemap or a sunburst can be a list of its levels, such as [\"Production\", \"Press\"]."
           ],
           src: [
             type: :string,
@@ -354,6 +355,17 @@ defmodule Expresso.Extension do
             type: :boolean,
             default: false,
             doc: "Dim each series when a later series shows."
+          ],
+          separator: [
+            type: :string,
+            default: "/",
+            doc:
+              "The text between two levels of a category of a treemap or a sunburst, such as \"Production/Press\". The default is a slash."
+          ],
+          levels: [
+            type: {:list, :string},
+            doc:
+              "The headings of the columns of a CSV file that hold the levels of the categories of a treemap or a sunburst, from the top level down. Requires the src option."
           ],
           frames: [
             type: :string,

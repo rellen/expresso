@@ -3,10 +3,12 @@ defmodule Expresso.Element.Chart.Hierarchy do
   The treemap and the sunburst: charts of the parts of a whole in groups
 
   A category with a slash names a part in a group, such as
-  `"Production/Press"`. The categories therefore give a tree, and the one
-  series gives the value of each leaf. A group has the sum of its parts. The
-  CSV file and the frames of the other charts give the same data, so the
-  data of a treemap needs no format of its own.
+  `"Production/Press"`, and the `separator` option of the chart can give a
+  different text than the slash. A category can also be a list of its
+  levels, such as `["Production", "Press"]`, and the `levels` option reads
+  such lists from the columns of a CSV file. The categories therefore give a
+  tree, and the one series gives the value of each leaf. A group has the sum
+  of its parts.
 
   A treemap divides its box into rectangles in proportion to the values, with
   the squarified layout of Bruls, Huizing and van Wijk, so the rectangles are
@@ -47,35 +49,39 @@ defmodule Expresso.Element.Chart.Hierarchy do
   @doc """
   Check the categories of a treemap or a sunburst
 
-  Each part of a name between two slashes has text, each category shows one
-  time, a category is not also a group of another category, and the top level
-  has at most 8 groups.
+  A category is a string with the separator between its levels, such as
+  `"A/x"`, or a list of its levels, such as `["A", "x"]`. Each level has a
+  name, each category shows one time, a category is not also a group of
+  another category, and the top level has at most 8 groups.
 
-      iex> Expresso.Element.Chart.Hierarchy.check(["A/x", "A/y", "B"])
+      iex> Expresso.Element.Chart.Hierarchy.check(["A/x", "A/y", "B"], "/")
       :ok
 
-      iex> Expresso.Element.Chart.Hierarchy.check(["A", "A/x"])
+      iex> Expresso.Element.Chart.Hierarchy.check([["A", "x"], ["A", "y"], ["B"]], "/")
+      :ok
+
+      iex> Expresso.Element.Chart.Hierarchy.check(["A", "A/x"], "/")
       {:error, "the category \\"A\\" is a group of \\"A/x\\", so it takes no value of its own. Give the value to a part, such as \\"A/Other\\"."}
   """
-  @spec check([String.t()]) :: :ok | {:error, String.t()}
-  def check(categories) do
-    paths = Enum.map(categories, &path/1)
-    names = Enum.map(paths, &Enum.join(&1, "/"))
-    roots = paths |> Enum.map(&hd/1) |> Enum.uniq()
+  @spec check([String.t() | [String.t()]], String.t()) :: :ok | {:error, String.t()}
+  def check(categories, separator) do
+    paths = Enum.map(categories, &path(&1, separator))
+    name = &Enum.join(&1, separator)
+    roots = paths |> Enum.map(&List.first/1) |> Enum.uniq()
 
     cond do
-      category = Enum.find(categories, &("" in path(&1))) ->
-        {:error, "the category \"#{category}\" has an empty part between two slashes"}
+      empty = Enum.find(paths, &(&1 == [] or "" in &1)) ->
+        {:error, "the category \"#{name.(empty)}\" has a level with no name"}
 
-      name = duplicate(names) ->
-        {:error, "the category \"#{name}\" shows two times"}
+      path = duplicate(paths) ->
+        {:error, "the category \"#{name.(path)}\" shows two times"}
 
-      conflict = conflict(names) ->
+      conflict = conflict(paths) ->
         {group, part} = conflict
 
         {:error,
-         "the category \"#{group}\" is a group of \"#{part}\", so it takes no value of its own. " <>
-           "Give the value to a part, such as \"#{group}/Other\"."}
+         "the category \"#{name.(group)}\" is a group of \"#{name.(part)}\", so it takes no " <>
+           "value of its own. Give the value to a part, such as \"#{name.(group ++ ["Other"])}\"."}
 
       length(roots) > @groups ->
         {:error,
@@ -87,15 +93,31 @@ defmodule Expresso.Element.Chart.Hierarchy do
     end
   end
 
-  defp path(category), do: category |> String.split("/") |> Enum.map(&String.trim/1)
+  @doc """
+  Return the levels of a category: the parts of a string between two
+  separators, or the names of a list, with no spaces at their ends
 
-  defp duplicate(names) do
-    names |> Enum.frequencies() |> Enum.find_value(fn {name, count} -> count > 1 && name end)
+      iex> Expresso.Element.Chart.Hierarchy.path("Production > Press", " > ")
+      ["Production", "Press"]
+
+      iex> Expresso.Element.Chart.Hierarchy.path(["I/O", " Disks "], "/")
+      ["I/O", "Disks"]
+  """
+  @spec path(String.t() | [String.t()], String.t()) :: [String.t()]
+  def path(category, _separator) when is_list(category), do: Enum.map(category, &String.trim/1)
+
+  def path(category, separator),
+    do: category |> String.split(separator) |> Enum.map(&String.trim/1)
+
+  defp duplicate(paths) do
+    paths |> Enum.frequencies() |> Enum.find_value(fn {path, count} -> count > 1 && path end)
   end
 
-  defp conflict(names) do
-    Enum.find_value(names, fn group ->
-      part = Enum.find(names, &String.starts_with?(&1, group <> "/"))
+  defp conflict(paths) do
+    Enum.find_value(paths, fn group ->
+      part =
+        Enum.find(paths, &(length(&1) > length(group) and Enum.take(&1, length(group)) == group))
+
       part && {group, part}
     end)
   end
@@ -105,13 +127,13 @@ defmodule Expresso.Element.Chart.Hierarchy do
 
   Each part has an `id` in the order of the tree, a parent before its parts,
   and a leaf has the `index` of its category. The parts of a group keep the
-  order of their first category. Call `check/1` first.
+  order of their first category. Call `check/2` first.
   """
-  @spec tree([String.t()]) :: [part()]
-  def tree(categories) do
+  @spec tree([String.t() | [String.t()]], String.t()) :: [part()]
+  def tree(categories, separator) do
     categories
     |> Enum.with_index()
-    |> Enum.map(fn {category, index} -> {path(category), index} end)
+    |> Enum.map(fn {category, index} -> {path(category, separator), index} end)
     |> build(1)
     |> Enum.with_index(1)
     |> Enum.map(fn {part, color} -> paint(part, color) end)
@@ -182,7 +204,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
   @spec scene(map()) :: map()
   def scene(%{categories: categories, frames: frames} = assigns) do
     values = Enum.map(frames, fn %{values: [values]} -> values end)
-    parts = categories |> tree() |> order(hd(values))
+    parts = categories |> tree(assigns.separator) |> order(hd(values))
     scene(assigns.kind, assigns, parts, values)
   end
 

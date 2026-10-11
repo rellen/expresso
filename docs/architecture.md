@@ -1155,9 +1155,13 @@ A treemap and a sunburst show the parts of a whole in groups.
 `Expresso.Element.Chart.Hierarchy` builds the tree, places the parts and draws them. These
 are the reasons for this design:
 
-- **A slash names the group.** A category such as `"Production/Press"` holds its path. The
-  categories, the one series, the CSV file and the frames of the other charts therefore
-  give the data of a treemap, and the data needs no format of its own.
+- **A category holds its path.** A category such as `"Production/Press"` holds its path, so
+  the categories, the one series, the CSV file and the frames of the other charts give the
+  data of a treemap, and the data needs no format of its own. A name can hold a slash, such
+  as "I/O" or "R&D/Test". Therefore the `separator` option gives a different text, a
+  category can be a list of its levels, and the `levels` option reads the levels from
+  columns of a CSV file. The CSV reader joins those columns into a list before the other
+  steps, so the frames and the checks need no change.
 - **The squarified layout.** The layout of Bruls, Huizing and van Wijk gives rectangles that
   are close to squares, so a reader can compare their areas. The parts of each frame keep
   the order of the first frame, so a part moves and changes its size from frame to frame,

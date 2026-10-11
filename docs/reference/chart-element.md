@@ -24,11 +24,13 @@ end
 | --- | --- | --- |
 | The first argument | `:bar`, `:line`, `:pie`, `:treemap` or `:sunburst` | The kind of the chart. |
 | `title` | A string, required | The name of the chart for a screen reader, and the caption of its table. |
-| `categories` | A list of strings | The name of each category, such as each year. |
+| `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels. |
 | `src` | The path of a CSV file | The categories and the series, in place of `categories` and `series`. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. |
 | `values` | `true` or `false` | Show the value of each bar. The default is `true`. |
 | `reveal` | `true` or `false` | Show each series at its own step. The default is `false`. A pie takes no `reveal`. |
 | `dim` | `true` or `false` | Dim each series when a later series shows. The default is `false`. |
+| `separator` | A string | The text between two levels of a category of a treemap or a sunburst. The default is `"/"`. |
+| `levels` | A list of strings | The headings of the columns of the CSV file that hold the levels of the categories of a treemap or a sunburst, from the top level down. Requires `src`. |
 | `frames` | A string | The heading of the column of the CSV file that names the frame of each row. Requires `src`. |
 | `frame_label` | `:top_right`, `:top_left` or `:none` | The place of the label of the frame in a chart with frames. The default is `:top_right`. |
 | `sort` | `true` or `false` | Put the categories of a bar chart in order of their totals, from the largest, in each frame. The default is `false`. |
@@ -139,10 +141,20 @@ A slash in a category names a part of a group. The category `"Production/Press"`
 `"Production/Line 4/Press"`. A category with no slash is a part of the top level. The value
 of a group is the sum of its parts. The spaces next to a slash do not count.
 
+Three other forms give the same groups:
+
+- The `separator` option gives a different text between two levels, such as `" > "` in
+  `"I/O > Disks"`. The default is `"/"`.
+- A category can be a list of its levels, such as `["I/O", "Disks"]`. A list needs no
+  separator, so a level can hold any text.
+- The `levels` option names the columns of a CSV file that hold the levels. See "The CSV
+  file".
+
 These rules apply to the groups:
 
 - The top level has at most 8 groups, one for each color. The parts of a group have tints
   of its color, lighter for a deeper level.
+- Each level has a name.
 - A category is not also a group. A category `"Office"` and a category `"Office/IT"` give an
   error, because "Office" then has a value and parts.
 - The parts of a group can be anywhere in the list of the categories.
@@ -169,8 +181,19 @@ Jan,420,310,150
 Feb,450,360,140
 ```
 
-The categories of a treemap and of a sunburst hold the slash in the same column, such as
+The categories of a treemap and of a sunburst hold the separator in the same column, such as
 `Production/Press,62`. A file needs no other change.
+
+With the `levels` option, the columns with these headings hold the levels of each category,
+from the top level down. The other columns keep their order, and each one holds a series.
+An empty cell at the end of a row ends the category at a higher level. An empty cell before
+a cell with a name is an error:
+
+```
+Division,Team,Hours
+Production,Press,62
+Office,,20
+```
 
 With the `frames` option, one more column names the frame of each row. Of the other
 columns, the first holds the category, and each other column holds a series. The frames have
@@ -198,8 +221,10 @@ The compiler gives an error for these:
   with `reveal`;
 - a treemap or a sunburst with more than one series, with a negative value, with `reveal`,
   or with more than 8 groups at the top level;
-- a category with an empty part between two slashes, a category that shows two times, and a
-  category that is also a group;
+- a category with a level with no name, a category that shows two times, and a category
+  that is also a group;
+- a list of levels or the `levels` option on a bar chart, a line chart or a pie, `levels`
+  without `src`, and an empty `separator`;
 - a chart with frames and a `series` of its own;
 - a frame with series that are not the series of the first frame, in the same order;
 - a series of a later frame with an overlay option or a `class`;

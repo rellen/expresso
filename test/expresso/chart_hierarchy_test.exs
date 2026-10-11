@@ -2,7 +2,7 @@ defmodule Expresso.ChartHierarchyTest do
   use ExUnit.Case, async: true
 
   alias Expresso.Builder
-  alias Expresso.Element.Chart.Hierarchy
+  alias Expresso.Element.Chart.{Csv, Hierarchy}
 
   doctest Hierarchy
 
@@ -28,7 +28,7 @@ defmodule Expresso.ChartHierarchyTest do
 
   describe "the tree" do
     test "a slash in a category names a part of a group, in the order of the first category" do
-      [production, support, office] = Hierarchy.tree(@categories)
+      [production, support, office] = Hierarchy.tree(@categories, "/")
 
       assert {production.name, production.color, Enum.map(production.children, & &1.name)} ==
                {"Production", 1, ["Press", "Paint"]}
@@ -39,18 +39,18 @@ defmodule Expresso.ChartHierarchyTest do
     end
 
     test "the categories of one group need not be neighbors" do
-      [a, b] = Hierarchy.tree(["A/x", "B", "A/y"])
+      [a, b] = Hierarchy.tree(["A/x", "B", "A/y"], "/")
       assert {a.name, Enum.map(a.children, & &1.index), b.name} == {"A", [0, 2], "B"}
     end
 
     test "the check refuses an empty part, a category two times and more than 8 groups" do
-      assert {:error, message} = Hierarchy.check(["A//x"])
-      assert message =~ "an empty part"
+      assert {:error, message} = Hierarchy.check(["A//x"], "/")
+      assert message =~ "a level with no name"
 
-      assert {:error, message} = Hierarchy.check(["A/x", "A / x"])
+      assert {:error, message} = Hierarchy.check(["A/x", "A / x"], "/")
       assert message =~ "\"A/x\" shows two times"
 
-      assert {:error, message} = Hierarchy.check(Enum.map(1..9, &"G#{&1}"))
+      assert {:error, message} = Hierarchy.check(Enum.map(1..9, &"G#{&1}"), "/")
       assert message =~ "at most 8 groups"
     end
 
@@ -72,6 +72,121 @@ defmodule Expresso.ChartHierarchyTest do
         assert box.x >= 0 and box.y >= 0 and box.x + box.w <= 4 + 1.0e-9 and
                  box.y + box.h <= 4 + 1.0e-9
       end
+    end
+  end
+
+  describe "the separator and the levels" do
+    test "the separator option gives a different text between two levels" do
+      chart =
+        chart(:treemap,
+          categories: ["I/O > Disks", "I/O > Network", "CPU"],
+          separator: " > ",
+          elements: [Builder.series("Load", [3, 2, 5])]
+        )
+
+      [figure] = figure(chart)
+      svg = Floki.find(figure, "figure.chart > svg")
+      assert svg |> Floki.find(".chart-head") |> Enum.map(&Floki.text/1) == ["I/O"]
+      assert svg |> Floki.find("rect.chart-tile") |> length() == 3
+    end
+
+    test "a category can be a list of its levels" do
+      chart =
+        chart(:sunburst,
+          categories: [["I/O", "Disks"], ["I/O", "Network"], ["CPU"]],
+          elements: [Builder.series("Load", [3, 2, 5])]
+        )
+
+      [figure] = figure(chart)
+      assert figure |> Floki.find("figure.chart > svg circle.chart-depth-2") |> length() == 2
+
+      rows = figure |> Floki.find("table.chart-table tbody th") |> Enum.map(&Floki.text/1)
+      assert rows == ["I/O / Disks", "I/O / Network", "CPU"]
+    end
+
+    test "a list of levels and the levels option are for a treemap or a sunburst" do
+      assert_raise ArgumentError, ~r/a category of a bar chart is a string/, fn ->
+        Builder.chart(:bar,
+          title: "Load",
+          categories: [["I/O", "Disks"]],
+          elements: [Builder.series("Load", [3])]
+        )
+      end
+
+      assert_raise ArgumentError, ~r/the separator option needs at least one character/, fn ->
+        chart(:treemap, separator: "")
+      end
+
+      assert_raise ArgumentError, ~r/the levels option names columns of a CSV file/, fn ->
+        chart(:treemap, levels: ["Division", "Team"])
+      end
+    end
+
+    @tag :tmp_dir
+    test "the levels option reads the levels from columns of a CSV file", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "hours.csv")
+
+      File.write!(path, """
+      Division,Team,Hours
+      Production,Press,62
+      Production,Paint,48
+      R&D/Ops,Lab,20
+      Office,,15
+      """)
+
+      chart = Builder.chart(:treemap, title: "Hours", src: path, levels: ["Division", "Team"])
+      [figure] = figure(chart)
+      svg = Floki.find(figure, "figure.chart > svg")
+
+      assert svg |> Floki.find(".chart-head") |> Enum.map(&Floki.text/1) == [
+               "Production",
+               "R&D/Ops"
+             ]
+
+      assert svg |> Floki.find(".chart-part") |> Enum.map(&Floki.text/1) == [
+               "Press",
+               "Paint",
+               "Lab",
+               "Office"
+             ]
+    end
+
+    @tag :tmp_dir
+    test "the levels option works with the frames option", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "hours.csv")
+
+      File.write!(path, """
+      year,Division,Team,Hours
+      2024,Production,Press,62
+      2024,Office,,15
+      2025,Office,,30
+      2025,Production,Press,40
+      """)
+
+      chart =
+        Builder.chart(:sunburst,
+          title: "Hours",
+          src: path,
+          frames: "year",
+          levels: ["Division", "Team"]
+        )
+
+      [%{elements: [chart]}] =
+        Builder.deck([Builder.slide("s", elements: [chart])], name: "p").slides
+
+      assert chart.categories == [["Production", "Press"], ["Office"]]
+      assert Enum.map(chart.timeline, &hd(&1.elements).values) == [[62, 15], [40, 30]]
+    end
+
+    test "the reader gives an error for a missing column and an empty level before a name" do
+      assert {:error, message} = Csv.table("Division,Hours\nA,1\n", "a.csv", ["Division", "Team"])
+      assert message =~ "has no column \"Team\" for the levels"
+
+      assert {:error, message} =
+               Csv.table("Division,Team,Hours\n,Press,1\n", "a.csv", ["Division", "Team"])
+
+      assert message =~
+               "line 2 of the chart file \"a.csv\" has an empty level before a level with a name"
     end
   end
 
