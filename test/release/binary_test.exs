@@ -40,10 +40,10 @@ defmodule Expresso.BinaryTest do
     %{binary: binary, timeout_command: timeout, env: [{"HOME", home}, {"XDG_DATA_HOME", home}]}
   end
 
-  defp run(context, args, opts \\ []) do
+  defp run(context, args) do
     System.cmd(context.timeout_command, [@timeout, context.binary | args],
       env: context.env,
-      stderr_to_stdout: Keyword.get(opts, :stderr_to_stdout, true)
+      stderr_to_stdout: true
     )
   end
 
@@ -52,6 +52,22 @@ defmodule Expresso.BinaryTest do
   defp standard_output(context, args) do
     command = [context.timeout_command, @timeout, context.binary | args]
     System.cmd("sh", ["-c", ~s(exec "$@" 2>/dev/null), "sh" | command], env: context.env)
+  end
+
+  # The exit status of a run, and the standard output that the shell writes to a
+  # file. The launcher of Burrito 1.6 stops the VM when a write to the standard
+  # output fails, also for EAGAIN. A port of `System.cmd/3` can give a pipe
+  # that does not block, so a large document can stop after 64 KiB with the
+  # exit status 0. A file blocks, so the document is complete.
+  defp file_output(context, dir, args, input \\ "/dev/null") do
+    out = Path.join(dir, "stdout.html")
+    command = [context.timeout_command, @timeout, context.binary | args]
+    script = ~s(out="$1" in="$2"; shift 2; exec "$@" < "$in" > "$out" 2>/dev/null)
+
+    {_output, status} =
+      System.cmd("sh", ["-c", script, "sh", out, input | command], env: context.env)
+
+    {File.read!(out), status}
   end
 
   defp write_script(dir, name, source) do
@@ -87,21 +103,21 @@ defmodule Expresso.BinaryTest do
     assert difference(html, File.read!(expected)) == nil
   end
 
-  test "writes the HTML to the standard output with one argument", context do
+  test "writes the HTML to the standard output with one argument",
+       %{tmp_dir: dir} = context do
     expected = capture_io(fn -> assert Expresso.main("examples/demo.exs") == :ok end)
 
-    assert {output, 0} = run(context, ["examples/demo.exs"], stderr_to_stdout: false)
+    assert {output, 0} = file_output(context, dir, ["examples/demo.exs"])
     assert difference(output, expected) == nil
   end
 
   # The launcher of Burrito passes the standard input to the VM without a
   # change, and it passes the standard output through a pipe.
-  test "reads the standard input and writes the standard output for - -", context do
+  test "reads the standard input and writes the standard output for - -",
+       %{tmp_dir: dir} = context do
     expected = capture_io(fn -> assert Expresso.main("examples/demo.exs") == :ok end)
-    command = [context.timeout_command, @timeout, context.binary, "-", "-"]
-    script = ~s(exec "$@" < examples/demo.exs 2>/dev/null)
 
-    assert {output, 0} = System.cmd("sh", ["-c", script, "sh" | command], env: context.env)
+    assert {output, 0} = file_output(context, dir, ["-", "-"], "examples/demo.exs")
     assert difference(output, expected) == nil
   end
 

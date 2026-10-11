@@ -145,6 +145,9 @@ mix expresso my_deck.exs my_deck.html
 - A path that starts with `-` needs a directory in front of it, such as `./-deck.exs`.
 - When the reader of the output stops, as `| head` does, the task stops with no message,
   and the exit status is 0.
+- The binary can write only a part of the HTML to a pipe that does not block, when the
+  reader of the pipe is slow. The exit status is then 0. Give an output path, or write the
+  standard output to a file with `> my_deck.html`, to get all the HTML.
 
 ### Watch a deck
 

@@ -212,6 +212,15 @@ The standard output can close before the command writes all the HTML, as for `| 
   halts the VM at once for SIGTERM, with the exit status 0. The moduledoc of that module
   tells why the status is 0.
 
+The launcher of Burrito 1.6 also stops the VM for a write that fails for a different
+reason. A pipe that does not block gives `EAGAIN` when it is full, and the launcher reads
+that error as a closed pipe. It sends SIGTERM to the VM, so the HTML stops at a multiple of
+the pipe size, and the exit status is 0. A file, a terminal and a pipe that blocks do not
+give `EAGAIN`, so the HTML is then complete. An Erlang port, as in `System.cmd/3`, can give
+a pipe that does not block. Therefore the release tests read the standard output of the
+binary from a file. The VM cannot see this error, so a fix must be in the launcher of
+Burrito.
+
 ## The watch mode
 
 `mix expresso deck.exs --watch` serves the document at `http://127.0.0.1:4100/`. After
