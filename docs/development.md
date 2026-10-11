@@ -274,7 +274,9 @@ The jobs run in parallel on Linux, so the slowest of them gives their time:
 - `format`: the formatter.
 - `lint`: the compiler with warnings as errors, Credo, Sobelow, `mix hex.audit`, the check
   of unused dependencies, `mix docs`, Doctor and Dialyzer.
-- `test`: the unit tests, the browser tests and the dependency test.
+- `test`: the unit tests, in two jobs, `test (1/2)` and `test (2/2)`.
+- `e2e`: the browser tests, in three jobs, `e2e (1/3)` to `e2e (3/3)`.
+- `dependency`: the dependency test.
 - `presenter`: `npm run check`, `npm run lint`, `npm run format:check` and `npm test`.
 - `binary`: the binary for Linux and the release tests, in two jobs. The job
   `binary (linux_x86)` runs on x86_64, and the job `binary (linux_arm)` runs on an arm64
@@ -296,10 +298,23 @@ job `macos` ran the compiler, the unit tests, the browser tests, the binary for
 
 A job compiles the project for one environment. Therefore the tools that need the same
 build share one job, and the project compiles two times for the development environment,
-in `lint` and in `gifs`. It compiles three times for the test environment, in `test` and in
-the two `binary` jobs, and two times for the production environment, in the two `binary`
-jobs. A step of `lint`, of `test` or of `presenter` runs also when a step before it fails,
-so one run reports each defect.
+in `lint` and in `gifs`. It compiles for the test environment in each job of `test`, `e2e`
+and `dependency`, and in the two `binary` jobs. It compiles two times for the production
+environment, in the two `binary` jobs. A step of `lint` or of `presenter` runs also when a
+step before it fails, so one run reports each defect.
+
+The jobs of `test`, `e2e` and `dependency` share the cache `test`. Each job reads the build
+of the commit before, and compiles only the files that changed. The first job to finish
+saves the build of its commit. A build job that the other jobs wait for adds its setup and
+the save of the cache to the time of each run, so the workflow has no such job.
+
+`mix test --partitions` gives each test file to one partition, and `MIX_TEST_PARTITION`
+selects the partition of a job. To run the tests of one job on your machine, give the same
+values:
+
+```sh
+MIX_TEST_PARTITION=2 mix test --only e2e --partitions 3
+```
 
 `lint` also runs Dialyzer, because Dialyzer needs the same build. The cache of `lint` holds
 the PLT. With the PLT, Dialyzer takes approximately 30 seconds, and `lint` still finishes
