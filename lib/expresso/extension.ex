@@ -647,6 +647,36 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @icon %Spark.Dsl.Entity{
+    name: :icon,
+    target: Expresso.Element.Icon,
+    args: [:name],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          name: [
+            type: :string,
+            required: true,
+            doc:
+              "The name of a Lucide icon, such as \"rocket\", or a name of the icons option of the deck. See docs/reference/icon-element.md."
+          ],
+          label: [type: :string, doc: "The text under the icon. A screen reader reads it."],
+          size: [
+            type: :string,
+            default: "3em",
+            doc: "The width and the height of the icon, as a CSS length. The default is 3em."
+          ],
+          color: [
+            type: {:in, Expresso.Element.Icon.colors()},
+            default: :text,
+            doc:
+              "The role of the theme that gives the color: :text, :muted, :accent, :success, :emphasis, :warning or :danger. The default is :text."
+          ]
+        ]
+  }
+
   # The elements that a text box and a column hold
   @inner_elements [
     @text_area,
@@ -663,7 +693,8 @@ defmodule Expresso.Extension do
     @audio,
     @qr_code,
     @chart,
-    @stat
+    @stat,
+    @icon
   ]
 
   @toc %Spark.Dsl.Entity{
@@ -916,6 +947,11 @@ defmodule Expresso.Extension do
         doc:
           "A style sheet, or the path of a file that holds one. The document puts it after the theme, so it can replace each rule of the theme and give new effects and states. See docs/reference/css-option.md."
       ],
+      icons: [
+        type: :keyword_list,
+        doc:
+          "Icons of your own: a name and the path of an SVG file for each, such as [logo: \"assets/logo.svg\"]. A name of the deck wins over a Lucide name. See docs/reference/icon-element.md."
+      ],
       root: [
         type: :string,
         doc:
@@ -998,6 +1034,7 @@ defmodule Expresso.Extension do
     imports: [],
     transformers: [
       Expresso.PathTransformer,
+      Expresso.IconTransformer,
       Expresso.SectionTransformer,
       Expresso.Overlay.Transformer
     ],

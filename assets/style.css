@@ -1135,6 +1135,63 @@ body[data-view="handout"] .chart-frames {
     --chart-n: var(--stat-from);
   }
 }
+/*
+ * An icon is an SVG with the color of its text, so the class of a role gives
+ * the color of the icon element. Each color mixes with its dimmed color
+ * through `--dimmed`. An icon in a line of text has the size of the text.
+ */
+.icon {
+  --icon-color: var(--text);
+  --icon-dim: var(--text-dim);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.2em;
+  margin: 0;
+  color: color-mix(
+    in srgb,
+    var(--icon-dim) calc(var(--dimmed) * 100%),
+    var(--icon-color)
+  );
+}
+.icon-muted {
+  --icon-color: var(--muted);
+  --icon-dim: var(--muted-dim);
+}
+.icon-accent {
+  --icon-color: var(--accent);
+  --icon-dim: var(--accent-dim);
+}
+.icon-success {
+  --icon-color: var(--success);
+  --icon-dim: var(--success-dim);
+}
+.icon-emphasis {
+  --icon-color: var(--emphasis);
+  --icon-dim: var(--emphasis-dim);
+}
+.icon-warning {
+  --icon-color: var(--warning);
+  --icon-dim: var(--warning-dim);
+}
+.icon-danger {
+  --icon-color: var(--danger);
+  --icon-dim: var(--danger-dim);
+}
+.icon-svg {
+  width: var(--icon-size, 3em);
+  height: var(--icon-size, 3em);
+  max-width: 100%;
+  flex-shrink: 0;
+}
+.icon-inline {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+}
 .spacer {
   flex-grow: 1;
 }
@@ -1267,6 +1324,7 @@ body[data-view="present"][data-undim] .screen .code [data-el] {
 .qr-code,
 .callout,
 .stat,
+.icon,
 .toc,
 .toc-entry,
 .footnote,

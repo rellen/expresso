@@ -696,6 +696,7 @@ An element is the content of a slide. These are the elements at this time:
 - `Expresso.Element.Callout`
 - `Expresso.Element.Toc`, with `Expresso.Element.TocEntry`
 - `Expresso.Element.Stat`
+- `Expresso.Element.Icon`
 
 ### The parts of an element module
 
@@ -1318,6 +1319,27 @@ design:
 - **A size from the box.** The number is at most a quarter of the width of its box, with a
   container query, so three stats fit in the columns of a slide without a change of size.
 
+### The icons
+
+An `icon` element shows an icon, and `:icon:name:` puts an icon into a text.
+`Expresso.Icon` holds the Lucide icons, and `Expresso.IconTransformer` puts the SVG into
+the elements at compile time. These are the reasons for this design:
+
+- **The icons in the package.** A document needs no network, so the SVG of each icon must
+  be in Expresso. `priv/icons/lucide.json` holds the paths of the Lucide icons, about
+  420 KB, and `Expresso.Icon` reads it at compile time. A document holds only the icons
+  that its deck uses.
+- **A transformer, and not the render.** The `icons` option of the deck names files, and
+  an element does not know the deck. The transformer reads the files once, with the `root`
+  of the deck, and it puts the SVG into each element. A name that no icon has is then an
+  error of the compiler, with three names that are near.
+- **`currentColor` in each file.** The renderer replaces each color of a file of the deck
+  with `currentColor`, so an icon of the deck takes the color of its role or of its text,
+  as a Lucide icon does.
+- **A marker in the text.** The text of a text area is HTML, so the transformer replaces
+  `:icon:name:` with the SVG. The marker has no meaning in HTML, so it cannot change a text
+  that has no icon.
+
 ## The DSL
 
 `Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a
@@ -1376,10 +1398,13 @@ In the present view, the style sheet puts the number in the corner of the window
 
 ### The transformer and the verifiers
 
-The extension imports nothing, and it lists three transformers and eight verifiers:
+The extension imports nothing, and it lists four transformers and eight verifiers:
 
 - `Expresso.PathTransformer` joins each relative path of the deck to the `root` option, and
   it builds each code element with `src`. It runs first. See "The watch mode".
+- `Expresso.IconTransformer` reads the files of the `icons` option of the deck, and it puts
+  the SVG of each icon into its element and into the text of each text area and item. See
+  "The icons".
 - `Expresso.SectionTransformer` puts the section of each slide into its metadata, and the
   entries into each `toc`. It runs before the overlay transformer. See "The table of
   contents".
