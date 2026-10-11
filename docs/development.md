@@ -192,8 +192,8 @@ library of the headless browser, so the workflow does not use `--with-deps`.
 
 ### The dependency test
 
-The test of `test/dependency/` makes a new Mix project in the temporary directory of the
-system. The project takes Expresso as a dev dependency from the path of the repository, as
+The test of `test/dependency/` makes a Mix project in `_build/dependency_project`.
+The project takes Expresso as a dev dependency from the path of the repository, as
 `docs/how-to/render-a-deck-in-your-project.md` tells a user to do from GitHub. The test
 runs `mix deps.get`, then `mix expresso` on a deck of the project with the `root` option.
 
@@ -202,8 +202,20 @@ mix test --only dependency
 ```
 
 `mix test` excludes this test, because it needs the network for the dependencies of the
-project, and it takes approximately 100 seconds. The test uses the code of the working
-tree, so it finds a change that breaks Expresso as a dependency before a merge.
+project. The test uses the code of the working tree, so it finds a change that breaks
+Expresso as a dependency before a merge.
+
+The project is in `_build/dependency_project`, and the test keeps it. The project gets
+`mix.lock` of Expresso, so its dependencies have the same versions. The first run compiles
+each dependency and takes approximately 200 seconds. A later run compiles only the files
+that changed, and takes approximately 10 seconds. A change to an element struct compiles
+`lib/expresso/extension.ex` again, and that takes approximately 2 minutes. The job
+`dependency` of the workflow has its own cache, which keeps the project. To start from a
+new project, remove the directory:
+
+```sh
+rm -rf _build/dependency_project
+```
 
 ### The release tests
 
@@ -303,7 +315,7 @@ and `dependency`, and in the two `binary` jobs. It compiles two times for the pr
 environment, in the two `binary` jobs. A step of `lint` or of `presenter` runs also when a
 step before it fails, so one run reports each defect.
 
-The jobs of `test`, `e2e` and `dependency` share the cache `test`. Each job reads the build
+The jobs of `test` and `e2e` share the cache `test`. Each job reads the build
 of the commit before, and compiles only the files that changed. The first job to finish
 saves the build of its commit. A build job that the other jobs wait for adds its setup and
 the save of the cache to the time of each run, so the workflow has no such job.

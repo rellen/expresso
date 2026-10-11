@@ -42,7 +42,8 @@
 # build. With the PLT in the cache, Dialyzer takes approximately 30 seconds,
 # and `lint` still finishes before the slowest job. The unit tests, the
 # browser tests and the test of Expresso as a dependency run in jobs of their
-# own, at the same time, and they share the cache of the test build. `format` and `presenter` compile nothing, and
+# own, at the same time. The jobs `test` and `e2e` share the cache of the test
+# build. `format` and `presenter` compile nothing, and
 # they stay alone, so a defect in them shows in a few seconds.
 #
 # The last job needs each other job, and it fails when one of them does not
@@ -128,10 +129,11 @@ jobs:
 
   # Each job of the tests compiles the GIF encoder of `tools/` in the test
   # environment, so it needs Zig. The jobs run in parallel, and each one
-  # reports its own result. They compile the same build, so they share the
-  # cache `test`: each job reads the build of the commit before, and compiles
-  # only the files that changed. The first job to finish saves the build of
-  # its commit. The other jobs find the key, and they do not save it again.
+  # reports its own result. The jobs `test` and `e2e` compile the same build,
+  # so they share the cache `test`: each job reads the build of the commit
+  # before, and compiles only the files that changed. The first job to finish
+  # saves the build of its commit. The other jobs find the key, and they do not
+  # save it again.
   #
   # `mix test --partitions` gives each test file to one of the partitions, and
   # `MIX_TEST_PARTITION` selects the partition of the job. The test of
@@ -182,7 +184,10 @@ jobs:
 
   # The test of `test/dependency/` makes a project that takes Expresso as a dev
   # dependency, and it fetches the dependencies of that project from Hex and
-  # GitHub.
+  # GitHub. The project is in `_build/dependency_project`, so the cache keeps
+  # its build, and the next run compiles only the files that changed. The job
+  # has its own cache: it finishes after the other jobs of the tests, so it
+  # cannot save the cache `test`.
   dependency:
     name: dependency
     runs-on: ubuntu-latest
@@ -190,11 +195,11 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-elixir
         with:
-          cache: test
+          cache: dependency
       - uses: ./.github/actions/setup-zig
         with:
           version: ${{ env.ZIG_VERSION }}
-          cache: test
+          cache: dependency
       - run: mix test --only dependency
 
   # The presenter script needs Node only. Each step after the install runs
