@@ -69,7 +69,7 @@ keep the same lines, find them by their text.
    ```
 
 The compiler gives an error when a text is not in the file, and when the `from` text is in
-it more than one time. Give a longer text, such as `"def handle_call(:get"`, to make it
+it more than one time. Give a longer text, such as `"def handle_call(:next"`, to make it
 one time. A change above the excerpt then does not move it. The example in
 [Show the whole code first](#show-the-whole-code-first) uses this option.
 

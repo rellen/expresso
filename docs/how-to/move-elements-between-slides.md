@@ -140,7 +140,7 @@ Write `morph :named` in the deck to move only the elements with a key. Write `mo
 to stop the morph. A slide can have its own mode for the change from the slide before:
 
 ```elixir
-defmodule Examples.MorphModes do
+defmodule MyDeck do
   use Expresso
 
   morph :named
