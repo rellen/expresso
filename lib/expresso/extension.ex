@@ -625,10 +625,34 @@ defmodule Expresso.Extension do
     @chart
   ]
 
+  # A callout holds the elements of a text box, and not a callout or columns.
+  @callout %Spark.Dsl.Entity{
+    name: :callout,
+    target: Expresso.Element.Callout,
+    args: [:kind],
+    entities: [elements: @inner_elements, on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          kind: [
+            type: {:in, Expresso.Element.Callout.kinds()},
+            required: true,
+            doc:
+              "The kind of the callout: :note, :tip, :important, :warning, :caution, :definition or :example. See docs/reference/callout-element.md."
+          ],
+          title: [
+            type: {:custom, Expresso.Element.Callout, :title, []},
+            doc:
+              "The text of the header in place of the name of the kind, such as \"Before you start\". The value false removes the header."
+          ]
+        ]
+  }
+
   @column %Spark.Dsl.Entity{
     name: :column,
     target: Expresso.Element.Column,
-    entities: [elements: @inner_elements, on: [@on]],
+    entities: [elements: @inner_elements ++ [@callout], on: [@on]],
     schema:
       @overlay_schema ++
         @class_schema ++
@@ -652,7 +676,7 @@ defmodule Expresso.Extension do
   @text_box %Spark.Dsl.Entity{
     name: :text_box,
     target: Expresso.Element.TextBox,
-    entities: [elements: @inner_elements ++ [@columns], on: [@on]],
+    entities: [elements: @inner_elements ++ [@columns, @callout], on: [@on]],
     schema: @overlay_schema ++ @class_schema
   }
 
@@ -735,7 +759,7 @@ defmodule Expresso.Extension do
   }
 
   @slide_elements [
-    elements: [@text_box, @columns] ++ @inner_elements ++ [@footnote, @shape, @pause]
+    elements: [@text_box, @columns, @callout] ++ @inner_elements ++ [@footnote, @shape, @pause]
   ]
 
   @slide %Spark.Dsl.Entity{

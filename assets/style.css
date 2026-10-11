@@ -948,6 +948,77 @@ body[data-view="handout"] .chart-frames {
 .quotation figcaption::before {
   content: "\2014\00a0";
 }
+/*
+ * A callout is a box with a border at its start and a light tint of the
+ * color of its kind. The header and the icon take that color, and the text
+ * of the body keeps the color of the text. Each kind reads a role of the
+ * theme and its dimmed color, so a dimmed callout dims its header.
+ */
+.callout {
+  --callout-color: var(--accent);
+  --callout-dim: var(--accent-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+  margin: 0.2em 0;
+  padding: 0.3em 0.6em;
+  overflow-wrap: anywhere;
+  border-inline-start: 0.2em solid var(--callout-color);
+  border-radius: 0.2em;
+  background: color-mix(in srgb, var(--callout-color) 8%, transparent);
+  text-align: start;
+}
+.callout-tip,
+.callout-example {
+  --callout-color: var(--success);
+  --callout-dim: var(--success-dim);
+}
+.callout-important {
+  --callout-color: var(--emphasis);
+  --callout-dim: var(--emphasis-dim);
+}
+.callout-warning {
+  --callout-color: var(--warning);
+  --callout-dim: var(--warning-dim);
+}
+.callout-caution {
+  --callout-color: var(--danger);
+  --callout-dim: var(--danger-dim);
+}
+.callout-definition {
+  --callout-color: var(--muted);
+  --callout-dim: var(--muted-dim);
+}
+.callout-title {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  margin: 0;
+  font-weight: 700;
+  color: color-mix(
+    in srgb,
+    var(--callout-dim) calc(var(--dimmed) * 100%),
+    var(--callout-color)
+  );
+}
+.callout-icon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.callout-body {
+  display: flex;
+  flex-direction: column;
+}
+.callout-body > .text-area {
+  flex-grow: 0;
+  text-align: start;
+}
 .spacer {
   flex-grow: 1;
 }
@@ -1078,6 +1149,7 @@ body[data-view="present"][data-undim] .screen .code [data-el] {
 .math,
 .diagram,
 .qr-code,
+.callout,
 .footnote,
 .audio,
 .shape,

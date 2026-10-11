@@ -693,6 +693,7 @@ An element is the content of a slide. These are the elements at this time:
 - `Expresso.Element.Footnote`
 - `Expresso.Element.Shape`
 - `Expresso.Element.Chart`, with `Expresso.Element.Series`
+- `Expresso.Element.Callout`
 
 ### The parts of an element module
 
@@ -1238,6 +1239,33 @@ browser runs no script for a mark. These are the reasons for this design:
   small charts show in a grid, and the chart that moves does not show. The overview and the
   menu show the frame of the `thumbnail` option, because they show the last step of the
   slide.
+
+### The callout
+
+A `callout` is a box with a kind, a header and the elements of a text box.
+`Expresso.Element.Callout` writes a `div` with the role `note`, a header, and the elements
+in a body. These are the reasons for this design:
+
+- **A kind, and not a color.** The author names the purpose, such as `:warning`, and the
+  theme gives the color. A deck then keeps one meaning for each color, and a change of the
+  theme changes each callout.
+- **Two more roles.** The kinds need a green and a purple that meet the contrast of text,
+  so the palette has the roles `success` (`base0B`) and `emphasis` (`base0E`). They get the
+  checks, the adjustment and the dimmed color of each other role of text. The code roles
+  use the same slots on the background of code, so they cannot give these colors.
+- **The colors of a kind are two custom properties.** Each kind sets `--callout-color` and
+  `--callout-dim`, and one rule draws each kind. The header mixes the two colors with
+  `--dimmed`, as a link does, so a dimmed callout dims its header. A deck changes a kind with
+  the same two properties.
+- **An inline SVG for the icon.** The icon is a path in the HTML, so it prints, it needs no
+  network and no font, and it takes `currentColor`. It has `aria-hidden`, because the title
+  gives the same information to a screen reader.
+- **A paragraph for the header, and not a heading.** A heading in a callout would change the
+  outline of the headings of the slide. The role `note` tells a screen reader that the box
+  is a part of the slide that it can skip.
+- **The elements of a text box, and no nest.** Spark cannot nest an entity inside itself
+  without a limit, so a callout holds no callout and no `columns`. A slide, a text box and a
+  column hold a callout.
 
 ## The DSL
 
