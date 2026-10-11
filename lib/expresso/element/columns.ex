@@ -8,8 +8,8 @@ defmodule Expresso.Element.Columns do
   with the option takes that width. Each column takes the `at` option and the
   `on` entity, so a column can show at a step.
 
-  A column cannot hold a `columns` element, because Spark cannot nest two
-  entities inside each other without a limit.
+  A column is for the elements of a text box. `docs/architecture.md` tells
+  which places the DSL accepts.
   """
 
   use Expresso.Element
