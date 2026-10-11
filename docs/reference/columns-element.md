@@ -60,7 +60,8 @@ column, and the theme reads them.
 
 ## The children
 
-A column can hold each element that [a text box](text-box-element.md) holds, a text box
-and a second `columns` element.
+A column can hold each element that [a text box](text-box-element.md) holds, except a
+`columns` element. A column cannot hold a text box. See
+[The places of the elements](placement.md).
 
-A slide, a text box or a column can hold a `columns` element.
+A slide or a text box can hold a `columns` element.
