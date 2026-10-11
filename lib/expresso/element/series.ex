@@ -20,6 +20,7 @@ defmodule Expresso.Element.Series do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     on: [],
     __spark_metadata__: nil

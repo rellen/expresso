@@ -26,6 +26,7 @@ end
 | `size` | A CSS length, such as `"5rem"` | The width and the height of the icon. The default is `"3em"`. |
 | `color` | `:text`, `:muted`, `:accent`, `:success`, `:emphasis`, `:warning` or `:danger` | The role of the theme that gives the color of the icon and of its label. The default is `:text`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md). A slide, a text box, a column and a callout can

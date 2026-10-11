@@ -45,6 +45,7 @@ slide template from `@metadata[:section]`, and a deck template from
 | `dim` | `true` or `false` | Dim each entry when a later entry shows. The default is `false`. |
 | `progress` | `:dim_rest`, `:dim_earlier`, `:check_earlier` or `:strike_earlier` | How the entries other than the current section look. The default is `:dim_rest`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).

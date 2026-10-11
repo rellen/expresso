@@ -18,6 +18,7 @@ defmodule Expresso.Element.Row do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     cells: [],
     on: [],

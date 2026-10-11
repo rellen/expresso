@@ -32,6 +32,7 @@ defmodule Expresso.Element.Stat do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     group: true,
     count: false,

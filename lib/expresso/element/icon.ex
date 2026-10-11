@@ -29,6 +29,7 @@ defmodule Expresso.Element.Icon do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     size: "3em",
     color: :text,

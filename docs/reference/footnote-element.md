@@ -24,6 +24,7 @@ end
 | --- | --- | --- |
 | The first argument | A string, required | The text of the footnote. It can contain HTML, such as `<em>` for the title of a book or `<a href>` for a link. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md). The `auto_reveal` option of a slide does not

@@ -45,6 +45,7 @@ defmodule Expresso do
       slide_numbers: option.(:slide_numbers, false),
       duration: option.(:duration, nil),
       transition: option.(:transition, :fade),
+      morph: option.(:morph, :auto),
       effect: option.(:effect, :fade),
       speed: option.(:speed, nil),
       easing: option.(:easing, nil),

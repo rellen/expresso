@@ -179,6 +179,7 @@ Write an option in the deck to apply it to each slide:
 | Option | Effect |
 | --- | --- |
 | `transition :slide` | How each slide comes in: `:fade`, `:slide`, `:zoom`, `:none` or a transition of the `css` option. The default is `:fade`. |
+| `morph :named` | Which elements move from one slide to the next: `:auto`, `:named` or `:off`. The default is `:auto`. See [the morph option](docs/reference/morph-option.md). |
 | `duration 20` | The length of the talk in minutes. The speaker view then shows the time left. |
 | `progress false` | Hide the progress bar at the start. |
 | `slide_numbers true` | Show the number of each slide, such as `3 / 12`. |
@@ -191,7 +192,7 @@ Write an option in the deck to apply it to each slide:
 | `slide_template MySlideTemplate` | A module that makes the body of each slide. |
 | `theme :dracula` | The colors of the slides and of the code. Each built-in theme meets the contrast minimums of WCAG. `theme dark: :dracula, light: :default` gives two variants. See [the theme option](docs/reference/theme-option.md). |
 
-A slide takes `transition`, `handout`, `effect`, `speed` and `easing` too. An option on a
+A slide takes `transition`, `morph`, `handout`, `effect`, `speed` and `easing` too. An option on a
 slide replaces the option of the deck for that slide. The `template` option of a slide
 replaces `slide_template`, and its `meta` option gives values of your own to the
 templates.
@@ -319,6 +320,18 @@ The `css` option of the deck can give a transition of your own. See
 The transitions need the View Transitions API of the browser. A browser without it, and a
 user who asks for reduced motion, get an instant change. The speaker view has no
 transitions.
+
+### The morph
+
+An element that two neighbor slides share moves from its place on one slide to its place
+on the next slide, and the rest of the two slides fades. The deck finds two elements with the
+same kind and the same content. Two code elements move each token that they share. The
+`morph` option of an element gives a key, and the element with the same key on the next
+slide takes its place.
+
+![An icon moves from the center of the cover to a column of the next slide and gets smaller](https://raw.githubusercontent.com/rellen/expresso/media/morph-key.gif)
+
+See [Move elements from one slide to the next](docs/how-to/move-elements-between-slides.md).
 
 ### The address
 
@@ -539,6 +552,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Show the plan of a talk](docs/how-to/show-the-plan-of-a-talk.md)
 - [Show a key number](docs/how-to/show-a-key-number.md)
 - [Add icons to a slide](docs/how-to/add-icons-to-a-slide.md)
+- [Move elements from one slide to the next](docs/how-to/move-elements-between-slides.md)
 - [Make templates of your own](docs/how-to/make-templates.md)
 - [Use colors of your own](docs/how-to/use-colors-of-your-own.md)
 - [Render a deck in your project](docs/how-to/render-a-deck-in-your-project.md)
@@ -549,6 +563,7 @@ Reference pages describe each value of an option. These pages describe the optio
 deck and of a slide:
 
 - [The transition option](docs/reference/transition-option.md)
+- [The morph option](docs/reference/morph-option.md)
 - [The overlay options](docs/reference/overlay-options.md)
 - [The css option](docs/reference/css-option.md)
 - [The goto option](docs/reference/goto-option.md)

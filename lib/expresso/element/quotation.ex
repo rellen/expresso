@@ -22,6 +22,7 @@ defmodule Expresso.Element.Quotation do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     on: [],
     __spark_metadata__: nil

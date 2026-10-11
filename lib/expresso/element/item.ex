@@ -20,6 +20,7 @@ defmodule Expresso.Element.Item do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     on: [],
     elements: [],

@@ -42,6 +42,7 @@ defmodule Expresso.Element.Shape do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     fill: false,
     on: [],

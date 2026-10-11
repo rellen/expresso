@@ -37,6 +37,7 @@ defmodule Expresso.Element.Toc do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     reveal: false,
     dim: false,

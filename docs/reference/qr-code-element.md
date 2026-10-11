@@ -25,6 +25,7 @@ end
 | `size` | A CSS width, such as `"300px"` or `"25%"` | The width and the height of the code. A percentage is a part of the width of the slide. The default is `40vh`, which is 40% of the height of the slide. |
 | `level` | `:l`, `:m`, `:q` or `:h` | The error correction level. A higher level makes a code with more modules, which a scanner reads when a part of the code is not clear. The default is `:m`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).

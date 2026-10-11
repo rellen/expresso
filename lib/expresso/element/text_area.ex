@@ -17,6 +17,7 @@ defmodule Expresso.Element.TextArea do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     on: [],
     __spark_metadata__: nil

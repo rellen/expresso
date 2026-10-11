@@ -59,6 +59,7 @@ defmodule Expresso.Element.Diagram do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     on: [],
     elements: [],

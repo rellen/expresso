@@ -21,6 +21,7 @@ end
 | The first argument | `:note`, `:tip`, `:important`, `:warning`, `:caution`, `:definition` or `:example`, required | The kind of the callout. The kind gives the color, the icon and the default title. |
 | `title` | A string, or `false` | The text of the header in place of the name of the kind. The value `false` removes the header. The text is not HTML. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).

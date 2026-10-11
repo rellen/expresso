@@ -41,8 +41,15 @@ defmodule Expresso.Extension do
       type: {:in, @easings},
       doc:
         "The easing of each animation of the element: #{Enum.map_join(@easings, ", ", &inspect/1)}. The default is the easing of the nearest parent, of the slide or of the deck."
+    ],
+    morph: [
+      type: :string,
+      doc:
+        "A key of the morph between two slides. The element with this key on the next slide takes its place and its size from this element. See docs/reference/morph-option.md."
     ]
   ]
+
+  @morph_modes [:auto, :named, :off]
 
   # The CSS classes of an element or of a slide. `Expresso.Element.class/1`
   # gives the rules.
@@ -915,6 +922,11 @@ defmodule Expresso.Extension do
         doc:
           "The transition between the slide before and this slide, in the two directions. The default is the transition of the deck."
       ],
+      morph: [
+        type: {:in, @morph_modes},
+        doc:
+          "The morph between the slide before and this slide, in the two directions: :auto, :named or :off. The default is the morph of the deck. See docs/reference/morph-option.md."
+      ],
       effect: [
         type: :atom,
         doc:
@@ -946,6 +958,12 @@ defmodule Expresso.Extension do
         type: :string,
         doc:
           "A style sheet, or the path of a file that holds one. The document puts it after the theme, so it can replace each rule of the theme and give new effects and states. See docs/reference/css-option.md."
+      ],
+      morph: [
+        type: {:in, @morph_modes},
+        default: :auto,
+        doc:
+          "How the elements of two neighbor slides move from one slide to the next: :auto matches the same elements and the keys of the morph option, :named matches only the keys, and :off has no morph. See docs/reference/morph-option.md."
       ],
       icons: [
         type: :keyword_list,

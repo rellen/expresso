@@ -8,6 +8,8 @@ import type { Deck } from "./deck.ts";
 import { helpMode } from "./interpreter.ts";
 import { search } from "./search.ts";
 import type { Transition } from "./interpreter.ts";
+import { visible } from "./morph.ts";
+import type { Pair } from "./morph.ts";
 import { parse as parseProgram } from "./program.ts";
 import type { Program, Projections } from "./program.ts";
 import { fromAddress } from "./scheme.ts";
@@ -43,7 +45,17 @@ export function program(): Program {
 // browser needs the View Transitions API, and the reader must not ask for
 // reduced motion. The kind and the direction go on the `html` element, and
 // the style sheet gives each kind its animation.
-export function animate(change: Transition | null, update: () => void): void {
+//
+// The pairs of the morph get their names: an element of the old slide that
+// shows before the change, and its partner after the update when the partner
+// shows. A change with a pair fades the rest of the slide, whatever its kind,
+// because a slide or a zoom would move against the pairs. The names go away
+// at the end of the transition.
+export function animate(
+  change: Transition | null,
+  update: () => void,
+  pairs: readonly Pair[] = [],
+): void {
   const reduced = window.matchMedia?.(
     "(prefers-reduced-motion: reduce)",
   ).matches;
@@ -55,9 +67,37 @@ export function animate(change: Transition | null, update: () => void): void {
     update();
     return;
   }
-  document.documentElement.dataset.transition = change.kind;
+  const named = pairs.filter((pair) => visible(pair.from));
+  document.documentElement.dataset.transition =
+    named.length > 0 ? "fade" : change.kind;
   document.documentElement.dataset.direction = change.direction;
-  document.startViewTransition(update);
+  if (named.length === 0) {
+    document.startViewTransition(update);
+    return;
+  }
+  for (const pair of named) {
+    name(pair.from, pair.name);
+  }
+  const transition = document.startViewTransition(() => {
+    for (const pair of named) {
+      name(pair.from, "");
+    }
+    update();
+    for (const pair of named) {
+      if (visible(pair.to)) {
+        name(pair.to, pair.name);
+      }
+    }
+  });
+  void transition.finished.finally(() => {
+    for (const pair of named) {
+      name(pair.to, "");
+    }
+  });
+}
+
+function name(element: Element, value: string): void {
+  (element as HTMLElement).style.viewTransitionName = value;
 }
 
 // Read a slide by its number. A missing slide is a defect of the renderer, so

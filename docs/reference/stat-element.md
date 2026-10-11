@@ -28,6 +28,7 @@ end
 | `count` | `true` or `false` | Count from `from` to the value when the stat shows. The default is `false`, and the number shows at once. |
 | `from` | A number | The number at the start of the count. The default is `0`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).

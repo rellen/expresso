@@ -46,6 +46,7 @@ defmodule Expresso.Element.Embed do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     interactive: false,
     on: [],

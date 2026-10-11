@@ -35,6 +35,7 @@ end
 | `reveal` | `true` or `false` | Shows each item at its own step. The default is `false`. See [the overlay options](overlay-options.md#reveal). |
 | `dim` | `true` or `false` | Dims each item when a later item shows. The default is `false`. See [the overlay options](overlay-options.md#dim). |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 ## The options of an item
 
@@ -43,6 +44,7 @@ end
 | The first argument | A string | The text of the item. It can contain HTML. |
 | `goto` | A slide and a step, such as `[slide: 5]` or `[slide: "summary"]` | Makes the element a link to that slide and step. See [the goto option](goto-option.md). |
 | `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 A list and an item each take the overlay options, such as `at`, `effect` and the `on`
 entity. See [the overlay options](overlay-options.md).

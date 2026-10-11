@@ -35,6 +35,7 @@ defmodule Expresso.Element.Audio do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     loop: false,
     controls: false,

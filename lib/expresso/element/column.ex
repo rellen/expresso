@@ -21,6 +21,7 @@ defmodule Expresso.Element.Column do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     on: [],
     elements: [],

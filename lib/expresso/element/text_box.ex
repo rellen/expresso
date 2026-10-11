@@ -16,6 +16,7 @@ defmodule Expresso.Element.TextBox do
     :el,
     :effect,
     :speed,
+    :morph,
     :easing,
     on: [],
     __spark_metadata__: nil

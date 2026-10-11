@@ -162,6 +162,15 @@ defmodule Expresso.Renderer do
     "--overview-columns: #{columns}; --overview-zoom: #{:erlang.float_to_binary(zoom, [:short])};"
   end
 
+  # The value of `data-morph` on a slide: the morph of the slide, else the
+  # morph of the deck. A deck from the imperative API can have no metadata,
+  # and it then morphs. The presenter reads the value of the slide with the
+  # higher number, as it does for a transition.
+  defp morph(deck, slide) do
+    value = slide.metadata[:morph] || (deck.metadata || %{})[:morph] || :auto
+    Atom.to_string(value)
+  end
+
   # The value of `data-progress` on the `body`. A deck from the imperative API
   # can have no metadata, and it then shows the progress bar.
   defp progress(deck) do
@@ -548,6 +557,7 @@ defmodule Expresso.Renderer do
                       class: Expresso.Element.classes("slide", slide.metadata[:class]),
                       data_step: 1,
                       data_max_step: Expresso.Overlay.Render.max_step(slide),
+                      data_morph: morph(@deck, slide),
                       style:
                         "height: 100%; display: #{if index == 0, do: "flex", else: "none"}; flex-direction: column; justify-content: stretch" do
                 c(&slide_parts/1, deck: @deck, slide: slide)

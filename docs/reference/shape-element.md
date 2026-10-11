@@ -28,6 +28,7 @@ end
 | `fill` | `:rect`, `:ellipse` | `true` or `false` | Fill the shape with a light tint of its color. The default is `false`. |
 | `from`, `to` | `:line`, `:arrow` | A list of two CSS lengths, such as `["10%", "50%"]` | The start and the end. The head of an arrow is at `to`. |
 | `class` | Each kind | CSS class names | See [the class option](class-option.md). |
+| `morph` | Each kind | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 A rectangle and an ellipse need `x`, `y`, `width` and `height`. A line and an arrow need
 `from` and `to`. The compiler gives an error for a missing option and for an option of the
