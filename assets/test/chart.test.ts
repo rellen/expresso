@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { format, write } from "../src/chart.ts";
+import { format, formatStat, write } from "../src/chart.ts";
 import type { Count } from "../src/chart.ts";
 
 test("a number has the decimals of the chart, with no zero at the end of the fraction", () => {
@@ -43,4 +43,25 @@ test("write keeps the text of a number without a value", () => {
     false,
   );
   assert.equal(counts[0]!.textContent, "10");
+});
+
+test("the number of a stat keeps each decimal, and groups the digits by three", () => {
+  assert.equal(formatStat(1250, 0, true), "1,250");
+  assert.equal(formatStat(-1234567.5, 2, true), "-1,234,567.50");
+  assert.equal(formatStat(1250, 0, false), "1250");
+  assert.equal(formatStat(999.999, 2, true), "1,000.00");
+  assert.equal(formatStat(-0.001, 2, true), "0.00");
+  assert.equal(formatStat(12, 0, true), "12");
+});
+
+test("write uses the format of a stat for a number with data-group", () => {
+  const stat: Count = {
+    textContent: "0",
+    dataset: { decimals: "0", group: "true" },
+  };
+  assert.equal(
+    write([stat], () => "1249.6"),
+    true,
+  );
+  assert.equal(stat.textContent, "1,250");
 });

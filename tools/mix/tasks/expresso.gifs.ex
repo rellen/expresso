@@ -103,6 +103,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "toc", deck: "toc.exs", actions: ["j", "j", "j"]},
     %{name: "toc-recap", deck: "toc_recap.exs", actions: ["j", "j", "j"]},
     %{name: "toc-progress", deck: "toc_progress.exs", address: "#3", still: true},
+    %{name: "stat", deck: "stat.exs", actions: ["j", "j"]},
     %{name: "shape", deck: "shape.exs", actions: ["j"]},
     %{name: "shape-move", deck: "shape_move.exs", actions: ["j", "j"]},
     %{name: "shape-color", deck: "shape_color.exs", actions: ["j", "j"]},
