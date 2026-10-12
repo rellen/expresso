@@ -1519,6 +1519,37 @@ svg [data-el] {
     clip-path var(--dur) var(--ease),
     color var(--dur) var(--ease);
 }
+/*
+ * The `main` element around the present view and the handout view. It is the
+ * main landmark for a screen reader, and it takes no box, so each view keeps
+ * its layout.
+ */
+.views {
+  display: contents;
+}
+/*
+ * The live region of the moves, and the word "Step" in front of the number of
+ * each step of the menu. A screen reader reads the text, and the screen and
+ * paper do not show it.
+ */
+.announce,
+.menu-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/*
+ * The live region is fixed at the top left corner. An absolute box in its
+ * place after the pages of the handout view would make the document taller.
+ */
+.announce {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
 .screen {
   height: 100vh;
   width: 100%;
@@ -1774,6 +1805,14 @@ body[data-view="handout"][data-print-notes="false"] .notes {
  * `data-cursor` and the row of the current step with `data-current`. A deck
  * can set `--menu-color` for the marks, which have the color `--accent`.
  */
+/*
+ * The list of the menu takes the focus while the menu is open, so a screen
+ * reader reads the row of the cursor. The row of the cursor shows the focus,
+ * so the list has no outline of its own.
+ */
+#menu [role="listbox"]:focus {
+  outline: none;
+}
 #menu {
   display: none;
 }

@@ -119,6 +119,8 @@ function slide(number: number): HTMLElement {
 // the speaker view writes the texts of its elements.
 export function apply(state: State, deck: Deck, program: Program): void {
   project(program.project, state, deck);
+  progress(current(state, deck)?.fraction ?? 0);
+  menu(state.menu);
   help(state.help ? helpMode(program, state) : undefined);
   for (let number = 1; number <= deck.slides.length; number++) {
     slide(number).style.display = "none";
@@ -176,6 +178,73 @@ function project(rules: Projections, state: State, deck: Deck): void {
       first.scrollIntoView?.({ block: "nearest" });
     }
   }
+}
+
+// The progress bar tells a screen reader the part of the deck before the
+// current step, as its width shows it.
+function progress(fraction: number): void {
+  document
+    .getElementById("progress")
+    ?.setAttribute("aria-valuenow", String(Math.round(fraction * 100)));
+}
+
+// The menu is a `listbox`. The projections mark the row of the cursor with
+// `data-cursor` and the row of the current step with `data-current`, and this
+// function gives the same rows their ARIA state. The list takes the focus
+// while the menu is open, so a screen reader reads the row of the cursor.
+function menu(open: boolean): void {
+  const list = document.querySelector?.<HTMLElement>("#menu [role=listbox]");
+  if (list === null || list === undefined) {
+    return;
+  }
+  let cursor = "";
+  for (const row of list.querySelectorAll<HTMLElement>("[role=option]")) {
+    const selected = row.hasAttribute("data-cursor");
+    row.setAttribute("aria-selected", String(selected));
+    if (selected) {
+      cursor = row.id;
+    }
+    if (row.hasAttribute("data-current")) {
+      row.setAttribute("aria-current", "step");
+    } else {
+      row.removeAttribute("aria-current");
+    }
+  }
+  list.setAttribute("aria-activedescendant", cursor);
+  if (open && document.activeElement !== list) {
+    list.focus({ preventScroll: true });
+  } else if (!open && document.activeElement === list) {
+    list.blur();
+  }
+}
+
+// Tell a screen reader the position after a move. A move to a different slide
+// gives the name of the slide, such as "Slide 3 of 12, step 1 of 2:
+// Supervisors". A move inside a slide gives the step, such as "Step 2 of 2".
+export function announce(
+  state: State,
+  deck: Deck,
+  slideChanged: boolean,
+): void {
+  const region = document.getElementById("announce");
+  const entry = current(state, deck);
+  if (region === null || entry === undefined) {
+    return;
+  }
+  const section = document.getElementById(`slide-${entry.slide}`);
+  const max = Number(section?.dataset.maxStep ?? 1);
+  const step = max > 1 ? `step ${entry.step} of ${max}` : "";
+  if (!slideChanged) {
+    region.textContent = max > 1 ? `Step ${entry.step} of ${max}` : "";
+    return;
+  }
+  const [position = "", ...name] = (
+    section?.getAttribute("aria-label") ?? ""
+  ).split(": ");
+  region.textContent =
+    position +
+    (step === "" ? "" : `, ${step}`) +
+    (name.length === 0 ? "" : `: ${name.join(": ")}`);
 }
 
 // The notes of the page of the current step go into the element

@@ -27,7 +27,9 @@ export type FakeElement = {
   appendChild: (child: FakeElement) => void;
   replaceChildren: () => void;
   querySelector: (selector: string) => FakeElement | null;
-  // The attributes `data-*` of the element, in its `dataset`.
+  // The attributes `data-*` of the element, in its `dataset`, and each other
+  // attribute, such as `aria-valuenow`, in `attributes`.
+  attributes: Record<string, string>;
   setAttribute: (name: string, value: string) => void;
   getAttribute: (name: string) => string | null;
   removeAttribute: (name: string) => void;
@@ -112,6 +114,9 @@ type Options = {
 
 export type FakePage = {
   slides: FakeElement[];
+  // The progress bar and the live region of the moves.
+  progress: FakeElement;
+  announce: FakeElement;
   pages: FakeElement[];
   body: FakeElement;
   location: { hash: string; search: string; readonly href: string };
@@ -191,12 +196,24 @@ export function element(
     },
     querySelector: (selector) =>
       self.children.find((child) => `.${child.className}` === selector) ?? null,
+    attributes: {},
     setAttribute: (name, value) => {
-      self.dataset[datasetKey(name)] = value;
+      if (name.startsWith("data-")) {
+        self.dataset[datasetKey(name)] = value;
+      } else {
+        self.attributes[name] = value;
+      }
     },
-    getAttribute: (name) => self.dataset[datasetKey(name)] ?? null,
+    getAttribute: (name) =>
+      name.startsWith("data-")
+        ? (self.dataset[datasetKey(name)] ?? null)
+        : (self.attributes[name] ?? null),
     removeAttribute: (name) => {
-      delete self.dataset[datasetKey(name)];
+      if (name.startsWith("data-")) {
+        delete self.dataset[datasetKey(name)];
+      } else {
+        delete self.attributes[name];
+      }
     },
   };
   return self;
@@ -313,6 +330,7 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   }
   // The renderer writes the progress bar into each document.
   const progress = element("progress");
+  const announce = element("announce");
   const all = () => [
     list,
     program,
@@ -321,6 +339,7 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     handout,
     ...handout.children,
     progress,
+    announce,
     ...body.children,
   ];
 
@@ -396,6 +415,8 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
 
   const page: FakePage = {
     slides,
+    progress,
+    announce,
     pages,
     body: doc.body,
     location,

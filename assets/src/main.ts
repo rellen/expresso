@@ -99,6 +99,7 @@ import type { State } from "./state.ts";
 import {
   animate,
   apply,
+  announce,
   deck as readDeck,
   program as readProgram,
   scheme,
@@ -180,6 +181,8 @@ function show(changed: State, local = true): void {
     return;
   }
   const moved = changed.index !== state.index;
+  const slideChanged =
+    current(changed, deck)?.slide !== current(state, deck)?.slide;
   const sent = synced(program, state, changed);
   const change = transition(state, changed, deck);
   const pairs = change === null ? [] : morphs(state, changed);
@@ -194,6 +197,9 @@ function show(changed: State, local = true): void {
     },
     pairs,
   );
+  if (moved) {
+    announce(state, deck, slideChanged);
+  }
   history.replaceState(null, "", toHash(state, deck));
   if (local && sent) {
     send();
