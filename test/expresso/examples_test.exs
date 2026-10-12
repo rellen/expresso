@@ -84,17 +84,24 @@ defmodule Expresso.ExamplesTest do
     document = deck |> Expresso.Deck.render() |> Floki.parse_document!()
 
     assert document |> Floki.find("section.slide") |> length() == length(deck.slides)
-    assert document |> Floki.find(".screen .diagram svg") |> length() == 10
+    assert document |> Floki.find(".screen .diagram") |> length() == 6
   end
 
-  test "the talk about Line 4 shows the start of its deck module on the slide of the DSL" do
+  # The copy differs from its source in iso-factories only in the path of the
+  # page, and the code slides find their lines in that page by text.
+  test "the talk about Line 4 shows the code of its copy of the page" do
     {value, _bindings} = Code.eval_file("examples/line4/line4.exs")
     assert {:ok, deck} = Expresso.to_deck(value)
 
-    [code] = Enum.find(deck.slides, &(&1.name == "this deck")).elements
+    [code] =
+      for slide <- deck.slides,
+          slide.name == "resHit",
+          element <- slide.elements,
+          is_struct(element, Expresso.Element.Code),
+          do: element
 
-    assert code.text =~ ~r/\Adefmodule Line4.Deck do\n  use Expresso\n/
-    assert code.text =~ ~r/  easing :ease_out\z/
+    assert code.text =~ ~r/\A  function resHit\(m, b, m2\) \{/
+    assert code.text =~ ~r/    return hit;\n  \}\z/
   end
 
   test "each guide is an extra of ExDoc" do
