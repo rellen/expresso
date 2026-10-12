@@ -62,21 +62,29 @@ defmodule Expresso.Test.PresenterFixtures do
   @spec path() :: Path.t()
   def path, do: @path
 
-  @doc "Return the text of the fixture file. The same seed returns the same text."
+  @doc """
+  Return the text of the fixture file. The same seed returns the same text.
+
+  The generator keeps its random state in a variable, and not in the process
+  dictionary, so no other code in the process can change the numbers.
+  """
   @spec json() :: String.t()
   def json do
-    :rand.seed(:exsss, {20, 26, 9})
-    random = for _deck <- 1..@random_decks, do: random_deck()
+    seed = :rand.seed_s(:exsss, {20, 26, 9})
+    {random, seed} = Enum.map_reduce(1..@random_decks, seed, fn _deck, r -> random_deck(r) end)
     decks = Enum.uniq(@decks ++ random)
+
+    {cases, _seed} =
+      Enum.flat_map_reduce(random, seed, fn deck, r ->
+        Enum.map_reduce(1..@sequences, r, fn _sequence, r -> plan(deck, r) end)
+      end)
 
     parts = [
       ~s("fields":) <> JSON.encode!(Enum.map(@fields, &Atom.to_string/1)),
       ~s("help":) <> JSON.encode!(help()),
       ~s("decks":{\n) <> Enum.map_join(decks, ",\n", &deck_json/1) <> "\n}",
       ~s("cases":[\n) <>
-        Enum.map_join(random, ",\n", fn deck ->
-          Enum.map_join(1..@sequences, ",\n", fn _sequence -> JSON.encode!(case_of(deck)) end)
-        end) <> "\n]"
+        Enum.map_join(cases, ",\n", &JSON.encode!(case_of(&1))) <> "\n]"
     ]
 
     "{\n" <> Enum.join(parts, ",\n") <> "\n}\n"
@@ -88,9 +96,11 @@ defmodule Expresso.Test.PresenterFixtures do
   end
 
   # A deck of 0 to 8 slides with 1 to 5 steps each, and a kind for each slide.
-  defp random_deck do
-    counts = for _slide <- 1..(:rand.uniform(9) - 1)//1, do: :rand.uniform(5)
-    {counts, Enum.map(counts, fn _count -> pick(@kinds) end)}
+  defp random_deck(r) do
+    {size, r} = uniform(9, r)
+    {counts, r} = Enum.map_reduce(1..(size - 1)//1, r, fn _slide, r -> uniform(5, r) end)
+    {kinds, r} = Enum.map_reduce(counts, r, fn _count, r -> pick(@kinds, r) end)
+    {{counts, kinds}, r}
   end
 
   @doc "Return the key of a deck in the fixture file"
@@ -120,19 +130,21 @@ defmodule Expresso.Test.PresenterFixtures do
     |> Builder.deck(name: "deck")
   end
 
-  defp case_of({counts, kinds} = shape) do
-    program = Program.compile(Definition.presenter(), deck(counts, kinds))
+  # The random part of a case: the options of the start, and the events.
+  defp plan({counts, _kinds} = shape, r) do
+    {view, r} = pick([:present, :speaker], r)
+    {progress, r} = pick([true, false], r)
+    {every, r} = pick([true, false], r)
+    {events, r} = Enum.map_reduce(1..@events, r, fn _event, r -> event(length(counts), r) end)
+    {{shape, %{view: view, progress: progress, every: every}, events}, r}
+  end
 
-    start =
-      Interpreter.initial(program, %{
-        view: pick([:present, :speaker]),
-        progress: pick([true, false]),
-        every: pick([true, false])
-      })
+  defp case_of({{counts, kinds} = shape, options, events}) do
+    program = Program.compile(Definition.presenter(), deck(counts, kinds))
+    start = Interpreter.initial(program, options)
 
     {results, _state} =
-      Enum.map_reduce(1..@events, start, fn _event, state ->
-        {event, model} = event(length(counts))
+      Enum.map_reduce(events, start, fn {event, model}, state ->
         {after_event, effects} = Interpreter.run(program, state, model)
 
         transition =
@@ -160,41 +172,56 @@ defmodule Expresso.Test.PresenterFixtures do
   end
 
   # An event in the fixture file, and the same event for the Elixir interpreter.
-  defp event(slides) do
-    case :rand.uniform(20) do
-      n when n <= 14 ->
-        key = pick(@keys)
-        {["key", key], {:key, key}}
+  defp event(slides, r) do
+    case uniform(20, r) do
+      {n, r} when n <= 14 ->
+        {key, r} = pick(@keys, r)
+        {{["key", key], {:key, key}}, r}
 
-      15 ->
-        region = pick([:right, :left_third])
-        {["click", Atom.to_string(region), nil], {:click, region}}
+      {15, r} ->
+        {region, r} = pick([:right, :left_third], r)
+        {{["click", Atom.to_string(region), nil], {:click, region}}, r}
 
       # A click on a page of the overview, on a link of `Expresso.Goto`, or on
       # a row of the menu.
-      16 ->
-        region = pick([:right, :left_third])
-        link = Program.link(:rand.uniform(slides * 3 + 1) - 1)
-        row = Program.menu(:rand.uniform(slides * 3 + 1) - 1)
-        commands = pick([Program.element(near(slides)), link, row])
+      {16, r} ->
+        {region, r} = pick([:right, :left_third], r)
+        {link, r} = uniform(slides * 3 + 1, r)
+        {row, r} = uniform(slides * 3 + 1, r)
+        {element, r} = near(slides, r)
+
+        {commands, r} =
+          pick([Program.element(element), Program.link(link - 1), Program.menu(row - 1)], r)
+
         json = commands |> Program.json_commands() |> JSON.decode!()
-        {["click", Atom.to_string(region), json], {:click, region, commands}}
+        {{["click", Atom.to_string(region), json], {:click, region, commands}}, r}
 
-      17 ->
-        direction = pick([:left, :right])
-        {["swipe", Atom.to_string(direction)], {:swipe, direction}}
+      {17, r} ->
+        {direction, r} = pick([:left, :right], r)
+        {{["swipe", Atom.to_string(direction)], {:swipe, direction}}, r}
 
-      18 ->
-        hash = pick(["#", "#x", "#2.2.1", "##{near(slides)}", "##{near(slides)}.#{near(6)}"])
-        {["hash", hash], {:hash, hash}}
+      {18, r} ->
+        {a, r} = near(slides, r)
+        {b, r} = near(slides, r)
+        {c, r} = near(6, r)
+        {hash, r} = pick(["#", "#x", "#2.2.1", "##{a}", "##{b}.#{c}"], r)
+        {{["hash", hash], {:hash, hash}}, r}
 
-      _message ->
-        {slide, step} = {near(slides), near(6)}
+      {_message, r} ->
+        {slide, r} = near(slides, r)
+        {step, r} = near(6, r)
+
         # Each field of the option `sync` holds true or false.
-        fields = Map.new(Definition.presenter().sync, &{&1, pick([true, false])})
+        {fields, r} =
+          Enum.map_reduce(Definition.presenter().sync, r, fn field, r ->
+            {value, r} = pick([true, false], r)
+            {{field, value}, r}
+          end)
 
-        {["message", slide, step, fields],
-         {:message, %{slide: slide, step: step, fields: fields}}}
+        fields = Map.new(fields)
+
+        {{["message", slide, step, fields],
+          {:message, %{slide: slide, step: step, fields: fields}}}, r}
     end
   end
 
@@ -205,8 +232,16 @@ defmodule Expresso.Test.PresenterFixtures do
     end)
   end
 
-  defp pick(list), do: Enum.at(list, :rand.uniform(length(list)) - 1)
+  defp uniform(n, r), do: :rand.uniform_s(n, r)
+
+  defp pick(list, r) do
+    {n, r} = uniform(length(list), r)
+    {Enum.at(list, n - 1), r}
+  end
 
   # A number of a slide or a step, inside and outside the deck.
-  defp near(maximum), do: :rand.uniform(maximum + 4) - 2
+  defp near(maximum, r) do
+    {n, r} = uniform(maximum + 4, r)
+    {n - 2, r}
+  end
 end
