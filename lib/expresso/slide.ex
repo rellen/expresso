@@ -7,6 +7,7 @@ defmodule Expresso.Slide do
           :name => String.t() | nil,
           :class => String.t() | nil,
           :heading => String.t() | nil,
+          :sr_heading => boolean() | nil,
           :section => String.t() | nil,
           :template => module() | {:builtins, atom()} | nil,
           :notes => String.t() | nil,
@@ -28,6 +29,7 @@ defmodule Expresso.Slide do
     :name,
     :class,
     :heading,
+    :sr_heading,
     :section,
     :template,
     :notes,
@@ -60,6 +62,7 @@ defmodule Expresso.Slide do
   @metadata_options [
     :class,
     :heading,
+    :sr_heading,
     :template,
     :notes,
     :meta,

@@ -1931,6 +1931,14 @@ test `test/e2e/accessibility_test.exs` runs axe-core on each view. These are the
 - **The `alt` of a diagram makes it one image.** The text of an SVG file is often a set of
   labels with no order. With `alt`, the diagram has the role `img`, and its parts are not
   read. Without `alt`, a screen reader still reads the text of the SVG.
+- **A hidden `h1` on a slide with no `h1`.** A screen reader moves from heading to heading,
+  and a slide with only a picture had none. A warning for each such slide was too strict,
+  because a slide can need no visible heading. The renderer therefore looks for an `h1` in
+  the HTML of the slide template, and adds a hidden one when it finds none. The text of the
+  label of the group already names the slide, so the hidden `h1` holds the same name. The
+  option `sr_heading false` removes it.
+- **A title that is never empty.** A deck with no name had an empty `title`, and axe-core
+  reports `document-title`. The title then comes from the first heading of the deck.
 - **Captions as a `track` with a data URI.** The document is one file, so the WebVTT file
   goes into the `track` element as a data URI. Chromium loads the cues of such a track. The
   file is small, so each copy of the slide holds its own copy, and the script needs no

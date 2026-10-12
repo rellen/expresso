@@ -54,7 +54,7 @@ defmodule Expresso.TemplateOptionsTest do
       )
 
     assert texts(deck, ".section-slide") == ["Part 1"]
-    assert texts(deck, "h1") == ["Built in"]
+    assert texts(deck, "h1:not(.slide-hidden-heading)") == ["Built in"]
   end
 
   test "a deck without slide_template uses the built-in slide template" do

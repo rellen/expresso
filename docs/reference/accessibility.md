@@ -28,6 +28,22 @@ attributes:
 The name is the `heading` of the slide. Without a heading, it is the name of the slide.
 Without both, the label has the position only.
 
+### The heading of a slide
+
+Each slide and each page holds an `h1`, so a screen reader that moves from heading to
+heading reaches each slide.
+
+| Slide | `h1` |
+| --- | --- |
+| The slide template writes an `h1`, such as from the `heading` option | That `h1`. |
+| The slide template writes no `h1` | An `h1` with the class `slide-hidden-heading`, which the style sheet hides from the eye. Its text is the heading, the name, or the position of the slide, such as `Slide 4 of 9`. |
+| The slide gives `sr_heading false` | No hidden `h1`. |
+
+## The title
+
+The `title` element holds the name of the deck. A deck with no name takes the heading of
+its first slide with a heading, and a deck with no heading takes `Slides`.
+
 ## The live region
 
 `div#announce` has the role `status`, so a screen reader reads each change of its text and

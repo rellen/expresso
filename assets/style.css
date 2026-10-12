@@ -1136,6 +1136,8 @@ body[data-view="handout"] .chart-frames {
     var(--muted)
   );
 }
+/* The h1 of a slide that has no visible h1: only a screen reader reads it. */
+.slide-hidden-heading,
 .stat-text {
   position: absolute;
   width: 1px;
