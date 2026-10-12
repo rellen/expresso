@@ -172,6 +172,19 @@ then reloads, and it shows the same step. The speaker view reloads too.
 
 The binary takes the same options.
 
+### Check a deck
+
+Add `--check` to check the deck and write a report:
+
+```sh
+mix expresso my_deck.exs --check          # needs no other tool
+mix expresso my_deck.exs --check=layout   # needs Chrome or Chromium
+mix expresso my_deck.exs --check=a11y     # needs Chrome or Chromium, and axe-core
+```
+
+The exit status is 1 for a problem, so a continuous integration job can run the check. See
+[Check a deck before the talk](docs/how-to/check-a-deck.md).
+
 ### The options of a deck
 
 Write an option in the deck to apply it to each slide:
@@ -482,6 +495,12 @@ window gives each problem, with a link to its step. See
 [Check that a deck fits the screen](docs/how-to/check-the-layout.md) and
 [the layout check](docs/reference/layout-check.md).
 
+`mix expresso deck.exs --check` checks a deck with no browser window, and exits with the
+status 1 for a problem. `--check=layout` also runs the layout check in a headless Chrome or
+Chromium, and `--check=a11y` also runs axe-core at each step and in each view. See
+[Check a deck before the talk](docs/how-to/check-a-deck.md) and
+[the check option](docs/reference/check-option.md).
+
 ### The custom properties of a theme
 
 A theme can set these custom properties:
@@ -554,6 +573,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Show the parts of a whole in a treemap or a sunburst](docs/how-to/show-parts-of-a-whole-in-a-treemap-or-a-sunburst.md)
 - [Show code on a slide](docs/how-to/show-code.md)
 - [Check that a deck fits the screen](docs/how-to/check-the-layout.md)
+- [Check a deck before the talk](docs/how-to/check-a-deck.md)
 - [Style one slide or one element](docs/how-to/style-one-slide.md)
 - [Move a part of a diagram to another part](docs/how-to/move-a-diagram-part.md)
 - [Point at a part of a slide](docs/how-to/point-at-a-part-of-a-slide.md)
@@ -588,6 +608,7 @@ deck and of a slide:
 - [The css option](docs/reference/css-option.md)
 - [The goto option](docs/reference/goto-option.md)
 - [The layout check](docs/reference/layout-check.md)
+- [The check option](docs/reference/check-option.md)
 - [The class option](docs/reference/class-option.md)
 - [The template option](docs/reference/template-option.md)
 - [The root option](docs/reference/root-option.md)

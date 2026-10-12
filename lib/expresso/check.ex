@@ -1,0 +1,142 @@
+defmodule Expresso.Check do
+  @moduledoc """
+  Runs `mix expresso <input> --check`, and writes a report of the problems of the deck
+
+  The check has three levels. Each level runs the checks of the level before
+  it, and it needs one more tool:
+
+  | Level | Option | Checks | Needs |
+  | --- | --- | --- | --- |
+  | `:basic` | `--check` | The render, the contrast of the theme, the size of the document, and the text for a screen reader | Nothing |
+  | `:layout` | `--check=layout` | Each element in the window, and each line of code on one line, at each step at 1920 × 1080 | Chrome or Chromium |
+  | `:a11y` | `--check=a11y` | The rules of axe-core at each step, and in the menu, the list of keys, the overview and the handout view | Chrome or Chromium, and axe-core |
+
+  `Expresso.Check.Document` gives the checks with no tool, and
+  `Expresso.Check.Browser` runs the checks in the browser. A problem makes the
+  exit status 1. A note does not.
+  """
+
+  alias Expresso.Check.{Browser, Document}
+
+  @typedoc "A level of the check"
+  @type level :: :basic | :layout | :a11y
+
+  @doc """
+  Check the deck of an input file, write the report, and return the exit status
+
+  With `output`, the function also writes the HTML to that file. The report
+  goes to the standard output, and an error goes to the standard error. The
+  exit status is 1 for a problem or an error, and 0 otherwise.
+  """
+  @spec run(Path.t(), Path.t() | nil, level()) :: 0 | 1
+  def run(input, output, level) do
+    case check(input, output, level) do
+      {:ok, report} ->
+        IO.write(report.text)
+        if report.problems == 0, do: 0, else: 1
+
+      {:error, message} ->
+        IO.puts(:stderr, message)
+        1
+    end
+  end
+
+  @doc """
+  Check the deck of an input file, and return the text of the report and the number of problems
+
+  The function writes the HTML to `output` when it is not `nil`. It writes
+  nothing else.
+  """
+  @spec check(Path.t(), Path.t() | nil, level()) ::
+          {:ok, %{text: String.t(), problems: non_neg_integer()}} | {:error, String.t()}
+  def check(input, output, level) do
+    with {:ok, tools} <- tools(level, input),
+         {:ok, deck} <- Expresso.load_file(input),
+         html = Expresso.Deck.render(deck),
+         :ok <- write(html, output),
+         {:ok, page} <- page(html, tools) do
+      checks = [Document.theme(deck), Document.size(html), Document.slides(html)]
+      problems = Enum.flat_map(checks, & &1.problems) ++ page_problems(page)
+      notes = Enum.flat_map(checks, & &1.notes)
+      {:ok, %{text: text(input, deck, level, page, notes, problems), problems: length(problems)}}
+    end
+  end
+
+  # Find each tool of the level before the render, so a missing tool gives
+  # its error at once.
+  defp tools(:basic, _input), do: {:ok, nil}
+
+  defp tools(:layout, _input) do
+    with {:ok, browser} <- Browser.find(), do: {:ok, {browser, nil}}
+  end
+
+  defp tools(:a11y, input) do
+    directories = if input == "-", do: [File.cwd!()], else: [File.cwd!(), Path.dirname(input)]
+
+    with {:ok, browser} <- Browser.find(),
+         {:ok, axe} <- Browser.find_axe(directories),
+         do: {:ok, {browser, axe}}
+  end
+
+  defp write(_html, nil), do: :ok
+
+  # sobelow_skip ["Traversal"]
+  defp write(html, output) do
+    case File.write(output, html) do
+      :ok -> :ok
+      {:error, reason} -> {:error, "Couldn't write output file: #{:file.format_error(reason)}"}
+    end
+  end
+
+  defp page(_html, nil), do: {:ok, nil}
+  defp page(html, {browser, axe}), do: Browser.run(html, browser, axe)
+
+  defp page_problems(nil), do: []
+
+  defp page_problems(page) do
+    accessibility =
+      Enum.map(page.accessibility || [], fn finding ->
+        "#{finding["where"]}: #{finding["rule"]}, #{finding["help"]}: " <>
+          Enum.join(finding["targets"], ", ")
+      end)
+
+    page.layout ++ accessibility
+  end
+
+  defp text(input, deck, level, page, notes, problems) do
+    [
+      "Check of #{input}: #{length(deck.slides)} #{plural(length(deck.slides), "slide")}\n",
+      ran(level, page),
+      section("Notes", notes),
+      section("Problems", problems),
+      "\n",
+      summary(problems)
+    ]
+    |> IO.iodata_to_binary()
+  end
+
+  defp ran(:basic, _page),
+    do: "Checks: the render, the theme and the text for a screen reader\n"
+
+  defp ran(:layout, page),
+    do:
+      "Checks: the render, the theme, the text for a screen reader, and the layout at #{size(page)}\n"
+
+  defp ran(:a11y, page),
+    do:
+      "Checks: the render, the theme, the text for a screen reader, the layout at #{size(page)}, " <>
+        "and axe-core at each step and in each view\n"
+
+  defp size(page), do: "#{page.width} × #{page.height}"
+
+  defp section(_title, []), do: []
+
+  defp section(title, lines),
+    do: ["\n", title, ":\n", Enum.map(lines, &["  - ", &1, "\n"])]
+
+  defp summary([]), do: "No problems.\n"
+  defp summary(problems), do: "#{length(problems)} #{plural(length(problems), "problem")}.\n"
+
+  defp plural(1, word), do: word
+  defp plural(_count, word), do: word <> "s"
+end

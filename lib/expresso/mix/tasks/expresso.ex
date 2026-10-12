@@ -6,6 +6,7 @@ defmodule Mix.Tasks.Expresso do
 
       $ mix expresso <input> [output]
       $ mix expresso <input> [output] --watch [--port <port>]
+      $ mix expresso <input> [output] --check[=layout | =a11y]
 
   `<input>` is the Elixir script of the deck, or `-` for the standard input.
   The script returns an `Expresso.Deck` struct, or a module that uses the DSL
@@ -26,11 +27,31 @@ defmodule Mix.Tasks.Expresso do
   keeps the last good document. The watch mode needs an input file. Stop it
   with Ctrl-C.
 
+  ## Check mode
+
+  With `--check`, the task renders the deck, checks it, and writes a report
+  to the standard output. The exit status is 1 when the report has a problem,
+  so a CI job can run the check. With `[output]`, the task also writes the
+  document to that file. Each level runs the checks of the level before it:
+
+    * `--check` - the render, the contrast of the theme, and the text for a
+      screen reader. It needs no other tool.
+    * `--check=layout` - also the layout check at each step, in a headless
+      Chrome or Chromium at 1920 × 1080. Give the path of the browser in
+      `EXPRESSO_CHROMIUM` when the task does not find it.
+    * `--check=a11y` - also the rules of axe-core at each step and in each
+      view. Run `npm install --save-dev axe-core` in the directory of the
+      deck, or give the path of `axe.min.js` in `EXPRESSO_AXE`.
+
+  `docs/how-to/check-a-deck.md` tells how to install each tool.
+
   ## Options
 
     * `--watch` - serve the deck, and render it again after each change
     * `--port <port>` - the port for `--watch`, from 1 to 65535. The default
       is 4100.
+    * `--check`, `--check=layout`, `--check=a11y` - check the deck, and write
+      a report
     * `-h`, `--help` - show this help
     * `--version` - show the version of Expresso
 
@@ -41,7 +62,8 @@ defmodule Mix.Tasks.Expresso do
   ## Exit status
 
   The task writes the usage text and each error message to the standard
-  error, and the exit status is then 1. When the standard output closes
+  error, and the exit status is then 1. With `--check`, a problem in the
+  report also gives the exit status 1. When the standard output closes
   before the task writes all the HTML, as for `| head`, the task stops with no
   message, and the exit status is 0.
   """

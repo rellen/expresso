@@ -144,7 +144,8 @@ defmodule Mix.Tasks.Expresso.Gifs do
       address: "?speaker",
       actions: ["t"]
     },
-    %{name: "layout-check", deck: "layout_check.exs", address: "?check", still: true}
+    %{name: "layout-check", deck: "layout_check.exs", address: "?check", still: true},
+    %{name: "check-deck", deck: "check_deck.exs", still: true}
   ]
 
   # The examples of "Present a deck" in README.md. The tour deck has ten
