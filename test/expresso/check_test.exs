@@ -170,6 +170,28 @@ defmodule Expresso.CheckTest do
       end
     end
 
+    test "a browser that does not end in its time is stopped, with an error", %{tmp_dir: dir} do
+      browser = Path.join(dir, "slow")
+      File.write!(browser, "#!/bin/sh\nsleep 30\n")
+      File.chmod!(browser, 0o755)
+
+      {time, result} =
+        :timer.tc(fn -> Browser.run("<body></body>", browser, nil, probe_timeout: 300) end)
+
+      assert {:error, message} = result
+      assert message =~ "did not end in 0 s"
+      assert time < 10_000_000
+    end
+
+    test "a browser that fails gives its exit status", %{tmp_dir: dir} do
+      browser = Path.join(dir, "failing")
+      File.write!(browser, "#!/bin/sh\nexit 3\n")
+      File.chmod!(browser, 0o755)
+
+      assert Browser.run("<body></body>", browser) ==
+               {:error, "The browser #{browser} stopped with the exit status 3."}
+    end
+
     test "a page with no result is an error" do
       assert {:error, "The page wrote no result." <> _} = Browser.result("<body></body>")
     end

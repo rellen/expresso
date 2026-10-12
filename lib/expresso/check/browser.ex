@@ -48,6 +48,12 @@ defmodule Expresso.Check.Browser do
   # fail.
   @budget 600_000
 
+  # The time in milliseconds that a run of the browser can take. A browser
+  # that does not end in this time is stopped, so a browser that waits for
+  # ever does not stop the command. The small page of the size needs less.
+  @probe_timeout 30_000
+  @timeout 600_000
+
   @doc """
   Find Chrome or Chromium
 
@@ -134,11 +140,14 @@ defmodule Expresso.Check.Browser do
 
   With `axe`, the path of `axe.min.js`, the page also runs axe-core. The
   function returns an error when the browser does not start, or when the page
-  writes no result.
+  writes no result. The option `:probe_timeout` gives the time in
+  milliseconds for the small page of the size, 30 000 by default, and
+  `:timeout` gives the time for the check, 600 000 by default.
   """
-  @spec run(String.t(), Path.t(), Path.t() | nil) :: {:ok, result()} | {:error, String.t()}
+  @spec run(String.t(), Path.t(), Path.t() | nil, keyword()) ::
+          {:ok, result()} | {:error, String.t()}
   # sobelow_skip ["Traversal"]
-  def run(html, browser, axe \\ nil) do
+  def run(html, browser, axe \\ nil, opts \\ []) do
     directory =
       Path.join(System.tmp_dir!(), "expresso-check-#{System.unique_integer([:positive])}")
 
@@ -148,7 +157,13 @@ defmodule Expresso.Check.Browser do
       page = Path.join(directory, "deck.html")
       File.write!(page, with_axe(html, axe))
       url = "file://#{page}?" <> if(axe, do: "check=a11y", else: "check")
-      measure(browser, url, directory, {@width, @height})
+
+      timeouts = {
+        Keyword.get(opts, :probe_timeout, @probe_timeout),
+        Keyword.get(opts, :timeout, @timeout)
+      }
+
+      measure(browser, url, directory, {@width, @height}, timeouts)
     after
       File.rm_rf(directory)
     end
@@ -185,7 +200,7 @@ defmodule Expresso.Check.Browser do
   # writes its size, and the window grows by the difference. Then run the
   # check one time in a window of that size.
   # sobelow_skip ["Traversal"]
-  defp measure(browser, url, directory, {width, height} = window) do
+  defp measure(browser, url, directory, {width, height} = window, {probe_timeout, timeout}) do
     probe = Path.join(directory, "size.html")
 
     File.write!(
@@ -193,17 +208,17 @@ defmodule Expresso.Check.Browser do
       "<body><script>document.body.dataset.size = innerWidth + \" \" + innerHeight</script></body>"
     )
 
-    with {:ok, dom} <- browse(browser, "file://#{probe}", directory, window),
+    with {:ok, dom} <- browse(browser, "file://#{probe}", directory, window, probe_timeout),
          [w, h] <- Regex.run(~r/data-size="(\d+) (\d+)"/, dom, capture: :all_but_first) do
       larger = {width + @width - String.to_integer(w), height + @height - String.to_integer(h)}
-      with {:ok, dom} <- browse(browser, url, directory, larger), do: result(dom)
+      with {:ok, dom} <- browse(browser, url, directory, larger, timeout), do: result(dom)
     else
       {:error, _message} = error -> error
       nil -> {:error, "The browser #{browser} did not run the script of a page."}
     end
   end
 
-  defp browse(browser, url, directory, {width, height}) do
+  defp browse(browser, url, directory, {width, height}, timeout) do
     args = [
       "--headless",
       "--no-sandbox",
@@ -219,14 +234,47 @@ defmodule Expresso.Check.Browser do
     ]
 
     # The browser writes its own log to the standard error. The shell drops
-    # that log, so the output of the command holds only the report.
-    case System.cmd("sh", ["-c", ~s(exec "$0" "$@" 2>/dev/null), browser | args]) do
-      {dom, 0} -> {:ok, dom}
-      {_dom, status} -> {:error, "The browser #{browser} stopped with the exit status #{status}."}
+    # that log, so the output of the command holds only the document. The
+    # shell starts the browser in its own process, so `kill` stops it.
+    port =
+      Port.open({:spawn_executable, System.find_executable("sh")}, [
+        :binary,
+        :exit_status,
+        args: ["-c", ~s(exec "$0" "$@" 2>/dev/null), browser | args]
+      ])
+
+    {:os_pid, pid} = Port.info(port, :os_pid)
+    deadline = System.monotonic_time(:millisecond) + timeout
+    collect(port, %{pid: pid, browser: browser, deadline: deadline, timeout: timeout}, [])
+  end
+
+  # Read the output of the browser until it exits, or until the time ends.
+  defp collect(port, run, output) do
+    wait = max(run.deadline - System.monotonic_time(:millisecond), 0)
+
+    receive do
+      {^port, {:data, data}} ->
+        collect(port, run, [output, data])
+
+      {^port, {:exit_status, 0}} ->
+        {:ok, IO.iodata_to_binary(output)}
+
+      {^port, {:exit_status, status}} ->
+        {:error, "The browser #{run.browser} stopped with the exit status #{status}."}
+    after
+      wait ->
+        System.cmd("kill", ["-9", Integer.to_string(run.pid)])
+
+        receive do
+          {^port, {:exit_status, _status}} -> :ok
+        after
+          5_000 -> :ok
+        end
+
+        {:error,
+         "The browser #{run.browser} did not end in #{div(run.timeout, 1000)} s. Give a " <>
+           "different browser in EXPRESSO_CHROMIUM, such as the headless shell of Playwright."}
     end
-  rescue
-    error in ErlangError ->
-      {:error, "The browser #{browser} did not start: #{Exception.message(error)}"}
   end
 
   # The element of the result. The presenter script holds the text

@@ -115,6 +115,8 @@ Problems:
 ## The time
 
 `--check` takes the time of a render. A browser level adds the start of the browser two
-times: one time to measure its window, and one time for the check. For the Line 4 deck of
+times: one time to measure its window, and one time for the check. The check stops a
+browser that does not end in 30 s for the measure, or in 10 minutes for the check, and
+gives an error. Then give a different browser in `EXPRESSO_CHROMIUM`. For the Line 4 deck of
 `examples/line4`, with 28 slides, `--check` took 3 s, `--check=layout` took 5 s and
 `--check=a11y` took 49 s, after the compile.
