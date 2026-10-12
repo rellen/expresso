@@ -574,6 +574,18 @@ defmodule Expresso.Extension do
             doc:
               "Groups of lines in the form of reveal, one group in focus at each step. Each line shows at each step, and the lines that are not in focus dim. See docs/reference/code-element.md."
           ],
+          trailing_comments: [
+            type: :boolean,
+            default: true,
+            doc:
+              "false removes a comment at the end of a line that has code before it. A line that is only a comment stays. The default is true. See docs/reference/code-element.md."
+          ],
+          wrap: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Break a line that is too long for the slide, with its next parts indented under its start. The layout check then does not report the line. The default is false."
+          ],
           relative: [
             type: :boolean,
             default: false,

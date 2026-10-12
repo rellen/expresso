@@ -86,6 +86,11 @@ defmodule Expresso.Highlight do
   registers, such as `"elixir"`, `"js"`, `"rust"` or `"toml"`.
   `languages/0` returns each name. A language with no lexer, or no language, gives plain lines.
 
+  The option `trailing_comments: false` removes a comment at the end of a
+  line that has code before it, with the white space before the comment. A
+  line that is only a comment stays. A text with no lexer keeps its comments,
+  because only a lexer finds them.
+
   Each fragment starts with a `span` element and ends with one, and the last
   `span` holds the line break. Floki removes a text node of white space only,
   so the white space of a template around a fragment does not join the text
@@ -94,10 +99,12 @@ defmodule Expresso.Highlight do
       iex> Expresso.Highlight.lines("a < 1", nil)
       ["<span>a &lt; 1\n</span>"]
   """
-  @spec lines(String.t(), String.t() | nil) :: [String.t()]
-  def lines(text, nil), do: text |> String.split("\n") |> Enum.map(&plain/1)
+  @spec lines(String.t(), String.t() | nil, keyword()) :: [String.t()]
+  def lines(text, language, opts \\ [])
 
-  def lines(text, language) do
+  def lines(text, nil, _opts), do: text |> String.split("\n") |> Enum.map(&plain/1)
+
+  def lines(text, language, opts) do
     start_lexers()
 
     case Makeup.Registry.fetch_lexer_by_name(language) do
@@ -110,6 +117,7 @@ defmodule Expresso.Highlight do
         |> Enum.map(&flatten_value/1)
         |> Makeup.Lexer.split_into_lines()
         |> Enum.drop(-1)
+        |> Enum.map(&comments(&1, Keyword.get(opts, :trailing_comments, true)))
         |> Enum.map(&line/1)
 
       :error ->
@@ -199,6 +207,24 @@ defmodule Expresso.Highlight do
   defp text_of(char) when is_integer(char), do: <<char::utf8>>
   defp text_of({_type, _meta, value}), do: text_of(value)
   defp text_of(values) when is_list(values), do: Enum.map_join(values, &text_of/1)
+
+  # The tokens of a line without a comment at its end. Each type of comment of
+  # Makeup starts with `comment`, such as `:comment_single`.
+  defp comments(tokens, true), do: tokens
+
+  defp comments(tokens, false) do
+    {tail, head} =
+      tokens |> Enum.reverse() |> Enum.split_while(&(comment?(&1) or blank?(&1)))
+
+    if Enum.any?(tail, &comment?/1) and Enum.any?(head, &(not comment?(&1) and not blank?(&1))),
+      do: head |> Enum.drop_while(&blank?/1) |> Enum.reverse(),
+      else: tokens
+  end
+
+  defp comment?({type, _meta, _value}),
+    do: type |> Atom.to_string() |> String.starts_with?("comment")
+
+  defp blank?({_type, _meta, value}), do: String.trim(value) == ""
 
   # A plain line is one `span`, as a line of a lexer is a sequence of them.
   defp plain(text),

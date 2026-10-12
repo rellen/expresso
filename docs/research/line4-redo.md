@@ -118,7 +118,7 @@ handout view. Two images make 2 MB of the 3.9 MB.
 
 ### 5. A real line of code is too long for a slide
 
-**Kind:** sharp edge.
+**Kind:** sharp edge. The code element now takes `trailing_comments false` and `wrap true`.
 
 The lines of the factory page have up to 190 characters, with a comment at the end. At a
 size that a room can read, `?check` reported a broken line on six slides.

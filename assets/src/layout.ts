@@ -230,7 +230,10 @@ function measure(slide: HTMLElement, number: number, step: number): Problem[] {
       });
     }
   }
-  for (const code of elements.filter((each) => each.matches(".code"))) {
+  // A code element with `wrap` breaks its long lines on purpose.
+  for (const code of elements.filter(
+    (each) => each.matches(".code") && !each.matches(".code-wrap"),
+  )) {
     const pre = code.querySelector("pre");
     const lineHeight =
       pre === null ? 0 : parseFloat(getComputedStyle(pre).lineHeight);

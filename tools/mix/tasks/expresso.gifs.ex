@@ -135,6 +135,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "theme-map", deck: "theme_map.exs", actions: ["j"]},
     %{name: "project-root", deck: "project_root.exs", actions: ["j"]},
     %{name: "code-text-groups", deck: "code_text_groups.exs", actions: ["j"]},
+    %{name: "code-long-lines", deck: "code_long_lines.exs", still: true},
     %{name: "css-files", deck: "css_files.exs", actions: ["j"]},
     %{name: "theme-variants", deck: "theme_variants.exs", actions: ["t"]},
     %{

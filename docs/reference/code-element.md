@@ -30,6 +30,8 @@ end
 | `reveal` | Line numbers, ranges and texts, such as `[10..12, 13..20]` or `[[from: "def start(", to: "end"]]` | Each group of lines shows at its own step. See [the groups](#the-groups) and [the overlay options](overlay-options.md). |
 | `dim` | `true` or `false` | Each group dims when a later group shows. |
 | `highlight` | Groups in the form of `reveal` | Each line shows at each step. Each group is in focus at its own step, and the other lines dim. |
+| `trailing_comments` | `true` or `false` | `false` removes a comment at the end of a line of code. See [long lines](#long-lines). The default is `true`. |
+| `wrap` | `true` or `false` | Break a long line with its next parts indented. See [long lines](#long-lines). The default is `false`. |
 | `relative` | `true` or `false` | Count the numbers of `reveal` and `highlight` from the first line of the excerpt. The default is `false`. |
 | `whole_first` | `true` or `false` | With `highlight`, the whole code shows in full color for one step before the first group. The default is `false`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
@@ -141,6 +143,18 @@ tell. With `relative true`, a number counts from the first line of the excerpt, 
 that line. Texts are found inside the text of the element, with the rules of
 [lines from a text](#lines-from-a-text): the `from` text must be in it one time, and the
 `to` text must come after it. The forms can mix in one option.
+
+## Long lines
+
+A line that is too long for the element breaks at the edge. Two options help:
+
+| Option | Effect |
+| --- | --- |
+| `trailing_comments false` | The lexer of the language finds each comment. A comment at the end of a line that has code before it goes, with the white space before it. A line that is only a comment stays. A code element with no lexer keeps each comment. |
+| `wrap true` | The element gets the class `code-wrap`, and each line gets `--indent`, the width of its white space at the start. A tab counts as 8 characters. The next parts of a broken line start 4 characters further in than the text of the line. `?check` does not report the lines of the element. |
+
+The two options change only the slide. `lines`, the groups of `reveal` and `highlight`,
+and the texts of `from` and `to` still read the text of the file.
 
 ## The numbers of the lines
 

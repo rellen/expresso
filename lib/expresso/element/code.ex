@@ -84,6 +84,8 @@ defmodule Expresso.Element.Code do
     :easing,
     dim: false,
     relative: false,
+    trailing_comments: true,
+    wrap: false,
     line_numbers: false,
     whole_first: false,
     first: 1,
@@ -521,20 +523,38 @@ defmodule Expresso.Element.Code do
   def get_assigns(code) do
     %__MODULE__{text: text, lang: lang, elements: groups, first: first} = code
 
+    source = String.replace_suffix(text, "\n", "")
+    indents = source |> String.split("\n") |> Enum.map(&indent/1)
+
     lines =
-      text
-      |> String.replace_suffix("\n", "")
-      |> Expresso.Highlight.lines(lang)
+      source
+      |> Expresso.Highlight.lines(lang, trailing_comments: code.trailing_comments)
+      |> Enum.zip(indents)
       |> Enum.with_index(first)
-      |> Enum.map(fn {html, number} -> {number, html, attributes(groups, number)} end)
+      |> Enum.map(fn {{html, indent}, number} ->
+        {number, html, attributes(groups, number) ++ wrap_style(code.wrap, indent)}
+      end)
 
     %{
       lines: lines,
       lang: lang,
+      wrap: code.wrap,
       numbers: width(code.line_numbers, lines),
       overlay: Expresso.Overlay.Render.attributes(code)
     }
   end
+
+  # The width of the white space at the start of a line, in characters. A tab
+  # is 8 characters wide, as the `tab-size` of the browser.
+  defp indent(line) do
+    [space] = Regex.run(~r/^[ \t]*/, line)
+    space |> String.graphemes() |> Enum.map(&if(&1 == "\t", do: 8, else: 1)) |> Enum.sum()
+  end
+
+  # A line of a code element with `wrap` gets its indent, and the style sheet
+  # indents the next parts of a broken line under its start.
+  defp wrap_style(true, indent), do: [{"style", "--indent: #{indent}ch"}]
+  defp wrap_style(false, _indent), do: []
 
   defp width(false, _lines), do: nil
   defp width(true, lines), do: lines |> List.last() |> elem(0) |> Integer.digits() |> length()
@@ -562,11 +582,16 @@ defmodule Expresso.Element.Code do
   # sobelow_skip ["XSS.Raw"]
   def render(assigns) do
     temple do
-      div class: Expresso.Element.classes("code", assigns[:class]),
+      div class:
+            Expresso.Element.classes(
+              if(@wrap, do: "code code-wrap", else: "code"),
+              assigns[:class]
+            ),
           data_language: @lang,
           rest!: @overlay do
         pre do
-          code class: "highlight", style: @numbers && "--line-number-width: #{@numbers}ch" do
+          code class: "highlight",
+               style: @numbers && "--line-number-width: #{@numbers}ch; --has-numbers: 1" do
             for {number, html, attributes} <- @lines do
               span class: "line", rest!: attributes do
                 if @numbers do
