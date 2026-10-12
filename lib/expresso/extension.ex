@@ -887,6 +887,11 @@ defmodule Expresso.Extension do
           "CSS class names for the slide, such as \"dense\". The present view and each page of the handout view get them. See docs/reference/class-option.md."
       ],
       heading: [type: :string, doc: "The heading that the slide template shows."],
+      sr_heading: [
+        type: :boolean,
+        doc:
+          "false gives the slide no hidden heading. A slide with no h1 otherwise gets an h1 that only a screen reader reads, with the name of the slide. See docs/reference/accessibility.md."
+      ],
       section: [
         type: :string,
         doc:

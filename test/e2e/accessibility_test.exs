@@ -117,6 +117,15 @@ defmodule Expresso.E2E.AccessibilityTest do
     assert {"handout view", violations(page)} == {"handout view", []}
   end
 
+  test "a slide with no heading has a hidden h1 with its name", %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(Deck, tmp_dir))
+    hidden = "document.querySelector('#slide-3 h1.slide-hidden-heading')"
+
+    assert js(page, "#{hidden}.textContent") == "numbers"
+    assert js(page, "#{hidden}.getBoundingClientRect().width") <= 1
+    assert js(page, "document.querySelectorAll('#slide-1 h1').length") == 1
+  end
+
   test "the live region tells the slide and the step after each move", %{
     page: page,
     tmp_dir: tmp_dir

@@ -48,6 +48,26 @@ Examples.Accessible
 
 ![The deck moves to the second slide, then the menu opens and its cursor moves to the third slide](https://raw.githubusercontent.com/rellen/expresso/media/accessible.gif)
 
+### A slide with no heading
+
+A screen reader can move from heading to heading. A slide with no `h1`, such as a slide with
+only a picture, gets an `h1` that only a screen reader reads. Its text is the name of the
+slide, or "Slide 4 of 9" for a slide with no name. A slide template that writes its title in
+an `h2` gets the hidden `h1` too.
+
+When the hidden heading adds nothing, such as on a slide between two parts of the talk,
+give `sr_heading false`:
+
+```elixir
+slide "pause" do
+  sr_heading false
+  image "photo.jpg"
+end
+```
+
+Give the deck a `name` too. The browser and a screen reader show it as the title of the
+document. A deck with no name takes the heading of its first slide as its title.
+
 ## Name the steps
 
 The `labels` option of a slide names its steps. The menu shows each name, and a screen

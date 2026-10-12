@@ -254,11 +254,11 @@ defmodule ExpressoTest do
       end
     end
 
-    test "writes an empty title, and no header" do
+    test "gets the title Slides, and writes no header" do
       document =
         NoNameDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
 
-      assert document |> Floki.find("title") |> Floki.text() == ""
+      assert document |> Floki.find("title") |> Floki.text() == "Slides"
       assert Floki.find(document, ".screen span.header") == []
       assert document |> Floki.find(".screen .text-area") |> Floki.text() =~ "a deck with no name"
     end
@@ -270,7 +270,7 @@ defmodule ExpressoTest do
         |> Expresso.Deck.render()
         |> Floki.parse_document!()
 
-      assert document |> Floki.find("title") |> Floki.text() == ""
+      assert document |> Floki.find("title") |> Floki.text() == "Slides"
       assert Floki.find(document, ".screen span.header") == []
     end
   end

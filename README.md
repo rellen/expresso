@@ -341,8 +341,10 @@ See [Move elements from one slide to the next](docs/how-to/move-elements-between
 A screen reader reads the name of each slide when the presenter moves to it, such as
 "Slide 2 of 3: A restart", and the step at each move inside a slide. The views are in a
 `main` landmark, each slide is a group with the role description "slide", and the menu is
-a list of options that a screen reader reads. Give each slide a `heading`, each picture
-and each diagram a text, each video its captions, and the deck its `lang`. See [Make a deck accessible](docs/how-to/make-a-deck-accessible.md) and
+a list of options that a screen reader reads. A slide with no `h1` gets a hidden one with
+its name, so a screen reader can move from slide to slide by heading. Give each slide a
+`heading`, each picture and each diagram a text, each video its captions, and the deck its
+`name` and `lang`. Give `dim_contrast 4.5` for small dimmed text. See [Make a deck accessible](docs/how-to/make-a-deck-accessible.md) and
 [The accessibility of a deck](docs/reference/accessibility.md).
 
 ### The address

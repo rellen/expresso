@@ -178,6 +178,32 @@ defmodule Expresso.Renderer do
 
   # The name of a slide for a screen reader, such as "Slide 3 of 12: Supervisors"
   # or, on a page of the handout view, "Slide 3 of 12, step 2 of 4: Supervisors".
+  # The text of the hidden h1 of a slide: nil when the body of the slide has an
+  # h1, or when the slide gives `sr_heading false`. The text is the heading,
+  # the name or the number of the slide.
+  defp hidden_heading(deck, slide, body) do
+    cond do
+      slide.metadata[:sr_heading] == false ->
+        nil
+
+      body |> Phoenix.HTML.safe_to_string() |> String.match?(~r/<h1[\s>]/) ->
+        nil
+
+      true ->
+        slide.metadata[:heading] || slide.name ||
+          "Slide #{slide.metadata.slide_number} of #{length(deck.slides)}"
+    end
+  end
+
+  # The title of the document: the name of the deck, or else the heading of
+  # its first slide. A screen reader reads the title first, so it is never
+  # empty.
+  defp document_title(%{name: name}) when is_binary(name) and name != "", do: name
+
+  defp document_title(deck) do
+    Enum.find_value(deck.slides, "Slides", & &1.metadata[:heading])
+  end
+
   defp slide_label(deck, slide, step) do
     position = "Slide #{slide.metadata.slide_number} of #{length(deck.slides)}"
 
@@ -256,13 +282,30 @@ defmodule Expresso.Renderer do
   # The three parts of a slide. The present view and the handout view show the
   # same parts, and each view gives its own container.
   defp slide_parts(assigns) do
+    body = Expresso.Template.render_slide_template(%{deck: assigns.deck, slide: assigns.slide})
+
+    assigns =
+      Map.merge(assigns, %{
+        body: body,
+        hidden_heading: hidden_heading(assigns.deck, assigns.slide, body)
+      })
+
     temple do
+      # A screen reader moves from heading to heading, so each slide gets an
+      # h1. A slide template that writes no h1 gets one that the style sheet
+      # hides from the eye.
+      if @hidden_heading do
+        h1 class: "slide-hidden-heading" do
+          @hidden_heading
+        end
+      end
+
       div style: "width: 100%; flex-grow: 0; display: flex;justify-content: center;" do
         c(&Expresso.Template.render_deck_template(:header, &1), deck: @deck, slide: @slide)
       end
 
       div style: "width: 100%; flex-grow: 1; display: flex; justify-content: center;" do
-        c(&Expresso.Template.render_slide_template/1, deck: @deck, slide: @slide)
+        @body
       end
 
       # The footnotes of the slide go under the slide template, so each
@@ -562,9 +605,9 @@ defmodule Expresso.Renderer do
           meta charset: "utf-8"
 
           # A deck has no name when the DSL gives no `name` option, or when
-          # `Expresso.Deck.new/3` takes `nil`. The `title` element is necessary,
-          # so the renderer writes it with no text.
-          title(do: @deck.name || "")
+          # `Expresso.Deck.new/3` takes `nil`. The title then comes from the
+          # first heading of the deck.
+          title(do: document_title(@deck))
 
           style do
             Phoenix.HTML.raw(fonts())
