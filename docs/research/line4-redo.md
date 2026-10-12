@@ -108,7 +108,7 @@ the minimum of large text.
 
 ### 4. Each image is in the document many times
 
-**Kind:** could be better.
+**Kind:** could be better. The document now holds each large file one time.
 
 `screen.jpg` is 250 KB. The document holds it six times, as a data URI for each place that
 shows it, such as the slide, the fallback of the embed, the overview, the menu and the

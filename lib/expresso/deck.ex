@@ -141,6 +141,9 @@ defmodule Expresso.Deck do
   parses a document, so this function puts the doctype in front of the tree.
   Without the doctype a browser uses the quirks mode.
 
+  Each large data URI that the document holds more than one time stays in it
+  one time. `Expresso.Assets` gives the rules.
+
   Floki writes the tree with no indentation. The pretty printer of Floki puts a
   line break between two elements, and it does not know an inline element.
   A line break becomes a space, and the text of a deck then gets a space in
@@ -155,6 +158,7 @@ defmodule Expresso.Deck do
       |> Phoenix.HTML.safe_to_string()
       |> Floki.parse_document!()
       |> Floki.raw_html()
+      |> Expresso.Assets.dedupe()
 
     "<!DOCTYPE html>\n" <> body
   end

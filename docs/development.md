@@ -545,6 +545,8 @@ file. To take a later version:
 - `assets/src/media.ts`, `assets/src/video.ts` and `assets/src/audio.ts` — the media of the
   video element and of the audio element.
 - `assets/src/embed.ts` — the frames of the embed element.
+- `assets/src/assets.ts` — copies each large file back into the elements that
+  `Expresso.Assets` gave a reference.
 - `assets/test/interpreter.test.ts` — the test that runs the fixtures of the Elixir
   interpreter. "The fixtures of the interpreter" below tells how to write them again.
 - `assets/test/validate.ts` — examines a program of the presenter and a list of the

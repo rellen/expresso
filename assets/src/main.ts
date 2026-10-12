@@ -108,6 +108,10 @@ import {
   timeLeft,
 } from "./dom.ts";
 import { fromAddress, next } from "./scheme.ts";
+import { restore as restoreAssets } from "./assets.ts";
+
+// Each view gets its copy of the large files before the first render.
+restoreAssets(document);
 
 const deck = readDeck();
 const program = readProgram();
