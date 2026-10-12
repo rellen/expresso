@@ -24,20 +24,24 @@ defmodule Expresso.Check.Browser do
         }
 
   # The names of Chrome and Chromium on Linux and on macOS, in the order of
-  # the search.
-  @names ~w(chromium chromium-browser google-chrome google-chrome-stable chrome headless_shell chrome-headless-shell)
+  # the search. Chrome comes first: on Ubuntu, `chromium` can be a command
+  # that installs a snap, and that command does not end.
+  @names ~w(google-chrome google-chrome-stable chrome chrome-headless-shell headless_shell chromium chromium-browser)
   @mac_paths [
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium"
   ]
 
   # The browsers of Playwright, in its cache on Linux and on macOS. The headless
-  # shell comes first, because it starts faster.
+  # shell comes first, because it starts faster. The names of the files
+  # changed in Playwright 1.57, so each browser has an old and a new pattern.
   @playwright [
-    "~/.cache/ms-playwright/chromium_headless_shell-*/chrome-*/headless_shell",
-    "~/Library/Caches/ms-playwright/chromium_headless_shell-*/chrome-*/headless_shell",
-    "~/.cache/ms-playwright/chromium-*/chrome-linux/chrome",
-    "~/Library/Caches/ms-playwright/chromium-*/chrome-mac*/Chromium.app/Contents/MacOS/Chromium"
+    "~/.cache/ms-playwright/chromium_headless_shell-*/chrome-headless-shell-*/chrome-headless-shell",
+    "~/.cache/ms-playwright/chromium_headless_shell-*/chrome-linux/headless_shell",
+    "~/Library/Caches/ms-playwright/chromium_headless_shell-*/chrome-headless-shell-*/chrome-headless-shell",
+    "~/Library/Caches/ms-playwright/chromium_headless_shell-*/chrome-mac*/headless_shell",
+    "~/.cache/ms-playwright/chromium-*/chrome-linux*/chrome",
+    "~/Library/Caches/ms-playwright/chromium-*/chrome-mac*/*.app/Contents/MacOS/*"
   ]
 
   @width 1920
@@ -59,7 +63,9 @@ defmodule Expresso.Check.Browser do
 
   The variable `EXPRESSO_CHROMIUM` in `env` gives the path of the browser. Without
   it, the function looks for each usual name of the browser on the `PATH`, then
-  in the usual places of macOS, and then in the cache of Playwright.
+  in the usual places of macOS, and then in the cache of Playwright. Chrome
+  comes before Chromium, because `chromium` on Ubuntu can be a command that
+  installs a snap.
   """
   @spec find(%{String.t() => String.t()}) :: {:ok, Path.t()} | {:error, String.t()}
   def find(env \\ System.get_env()) do
@@ -79,7 +85,7 @@ defmodule Expresso.Check.Browser do
     found =
       Enum.find_value(@names, &System.find_executable/1) ||
         Enum.find(@mac_paths, &File.regular?/1) ||
-        Enum.find_value(@playwright, &(&1 |> Path.expand() |> Path.wildcard() |> List.last()))
+        playwright()
 
     if found,
       do: {:ok, found},
@@ -87,6 +93,19 @@ defmodule Expresso.Check.Browser do
         {:error,
          "This level of --check needs Chrome or Chromium. Install one of them, or give its " <>
            "path in EXPRESSO_CHROMIUM. docs/how-to/check-a-deck.md tells how."}
+  end
+
+  @doc """
+  Return the path of a browser in the cache of Playwright, or `nil`
+
+  The function prefers the headless shell, and the latest version of each
+  browser.
+  """
+  @spec playwright() :: Path.t() | nil
+  def playwright do
+    Enum.find_value(@playwright, fn pattern ->
+      pattern |> Path.expand() |> Path.wildcard() |> Enum.filter(&File.regular?/1) |> List.last()
+    end)
   end
 
   @doc """
