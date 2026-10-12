@@ -7,7 +7,7 @@ exits with the status 1 for a problem. For each value of the report, see
 
 ## Choose a level
 
-The check has three levels. Each level runs the checks of the level before it, and it needs
+The check has four levels. Each level runs the checks of the level before it, and it needs
 one more tool:
 
 | Command | Checks | Needs |
@@ -15,6 +15,7 @@ one more tool:
 | `mix expresso deck.exs --check` | The render, the contrast of the theme, and the text for a screen reader | Nothing |
 | `mix expresso deck.exs --check=layout` | Each element in the window, and each line of code on one line, at each step at 1920 × 1080 | Chrome or Chromium |
 | `mix expresso deck.exs --check=a11y` | The rules of axe-core at each step, and in the menu, the list of keys, the overview and the handout view | Chrome or Chromium, and axe-core |
+| `mix expresso deck.exs --check=browser` | The checks of `--check=a11y`, and the keys of the presenter: each step, each view, the focus and the errors of the script | Node, Playwright, axe-core, and the Hex package `playwright_ex` |
 
 Start with `--check`. Install the tools of a higher level when the deck is ready for the
 room. The binary takes the same options, such as `expresso deck.exs --check=a11y`.
@@ -85,6 +86,46 @@ The check looks for `node_modules/axe-core/axe.min.js` in the current directory,
 directory of the deck, and in each parent of them. To use a different copy, give its path
 in `EXPRESSO_AXE`.
 
+## Install Playwright for the browser check
+
+`--check=browser` opens the deck in the Chromium of [Playwright](https://playwright.dev),
+and uses the presenter as you do. It presses the key of the next step from the first step
+to the last step, and it opens and closes the menu, the list of keys, the overview and the
+handout view with their keys. It also runs the checks of `--check=a11y` in the same browser,
+so it needs no other Chrome.
+
+1. Install [Node](https://nodejs.org), and make sure that `node` is on the `PATH`.
+2. Go to the directory of the deck, or to a parent directory of it.
+3. Install the npm packages and the browser:
+
+   ```sh
+   npm install --save-dev playwright axe-core
+   npx playwright install chromium
+   ```
+
+4. In a Mix project, add the Hex package `playwright_ex` to the deps in `mix.exs`, and run
+   `mix deps.get`:
+
+   ```elixir
+   {:playwright_ex, "~> 0.14", only: :dev, runtime: false}
+   ```
+
+   The binary holds this package, so the binary needs no step 4.
+
+5. Run the check:
+
+   ```sh
+   mix expresso deck.exs --check=browser
+   ```
+
+The check looks for `node_modules/playwright/cli.js` as it looks for axe-core. To use a
+different copy, give its path in `EXPRESSO_PLAYWRIGHT`. To use a different browser than the
+Chromium of Playwright, give its path in `EXPRESSO_CHROMIUM`.
+
+A problem of the keys names the key and the step, such as
+`The keys: j at 2.1 shows 2.1, and not the next step 2.2`. A problem of the script gives
+the message of the error, such as `The script: TypeError: x is undefined`.
+
 ## Read a report
 
 This deck has a text in grey on a grey background:
@@ -139,8 +180,8 @@ The most frequent problem is dimmed text. To correct it, see
 
 ## Check a deck in a continuous integration job
 
-This job of GitHub Actions runs each level for a deck in a Mix project. The runner of
-GitHub has Chrome on its `PATH`:
+This job of GitHub Actions runs the accessibility check for a deck in a Mix project. The
+runner of GitHub has Chrome on its `PATH`:
 
 ```yaml
 jobs:
@@ -162,3 +203,12 @@ jobs:
 
 The job fails when the report has a problem. The step also writes `deck.html`, so a later
 step can publish it.
+
+For `--check=browser`, install Playwright and its Chromium in place of the step of
+axe-core, and add `playwright_ex` to the deps of the project:
+
+```yaml
+      - run: npm install --no-save playwright axe-core
+      - run: npx playwright install --with-deps chromium
+      - run: mix expresso deck.exs deck.html --check=browser
+```

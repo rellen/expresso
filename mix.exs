@@ -214,9 +214,11 @@ defmodule Expresso.MixProject do
       # therefore the dependency is present in `dev` too.
       {:stream_data, "~> 1.2", only: [:dev, :test], runtime: false},
 
-      # the browser tests of `mix test --only e2e` and the recorder of the GIFs
-      # in `tools/`. The client drives the Playwright driver of `package.json`.
-      {:playwright_ex, "~> 0.12", only: [:dev, :test]},
+      # the browser tests of `mix test --only e2e`, the recorder of the GIFs in
+      # `tools/` and `--check=browser`. The client drives the Playwright driver
+      # of `package.json`. It is optional, so a project that uses Expresso adds
+      # it only for `--check=browser`.
+      {:playwright_ex, "~> 0.12", optional: true},
 
       # the GIF encoder of the recorder, a NIF in Zig. Zigler compiles it with
       # the Zig of the toolchain.

@@ -147,7 +147,9 @@ defmodule Expresso.Check.Browser do
            "docs/how-to/check-a-deck.md tells how."}
   end
 
-  defp ancestors(directory) do
+  @doc false
+  @spec ancestors(Path.t()) :: [Path.t()]
+  def ancestors(directory) do
     case Path.dirname(directory) do
       ^directory -> [directory]
       parent -> [directory | ancestors(parent)]
@@ -188,13 +190,19 @@ defmodule Expresso.Check.Browser do
     end
   end
 
-  # Put axe-core into the document before the end of its `body`. A `</script`
-  # in the source of axe-core would close the element, so it gets a backslash,
-  # which JavaScript reads as the same text.
-  defp with_axe(html, nil), do: html
+  @doc """
+  Put axe-core into a document before the end of its `body`
+
+  `axe` is the path of `axe.min.js`, or `nil` for no change. A `</script` in
+  the source of axe-core would close the element, so it gets a backslash,
+  which JavaScript reads as the same text. `Expresso.Check.Session` also
+  calls this function.
+  """
+  @spec with_axe(String.t(), Path.t() | nil) :: String.t()
+  def with_axe(html, nil), do: html
 
   # sobelow_skip ["Traversal"]
-  defp with_axe(html, axe) do
+  def with_axe(html, axe) do
     source = axe |> File.read!() |> String.replace("</script", "<\\/script")
     [head, tail] = split_last(html, "</body>")
     IO.iodata_to_binary([head, "<script>", source, "</script></body>", tail])
@@ -310,16 +318,33 @@ defmodule Expresso.Check.Browser do
   """
   @spec result(String.t()) :: {:ok, result()} | {:error, String.t()}
   def result(dom) do
-    with [json] <- Regex.run(@result, dom, capture: :all_but_first),
-         {:ok, %{"width" => width, "height" => height, "layout" => layout} = value} <-
-           JSON.decode(json) do
-      {:ok,
-       %{width: width, height: height, layout: layout, accessibility: value["accessibility"]}}
-    else
-      _other ->
-        {:error,
-         "The page wrote no result. The script of the deck stopped, or the check did not " <>
-           "end in the time of the browser."}
+    case Regex.run(@result, dom, capture: :all_but_first) do
+      [json] -> decode(json)
+      nil -> no_result()
     end
   end
+
+  @doc """
+  Read the JSON of the element `check-result`
+
+      iex> Expresso.Check.Browser.decode(~s({"width":1920,"height":1080,"layout":["x"],"accessibility":[]}))
+      {:ok, %{width: 1920, height: 1080, layout: ["x"], accessibility: []}}
+  """
+  @spec decode(String.t()) :: {:ok, result()} | {:error, String.t()}
+  def decode(json) do
+    case JSON.decode(json) do
+      {:ok, %{"width" => width, "height" => height, "layout" => layout} = value} ->
+        {:ok,
+         %{width: width, height: height, layout: layout, accessibility: value["accessibility"]}}
+
+      _other ->
+        no_result()
+    end
+  end
+
+  defp no_result,
+    do:
+      {:error,
+       "The page wrote no result. The script of the deck stopped, or the check did not " <>
+         "end in the time of the browser."}
 end

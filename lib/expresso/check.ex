@@ -2,7 +2,7 @@ defmodule Expresso.Check do
   @moduledoc """
   Runs `mix expresso <input> --check`, and writes a report of the problems of the deck
 
-  The check has three levels. Each level runs the checks of the level before
+  The check has four levels. Each level runs the checks of the level before
   it, and it needs one more tool:
 
   | Level | Option | Checks | Needs |
@@ -10,16 +10,18 @@ defmodule Expresso.Check do
   | `:basic` | `--check` | The render, the contrast of the theme, the size of the document, and the text for a screen reader | Nothing |
   | `:layout` | `--check=layout` | Each element in the window, and each line of code on one line, at each step at 1920 × 1080 | Chrome or Chromium |
   | `:a11y` | `--check=a11y` | The rules of axe-core at each step, and in the menu, the list of keys, the overview and the handout view | Chrome or Chromium, and axe-core |
+  | `:browser` | `--check=browser` | The checks of `:a11y` in Playwright, and the keys of the presenter: each step, each view, the focus and the errors of the script | Node, the npm packages `playwright` and `axe-core`, and the Hex package `playwright_ex` |
 
   `Expresso.Check.Document` gives the checks with no tool, and
-  `Expresso.Check.Browser` runs the checks in the browser. A problem makes the
+  `Expresso.Check.Browser` runs the checks in the browser.
+  `Expresso.Check.Session` runs the browser level in Playwright. A problem makes the
   exit status 1. A note does not.
   """
 
-  alias Expresso.Check.{Browser, Document}
+  alias Expresso.Check.{Browser, Document, Session}
 
   @typedoc "A level of the check"
-  @type level :: :basic | :layout | :a11y
+  @type level :: :basic | :layout | :a11y | :browser
 
   @doc """
   Check the deck of an input file, write the report, and return the exit status
@@ -54,7 +56,7 @@ defmodule Expresso.Check do
          {:ok, deck} <- Expresso.load_file(input),
          html = Expresso.Deck.render(deck),
          :ok <- write(html, output),
-         {:ok, page} <- page(html, tools) do
+         {:ok, page} <- page(html, deck, tools) do
       checks = [Document.theme(deck), Document.size(html), Document.slides(html)]
       problems = Enum.flat_map(checks, & &1.problems) ++ page_problems(page)
       notes = Enum.flat_map(checks, & &1.notes)
@@ -71,12 +73,18 @@ defmodule Expresso.Check do
   end
 
   defp tools(:a11y, input) do
-    directories = if input == "-", do: [File.cwd!()], else: [File.cwd!(), Path.dirname(input)]
-
     with {:ok, browser} <- Browser.find(),
-         {:ok, axe} <- Browser.find_axe(directories),
+         {:ok, axe} <- Browser.find_axe(directories(input)),
          do: {:ok, {browser, axe}}
   end
+
+  defp tools(:browser, input) do
+    with {:ok, tools} <- Session.find(directories(input)), do: {:ok, {:session, tools}}
+  end
+
+  # The directories where the check looks for the npm packages.
+  defp directories("-"), do: [File.cwd!()]
+  defp directories(input), do: [File.cwd!(), Path.dirname(input)]
 
   defp write(_html, nil), do: :ok
 
@@ -88,8 +96,9 @@ defmodule Expresso.Check do
     end
   end
 
-  defp page(_html, nil), do: {:ok, nil}
-  defp page(html, {browser, axe}), do: Browser.run(html, browser, axe)
+  defp page(_html, _deck, nil), do: {:ok, nil}
+  defp page(html, deck, {:session, tools}), do: Session.run(html, deck, tools)
+  defp page(html, _deck, {browser, axe}), do: Browser.run(html, browser, axe)
 
   defp page_problems(nil), do: []
 
@@ -100,7 +109,7 @@ defmodule Expresso.Check do
           Enum.join(finding["targets"], ", ")
       end)
 
-    page.layout ++ accessibility
+    page.layout ++ accessibility ++ Map.get(page, :session, [])
   end
 
   defp text(input, deck, level, page, notes, problems) do
@@ -126,6 +135,11 @@ defmodule Expresso.Check do
     do:
       "Checks: the render, the theme, the text for a screen reader, the layout at #{size(page)}, " <>
         "and axe-core at each step and in each view\n"
+
+  defp ran(:browser, page),
+    do:
+      "Checks: the render, the theme, the text for a screen reader, the layout at #{size(page)}, " <>
+        "axe-core at each step and in each view, and the keys of the presenter in Playwright\n"
 
   defp size(page), do: "#{page.width} × #{page.height}"
 

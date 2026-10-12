@@ -10,6 +10,7 @@ defmodule Expresso.CheckTest do
 
   doctest Expresso.Check.Document
   doctest Expresso.Check.Browser
+  doctest Expresso.Check.Session
 
   @moduletag :tmp_dir
 
@@ -190,6 +191,16 @@ defmodule Expresso.CheckTest do
 
       assert Browser.run("<body></body>", browser) ==
                {:error, "The browser #{browser} stopped with the exit status 3."}
+    end
+
+    test "the browser level tells how to install the npm package playwright", %{tmp_dir: dir} do
+      assert {:error, message} = Expresso.Check.Session.find(["/"], %{})
+      assert message =~ "npm install --save-dev playwright axe-core"
+
+      assert {:error, message} =
+               Expresso.Check.Session.find([dir], %{"EXPRESSO_PLAYWRIGHT" => "/none/cli.js"})
+
+      assert message =~ "EXPRESSO_PLAYWRIGHT gives /none/cli.js"
     end
 
     test "a page with no result is an error" do

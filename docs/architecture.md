@@ -235,11 +235,17 @@ check in this sequence:
 2. Load the deck with `Expresso.load_file/1`, and render it. With an output path, write
    the document.
 3. Run the checks of `Expresso.Check.Document` on the deck and on its HTML.
-4. For a browser level, run `Expresso.Check.Browser.run/3`. It writes a copy of the
+4. For `--check=layout` and `--check=a11y`, run `Expresso.Check.Browser.run/4`. It writes a copy of the
    document into a temporary directory, with axe-core before the end of the `body` for
    `--check=a11y`. A headless Chrome opens the copy with `?check` or `?check=a11y`, and
    it writes the document after the check with `--dump-dom`.
 5. Read the element `check-result` of that document, and write the report.
+
+`--check=browser` replaces step 4 with `Expresso.Check.Session.run/4`. It starts the
+Playwright driver of the npm package `playwright` with `playwright_ex`, and it opens the copy
+in a page of 1920 × 1080. The page runs `?check=a11y`. Then the session opens the copy again,
+presses the key of the next step at each step, and opens and closes each view with its key.
+A script that runs before the script of the page keeps each error and each `console.error`.
 
 These are the reasons for its design:
 
@@ -256,6 +262,13 @@ These are the reasons for its design:
 - **A small page measures the window.** A headless Chrome keeps a part of its window for
   itself, and the part changes with the version. The first run opens a page that writes its
   size, and the second run makes the window larger by the difference.
+- **The browser level presses real keys.** The other levels show each step and each view
+  with `apply`, so they do not test the program of the keys, the focus or the errors of the
+  script. The session finds each key in the program of the presenter, and it presses the key
+  on the keyboard of the page, so the key goes to the element with the focus.
+- **`playwright_ex` is an optional dependency.** A project that uses Expresso fetches it only
+  when it adds it. The binary holds it. The module of the session tells the compiler that
+  the modules of `playwright_ex` can be absent.
 - **axe-core reads the slide at each step, and the document in each view.** The rules of
   the whole document run one time for each view. A run on the slide alone is faster, and
   the check of the Line 4 deck took 49 s and not 200 s.

@@ -8,6 +8,7 @@ can run it.
 mix expresso <input> [output] --check
 mix expresso <input> [output] --check=layout
 mix expresso <input> [output] --check=a11y
+mix expresso <input> [output] --check=browser
 ```
 
 For the steps and the installation of the tools, see
@@ -20,7 +21,7 @@ For the steps and the installation of the tools, see
 | `<input>` | The deck file, or `-` for the standard input. The check needs it. |
 | `[output]` | The file for the HTML. Without it, the check writes no HTML. `-` is an error, because the report goes to the standard output. |
 
-`--check` with `--watch` is an error, and so is a level that is not `layout` or `a11y`.
+`--check` with `--watch` is an error, and so is a level that is not `layout`, `a11y` or `browser`.
 
 ## The levels
 
@@ -29,6 +30,7 @@ For the steps and the installation of the tools, see
 | `--check` | The render, the theme, the size of the document, and the text for a screen reader |
 | `--check=layout` | The checks of `--check`, and [the layout check](layout-check.md) at each step |
 | `--check=a11y` | The checks of `--check=layout`, and the rules of axe-core at each step and in each view |
+| `--check=browser` | The checks of `--check=a11y` in Playwright, and the keys of the presenter |
 
 ### The checks with no tool
 
@@ -66,12 +68,42 @@ the rule, and a CSS selector for each element that fails. The check gives each r
 element one time, at the first step or view that has it. The time of each animation is
 zero, so axe-core reads the final color of each element.
 
+### The keys of the presenter
+
+`--check=browser` opens the document in the Chromium of Playwright, in a page of
+1920 × 1080 with reduced motion. First it runs the layout check and axe-core with
+`?check=a11y`, as `--check=a11y` does. Then it opens the document again, and it uses the
+keys of the list of keys:
+
+| Action | A problem when |
+| --- | --- |
+| Open the deck. | The present view does not show step 1 of slide 1. |
+| Press `j` at each step, to the last step. | The view does not show the next entry of the list of the steps. The check stops at the first such step. |
+| Press `Home`, then `m`, then `Escape`. | The menu does not open, does not take the focus, does not close, or keeps the focus. |
+| Press `/`, then `Escape`. | The list of keys does not open, does not take the focus, does not close, or keeps the focus. |
+| Press `o`, then `Escape`. | The overview does not open or does not close. |
+| Press `p`. | The handout view does not open. |
+
+The keys come from the program of the presenter, so the check presses the keys that the list
+of keys shows. A key changes the view in a frame of the browser, so the check waits up to
+2 s for each change.
+
+Each error of the script of the page, each rejected promise with no handler, and each call of
+`console.error` during these actions is a problem too, such as
+`The script: TypeError: x is undefined`.
+
 ## The tools
 
 | Variable | Gives | Without it |
 | --- | --- | --- |
 | `EXPRESSO_CHROMIUM` | The path of Chrome or Chromium | The check looks for `google-chrome`, `google-chrome-stable`, `chrome`, `chrome-headless-shell`, `headless_shell`, `chromium` and `chromium-browser` on the `PATH`, in this sequence. Then it looks for Chrome and Chromium in the folder `Applications` of macOS, and then in the cache of Playwright. |
 | `EXPRESSO_AXE` | The path of `axe.min.js` | The check looks for `node_modules/axe-core/axe.min.js` in the current directory, in the directory of the deck, and in each parent of them. |
+| `EXPRESSO_PLAYWRIGHT` | The path of `cli.js` of the npm package `playwright` | The check looks for `node_modules/playwright/cli.js` in the same directories as axe-core. |
+
+`--check=browser` also needs `node` on the `PATH`, the Chromium of Playwright, and the Hex
+package `playwright_ex`. Expresso gives `playwright_ex` as an optional dependency, so a Mix
+project adds it to its own deps. The binary holds it. With `EXPRESSO_CHROMIUM`, Playwright
+starts that browser in place of its own.
 
 The check finds each tool before it renders the deck. A missing tool gives an error that
 tells how to install it.
@@ -114,9 +146,10 @@ Problems:
 
 ## The time
 
-`--check` takes the time of a render. A browser level adds the start of the browser two
-times: one time to measure its window, and one time for the check. The check stops a
+`--check` takes the time of a render. `--check=layout` and `--check=a11y` add the start of
+the browser two times: one time to measure its window, and one time for the check.
+Playwright gives the page its size, so `--check=browser` starts its browser one time. The check stops a
 browser that does not end in 30 s for the measure, or in 10 minutes for the check, and
 gives an error. Then give a different browser in `EXPRESSO_CHROMIUM`. For the Line 4 deck of
 `examples/line4`, with 28 slides, `--check` took 3 s, `--check=layout` took 5 s and
-`--check=a11y` took 49 s, after the compile.
+`--check=a11y` took 49 s and `--check=browser` took 54 s, after the compile.
