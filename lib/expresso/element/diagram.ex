@@ -54,6 +54,7 @@ defmodule Expresso.Element.Diagram do
     :class,
     :src,
     :width,
+    :alt,
     :at,
     :steps,
     :el,
@@ -138,19 +139,26 @@ defmodule Expresso.Element.Diagram do
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from
-  `Expresso.Overlay.Render.attributes/1`. The key `svg` holds the SVG with
+  `Expresso.Overlay.Render.attributes/1`, and, with the `alt` option, the
+  role `img` and the name of the diagram. The key `svg` holds the SVG with
   the attributes of each part on its element. The function raises for a file
   that it cannot read, and for an `id` that the file does not hold.
   """
   @spec get_assigns(t()) :: map()
   def get_assigns(diagram) do
-    %__MODULE__{src: src, elements: parts, width: width} = diagram
+    %__MODULE__{src: src, elements: parts, width: width, alt: alt} = diagram
 
     %{
       svg: svg(src, parts),
-      overlay: Expresso.Overlay.Render.attributes(diagram) ++ width(width)
+      overlay: Expresso.Overlay.Render.attributes(diagram) ++ width(width) ++ alt(alt)
     }
   end
+
+  # A diagram with a text is one image for a screen reader, and the text of
+  # the SVG is then not read. Without a text, a screen reader reads the text
+  # of the SVG.
+  defp alt(nil), do: []
+  defp alt(alt), do: [{"role", "img"}, {"aria-label", alt}]
 
   defp width(nil), do: []
 

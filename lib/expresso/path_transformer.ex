@@ -107,8 +107,15 @@ defmodule Expresso.PathTransformer do
     {:ok, %Embed{embed | src: src, fallback: path(fallback, root)}}
   end
 
-  defp own(%Video{src: src, poster: poster} = video, root),
-    do: {:ok, %Video{video | src: path(src, root), poster: path(poster, root)}}
+  defp own(%Video{src: src, poster: poster, captions: captions} = video, root),
+    do:
+      {:ok,
+       %Video{
+         video
+         | src: path(src, root),
+           poster: path(poster, root),
+           captions: path(captions, root)
+       }}
 
   defp own(%Audio{src: src} = audio, root), do: {:ok, %Audio{audio | src: path(src, root)}}
 

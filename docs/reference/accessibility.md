@@ -64,14 +64,20 @@ part of the deck before the current step, from 0 to 100, as the width of the bar
 | Element | What a screen reader gets |
 | --- | --- |
 | `image` | The `alt` option as the `alt` attribute. Without it, the image is decorative. |
+| `diagram` | With the `alt` option, an `img` with that text as its name. Without it, the text of the SVG. |
 | `chart` | An `img` with the `title` option as its name, and a table of the values. |
 | `stat` | The whole value as one text, such as "$4.2M", and the `label` option. |
 | `icon` | Nothing for the drawing. The `label` option as text. |
 | `qr_code` | An `img` with the `title` option, or the text of the code, as its name. |
-| `video`, `audio`, `embed` | The `title` option as the name of the element. |
+| `video`, `audio`, `embed` | The `title` option as the name of the element. A video with the `captions` option has a `track` of captions. |
 | `callout` | A `note`, with the header as text. |
 | `math` | MathML, which a screen reader reads. |
 | An element of a later step | Nothing. The style sheet hides it with `visibility: hidden` until its step. |
+
+## The language
+
+The `html` element has the `lang` attribute from [the lang option](lang-option.md) of the
+deck, and the default is `en`. A screen reader selects its voice from it.
 
 ## The motion
 

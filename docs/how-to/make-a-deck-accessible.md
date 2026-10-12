@@ -61,6 +61,7 @@ A screen reader cannot see a picture, so give each one a text:
 | Element | Option | Example |
 | --- | --- | --- |
 | `image` | `alt` | `alt "A supervisor with three workers"` |
+| `diagram` | `alt` | `alt "A request goes from the browser to the server"` |
 | `chart` | `title` | `title "Orders for each month"` |
 | `stat` | `label` | `label "of the time, the service answers"` |
 | `icon` | `label` | `label "Expresso"` |
@@ -69,6 +70,67 @@ A screen reader cannot see a picture, so give each one a text:
 
 An image without `alt` is decorative, and a screen reader does not read it. Leave out `alt`
 only for an image that gives no information.
+
+## Describe a diagram
+
+A screen reader reads the text inside an SVG file, and that text is often a set of labels
+with no order. Give the diagram an `alt` option to replace it with one description:
+
+```elixir
+diagram "examples/flow.svg" do
+  alt "A request goes from the browser to the server, and back"
+end
+```
+
+## Add captions to a video
+
+Write the captions in a WebVTT file, and give its path in the `captions` option. The
+browser shows each line at its time:
+
+```elixir
+defmodule Examples.VideoCaptions do
+  use Expresso
+
+  slide "the demonstration" do
+    heading "The demonstration"
+
+    video "examples/animations/clip.webm" do
+      title "A test pattern that moves"
+      poster "examples/animations/clip.png"
+      captions "examples/animations/clip.vtt"
+      controls true
+      width "60%"
+    end
+  end
+end
+
+Examples.VideoCaptions
+```
+
+![A video with a line of captions at its bottom](https://raw.githubusercontent.com/rellen/expresso/media/video-captions.png)
+
+`examples/animations/clip.vtt` holds the captions:
+
+```text
+WEBVTT
+
+00:00:00.000 --> 00:00:01.000
+A test pattern moves to the right.
+
+00:00:01.000 --> 00:00:02.000
+The pattern moves on, and the clip starts again.
+```
+
+## Give the language of the deck
+
+A screen reader reads an English deck with an English voice. For a deck in a different
+language, give the `lang` option, so the screen reader selects the correct voice:
+
+```elixir
+lang "de"
+```
+
+See [the lang option](../reference/lang-option.md).
 
 ## Make sure of the result
 

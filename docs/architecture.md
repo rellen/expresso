@@ -972,7 +972,8 @@ its own line.
 
 A `diagram` shows an SVG file. The `src` option gives the path, as for an image. The
 render function puts the SVG into the document as an element, and not as a data URI.
-Therefore the rules of the theme reach the parts of the diagram.
+Therefore the rules of the theme reach the parts of the diagram. The `alt` option gives the
+diagram the role `img` and a name. See "The accessibility".
 
 A `part` entity names an element of the file by its `id`, and its `at` option and `on`
 entities give the steps. The parts are the children of the diagram, so the transformer
@@ -1061,6 +1062,8 @@ for the user. It follows the design of the embed, with these differences:
   starts it from the start, because the presenter shows it again from the beginning.
 - **It has no sound.** A browser plays a video automatically only when it is muted. With
   `controls`, the video takes the clicks, and the presenter can turn the sound on.
+- **The captions are a `track`.** The `captions` option gives a WebVTT file, and the
+  renderer writes it as a data URI into a `track` of each copy. See "The accessibility".
 - **It uses the box of an embed.** The element has the classes of an embed, so the size,
   the poster under the video, and the rules that hide the frame in the handout view and in
   the menu apply to it.
@@ -1912,6 +1915,16 @@ test `test/e2e/accessibility_test.exs` runs axe-core on each view. These are the
   makes the name "Step 2 The restart".
 - **`inert` on the pictures of the menu.** A picture of a slide can hold a link. `aria-hidden`
   alone hides it from a screen reader, but the `Tab` key still reaches the link.
+- **The `lang` of the deck on the `html` element.** One language applies to the deck, and
+  the texts of the presenter stay in English. `Expresso.Deck.lang/1` accepts a language tag
+  of the usual form.
+- **The `alt` of a diagram makes it one image.** The text of an SVG file is often a set of
+  labels with no order. With `alt`, the diagram has the role `img`, and its parts are not
+  read. Without `alt`, a screen reader still reads the text of the SVG.
+- **Captions as a `track` with a data URI.** The document is one file, so the WebVTT file
+  goes into the `track` element as a data URI. Chromium loads the cues of such a track. The
+  file is small, so each copy of the slide holds its own copy, and the script needs no
+  change.
 
 ### The overview
 

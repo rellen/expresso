@@ -46,6 +46,7 @@ defmodule Expresso do
       duration: option.(:duration, nil),
       transition: option.(:transition, :fade),
       morph: option.(:morph, :auto),
+      lang: option.(:lang, "en"),
       effect: option.(:effect, :fade),
       speed: option.(:speed, nil),
       easing: option.(:easing, nil),

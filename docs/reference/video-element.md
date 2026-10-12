@@ -23,6 +23,7 @@ end
 | The first argument | The path of a `.webm` or a `.mp4` file, relative to [the root option](root-option.md) of the deck, or to the working directory of the command | The video. Required. |
 | `title` | A string | The name of the video for a screen reader, and the text of the poster. Required. |
 | `poster` | The path of an image | The image that shows on paper, in the handout view, in the speaker view, in the overview, in the menu and while the video loads. Required. |
+| `captions` | The path of a `.vtt` file, relative to [the root option](root-option.md) of the deck | The captions of the video, in the WebVTT format. The browser shows them on the video. See "The captions". |
 | `width` | A width, such as `900px` or `60%` | The width of the video. The default is `80%`. |
 | `aspect` | A ratio, such as `"4/3"` | The ratio of the width to the height. The default is `"16/9"`. |
 | `loop` | `true` or `false` | Play the video again from the start at its end. The default is `true`. |
@@ -54,12 +55,32 @@ holds only a `video` element with `data-video`, the number of the file, and the 
 under it. The presenter gives the `video` element of the present view its source the first
 time that it plays.
 
+## The captions
+
+The `captions` option gives a WebVTT file. The renderer writes it into the `video`
+element as a `track` with `kind="captions"`, the label "Captions" and the attribute
+`default`, so the browser shows the captions from the start. The track holds the file as a
+data URI, because the document is one file. With `controls true`, the controls of the
+browser can turn the captions off.
+
+```text
+WEBVTT
+
+00:00:00.000 --> 00:00:01.000
+A test pattern moves to the right.
+```
+
+![A video with a line of captions at its bottom](https://raw.githubusercontent.com/rellen/expresso/media/video-captions.png)
+
 ## The errors
 
 The compiler gives an error for:
 
 - a first argument that is not the path of a `.webm` or a `.mp4` file,
-- a video with no `title` or no `poster`.
+- a video with no `title` or no `poster`,
+- a `captions` option that is not the path of a `.vtt` file.
+
+The renderer raises an `ArgumentError` for a captions file that it cannot read.
 
 The renderer raises an `ArgumentError` for a video file or a poster that it cannot read.
 

@@ -161,6 +161,9 @@ defmodule Expresso.Renderer do
   defp menu_commands(index), do: index |> Program.menu() |> Program.json_commands()
 
   # The name of a slide in the menu: its heading, its name, or its number.
+  # The language of the deck. A deck struct from data can have no key.
+  defp lang(deck), do: deck.metadata[:lang] || "en"
+
   defp menu_name(slide),
     do: slide.metadata[:heading] || slide.name || "Slide #{slide.metadata.slide_number}"
 
@@ -538,10 +541,10 @@ defmodule Expresso.Renderer do
     assigns = Map.put(assigns, :program, Program.compile(Definition.presenter(), assigns.deck))
 
     temple do
-      # The language of the document. A screen reader reads the attribute, and
-      # it selects a voice from the value. Each deck takes English at this
-      # time, and a later version can give the `deck` section an option.
-      html lang: "en", data_variants: two_variants?(@deck) do
+      # The language of the document, from the `lang` option of the deck. A
+      # screen reader reads the attribute, and it selects a voice from the
+      # value.
+      html lang: lang(@deck), data_variants: two_variants?(@deck) do
         head do
           # The encoding goes in front of each other element of the head. A
           # browser reads the first 1024 bytes of a document for it. Without

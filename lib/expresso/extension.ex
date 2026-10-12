@@ -184,6 +184,11 @@ defmodule Expresso.Extension do
             required: true,
             doc: "The name of the video for a screen reader."
           ],
+          captions: [
+            type: {:custom, Expresso.Element.Video, :captions, []},
+            doc:
+              "The path of a WebVTT file with the captions of the video, from the root option of the deck. The browser shows the captions on the video. See docs/reference/video-element.md."
+          ],
           poster: [
             type: :string,
             required: true,
@@ -607,6 +612,11 @@ defmodule Expresso.Extension do
           width: [
             type: :string,
             doc: "The width of the diagram, such as 900px or 60%. See docs/architecture.md."
+          ],
+          alt: [
+            type: :string,
+            doc:
+              "The text of the diagram for a screen reader. The diagram then has the role img, and a screen reader reads this text in the place of the text of the SVG. See docs/reference/diagram-element.md."
           ]
         ]
   }
@@ -959,6 +969,12 @@ defmodule Expresso.Extension do
         default: :auto,
         doc:
           "How the elements of two neighbor slides move from one slide to the next: :auto matches the same elements and the keys of the morph option, :named matches only the keys, and :off has no morph. See docs/reference/morph-option.md."
+      ],
+      lang: [
+        type: {:custom, Expresso.Deck, :lang, []},
+        default: "en",
+        doc:
+          "The language of the text of the deck, as a language tag, such as \"de\" or \"pt-BR\". A screen reader selects its voice from it. The default is \"en\". See docs/reference/lang-option.md."
       ],
       icons: [
         type: :keyword_list,

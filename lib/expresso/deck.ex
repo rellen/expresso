@@ -32,6 +32,10 @@ defmodule Expresso.Deck do
   deck for the move into that slide. A deck without the key uses `:auto`.
   `docs/reference/morph-option.md` gives the rules.
 
+  The metadata can also hold `:lang`, the language of the text of the deck as
+  a language tag, such as `"de"`. The renderer writes it into the `lang`
+  attribute of the `html` element. A deck without the key is English.
+
   The metadata can also hold `:effect`, the way in which an element with steps
   shows and hides, such as `:grow`. The metadata of a slide and the `effect`
   field of an element can hold it too, and the nearest value applies. A deck
@@ -82,6 +86,30 @@ defmodule Expresso.Deck do
 
     %__MODULE__{deck | slides: numbered_slides}
   end
+
+  @doc """
+  Validate the language of a deck
+
+  The value is a language tag of BCP 47 in its usual form: a language of two
+  or three letters, then subtags of letters and digits, each after a hyphen.
+
+      iex> Expresso.Deck.lang("pt-BR")
+      {:ok, "pt-BR"}
+      iex> Expresso.Deck.lang("en_US")
+      {:error, "the lang option must be a language tag, such as \\"en\\" or \\"pt-BR\\", and not \\"en_US\\""}
+  """
+  @spec lang(term()) :: {:ok, String.t()} | {:error, String.t()}
+  def lang(value) when is_binary(value) do
+    if value =~ ~r/\A[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8})*\z/,
+      do: {:ok, value},
+      else: {:error, lang_error(value)}
+  end
+
+  def lang(value), do: {:error, lang_error(value)}
+
+  defp lang_error(value),
+    do:
+      "the lang option must be a language tag, such as \"en\" or \"pt-BR\", and not #{inspect(value)}"
 
   @doc """
   Render a deck to HTML

@@ -34,6 +34,7 @@ defmodule Expresso.Element.Video do
     :src,
     :title,
     :poster,
+    :captions,
     :width,
     :aspect,
     :index,
@@ -104,7 +105,8 @@ defmodule Expresso.Element.Video do
 
   The key `overlay` holds the attributes of the overlay contract, and the
   `style` attribute of the `width` and `aspect` options. The key `poster`
-  holds the data URI of the poster.
+  holds the data URI of the poster, and the key `captions` the data URI of the
+  captions, or `nil`.
   """
   @spec get_assigns(t()) :: map()
   def get_assigns(video) do
@@ -123,10 +125,49 @@ defmodule Expresso.Element.Video do
       loop: video.loop,
       controls: video.controls,
       poster: Expresso.Image.data_uri!(video.poster),
+      captions: captions_uri(video.captions),
       overlay:
         Expresso.Overlay.Render.attributes(video) ++
           if(style == [], do: [], else: [{"style", Enum.join(style, "; ")}])
     }
+  end
+
+  @doc """
+  Validate the `captions` option: the path of a WebVTT file
+
+      iex> Expresso.Element.Video.captions("talk.vtt")
+      {:ok, "talk.vtt"}
+      iex> Expresso.Element.Video.captions("talk.srt")
+      {:error, "the captions must be a WebVTT file with the extension .vtt, and not \\"talk.srt\\""}
+  """
+  @spec captions(term()) :: {:ok, String.t()} | {:error, String.t()}
+  def captions(path) when is_binary(path) do
+    if path |> Path.extname() |> String.downcase() == ".vtt",
+      do: {:ok, path},
+      else: {:error, captions_error(path)}
+  end
+
+  def captions(path), do: {:error, captions_error(path)}
+
+  defp captions_error(path),
+    do: "the captions must be a WebVTT file with the extension .vtt, and not #{inspect(path)}"
+
+  # The captions go into the document as a data URI, because the document is
+  # one file. `Expresso.DeckFile` reads the file, so the watch mode renders the
+  # deck again after a change to it.
+  defp captions_uri(nil), do: nil
+
+  defp captions_uri(path) do
+    case Expresso.DeckFile.read(path) do
+      {:ok, text} ->
+        "data:text/vtt;base64," <> Base.encode64(text)
+
+      {:error, reason} ->
+        raise ArgumentError,
+              "cannot read the captions \"#{path}\": #{:file.format_error(reason)}. " <>
+                "A path is relative to the working directory of the command, or to the " <>
+                "root option of the deck."
+    end
   end
 
   @doc """
@@ -154,6 +195,9 @@ defmodule Expresso.Element.Video do
                 loop: @loop,
                 controls: @controls,
                 tabindex: if(@controls, do: nil, else: "-1") do
+            if @captions do
+              track kind: "captions", label: "Captions", src: @captions, default: true
+            end
           end
         end
       end
