@@ -602,6 +602,16 @@ for a part that the reader must see. Lc 30 is the APCA minimum for any text that
 reader must be able to read. The presenter does not talk about a dimmed element now, but
 the reader can go back to it.
 
+The default minimum is 3:1, and the `dim_contrast` option of a deck can raise it to a
+value up to 7:1. `Expresso.Palette.with_dim_contrast/2` then calculates each dimmed color
+and the dim opacity again with that ratio, and the renderer applies it to each variant and
+to the colors of paper. 3:1 is the minimum of WCAG for large text, and the text of a slide
+is usually large. A dimmed text under 24 px is normal text for criterion 1.4.3, which asks
+for 4.5:1, so axe-core reports it. The talk about Line 4 found this case: a long listing
+at a small size, with lines out of focus. The default stays 3:1, because a higher minimum
+dims less, and a role near 4.5:1 then does not dim. `docs/research/line4-redo.md` gives the
+three options that we compared.
+
 Each role starts at a different contrast. `Color.adjust/4` stops at the minimum of a text,
 so most roles start near 4.5:1 and Lc 60. The text starts far above them. Thus one opacity
 for all the colors of an element must stop where the weakest role meets its minimum.

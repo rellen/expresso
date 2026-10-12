@@ -79,6 +79,13 @@ part of the deck before the current step, from 0 to 100, as the width of the bar
 The `html` element has the `lang` attribute from [the lang option](lang-option.md) of the
 deck, and the default is `en`. A screen reader selects its voice from it.
 
+## The contrast
+
+Each text of a theme keeps 4.5:1 on its background. A dimmed text keeps 3:1, or the ratio
+of [the dim_contrast option](dim-contrast-option.md). Give `dim_contrast 4.5` for a deck
+with small dimmed text, or for a deck that axe-core must pass. See
+[the theme option](theme-option.md#the-minimums).
+
 ## The motion
 
 A reader who asks for reduced motion gets no effect, no transition and no morph.

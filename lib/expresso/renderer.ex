@@ -47,7 +47,10 @@ defmodule Expresso.Renderer do
   # the scheme of the screen. The rule of paper names the attribute too, so it
   # wins over each variant.
   defp theme(deck) do
-    print = Expresso.Palette.Builtin.fetch!(:default)
+    print =
+      :default
+      |> Expresso.Palette.Builtin.fetch!()
+      |> Expresso.Palette.with_dim_contrast((deck.metadata || %{})[:dim_contrast])
 
     roles =
       case variants(deck) do
@@ -64,7 +67,13 @@ defmodule Expresso.Renderer do
     roles <> "\n@media print { :root, :root[data-scheme] { #{declarations(print)} } }"
   end
 
-  defp variants(deck), do: Expresso.Palette.variants((deck.metadata || %{})[:theme])
+  # Each variant dims to the minimum of the `dim_contrast` option of the deck.
+  defp variants(deck) do
+    metadata = deck.metadata || %{}
+
+    for {name, palette} <- Expresso.Palette.variants(metadata[:theme]),
+        do: {name, Expresso.Palette.with_dim_contrast(palette, metadata[:dim_contrast])}
+  end
 
   defp declarations(palette), do: Expresso.Palette.declarations(palette)
 

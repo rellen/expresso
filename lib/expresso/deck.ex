@@ -36,6 +36,10 @@ defmodule Expresso.Deck do
   a language tag, such as `"de"`. The renderer writes it into the `lang`
   attribute of the `html` element. A deck without the key is English.
 
+  The metadata can also hold `:dim_contrast`, the minimum contrast ratio of
+  dimmed text, from 3 to 7. A deck without the key, or with `nil`, dims to
+  3:1. `Expresso.Palette.with_dim_contrast/2` gives the rules.
+
   The metadata can also hold `:effect`, the way in which an element with steps
   shows and hides, such as `:grow`. The metadata of a slide and the `effect`
   field of an element can hold it too, and the nearest value applies. A deck
@@ -86,6 +90,25 @@ defmodule Expresso.Deck do
 
     %__MODULE__{deck | slides: numbered_slides}
   end
+
+  @doc """
+  Validate the minimum contrast ratio of dimmed text
+
+  The value is a number from 3 to 7. 3 is the default of Expresso, 4.5 is the
+  minimum of WCAG 2.2 for normal text, and 7 is its enhanced minimum.
+
+      iex> Expresso.Deck.dim_contrast(4.5)
+      {:ok, 4.5}
+      iex> Expresso.Deck.dim_contrast(2)
+      {:error, "the dim_contrast option must be a number from 3 to 7, such as 4.5, and not 2"}
+  """
+  @spec dim_contrast(term()) :: {:ok, number()} | {:error, String.t()}
+  def dim_contrast(value) when is_number(value) and value >= 3 and value <= 7, do: {:ok, value}
+
+  def dim_contrast(value),
+    do:
+      {:error,
+       "the dim_contrast option must be a number from 3 to 7, such as 4.5, and not #{inspect(value)}"}
 
   @doc """
   Validate the language of a deck

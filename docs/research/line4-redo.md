@@ -85,7 +85,7 @@ that it holds a chart, but it held none.
 
 ### 3. Dimmed text has a contrast of 3:1
 
-**Kind:** a decision to make.
+**Kind:** a decision to make. The maintainer chose a deck option: `dim_contrast 4.5`.
 
 `Expresso.Palette` dims each role of text to the strongest dimming that keeps 3:1 and
 Lc 30. The `@moduledoc` gives criterion 1.4.11 as the reason, but that criterion is for

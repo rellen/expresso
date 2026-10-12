@@ -191,6 +191,7 @@ Write an option in the deck to apply it to each slide:
 | `template MyDeckTemplate` | A module that makes the header and the footer. See [the template option](docs/reference/template-option.md). |
 | `slide_template MySlideTemplate` | A module that makes the body of each slide. |
 | `lang "de"` | The language of the text of the deck, for a screen reader. The default is `"en"`. See [the lang option](docs/reference/lang-option.md). |
+| `dim_contrast 4.5` | The minimum contrast of dimmed text, from 3 to 7. The default is 3. See [the dim_contrast option](docs/reference/dim-contrast-option.md). |
 | `icons logo: "assets/logo.svg"` | SVG files of your own for the `icon` element and for `:icon:name:` in a text. See [the icon element](docs/reference/icon-element.md). |
 | `theme :dracula` | The colors of the slides and of the code. Each built-in theme meets the contrast minimums of WCAG. `theme dark: :dracula, light: :default` gives two variants. See [the theme option](docs/reference/theme-option.md). |
 
@@ -578,6 +579,7 @@ deck and of a slide:
 - [The places of the elements](docs/reference/placement.md)
 - [The accessibility of a deck](docs/reference/accessibility.md)
 - [The lang option](docs/reference/lang-option.md)
+- [The dim_contrast option](docs/reference/dim-contrast-option.md)
 - [The morph option](docs/reference/morph-option.md)
 - [The overlay options](docs/reference/overlay-options.md)
 - [Step labels](docs/reference/step-labels.md)

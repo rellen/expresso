@@ -976,6 +976,11 @@ defmodule Expresso.Extension do
         doc:
           "The language of the text of the deck, as a language tag, such as \"de\" or \"pt-BR\". A screen reader selects its voice from it. The default is \"en\". See docs/reference/lang-option.md."
       ],
+      dim_contrast: [
+        type: {:custom, Expresso.Deck, :dim_contrast, []},
+        doc:
+          "The minimum contrast ratio of dimmed text on its background, from 3 to 7. The default is 3. Give 4.5 to meet WCAG 2.2 criterion 1.4.3 for normal text. See docs/reference/dim-contrast-option.md."
+      ],
       icons: [
         type: :keyword_list,
         doc:
