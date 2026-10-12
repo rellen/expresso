@@ -126,7 +126,7 @@ each role, such as `--text-dim`, and a deck can replace one in its `css` option.
 | --- | --- | --- |
 | `list` | `true` | Each item shows at its own step. |
 | `table` | `true` | Each row shows at its own step. |
-| `code` | a list of line numbers and ranges, such as `[1..3, 5..6]` | Each group of lines shows at its own step. A line that does not show keeps its space. With `src`, a number is the number of the line in the file. See [the code element](code-element.md). |
+| `code` | a list of line numbers, ranges and texts, such as `[1..3, 5..6]` or `[[from: "def ", to: "end"]]` | Each group of lines shows at its own step. A line that does not show keeps its space. With `src`, a number is the number of the line in the file. See [the code element](code-element.md). |
 | `chart` | `true` | Each series shows at its own step. A pie, a treemap and a sunburst take no `reveal`. See [the chart element](chart-element.md). |
 | `toc` | `true` | Each entry shows at its own step. See [the toc element](toc-element.md). |
 

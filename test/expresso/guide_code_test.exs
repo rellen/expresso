@@ -62,7 +62,9 @@ defmodule Expresso.GuideCodeTest do
   test "the deck of the guide to code from the project of the deck renders from another directory",
        %{tmp_dir: tmp_dir} do
     [code] =
-      "docs/how-to/show-code.md" |> blocks() |> Enum.filter(&(&1 =~ "__DIR__"))
+      "docs/how-to/show-code.md"
+      |> blocks()
+      |> Enum.filter(&(&1 =~ "__DIR__" and &1 =~ "MyTalk.Deck"))
 
     lines = Enum.map_join(1..60, &"# line #{&1}\n")
     File.mkdir_p!(Path.join(tmp_dir, "talk"))

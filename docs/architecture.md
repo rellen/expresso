@@ -862,6 +862,14 @@ A `lines` option with texts finds its range in the bytes of the file: from the l
 above the excerpt then does not move it. The `from` text must be in the file one time, so
 a new copy of it above the excerpt gives an error, and not a different excerpt.
 
+The numbers of `reveal` and `highlight` did not follow the excerpt. The Line 4 talk found
+this: its excerpts came from a page that changed each day, and the groups selected other
+lines with no error. A group can therefore be texts too, with the rules of `lines`, inside
+the text of the element. `build/1` turns each group into numbers of the file before the
+other checks, so the steps, the dimming and the render do not change. The option
+`relative true` counts the numbers from the excerpt for an author who reads the lines on
+the slide and not in the editor.
+
 Makeup lexes the text when a lexer registers the language. `mix.exs` lists one package for
 each of these languages:
 

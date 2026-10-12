@@ -108,7 +108,7 @@ defmodule Expresso.Element.CodeTest do
 
     test "gives an error for another term" do
       assert {:error, message} = Code.reveal([0])
-      assert message =~ "line numbers and ranges"
+      assert message =~ "line numbers, ranges and texts"
       assert {:error, _} = Code.reveal([3..1//-1])
       assert {:error, _} = Code.reveal([])
       assert {:error, _} = Code.reveal("1..3")
@@ -153,7 +153,7 @@ defmodule Expresso.Element.CodeTest do
       """
 
       error = assert_raise Spark.Error.DslError, fn -> Elixir.Code.compile_string(source) end
-      assert Exception.message(error) =~ "line numbers and ranges"
+      assert Exception.message(error) =~ "line numbers, ranges and texts"
     end
 
     test "reports a reveal option with a line that the text does not have" do
