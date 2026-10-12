@@ -1276,6 +1276,20 @@ body[data-view="present"][data-undim] .screen .code [data-el] {
  * stand in one column. The color of the comments meets the contrast minimum
  * on the background of the code. A copy of the text does not take the number.
  */
+/*
+ * A code element with `wrap`: the next parts of a broken line start under the
+ * start of its text, 4 characters further in. The renderer sets `--indent` to
+ * the white space at the start of each line. The negative `text-indent` puts
+ * the first part back at the left edge.
+ */
+.code-wrap .line {
+  --wrap-start: calc(
+    var(--indent, 0ch) + 4ch + (var(--line-number-width, 0ch) + 1.5ch) *
+      var(--has-numbers, 0)
+  );
+  padding-inline-start: var(--wrap-start);
+  text-indent: calc(-1 * var(--wrap-start));
+}
 .code .line-number {
   display: inline-block;
   min-width: var(--line-number-width, 1ch);

@@ -461,7 +461,7 @@ defmodule Expresso.Element.CodeTest do
       assert Enum.all?(numbers, &(Floki.attribute(&1, "aria-hidden") == ["true"]))
 
       assert code |> Floki.find("code") |> Floki.attribute("style") == [
-               "--line-number-width: 2ch"
+               "--line-number-width: 2ch; --has-numbers: 1"
              ]
     end
 

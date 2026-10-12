@@ -307,3 +307,45 @@ Examples.CodeConfig
 A long line breaks on the slide, and the reader then sees two lines with one number. Open
 the document with `?check` at the end of the address, and the report gives each code
 element with a line that breaks. See [Check that a deck fits the screen](check-the-layout.md).
+
+## Show the long lines of real code
+
+The lines of a real file are often longer than a slide, and many end with a comment. Give
+`trailing_comments false` to remove a comment at the end of a line of code. A line that is
+only a comment stays. Give `wrap true` to break each line that is still too long, with its
+next parts indented under its start:
+
+```elixir
+defmodule Examples.CodeLongLines do
+  use Expresso
+
+  slide "the reservation" do
+    heading "Book the floor"
+
+    code "js" do
+      text """
+      // anyone else's booking that meets b: the one that ends last
+      function resHit(m, b) {
+        let hit = null;               // (the latest booking that meets b)
+        for (const [who, r] of RES) {
+          if (who === m || r.t1 <= b.t0 || b.t1 <= r.t0 || !boxesMeet(r, b)) continue;
+          for (const q of r.list) if (q.t0 < b.t1 && b.t0 < q.t1 && boxesMeet(q, b) && (!hit || q.t1 > hit.t1)) hit = { who, q };
+        }
+        return hit;                   // (null when the floor is free)
+      }
+      """
+
+      trailing_comments false
+      wrap true
+    end
+  end
+end
+
+Examples.CodeLongLines
+```
+
+![A function with no comments at the ends of its lines, and a long line that breaks with its second part indented](https://raw.githubusercontent.com/rellen/expresso/media/code-long-lines.png)
+
+`?check` does not report a line of a code element with `wrap`, because the line breaks on
+purpose. Give a smaller font with [the class option](../reference/class-option.md) when
+the lines must not break.

@@ -870,6 +870,14 @@ other checks, so the steps, the dimming and the render do not change. The option
 `relative true` counts the numbers from the excerpt for an author who reads the lines on
 the slide and not in the editor.
 
+The lines of a real file are long. On the Line 4 talk, they had up to 190 characters, and
+most of the length was a comment at the end. `trailing_comments false` removes such a
+comment from the tokens of the lexer, so it works for each language with a lexer, and the
+groups and the texts of `lines` still match the file. A line that is still too long breaks,
+because the style sheet gives the code `white-space: pre-wrap`. `wrap true` makes the break
+a choice: a hanging indent from `--indent`, and no report from `?check`. A mark at each
+break needs a measure of the text in the script, so the indent alone shows the break.
+
 Makeup lexes the text when a lexer registers the language. `mix.exs` lists one package for
 each of these languages:
 

@@ -92,6 +92,47 @@ defmodule Expresso.E2E.LayoutCheckTest do
     assert js(page, ~s|document.getElementById("layout-check")|) == nil
   end
 
+  # The long line of `ProblemDeck`, with `wrap`: the line breaks on purpose.
+  defmodule WrapDeck do
+    use Expresso
+
+    slide "long" do
+      code "js" do
+        wrap true
+        line_numbers true
+        text "const a = 1;\n  const b = [#{Enum.join(1..120, ", ")}];\n"
+      end
+    end
+  end
+
+  test "?check reports no problem for a code with wrap, and a broken line is indented", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(WrapDeck, tmp_dir) <> "?check")
+    result = report(page)
+
+    assert result["problems"] == []
+
+    # The second line breaks into rows. The rows after the first start further
+    # in: the line has a padding, and the first row moves back by as much.
+    line = ~s|document.querySelectorAll("#slide-1 .code .line")[1]|
+    height = js(page, "#{line}.offsetHeight")
+
+    row =
+      js(
+        page,
+        ~s|parseFloat(getComputedStyle(document.querySelector("#slide-1 pre")).lineHeight)|
+      )
+
+    padding = js(page, "parseFloat(getComputedStyle(#{line}).paddingInlineStart)")
+    indent = js(page, "parseFloat(getComputedStyle(#{line}).textIndent)")
+
+    assert height > 2 * row
+    assert padding > 0
+    assert_in_delta indent, -padding, 0.5
+  end
+
   test "?check reports no problem for a deck that fits", %{page: page, tmp_dir: tmp_dir} do
     result = page |> open(render(GoodDeck, tmp_dir) <> "?check") |> report()
 

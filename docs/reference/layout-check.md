@@ -20,7 +20,7 @@ check does not change the report. Reload the page for a new check.
 | Problem | When | The report gives |
 | --- | --- | --- |
 | Past an edge | The box of an element goes more than 1 pixel past the left, top, right or bottom edge of the window. | The edge, and the distance in pixels. For two or more edges, the edge with the largest distance. |
-| A line breaks | A line of a code element is more than 1.5 times the line height of the element. | The number of lines that break in the code element. |
+| A line breaks | A line of a code element is more than 1.5 times the line height of the element. A code element with `wrap true` breaks its lines on purpose, and the check does not measure them. | The number of lines that break in the code element. |
 
 The check measures these elements, and the content of each:
 

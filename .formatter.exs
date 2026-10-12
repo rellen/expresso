@@ -162,6 +162,7 @@ spark_locals_without_parens = [
   to: 1,
   toc: 0,
   toc: 1,
+  trailing_comments: 1,
   transition: 1,
   value_label: 1,
   values: 1,
@@ -169,6 +170,7 @@ spark_locals_without_parens = [
   video: 2,
   whole_first: 1,
   width: 1,
+  wrap: 1,
   x: 1,
   y: 1
 ]
