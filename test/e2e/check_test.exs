@@ -9,6 +9,24 @@ defmodule Expresso.E2E.CheckTest do
   @moduletag :tmp_dir
   @moduletag timeout: 300_000
 
+  # The CI job installs the headless shell of Playwright, and the runner can
+  # have a different browser on the PATH. Without EXPRESSO_CHROMIUM, the tests
+  # use that headless shell, as the other browser tests do.
+  setup_all do
+    shell =
+      "~/.cache/ms-playwright/chromium_headless_shell-*/chrome-*/headless_shell"
+      |> Path.expand()
+      |> Path.wildcard()
+      |> List.last()
+
+    if System.get_env("EXPRESSO_CHROMIUM") == nil and shell != nil do
+      System.put_env("EXPRESSO_CHROMIUM", shell)
+      on_exit(fn -> System.delete_env("EXPRESSO_CHROMIUM") end)
+    end
+
+    :ok
+  end
+
   # Slide 2 holds a line of code that is too long for its box, at step 2.
   # Slide 3 holds text with a low contrast, from the `css` option. The text of
   # the deck holds `</script>`, so the result of the page must escape it.
