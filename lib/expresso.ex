@@ -163,29 +163,45 @@ defmodule Expresso do
     kind, reason -> {:error, Exception.format_banner(kind, reason, __STACKTRACE__)}
   end
 
-  defp render_input("-") do
+  @doc """
+  Read an input file, and return its deck
+
+  The function returns `{:ok, deck}`, or `{:error, message}` for a file that it
+  cannot find, or for a script that does not return a deck. With `-` as the
+  path, the function reads the script from the standard input. An exception,
+  an exit or a throw of the script also returns an error tuple.
+  `Expresso.Check` reads the deck with this function.
+  """
+  @spec load_file(Path.t()) :: {:ok, Expresso.Deck.t()} | {:error, String.t()}
+  def load_file(input_path) do
+    load_input(input_path)
+  catch
+    kind, reason -> {:error, Exception.format_banner(kind, reason, __STACKTRACE__)}
+  end
+
+  defp render_input(input_path) do
+    with {:ok, deck} <- load_input(input_path), do: {:ok, Expresso.Deck.render(deck)}
+  end
+
+  defp load_input("-") do
     case IO.read(:stdio, :eof) do
       {:error, reason} ->
         {:error, "Couldn't read the standard input: #{:file.format_error(reason)}"}
 
       # Empty input gives `:eof`, and an empty script gives `nil`.
       :eof ->
-        render_value(evaluate_deck_source(""))
+        to_deck(evaluate_deck_source(""))
 
       source ->
-        render_value(evaluate_deck_source(source))
+        to_deck(evaluate_deck_source(source))
     end
   end
 
-  defp render_input(input_path) do
+  defp load_input(input_path) do
     case File.stat(input_path) do
-      {:ok, _stat} -> render_value(evaluate_deck_file(input_path))
+      {:ok, _stat} -> to_deck(evaluate_deck_file(input_path))
       _ -> {:error, "Couldn't find input file"}
     end
-  end
-
-  defp render_value({value, _bindings}) do
-    with {:ok, deck} <- to_deck(value), do: {:ok, Expresso.Deck.render(deck)}
   end
 
   # When the reader of the standard output stops, as `| head` does, the writer
@@ -241,14 +257,14 @@ defmodule Expresso do
 
   # sobelow_skip ["RCE"]
   defp evaluate_deck_file(input_path) do
-    Code.eval_file(input_path)
+    input_path |> Code.eval_file() |> elem(0)
   end
 
   # The script of the standard input. A warning or an error of the compiler
   # names the file "stdin".
   # sobelow_skip ["RCE"]
   defp evaluate_deck_source(source) do
-    Code.eval_string(source, [], file: "stdin")
+    source |> Code.eval_string([], file: "stdin") |> elem(0)
   end
 
   # sobelow_skip ["Traversal"]

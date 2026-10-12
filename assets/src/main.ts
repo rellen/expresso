@@ -64,6 +64,9 @@
 // load of the document and of its fonts. The check shows each step, finds the
 // elements that go past an edge of the window and the lines of code that
 // break, and writes a report into the document. `layout.ts` gives the rules.
+// `?check=a11y` then runs axe-core at each step and in each view, when the
+// document holds it. `check.ts` gives the rules, and the result of the two
+// checks for `mix expresso --check`.
 
 import {
   follow,
@@ -83,7 +86,8 @@ import { count } from "./chart.ts";
 import { modeOf, pairs } from "./morph.ts";
 import type { Pair } from "./morph.ts";
 import { search } from "./search.ts";
-import { audit, report } from "./layout.ts";
+import { audit, report, sentence } from "./layout.ts";
+import { accessibility, engine, write } from "./check.ts";
 import { clock, left, pace, talkLength } from "./speaker.ts";
 import {
   accepts,
@@ -314,17 +318,42 @@ window.addEventListener("online", embeds);
 // again and goes to the console, as each problem of the check does.
 function check(): void {
   document.fonts.ready
-    .then(() => {
-      const problems = audit(deck.steps, (index) =>
-        apply({ ...state, index }, deck, program),
-      );
+    .then(async () => {
+      const show = (index: number): void =>
+        apply({ ...state, index }, deck, program);
+      const problems = audit(deck.steps, show);
       apply(state, deck, program);
       report(problems);
+      const axe = parameters.get("check") === "a11y" ? engine() : undefined;
+      const findings =
+        axe === undefined
+          ? null
+          : await accessibility(deck.steps, show, views(), axe);
+      apply(state, deck, program);
+      write({
+        width: window.innerWidth,
+        height: window.innerHeight,
+        layout: problems.map(sentence),
+        accessibility: findings,
+      });
     })
     .catch((reason: unknown) => {
       apply(state, deck, program);
       console.error("Expresso layout check failed:", reason);
     });
+}
+
+// The views that the accessibility check reads after the steps, each with
+// the function that shows it.
+function views(): (readonly [string, () => void])[] {
+  const open = (changed: State) => (): void => apply(changed, deck, program);
+  return [
+    ["The present view", open(state)],
+    ["The menu", open({ ...state, menu: true })],
+    ["The list of keys", open({ ...state, help: true })],
+    ["The overview", open({ ...state, overview: true })],
+    ["The handout view", open({ ...state, view: "handout" })],
+  ];
 }
 
 if (parameters.has("check") && !isSpeaker) {

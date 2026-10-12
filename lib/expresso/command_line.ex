@@ -4,7 +4,8 @@ defmodule Expresso.CommandLine do
 
   The two commands take the same arguments:
 
-      <input> [output] [--watch [--port <port>]] [--help | -h] [--version]
+      <input> [output] [--watch [--port <port>] | --check[=<level>]]
+              [--help | -h] [--version]
 
   `parse/1` reads the arguments, and `run/3` runs them. The mix task and the
   binary both call `run/3`, so the two commands agree.
@@ -13,6 +14,9 @@ defmodule Expresso.CommandLine do
   # The version in `mix.exs`. The binary has no `Mix`, so the value comes in at
   # compile time.
   @version Mix.Project.config()[:version]
+
+  # The levels of `--check`. Each level runs the checks of the level before it.
+  @check_levels %{"layout" => :layout, "a11y" => :a11y}
 
   # The port of the watch mode without `--port`. Phoenix uses 4000, so a
   # Phoenix application and a deck can run at the same time.
@@ -25,9 +29,14 @@ defmodule Expresso.CommandLine do
 
     * `:help` for `--help` or `-h` in any position.
     * `:version` for `--version` in any position.
-    * `{:error, message}` for an unknown option, a third path or a bad
-      `--port`. Each argument that starts with `-` is an option, except `-`
-      alone. `--port` without `--watch` is an error too.
+    * `{:error, message}` for an unknown option, a third path, a bad
+      `--port` or a bad level of `--check`. Each argument that starts with
+      `-` is an option, except `-` alone. `--port` without `--watch` is an
+      error too, and so is `--check` with `--watch`.
+    * `{:check, level, input, output}` for `--check`. The level is `:basic`
+      for `--check`, `:layout` for `--check=layout` and `:a11y` for
+      `--check=a11y`. The check needs an input, and it writes its report to
+      the standard output, so `-` is an error for the output.
     * `{:watch, input, output, port}` for `--watch`. The port comes from
       `--port 4200` or `--port=4200`, and it is 4100 without that option. The
       watch mode needs an input file, and it does not write to the standard
@@ -47,6 +56,9 @@ defmodule Expresso.CommandLine do
       iex> Expresso.CommandLine.parse(["deck.exs", "deck.html", "--watch", "--port", "4200"])
       {:watch, "deck.exs", "deck.html", 4200}
 
+      iex> Expresso.CommandLine.parse(["deck.exs", "--check=layout"])
+      {:check, :layout, "deck.exs", nil}
+
       iex> Expresso.CommandLine.parse(["deck.exs", "-h"])
       :help
 
@@ -64,36 +76,47 @@ defmodule Expresso.CommandLine do
           | :version
           | {:paths, String.t() | nil, String.t() | nil}
           | {:watch, String.t(), String.t() | nil, :inet.port_number()}
+          | {:check, Expresso.Check.level(), String.t(), String.t() | nil}
           | {:error, String.t()}
   def parse(args) do
     cond do
       Enum.any?(args, &(&1 in ["--help", "-h"])) -> :help
       "--version" in args -> :version
-      true -> args |> take_watch_options(%{watch: false, port: nil}, []) |> command()
+      true -> args |> take_options(%{watch: false, port: nil, check: nil}, []) |> command()
     end
   end
 
-  # Take `--watch` and `--port` out of the arguments. The other arguments keep
-  # their order.
-  defp take_watch_options(["--watch" | rest], options, args),
-    do: take_watch_options(rest, %{options | watch: true}, args)
+  # Take `--watch`, `--port` and `--check` out of the arguments. The other
+  # arguments keep their order.
+  defp take_options(["--watch" | rest], options, args),
+    do: take_options(rest, %{options | watch: true}, args)
 
-  defp take_watch_options(["--port", value | rest], options, args),
+  defp take_options(["--port", value | rest], options, args),
     do: take_port(value, rest, options, args)
 
-  defp take_watch_options(["--port"], _options, _args), do: {:error, "--port needs a number"}
+  defp take_options(["--port"], _options, _args), do: {:error, "--port needs a number"}
 
-  defp take_watch_options(["--port=" <> value | rest], options, args),
+  defp take_options(["--port=" <> value | rest], options, args),
     do: take_port(value, rest, options, args)
 
-  defp take_watch_options([arg | rest], options, args),
-    do: take_watch_options(rest, options, [arg | args])
+  defp take_options(["--check" | rest], options, args),
+    do: take_options(rest, %{options | check: :basic}, args)
 
-  defp take_watch_options([], options, args), do: {options, Enum.reverse(args)}
+  defp take_options(["--check=" <> level | rest], options, args) do
+    case Map.fetch(@check_levels, level) do
+      {:ok, level} -> take_options(rest, %{options | check: level}, args)
+      :error -> {:error, "Unknown level of --check: #{level}. Give layout or a11y."}
+    end
+  end
+
+  defp take_options([arg | rest], options, args),
+    do: take_options(rest, options, [arg | args])
+
+  defp take_options([], options, args), do: {options, Enum.reverse(args)}
 
   defp take_port(value, rest, options, args) do
     case Integer.parse(value) do
-      {port, ""} when port in 1..65_535 -> take_watch_options(rest, %{options | port: port}, args)
+      {port, ""} when port in 1..65_535 -> take_options(rest, %{options | port: port}, args)
       _other -> {:error, "Invalid port: #{value}"}
     end
   end
@@ -106,11 +129,24 @@ defmodule Expresso.CommandLine do
     cond do
       option = Enum.find(args, &option?/1) -> {:error, "Unknown option: #{option}"}
       length(args) > 2 -> {:error, "Unexpected argument: #{Enum.at(args, 2)}"}
-      options.watch -> watch(Enum.at(args, 0), Enum.at(args, 1), options.port || @default_port)
-      options.port -> {:error, "--port needs --watch"}
-      true -> {:paths, Enum.at(args, 0), Enum.at(args, 1)}
+      true -> mode(options, Enum.at(args, 0), Enum.at(args, 1))
     end
   end
+
+  # The mode of the command, from the options that `take_options/3` found.
+  defp mode(%{watch: true, check: level}, _input, _output) when level != nil,
+    do: {:error, "--check and --watch do not go together"}
+
+  defp mode(%{check: level, port: nil}, input, output) when level != nil,
+    do: check(level, input, output)
+
+  defp mode(%{watch: true, port: port}, input, output),
+    do: watch(input, output, port || @default_port)
+
+  defp mode(%{port: port}, _input, _output) when port != nil,
+    do: {:error, "--port needs --watch"}
+
+  defp mode(_options, input, output), do: {:paths, input, output}
 
   # `-` alone is a path, and each other argument that starts with `-` is an
   # option.
@@ -122,6 +158,13 @@ defmodule Expresso.CommandLine do
 
   defp watch(_input, "-", _port), do: {:error, "--watch cannot write to the standard output"}
   defp watch(input, output, port), do: {:watch, input, output, port}
+
+  defp check(_level, nil, _output), do: {:error, "--check needs an input"}
+
+  defp check(_level, _input, "-"),
+    do: {:error, "--check writes its report to the standard output, so give a file for the HTML"}
+
+  defp check(level, input, output), do: {:check, level, input, output}
 
   @doc """
   Run a command line, and return its exit status
@@ -142,6 +185,8 @@ defmodule Expresso.CommandLine do
       standard output that closed, as for `| head`, is not an error.
     * `{:watch, input, output, port}` calls `Expresso.Watch.run/3`. That
       function returns only for an error, so the exit status is 1.
+    * `{:check, level, input, output}` calls `Expresso.Check.run/3`. The exit
+      status is 1 for a problem or an error, and 0 otherwise.
 
   The function does not catch an exception from the deck. The binary catches
   it and writes the message, and Mix writes it for the mix task.
@@ -172,6 +217,9 @@ defmodule Expresso.CommandLine do
       {:watch, input_path, output_path, port} ->
         {:error, _message} = Expresso.Watch.run(input_path, output_path, port: port)
         1
+
+      {:check, level, input_path, output_path} ->
+        Expresso.Check.run(input_path, output_path, level)
     end
   end
 

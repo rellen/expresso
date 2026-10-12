@@ -126,6 +126,39 @@ defmodule Expresso.CommandLineTest do
   # `OptionParser` reads these four arguments in a different way, so these
   # tests keep the rule of the command: each argument that starts with `-` is
   # an option. See "The two commands" in `docs/architecture.md`.
+  describe "parse/1 with --check" do
+    test "gives the level, the input and the output in any order of the arguments" do
+      assert CommandLine.parse(["deck.exs", "--check"]) == {:check, :basic, "deck.exs", nil}
+      assert CommandLine.parse(["--check", "deck.exs"]) == {:check, :basic, "deck.exs", nil}
+
+      assert CommandLine.parse(["deck.exs", "deck.html", "--check=layout"]) ==
+               {:check, :layout, "deck.exs", "deck.html"}
+
+      assert CommandLine.parse(["--check=a11y", "-"]) == {:check, :a11y, "-", nil}
+    end
+
+    test "gives an error for an unknown level" do
+      assert CommandLine.parse(["deck.exs", "--check=all"]) ==
+               {:error, "Unknown level of --check: all. Give layout or a11y."}
+
+      assert CommandLine.parse(["deck.exs", "--check="]) ==
+               {:error, "Unknown level of --check: . Give layout or a11y."}
+    end
+
+    test "gives an error without an input, for the standard output, and with --watch" do
+      assert CommandLine.parse(["--check"]) == {:error, "--check needs an input"}
+
+      assert {:error, "--check writes its report to the standard output" <> _} =
+               CommandLine.parse(["deck.exs", "-", "--check"])
+
+      assert CommandLine.parse(["deck.exs", "--check", "--watch"]) ==
+               {:error, "--check and --watch do not go together"}
+
+      assert CommandLine.parse(["deck.exs", "--check", "--port", "4200"]) ==
+               {:error, "--port needs --watch"}
+    end
+  end
+
   describe "parse/1 with the argument forms of OptionParser" do
     test "gives each form as an unknown option" do
       for arg <- ["-1", "--no-watch", "--watch=true", "--"] do

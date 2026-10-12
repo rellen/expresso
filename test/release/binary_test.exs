@@ -211,6 +211,21 @@ defmodule Expresso.BinaryTest do
            ) == {"exit status: 0\n", 0}
   end
 
+  test "checks a deck with --check, and writes the report to the standard output",
+       %{tmp_dir: dir} = context do
+    html = Path.join(dir, "demo.html")
+
+    assert {output, 0} = standard_output(context, ["examples/demo.exs", html, "--check"])
+    assert output =~ "Check of examples/demo.exs: "
+    assert String.ends_with?(output, "\nNo problems.\n")
+    assert "<!DOCTYPE html>" <> _ = File.read!(html)
+  end
+
+  test "gives the exit status 1 for a level of --check that it does not know", context do
+    assert {output, 1} = run(context, ["examples/demo.exs", "--check=all"])
+    assert output =~ "Unknown level of --check: all. Give layout or a11y.\n"
+  end
+
   test "gives the exit status 1 for an unknown option", context do
     assert {output, 1} = run(context, ["--verbose"])
     assert output =~ "Unknown option: --verbose\n"

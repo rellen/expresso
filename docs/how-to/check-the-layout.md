@@ -94,25 +94,6 @@ column. Do one of these:
 
 ## Check a deck with no window
 
-A browser with no window can run the check, for example in a continuous integration job.
-Chromium writes the document after the check with `--dump-dom`, and the `body` element
-then has `data-layout="ok"` or `data-layout="problems"`:
-
-```sh
-chromium --headless --window-size=1920,1167 --virtual-time-budget=10000 \
-  --dump-dom "file:///path/to/deck.html?check" | grep -o 'Layout check at [0-9][^<]*'
-```
-
-The window of a headless Chromium is larger than its page, so the height in
-`--window-size` is more than 1080. Read the size in the report, and change the height until
-the report gives the size of the talk. The difference can change with the version of
-Chromium. `--virtual-time-budget` makes Chromium wait for the fonts and the check.
-
-To stop a job on a problem, look for the value `ok`:
-
-```sh
-chromium --headless --window-size=1920,1167 --virtual-time-budget=10000 \
-  --dump-dom "file:///path/to/deck.html?check" | grep -q 'data-layout="ok"'
-```
-
-The name of the command can be `google-chrome` or `chrome`.
+`mix expresso deck.exs --check=layout` runs the check in a headless browser at
+1920 × 1080, writes the problems, and exits with the status 1 for a problem. A continuous
+integration job can run it. See [Check a deck before the talk](check-a-deck.md).
