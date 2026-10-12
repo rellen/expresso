@@ -70,7 +70,7 @@ zero, so axe-core reads the final color of each element.
 
 | Variable | Gives | Without it |
 | --- | --- | --- |
-| `EXPRESSO_CHROMIUM` | The path of Chrome or Chromium | The check looks for `chromium`, `chromium-browser`, `google-chrome`, `google-chrome-stable`, `chrome`, `headless_shell` and `chrome-headless-shell` on the `PATH`. Then it looks for Chrome and Chromium in the folder `Applications` of macOS, and then in the cache of Playwright. |
+| `EXPRESSO_CHROMIUM` | The path of Chrome or Chromium | The check looks for `google-chrome`, `google-chrome-stable`, `chrome`, `chrome-headless-shell`, `headless_shell`, `chromium` and `chromium-browser` on the `PATH`, in this sequence. Then it looks for Chrome and Chromium in the folder `Applications` of macOS, and then in the cache of Playwright. |
 | `EXPRESSO_AXE` | The path of `axe.min.js` | The check looks for `node_modules/axe-core/axe.min.js` in the current directory, in the directory of the deck, and in each parent of them. |
 
 The check finds each tool before it renders the deck. A missing tool gives an error that

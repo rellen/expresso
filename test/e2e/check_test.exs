@@ -13,11 +13,7 @@ defmodule Expresso.E2E.CheckTest do
   # have a different browser on the PATH. Without EXPRESSO_CHROMIUM, the tests
   # use that headless shell, as the other browser tests do.
   setup_all do
-    shell =
-      "~/.cache/ms-playwright/chromium_headless_shell-*/chrome-*/headless_shell"
-      |> Path.expand()
-      |> Path.wildcard()
-      |> List.last()
+    shell = Expresso.Check.Browser.playwright()
 
     if System.get_env("EXPRESSO_CHROMIUM") == nil and shell != nil do
       System.put_env("EXPRESSO_CHROMIUM", shell)
