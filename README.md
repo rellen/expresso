@@ -180,6 +180,7 @@ Add `--check` to check the deck and write a report:
 mix expresso my_deck.exs --check          # needs no other tool
 mix expresso my_deck.exs --check=layout   # needs Chrome or Chromium
 mix expresso my_deck.exs --check=a11y     # needs Chrome or Chromium, and axe-core
+mix expresso my_deck.exs --check=browser  # needs Node, Playwright and axe-core
 ```
 
 The exit status is 1 for a problem, so a continuous integration job can run the check. See
@@ -497,7 +498,8 @@ window gives each problem, with a link to its step. See
 
 `mix expresso deck.exs --check` checks a deck with no browser window, and exits with the
 status 1 for a problem. `--check=layout` also runs the layout check in a headless Chrome or
-Chromium, and `--check=a11y` also runs axe-core at each step and in each view. See
+Chromium, and `--check=a11y` also runs axe-core at each step and in each view.
+`--check=browser` also presses the keys of the presenter in Playwright. See
 [Check a deck before the talk](docs/how-to/check-a-deck.md) and
 [the check option](docs/reference/check-option.md).
 

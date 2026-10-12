@@ -16,7 +16,7 @@ defmodule Expresso.CommandLine do
   @version Mix.Project.config()[:version]
 
   # The levels of `--check`. Each level runs the checks of the level before it.
-  @check_levels %{"layout" => :layout, "a11y" => :a11y}
+  @check_levels %{"layout" => :layout, "a11y" => :a11y, "browser" => :browser}
 
   # The port of the watch mode without `--port`. Phoenix uses 4000, so a
   # Phoenix application and a deck can run at the same time.
@@ -34,9 +34,10 @@ defmodule Expresso.CommandLine do
       `-` is an option, except `-` alone. `--port` without `--watch` is an
       error too, and so is `--check` with `--watch`.
     * `{:check, level, input, output}` for `--check`. The level is `:basic`
-      for `--check`, `:layout` for `--check=layout` and `:a11y` for
-      `--check=a11y`. The check needs an input, and it writes its report to
-      the standard output, so `-` is an error for the output.
+      for `--check`, `:layout` for `--check=layout`, `:a11y` for
+      `--check=a11y` and `:browser` for `--check=browser`. The check needs an
+      input, and it writes its report to the standard output, so `-` is an
+      error for the output.
     * `{:watch, input, output, port}` for `--watch`. The port comes from
       `--port 4200` or `--port=4200`, and it is 4100 without that option. The
       watch mode needs an input file, and it does not write to the standard
@@ -105,7 +106,7 @@ defmodule Expresso.CommandLine do
   defp take_options(["--check=" <> level | rest], options, args) do
     case Map.fetch(@check_levels, level) do
       {:ok, level} -> take_options(rest, %{options | check: level}, args)
-      :error -> {:error, "Unknown level of --check: #{level}. Give layout or a11y."}
+      :error -> {:error, "Unknown level of --check: #{level}. Give layout, a11y or browser."}
     end
   end
 

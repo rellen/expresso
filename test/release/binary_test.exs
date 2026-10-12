@@ -223,7 +223,7 @@ defmodule Expresso.BinaryTest do
 
   test "gives the exit status 1 for a level of --check that it does not know", context do
     assert {output, 1} = run(context, ["examples/demo.exs", "--check=all"])
-    assert output =~ "Unknown level of --check: all. Give layout or a11y.\n"
+    assert output =~ "Unknown level of --check: all. Give layout, a11y or browser.\n"
   end
 
   test "gives the exit status 1 for an unknown option", context do

@@ -89,6 +89,9 @@ defmodule Expresso.BurritoEntryPoint do
                          Chrome or Chromium. EXPRESSO_CHROMIUM gives its path.
           --check=a11y   Also run axe-core at each step and in each view.
                          EXPRESSO_AXE gives the path of axe.min.js.
+          --check=browser
+                         Also press the keys of the presenter in Playwright.
+                         It needs Node and the npm package playwright.
       -h, --help         Show this help.
           --version      Show the version of Expresso.
 

@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Expresso do
 
       $ mix expresso <input> [output]
       $ mix expresso <input> [output] --watch [--port <port>]
-      $ mix expresso <input> [output] --check[=layout | =a11y]
+      $ mix expresso <input> [output] --check[=layout | =a11y | =browser]
 
   `<input>` is the Elixir script of the deck, or `-` for the standard input.
   The script returns an `Expresso.Deck` struct, or a module that uses the DSL
@@ -42,6 +42,11 @@ defmodule Mix.Tasks.Expresso do
     * `--check=a11y` - also the rules of axe-core at each step and in each
       view. Run `npm install --save-dev axe-core` in the directory of the
       deck, or give the path of `axe.min.js` in `EXPRESSO_AXE`.
+    * `--check=browser` - also the keys of the presenter in Playwright: each
+      step, each view, the focus and the errors of the script. Add the Hex
+      package `playwright_ex` to your project, and run
+      `npm install --save-dev playwright axe-core` and
+      `npx playwright install chromium` in the directory of the deck.
 
   `docs/how-to/check-a-deck.md` tells how to install each tool.
 
@@ -50,8 +55,8 @@ defmodule Mix.Tasks.Expresso do
     * `--watch` - serve the deck, and render it again after each change
     * `--port <port>` - the port for `--watch`, from 1 to 65535. The default
       is 4100.
-    * `--check`, `--check=layout`, `--check=a11y` - check the deck, and write
-      a report
+    * `--check`, `--check=layout`, `--check=a11y`, `--check=browser` - check
+      the deck, and write a report
     * `-h`, `--help` - show this help
     * `--version` - show the version of Expresso
 

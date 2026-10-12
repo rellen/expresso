@@ -139,10 +139,10 @@ defmodule Expresso.CommandLineTest do
 
     test "gives an error for an unknown level" do
       assert CommandLine.parse(["deck.exs", "--check=all"]) ==
-               {:error, "Unknown level of --check: all. Give layout or a11y."}
+               {:error, "Unknown level of --check: all. Give layout, a11y or browser."}
 
       assert CommandLine.parse(["deck.exs", "--check="]) ==
-               {:error, "Unknown level of --check: . Give layout or a11y."}
+               {:error, "Unknown level of --check: . Give layout, a11y or browser."}
     end
 
     test "gives an error without an input, for the standard output, and with --watch" do

@@ -116,6 +116,53 @@ defmodule Expresso.E2E.CheckTest do
     assert output =~ ".low"
   end
 
+  test "--check=browser presses each key, and finds no problem in a good deck", %{tmp_dir: dir} do
+    {status, output} = check(dir, @good, :browser)
+
+    assert output =~ "and the keys of the presenter in Playwright\n"
+    assert {status, output} == {0, output}
+    assert String.ends_with?(output, "\nNo problems.\n")
+  end
+
+  test "--check=browser finds a key that does not move, and an error of the script" do
+    {:ok, deck} =
+      Expresso.to_deck(
+        Expresso.Builder.deck(
+          [
+            Expresso.Builder.slide("one",
+              heading: "One",
+              elements: [
+                Expresso.Builder.text_area(text: "a"),
+                Expresso.Builder.text_area(text: "b", at: 2)
+              ]
+            )
+          ],
+          name: "broken keys",
+          dim_contrast: 4.5
+        )
+      )
+
+    # A script that takes the key `j` before the presenter, and an error.
+    script = """
+    <script>
+    addEventListener("keydown", (event) => {
+      if (event.key === "j") event.stopImmediatePropagation();
+    }, true);
+    setTimeout(() => { throw new Error("boom"); }, 0);
+    </script>
+    """
+
+    html = String.replace(Expresso.Deck.render(deck), "</head>", script <> "</head>")
+    {:ok, tools} = Expresso.Check.Session.find([File.cwd!()])
+    {:ok, result} = Expresso.Check.Session.run(html, deck, tools)
+
+    assert result.layout == []
+    assert result.accessibility == []
+
+    assert "The keys: j at 1.1 shows 1.1, and not the next step 1.2" in result.session
+    assert Enum.any?(result.session, &(&1 =~ ~r/^The script: .*boom/))
+  end
+
   test "--check=a11y finds no problem in a good deck", %{tmp_dir: dir} do
     {status, output} = check(dir, @good, :a11y)
 
