@@ -507,7 +507,8 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   stroke-opacity: 0.3;
 }
 .chart-tick,
-.chart-category {
+.chart-category,
+.chart-axis-title {
   fill: var(--muted);
 }
 .chart-value,

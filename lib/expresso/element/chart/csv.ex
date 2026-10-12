@@ -60,6 +60,33 @@ defmodule Expresso.Element.Chart.Csv do
   end
 
   @doc """
+  Return the heading of the column of the categories, or `nil`
+
+  The heading is the first cell of the first row. In a file with a column of
+  frames, it is the first cell of the other columns. A file with levels joins
+  the headings of its levels. An empty heading, or a file that the other
+  functions refuse, returns `nil`.
+
+      iex> Expresso.Element.Chart.Csv.heading("Year,Orders\\n2024,1\\n", "a.csv")
+      "Year"
+      iex> Expresso.Element.Chart.Csv.heading("year,region,Orders\\n2024,North,1\\n", "a.csv", [], "year")
+      "region"
+      iex> Expresso.Element.Chart.Csv.heading(",Orders\\n2024,1\\n", "a.csv")
+      nil
+  """
+  @spec heading(String.t(), String.t(), opts(), String.t() | nil) :: String.t() | nil
+  def heading(text, src, opts \\ [], frames \\ nil) do
+    with {:ok, rows} <- rows(text, src, opts),
+         {:ok, [{_number, cells} | _data]} <- levels(rows, opts[:levels], src),
+         [first | _rest] <- if(frames, do: List.delete(cells, frames), else: cells),
+         true <- is_binary(first) and String.trim(first) != "" do
+      String.trim(first)
+    else
+      _no_heading -> nil
+    end
+  end
+
+  @doc """
   Read a CSV file with a column that names the frame of each row
 
   The column with the heading `column` names the frame. Of the other columns,

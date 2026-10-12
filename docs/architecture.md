@@ -1194,6 +1194,11 @@ to the items of a list. These are the reasons for this design:
   series, so the legend does not name a series before the series shows.
 - **A table for a screen reader.** The SVG has `role="img"` and the title. The table with
   the class `chart-table` holds each value, and the style sheet hides it from the eye.
+- **The names of the axes come from the file.** The first heading of a CSV file names the
+  categories, and the reader dropped it before. The Line 4 talk found the problem: the axis
+  of its chart had no name. The heading is now the default of `category_label`, so a chart
+  from a file shows the name that the spreadsheet already gives. The value has no heading
+  in the file, so `value_label` has no default.
 - **A CSV file at compile time.** `Expresso.PathTransformer` joins the path to the `root`
   option, and `Expresso.Element.Chart.build/1` reads the file, as for a code element. The
   series of the file are then entities, so `reveal` applies to them.
