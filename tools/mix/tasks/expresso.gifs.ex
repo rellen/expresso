@@ -99,6 +99,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "chart-sunburst", deck: "chart_sunburst.exs", actions: ["j"]},
     %{name: "chart-levels", deck: "chart_levels.exs", still: true},
     %{name: "chart-tsv", deck: "chart_tsv.exs", still: true},
+    %{name: "chart-labels", deck: "chart_labels.exs", still: true},
     %{name: "callout", deck: "callout.exs", actions: ["j", "j"]},
     %{name: "callout-kinds", deck: "callout_kinds.exs", still: true},
     %{name: "accessible", deck: "accessible.exs", actions: ["j", "m", "j", "j"]},

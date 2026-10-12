@@ -75,6 +75,38 @@ Examples.ChartLine
 
 ![The line of the web shows first, then the phone and the shop, and the earlier lines dim](https://raw.githubusercontent.com/rellen/expresso/media/chart-line.gif)
 
+## Name the axes
+
+A chart from a CSV file takes the first heading of the file, such as `Month`, as the name of
+its categories. The name goes under the axis of the categories. Give the `value_label`
+option to name the values beside their axis:
+
+```elixir
+defmodule Examples.ChartLabels do
+  use Expresso
+
+  root __DIR__
+
+  slide "visitors" do
+    heading "Visitors each month"
+
+    chart :line do
+      title "Visitors each month on the web, by phone and in the shop"
+      src "visitors.csv"
+      value_label "Visitors"
+    end
+  end
+end
+
+Examples.ChartLabels
+```
+
+![A line chart with "Visitors" beside the axis of the values and "Month" under the months](https://raw.githubusercontent.com/rellen/expresso/media/chart-labels.png)
+
+A chart with `categories` in the deck has no name for them. Give the `category_label`
+option, such as `category_label "Year"`. The option also replaces the heading of a file. A
+screen reader reads both names in the table of the chart.
+
 ## Draw a chart from a file of a spreadsheet
 
 A spreadsheet can save its table as a CSV file or as a TSV file. You can also copy the cells

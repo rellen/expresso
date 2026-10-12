@@ -171,6 +171,6 @@ or numbers relative to the first line of the excerpt.
 5. A headless check, such as `mix expresso deck.exs --check`, that runs `?check` and
    axe-core on each slide and exits with an error for a problem. A CI job can then run it.
 6. A warning for a slide with no `h1`.
-7. The name of the categories of a chart. The first heading of the CSV file, such as
+7. The name of the categories of a chart (now `category_label`, from the first heading of the file). The first heading of the CSV file, such as
    `commit`, can name the corner of the table of values and the axis of the categories.
-8. A title for the axis of the values of a chart, such as "widgets an hour".
+8. A title for the axis of the values of a chart, such as "widgets an hour" (now `value_label`).

@@ -55,6 +55,8 @@ defmodule Expresso.Element.Chart do
     :class,
     :kind,
     :title,
+    :category_label,
+    :value_label,
     :categories,
     :src,
     :width,
@@ -139,14 +141,21 @@ defmodule Expresso.Element.Chart do
   def build(%__MODULE__{src: src, frames: nil} = chart) when is_binary(src) do
     with {:ok, text} <- read(src),
          {:ok, categories, series} <- Csv.table(text, src, reader(chart)) do
-      validate(%__MODULE__{chart | categories: categories, elements: series})
+      validate(%__MODULE__{
+        chart
+        | categories: categories,
+          elements: series,
+          category_label: chart.category_label || Csv.heading(text, src, reader(chart))
+      })
     end
   end
 
   def build(%__MODULE__{src: src} = chart) when is_binary(src) do
     with {:ok, text} <- read(src),
          {:ok, categories, timeline} <- Csv.frames(text, chart.frames, src, reader(chart)) do
-      %__MODULE__{chart | categories: categories, timeline: timeline}
+      label = chart.category_label || Csv.heading(text, src, reader(chart), chart.frames)
+
+      %__MODULE__{chart | categories: categories, timeline: timeline, category_label: label}
       |> first_frame()
       |> validate()
     end
@@ -364,6 +373,8 @@ defmodule Expresso.Element.Chart do
     %{
       kind: chart.kind,
       title: chart.title,
+      category_label: chart.category_label,
+      value_label: chart.value_label,
       categories: chart.categories,
       series: series,
       values: chart.values,
@@ -484,15 +495,12 @@ defmodule Expresso.Element.Chart do
     temple do
       table class: "chart-table" do
         caption do
-          @title
+          caption_text(@title, @value_label)
         end
 
         thead do
           tr do
-            # The corner names nothing, so it is a cell and not a header. A
-            # header with no text has no name for a screen reader.
-            td do
-            end
+            c(&corner/1, category_label: @category_label)
 
             for {name, _values} <- @columns do
               th scope: "col" do
@@ -517,6 +525,27 @@ defmodule Expresso.Element.Chart do
             end
           end
         end
+      end
+    end
+  end
+
+  defp caption_text(title, nil), do: title
+  defp caption_text(title, value_label), do: "#{title} (#{value_label})"
+
+  # The corner is the header of the column of the categories when the chart
+  # has a name for them. Without one, it names nothing, so it is a cell: a
+  # header with no text has no name for a screen reader.
+  defp corner(%{category_label: nil} = _assigns) do
+    temple do
+      td do
+      end
+    end
+  end
+
+  defp corner(assigns) do
+    temple do
+      th scope: "col" do
+        @category_label
       end
     end
   end
@@ -565,10 +594,10 @@ defmodule Expresso.Element.Chart do
   # holds the names at the ends of the lines.
   defp box(assigns, ticks) do
     widest = ticks |> Enum.map(&String.length(Plot.label(&1))) |> Enum.max()
-    left = 24 + widest * 10
+    left = 24 + widest * 10 + if(assigns[:value_label], do: 32, else: 0)
     top = if length(assigns.series) > 1 or label?(assigns), do: 64, else: 28
     right = if assigns.kind == :line, do: @width - 150, else: @width - 16
-    bottom = @height - 40
+    bottom = @height - 40 - if(assigns[:category_label], do: 30, else: 0)
     %{left: left, top: top, right: right, bottom: bottom}
   end
 
@@ -604,10 +633,37 @@ defmodule Expresso.Element.Chart do
         end
       end
 
+      c(&axis_titles/1, rest!: assigns)
+
       cond do
         @moves -> Motion.render(assigns)
         @kind == :bar -> c(&bars/1, rest!: assigns)
         true -> c(&lines/1, rest!: assigns)
+      end
+    end
+  end
+
+  # The name of the categories under their axis, and the name of the values
+  # beside their axis, turned to read from the bottom up.
+  defp axis_titles(assigns) do
+    temple do
+      if @category_label do
+        text x: Plot.f((@box.left + @box.right) / 2),
+             y: @box.bottom + 62,
+             text_anchor: "middle",
+             class: "chart-axis-title" do
+          @category_label
+        end
+      end
+
+      if @value_label do
+        text x: 0,
+             y: 0,
+             transform: "translate(22 #{Plot.f((@box.top + @box.bottom) / 2)}) rotate(-90)",
+             text_anchor: "middle",
+             class: "chart-axis-title" do
+          @value_label
+        end
       end
     end
   end

@@ -339,6 +339,16 @@ defmodule Expresso.Extension do
             required: true,
             doc: "The name of the chart for a screen reader, and the caption of its table."
           ],
+          category_label: [
+            type: :string,
+            doc:
+              "The name of the categories, such as \"Year\". It goes under the axis of the categories and into the corner of the table. A chart with src takes the first heading of its file by default."
+          ],
+          value_label: [
+            type: :string,
+            doc:
+              "The name of the values, such as \"Widgets an hour\". It goes beside the axis of the values and into the caption of the table."
+          ],
           categories: [
             type: {:list, {:or, [:string, {:list, :string}]}},
             doc:

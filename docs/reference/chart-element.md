@@ -25,6 +25,8 @@ end
 | The first argument | `:bar`, `:line`, `:pie`, `:treemap` or `:sunburst` | The kind of the chart. |
 | `title` | A string, required | The name of the chart for a screen reader, and the caption of its table. |
 | `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels. |
+| `category_label` | A string | The name of the categories, such as `"Year"`. See [the names of the axes](#the-names-of-the-axes). A chart with `src` takes the first heading of its file. |
+| `value_label` | A string | The name of the values, such as `"Widgets an hour"`. See [the names of the axes](#the-names-of-the-axes). |
 | `src` | The path of a CSV file or a TSV file | The categories and the series, in place of `categories` and `series`. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. |
 | `delimiter` | One character, such as `";"` | The character between two cells of the `src` file. The default is a tab for a file that ends in `.tsv`, and a comma for each other file. Requires `src`. |
 | `values` | `true` or `false` | Show the value of each bar. The default is `true`. |
@@ -55,6 +57,21 @@ The chart also takes the overlay options, such as `at`, `effect` and the `on` en
 
 A series also takes the overlay options, so a series can show at its own step without
 `reveal`.
+
+## The names of the axes
+
+| Option | Bar chart and line chart | Each chart, in its table |
+| --- | --- | --- |
+| `category_label` | Under the axis of the categories, in the color `--muted`. | The header of the column of the categories. Without it, the corner of the table is an empty cell. |
+| `value_label` | Beside the axis of the values, turned to read from the bottom up, in the color `--muted`. | After the title in the caption, such as `Orders (Widgets an hour)`. |
+
+The plot gets smaller to make room for each name. A pie, a treemap and a sunburst have no
+axis, so the names go into the table only.
+
+A chart with `src` takes the first heading of its file as `category_label`. In a file with a
+column of frames, it takes the first heading of the other columns. With `levels`, it takes
+the headings of the levels, joined by `/`. An empty heading gives no name. The
+`category_label` option wins over the heading of the file.
 
 ## The frames
 
