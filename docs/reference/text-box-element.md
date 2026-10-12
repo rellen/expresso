@@ -39,8 +39,11 @@ The element also takes the overlay options, such as `at`, `effect` and the `on` 
 A text box can hold each of these elements:
 
 - `text_area`, `image`, `list`, `table`, `quotation`, `spacer` and `code`;
-- `math`, `diagram`, `embed` and `video`;
-- `columns` and `text_box`.
+- `math`, `diagram`, `embed`, `video` and `audio`;
+- `qr_code`, `chart`, `stat` and `icon`;
+- `columns`, `callout` and `toc`.
+
+A text box cannot hold a text box. See [The places of the elements](placement.md).
 
 Use [the columns element](columns-element.md) to put groups side by side.
 

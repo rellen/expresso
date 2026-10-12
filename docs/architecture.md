@@ -1284,10 +1284,10 @@ in a body. These are the reasons for this design:
 - **A paragraph for the header, and not a heading.** A heading in a callout would change the
   outline of the headings of the slide. The role `note` tells a screen reader that the box
   is a part of the slide that it can skip.
-- **The elements of a text box, and no nest.** A callout is for the elements of a text
-  box, and not for a callout or `columns`. A slide, a text box and a column hold a callout.
-  The DSL does not refuse a callout or `columns` in a callout, because the macros of the
-  slide stay in scope. See "The definitions of the elements".
+- **The elements of a text box, and no nest.** A callout holds the elements of a text box,
+  and not a callout or `columns`. A slide, a text box and a column hold a callout.
+  `Expresso.PlacementTransformer` refuses a callout or `columns` in a callout. See "The
+  definitions of the elements".
 
 ### The table of contents
 
@@ -1398,10 +1398,21 @@ held the definitions of its elements, Spark made 882 modules of 25 MB, and
 `lib/expresso/extension.ex` took approximately 2 minutes to compile. With one definition of
 each element, Spark makes 120 modules of 2.3 MB, and the file takes a few seconds.
 
-The tree of the definitions does not give the rules of the places, because the macros of
-the outer entities are in scope in each nested block. Until 2026-10-11, each container held
-the definitions of its elements, and the DSL accepted the same places. `Expresso.Overlay.Check`
-refuses a `pause` inside an element.
+The tree of the definitions therefore does not give the rules of the places, because the
+macros of the outer entities are in scope in each nested block. `Expresso.Placement` gives
+the rules, and `docs/reference/placement.md` lists them. `Expresso.PlacementTransformer`
+calls it for each slide, before the other transformers. The rules are the tree that the
+extension declared until 2026-10-11, when each container held the definitions of its
+elements. A footnote and a shape go at the level of the slide only.
+
+The check is a transformer and not a verifier. Spark raises an error from a transformer, and
+the compile stops. Spark runs a verifier in an `@after_verify` callback, and Elixir reports
+its error as a warning. `Expresso.Overlay.Check` reports a `pause` inside an element, so
+`Expresso.Placement` accepts a pause in each place.
+
+The check reads the structs that Spark makes. An entity keeps only the children of the keys
+that it declares, so an element in the block of a leaf, such as a `text_area` in a `code`
+block, is lost before the check, with no error.
 
 ### The options of the overlays
 
@@ -1441,10 +1452,12 @@ In the present view, the style sheet puts the number in the corner of the window
 
 ### The transformer and the verifiers
 
-The extension imports nothing, and it lists four transformers and eight verifiers:
+The extension imports nothing, and it lists five transformers and eight verifiers:
 
+- `Expresso.PlacementTransformer` refuses an element in a wrong place. It runs first, and it
+  changes nothing. See "The definitions of the elements".
 - `Expresso.PathTransformer` joins each relative path of the deck to the `root` option, and
-  it builds each code element with `src`. It runs first. See "The watch mode".
+  it builds each code element and each chart with `src`. See "The watch mode".
 - `Expresso.IconTransformer` reads the files of the `icons` option of the deck, and it puts
   the SVG of each icon into its element and into the text of each text area and item. See
   "The icons".

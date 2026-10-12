@@ -1046,6 +1046,7 @@ defmodule Expresso.Extension do
     sections: @sections,
     imports: [],
     transformers: [
+      Expresso.PlacementTransformer,
       Expresso.PathTransformer,
       Expresso.IconTransformer,
       Expresso.SectionTransformer,

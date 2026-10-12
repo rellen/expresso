@@ -32,6 +32,9 @@ give a footnote a step of its own, so a footnote without `at` shows at each step
 
 ## The place and the number
 
+Write a footnote at the level of the slide. The compiler refuses a footnote inside an
+element, such as a text box. See [The places of the elements](placement.md).
+
 A footnote shows nothing in the place where you write it. The renderer puts the footnotes
 of a slide into one numbered list under the slide template, in the order of the deck. Each
 template thus gets the list, with no change to the template.
@@ -41,7 +44,6 @@ template thus gets the list, with no change to the template.
 | The number | The position of the footnote in the list of its slide, from 1. The next slide starts at 1 again. |
 | A mark in the text | Write the number in the text yourself, such as `<sup>1</sup>`. Do not write it in the footnote, because the list gives the number. |
 | A footnote at a step | The footnote keeps its number and its space at each step, so the list does not move. |
-| A footnote in a text box | The list collects it too. The `at` option of the text box does not apply to it. |
 
 ## The page of the sources
 

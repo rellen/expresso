@@ -564,6 +564,7 @@ Reference pages describe each value of an option. These pages describe the optio
 deck and of a slide:
 
 - [The transition option](docs/reference/transition-option.md)
+- [The places of the elements](docs/reference/placement.md)
 - [The morph option](docs/reference/morph-option.md)
 - [The overlay options](docs/reference/overlay-options.md)
 - [Step labels](docs/reference/step-labels.md)

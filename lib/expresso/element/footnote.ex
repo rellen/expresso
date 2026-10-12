@@ -42,30 +42,23 @@ defmodule Expresso.Element.Footnote do
   @doc """
   Return the footnotes of a slide, in the order of the deck
 
-  A footnote can be at the level of the slide or inside an element that holds
-  elements, such as a text box.
+  A footnote is at the level of the slide. `Expresso.PlacementTransformer`
+  refuses a footnote inside an element.
 
       iex> alias Expresso.Builder
       iex> slide =
       ...>   Builder.slide("s",
       ...>     elements: [
       ...>       Builder.footnote("one"),
-      ...>       Builder.text_box(elements: [Builder.footnote("two")])
+      ...>       Builder.text_box(elements: [Builder.text_area(text: "A claim")]),
+      ...>       Builder.footnote("two")
       ...>     ]
       ...>   )
       iex> slide |> Expresso.Element.Footnote.of_slide() |> Enum.map(& &1.text)
       ["one", "two"]
   """
   @spec of_slide(map()) :: [t()]
-  def of_slide(slide), do: collect(slide.elements || [])
-
-  defp collect(elements) do
-    Enum.flat_map(elements, fn
-      %__MODULE__{} = footnote -> [footnote]
-      %{elements: [_ | _] = children} -> collect(children)
-      _element -> []
-    end)
-  end
+  def of_slide(slide), do: for(%__MODULE__{} = footnote <- slide.elements || [], do: footnote)
 
   @doc """
   Make the assigns of the render function from the struct

@@ -18,10 +18,8 @@ slide "two sides" do
     column do
       at from: 2
 
-      text_box do
-        text_area do
-          text "A column that takes the rest, and shows at step 2."
-        end
+      text_area do
+        text "A column that takes the rest, and shows at step 2."
       end
     end
   end
@@ -63,7 +61,8 @@ the defaults of the theme: it grows, and its base width is 0%.
 
 ## The children
 
-A column can hold each element that [a text box](text-box-element.md) holds, a text box
-and a second `columns` element.
+A column can hold each element that [a text box](text-box-element.md) holds, except a
+`columns` element. A column cannot hold a text box. See
+[The places of the elements](placement.md).
 
-A slide, a text box or a column can hold a `columns` element.
+A slide or a text box can hold a `columns` element.

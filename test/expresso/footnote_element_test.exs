@@ -22,7 +22,8 @@ defmodule Expresso.FootnoteElementTest do
           elements: [
             claim("A claim.<sup>1</sup>"),
             Builder.footnote("The <em>first</em> source."),
-            Builder.text_box(elements: [Builder.footnote("The second source.")])
+            claim("A second claim.<sup>2</sup>"),
+            Builder.footnote("The second source.")
           ]
         )
       ])
@@ -34,6 +35,7 @@ defmodule Expresso.FootnoteElementTest do
 
     assert slide |> Floki.find("ol.footnotes em") |> Floki.text() == "first"
     assert Floki.find(slide, ".text-box li.footnote") == []
+    assert slide |> Floki.find(".text-box") |> length() == 2
     assert html |> Floki.find(".handout-page ol.footnotes") |> length() == 1
   end
 
