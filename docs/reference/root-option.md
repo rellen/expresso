@@ -43,7 +43,7 @@ directory.
 | A code file | The `src` option of `code`. |
 | A local page | The first argument of `embed`, when it is not an address. |
 | The image of an embed | The `fallback` option of `embed`. |
-| A video | The first argument and the `poster` option of `video`. |
+| A video | The first argument and the `poster` and `captions` options of `video`. |
 | A sound | The first argument of `audio`. |
 | A chart file | The `src` option of `chart`. |
 | An icon | Each path of the `icons` option of the deck. |

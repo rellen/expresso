@@ -46,6 +46,32 @@ defmodule Expresso.E2E.AccessibilityTest do
     end
   end
 
+  # A German deck with a described diagram and a video with captions.
+  defmodule OptionsDeck do
+    use Expresso
+
+    name "Optionen"
+    lang "de"
+
+    slide "start" do
+      heading "Der Ablauf"
+
+      diagram "test/fixtures/flow.svg" do
+        alt "Eine Anfrage geht vom Browser zum Server und zurück"
+      end
+    end
+
+    slide "video" do
+      heading "Die Vorführung"
+
+      video "test/fixtures/clip.webm" do
+        title "Ein Testbild"
+        poster "test/fixtures/dot.png"
+        captions "test/fixtures/captions.vtt"
+      end
+    end
+  end
+
   @axe Path.expand("../../node_modules/axe-core/axe.min.js", __DIR__)
 
   # The violations of axe-core in the page, as a list of rule ids and targets.
@@ -130,5 +156,22 @@ defmodule Expresso.E2E.AccessibilityTest do
 
     press(page, "Escape")
     refute js(page, "document.activeElement === #{listbox}")
+  end
+
+  test "the options of a deck give the language, the text of a diagram and the captions", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(OptionsDeck, tmp_dir))
+
+    assert js(page, "document.documentElement.lang") == "de"
+    assert {"diagram", violations(page)} == {"diagram", []}
+
+    press(page, "j")
+    assert {"video", violations(page)} == {"video", []}
+
+    wait_for(page, "document.querySelector('.screen video').textTracks[0].cues?.length === 1")
+
+    assert js(page, "document.querySelector('.screen video').textTracks[0].mode") == "showing"
   end
 end

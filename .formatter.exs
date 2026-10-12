@@ -17,6 +17,7 @@ spark_locals_without_parens = [
   by: 1,
   callout: 1,
   callout: 2,
+  captions: 1,
   categories: 1,
   chart: 1,
   chart: 2,

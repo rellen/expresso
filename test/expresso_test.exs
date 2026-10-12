@@ -77,6 +77,7 @@ defmodule ExpressoTest do
                duration: nil,
                transition: :fade,
                morph: :auto,
+               lang: "en",
                effect: :fade,
                speed: nil,
                easing: nil,

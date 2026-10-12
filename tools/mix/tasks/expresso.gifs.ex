@@ -88,6 +88,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "video", deck: "video.exs", actions: ["p"]},
     %{name: "video-at", deck: "video_at.exs", actions: ["j"]},
     %{name: "video-controls", deck: "video_controls.exs", still: true},
+    %{name: "video-captions", deck: "video_captions.exs", still: true},
     %{name: "chart", deck: "chart.exs", actions: ["j"]},
     %{name: "chart-line", deck: "chart_line.exs", actions: ["j", "j"]},
     %{name: "chart-pie", deck: "chart_pie.exs", still: true},
