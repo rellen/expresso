@@ -158,7 +158,8 @@ or numbers relative to the first line of the excerpt.
    these in the pull request of iso-factories.
 5. **The checks need a script.** We wrote a Playwright script to run `?check`, to run
    axe-core on each slide and each view, and to take a picture of each slide. Each deck
-   that wants these checks in CI needs the same script.
+   that wants these checks in CI needs the same script. `--check=a11y` now runs the first
+   two checks with no script.
 6. **The talk is a Mix project beside pages with no build.** The Pages workflow of
    iso-factories publishes only the rendered `index.html` of the talk.
 
@@ -169,8 +170,9 @@ or numbers relative to the first line of the excerpt.
 3. An option of `code` for long lines. See Minus 5.
 4. `highlight` and `reveal` groups by text. See Minus 6.
 5. A headless check, such as `mix expresso deck.exs --check`, that runs `?check` and
-   axe-core on each slide and exits with an error for a problem. A CI job can then run it.
-6. A warning for a slide with no `h1`.
+   axe-core on each slide and exits with an error for a problem. A CI job can then run it
+   (now `--check`, `--check=layout` and `--check=a11y`).
+6. A warning for a slide with no `h1` (now a hidden `h1`, and a note of `--check`).
 7. The name of the categories of a chart (now `category_label`, from the first heading of the file). The first heading of the CSV file, such as
    `commit`, can name the corner of the table of values and the axis of the categories.
 8. A title for the axis of the values of a chart, such as "widgets an hour" (now `value_label`).

@@ -5,6 +5,7 @@ end of the address of the present view starts it, such as `deck.html?check`. The
 view does not run it.
 
 For the steps of a check, see [Check that a deck fits the screen](../how-to/check-the-layout.md).
+To run the check with no window, use [the check option](check-option.md).
 
 ## When it runs
 
@@ -68,6 +69,12 @@ The console of the browser gets one warning for each problem, with the text of i
 The `body` element gets `data-layout="ok"` for no problem, and `data-layout="problems"`
 for one or more problems.
 
+After the report, the page writes the result as JSON into a `script` element with the id
+`check-result`, and the `body` element gets `data-check="done"`. The JSON holds the size of
+the window and the text of each problem. With `?check=a11y`, and with axe-core in the
+document, the page first runs axe-core at each step and in each view, and the JSON also
+holds each violation. [The check option](check-option.md) reads this element.
+
 The report does not show on paper.
 
 ## What the check does not find
@@ -76,6 +83,7 @@ The check reads the place and the size of each element. It does not find:
 
 - a color with low contrast. The theme option checks the colors of a theme, and the
   compiler gives a warning for a color of a map under its minimum. See
-  [The theme option](theme-option.md),
+  [The theme option](theme-option.md). `--check=a11y` runs axe-core, which finds the
+  contrast of each text on the slide. See [The check option](check-option.md),
 - text that is too small for the room,
 - an element that covers another element inside the window.

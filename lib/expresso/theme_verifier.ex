@@ -28,15 +28,25 @@ defmodule Expresso.ThemeVerifier do
   @impl Verifier
   @spec verify(map()) :: :ok | {:warn, [String.t()]}
   def verify(dsl_state) do
-    theme = Verifier.get_option(dsl_state, [:deck], :theme, :default)
-
-    warnings =
-      for {name, palette} <- Palette.variants(theme),
-          map?(theme, name),
-          warning <- warnings(palette, subject(name), adjust?(theme)),
-          do: warning
-
+    warnings = dsl_state |> Verifier.get_option([:deck], :theme, :default) |> messages()
     if warnings == [], do: :ok, else: {:warn, warnings}
+  end
+
+  @doc """
+  Return the warning of each role of a theme under its minimum of contrast
+
+  `theme` is a value of the `theme` option. `verify/1` and `Expresso.Check`
+  call this function.
+
+      iex> Expresso.ThemeVerifier.messages(:dracula)
+      []
+  """
+  @spec messages(term()) :: [String.t()]
+  def messages(theme) do
+    for {name, palette} <- Palette.variants(theme),
+        map?(theme, name),
+        warning <- warnings(palette, subject(name), adjust?(theme)),
+        do: warning
   end
 
   # A built-in theme meets each minimum, so the verifier checks a map only.

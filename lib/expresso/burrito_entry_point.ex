@@ -83,10 +83,17 @@ defmodule Expresso.BurritoEntryPoint do
                          reloads on the same step. With [output], also write the
                          file after each render. Stop with Ctrl-C.
           --port <port>  The port for --watch. The default is 4100.
+          --check        Check the deck, and write a report. The exit status is
+                         1 for a problem. With [output], also write the file.
+          --check=layout Also run the layout check at each step in a headless
+                         Chrome or Chromium. EXPRESSO_CHROMIUM gives its path.
+          --check=a11y   Also run axe-core at each step and in each view.
+                         EXPRESSO_AXE gives the path of axe.min.js.
       -h, --help         Show this help.
           --version      Show the version of Expresso.
 
-    The exit status is 0 when the command writes the HTML, and 1 for an error.
+    The exit status is 0 when the command writes the HTML, and 1 for an error
+    or for a problem of --check.
     """
   end
 end

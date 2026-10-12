@@ -177,6 +177,7 @@ help text, so the two commands take the same arguments. `run/3` reads the argume
 | No input path | Writes the usage text to the standard error. | 1 |
 | `<input> [output]` | Calls `Expresso.main/2`. | 0, or 1 for an error |
 | `<input> [output] --watch` | Calls `Expresso.Watch.run/3`. See "The watch mode". | 1, after an error |
+| `<input> [output] --check[=<level>]` | Calls `Expresso.Check.run/3`. See "The check mode". | 0, or 1 for a problem or an error |
 
 Each argument that starts with `-` is an option, except `-` alone. `-` is a path, and
 `Expresso.main/2` reads it as the standard input or the standard output. A path that
@@ -222,6 +223,42 @@ give `EAGAIN`, so the HTML is then complete. An Erlang port, as in `System.cmd/3
 a pipe that does not block. Therefore the release tests read the standard output of the
 binary from a file. The VM cannot see this error, so a fix must be in the launcher of
 Burrito.
+
+## The check mode
+
+`mix expresso deck.exs --check` checks a deck, and writes a report to the standard output.
+`docs/reference/check-option.md` gives the levels and the report. `Expresso.Check` runs a
+check in this sequence:
+
+1. Find the tools of the level: `Expresso.Check.Browser.find/1` for a browser, and
+   `find_axe/2` for axe-core. A missing tool stops the check before the render.
+2. Load the deck with `Expresso.load_file/1`, and render it. With an output path, write
+   the document.
+3. Run the checks of `Expresso.Check.Document` on the deck and on its HTML.
+4. For a browser level, run `Expresso.Check.Browser.run/3`. It writes a copy of the
+   document into a temporary directory, with axe-core before the end of the `body` for
+   `--check=a11y`. A headless Chrome opens the copy with `?check` or `?check=a11y`, and
+   it writes the document after the check with `--dump-dom`.
+5. Read the element `check-result` of that document, and write the report.
+
+These are the reasons for its design:
+
+- **The levels add tools.** A user can run `--check` with no tool. Each higher level needs
+  one more tool, and the error of a missing tool tells how to install it. Expresso does not
+  depend on Node or on a browser.
+- **The browser runs the check of the page.** The page already has the layout check of
+  `?check`. `assets/src/check.ts` adds axe-core and the JSON result. Thus the layout check
+  of a window and of the check mode is the same code.
+- **The browser runs with `--dump-dom`, and not with a protocol.** The command waits for
+  the end of the check with `--virtual-time-budget`. The browser advances the time of the
+  page only when the page waits, so a slow computer does not stop the check early. The
+  check needs no client of the DevTools protocol, and the binary can run it too.
+- **A small page measures the window.** A headless Chrome keeps a part of its window for
+  itself, and the part changes with the version. The first run opens a page that writes its
+  size, and the second run makes the window larger by the difference.
+- **axe-core reads the slide at each step, and the document in each view.** The rules of
+  the whole document run one time for each view. A run on the slide alone is faster, and
+  the check of the Line 4 deck took 49 s and not 200 s.
 
 ## The watch mode
 
@@ -1580,6 +1617,8 @@ The TypeScript part is under `assets/src/`. It has these modules:
   the fragment of the address.
 - `layout.ts` makes the layout check of `?check`. It shows each step with `dom.ts`, it
   measures the elements of the slide, and it writes a report into the document.
+- `check.ts` runs axe-core for `?check=a11y`, and it writes the result of the two checks
+  for the check mode. See "The check mode".
 - `search.ts` filters the list of keys, and `scheme.ts` changes the variant of a theme.
 - `morph.ts` finds the elements that two slides share. See "The morph".
 - `chart.ts` writes the numbers that count, of a chart and of a stat.
@@ -2147,8 +2186,9 @@ gives what it finds. These are the reasons for its design:
 
 - **It runs in the browser.** Only a browser engine knows the place of each element,
   because the place depends on the fonts, the style sheet and the size of the window. The
-  compiler and the binary have no browser engine. A headless Chromium can still run the
-  check with no window, so a continuous integration job can use it.
+  compiler and the binary have no browser engine. `--check=layout` runs the check in a
+  headless Chrome with no window, so a continuous integration job can use it. See "The
+  check mode".
 - **It measures the window, and not the slide.** Content past the edge of the window can
   make the slide larger too. The window is the part that the audience sees.
 - **It measures the text, and not the box.** A text box is as wide as the slide. When it

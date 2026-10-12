@@ -536,6 +536,8 @@ file. To take a later version:
 - `assets/src/dom.ts` — the code that reads the document and writes to it.
 - `assets/src/main.ts` — the entry, which esbuild bundles.
 - `assets/src/layout.ts` — the layout check of `?check` in the address.
+- `assets/src/check.ts` — axe-core for `?check=a11y`, and the result for
+  `mix expresso --check`.
 - `assets/src/deck.ts` — the list of the steps of the deck.
 - `assets/src/speaker.ts` — the texts of the speaker view.
 - `assets/src/search.ts` — the search of the list of keys.
@@ -882,8 +884,9 @@ new behavior. A look at the slides is still necessary after a change to
 `assets/style.css`. `?check` in the address finds an element past an edge of the window
 and a line of code that breaks. `test/e2e/layout_check_test.exs` runs it on
 `examples/line4/line4.exs` at 1920 × 1080, and on each example deck of the GIFs at
-1280 × 720. The check does not see a color, an order or a
-size that is wrong, so look at the slides too. A remote container has no display,
+1280 × 720. `mix expresso deck.exs --check=a11y` runs the layout check and axe-core on a
+deck with no window, and `test/e2e/check_test.exs` tests it. The checks do not see an
+order or a size that is wrong, so look at the slides too. A remote container has no display,
 but it has Chromium, and `npm install` gives Playwright. The browser is at
 `/opt/pw-browsers/chromium`. This path is not the default path of Playwright, so give it
 to `chromium.launch`.
