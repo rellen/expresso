@@ -140,7 +140,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "a fragment goes to a slide and a step of the deck, and other fragments do not change the state" do
+  property "a fragment goes to the nearest step of its slide, and other fragments do not change the state" do
     check all program <- decks(),
               state <- state_in(program),
               hash <- fragment(program),
@@ -154,11 +154,23 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
           nil -> nil
         end
 
-      if inside in Tuple.to_list(program.steps) do
-        assert where(program, read) == inside
-      else
-        assert read == state
+      case nearest(program, inside) do
+        nil -> assert read == state
+        position -> assert where(program, read) == position
       end
+    end
+  end
+
+  # The nearest step of a slide of the deck, or nil for a slide that the deck
+  # does not have.
+  defp nearest(_program, nil), do: nil
+
+  defp nearest(program, {slide, step}) do
+    steps = program.steps |> Tuple.to_list() |> Enum.filter(&(elem(&1, 0) == slide))
+
+    case steps do
+      [] -> nil
+      _ -> {slide, step |> max(1) |> min(length(steps))}
     end
   end
 

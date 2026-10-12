@@ -263,9 +263,6 @@ defmodule Expresso.Presenter.InterpreterTest do
             "#",
             "#0",
             "#4",
-            "#2.0",
-            "#2.4",
-            "#1.2",
             "#x",
             "#2.2.1",
             "#slide-2",
@@ -273,6 +270,12 @@ defmodule Expresso.Presenter.InterpreterTest do
           ] do
         assert run(@three, state, {:hash, hash}) == state, hash
       end
+    end
+
+    test "a step that the slide does not have becomes the nearest step of the slide" do
+      assert run(@three, at(1, 1), {:hash, "#2.9"}) == at(2, 3)
+      assert run(@three, at(1, 1), {:hash, "#2.0"}) == at(2, 1)
+      assert run(@three, at(2, 2), {:hash, "#1.2"}) == at(1, 1)
     end
 
     test "a fragment removes a black screen and the digits" do

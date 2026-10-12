@@ -74,7 +74,10 @@ defmodule Expresso.Presenter.Interpreter do
         {position(program, state, number(slide), 1, %{blank: false}), []}
 
       [_all, slide, step] ->
-        {position(program, state, number(slide), number(step), %{blank: false}), []}
+        slide = number(slide)
+
+        {position(program, state, slide, in_slide(program, slide, number(step)), %{blank: false}),
+         []}
 
       nil ->
         {state, []}
@@ -273,6 +276,17 @@ defmodule Expresso.Presenter.Interpreter do
       %{moved | digits: ""}
     else
       _no_change -> state
+    end
+  end
+
+  # A step of a fragment that the slide does not have becomes its nearest step:
+  # step 1 for 0, and the last step for a number past the last step. An old
+  # bookmark then shows the right slide after the slide loses a step.
+  defp in_slide(program, slide, step) do
+    if slide >= 1 and slide <= tuple_size(program.slides) do
+      step |> max(1) |> min(elem(program.slides, slide - 1).steps)
+    else
+      step
     end
   end
 

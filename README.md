@@ -364,7 +364,9 @@ its name, so a screen reader can move from slide to slide by heading. Give each 
 ### The address
 
 The address of the document holds the slide and the step. For example, `deck.html#4.2` is
-step 2 of slide 4. A reload shows the same step, and a link can go to one slide.
+step 2 of slide 4. A reload shows the same step, and a link can go to one slide. A step
+that the slide does not have shows the nearest step of that slide, so an old link still
+opens the right slide after the slide loses a step.
 
 For a deck with a light and a dark variant, `?scheme=dark` or `?scheme=light` in the address
 chooses the variant, such as `deck.html?scheme=dark#4.2`. The key `t` shows the other
