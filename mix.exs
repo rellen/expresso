@@ -235,7 +235,11 @@ defmodule Mix.Tasks.Compile.Presenter do
   `mix.exs` puts this compiler in front of the Elixir compiler. esbuild reads
   `assets/src/main.ts`, it follows each import, and it writes one minified
   script to `priv/static/presenter.js`. `Expresso.Renderer` reads that file at
-  compile time. The profile is in `config/config.exs`.
+  compile time.
+
+  The compiler gives esbuild its version and its profile itself. A project that
+  takes Expresso as a dependency does not load `config/config.exs` of Expresso,
+  and a dependency from Git has no bundle, because `.gitignore` excludes it.
 
   This module is in `mix.exs` and not in `lib/`. Mix runs the compilers before
   it compiles `lib/`, so a compiler in `lib/` is not present when Mix needs it.
@@ -250,6 +254,7 @@ defmodule Mix.Tasks.Compile.Presenter do
 
   @sources "assets/src/**/*.ts"
   @bundle "priv/static/presenter.js"
+  @version "0.28.2"
 
   @impl Mix.Task.Compiler
   def run(args) do
@@ -272,6 +277,14 @@ defmodule Mix.Tasks.Compile.Presenter do
     # applications. `mix esbuild` starts them the same way.
     Mix.ensure_application!(:inets)
     Mix.ensure_application!(:ssl)
+    Application.put_env(:esbuild, :version, @version)
+
+    Application.put_env(:esbuild, :presenter,
+      args:
+        ~w(src/main.ts --bundle --format=iife --target=es2020 --minify --outfile=../priv/static/presenter.js),
+      cd: Path.expand("assets", __DIR__)
+    )
+
     Application.ensure_all_started(:esbuild)
 
     case Esbuild.install_and_run(:presenter, []) do
