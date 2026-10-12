@@ -101,15 +101,16 @@ defmodule Expresso.Renderer do
   defp menu(assigns) do
     temple do
       nav id: "menu", aria_label: "Slides and steps" do
-        ol do
+        ol role: "listbox", aria_label: "Slides and steps", tabindex: "0" do
           for {slide, %{first: first, steps: steps}} <-
                 Enum.zip(@deck.slides, Expresso.Steps.slides(@deck)),
               labels = slide.metadata[:labels] || %{} do
-            li class: "menu-group" do
+            li class: "menu-group", role: "none" do
               div class: "menu-slide", data_commands: menu_commands(first) do
                 section class: Expresso.Element.classes("menu-thumb", slide.metadata[:class]),
                         data_step: steps,
-                        aria_hidden: "true" do
+                        aria_hidden: "true",
+                        inert: true do
                   c(&slide_parts/1, deck: @deck, slide: slide)
                 end
 
@@ -117,18 +118,30 @@ defmodule Expresso.Renderer do
                   slide.metadata.slide_number
                 end
 
-                span class: "menu-name" do
+                span class: "menu-name", id: "menu-name-#{slide.metadata.slide_number}" do
                   menu_name(slide)
                 end
               end
 
-              ol class: "menu-steps" do
+              ol class: "menu-steps",
+                 role: "group",
+                 aria_labelledby: "menu-name-#{slide.metadata.slide_number}" do
                 for step <- 1..steps//1 do
                   li class: "menu-step",
+                     id: "menu-step-#{first + step - 1}",
+                     role: "option",
+                     aria_selected: "false",
+                     aria_labelledby:
+                       (steps == 1 and labels[step] == nil) &&
+                         "menu-name-#{slide.metadata.slide_number}",
                      data_index: first + step - 1,
                      data_single: steps == 1 and labels[step] == nil,
                      data_commands: menu_commands(first + step - 1) do
                     span class: "menu-number" do
+                      span class: "menu-hidden" do
+                        "Step "
+                      end
+
                       step
                     end
 
@@ -150,6 +163,23 @@ defmodule Expresso.Renderer do
   # The name of a slide in the menu: its heading, its name, or its number.
   defp menu_name(slide),
     do: slide.metadata[:heading] || slide.name || "Slide #{slide.metadata.slide_number}"
+
+  # The name of a slide for a screen reader, such as "Slide 3 of 12: Supervisors"
+  # or, on a page of the handout view, "Slide 3 of 12, step 2 of 4: Supervisors".
+  defp slide_label(deck, slide, step) do
+    position = "Slide #{slide.metadata.slide_number} of #{length(deck.slides)}"
+
+    position =
+      case step do
+        {step, max} when max > 1 -> "#{position}, step #{step} of #{max}"
+        _single -> position
+      end
+
+    case slide.metadata[:heading] || slide.name do
+      nil -> position
+      name -> "#{position}: #{name}"
+    end
+  end
 
   # The columns of the overview and the zoom of each page in it. Each page is as
   # large as the window, and the style sheet scales it with `zoom`. The padding
@@ -551,67 +581,89 @@ defmodule Expresso.Renderer do
              data_view: "present",
              data_progress: progress(@deck),
              data_print_notes: print_notes(@deck) do
-          div class: "screen" do
-            for {slide, index} <- Enum.with_index(@deck.slides) do
-              section id: "slide-#{slide.metadata.slide_number}",
-                      class: Expresso.Element.classes("slide", slide.metadata[:class]),
-                      data_step: 1,
-                      data_max_step: Expresso.Overlay.Render.max_step(slide),
-                      data_morph: morph(@deck, slide),
-                      style:
-                        "height: 100%; display: #{if index == 0, do: "flex", else: "none"}; flex-direction: column; justify-content: stretch" do
-                c(&slide_parts/1, deck: @deck, slide: slide)
-              end
-            end
-          end
-
-          div class: "handout" do
-            # Each step gets a page, because the speaker view shows the page of
-            # each step. A page that the handout option does not select gets
-            # `data-omit`, and the style sheet hides it in the handout view and
-            # on paper. The overview shows the page of the last step of each
-            # slide, which has `data-thumbnail`, and a click on that page runs
-            # its `data-commands`. `data-index` is the index of the step in the
-            # list of the steps, and the speaker view marks pages by it.
-            for {slide, %{first: first}} <- Enum.zip(@deck.slides, Expresso.Steps.slides(@deck)),
-                printed <- [Expresso.Handout.printed(@deck, slide)],
-                max = Expresso.Overlay.Render.max_step(slide),
-                step <- 1..max//1 do
-              section class: Expresso.Element.classes("handout-page", slide.metadata[:class]),
-                      data_step: step,
-                      data_slide: slide.metadata.slide_number,
-                      data_index: first + step - 1,
-                      data_omit: step not in printed,
-                      data_thumbnail: step == max,
-                      data_commands: step == max && page_commands(slide) do
-                c(&slide_parts/1, deck: @deck, slide: slide)
-
-                # The notes of the speaker go under each page of the slide, and
-                # the present view does not show them. The text is not HTML.
-                if notes = slide.metadata[:notes] do
-                  aside class: "notes" do
-                    div do
-                      notes
-                    end
-                  end
+          # The two views of the slides are the main content of the document.
+          # The element takes no box, so the views keep their layout.
+          main class: "views" do
+            div class: "screen" do
+              for {slide, index} <- Enum.with_index(@deck.slides) do
+                section id: "slide-#{slide.metadata.slide_number}",
+                        class: Expresso.Element.classes("slide", slide.metadata[:class]),
+                        role: "group",
+                        aria_roledescription: "slide",
+                        aria_label: slide_label(@deck, slide, nil),
+                        data_step: 1,
+                        data_max_step: Expresso.Overlay.Render.max_step(slide),
+                        data_morph: morph(@deck, slide),
+                        style:
+                          "height: 100%; display: #{if index == 0, do: "flex", else: "none"}; flex-direction: column; justify-content: stretch" do
+                  c(&slide_parts/1, deck: @deck, slide: slide)
                 end
               end
             end
 
-            c(&sources/1, slides: footnoted(@deck))
+            div class: "handout" do
+              # Each step gets a page, because the speaker view shows the page of
+              # each step. A page that the handout option does not select gets
+              # `data-omit`, and the style sheet hides it in the handout view and
+              # on paper. The overview shows the page of the last step of each
+              # slide, which has `data-thumbnail`, and a click on that page runs
+              # its `data-commands`. `data-index` is the index of the step in the
+              # list of the steps, and the speaker view marks pages by it.
+              for {slide, %{first: first}} <- Enum.zip(@deck.slides, Expresso.Steps.slides(@deck)),
+                  printed <- [Expresso.Handout.printed(@deck, slide)],
+                  max = Expresso.Overlay.Render.max_step(slide),
+                  step <- 1..max//1 do
+                section class: Expresso.Element.classes("handout-page", slide.metadata[:class]),
+                        role: "group",
+                        aria_roledescription: "slide",
+                        aria_label: slide_label(@deck, slide, {step, max}),
+                        data_step: step,
+                        data_slide: slide.metadata.slide_number,
+                        data_index: first + step - 1,
+                        data_omit: step not in printed,
+                        data_thumbnail: step == max,
+                        data_commands: step == max && page_commands(slide) do
+                  c(&slide_parts/1, deck: @deck, slide: slide)
 
-            # The four elements of the speaker view. They go into the handout
-            # view, because the style sheet places them in the grid of that
-            # view. The style sheet hides them in each other view and on paper.
-            for id <- ~w(speaker-notes speaker-position speaker-timer speaker-left) do
-              div id: id do
+                  # The notes of the speaker go under each page of the slide, and
+                  # the present view does not show them. The text is not HTML.
+                  if notes = slide.metadata[:notes] do
+                    aside class: "notes",
+                          aria_label: "Notes: " <> slide_label(@deck, slide, {step, max}) do
+                      div do
+                        notes
+                      end
+                    end
+                  end
+                end
+              end
+
+              c(&sources/1, slides: footnoted(@deck))
+
+              # The four elements of the speaker view. They go into the handout
+              # view, because the style sheet places them in the grid of that
+              # view. The style sheet hides them in each other view and on paper.
+              for id <- ~w(speaker-notes speaker-position speaker-timer speaker-left) do
+                div id: id do
+                end
               end
             end
-          end
 
-          # The progress bar of the present view. The style sheet sets its width
-          # from `--fraction`, which the script writes on the `body`.
-          div id: "progress" do
+            # The progress bar of the present view. The style sheet sets its width
+            # from `--fraction`, which the script writes on the `body`, and the
+            # script writes the same part into `aria-valuenow`.
+            div id: "progress",
+                role: "progressbar",
+                aria_label: "Progress",
+                aria_valuemin: 0,
+                aria_valuemax: 100,
+                aria_valuenow: 0 do
+            end
+
+            # The script writes the slide and the step of each move into this
+            # element, and a screen reader reads the text.
+            div id: "announce", role: "status", class: "announce" do
+            end
           end
 
           c(&menu/1, deck: @deck)

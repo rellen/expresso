@@ -358,10 +358,12 @@ html               lang "en", and data-variants for a theme with two variants
     body           data-view "present", and data-progress and data-print-notes
                    from the deck, and a style with --overview-columns and
                    --overview-zoom
+      main           the main landmark, class "views", with no box
       div            the present view, class "screen"
         section      one for each slide, class "slide", id "slide-<number>",
                      data-step "1", data-max-step from the slide, data-morph
-                     from the slide or the deck
+                     from the slide or the deck, role "group",
+                     aria-roledescription "slide" and aria-label
           div        the header, from the deck template
           div        the body, from the slide template
           ol         the footnotes of the slide, class "footnotes", when it has some
@@ -370,6 +372,7 @@ html               lang "en", and data-variants for a theme with two variants
             span     the slide number, class "slide-number", with slide_numbers: true
       div            the handout view, class "handout"
         section      one for each step of each slide, class "handout-page",
+                     role "group", aria-roledescription "slide", aria-label,
                      data-step from the step, data-slide from the slide,
                      data-index from the index of the step in the list of the
                      steps, data-omit when the handout option does not select
@@ -381,8 +384,10 @@ html               lang "en", and data-variants for a theme with two variants
                      footnotes
         div          the four elements of the speaker view: speaker-notes,
                      speaker-position, speaker-timer and speaker-left
-      div            the progress bar, id "progress"
-      nav            the menu of the slides and the steps, id "menu"
+      div            the progress bar, id "progress", role "progressbar"
+      div            the live region of the moves, id "announce", role "status"
+      nav            the menu of the slides and the steps, id "menu", with an ol
+                     of role "listbox" and an option for each step
       dialog         the list of keys, id "help"
         h2           the title of the list
         label        the field of the search, with an input
@@ -1878,6 +1883,35 @@ The style sheet gives each `::view-transition-group` of a morph the duration and
 of the transition. The old and the new image of a group have `object-fit: contain` and the
 full height of the group, so an element that changes its aspect ratio does not show two
 images of different sizes.
+
+### The accessibility
+
+The document is an application, and not a page of text, so a screen reader needs more than
+the HTML of the slides. `docs/reference/accessibility.md` lists each part, and the browser
+test `test/e2e/accessibility_test.exs` runs axe-core on each view. These are the decisions:
+
+- **One `main` with no box.** The present view and the handout view are in one `main`
+  element with `display: contents`. Two `main` elements are not valid unless the hidden one
+  has the attribute `hidden`, and the views change with CSS. The element takes no box, so no
+  rule of the views changes. The progress bar and the live region are in it too, because
+  they belong to the present view.
+- **A group with the role description `slide`.** This is the pattern of a carousel in the
+  ARIA practices. A `section` with a name is a `region` landmark, and the deck then has a
+  landmark for each slide and each page. The role `group` keeps one landmark.
+- **A polite live region.** The role `status` does not stop the text that a screen reader
+  reads. `announce` in `dom.ts` writes the name of the slide at a change of the slide, and
+  the step only at a move inside a slide, so a fast series of steps gives short texts.
+- **The ARIA state of the menu comes from `dom.ts`, and not from the projections.** A
+  projection writes only `data-` attributes, and `Expresso.Presenter.Verifier` keeps this
+  rule. `menu` in `dom.ts` copies `data-cursor` and `data-current` into `aria-selected`,
+  `aria-activedescendant` and `aria-current`. The list takes the focus while the menu is
+  open. The keys still reach the presenter, because the handler of the keys ignores only a
+  field of text.
+- **The word "Step" in the text of an option.** The name of an option must hold its visible
+  text (WCAG 2.5.3), so the option has no `aria-label`. A hidden word in front of the number
+  makes the name "Step 2 The restart".
+- **`inert` on the pictures of the menu.** A picture of a slide can hold a link. `aria-hidden`
+  alone hides it from a screen reader, but the `Tab` key still reaches the link.
 
 ### The overview
 

@@ -100,6 +100,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "chart-tsv", deck: "chart_tsv.exs", still: true},
     %{name: "callout", deck: "callout.exs", actions: ["j", "j"]},
     %{name: "callout-kinds", deck: "callout_kinds.exs", still: true},
+    %{name: "accessible", deck: "accessible.exs", actions: ["j", "m", "j", "j"]},
     %{name: "toc", deck: "toc.exs", actions: ["j", "j", "j"]},
     %{name: "toc-recap", deck: "toc_recap.exs", actions: ["j", "j", "j"]},
     %{name: "toc-progress", deck: "toc_progress.exs", address: "#3", still: true},

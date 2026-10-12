@@ -334,6 +334,15 @@ slide takes its place.
 
 See [Move elements from one slide to the next](docs/how-to/move-elements-between-slides.md).
 
+### Accessibility
+
+A screen reader reads the name of each slide when the presenter moves to it, such as
+"Slide 2 of 3: A restart", and the step at each move inside a slide. The views are in a
+`main` landmark, each slide is a group with the role description "slide", and the menu is
+a list of options that a screen reader reads. Give each slide a `heading` and each picture
+a text. See [Make a deck accessible](docs/how-to/make-a-deck-accessible.md) and
+[The accessibility of a deck](docs/reference/accessibility.md).
+
 ### The address
 
 The address of the document holds the slide and the step. For example, `deck.html#4.2` is
@@ -554,6 +563,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Show a key number](docs/how-to/show-a-key-number.md)
 - [Add icons to a slide](docs/how-to/add-icons-to-a-slide.md)
 - [Move elements from one slide to the next](docs/how-to/move-elements-between-slides.md)
+- [Make a deck accessible](docs/how-to/make-a-deck-accessible.md)
 - [Make templates of your own](docs/how-to/make-templates.md)
 - [Use colors of your own](docs/how-to/use-colors-of-your-own.md)
 - [Render a deck in your project](docs/how-to/render-a-deck-in-your-project.md)
@@ -565,6 +575,7 @@ deck and of a slide:
 
 - [The transition option](docs/reference/transition-option.md)
 - [The places of the elements](docs/reference/placement.md)
+- [The accessibility of a deck](docs/reference/accessibility.md)
 - [The morph option](docs/reference/morph-option.md)
 - [The overlay options](docs/reference/overlay-options.md)
 - [Step labels](docs/reference/step-labels.md)
