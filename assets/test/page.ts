@@ -366,8 +366,13 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     getElementsByClassName: (name: string) =>
       all().filter((each) => each.className === name),
     // Only a selector of one class, with one attribute or none, such as
-    // `.handout-page[data-thumbnail]`.
+    // `.handout-page[data-thumbnail]`, or of one attribute, such as
+    // `[data-asset-src]`.
     querySelectorAll: (selector: string) => {
+      const only = /^\[(data-[\w-]+)\]$/.exec(selector);
+      if (only) {
+        return all().filter((each) => each.getAttribute(only[1]!) !== null);
+      }
       const match = /^\.([\w-]+)(?:\[(data-[\w-]+)\])?$/.exec(selector);
       assert.ok(match, `the fake page has no selector ${selector}`);
       const [, className, attribute] = match;

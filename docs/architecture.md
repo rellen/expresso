@@ -773,6 +773,16 @@ option of the deck, or to the working directory of the command without it. The e
 `Expresso.Image` accepts `.avif`, `.gif`, `.jpeg`, `.jpg`, `.png`, `.svg` and `.webp`. A
 file that the function cannot read stops the render with a message that names the path.
 
+Each view of a slide holds its own copy of the slide: the present view, each page of the
+handout view and the picture in the menu. An image of 250 KB on a slide of two steps was
+then in the document six times, and the images of the Line 4 talk made 2 MB of its 3.9 MB.
+`Expresso.Deck.render/1` therefore runs `Expresso.Assets.dedupe/1` on the HTML. The first
+element with a large data URI in `src` or `poster` keeps it, and each later element refers
+to it with `data-asset-src` or `data-asset-poster`. `assets.ts` copies the value back
+before the first render of the script. The work is on the text of the HTML, after the
+render, so each element and each template gets it with no change. A video does not need
+it, because `Expresso.Media` already writes each file one time.
+
 The `alt` option gives the text of the image for a screen reader. An image with no `alt`
 option is decorative, and the render function writes an empty `alt` attribute.
 
