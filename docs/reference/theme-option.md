@@ -151,7 +151,7 @@ gives a warning for each color under its minimum. See [the warnings](#the-warnin
 | Part | WCAG 2.2 | APCA | WCAG criterion |
 | --- | --- | --- | --- |
 | Each text on its background: the slides, the code, the speaker view and the list of keys | 4.5:1 | Lc 60 | 1.4.3 |
-| Each text of a dimmed element, in the dimmed color of its role, on its background | 3:1 | Lc 30 | 1.4.11 |
+| Each text of a dimmed element, in the dimmed color of its role, on its background | 3:1, or the value of [the dim_contrast option](dim-contrast-option.md) | Lc 30 | 1.4.11, or 1.4.3 at 4.5:1 |
 | The progress bar, the selected page of the overview and a link | 4.5:1, from the accent | Lc 60, from the accent | 1.4.11 |
 
 Each color must meet both measures. The contrast ratio of WCAG 2.2 gives too high a value

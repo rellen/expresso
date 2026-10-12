@@ -132,6 +132,45 @@ lang "de"
 
 See [the lang option](../reference/lang-option.md).
 
+## Keep dimmed text readable
+
+A dimmed element, such as a line of code out of focus, keeps a contrast of 3:1 on its
+background. A slide usually shows large text, and 3:1 is the minimum of WCAG for large
+text. For small text, such as a long listing, or for a deck that a checker must pass, give
+the `dim_contrast` option:
+
+```elixir
+defmodule Examples.DimContrast do
+  use Expresso
+
+  theme :dracula
+  dim_contrast 4.5
+
+  slide "the counter" do
+    heading "The counter"
+
+    code "elixir" do
+      text """
+      # Add one to the count, and reply with the new count.
+      def handle_call(:increment, _from, count) do
+        {:reply, count + 1, count + 1}
+      end
+      """
+
+      highlight [2..2, 3..3]
+    end
+  end
+end
+
+Examples.DimContrast
+```
+
+![A function of three lines: the second line is in focus with a bar at its left, and the other lines are dimmed](https://raw.githubusercontent.com/rellen/expresso/media/dim-contrast.png)
+
+Each dimmed line now keeps 4.5:1, the minimum of WCAG for normal text. The lines dim less,
+and the bar of `highlight` still shows the focus. See
+[the dim_contrast option](../reference/dim-contrast-option.md).
+
 ## Make sure of the result
 
 1. Open the deck in a browser with a screen reader, such as VoiceOver on macOS or NVDA on

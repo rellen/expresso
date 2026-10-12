@@ -56,8 +56,10 @@ defmodule Expresso do
 
     # The templates and the renderer read a key when it is present, so the key
     # is present only for an option that the deck gives.
+    given = [:template, :slide_template, :root, :dim_contrast]
+
     metadata =
-      Enum.reduce([:template, :slide_template, :root], metadata, fn key, metadata ->
+      Enum.reduce(given, metadata, fn key, metadata ->
         case option.(key, nil) do
           nil -> metadata
           template -> Map.put(metadata, key, template)

@@ -26,7 +26,9 @@ defmodule Expresso.Palette do
       presenter does not talk about now. A dimmed element is less important, and it
       must stay readable. The dimming applies to each color of the element,
       such as a comment of a dimmed line of code, so the role with the lowest
-      contrast sets the opacity.
+      contrast sets the opacity. 3:1 is also the minimum of WCAG for large
+      text, and not for normal text. The `dim_contrast` option of a deck raises
+      it, such as to 4.5:1 for criterion 1.4.3. See `with_dim_contrast/2`.
 
   `docs/architecture.md` gives the formulas, and it tells why the dimming of a
   theme is small.
@@ -50,7 +52,9 @@ defmodule Expresso.Palette do
   `change` is the largest change of lightness that `adjust/1` made, in OKLab,
   from 0 to 1. `dimmed` holds, for each role of text, its dimmed color and the
   opacity that gives it. `dim_opacity` is one opacity that dims each role of
-  text to its minimums. The style sheet dims an image, an SVG file and an
+  text to its minimums. `dim_ratio` is the minimum contrast ratio of a dimmed
+  role: 3.0 by default, and the `dim_contrast` option of a deck can raise it.
+  See `with_dim_contrast/2`. The style sheet dims an image, an SVG file and an
   embed with it, because their colors are not roles.
   """
   @type t :: %__MODULE__{
@@ -60,11 +64,12 @@ defmodule Expresso.Palette do
           roles: %{atom() => Color.t()},
           dimmed: %{atom() => {float(), Color.t()}},
           dim_opacity: float(),
+          dim_ratio: float(),
           change: float()
         }
 
   @enforce_keys [:name, :variant, :colors, :roles, :dimmed, :dim_opacity]
-  defstruct @enforce_keys ++ [change: 0.0]
+  defstruct @enforce_keys ++ [dim_ratio: 3.0, change: 0.0]
 
   @slots ~w(base00 base01 base02 base03 base04 base05 base06 base07 base08 base09 base0A base0B base0C base0D base0E base0F)a
 
@@ -132,8 +137,34 @@ defmodule Expresso.Palette do
       variant: variant,
       colors: colors,
       roles: roles,
-      dimmed: dimmed(roles),
-      dim_opacity: dim_opacity(roles)
+      dimmed: dimmed(roles, @dimmed_ratio),
+      dim_opacity: dim_opacity(roles, @dimmed_ratio)
+    }
+  end
+
+  @doc """
+  Dim the palette to a higher minimum contrast ratio
+
+  Each role of text then dims only as far as the role keeps `ratio` on its
+  background, and the dim opacity follows. The minimum of APCA stays at Lc 30.
+  A ratio of 4.5 is the minimum of WCAG 2.2 for normal text, criterion 1.4.3.
+  `nil` keeps the palette as it is.
+
+      iex> palette = Expresso.Palette.Builtin.fetch!(:default)
+      iex> Expresso.Palette.with_dim_contrast(palette, 4.5).dim_opacity >= palette.dim_opacity
+      true
+  """
+  @spec with_dim_contrast(t(), number() | nil) :: t()
+  def with_dim_contrast(%__MODULE__{} = palette, nil), do: palette
+
+  def with_dim_contrast(%__MODULE__{roles: roles} = palette, ratio) do
+    ratio = ratio / 1
+
+    %{
+      palette
+      | dim_ratio: ratio,
+        dimmed: dimmed(roles, ratio),
+        dim_opacity: dim_opacity(roles, ratio)
     }
   end
 
@@ -146,7 +177,7 @@ defmodule Expresso.Palette do
   each minimum returns an empty list.
   """
   @spec problems(t()) :: [{atom(), :wcag | :apca, float(), number()}]
-  def problems(%__MODULE__{roles: roles, dim_opacity: opacity}) do
+  def problems(%__MODULE__{roles: roles, dim_opacity: opacity, dim_ratio: dim_ratio}) do
     text =
       for {role, {_slot, on}} <- @roles,
           on != nil,
@@ -160,7 +191,7 @@ defmodule Expresso.Palette do
     {ratio, lc} = dimmed_contrast(roles, opacity)
 
     dimmed =
-      for {value, measure, minimum} <- [{ratio, :wcag, @dimmed_ratio}, {lc, :apca, @dimmed_lc}],
+      for {value, measure, minimum} <- [{ratio, :wcag, dim_ratio}, {lc, :apca, @dimmed_lc}],
           value < minimum,
           do: {:dimmed_text, measure, value, minimum}
 
@@ -231,7 +262,7 @@ defmodule Expresso.Palette do
   `:error` when no lightness gives a role its minimum.
   """
   @spec adjust(t()) :: {:ok, t()} | :error
-  def adjust(%__MODULE__{roles: roles} = palette) do
+  def adjust(%__MODULE__{roles: roles, dim_ratio: dim_ratio} = palette) do
     @roles
     |> Enum.reduce_while({%{}, 0.0}, fn
       {role, {_slot, nil}}, {acc, change} ->
@@ -252,8 +283,8 @@ defmodule Expresso.Palette do
          %{
            palette
            | roles: adjusted,
-             dimmed: dimmed(adjusted),
-             dim_opacity: dim_opacity(adjusted),
+             dimmed: dimmed(adjusted, dim_ratio),
+             dim_opacity: dim_opacity(adjusted, dim_ratio),
              change: change
          }}
     end
@@ -480,13 +511,13 @@ defmodule Expresso.Palette do
   # The dimmed color of each role of text, with its opacity: the role blended
   # on its background at the smallest step that keeps the role at its minimums
   # for a dimmed element. A role under the minimums gets no dimming.
-  defp dimmed(roles) do
+  defp dimmed(roles, ratio) do
     steps = round(1 / @dim_step)
 
     for {role, {_slot, on}} <- @roles, on != nil, into: %{} do
       step =
         Enum.find(1..steps, steps, fn step ->
-          dimmed_meets?(Color.blend(roles[role], roles[on], step / steps), roles[on])
+          dimmed_meets?(Color.blend(roles[role], roles[on], step / steps), roles[on], ratio)
         end)
 
       opacity = step / steps
@@ -494,19 +525,19 @@ defmodule Expresso.Palette do
     end
   end
 
-  defp dimmed_meets?(color, background) do
-    Color.contrast(color, background) >= @dimmed_ratio and
+  defp dimmed_meets?(color, background, ratio) do
+    Color.contrast(color, background) >= ratio and
       Color.lightness_contrast(color, background) >= @dimmed_lc
   end
 
   # The smallest multiple of 0.05 that keeps each dimmed role of text at its
   # minimums. A palette with a role under them gets no dimming.
-  defp dim_opacity(roles) do
+  defp dim_opacity(roles, minimum) do
     steps = round(1 / @dim_step)
 
     Enum.find(1..steps, steps, fn step ->
       {ratio, lc} = dimmed_contrast(roles, step / steps)
-      ratio >= @dimmed_ratio and lc >= @dimmed_lc
+      ratio >= minimum and lc >= @dimmed_lc
     end) / steps
   end
 

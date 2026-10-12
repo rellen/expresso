@@ -62,6 +62,7 @@ defmodule Expresso.MixProject do
         "docs/reference/placement.md",
         "docs/reference/accessibility.md",
         "docs/reference/lang-option.md",
+        "docs/reference/dim-contrast-option.md",
         "docs/reference/morph-option.md",
         "docs/reference/overlay-options.md",
         "docs/reference/step-labels.md",
