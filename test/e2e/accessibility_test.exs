@@ -30,6 +30,12 @@ defmodule Expresso.E2E.AccessibilityTest do
       callout :tip do
         text_area(text: "A tip.")
       end
+
+      chart :bar do
+        title "Orders each year"
+        categories ["2024", "2025"]
+        series "Orders", [120, 180]
+      end
     end
 
     slide "numbers" do

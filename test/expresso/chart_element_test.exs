@@ -50,6 +50,14 @@ defmodule Expresso.ChartElementTest do
     assert figure |> Floki.find("table.chart-table caption") |> Floki.text() == "Orders"
   end
 
+  test "the corner of the table is a cell, so each header of the table has a name" do
+    [figure] = bars() |> document() |> screen()
+
+    heads = figure |> Floki.find("table.chart-table thead th") |> Enum.map(&Floki.text/1)
+    assert heads == ["Orders", "Returns"]
+    assert figure |> Floki.find("table.chart-table thead td") |> length() == 1
+  end
+
   test "values false hides the values of the bars, and one series has no legend" do
     [figure] =
       Builder.chart(:bar,

@@ -270,8 +270,10 @@ for the heading.
 The document writes a `figure` element with the classes `chart` and `chart-bar`,
 `chart-line`, `chart-pie`, `chart-treemap` or `chart-sunburst`. It holds an `svg` element with `role="img"` and the `title`
 as its `aria-label`, and a `table` with the class `chart-table` that holds each value. The
-style sheet hides the table from the eye and not from a screen reader. Each series is a
-`g` element with the class `chart-series`.
+style sheet hides the table from the eye and not from a screen reader. The table has a
+column header for each series and a row header for each category. Its top left corner is a
+`td` cell, because it names nothing. Each series is a `g` element with the class
+`chart-series`.
 
 A chart with frames or with the effect `:grow` has a `data-el` attribute. Its marks have the
 class `chart-mark`, `chart-segment`, `chart-arc` or `chart-gap`, and the label of the frame
