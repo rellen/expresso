@@ -558,13 +558,15 @@ file. To take a later version:
 - `assets/tsconfig.json` — the options of the type check.
 - `.oxlintrc.json` — the rules of the lint.
 - `package.json` — the tools, with a pinned version of each.
-- `config/config.exs` — the esbuild profile.
-- `Mix.Tasks.Compile.Presenter` in `mix.exs` — the compiler that makes the bundle.
+- `Mix.Tasks.Compile.Presenter` in `mix.exs` — the compiler that makes the bundle, with the esbuild version and profile.
 
 `mix compile` makes `priv/static/presenter.js` with esbuild, in front of the Elixir
 compiler. The first `mix compile` downloads the esbuild binary from the npm registry, and
 the download passes the proxy of the remote container. Git does not hold the bundle. A
 source newer than the bundle makes a new bundle and a new compile of `Expresso.Renderer`.
+A project that takes Expresso from GitHub makes the bundle in the same way when it compiles
+the dependency. The compiler gives esbuild its version and profile, because a dependency
+does not load `config/config.exs`.
 
 The commands are:
 

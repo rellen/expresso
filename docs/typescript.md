@@ -275,8 +275,8 @@ reasons are:
 - fp-ts gets only maintenance, because its author went to Effect. Effect 4 is a release
   candidate (`4.0.0-rc.117`), and the `latest` tag of Effect is `3.22.2`.
 
-A trial bundled a small sample of each library with the flags of the esbuild profile in
-`config/config.exs`. The gzipped size comes from `gzip -9n`. These are the sizes, in
+A trial bundled a small sample of each library with the flags of the esbuild profile of
+`Mix.Tasks.Compile.Presenter`. The gzipped size comes from `gzip -9n`. These are the sizes, in
 bytes:
 
 | Sample                                       | Minified | Gzipped |
