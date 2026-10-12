@@ -32,6 +32,14 @@ defmodule Expresso.Element.Code do
   move when a group shows. A line number that the element does not show gives
   an error, because such a group shows nothing.
 
+  A group of `reveal` or `highlight` can also be texts, such as
+  `[from: "let hit", to: "return hit;"]`, in the form of the `lines` option.
+  The group then runs from the line of the start text to the line of the end
+  text, inside the text of the element. A group with only `from` is the line
+  of the start text. The `relative` option counts the numbers of the groups
+  from the first line of the element, so 1 is the first line of an excerpt.
+  `resolve/2` turns each group into line numbers before the other checks.
+
   The `dim` option gives each group the state `dim` from the first step of a
   later group. A line that is in no group does not dim. `docs/overlays.md`
   gives the rules.
@@ -75,6 +83,7 @@ defmodule Expresso.Element.Code do
     :morph,
     :easing,
     dim: false,
+    relative: false,
     line_numbers: false,
     whole_first: false,
     first: 1,
@@ -243,14 +252,16 @@ defmodule Expresso.Element.Code do
   defp groups(%__MODULE__{reveal: nil, highlight: nil} = code), do: {:ok, code}
 
   defp groups(%__MODULE__{reveal: reveal, highlight: nil} = code) do
-    with :ok <- shows(code, :reveal, reveal) do
+    with {:ok, reveal} <- resolve(code, :reveal, reveal),
+         :ok <- shows(code, :reveal, reveal) do
       groups = Enum.map(reveal, &%Lines{numbers: numbers(&1), at: Overlay.from_next()})
       {:ok, %__MODULE__{code | elements: groups}}
     end
   end
 
   defp groups(%__MODULE__{highlight: highlight, text: text, first: first} = code) do
-    with :ok <- shows(code, :highlight, highlight),
+    with {:ok, highlight} <- resolve(code, :highlight, highlight),
+         :ok <- shows(code, :highlight, highlight),
          :ok <- apart(highlight) do
       {:ok, next} = Overlay.new(:next)
 
@@ -274,8 +285,75 @@ defmodule Expresso.Element.Code do
       nil ->
         :ok
 
+      line when code.relative ->
+        {:error,
+         "the #{option} option has the line #{line - first + 1} of the excerpt, and " <>
+           "the code element shows #{count(last - first + 1)}"}
+
       line ->
         {:error, "the #{option} option has the line #{line}, and " <> shown(code, first, last)}
+    end
+  end
+
+  # The groups of an option as line numbers and ranges, with the numbers of
+  # the file. A relative number counts from the first line of the element, and
+  # a group of texts takes the lines of its texts in the text of the element.
+  defp resolve(%__MODULE__{} = code, option, items) do
+    Enum.reduce_while(items, {:ok, []}, fn item, {:ok, resolved} ->
+      case resolve_item(code, option, item) do
+        {:ok, group} -> {:cont, {:ok, resolved ++ [group]}}
+        {:error, message} -> {:halt, {:error, message}}
+      end
+    end)
+  end
+
+  defp resolve_item(%__MODULE__{relative: true, first: first}, _option, line)
+       when is_integer(line),
+       do: {:ok, line + first - 1}
+
+  defp resolve_item(%__MODULE__{relative: true, first: first}, _option, low..high//1),
+    do: {:ok, (low + first - 1)..(high + first - 1)//1}
+
+  defp resolve_item(_code, _option, line) when is_integer(line), do: {:ok, line}
+  defp resolve_item(_code, _option, _low.._high//1 = range), do: {:ok, range}
+
+  defp resolve_item(%__MODULE__{text: text, first: first}, option, texts) do
+    text = text || ""
+
+    with {:ok, start} <- group_start(text, texts[:from], option),
+         {:ok, finish} <- group_finish(text, start, texts[:to], option) do
+      {:ok, (line_of(text, start) + first - 1)..(line_of(text, finish) + first - 1)//1}
+    end
+  end
+
+  # A start text that is in the code more than one time gives an error, as in
+  # the lines option, so a new copy of the text cannot move the group.
+  defp group_start(text, from, option) do
+    case :binary.matches(text, from) do
+      [{position, _length}] ->
+        {:ok, position}
+
+      [] ->
+        {:error, "the start text #{inspect(from)} of the #{option} option is not in the code"}
+
+      matches ->
+        {:error,
+         "the start text #{inspect(from)} of the #{option} option is in the code " <>
+           "#{length(matches)} times, and it must be in it one time"}
+    end
+  end
+
+  # Without an end text, the group is the line of the start text.
+  defp group_finish(_text, start, nil, _option), do: {:ok, start}
+
+  defp group_finish(text, start, to, option) do
+    case :binary.match(text, to, scope: {start, byte_size(text) - start}) do
+      {position, length} ->
+        {:ok, position + length - 1}
+
+      :nomatch ->
+        {:error,
+         "the end text #{inspect(to)} of the #{option} option is not in the code after its start text"}
     end
   end
 
@@ -397,26 +475,36 @@ defmodule Expresso.Element.Code do
     do: for(%On{state: :highlight, steps: steps} <- on, step <- steps || [], do: step)
 
   @doc """
-  Make sure that a `reveal` option is a list of line numbers and of ranges
+  Make sure that a `reveal` option is a list of line numbers, ranges and texts
 
-  This function is the custom type of the option. Each item is a positive
-  integer or a range with a step of 1.
+  This function is the custom type of the options `reveal` and `highlight`.
+  Each item is a positive integer, a range with a step of 1, or a keyword list
+  with `from` and an optional `to`, each a text that is not empty.
+
+      iex> Expresso.Element.Code.reveal([1..2, [from: "let hit", to: "return hit;"], 7])
+      {:ok, [1..2, [from: "let hit", to: "return hit;"], 7]}
   """
   @spec reveal(term()) :: {:ok, [pos_integer() | Range.t()]} | {:error, String.t()}
   def reveal([_ | _] = items) do
     if Enum.all?(items, &line_item?/1) do
       {:ok, items}
     else
-      {:error, "a reveal option takes line numbers and ranges, such as [1..3, 4..8, 10]"}
+      reveal(nil)
     end
   end
 
   def reveal(_term) do
-    {:error, "a reveal option takes line numbers and ranges, such as [1..3, 4..8, 10]"}
+    {:error,
+     "a reveal option takes line numbers, ranges and texts, such as " <>
+       "[1..3, 4..8, [from: \"def start(\", to: \"end\"]]"}
   end
 
   defp line_item?(line) when is_integer(line), do: line >= 1
   defp line_item?(first..last//1), do: first >= 1 and first <= last
+
+  defp line_item?([_ | _] = texts),
+    do: Keyword.keyword?(texts) and Keyword.has_key?(texts, :from) and texts?(texts)
+
   defp line_item?(_item), do: false
 
   @doc """

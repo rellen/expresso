@@ -145,6 +145,53 @@ end
 Use `reveal` to show new lines at each step, and `highlight` to point at lines that the
 audience already sees. A code element takes one of the two options.
 
+## Keep the groups on their lines
+
+A number of `reveal` or `highlight` is the number of a line in the file. A change above the
+excerpt moves the lines, and each group then shows other lines with no error. Give each
+group by its text, in the form of `lines`. The group runs from the line of `from` to the
+line of `to`, inside the excerpt. A group with only `from` is one line:
+
+```elixir
+defmodule Examples.CodeTextGroups do
+  use Expresso
+
+  root __DIR__
+
+  slide "the counter" do
+    heading "The counter"
+
+    code "elixir" do
+      src "counter.ex"
+      lines from: "def handle_call(", to: "\n  end"
+      line_numbers true
+      highlight [[from: "def handle_call("], [from: "next = ", to: "{:reply"]]
+    end
+  end
+end
+
+Examples.CodeTextGroups
+```
+
+![The first line of the function is in focus, then the two lines that count and reply](https://raw.githubusercontent.com/rellen/expresso/media/code-text-groups.gif)
+
+Each text must be in the excerpt one time, or the compiler gives an error. A group can mix
+with numbers, such as `[1, [from: "next = "]]`.
+
+To keep the numbers, but count them from the excerpt, give `relative true`. Then `1` is the
+first line of the excerpt, whatever its number in the file:
+
+```elixir
+code "elixir" do
+  src "lib/my_app/server.ex"
+  lines from: "def handle_call(", to: "\n  end"
+  relative true
+  highlight [1, 2..3]
+end
+```
+
+A line added inside the excerpt still moves the numbers. Texts move with the code.
+
 ## Show the whole code first
 
 The first group of `highlight` is in focus at the first step of the code. To show the

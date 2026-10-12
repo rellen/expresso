@@ -116,6 +116,7 @@ spark_locals_without_parens = [
   qr_code: 2,
   quotation: 1,
   quotation: 2,
+  relative: 1,
   reset: 1,
   reveal: 1,
   root: 1,

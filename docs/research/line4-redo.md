@@ -131,7 +131,7 @@ breaks a long line at an indent.
 
 ### 6. `highlight` takes line numbers
 
-**Kind:** sharp edge.
+**Kind:** sharp edge. A group can now be texts, and `relative true` counts from the excerpt.
 
 `lines from:` finds the excerpt by text, so the excerpt follows the file. But `highlight`
 and `reveal` take the numbers of lines in the file, such as `[3589..3590, 3593..3593]`.

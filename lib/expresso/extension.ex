@@ -562,7 +562,7 @@ defmodule Expresso.Extension do
           reveal: [
             type: {:custom, Expresso.Element.Code, :reveal, []},
             doc:
-              "Line numbers and ranges, one group at each step. With src, a number is the number of the line in the file. See docs/overlays.md."
+              "Groups of lines, one group at each step: line numbers, ranges, and texts such as [from: \"def start(\", to: \"end\"]. With src, a number is the number of the line in the file, unless relative is true. See docs/reference/code-element.md."
           ],
           dim: [
             type: :boolean,
@@ -572,7 +572,13 @@ defmodule Expresso.Extension do
           highlight: [
             type: {:custom, Expresso.Element.Code, :reveal, []},
             doc:
-              "Line numbers and ranges, one group in focus at each step. Each line shows at each step, and the lines that are not in focus dim. See docs/reference/code-element.md."
+              "Groups of lines in the form of reveal, one group in focus at each step. Each line shows at each step, and the lines that are not in focus dim. See docs/reference/code-element.md."
+          ],
+          relative: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Count the numbers of reveal and highlight from the first line that the element shows, so 1 is the first line of the excerpt. The default is false: a number is the number of the line in the file."
           ],
           whole_first: [
             type: :boolean,

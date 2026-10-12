@@ -27,9 +27,10 @@ end
 | `src` | The path of a file, relative to [the root option](root-option.md) of the deck, or to the working directory of the command | The source code is the text of the file. |
 | `lines` | A range, such as `10..24`, or texts, such as `[from: "def start(", to: "\n  end"]` | The element shows only these lines of the `src` file. See [lines from a text](#lines-from-a-text). The default is each line. |
 | `line_numbers` | `true` or `false` | Show the number of each line. The default is `false`. |
-| `reveal` | Line numbers and ranges, such as `[10..12, 13..20]` | Each group of lines shows at its own step. See [the overlay options](overlay-options.md). |
+| `reveal` | Line numbers, ranges and texts, such as `[10..12, 13..20]` or `[[from: "def start(", to: "end"]]` | Each group of lines shows at its own step. See [the groups](#the-groups) and [the overlay options](overlay-options.md). |
 | `dim` | `true` or `false` | Each group dims when a later group shows. |
-| `highlight` | Line numbers and ranges, such as `[10..12, 13..20]` | Each line shows at each step. Each group is in focus at its own step, and the other lines dim. |
+| `highlight` | Groups in the form of `reveal` | Each line shows at each step. Each group is in focus at its own step, and the other lines dim. |
+| `relative` | `true` or `false` | Count the numbers of `reveal` and `highlight` from the first line of the excerpt. The default is `false`. |
 | `whole_first` | `true` or `false` | With `highlight`, the whole code shows in full color for one step before the first group. The default is `false`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
@@ -107,6 +108,9 @@ The compiler gives an error for:
 - a `to` text that is not in the file after the `from` text,
 - a `whole_first` option without `highlight`,
 - a number of `reveal` or `highlight` that the element does not show,
+- a group with a `from` text that is not in the code, or that is in it more than one time,
+- a group with a `to` text that is not in the code after its `from` text, and a group with
+  a `to` text and no `from` text,
 - `reveal` and `highlight` together, and `highlight` with `dim`,
 - a line that is in two groups of `highlight`.
 
@@ -120,6 +124,23 @@ The compiler gives a warning for a language that no lexer registers, such as `"e
 The warning names the slide and gives the list of the languages. The deck still compiles,
 and the element shows its lines with no colors. `Expresso.Builder.deck/2` writes the same
 warning to the standard error.
+
+## The groups
+
+A group of `reveal` or `highlight` takes one of these forms:
+
+| Form | Example | Lines |
+| --- | --- | --- |
+| A number | `12` | The line with that number. |
+| A range | `12..15` | The lines with those numbers. |
+| Texts | `[from: "next = ", to: "{:reply"]` | From the line that holds the `from` text to the line that holds the last character of the `to` text. |
+| A start text only | `[from: "def handle_call("]` | The line that holds the text. |
+
+A number is the number of the line in the file, as [the numbers of the lines](#the-numbers-of-the-lines)
+tell. With `relative true`, a number counts from the first line of the excerpt, so `1` is
+that line. Texts are found inside the text of the element, with the rules of
+[lines from a text](#lines-from-a-text): the `from` text must be in it one time, and the
+`to` text must come after it. The forms can mix in one option.
 
 ## The numbers of the lines
 
