@@ -96,7 +96,7 @@ defmodule Expresso.E2E.CheckTest do
 
     assert status == 1
     assert output =~ "the layout at 1920 × 1080\n"
-    assert output =~ "  - Slide 2, step 2: 1 line breaks in the code “const a = 1;"
+    assert output =~ "  - Slide 2 “long”, step 2: 1 line breaks in the code “const a = 1;"
     refute output =~ "color-contrast"
   end
 
@@ -107,10 +107,10 @@ defmodule Expresso.E2E.CheckTest do
 
     assert status == 1
     assert output =~ "and axe-core at each step and in each view\n"
-    assert output =~ "  - Slide 2, step 2: 1 line breaks in the code “const a = 1;"
+    assert output =~ "  - Slide 2 “long”, step 2: 1 line breaks in the code “const a = 1;"
 
     assert output =~
-             "  - Slide 3, step 1: color-contrast, Elements must meet minimum color contrast"
+             "  - Slide 3 “low”, step 1: color-contrast, Elements must meet minimum color contrast"
 
     assert output =~ "  - The overview: color-contrast"
     assert output =~ ".low"

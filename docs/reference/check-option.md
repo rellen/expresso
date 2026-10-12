@@ -123,6 +123,9 @@ The report has these parts, in this sequence:
    problem.
 5. `No problems.`, or the number of problems.
 
+A line about one slide gives the number and the name of the slide, such as
+`Slide 14 “resHit”, step 3`. A slide with no name gives its number only.
+
 ```text
 Check of deck.exs: 3 slides
 Checks: the render, the theme, the text for a screen reader, the layout at 1920 × 1080, and axe-core at each step and in each view
@@ -131,8 +134,8 @@ Notes:
   - The document is 291 KB.
 
 Problems:
-  - Slide 2, step 2: 1 line breaks in the code “const a = 1; const b = [1, 2, 3, 4, 5, 6…”
-  - Slide 3, step 1: color-contrast, Elements must meet minimum color contrast ratio thresholds: #slide-3 > div:nth-child(2) > .slide-body > .slide-main > .low.text-area > div
+  - Slide 2 “long”, step 2: 1 line breaks in the code “const a = 1; const b = [1, 2, 3, 4, 5, 6…”
+  - Slide 3 “low”, step 1: color-contrast, Elements must meet minimum color contrast ratio thresholds: #slide-3 > div:nth-child(2) > .slide-body > .slide-main > .low.text-area > div
 
 2 problems.
 ```
