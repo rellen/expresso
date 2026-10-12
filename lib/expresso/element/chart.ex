@@ -489,7 +489,9 @@ defmodule Expresso.Element.Chart do
 
         thead do
           tr do
-            th do
+            # The corner names nothing, so it is a cell and not a header. A
+            # header with no text has no name for a screen reader.
+            td do
             end
 
             for {name, _values} <- @columns do

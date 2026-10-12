@@ -263,7 +263,7 @@ defmodule Expresso.ChartFramesTest do
         race() |> List.wrap() |> deck() |> document() |> Floki.find(".screen figure.chart")
 
       heads = figure |> Floki.find("table.chart-table thead th") |> Enum.map(&Floki.text/1)
-      assert heads == ["", "2023", "2024", "2025"]
+      assert heads == ["2023", "2024", "2025"]
     end
 
     test "with count, a number is one copy that the script counts, with its decimals" do
