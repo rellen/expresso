@@ -58,11 +58,39 @@ defmodule Expresso.Check do
          :ok <- write(html, output),
          {:ok, page} <- page(html, deck, tools) do
       checks = [Document.theme(deck), Document.size(html), Document.slides(html)]
-      problems = Enum.flat_map(checks, & &1.problems) ++ page_problems(page)
-      notes = Enum.flat_map(checks, & &1.notes)
+      problems = named(Enum.flat_map(checks, & &1.problems) ++ page_problems(page), deck)
+      notes = named(Enum.flat_map(checks, & &1.notes), deck)
       {:ok, %{text: text(input, deck, level, page, notes, problems), problems: length(problems)}}
     end
   end
+
+  @doc """
+  Put the name of the slide after its number, in each line that starts with a slide
+
+  The reports of the checks name a slide by its number, and the deck names it
+  by its name. A slide with no name keeps its number alone.
+
+      iex> deck = Expresso.Builder.deck([Expresso.Builder.slide("resHit", elements: [])], name: "n")
+      iex> Expresso.Check.named(["Slide 1, step 2: a problem", "Slide 1: a note", "The keys: j"], deck)
+      ["Slide 1 “resHit”, step 2: a problem", "Slide 1 “resHit”: a note", "The keys: j"]
+  """
+  @spec named([String.t()], Expresso.Deck.t()) :: [String.t()]
+  def named(lines, deck) do
+    names =
+      deck.slides
+      |> Enum.with_index(1)
+      |> Map.new(fn {slide, number} -> {Integer.to_string(number), slide.name} end)
+
+    Enum.map(
+      lines,
+      &Regex.replace(~r/^Slide (\d+)(?=[,:])/, &1, fn all, number ->
+        name(all, number, names[number])
+      end)
+    )
+  end
+
+  defp name(all, _number, nil), do: all
+  defp name(_all, number, name), do: "Slide #{number} “#{name}”"
 
   # Find each tool of the level before the render, so a missing tool gives
   # its error at once.

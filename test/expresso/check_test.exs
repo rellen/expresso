@@ -8,6 +8,7 @@ defmodule Expresso.CheckTest do
   alias Expresso.Check
   alias Expresso.Check.{Browser, Document}
 
+  doctest Expresso.Check, only: [named: 2]
   doctest Expresso.Check.Document
   doctest Expresso.Check.Browser
   doctest Expresso.Check.Session
@@ -105,7 +106,7 @@ defmodule Expresso.CheckTest do
       assert status == 0
 
       assert output =~
-               "  - Slide 1: 1 × an image with no alt text, so a screen reader skips it.\n"
+               "  - Slide 1 “one”: 1 × an image with no alt text, so a screen reader skips it.\n"
 
       assert output =~
                "  - Slide 2: 1 × a diagram with no alt text, so a screen reader reads the text of its SVG.\n"

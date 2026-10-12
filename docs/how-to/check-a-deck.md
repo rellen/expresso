@@ -164,7 +164,7 @@ Notes:
   - The document is 259 KB.
 
 Problems:
-  - Slide 1, step 1: color-contrast, Elements must meet minimum color contrast ratio thresholds: #slide-1 > div:nth-child(2) > .slide-body > .slide-main > .text-area.quiet > div
+  - Slide 1 “the plan”, step 1: color-contrast, Elements must meet minimum color contrast ratio thresholds: #slide-1 > div:nth-child(2) > .slide-body > .slide-main > .text-area.quiet > div
   - The overview: color-contrast, Elements must meet minimum color contrast ratio thresholds: .handout-page > div:nth-child(2) > .slide-body > .slide-main > .text-area.quiet > div
 
 2 problems.
