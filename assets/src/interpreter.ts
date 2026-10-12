@@ -241,8 +241,10 @@ export function toHash(state: State, deck: Deck): string {
 }
 
 // Go to the slide and the step of a fragment. The fragment `#4` is step 1 of
-// slide 4, and a fragment removes a black screen. A fragment with no slide and
-// step of the deck makes no change.
+// slide 4, and a fragment removes a black screen. A step that the slide does
+// not have becomes its nearest step, so `#4.9` on a slide of 3 steps is step 3
+// of slide 4. A fragment with a slide that the deck does not have makes no
+// change.
 export function fromHash(
   program: Program,
   state: State,
@@ -255,7 +257,9 @@ export function fromHash(
   }
   const slide = Number(match[1]);
   const step = match[2] === undefined ? 1 : Number(match[2]);
-  return position(program, state, slide, step, { blank: false }, deck);
+  const steps = deck.slides[slide - 1]?.steps;
+  const near = steps === undefined ? step : Math.min(Math.max(step, 1), steps);
+  return position(program, state, slide, near, { blank: false }, deck);
 }
 
 // Go to the position of a message from the other window, and take its fields
