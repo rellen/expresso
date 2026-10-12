@@ -854,10 +854,13 @@ mix expresso examples/dsl_deck.exs /tmp/dsl.html
 ```
 
 `examples/line4/line4.exs` is a full talk about an isometric factory in one HTML file. It
-uses many features of Expresso: a deck template, a slide template, a theme from a map, the
-`css` option, the text, code, math, diagram, table and embed elements, and the overlay
-options. Its SVG diagrams are in the same
-directory. Use it to look at a change to the style sheet on real slides:
+is a copy of `talks/line-4/deck.exs` of
+[iso-factories](https://github.com/rellen/iso-factories), and its header tells how the two
+differ. It uses many features of Expresso: a deck template, a theme from a map, the `css`
+option, sections and a toc, the stat, callout, icon, chart, code, diagram, table, image,
+video, embed and QR code elements, and the overlay options. Its files are in the same
+directory, with `line-4.html`, a copy of the factory page. Use it to look at a change to the
+style sheet on real slides:
 
 ```sh
 mix expresso examples/line4/line4.exs /tmp/line4.html
