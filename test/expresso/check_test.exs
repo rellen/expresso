@@ -137,6 +137,39 @@ defmodule Expresso.CheckTest do
       assert path == Path.join(dir, "chrome")
     end
 
+    test "finds the headless shell of Playwright before its Chromium", %{tmp_dir: dir} do
+      shell = Path.join(dir, "chromium_headless_shell-1194/chrome-linux/headless_shell")
+      chromium = Path.join(dir, "chromium-1194/chrome-linux/chrome")
+
+      for path <- [shell, chromium] do
+        File.mkdir_p!(Path.dirname(path))
+        File.write!(path, "")
+      end
+
+      env = %{"PLAYWRIGHT_BROWSERS_PATH" => dir}
+      assert Browser.playwright(env) == shell
+      assert Browser.find(env) == {:ok, shell}
+
+      File.rm!(shell)
+      assert Browser.playwright(env) == chromium
+    end
+
+    test "knows a command that installs a snap", %{tmp_dir: dir} do
+      snap = deck_file(dir, "snap", "")
+      link = Path.join(dir, "chromium")
+      File.ln_s!(snap, link)
+
+      script = Path.join(dir, "chromium-browser")
+      File.write!(script, "#!/bin/sh\necho 'install the snap'\nexec snap install chromium\n")
+      chrome = Path.join(dir, "chrome")
+      File.write!(chrome, "#!/bin/sh\nexec /opt/chrome/chrome \"$@\"\n")
+
+      assert Browser.snap?(link)
+      assert Browser.snap?(script)
+      refute Browser.snap?(chrome)
+      refute Browser.snap?(Path.join(dir, "none"))
+    end
+
     test "finds axe-core in node_modules of a directory or a parent", %{tmp_dir: dir} do
       axe = Path.join(dir, "node_modules/axe-core/axe.min.js")
       File.mkdir_p!(Path.dirname(axe))

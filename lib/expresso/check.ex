@@ -69,7 +69,8 @@ defmodule Expresso.Check do
       checks = [Document.theme(deck), Document.size(html), Document.slides(html)]
       problems = named(Enum.flat_map(checks, & &1.problems) ++ page_problems(page), deck)
       notes = named(Enum.flat_map(checks, & &1.notes), deck)
-      {:ok, %{text: text(input, deck, level, page, notes, problems), problems: length(problems)}}
+      text = text(input, deck, {level, browser(tools)}, page, notes, problems)
+      {:ok, %{text: text, problems: length(problems)}}
     end
   end
 
@@ -232,10 +233,19 @@ defmodule Expresso.Check do
     end
   end
 
-  defp text(input, deck, level, page, notes, problems) do
+  # The browser of the checks of the page, for the report.
+  defp browser(nil), do: nil
+
+  defp browser({:session, _tools}),
+    do: System.get_env("EXPRESSO_CHROMIUM", "the Chromium of Playwright")
+
+  defp browser({browser, _axe}), do: browser
+
+  defp text(input, deck, {level, browser}, page, notes, problems) do
     [
       "Check of #{input}: #{length(deck.slides)} #{plural(length(deck.slides), "slide")}\n",
       ran(level, page),
+      if(browser, do: "Browser: #{browser}\n", else: []),
       section("Notes", notes),
       section("Problems", problems),
       "\n",

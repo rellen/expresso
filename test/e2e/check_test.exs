@@ -95,7 +95,10 @@ defmodule Expresso.E2E.CheckTest do
     {status, output} = check(dir, @deck, :layout)
 
     assert status == 1
-    assert output =~ "the layout at 1920 × 1080\n"
+
+    assert output =~
+             "the layout at 1920 × 1080\nBrowser: #{System.get_env("EXPRESSO_CHROMIUM")}\n"
+
     assert output =~ "  - Slide 2 “long”, step 2: 1 line breaks in the code “const a = 1;"
     refute output =~ "color-contrast"
   end
@@ -123,7 +126,7 @@ defmodule Expresso.E2E.CheckTest do
   test "--check=browser presses each key, and finds no problem in a good deck", %{tmp_dir: dir} do
     {status, output} = check(dir, @good, :browser)
 
-    assert output =~ "and the keys of the presenter in Playwright\n"
+    assert output =~ "and the keys of the presenter in Playwright\nBrowser: "
     assert {status, output} == {0, output}
     assert String.ends_with?(output, "\nNo problems.\n")
   end

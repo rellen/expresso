@@ -135,9 +135,25 @@ Each error of the script of the page, each rejected promise with no handler, and
 
 | Variable | Gives | Without it |
 | --- | --- | --- |
-| `EXPRESSO_CHROMIUM` | The path of Chrome or Chromium | The check looks for `google-chrome`, `google-chrome-stable`, `chrome`, `chrome-headless-shell`, `headless_shell`, `chromium` and `chromium-browser` on the `PATH`, in this sequence. Then it looks for Chrome and Chromium in the folder `Applications` of macOS, and then in the cache of Playwright. |
+| `EXPRESSO_CHROMIUM` | The path of Chrome or Chromium | The check looks in [the sequence of the search](#the-search-for-the-browser). |
 | `EXPRESSO_AXE` | The path of `axe.min.js` | The check looks for `node_modules/axe-core/axe.min.js` in the current directory, in the directory of the deck, and in each parent of them. |
 | `EXPRESSO_PLAYWRIGHT` | The path of `cli.js` of the npm package `playwright` | The check looks for `node_modules/playwright/cli.js` in the same directories as axe-core. |
+
+### The search for the browser
+
+Without `EXPRESSO_CHROMIUM`, `--check=layout` and `--check=a11y` look for the browser in
+this sequence:
+
+1. The headless shell of Playwright, and then its Chromium, in the directory of
+   `PLAYWRIGHT_BROWSERS_PATH`, or in the cache of Playwright without it. The headless shell
+   starts fast, and it gives the page its size exactly.
+2. `google-chrome`, `google-chrome-stable`, `chrome`, `chrome-headless-shell`,
+   `headless_shell`, `chromium` and `chromium-browser` on the `PATH`. The check skips a
+   command that runs or installs a snap, such as `chromium` on Ubuntu, because that command
+   does not end.
+3. Chrome and Chromium in the folder `Applications` of macOS.
+
+The line `Browser:` of the report gives the path of the browser that ran.
 
 `--check=browser` also needs `node` on the `PATH`, the Chromium of Playwright, and the Hex
 package `playwright_ex`. Expresso gives `playwright_ex` as an optional dependency, so a Mix
@@ -157,10 +173,12 @@ The report has these parts, in this sequence:
 
 1. `Check of <input>:` and the number of slides.
 2. `Checks:` and the checks of the level. A browser level gives the size of the page.
-3. `Notes:` and one line for each note. The part is absent when the deck has no note.
-4. `Problems:` and one line for each problem. The part is absent when the deck has no
+3. `Browser:` and the path of the browser, for a browser level. `--check=browser` gives
+   `the Chromium of Playwright` without `EXPRESSO_CHROMIUM`.
+4. `Notes:` and one line for each note. The part is absent when the deck has no note.
+5. `Problems:` and one line for each problem. The part is absent when the deck has no
    problem.
-5. `No problems.`, or the number of problems.
+6. `No problems.`, or the number of problems.
 
 A line about one slide gives the number and the name of the slide, such as
 `Slide 14 “resHit”, step 3`. A slide with no name gives its number only.
@@ -168,6 +186,7 @@ A line about one slide gives the number and the name of the slide, such as
 ```text
 Check of deck.exs: 3 slides
 Checks: the render, the theme, the text for a screen reader, the layout at 1920 × 1080, and axe-core at each step and in each view
+Browser: /home/user/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
 
 Notes:
   - The document is 291 KB.
