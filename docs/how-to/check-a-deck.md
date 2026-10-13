@@ -52,8 +52,9 @@ Chrome or Chromium:
 | macOS with Homebrew | `brew install --cask chromium` |
 | Each system with Node | `npx playwright install --only-shell chromium` |
 
-The check looks for the browser on the `PATH`, in the folder `Applications` of macOS, and
-in the cache of Playwright. When it does not find the browser, give its path:
+The check looks for the browser in the cache of Playwright, on the `PATH`, and in the
+folder `Applications` of macOS. The line `Browser:` of the report gives the browser that
+ran. When the check does not find the browser, or finds a different one, give its path:
 
 ```sh
 export EXPRESSO_CHROMIUM=/path/to/chrome
@@ -171,6 +172,7 @@ Examples.CheckDeck
 ```text
 Check of check_deck.exs: 1 slide
 Checks: the render, the theme, the text for a screen reader, the layout at 1920 × 1080, and axe-core at each step and in each view
+Browser: /home/user/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
 
 Notes:
   - The document is 259 KB.

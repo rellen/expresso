@@ -25,24 +25,28 @@ defmodule Expresso.Check.Browser do
 
   # The names of Chrome and Chromium on Linux and on macOS, in the order of
   # the search. Chrome comes first: on Ubuntu, `chromium` can be a command
-  # that installs a snap, and that command does not end.
+  # that installs a snap, and that command does not end. The search skips
+  # such a command.
   @names ~w(google-chrome google-chrome-stable chrome chrome-headless-shell headless_shell chromium chromium-browser)
   @mac_paths [
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium"
   ]
 
-  # The browsers of Playwright, in its cache on Linux and on macOS. The headless
+  # The browsers of Playwright, in a directory of its browsers. The headless
   # shell comes first, because it starts faster. The names of the files
   # changed in Playwright 1.57, so each browser has an old and a new pattern.
   @playwright [
-    "~/.cache/ms-playwright/chromium_headless_shell-*/chrome-headless-shell-*/chrome-headless-shell",
-    "~/.cache/ms-playwright/chromium_headless_shell-*/chrome-linux/headless_shell",
-    "~/Library/Caches/ms-playwright/chromium_headless_shell-*/chrome-headless-shell-*/chrome-headless-shell",
-    "~/Library/Caches/ms-playwright/chromium_headless_shell-*/chrome-mac*/headless_shell",
-    "~/.cache/ms-playwright/chromium-*/chrome-linux*/chrome",
-    "~/Library/Caches/ms-playwright/chromium-*/chrome-mac*/*.app/Contents/MacOS/*"
+    "chromium_headless_shell-*/chrome-headless-shell-*/chrome-headless-shell",
+    "chromium_headless_shell-*/chrome-linux/headless_shell",
+    "chromium_headless_shell-*/chrome-mac*/headless_shell",
+    "chromium-*/chrome-linux*/chrome",
+    "chromium-*/chrome-mac*/*.app/Contents/MacOS/*"
   ]
+
+  # The directories of the browsers of Playwright on Linux and on macOS,
+  # without `PLAYWRIGHT_BROWSERS_PATH`.
+  @playwright_caches ["~/.cache/ms-playwright", "~/Library/Caches/ms-playwright"]
 
   @width 1920
   @height 1080
@@ -61,16 +65,20 @@ defmodule Expresso.Check.Browser do
   @doc """
   Find Chrome or Chromium
 
-  The variable `EXPRESSO_CHROMIUM` in `env` gives the path of the browser. Without
-  it, the function looks for each usual name of the browser on the `PATH`, then
-  in the usual places of macOS, and then in the cache of Playwright. Chrome
-  comes before Chromium, because `chromium` on Ubuntu can be a command that
-  installs a snap.
+  The variable `EXPRESSO_CHROMIUM` in `env` gives the path of the browser.
+  Without it, the function looks in this sequence:
+
+  1. The browsers of Playwright, as `playwright/1` finds them. The headless
+     shell starts fast, and it gives the page its size exactly.
+  2. Each usual name of the browser on the `PATH`. Chrome comes before
+     Chromium. The function skips a command that installs a snap, such as
+     `chromium` on Ubuntu, because that command does not end.
+  3. The usual places of Chrome and Chromium on macOS.
   """
   @spec find(%{String.t() => String.t()}) :: {:ok, Path.t()} | {:error, String.t()}
   def find(env \\ System.get_env()) do
     case env["EXPRESSO_CHROMIUM"] do
-      nil -> search()
+      nil -> search(env)
       path -> given(path)
     end
   end
@@ -81,11 +89,11 @@ defmodule Expresso.Check.Browser do
       else: {:error, "EXPRESSO_CHROMIUM gives #{path}, and that file does not exist."}
   end
 
-  defp search do
+  defp search(env) do
     found =
-      Enum.find_value(@names, &System.find_executable/1) ||
-        Enum.find(@mac_paths, &File.regular?/1) ||
-        playwright()
+      playwright(env) ||
+        Enum.find_value(@names, &on_path/1) ||
+        Enum.find(@mac_paths, &File.regular?/1)
 
     if found,
       do: {:ok, found},
@@ -95,16 +103,73 @@ defmodule Expresso.Check.Browser do
            "path in EXPRESSO_CHROMIUM. docs/how-to/check-a-deck.md tells how."}
   end
 
-  @doc """
-  Return the path of a browser in the cache of Playwright, or `nil`
+  # A command on the `PATH` that is not a command of snap.
+  defp on_path(name) do
+    case System.find_executable(name) do
+      nil -> nil
+      path -> if snap?(path), do: nil, else: path
+    end
+  end
 
-  The function prefers the headless shell, and the latest version of each
-  browser.
+  @doc """
+  Return true for a command that runs or installs a snap
+
+  A command of a snap is a link to `/usr/bin/snap`, or a short script that
+  names `snap`, as `chromium-browser` on Ubuntu is.
   """
-  @spec playwright() :: Path.t() | nil
-  def playwright do
+  @spec snap?(Path.t()) :: boolean()
+  def snap?(path) do
+    real = real_path(path)
+
+    Path.basename(real) == "snap" or String.starts_with?(real, "/snap/") or
+      script_of_snap?(real)
+  end
+
+  # The path comes from the `PATH`, and the function reads only its start.
+  # sobelow_skip ["Traversal"]
+  defp script_of_snap?(path) do
+    case File.open(path, [:read, :binary], &IO.binread(&1, 4096)) do
+      {:ok, "#!" <> _rest = head} -> head =~ ~r/\bsnap\b/
+      _other -> false
+    end
+  end
+
+  # The path of a file after each symbolic link.
+  defp real_path(path, links \\ 0)
+  defp real_path(path, 20), do: path
+
+  defp real_path(path, links) do
+    case File.read_link(path) do
+      {:ok, target} -> real_path(Path.expand(target, Path.dirname(path)), links + 1)
+      {:error, _reason} -> path
+    end
+  end
+
+  @doc """
+  Return the path of a browser of Playwright, or `nil`
+
+  The variable `PLAYWRIGHT_BROWSERS_PATH` in `env` gives the directory of the
+  browsers, as for Playwright. Without it, the function looks in the cache of
+  Playwright on Linux and on macOS. It prefers the headless shell, and the
+  latest version of each browser.
+  """
+  @spec playwright(%{String.t() => String.t()}) :: Path.t() | nil
+  def playwright(env \\ System.get_env()) do
+    directories =
+      case env["PLAYWRIGHT_BROWSERS_PATH"] do
+        path when path in [nil, "", "0"] -> @playwright_caches
+        path -> [path]
+      end
+
     Enum.find_value(@playwright, fn pattern ->
-      pattern |> Path.expand() |> Path.wildcard() |> Enum.filter(&File.regular?/1) |> List.last()
+      Enum.find_value(directories, fn directory ->
+        directory
+        |> Path.join(pattern)
+        |> Path.expand()
+        |> Path.wildcard()
+        |> Enum.filter(&File.regular?/1)
+        |> List.last()
+      end)
     end)
   end
 
