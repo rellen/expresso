@@ -285,7 +285,14 @@ defmodule Expresso.Check.Browser do
         args: ["-c", ~s(exec "$0" "$@" 2>/dev/null), browser | args]
       ])
 
-    {:os_pid, pid} = Port.info(port, :os_pid)
+    # A browser that exits at once closes the port before `Port.info/2`,
+    # which then returns `nil`. Its exit status is already in the mailbox.
+    pid =
+      case Port.info(port, :os_pid) do
+        {:os_pid, pid} -> pid
+        nil -> nil
+      end
+
     deadline = System.monotonic_time(:millisecond) + timeout
     collect(port, %{pid: pid, browser: browser, deadline: deadline, timeout: timeout}, [])
   end
@@ -305,7 +312,7 @@ defmodule Expresso.Check.Browser do
         {:error, "The browser #{run.browser} stopped with the exit status #{status}."}
     after
       wait ->
-        System.cmd("kill", ["-9", Integer.to_string(run.pid)])
+        if run.pid, do: System.cmd("kill", ["-9", Integer.to_string(run.pid)])
 
         receive do
           {^port, {:exit_status, _status}} -> :ok
