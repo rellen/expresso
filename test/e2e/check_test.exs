@@ -203,18 +203,23 @@ defmodule Expresso.E2E.CheckTest do
     refute output =~ "(light)"
   end
 
-  # A formula of 20 terms fits a page of 16:9, and it goes past the right
-  # edge of a page of 4:3. A slide grows with the page, so only the
-  # proportions change the layout.
+  # A box of 1500 px fits the slide of a page of 16:9, and it goes past an edge
+  # of the slide of a page of 4:3. The width is in pixels, so the fonts of the
+  # browser do not change the result.
   @wide """
   defmodule WideCheckDeck do
     use Expresso
 
     name "wide check deck"
+    css ".wide { width: 1500px; max-width: none; flex: none; } .wide img { width: 100%; height: 100px; }"
 
     slide "wide" do
       heading "Wide"
-      math "<math><mrow>#{String.duplicate("<mi>x</mi><mo>+</mo>", 20)}<mn>1</mn></mrow></math>"
+
+      image "#{Path.expand("test/fixtures/dot.png")}" do
+        alt "A wide image"
+        class "wide"
+      end
     end
   end
   """
@@ -228,7 +233,7 @@ defmodule Expresso.E2E.CheckTest do
     assert output =~ "the layout at 1920 × 1080 and 1024 × 768\n"
 
     assert output =~
-             ~r/  - Slide 1 “wide”, step 1 \(1024 × 768\): the math .* past the right edge/
+             ~r/  - Slide 1 “wide”, step 1 \(1024 × 768\): the image .* past the (left|right) edge/
 
     refute output =~ "(1920 × 1080)"
 
@@ -241,7 +246,7 @@ defmodule Expresso.E2E.CheckTest do
 
     assert status == 1
     assert output =~ "the layout at 1920 × 1080 and 1024 × 768, axe-core"
-    assert output =~ ~r/  - Slide 1 “wide”, step 1 \(1024 × 768\): the math/
+    assert output =~ ~r/  - Slide 1 “wide”, step 1 \(1024 × 768\): the image/
     refute output =~ "The keys"
   end
 
