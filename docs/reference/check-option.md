@@ -81,8 +81,8 @@ A slide grows and shrinks with the page, so two sizes with the same proportions,
 as 1024 × 768 for a projector of 4:3, to find the problems of that room.
 
 A problem of each size gives one line. A problem of some sizes names them before the first
-colon, such as `Slide 1 “wide”, step 1 (1024 × 768): the math … goes 442 px past the right
-edge`. A problem of the layout gives its distance in pixels, so the same element at two sizes
+colon, such as `Slide 1 “wide”, step 1 (1024 × 768): the image “A wide image” goes 524 px past
+the right edge`. A problem of the layout gives its distance in pixels, so the same element at two sizes
 gives two lines. `--check=browser` presses the keys one time, at the first size.
 
 ### Two variants of a theme
