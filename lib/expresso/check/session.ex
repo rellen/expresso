@@ -86,7 +86,8 @@ defmodule Expresso.Check.Session do
     3. The npm package `playwright`. The variable `EXPRESSO_PLAYWRIGHT` in
        `env` gives the path of its `cli.js`. Without it, the function looks
        for `node_modules/playwright/cli.js` in each directory of
-       `directories`, and in each parent of them.
+       `directories`, in each parent of them, and in the directory of
+       `Expresso.Check.Tools`.
     4. axe-core, as `Expresso.Check.Browser.find_axe/2` finds it.
   """
   @spec find([Path.t()], %{String.t() => String.t()}) :: {:ok, tools()} | {:error, String.t()}
@@ -120,7 +121,7 @@ defmodule Expresso.Check.Session do
 
   defp cli(directories, env) do
     case env["EXPRESSO_PLAYWRIGHT"] do
-      nil -> search_cli(directories)
+      nil -> search_cli(directories, env)
       path -> given_cli(path)
     end
   end
@@ -131,11 +132,10 @@ defmodule Expresso.Check.Session do
       else: {:error, "EXPRESSO_PLAYWRIGHT gives #{path}, and that file does not exist."}
   end
 
-  defp search_cli(directories) do
+  defp search_cli(directories, env) do
     found =
       directories
-      |> Enum.flat_map(&Browser.ancestors(Path.expand(&1)))
-      |> Enum.uniq()
+      |> Browser.places(env)
       |> Enum.map(&Path.join(&1, "node_modules/playwright/cli.js"))
       |> Enum.find(&File.regular?/1)
 
@@ -144,9 +144,10 @@ defmodule Expresso.Check.Session do
       else:
         {:error,
          "--check=browser needs the npm package playwright. Run " <>
-           "`npm install --save-dev playwright axe-core` and `npx playwright install chromium` " <>
-           "in the directory of the deck, or give the path of its cli.js in EXPRESSO_PLAYWRIGHT. " <>
-           "docs/how-to/check-a-deck.md tells how."}
+           "`mix expresso --install-check-tools`, or `expresso --install-check-tools` with the " <>
+           "binary. You can also run `npm install --save-dev playwright axe-core` and " <>
+           "`npx playwright install chromium` in the directory of the deck, or give the path " <>
+           "of its cli.js in EXPRESSO_PLAYWRIGHT. docs/how-to/check-a-deck.md tells how."}
   end
 
   @doc """

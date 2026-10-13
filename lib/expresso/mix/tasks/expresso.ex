@@ -52,6 +52,8 @@ defmodule Mix.Tasks.Expresso do
   another size, and give the option more than one time for more sizes. Each
   problem of one size only names its size.
 
+  `mix expresso --install-check-tools` installs the npm packages and the
+  browser of the browser levels into a directory of the user.
   `docs/how-to/check-a-deck.md` tells how to install each tool.
 
   ## Options
@@ -65,6 +67,8 @@ defmodule Mix.Tasks.Expresso do
       `--check`, such as `1024x768`. The default is 1920 × 1080.
     * `-h`, `--help` - show this help
     * `--version` - show the version of Expresso
+    * `--install-check-tools` - install the tools of the browser levels of
+      `--check`. It needs Node and npm.
 
   Each other argument that starts with `-` is an error, and so is a third
   path. A path that starts with `-` needs a directory in front of it, such as

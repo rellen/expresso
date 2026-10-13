@@ -23,6 +23,13 @@ defmodule Expresso.CommandLineTest do
       assert CommandLine.parse(["--verbose", "-h"]) == :help
     end
 
+    test "gives :install_check_tools for --install-check-tools alone" do
+      assert CommandLine.parse(["--install-check-tools"]) == :install_check_tools
+
+      assert CommandLine.parse(["deck.exs", "--install-check-tools"]) ==
+               {:error, "--install-check-tools takes no other argument"}
+    end
+
     test "gives :version for --version in any position, before an unknown option" do
       for args <- [["--version"], ["deck.exs", "--version"], ["--verbose", "--version"]] do
         assert CommandLine.parse(args) == :version
