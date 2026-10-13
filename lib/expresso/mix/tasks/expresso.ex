@@ -6,7 +6,7 @@ defmodule Mix.Tasks.Expresso do
 
       $ mix expresso <input> [output]
       $ mix expresso <input> [output] --watch [--port <port>]
-      $ mix expresso <input> [output] --check[=layout | =a11y | =browser]
+      $ mix expresso <input> [output] --check[=layout | =a11y | =browser] [--size <size>]...
 
   `<input>` is the Elixir script of the deck, or `-` for the standard input.
   The script returns an `Expresso.Deck` struct, or a module that uses the DSL
@@ -48,6 +48,10 @@ defmodule Mix.Tasks.Expresso do
       `npm install --save-dev playwright axe-core` and
       `npx playwright install chromium` in the directory of the deck.
 
+  A browser level checks the page at 1920 × 1080. Give `--size 1024x768` for
+  another size, and give the option more than one time for more sizes. Each
+  problem of one size only names its size.
+
   `docs/how-to/check-a-deck.md` tells how to install each tool.
 
   ## Options
@@ -57,6 +61,8 @@ defmodule Mix.Tasks.Expresso do
       is 4100.
     * `--check`, `--check=layout`, `--check=a11y`, `--check=browser` - check
       the deck, and write a report
+    * `--size <width>x<height>` - a size of the page for a browser level of
+      `--check`, such as `1024x768`. The default is 1920 × 1080.
     * `-h`, `--help` - show this help
     * `--version` - show the version of Expresso
 

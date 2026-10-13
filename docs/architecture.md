@@ -269,6 +269,10 @@ These are the reasons for its design:
 - **`playwright_ex` is an optional dependency.** A project that uses Expresso fetches it only
   when it adds it. The binary holds it. The module of the session tells the compiler that
   the modules of `playwright_ex` can be absent.
+- **Each size of `--size` gets its own run.** A slide grows with the page, so the
+  proportions of the page change the layout, and the size alone does not. A problem of
+  the layout gives its distance in pixels, so the check names the size of each problem and
+  does not merge the problems of two sizes.
 - **Each variant of a theme gets its own run.** A color can pass in the light variant and
   fail in the dark variant, so a browser level opens the page with `?scheme=light` and
   with `?scheme=dark`. A problem of the two variants gives one line. The keys run one time,

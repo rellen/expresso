@@ -165,7 +165,9 @@ defmodule Expresso.Check.Browser do
   milliseconds for the small page of the size, 30 000 by default, and
   `:timeout` gives the time for the check, 600 000 by default. The option
   `:scheme`, `:light` or `:dark`, shows that variant of a theme with two
-  variants, with `?scheme=` in the address.
+  variants, with `?scheme=` in the address. The option `:size`, such as
+  `{1280, 720}`, gives the size of the page, and it is `{1920, 1080}` by
+  default.
   """
   @spec run(String.t(), Path.t(), Path.t() | nil, keyword()) ::
           {:ok, result()} | {:error, String.t()}
@@ -187,7 +189,7 @@ defmodule Expresso.Check.Browser do
         Keyword.get(opts, :timeout, @timeout)
       }
 
-      measure(browser, url, directory, {@width, @height}, timeouts)
+      measure(browser, url, directory, Keyword.get(opts, :size, {@width, @height}), timeouts)
     after
       File.rm_rf(directory)
     end
@@ -238,7 +240,7 @@ defmodule Expresso.Check.Browser do
     end
   end
 
-  # Find the size of the window that gives a page of 1920 × 1080. A small page
+  # Find the size of the window that gives a page of the size. A small page
   # writes its size, and the window grows by the difference. Then run the
   # check one time in a window of that size.
   # sobelow_skip ["Traversal"]
@@ -252,7 +254,7 @@ defmodule Expresso.Check.Browser do
 
     with {:ok, dom} <- browse(browser, "file://#{probe}", directory, window, probe_timeout),
          [w, h] <- Regex.run(~r/data-size="(\d+) (\d+)"/, dom, capture: :all_but_first) do
-      larger = {width + @width - String.to_integer(w), height + @height - String.to_integer(h)}
+      larger = {2 * width - String.to_integer(w), 2 * height - String.to_integer(h)}
       with {:ok, dom} <- browse(browser, url, directory, larger, timeout), do: result(dom)
     else
       {:error, _message} = error -> error

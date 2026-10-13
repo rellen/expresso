@@ -92,6 +92,9 @@ defmodule Expresso.BurritoEntryPoint do
           --check=browser
                          Also press the keys of the presenter in Playwright.
                          It needs Node and the npm package playwright.
+          --size <size>  A size of the page for a browser level of --check,
+                         such as 1024x768. Give it more than one time for
+                         more sizes. The default is 1920x1080.
       -h, --help         Show this help.
           --version      Show the version of Expresso.
 
