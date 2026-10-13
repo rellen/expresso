@@ -48,6 +48,13 @@ file:///path/to/deck.html?scheme=dark
 `?scheme=light` gives the light variant. The key `t` still shows the other variant. The
 key `s` opens the speaker view in the variant of the present view.
 
+## Check the two variants
+
+`mix expresso deck.exs --check=a11y` checks each variant, because a color can pass in one
+variant and fail in the other. A problem of one variant only names the variant, such as
+`Slide 1 “start”, step 1 (dark): color-contrast`. See
+[Check a deck before the talk](check-a-deck.md).
+
 ## The complete deck
 
 This deck has a dark and a light built-in theme. The window of the recording has a light

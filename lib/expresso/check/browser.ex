@@ -163,7 +163,9 @@ defmodule Expresso.Check.Browser do
   function returns an error when the browser does not start, or when the page
   writes no result. The option `:probe_timeout` gives the time in
   milliseconds for the small page of the size, 30 000 by default, and
-  `:timeout` gives the time for the check, 600 000 by default.
+  `:timeout` gives the time for the check, 600 000 by default. The option
+  `:scheme`, `:light` or `:dark`, shows that variant of a theme with two
+  variants, with `?scheme=` in the address.
   """
   @spec run(String.t(), Path.t(), Path.t() | nil, keyword()) ::
           {:ok, result()} | {:error, String.t()}
@@ -178,6 +180,7 @@ defmodule Expresso.Check.Browser do
       page = Path.join(directory, "deck.html")
       File.write!(page, with_axe(html, axe))
       url = "file://#{page}?" <> if(axe, do: "check=a11y", else: "check")
+      url = scheme(url, Keyword.get(opts, :scheme))
 
       timeouts = {
         Keyword.get(opts, :probe_timeout, @probe_timeout),
@@ -189,6 +192,18 @@ defmodule Expresso.Check.Browser do
       File.rm_rf(directory)
     end
   end
+
+  @doc """
+  Add the variant of a theme to the address of a page
+
+      iex> Expresso.Check.Browser.scheme("file:///d.html?check", :dark)
+      "file:///d.html?check&scheme=dark"
+      iex> Expresso.Check.Browser.scheme("file:///d.html?check", nil)
+      "file:///d.html?check"
+  """
+  @spec scheme(String.t(), :light | :dark | nil) :: String.t()
+  def scheme(url, nil), do: url
+  def scheme(url, scheme), do: "#{url}&scheme=#{scheme}"
 
   @doc """
   Put axe-core into a document before the end of its `body`

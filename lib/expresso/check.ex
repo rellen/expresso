@@ -124,13 +124,40 @@ defmodule Expresso.Check do
     end
   end
 
+  # Run the checks of the page one time for each variant of the theme. The
+  # result is a list of `{scheme, result}`, with `nil` as the scheme of a
+  # theme with one variant.
   defp page(_html, _deck, nil), do: {:ok, nil}
-  defp page(html, deck, {:session, tools}), do: Session.run(html, deck, tools)
-  defp page(html, _deck, {browser, axe}), do: Browser.run(html, browser, axe)
+
+  defp page(html, deck, {:session, tools}),
+    do: Session.run(html, deck, tools, schemes: schemes(deck))
+
+  defp page(html, deck, {browser, axe}) do
+    deck
+    |> schemes()
+    |> Enum.reduce_while({:ok, []}, fn scheme, {:ok, pages} ->
+      case Browser.run(html, browser, axe, scheme: scheme) do
+        {:ok, result} -> {:cont, {:ok, pages ++ [{scheme, result}]}}
+        error -> {:halt, error}
+      end
+    end)
+  end
+
+  # The variants of the theme of a deck: `[:light, :dark]` for a theme with
+  # two variants, and `[nil]` otherwise.
+  defp schemes(deck) do
+    deck.metadata |> Map.get(:theme, :default) |> Expresso.Palette.variants() |> Keyword.keys()
+  end
 
   defp page_problems(nil), do: []
 
-  defp page_problems(page) do
+  defp page_problems(pages) do
+    pages
+    |> Enum.map(fn {scheme, page} -> {scheme, problems_of(page)} end)
+    |> variants()
+  end
+
+  defp problems_of(page) do
     accessibility =
       Enum.map(page.accessibility || [], fn finding ->
         "#{finding["where"]}: #{finding["rule"]}, #{finding["help"]}: " <>
@@ -138,6 +165,41 @@ defmodule Expresso.Check do
       end)
 
     page.layout ++ accessibility ++ Map.get(page, :session, [])
+  end
+
+  @doc """
+  Merge the problems of the variants of a theme
+
+  A problem of each variant gives one line. A problem of one variant only
+  names the variant before the first colon.
+
+      iex> Expresso.Check.variants([{nil, ["Slide 1, step 1: a"]}])
+      ["Slide 1, step 1: a"]
+      iex> Expresso.Check.variants([
+      ...>   {:light, ["Slide 1, step 1: a", "Slide 2, step 1: b"]},
+      ...>   {:dark, ["Slide 1, step 1: a", "Slide 3, step 2: c"]}
+      ...> ])
+      ["Slide 1, step 1: a", "Slide 2, step 1 (light): b", "Slide 3, step 2 (dark): c"]
+  """
+  @spec variants([{atom() | nil, [String.t()]}]) :: [String.t()]
+  def variants([{_scheme, problems}]), do: problems
+
+  def variants(variants) do
+    every = variants |> Enum.map(fn {_scheme, problems} -> MapSet.new(problems) end)
+    shared = Enum.reduce(every, &MapSet.intersection/2)
+
+    variants
+    |> Enum.flat_map(fn {scheme, problems} ->
+      Enum.map(problems, &if(&1 in shared, do: &1, else: in_variant(&1, scheme)))
+    end)
+    |> Enum.uniq()
+  end
+
+  defp in_variant(problem, scheme) do
+    case String.split(problem, ": ", parts: 2) do
+      [where, what] -> "#{where} (#{scheme}): #{what}"
+      [_one] -> "#{problem} (#{scheme})"
+    end
   end
 
   defp text(input, deck, level, page, notes, problems) do
@@ -152,22 +214,29 @@ defmodule Expresso.Check do
     |> IO.iodata_to_binary()
   end
 
-  defp ran(:basic, _page),
-    do: "Checks: the render, the theme and the text for a screen reader\n"
+  defp ran(level, [{nil, page} | _rest]), do: checks(level, page) <> "\n"
 
-  defp ran(:layout, page),
+  defp ran(level, [{_scheme, page} | _rest]),
+    do: checks(level, page) <> ", in the light and the dark variants\n"
+
+  defp ran(level, nil), do: checks(level, nil) <> "\n"
+
+  defp checks(:basic, _page),
+    do: "Checks: the render, the theme and the text for a screen reader"
+
+  defp checks(:layout, page),
     do:
-      "Checks: the render, the theme, the text for a screen reader, and the layout at #{size(page)}\n"
+      "Checks: the render, the theme, the text for a screen reader, and the layout at #{size(page)}"
 
-  defp ran(:a11y, page),
+  defp checks(:a11y, page),
     do:
       "Checks: the render, the theme, the text for a screen reader, the layout at #{size(page)}, " <>
-        "and axe-core at each step and in each view\n"
+        "and axe-core at each step and in each view"
 
-  defp ran(:browser, page),
+  defp checks(:browser, page),
     do:
       "Checks: the render, the theme, the text for a screen reader, the layout at #{size(page)}, " <>
-        "axe-core at each step and in each view, and the keys of the presenter in Playwright\n"
+        "axe-core at each step and in each view, and the keys of the presenter in Playwright"
 
   defp size(page), do: "#{page.width} × #{page.height}"
 
