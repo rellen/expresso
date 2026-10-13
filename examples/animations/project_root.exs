@@ -8,7 +8,7 @@ defmodule Examples.ProjectRoot do
 
     code "elixir" do
       src "counter.ex"
-      lines from: "def handle_call(", to: "\n  end"
+      lines from: "def handle_call(", to: :block
       line_numbers true
       reveal [12..13, 14..15]
     end

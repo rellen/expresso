@@ -8,7 +8,7 @@ defmodule Examples.CodeTextGroups do
 
     code "elixir" do
       src "counter.ex"
-      lines from: "def handle_call(", to: "\n  end"
+      lines from: "def handle_call(", to: :block
       line_numbers true
       highlight [[from: "def handle_call("], [from: "next = ", to: "{:reply"]]
     end

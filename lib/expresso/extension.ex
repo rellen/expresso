@@ -551,7 +551,7 @@ defmodule Expresso.Extension do
           lines: [
             type: {:custom, Expresso.Element.Code, :lines, []},
             doc:
-              "The lines of the src file that the element shows: a range, such as 10..24, or a start text and an end text, such as [from: \"def start(\", to: \"end\"]. The default is each line of the file. See docs/reference/code-element.md."
+              "The lines of the src file that the element shows: a range, such as 10..24, or a start text and an end text, such as [from: \"def start(\", to: \"end\"]. to: :block ends the lines at the end of the block of the start line. The default is each line of the file. See docs/reference/code-element.md."
           ],
           line_numbers: [
             type: :boolean,
@@ -562,7 +562,7 @@ defmodule Expresso.Extension do
           reveal: [
             type: {:custom, Expresso.Element.Code, :reveal, []},
             doc:
-              "Groups of lines, one group at each step: line numbers, ranges, and texts such as [from: \"def start(\", to: \"end\"]. With src, a number is the number of the line in the file, unless relative is true. See docs/reference/code-element.md."
+              "Groups of lines, one group at each step: line numbers, ranges, and texts such as [from: \"def start(\", to: \"end\"] or [from: \"def start(\", to: :block]. With src, a number is the number of the line in the file, unless relative is true. See docs/reference/code-element.md."
           ],
           dim: [
             type: :boolean,

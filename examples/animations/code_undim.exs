@@ -6,7 +6,7 @@ defmodule Examples.CodeUndim do
 
     code "elixir" do
       src "examples/animations/counter.ex"
-      lines from: "def handle_call(", to: "\n  end"
+      lines from: "def handle_call(", to: :block
       line_numbers true
       highlight [13, 14]
     end

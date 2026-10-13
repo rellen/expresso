@@ -19,7 +19,7 @@ and render it with `mix expresso` or with the binary. For each value of the opti
      slide "the server" do
        code "elixir" do
          src "lib/my_app/server.ex"
-         lines from: "def handle_call(", to: "\n  end"
+         lines from: "def handle_call(", to: :block
        end
      end
    end
@@ -91,7 +91,7 @@ defmodule Examples.ProjectRoot do
 
     code "elixir" do
       src "counter.ex"
-      lines from: "def handle_call(", to: "\n  end"
+      lines from: "def handle_call(", to: :block
       line_numbers true
       reveal [12..13, 14..15]
     end

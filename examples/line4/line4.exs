@@ -250,7 +250,7 @@ defmodule Line4Talk.Deck do
 
     code "js" do
       src @page
-      lines from: "function B(x0, y0, z0, x1, y1, z1, c, extra) {", to: "\n  }"
+      lines from: "function B(x0, y0, z0, x1, y1, z1, c, extra) {", to: :block
       highlight [612..612, 613..618]
     end
   end
@@ -393,7 +393,7 @@ defmodule Line4Talk.Deck do
 
     code "js" do
       src @page
-      lines from: "const stuck = () =>", to: "return sim.armYield.arm === arm;\n    };"
+      lines from: "const stuck = () =>", to: :block
       highlight [2222..2222, 2223..2226, 2227..2227]
     end
 
@@ -449,7 +449,7 @@ defmodule Line4Talk.Deck do
 
     code "js" do
       src @page
-      lines from: "  function resHit(m, b, m2) {", to: "return hit;\n  }"
+      lines from: "  function resHit(m, b, m2) {", to: :block
       highlight [3589..3590, 3591..3591, 3593..3593]
     end
   end
@@ -603,7 +603,7 @@ defmodule Line4Talk.Deck do
           src @page
 
           lines from: "  function oeeFigures(from, to) {",
-                to: "return { A, P, Q, oee: A * P * Q };\n  }"
+                to: :block
 
           highlight [6728..6730, 6732..6734, 6735..6735]
         end

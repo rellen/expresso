@@ -25,7 +25,7 @@ end
 | The first argument | The name of a language, such as `"elixir"` or `"js"` | The colors of the language. See [the languages](#the-languages). Without it, the code has no colors. |
 | `text` | A string | The source code. |
 | `src` | The path of a file, relative to [the root option](root-option.md) of the deck, or to the working directory of the command | The source code is the text of the file. |
-| `lines` | A range, such as `10..24`, or texts, such as `[from: "def start(", to: "\n  end"]` | The element shows only these lines of the `src` file. See [lines from a text](#lines-from-a-text). The default is each line. |
+| `lines` | A range, such as `10..24`, or texts, such as `[from: "def start(", to: :block]` | The element shows only these lines of the `src` file. See [lines from a text](#lines-from-a-text). The default is each line. |
 | `line_numbers` | `true` or `false` | Show the number of each line. The default is `false`. |
 | `reveal` | Line numbers, ranges and texts, such as `[10..12, 13..20]` or `[[from: "def start(", to: "end"]]` | Each group of lines shows at its own step. See [the groups](#the-groups) and [the overlay options](overlay-options.md). |
 | `dim` | `true` or `false` | Each group dims when a later group shows. |
@@ -90,13 +90,36 @@ from the text of the file:
 | Key | Value | Effect |
 | --- | --- | --- |
 | `from` | The text of the first line, or a part of it | The excerpt starts at the line that holds the text. The default is line 1. |
-| `to` | The text of the last line, or a part of it | The excerpt ends at the line that holds the last character of the text. The text is the first one after the start of the `from` text. The default is the last line. |
+| `to` | The text of the last line, or a part of it, or `:block` | The excerpt ends at the line that holds the last character of the text. The text is the first one after the start of the `from` text. With `:block`, the excerpt ends at [the end of the block](#the-end-of-a-block) of the `from` line. The default is the last line. |
 
 A text can hold a line break, such as `"\n  end"`, which is the first line of the file
 that starts with `  end`. The lines keep their numbers in the file, so the first line of
 the excerpt can be line 40. A `reveal` or a `highlight` uses those numbers.
 
 For the steps, see [Show code on a slide](../how-to/show-code.md).
+
+### The end of a block
+
+`to: :block` ends the lines at the end of the block that the `from` line opens, such as a
+function, an `if` or a `do` block. The indent finds the block, so a change of the indent of
+the file does not break the option:
+
+1. The block holds each later line with more indent than the `from` line, and the blank
+   lines between them.
+2. The first later line with the same indent or less ends the block.
+3. That line is the last line of the block when it starts with `}`, `]`, `)` or `end`.
+   Otherwise the last line of the block is the last line with more indent, as in Python.
+
+A `from` line with no line of more indent after it is a block of one line. Its group does
+not take the closing line of a block around it.
+
+```elixir
+code "js" do
+  src "assets/line4.html"
+  lines from: "function resHit(m, b, m2) {", to: :block
+  highlight [[from: "if (extra) {", to: :block], [from: "return hit;"]]
+end
+```
 
 ## The errors
 
@@ -136,6 +159,7 @@ A group of `reveal` or `highlight` takes one of these forms:
 | A number | `12` | The line with that number. |
 | A range | `12..15` | The lines with those numbers. |
 | Texts | `[from: "next = ", to: "{:reply"]` | From the line that holds the `from` text to the line that holds the last character of the `to` text. |
+| A block | `[from: "if (extra) {", to: :block]` | From the line that holds the `from` text to [the end of its block](#the-end-of-a-block). |
 | A start text only | `[from: "def handle_call("]` | The line that holds the text. |
 
 A number is the number of the line in the file, as [the numbers of the lines](#the-numbers-of-the-lines)
