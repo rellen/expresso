@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { accessibility, describe, engine, first, write } from "../src/check.ts";
+import {
+  accessibility,
+  describe,
+  detach,
+  engine,
+  first,
+  write,
+} from "../src/check.ts";
 import type { Axe, Finding } from "../src/check.ts";
 
 // A stub of the parts of the document that the check reads: the style of the
@@ -26,6 +33,7 @@ function stubDocument(): {
       },
     },
     getElementById: (id: string) => ({ id }),
+    querySelectorAll: () => [],
     createElement: () => ({ type: "", id: "", textContent: "" }),
     body,
   };
@@ -89,6 +97,41 @@ test("describe names the element of a slide, and keeps another selector", () => 
   assert.equal(describe("li"), "li");
   assert.equal(describe(".none"), ".none");
   assert.equal(describe("["), "[");
+});
+
+test("detach takes the parts outside the slides out, and puts them back in their places", () => {
+  const children: string[] = ["slides", "menu", "help", "handout", "script"];
+  const part = (name: string) => ({
+    name,
+    parentNode: {
+      insertBefore: (
+        element: { name: string },
+        next: { name: string } | null,
+      ) => {
+        const at =
+          next === null ? children.length : children.indexOf(next.name);
+        children.splice(at, 0, element.name);
+      },
+    },
+    get nextSibling() {
+      const next = children[children.indexOf(name) + 1];
+      return next === undefined ? null : { name: next };
+    },
+    remove: () => children.splice(children.indexOf(name), 1),
+  });
+  let selector = "";
+  (globalThis as { document?: unknown }).document = {
+    querySelectorAll: (given: string) => {
+      selector = given;
+      return ["menu", "help", "handout"].map(part);
+    },
+  };
+
+  const restore = detach();
+  assert.equal(selector, "#menu, #help, .handout");
+  assert.deepEqual(children, ["slides", "script"]);
+  restore();
+  assert.deepEqual(children, ["slides", "menu", "help", "handout", "script"]);
 });
 
 test("engine returns undefined for a page without axe-core", () => {

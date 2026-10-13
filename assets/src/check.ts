@@ -92,6 +92,28 @@ export function describe(selector: string): string {
   return name === null ? selector : `the ${name}`;
 }
 
+// The parts of the document outside the slides: the menu, the list of keys,
+// and the copies of the slides for the overview and the handout view. A run
+// of axe-core reads the whole document, so these parts make each run slow.
+const ASIDE = "#menu, #help, .handout";
+
+// Take each part of `ASIDE` out of the document, and return the function
+// that puts them back in their places. The presenter does not need them to
+// show a step.
+export function detach(): () => void {
+  const parts = Array.from(document.querySelectorAll(ASIDE)).map(
+    (element) => [element, element.parentNode, element.nextSibling] as const,
+  );
+  for (const [element] of parts) {
+    element.remove();
+  }
+  return (): void => {
+    for (const [element, parent, next] of parts.reverse()) {
+      parent?.insertBefore(element, next);
+    }
+  };
+}
+
 // Show each step with `show`, and run axe-core on its slide. Then show each
 // view, and run axe-core on the document. `views` gives the name of each view
 // and the function that shows it. The first view is the present view, so the
@@ -99,6 +121,9 @@ export function describe(selector: string): string {
 // of a selector. The animations take no
 // time during the check, because a color in the middle of a transition can
 // fail a rule of contrast.
+//
+// During the steps, the parts of `ASIDE` are out of the document. A step
+// shows only its slide, so the parts change nothing for its run.
 export async function accessibility(
   steps: readonly { slide: number; step: number }[],
   show: (index: number) => void,
@@ -125,12 +150,17 @@ export async function accessibility(
     }
   };
   try {
-    for (const [index, { slide, step }] of steps.entries()) {
-      show(index);
-      const element = document.getElementById(`slide-${slide}`);
-      if (element !== null) {
-        await read(`Slide ${slide}, step ${step}`, element);
+    const restore = detach();
+    try {
+      for (const [index, { slide, step }] of steps.entries()) {
+        show(index);
+        const element = document.getElementById(`slide-${slide}`);
+        if (element !== null) {
+          await read(`Slide ${slide}, step ${step}`, element);
+        }
       }
+    } finally {
+      restore();
     }
     for (const [name, open] of views) {
       open();

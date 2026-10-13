@@ -229,6 +229,16 @@ deck with two variants of a theme runs the checks of the page two times, so thes
 take about two times as long. Each size of `--size` adds one more run of the checks of the
 page, for each variant. The check stops a
 browser that does not end in 30 s for the measure, or in 10 minutes for the check, and
-gives an error. Then give a different browser in `EXPRESSO_CHROMIUM`. For the Line 4 deck of
-`examples/line4`, with 28 slides, `--check` took 3 s, `--check=layout` took 5 s and
-`--check=a11y` took 49 s and `--check=browser` took 54 s, after the compile.
+gives an error. Then give a different browser in `EXPRESSO_CHROMIUM`.
+
+Most of the time of `--check=a11y` goes to axe-core, at about 0.2 s for each step. During
+the steps, the check takes the menu, the list of keys and the copies of the slides out of
+the document, because axe-core reads the whole document at each run. For the Line 4 deck
+of `examples/line4`, with 28 slides and 74 steps, these were the times after the compile:
+
+| Level | Time |
+| --- | --- |
+| `--check` | 2 s |
+| `--check=layout` | 11 s |
+| `--check=a11y` | 36 s |
+| `--check=browser` | 30 s |
