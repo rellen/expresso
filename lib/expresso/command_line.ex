@@ -4,7 +4,7 @@ defmodule Expresso.CommandLine do
 
   The two commands take the same arguments:
 
-      <input> [output] [--watch [--port <port>] | --check[=<level>]]
+      <input> [output] [--watch [--port <port>] | --check[=<level>] [--size <size>]...]
               [--help | -h] [--version]
 
   `parse/1` reads the arguments, and `run/3` runs them. The mix task and the
@@ -33,11 +33,13 @@ defmodule Expresso.CommandLine do
       `--port` or a bad level of `--check`. Each argument that starts with
       `-` is an option, except `-` alone. `--port` without `--watch` is an
       error too, and so is `--check` with `--watch`.
-    * `{:check, level, input, output}` for `--check`. The level is `:basic`
-      for `--check`, `:layout` for `--check=layout`, `:a11y` for
+    * `{:check, level, input, output, sizes}` for `--check`. The level is
+      `:basic` for `--check`, `:layout` for `--check=layout`, `:a11y` for
       `--check=a11y` and `:browser` for `--check=browser`. The check needs an
       input, and it writes its report to the standard output, so `-` is an
-      error for the output.
+      error for the output. `sizes` holds a tuple `{width, height}` for each
+      `--size 1280x720` or `--size=1280x720`, in sequence, and it is `[]`
+      without the option. `--size` needs a browser level.
     * `{:watch, input, output, port}` for `--watch`. The port comes from
       `--port 4200` or `--port=4200`, and it is 4100 without that option. The
       watch mode needs an input file, and it does not write to the standard
@@ -58,7 +60,10 @@ defmodule Expresso.CommandLine do
       {:watch, "deck.exs", "deck.html", 4200}
 
       iex> Expresso.CommandLine.parse(["deck.exs", "--check=layout"])
-      {:check, :layout, "deck.exs", nil}
+      {:check, :layout, "deck.exs", nil, []}
+
+      iex> Expresso.CommandLine.parse(["deck.exs", "--check=layout", "--size", "1280x720"])
+      {:check, :layout, "deck.exs", nil, [{1280, 720}]}
 
       iex> Expresso.CommandLine.parse(["deck.exs", "-h"])
       :help
@@ -77,18 +82,24 @@ defmodule Expresso.CommandLine do
           | :version
           | {:paths, String.t() | nil, String.t() | nil}
           | {:watch, String.t(), String.t() | nil, :inet.port_number()}
-          | {:check, Expresso.Check.level(), String.t(), String.t() | nil}
+          | {:check, Expresso.Check.level(), String.t(), String.t() | nil,
+             [Expresso.Check.size()]}
           | {:error, String.t()}
   def parse(args) do
     cond do
-      Enum.any?(args, &(&1 in ["--help", "-h"])) -> :help
-      "--version" in args -> :version
-      true -> args |> take_options(%{watch: false, port: nil, check: nil}, []) |> command()
+      Enum.any?(args, &(&1 in ["--help", "-h"])) ->
+        :help
+
+      "--version" in args ->
+        :version
+
+      true ->
+        args |> take_options(%{watch: false, port: nil, check: nil, sizes: []}, []) |> command()
     end
   end
 
-  # Take `--watch`, `--port` and `--check` out of the arguments. The other
-  # arguments keep their order.
+  # Take `--watch`, `--port`, `--check` and `--size` out of the arguments. The
+  # other arguments keep their order.
   defp take_options(["--watch" | rest], options, args),
     do: take_options(rest, %{options | watch: true}, args)
 
@@ -110,6 +121,15 @@ defmodule Expresso.CommandLine do
     end
   end
 
+  defp take_options(["--size", value | rest], options, args),
+    do: take_size(value, rest, options, args)
+
+  defp take_options(["--size"], _options, _args),
+    do: {:error, "--size needs a width and a height, such as 1280x720"}
+
+  defp take_options(["--size=" <> value | rest], options, args),
+    do: take_size(value, rest, options, args)
+
   defp take_options([arg | rest], options, args),
     do: take_options(rest, options, [arg | args])
 
@@ -119,6 +139,20 @@ defmodule Expresso.CommandLine do
     case Integer.parse(value) do
       {port, ""} when port in 1..65_535 -> take_options(rest, %{options | port: port}, args)
       _other -> {:error, "Invalid port: #{value}"}
+    end
+  end
+
+  # A size of the window, such as `1280x720`. Each side is from 200 to 8000
+  # pixels.
+  defp take_size(value, rest, options, args) do
+    with [width, height] <- String.split(value, ["x", "×"]),
+         {width, ""} when width in 200..8000 <- Integer.parse(width),
+         {height, ""} when height in 200..8000 <- Integer.parse(height) do
+      take_options(rest, %{options | sizes: options.sizes ++ [{width, height}]}, args)
+    else
+      _other ->
+        {:error,
+         "Invalid size: #{value}. Give a width and a height from 200 to 8000, such as 1280x720."}
     end
   end
 
@@ -138,8 +172,11 @@ defmodule Expresso.CommandLine do
   defp mode(%{watch: true, check: level}, _input, _output) when level != nil,
     do: {:error, "--check and --watch do not go together"}
 
-  defp mode(%{check: level, port: nil}, input, output) when level != nil,
-    do: check(level, input, output)
+  defp mode(%{check: level, sizes: [_ | _]}, _input, _output) when level in [nil, :basic],
+    do: {:error, "--size needs --check=layout, --check=a11y or --check=browser"}
+
+  defp mode(%{check: level, port: nil, sizes: sizes}, input, output) when level != nil,
+    do: check(level, input, output, sizes)
 
   defp mode(%{watch: true, port: port}, input, output),
     do: watch(input, output, port || @default_port)
@@ -160,12 +197,12 @@ defmodule Expresso.CommandLine do
   defp watch(_input, "-", _port), do: {:error, "--watch cannot write to the standard output"}
   defp watch(input, output, port), do: {:watch, input, output, port}
 
-  defp check(_level, nil, _output), do: {:error, "--check needs an input"}
+  defp check(_level, nil, _output, _sizes), do: {:error, "--check needs an input"}
 
-  defp check(_level, _input, "-"),
+  defp check(_level, _input, "-", _sizes),
     do: {:error, "--check writes its report to the standard output, so give a file for the HTML"}
 
-  defp check(level, input, output), do: {:check, level, input, output}
+  defp check(level, input, output, sizes), do: {:check, level, input, output, sizes}
 
   @doc """
   Run a command line, and return its exit status
@@ -186,7 +223,7 @@ defmodule Expresso.CommandLine do
       standard output that closed, as for `| head`, is not an error.
     * `{:watch, input, output, port}` calls `Expresso.Watch.run/3`. That
       function returns only for an error, so the exit status is 1.
-    * `{:check, level, input, output}` calls `Expresso.Check.run/3`. The exit
+    * `{:check, level, input, output, sizes}` calls `Expresso.Check.run/4`. The exit
       status is 1 for a problem or an error, and 0 otherwise.
 
   The function does not catch an exception from the deck. The binary catches
@@ -219,8 +256,8 @@ defmodule Expresso.CommandLine do
         {:error, _message} = Expresso.Watch.run(input_path, output_path, port: port)
         1
 
-      {:check, level, input_path, output_path} ->
-        Expresso.Check.run(input_path, output_path, level)
+      {:check, level, input_path, output_path, sizes} ->
+        Expresso.Check.run(input_path, output_path, level, sizes)
     end
   end
 

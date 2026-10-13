@@ -8,7 +8,7 @@ defmodule Expresso.Check do
   | Level | Option | Checks | Needs |
   | --- | --- | --- | --- |
   | `:basic` | `--check` | The render, the contrast of the theme, the size of the document, and the text for a screen reader | Nothing |
-  | `:layout` | `--check=layout` | Each element in the window, and each line of code on one line, at each step at 1920 × 1080 | Chrome or Chromium |
+  | `:layout` | `--check=layout` | Each element in the window, and each line of code on one line, at each step at 1920 × 1080, or at each size of `--size` | Chrome or Chromium |
   | `:a11y` | `--check=a11y` | The rules of axe-core at each step, and in the menu, the list of keys, the overview and the handout view | Chrome or Chromium, and axe-core |
   | `:browser` | `--check=browser` | The checks of `:a11y` in Playwright, and the keys of the presenter: each step, each view, the focus and the errors of the script | Node, the npm packages `playwright` and `axe-core`, and the Hex package `playwright_ex` |
 
@@ -23,16 +23,23 @@ defmodule Expresso.Check do
   @typedoc "A level of the check"
   @type level :: :basic | :layout | :a11y | :browser
 
+  @typedoc "A size of the page in pixels, such as `{1280, 720}`"
+  @type size :: {pos_integer(), pos_integer()}
+
+  # The size of the page without the option `--size`.
+  @default_size {1920, 1080}
+
   @doc """
   Check the deck of an input file, write the report, and return the exit status
 
   With `output`, the function also writes the HTML to that file. The report
   goes to the standard output, and an error goes to the standard error. The
-  exit status is 1 for a problem or an error, and 0 otherwise.
+  exit status is 1 for a problem or an error, and 0 otherwise. `sizes` gives
+  the sizes of the page for a browser level, and `[]` gives 1920 × 1080.
   """
-  @spec run(Path.t(), Path.t() | nil, level()) :: 0 | 1
-  def run(input, output, level) do
-    case check(input, output, level) do
+  @spec run(Path.t(), Path.t() | nil, level(), [size()]) :: 0 | 1
+  def run(input, output, level, sizes \\ []) do
+    case check(input, output, level, sizes) do
       {:ok, report} ->
         IO.write(report.text)
         if report.problems == 0, do: 0, else: 1
@@ -49,14 +56,16 @@ defmodule Expresso.Check do
   The function writes the HTML to `output` when it is not `nil`. It writes
   nothing else.
   """
-  @spec check(Path.t(), Path.t() | nil, level()) ::
+  @spec check(Path.t(), Path.t() | nil, level(), [size()]) ::
           {:ok, %{text: String.t(), problems: non_neg_integer()}} | {:error, String.t()}
-  def check(input, output, level) do
+  def check(input, output, level, sizes \\ []) do
+    sizes = if sizes == [], do: [@default_size], else: Enum.uniq(sizes)
+
     with {:ok, tools} <- tools(level, input),
          {:ok, deck} <- Expresso.load_file(input),
          html = Expresso.Deck.render(deck),
          :ok <- write(html, output),
-         {:ok, page} <- page(html, deck, tools) do
+         {:ok, page} <- page(html, deck, tools, sizes) do
       checks = [Document.theme(deck), Document.size(html), Document.slides(html)]
       problems = named(Enum.flat_map(checks, & &1.problems) ++ page_problems(page), deck)
       notes = named(Enum.flat_map(checks, & &1.notes), deck)
@@ -124,20 +133,20 @@ defmodule Expresso.Check do
     end
   end
 
-  # Run the checks of the page one time for each variant of the theme. The
-  # result is a list of `{scheme, result}`, with `nil` as the scheme of a
-  # theme with one variant.
-  defp page(_html, _deck, nil), do: {:ok, nil}
+  # Run the checks of the page one time for each size and each variant of
+  # the theme. The result is a list of `{{size, scheme}, result}`, with `nil`
+  # as the scheme of a theme with one variant.
+  defp page(_html, _deck, nil, _sizes), do: {:ok, nil}
 
-  defp page(html, deck, {:session, tools}),
-    do: Session.run(html, deck, tools, schemes: schemes(deck))
+  defp page(html, deck, {:session, tools}, sizes),
+    do: Session.run(html, deck, tools, schemes: schemes(deck), sizes: sizes)
 
-  defp page(html, deck, {browser, axe}) do
-    deck
-    |> schemes()
-    |> Enum.reduce_while({:ok, []}, fn scheme, {:ok, pages} ->
-      case Browser.run(html, browser, axe, scheme: scheme) do
-        {:ok, result} -> {:cont, {:ok, pages ++ [{scheme, result}]}}
+  defp page(html, deck, {browser, axe}, sizes) do
+    runs = for size <- sizes, scheme <- schemes(deck), do: {size, scheme}
+
+    Enum.reduce_while(runs, {:ok, []}, fn {size, scheme} = run, {:ok, pages} ->
+      case Browser.run(html, browser, axe, scheme: scheme, size: size) do
+        {:ok, result} -> {:cont, {:ok, pages ++ [{run, result}]}}
         error -> {:halt, error}
       end
     end)
@@ -152,9 +161,19 @@ defmodule Expresso.Check do
   defp page_problems(nil), do: []
 
   defp page_problems(pages) do
+    sizes = pages |> Enum.map(fn {{size, _scheme}, _page} -> size end) |> Enum.uniq()
+
     pages
-    |> Enum.map(fn {scheme, page} -> {scheme, problems_of(page)} end)
+    |> Enum.map(fn {run, page} -> {label(run, length(sizes)), problems_of(page)} end)
     |> variants()
+  end
+
+  # The name of a run in the report: the size when the check has more than
+  # one size, and the variant of the theme when the theme has two variants.
+  defp label({{width, height}, scheme}, sizes) do
+    [if(sizes > 1, do: "#{width} × #{height}"), scheme]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(", ")
   end
 
   defp problems_of(page) do
@@ -168,37 +187,48 @@ defmodule Expresso.Check do
   end
 
   @doc """
-  Merge the problems of the variants of a theme
+  Merge the problems of the runs of the checks of the page
 
-  A problem of each variant gives one line. A problem of one variant only
-  names the variant before the first colon.
+  Each run has a name, such as `dark` or `1280 × 720`. A problem of each run
+  gives one line. A problem of some runs names them before the first colon.
 
-      iex> Expresso.Check.variants([{nil, ["Slide 1, step 1: a"]}])
+      iex> Expresso.Check.variants([{"", ["Slide 1, step 1: a"]}])
       ["Slide 1, step 1: a"]
       iex> Expresso.Check.variants([
-      ...>   {:light, ["Slide 1, step 1: a", "Slide 2, step 1: b"]},
-      ...>   {:dark, ["Slide 1, step 1: a", "Slide 3, step 2: c"]}
+      ...>   {"light", ["Slide 1, step 1: a", "Slide 2, step 1: b"]},
+      ...>   {"dark", ["Slide 1, step 1: a", "Slide 3, step 2: c"]}
       ...> ])
       ["Slide 1, step 1: a", "Slide 2, step 1 (light): b", "Slide 3, step 2 (dark): c"]
+      iex> Expresso.Check.variants([
+      ...>   {"1920 × 1080", []},
+      ...>   {"1280 × 720", ["Slide 2, step 1: d"]},
+      ...>   {"1024 × 768", ["Slide 2, step 1: d"]}
+      ...> ])
+      ["Slide 2, step 1 (1280 × 720; 1024 × 768): d"]
   """
-  @spec variants([{atom() | nil, [String.t()]}]) :: [String.t()]
-  def variants([{_scheme, problems}]), do: problems
+  @spec variants([{String.t(), [String.t()]}]) :: [String.t()]
+  def variants([{_label, problems}]), do: problems
 
-  def variants(variants) do
-    every = variants |> Enum.map(fn {_scheme, problems} -> MapSet.new(problems) end)
-    shared = Enum.reduce(every, &MapSet.intersection/2)
-
-    variants
-    |> Enum.flat_map(fn {scheme, problems} ->
-      Enum.map(problems, &if(&1 in shared, do: &1, else: in_variant(&1, scheme)))
-    end)
+  def variants(runs) do
+    runs
+    |> Enum.flat_map(fn {_label, problems} -> problems end)
     |> Enum.uniq()
+    |> Enum.map(&merged(&1, runs))
   end
 
-  defp in_variant(problem, scheme) do
+  # A problem with the names of the runs that have it, or alone when each run
+  # has it.
+  defp merged(problem, runs) do
+    case for {label, problems} <- runs, problem in problems, do: label do
+      labels when length(labels) == length(runs) -> problem
+      labels -> in_runs(problem, Enum.join(labels, "; "))
+    end
+  end
+
+  defp in_runs(problem, labels) do
     case String.split(problem, ": ", parts: 2) do
-      [where, what] -> "#{where} (#{scheme}): #{what}"
-      [_one] -> "#{problem} (#{scheme})"
+      [where, what] -> "#{where} (#{labels}): #{what}"
+      [_one] -> "#{problem} (#{labels})"
     end
   end
 
@@ -214,31 +244,41 @@ defmodule Expresso.Check do
     |> IO.iodata_to_binary()
   end
 
-  defp ran(level, [{nil, page} | _rest]), do: checks(level, page) <> "\n"
-
-  defp ran(level, [{_scheme, page} | _rest]),
-    do: checks(level, page) <> ", in the light and the dark variants\n"
-
   defp ran(level, nil), do: checks(level, nil) <> "\n"
 
-  defp checks(:basic, _page),
+  defp ran(level, pages) do
+    variants =
+      if Enum.any?(pages, fn {{_size, scheme}, _page} -> scheme != nil end),
+        do: ", in the light and the dark variants",
+        else: ""
+
+    checks(level, sizes(pages)) <> variants <> "\n"
+  end
+
+  defp checks(:basic, _sizes),
     do: "Checks: the render, the theme and the text for a screen reader"
 
-  defp checks(:layout, page),
-    do:
-      "Checks: the render, the theme, the text for a screen reader, and the layout at #{size(page)}"
+  defp checks(:layout, sizes),
+    do: "Checks: the render, the theme, the text for a screen reader, and the layout at #{sizes}"
 
-  defp checks(:a11y, page),
+  defp checks(:a11y, sizes),
     do:
-      "Checks: the render, the theme, the text for a screen reader, the layout at #{size(page)}, " <>
+      "Checks: the render, the theme, the text for a screen reader, the layout at #{sizes}, " <>
         "and axe-core at each step and in each view"
 
-  defp checks(:browser, page),
+  defp checks(:browser, sizes),
     do:
-      "Checks: the render, the theme, the text for a screen reader, the layout at #{size(page)}, " <>
+      "Checks: the render, the theme, the text for a screen reader, the layout at #{sizes}, " <>
         "axe-core at each step and in each view, and the keys of the presenter in Playwright"
 
-  defp size(page), do: "#{page.width} × #{page.height}"
+  # The sizes of the pages, as the pages give them, such as
+  # `1920 × 1080 and 1280 × 720`.
+  defp sizes(pages) do
+    pages
+    |> Enum.map(fn {_run, page} -> "#{page.width} × #{page.height}" end)
+    |> Enum.uniq()
+    |> Enum.join(" and ")
+  end
 
   defp section(_title, []), do: []
 

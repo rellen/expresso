@@ -9,6 +9,7 @@ mix expresso <input> [output] --check
 mix expresso <input> [output] --check=layout
 mix expresso <input> [output] --check=a11y
 mix expresso <input> [output] --check=browser
+mix expresso <input> [output] --check=layout --size 1920x1080 --size 1024x768
 ```
 
 For the steps and the installation of the tools, see
@@ -20,6 +21,7 @@ For the steps and the installation of the tools, see
 | --- | --- |
 | `<input>` | The deck file, or `-` for the standard input. The check needs it. |
 | `[output]` | The file for the HTML. Without it, the check writes no HTML. `-` is an error, because the report goes to the standard output. |
+| `--size <width>x<height>` | A size of the page for a browser level, such as `1024x768`. Each side is from 200 to 8000 pixels. Give the option more than one time for more sizes. The default is `1920x1080`. `--size` with `--check` alone, or with no `--check`, is an error. |
 
 `--check` with `--watch` is an error, and so is a level that is not `layout`, `a11y` or `browser`.
 
@@ -68,6 +70,21 @@ the rule, and a CSS selector for each element that fails. The check gives each r
 element one time, at the first step or view that has it. The time of each animation is
 zero, so axe-core reads the final color of each element.
 
+### Sizes of the page
+
+A browser level checks the page at each size of `--size`, in sequence, and at 1920 × 1080
+without the option. The `Checks:` line gives each size, such as
+`the layout at 1920 × 1080 and 1024 × 768`.
+
+A slide grows and shrinks with the page, so two sizes with the same proportions, such as
+1920 × 1080 and 1280 × 720, give the same layout. Give a size with other proportions, such
+as 1024 × 768 for a projector of 4:3, to find the problems of that room.
+
+A problem of each size gives one line. A problem of some sizes names them before the first
+colon, such as `Slide 1 “wide”, step 1 (1024 × 768): the math … goes 442 px past the right
+edge`. A problem of the layout gives its distance in pixels, so the same element at two sizes
+gives two lines. `--check=browser` presses the keys one time, at the first size.
+
 ### Two variants of a theme
 
 For a deck with a light and a dark variant, each browser level runs the checks of the page
@@ -76,7 +93,8 @@ line of the report then ends with `in the light and the dark variants`.
 
 A problem of the two variants gives one line. A problem of one variant gives the name of
 the variant before the first colon, such as
-`Slide 1 “start”, step 1 (dark): color-contrast, …`. `--check=browser` presses the keys
+`Slide 1 “start”, step 1 (dark): color-contrast, …`. With more than one size, the name holds
+the size and the variant, such as `(1024 × 768, dark)`. `--check=browser` presses the keys
 one time, in the variant of the document, because the keys do not change with the colors.
 
 The check with no tool already checks the colors of each variant, as
@@ -167,7 +185,8 @@ Problems:
 the browser two times: one time to measure its window, and one time for the check.
 Playwright gives the page its size, so `--check=browser` starts its browser one time. A
 deck with two variants of a theme runs the checks of the page two times, so these levels
-take about two times as long. The check stops a
+take about two times as long. Each size of `--size` adds one more run of the checks of the
+page, for each variant. The check stops a
 browser that does not end in 30 s for the measure, or in 10 minutes for the check, and
 gives an error. Then give a different browser in `EXPRESSO_CHROMIUM`. For the Line 4 deck of
 `examples/line4`, with 28 slides, `--check` took 3 s, `--check=layout` took 5 s and

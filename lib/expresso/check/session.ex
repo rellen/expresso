@@ -154,23 +154,26 @@ defmodule Expresso.Check.Session do
 
   `deck` gives the list of the steps and the program of the keys. The option
   `:schemes` gives the variants of the theme, such as `[:light, :dark]`, and
-  `[nil]` by default for the variant of the document. The page runs its
-  checks one time for each variant, and the keys run one time, in the first
-  variant.
+  `[nil]` by default for the variant of the document. The option `:sizes`
+  gives the sizes of the page, such as `[{1280, 720}]`, and
+  `[{1920, 1080}]` by default. The page runs its checks one time for each
+  size and each variant, and the keys run one time, at the first size and in
+  the first variant.
 
-  The function returns a list with a tuple `{scheme, result}` for each
-  variant. A result holds the result of the page, as
+  The function returns a list with a tuple `{{size, scheme}, result}` for
+  each size and each variant. A result holds the result of the page, as
   `Expresso.Check.Browser.decode/1` returns it. The first result also holds
   the problems of the keys and of the script in `:session`. The option `:env`
   gives the environment, and `EXPRESSO_CHROMIUM` in it gives a different
   browser than the Chromium of Playwright.
   """
   @spec run(String.t(), Expresso.Deck.t(), tools(), keyword()) ::
-          {:ok, [{:light | :dark | nil, map()}]} | {:error, String.t()}
+          {:ok, [{{Expresso.Check.size(), :light | :dark | nil}, map()}]} | {:error, String.t()}
   # sobelow_skip ["Traversal"]
   def run(html, deck, tools, opts \\ []) do
     env = Keyword.get_lazy(opts, :env, &System.get_env/0)
     schemes = Keyword.get(opts, :schemes, [nil])
+    sizes = Keyword.get(opts, :sizes, [{@width, @height}])
 
     directory =
       Path.join(System.tmp_dir!(), "expresso-session-#{System.unique_integer([:positive])}")
@@ -184,7 +187,7 @@ defmodule Expresso.Check.Session do
       with {:ok, supervisor} <- start(tools.cli),
            {:ok, browser} <- launch(env) do
         try do
-          session(browser, "file://" <> page_path, deck, schemes)
+          session(browser, "file://" <> page_path, deck, sizes, schemes)
         after
           Supervisor.stop(supervisor)
         end
@@ -231,30 +234,38 @@ defmodule Expresso.Check.Session do
 
   defp options(extra \\ []), do: [timeout: @timeout, connection: connection()] ++ extra
 
-  defp session(browser, url, deck, [first | others]) do
+  # Open a page for each size, run the checks of the page for each size and
+  # each variant, and then press the keys in the page of the first size.
+  defp session(browser, url, deck, sizes, schemes) do
+    frames = Map.new(sizes, &{&1, frame(browser, &1)})
+    runs = for size <- sizes, scheme <- schemes, do: {size, scheme}
+
+    with {:ok, [{run, result} | others]} <- check_runs(frames, url, runs) do
+      problems = keys(Map.fetch!(frames, hd(sizes)), url, deck)
+      {:ok, [{run, Map.put(result, :session, problems)} | others]}
+    end
+  end
+
+  # A page of a size, in a context of its own, with the script that keeps
+  # the errors.
+  defp frame(browser, {width, height}) do
     {:ok, context} =
       PlaywrightEx.Browser.new_context(
         browser.guid,
-        options(viewport: %{width: @width, height: @height}, reduced_motion: "reduce")
+        options(viewport: %{width: width, height: height}, reduced_motion: "reduce")
       )
 
     {:ok, _result} =
       PlaywrightEx.BrowserContext.add_init_script(context.guid, options(source: @errors))
 
     {:ok, page} = PlaywrightEx.BrowserContext.new_page(context.guid, options())
-    frame = %{frame: page.main_frame.guid}
-
-    with {:ok, result} <- check_page(frame, url, first),
-         {:ok, more} <- check_others(frame, url, others) do
-      problems = keys(frame, url, deck)
-      {:ok, [{first, Map.put(result, :session, problems)} | more]}
-    end
+    %{frame: page.main_frame.guid}
   end
 
-  defp check_others(frame, url, schemes) do
-    Enum.reduce_while(schemes, {:ok, []}, fn scheme, {:ok, results} ->
-      case check_page(frame, url, scheme) do
-        {:ok, result} -> {:cont, {:ok, results ++ [{scheme, result}]}}
+  defp check_runs(frames, url, runs) do
+    Enum.reduce_while(runs, {:ok, []}, fn {size, scheme} = run, {:ok, results} ->
+      case check_page(Map.fetch!(frames, size), url, scheme) do
+        {:ok, result} -> {:cont, {:ok, results ++ [{run, result}]}}
         error -> {:halt, error}
       end
     end)

@@ -75,7 +75,7 @@ defmodule Expresso.E2E.CheckTest do
   end
   """
 
-  defp check(dir, source, level) do
+  defp check(dir, source, level, sizes \\ []) do
     input = Path.join(dir, "deck.exs")
     # Each run defines its module with a new name, so the compiler gives no
     # warning for a module that it defines again.
@@ -84,7 +84,7 @@ defmodule Expresso.E2E.CheckTest do
 
     output =
       capture_io(fn ->
-        send(self(), {:status, Expresso.Check.run(input, nil, level)})
+        send(self(), {:status, Expresso.Check.run(input, nil, level, sizes)})
       end)
 
     assert_received {:status, status}
@@ -154,7 +154,7 @@ defmodule Expresso.E2E.CheckTest do
 
     html = String.replace(Expresso.Deck.render(deck), "</head>", script <> "</head>")
     {:ok, tools} = Expresso.Check.Session.find([File.cwd!()])
-    {:ok, [{nil, result}]} = Expresso.Check.Session.run(html, deck, tools)
+    {:ok, [{{{1920, 1080}, nil}, result}]} = Expresso.Check.Session.run(html, deck, tools)
 
     assert result.layout == []
     assert result.accessibility == []
@@ -201,6 +201,48 @@ defmodule Expresso.E2E.CheckTest do
     assert output =~ "  - Slide 1 “start”, step 1 (dark): color-contrast"
     refute output =~ "The keys"
     refute output =~ "(light)"
+  end
+
+  # A formula of 20 terms fits a page of 16:9, and it goes past the right
+  # edge of a page of 4:3. A slide grows with the page, so only the
+  # proportions change the layout.
+  @wide """
+  defmodule WideCheckDeck do
+    use Expresso
+
+    name "wide check deck"
+
+    slide "wide" do
+      heading "Wide"
+      math "<math><mrow>#{String.duplicate("<mi>x</mi><mo>+</mo>", 20)}<mn>1</mn></mrow></math>"
+    end
+  end
+  """
+
+  test "--check=layout checks each size of --size, and names the size of a problem", %{
+    tmp_dir: dir
+  } do
+    {status, output} = check(dir, @wide, :layout, [{1920, 1080}, {1024, 768}])
+
+    assert status == 1
+    assert output =~ "the layout at 1920 × 1080 and 1024 × 768\n"
+
+    assert output =~
+             ~r/  - Slide 1 “wide”, step 1 \(1024 × 768\): the math .* past the right edge/
+
+    refute output =~ "(1920 × 1080)"
+
+    assert {0, small} = check(dir, @wide, :layout, [{1920, 1080}])
+    assert small =~ "the layout at 1920 × 1080\n"
+  end
+
+  test "--check=browser checks each size in Playwright", %{tmp_dir: dir} do
+    {status, output} = check(dir, @wide, :browser, [{1920, 1080}, {1024, 768}])
+
+    assert status == 1
+    assert output =~ "the layout at 1920 × 1080 and 1024 × 768, axe-core"
+    assert output =~ ~r/  - Slide 1 “wide”, step 1 \(1024 × 768\): the math/
+    refute output =~ "The keys"
   end
 
   test "--check=a11y finds no problem in a good deck", %{tmp_dir: dir} do

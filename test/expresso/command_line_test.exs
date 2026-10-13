@@ -128,13 +128,38 @@ defmodule Expresso.CommandLineTest do
   # an option. See "The two commands" in `docs/architecture.md`.
   describe "parse/1 with --check" do
     test "gives the level, the input and the output in any order of the arguments" do
-      assert CommandLine.parse(["deck.exs", "--check"]) == {:check, :basic, "deck.exs", nil}
-      assert CommandLine.parse(["--check", "deck.exs"]) == {:check, :basic, "deck.exs", nil}
+      assert CommandLine.parse(["deck.exs", "--check"]) == {:check, :basic, "deck.exs", nil, []}
+      assert CommandLine.parse(["--check", "deck.exs"]) == {:check, :basic, "deck.exs", nil, []}
 
       assert CommandLine.parse(["deck.exs", "deck.html", "--check=layout"]) ==
-               {:check, :layout, "deck.exs", "deck.html"}
+               {:check, :layout, "deck.exs", "deck.html", []}
 
-      assert CommandLine.parse(["--check=a11y", "-"]) == {:check, :a11y, "-", nil}
+      assert CommandLine.parse(["--check=a11y", "-"]) == {:check, :a11y, "-", nil, []}
+    end
+
+    test "reads each --size in two forms, in sequence" do
+      assert CommandLine.parse([
+               "deck.exs",
+               "--check=a11y",
+               "--size",
+               "1280x720",
+               "--size=1024×768"
+             ]) == {:check, :a11y, "deck.exs", nil, [{1280, 720}, {1024, 768}]}
+    end
+
+    test "gives an error for a bad size, and for --size without a browser level" do
+      for value <- ["1280", "x720", "1280x", "100x100", "1280x720x2", "axb"] do
+        assert {:error, "Invalid size: " <> _} =
+                 CommandLine.parse(["deck.exs", "--check=layout", "--size", value])
+      end
+
+      assert {:error, "--size needs a width" <> _} =
+               CommandLine.parse(["deck.exs", "--check=layout", "--size"])
+
+      for args <- [["deck.exs", "--size", "1280x720"], ["deck.exs", "--check", "--size=1280x720"]] do
+        assert CommandLine.parse(args) ==
+                 {:error, "--size needs --check=layout, --check=a11y or --check=browser"}
+      end
     end
 
     test "gives an error for an unknown level" do

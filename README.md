@@ -183,7 +183,8 @@ mix expresso my_deck.exs --check=a11y     # needs Chrome or Chromium, and axe-co
 mix expresso my_deck.exs --check=browser  # needs Node, Playwright and axe-core
 ```
 
-The exit status is 1 for a problem, so a continuous integration job can run the check. See
+`--size 1024x768` checks another size of the screen, such as a projector of 4:3. The exit
+status is 1 for a problem, so a continuous integration job can run the check. See
 [Check a deck before the talk](docs/how-to/check-a-deck.md).
 
 ### The options of a deck

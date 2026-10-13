@@ -63,6 +63,19 @@ mix expresso deck.exs --check=layout
 The check measures each step at 1920 × 1080. To correct a problem of the layout, see
 [Check that a deck fits the screen](check-the-layout.md).
 
+## Check the screen of the room
+
+A projector can have other proportions than 16:9, such as 4:3. Give the size of each screen
+of the talk with `--size`:
+
+```sh
+mix expresso deck.exs --check=layout --size 1920x1080 --size 1024x768
+```
+
+A problem of one size names it, such as `Slide 1 “wide”, step 1 (1024 × 768): …`. A slide
+grows with the page, so only the proportions of a size change the layout. 1280 × 720 thus
+gives the same result as 1920 × 1080.
+
 ## Install axe-core for the accessibility check
 
 `--check=a11y` also runs [axe-core](https://github.com/dequelabs/axe-core) at each step
