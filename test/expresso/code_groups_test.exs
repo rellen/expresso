@@ -31,6 +31,38 @@ defmodule Expresso.CodeGroupsTest do
       assert [%Lines{numbers: [6]}, %Lines{numbers: [9, 10, 11]} | _rest] = code.elements
     end
 
+    test "with to: :block, runs to the closing line of the block at the indent of the start line" do
+      text = """
+      for (const a of all) {
+        if (a.extra) {
+          a.count += 1;
+          if (a.count > 3) { break; }
+        }
+        a.done = true;
+      }
+      """
+
+      code =
+        Builder.code(
+          text: text,
+          highlight: [[from: "if (a.extra) {", to: :block], [from: "a.done", to: :block]]
+        )
+
+      assert [[2, 3, 4, 5], [6] | _rest] = numbers(code)
+    end
+
+    test "with to: :block, ends a block of Python at its last line with more indent" do
+      text = "def f(a):\n    if a:\n        b()\n\n    c()\nf(1)\n"
+
+      code =
+        Builder.code(
+          text: text,
+          reveal: [[from: "if a:", to: :block], [from: "def f", to: :block]]
+        )
+
+      assert numbers(code) == [[2, 3], [1, 2, 3, 4, 5]]
+    end
+
     test "can mix with numbers" do
       code = Builder.code(text: "a\nb\nc", reveal: [1, [from: "c"]])
       assert numbers(code) == [[1], [3]]

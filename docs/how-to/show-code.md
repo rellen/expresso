@@ -57,16 +57,19 @@ keep the same lines, find them by their text.
 
 1. Find a text that starts the first line, such as `def handle_call(`. The text must be in
    the file one time only.
-2. Find a text that ends the excerpt, such as `"\n  end"`. The excerpt ends at the first
-   copy of this text after the first line.
-3. Give the two texts in `lines`:
+2. Give the text in `lines`, with `to: :block`. The excerpt then ends at the end of the
+   block of the first line, such as its `end` or its `}`:
 
    ```elixir
    code "elixir" do
      src "lib/my_app/server.ex"
-     lines from: "def handle_call(", to: "\n  end"
+     lines from: "def handle_call(", to: :block
    end
    ```
+
+To end the excerpt at another line, give a text of that line in `to`, such as
+`to: "{:reply"`. The excerpt then ends at the first copy of the text after the first line.
+The groups of `reveal` and `highlight` take `to: :block` too.
 
 The compiler gives an error when a text is not in the file, and when the `from` text is in
 it more than one time. Give a longer text, such as `"def handle_call(:next"`, to make it
@@ -163,7 +166,7 @@ defmodule Examples.CodeTextGroups do
 
     code "elixir" do
       src "counter.ex"
-      lines from: "def handle_call(", to: "\n  end"
+      lines from: "def handle_call(", to: :block
       line_numbers true
       highlight [[from: "def handle_call("], [from: "next = ", to: "{:reply"]]
     end
@@ -184,7 +187,7 @@ first line of the excerpt, whatever its number in the file:
 ```elixir
 code "elixir" do
   src "lib/my_app/server.ex"
-  lines from: "def handle_call(", to: "\n  end"
+  lines from: "def handle_call(", to: :block
   relative true
   highlight [1, 2..3]
 end
@@ -211,7 +214,7 @@ defmodule Examples.CodeWholeFirst do
 
     code "elixir" do
       src "examples/animations/counter.ex"
-      lines from: "def handle_call(", to: "\n  end"
+      lines from: "def handle_call(", to: :block
       line_numbers true
       highlight [13, 14]
       whole_first true
@@ -248,7 +251,7 @@ defmodule Examples.CodeUndim do
 
     code "elixir" do
       src "examples/animations/counter.ex"
-      lines from: "def handle_call(", to: "\n  end"
+      lines from: "def handle_call(", to: :block
       line_numbers true
       highlight [13, 14]
     end

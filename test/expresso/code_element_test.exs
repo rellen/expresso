@@ -364,6 +364,13 @@ defmodule Expresso.Element.CodeTest do
       assert code.text |> String.split("\n") |> length() == 3
     end
 
+    test "with to: :block, ends at the line that closes the block of the start line" do
+      code = built(Builder.code("js", src: @src, lines: [from: "function sum(", to: :block]))
+
+      assert code.first == 9
+      assert code.text == "function sum(list) {\n  return list.reduce(add, 0);\n}"
+    end
+
     test "starts at line 1 without from, and ends at the last line without to" do
       assert built(Builder.code("js", src: @src, lines: [to: "const two"])).text ==
                "// A file for the tests of the src option of the code element.\nconst one = 1;\nconst two = 2;"

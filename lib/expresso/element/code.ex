@@ -13,7 +13,8 @@ defmodule Expresso.Element.Code do
   lines. It can also take a start text and an end text, such as
   `[from: "def start(", to: "\n  end"]`. The excerpt then starts at the line
   of the start text and ends at the line of the end text, so a change above
-  the excerpt does not move it. `build/1` reads the file through
+  the excerpt does not move it. `to: :block` in place of an end text ends
+  the excerpt at the end of the block that the start line opens. `build/1` reads the file through
   `Expresso.DeckFile`, so the watch
   mode renders the deck again after a change to the file. The element takes
   `text` or `src`, and not both.
@@ -36,7 +37,8 @@ defmodule Expresso.Element.Code do
   `[from: "let hit", to: "return hit;"]`, in the form of the `lines` option.
   The group then runs from the line of the start text to the line of the end
   text, inside the text of the element. A group with only `from` is the line
-  of the start text. The `relative` option counts the numbers of the groups
+  of the start text. A group with `to: :block` runs to the end of the block
+  that the start line opens, as `block_end/2` finds it. The `relative` option counts the numbers of the groups
   from the first line of the element, so 1 is the first line of an excerpt.
   `resolve/2` turns each group into line numbers before the other checks.
 
@@ -204,6 +206,7 @@ defmodule Expresso.Element.Code do
   end
 
   defp finish(bytes, _start, nil, _src), do: {:ok, max(byte_size(bytes) - 1, 0)}
+  defp finish(bytes, start, :block, _src), do: {:ok, block_end(bytes, start)}
 
   defp finish(bytes, start, to, src) do
     case :binary.match(bytes, to, scope: {start, byte_size(bytes) - start}) do
@@ -347,6 +350,7 @@ defmodule Expresso.Element.Code do
 
   # Without an end text, the group is the line of the start text.
   defp group_finish(_text, start, nil, _option), do: {:ok, start}
+  defp group_finish(text, start, :block, _option), do: {:ok, block_end(text, start)}
 
   defp group_finish(text, start, to, option) do
     case :binary.match(text, to, scope: {start, byte_size(text) - start}) do
@@ -358,6 +362,74 @@ defmodule Expresso.Element.Code do
          "the end text #{inspect(to)} of the #{option} option is not in the code after its start text"}
     end
   end
+
+  @doc """
+  Return the position of the first byte of the last line of the block that the line at a position opens
+
+  The block holds each later line with more indent than the start line, and
+  blank lines between them. The first later line with the same indent or
+  less ends the block. That line is the last line of the block when it
+  starts with `}`, `]`, `)` or `end`, as in most languages. Otherwise the
+  last line of the block is the last line with more indent, as in Python. A
+  start line with no line of more indent after it is a block of one line, so
+  the block does not take the closing line of a block around it.
+
+      iex> code = "if (a) {\\n  if (b) {\\n    c();\\n  }\\n}\\nd();\\n"
+      iex> Expresso.Element.Code.block_end(code, 0)
+      33
+      iex> Expresso.Element.Code.block_end(code, 9)
+      29
+      iex> Expresso.Element.Code.block_end("def f():\\n    a\\n\\n    b\\nc\\n", 0)
+      16
+      iex> Expresso.Element.Code.block_end("a\\nb\\n", 0)
+      0
+  """
+  @spec block_end(String.t(), non_neg_integer()) :: non_neg_integer()
+  def block_end(text, position) do
+    starts = line_starts(text)
+
+    {line_start, index} =
+      starts
+      |> Enum.with_index()
+      |> Enum.take_while(fn {at, _} -> at <= position end)
+      |> List.last()
+
+    depth = depth(line_text(text, starts, index))
+
+    starts
+    |> Enum.drop(index + 1)
+    |> Enum.with_index(index + 1)
+    |> Enum.reject(fn {_at, each} -> String.trim(line_text(text, starts, each)) == "" end)
+    |> Enum.reduce_while(line_start, fn {at, each}, last ->
+      line = line_text(text, starts, each)
+
+      cond do
+        depth(line) > depth -> {:cont, at}
+        closes?(line) and last != line_start -> {:halt, at}
+        true -> {:halt, last}
+      end
+    end)
+  end
+
+  # The position of the first byte of each line.
+  defp line_starts(text) do
+    [0 | text |> :binary.matches("\n") |> Enum.map(fn {at, 1} -> at + 1 end)]
+    |> Enum.reject(&(&1 >= byte_size(text)))
+  end
+
+  defp line_text(text, starts, index) do
+    from = Enum.at(starts, index)
+    to = Enum.at(starts, index + 1, byte_size(text))
+    text |> binary_part(from, to - from) |> String.trim_trailing("\n")
+  end
+
+  # The indent of a line: the number of spaces and tabs at its start.
+  defp depth(line) do
+    [indent] = Regex.run(~r/^[ \t]*/, line)
+    byte_size(indent)
+  end
+
+  defp closes?(line), do: String.trim_leading(line) =~ ~r/^([}\])]|end\b)/
 
   # A line can have the attributes of one group only.
   defp apart(highlight) do
@@ -389,14 +461,18 @@ defmodule Expresso.Element.Code do
   This function is the custom type of the option. A range starts at 1 or
   more, and it has a step of 1. A keyword list has the key `from`, the key
   `to` or both, one time each, and each value is a text that is not empty.
+  The value of `to` can also be `:block`.
 
       iex> Expresso.Element.Code.lines(10..24)
       {:ok, 10..24}
 
       iex> Expresso.Element.Code.lines(from: "def start(", to: "end")
       {:ok, [from: "def start(", to: "end"]}
+
+      iex> Expresso.Element.Code.lines(from: "def start(", to: :block)
+      {:ok, [from: "def start(", to: :block]}
   """
-  @spec lines(term()) :: {:ok, Range.t() | keyword(String.t())} | {:error, String.t()}
+  @spec lines(term()) :: {:ok, Range.t() | keyword(String.t() | :block)} | {:error, String.t()}
   def lines(first..last//1 = range) when is_integer(first) and first >= 1 and first <= last,
     do: {:ok, range}
 
@@ -414,7 +490,10 @@ defmodule Expresso.Element.Code do
     keys = Keyword.keys(texts)
 
     keys -- [:from, :to] == [] and keys == Enum.uniq(keys) and
-      Enum.all?(Keyword.values(texts), &(is_binary(&1) and &1 != ""))
+      Enum.all?(texts, fn
+        {:to, :block} -> true
+        {_key, value} -> is_binary(value) and value != ""
+      end)
   end
 
   defp numbers(line) when is_integer(line), do: [line]
@@ -481,7 +560,8 @@ defmodule Expresso.Element.Code do
 
   This function is the custom type of the options `reveal` and `highlight`.
   Each item is a positive integer, a range with a step of 1, or a keyword list
-  with `from` and an optional `to`, each a text that is not empty.
+  with `from` and an optional `to`, each a text that is not empty, or
+  `to: :block`.
 
       iex> Expresso.Element.Code.reveal([1..2, [from: "let hit", to: "return hit;"], 7])
       {:ok, [1..2, [from: "let hit", to: "return hit;"], 7]}
