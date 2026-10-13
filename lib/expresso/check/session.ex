@@ -152,16 +152,26 @@ defmodule Expresso.Check.Session do
   @doc """
   Run the checks of the page and the keys of the presenter on a document
 
-  `deck` gives the list of the steps and the program of the keys. The result
-  holds the result of the page, as `Expresso.Check.Browser.decode/1` returns
-  it, and the problems of the keys and of the script in `:session`.
-  `EXPRESSO_CHROMIUM` gives a different browser than the Chromium of
-  Playwright.
+  `deck` gives the list of the steps and the program of the keys. The option
+  `:schemes` gives the variants of the theme, such as `[:light, :dark]`, and
+  `[nil]` by default for the variant of the document. The page runs its
+  checks one time for each variant, and the keys run one time, in the first
+  variant.
+
+  The function returns a list with a tuple `{scheme, result}` for each
+  variant. A result holds the result of the page, as
+  `Expresso.Check.Browser.decode/1` returns it. The first result also holds
+  the problems of the keys and of the script in `:session`. The option `:env`
+  gives the environment, and `EXPRESSO_CHROMIUM` in it gives a different
+  browser than the Chromium of Playwright.
   """
-  @spec run(String.t(), Expresso.Deck.t(), tools(), %{String.t() => String.t()}) ::
-          {:ok, map()} | {:error, String.t()}
+  @spec run(String.t(), Expresso.Deck.t(), tools(), keyword()) ::
+          {:ok, [{:light | :dark | nil, map()}]} | {:error, String.t()}
   # sobelow_skip ["Traversal"]
-  def run(html, deck, tools, env \\ System.get_env()) do
+  def run(html, deck, tools, opts \\ []) do
+    env = Keyword.get_lazy(opts, :env, &System.get_env/0)
+    schemes = Keyword.get(opts, :schemes, [nil])
+
     directory =
       Path.join(System.tmp_dir!(), "expresso-session-#{System.unique_integer([:positive])}")
 
@@ -174,7 +184,7 @@ defmodule Expresso.Check.Session do
       with {:ok, supervisor} <- start(tools.cli),
            {:ok, browser} <- launch(env) do
         try do
-          session(browser, "file://" <> page_path, deck)
+          session(browser, "file://" <> page_path, deck, schemes)
         after
           Supervisor.stop(supervisor)
         end
@@ -221,7 +231,7 @@ defmodule Expresso.Check.Session do
 
   defp options(extra \\ []), do: [timeout: @timeout, connection: connection()] ++ extra
 
-  defp session(browser, url, deck) do
+  defp session(browser, url, deck, [first | others]) do
     {:ok, context} =
       PlaywrightEx.Browser.new_context(
         browser.guid,
@@ -234,16 +244,27 @@ defmodule Expresso.Check.Session do
     {:ok, page} = PlaywrightEx.BrowserContext.new_page(context.guid, options())
     frame = %{frame: page.main_frame.guid}
 
-    with {:ok, result} <- check_page(frame, url) do
+    with {:ok, result} <- check_page(frame, url, first),
+         {:ok, more} <- check_others(frame, url, others) do
       problems = keys(frame, url, deck)
-      {:ok, Map.put(result, :session, problems)}
+      {:ok, [{first, Map.put(result, :session, problems)} | more]}
     end
+  end
+
+  defp check_others(frame, url, schemes) do
+    Enum.reduce_while(schemes, {:ok, []}, fn scheme, {:ok, results} ->
+      case check_page(frame, url, scheme) do
+        {:ok, result} -> {:cont, {:ok, results ++ [{scheme, result}]}}
+        error -> {:halt, error}
+      end
+    end)
   end
 
   # Open the page with `?check=a11y`, wait for the end of the check, and read
   # its result.
-  defp check_page(frame, url) do
-    {:ok, _response} = PlaywrightEx.Frame.goto(frame.frame, options(url: url <> "?check=a11y"))
+  defp check_page(frame, url, scheme) do
+    address = Browser.scheme(url <> "?check=a11y", scheme)
+    {:ok, _response} = PlaywrightEx.Frame.goto(frame.frame, options(url: address))
 
     case wait(frame, "document.body.dataset.check === 'done'", @check_timeout) do
       true ->

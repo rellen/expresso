@@ -154,13 +154,53 @@ defmodule Expresso.E2E.CheckTest do
 
     html = String.replace(Expresso.Deck.render(deck), "</head>", script <> "</head>")
     {:ok, tools} = Expresso.Check.Session.find([File.cwd!()])
-    {:ok, result} = Expresso.Check.Session.run(html, deck, tools)
+    {:ok, [{nil, result}]} = Expresso.Check.Session.run(html, deck, tools)
 
     assert result.layout == []
     assert result.accessibility == []
 
     assert "The keys: j at 1.1 shows 1.1, and not the next step 1.2" in result.session
     assert Enum.any?(result.session, &(&1 =~ ~r/^The script: .*boom/))
+  end
+
+  # A deck with two variants. The text has a low contrast in the dark variant
+  # only.
+  @variants """
+  defmodule VariantsCheckDeck do
+    use Expresso
+
+    name "variants check deck"
+    theme light: :default, dark: :dracula
+    dim_contrast 4.5
+    css ":root[data-scheme=dark] .quiet { color: #777777; background: #888888; }"
+
+    slide "start" do
+      heading "Two variants"
+      text_area(text: "Grey on grey in the dark", class: "quiet")
+    end
+  end
+  """
+
+  test "--check=a11y checks each variant, and names the variant of a problem", %{tmp_dir: dir} do
+    {status, output} = check(dir, @variants, :a11y)
+
+    assert status == 1
+    assert output =~ "in the light and the dark variants\n"
+
+    assert output =~
+             "  - Slide 1 “start”, step 1 (dark): color-contrast, Elements must meet minimum color contrast"
+
+    refute output =~ "(light)"
+  end
+
+  test "--check=browser checks each variant, and presses the keys one time", %{tmp_dir: dir} do
+    {status, output} = check(dir, @variants, :browser)
+
+    assert status == 1
+    assert output =~ "in the light and the dark variants\n"
+    assert output =~ "  - Slide 1 “start”, step 1 (dark): color-contrast"
+    refute output =~ "The keys"
+    refute output =~ "(light)"
   end
 
   test "--check=a11y finds no problem in a good deck", %{tmp_dir: dir} do

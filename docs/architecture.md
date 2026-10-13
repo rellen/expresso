@@ -269,6 +269,10 @@ These are the reasons for its design:
 - **`playwright_ex` is an optional dependency.** A project that uses Expresso fetches it only
   when it adds it. The binary holds it. The module of the session tells the compiler that
   the modules of `playwright_ex` can be absent.
+- **Each variant of a theme gets its own run.** A color can pass in the light variant and
+  fail in the dark variant, so a browser level opens the page with `?scheme=light` and
+  with `?scheme=dark`. A problem of the two variants gives one line. The keys run one time,
+  because they do not depend on the colors.
 - **axe-core reads the slide at each step, and the document in each view.** The rules of
   the whole document run one time for each view. A run on the slide alone is faster, and
   the check of the Line 4 deck took 49 s and not 200 s.

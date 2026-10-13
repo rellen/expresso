@@ -68,6 +68,20 @@ the rule, and a CSS selector for each element that fails. The check gives each r
 element one time, at the first step or view that has it. The time of each animation is
 zero, so axe-core reads the final color of each element.
 
+### Two variants of a theme
+
+For a deck with a light and a dark variant, each browser level runs the checks of the page
+two times: one time with `?scheme=light` and one time with `?scheme=dark`. The `Checks:`
+line of the report then ends with `in the light and the dark variants`.
+
+A problem of the two variants gives one line. A problem of one variant gives the name of
+the variant before the first colon, such as
+`Slide 1 “start”, step 1 (dark): color-contrast, …`. `--check=browser` presses the keys
+one time, in the variant of the document, because the keys do not change with the colors.
+
+The check with no tool already checks the colors of each variant, as
+[the theme option](theme-option.md) does.
+
 ### The keys of the presenter
 
 `--check=browser` opens the document in the Chromium of Playwright, in a page of
@@ -151,7 +165,9 @@ Problems:
 
 `--check` takes the time of a render. `--check=layout` and `--check=a11y` add the start of
 the browser two times: one time to measure its window, and one time for the check.
-Playwright gives the page its size, so `--check=browser` starts its browser one time. The check stops a
+Playwright gives the page its size, so `--check=browser` starts its browser one time. A
+deck with two variants of a theme runs the checks of the page two times, so these levels
+take about two times as long. The check stops a
 browser that does not end in 30 s for the measure, or in 10 minutes for the check, and
 gives an error. Then give a different browser in `EXPRESSO_CHROMIUM`. For the Line 4 deck of
 `examples/line4`, with 28 slides, `--check` took 3 s, `--check=layout` took 5 s and

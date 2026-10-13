@@ -8,7 +8,7 @@ defmodule Expresso.CheckTest do
   alias Expresso.Check
   alias Expresso.Check.{Browser, Document}
 
-  doctest Expresso.Check, only: [named: 2]
+  doctest Expresso.Check, only: [named: 2, variants: 1]
   doctest Expresso.Check.Document
   doctest Expresso.Check.Browser
   doctest Expresso.Check.Session
