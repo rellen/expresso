@@ -176,3 +176,59 @@ or numbers relative to the first line of the excerpt.
 7. The name of the categories of a chart (now `category_label`, from the first heading of the file). The first heading of the CSV file, such as
    `commit`, can name the corner of the table of values and the axis of the categories.
 8. A title for the axis of the values of a chart, such as "widgets an hour" (now `value_label`).
+
+## After the fixes
+
+The pull requests #206 to #216 of Expresso close each item of [Minus](#minus) and of
+[Missing features](#missing-features). rellen/iso-factories#10 then removed each workaround
+from the talk. `examples/line4/line4.exs` is still the copy from before that change, so it
+keeps the workarounds.
+
+### Minus
+
+| Item | Pull request | What the talk uses now |
+| --- | --- | --- |
+| 1. A dependency from GitHub does not compile | #206 | No `config/config.exs`. The dependency makes the presenter bundle. |
+| 2. Each chart has an empty header cell | #207 | Nothing. The corner of the table of values is a cell. |
+| 3. Dimmed text has a contrast of 3:1 | #209 | `dim_contrast 4.5` in place of the 16 dimmed colors in the `css` option. |
+| 4. Each image is in the document many times | #214 | Nothing. The document holds each large file one time, and it is 1.9 MB in place of 3.9 MB. |
+| 5. A real line of code is too long for a slide | #213 | `trailing_comments false` and `wrap true` in place of the class `dense`. |
+| 6. `highlight` takes line numbers | #212 | Groups of texts, such as `[from: "if (extra) {", to: "break; }\n    }"]`. #230 adds `to: :block` for a group that ends on a line with only `}`. |
+
+### Missing features
+
+| Item | Pull request | What the talk uses now |
+| --- | --- | --- |
+| 1. A deck option for the contrast of dimmed text | #209 | `dim_contrast 4.5` |
+| 2. One copy of each file in the document | #214 | Nothing. The render does it. |
+| 3. An option of `code` for long lines | #213 | `trailing_comments false` and `wrap true` |
+| 4. `highlight` and `reveal` groups by text | #212 | Groups of texts |
+| 5. A headless check | #215, #216 | `mix expresso deck.exs --check=browser` |
+| 6. A warning for a slide with no `h1` | #210 | Nothing. Each slide has an `h1`, and `--check` gives a note for a slide with no visible heading. |
+| 7. The name of the categories of a chart | #211 | Nothing. The first heading of `throughput.csv`, `commit`, names the categories. |
+| 8. A title for the axis of the values of a chart | #211 | Nothing. The title of each chart gives the unit. A deck can give `value_label`. |
+
+### The check of the talk
+
+`mix expresso deck.exs --check=browser` gave no problem for the talk:
+
+```text
+Check of deck.exs: 28 slides
+Checks: the render, the theme, the text for a screen reader, the layout at 1920 × 1080, axe-core at each step and in each view, and the keys of the presenter in Playwright
+
+Notes:
+  - The document is 1.9 MB. The largest files: image/jpeg 247 KB, image/jpeg 52 KB.
+
+No problems.
+```
+
+The check took 54 s after #216. With #233, which runs the steps without the parts outside
+the slides, it took 31 s after the compile.
+
+Later pull requests made the check easier to use on the talk:
+
+- #222 and #230: `to: :block` for a group of lines.
+- #224 and #231: the search for the browser, and the line `Browser:` of the report.
+- #223 and #232: `mix expresso --install-check-tools`, so a Mix project with no Node can
+  run the check.
+- #225 and #233: the faster accessibility check.
