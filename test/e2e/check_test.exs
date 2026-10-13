@@ -100,9 +100,10 @@ defmodule Expresso.E2E.CheckTest do
     refute output =~ "color-contrast"
   end
 
-  test "--check=a11y finds the text with a low contrast, and each problem of the layout", %{
-    tmp_dir: dir
-  } do
+  test "--check=a11y names the text with a low contrast one time, and each problem of the layout",
+       %{
+         tmp_dir: dir
+       } do
     {status, output} = check(dir, @deck, :a11y)
 
     assert status == 1
@@ -110,10 +111,13 @@ defmodule Expresso.E2E.CheckTest do
     assert output =~ "  - Slide 2 “long”, step 2: 1 line breaks in the code “const a = 1;"
 
     assert output =~
-             "  - Slide 3 “low”, step 1: color-contrast, Elements must meet minimum color contrast"
+             ~r/  - Slide 3 “low”, step 1: color-contrast, Elements must meet minimum color contrast .*: the text area “Grey on grey”\n/
 
-    assert output =~ "  - The overview: color-contrast"
-    assert output =~ ".low"
+    # The overview and the handout view hold a copy of the text, and a step
+    # already gives it.
+    refute output =~ "The overview: color-contrast"
+    refute output =~ "The handout view: color-contrast"
+    refute output =~ ".low"
   end
 
   test "--check=browser presses each key, and finds no problem in a good deck", %{tmp_dir: dir} do

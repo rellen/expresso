@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { accessibility, engine, first, write } from "../src/check.ts";
+import { accessibility, describe, engine, first, write } from "../src/check.ts";
 import type { Axe, Finding } from "../src/check.ts";
 
 // A stub of the parts of the document that the check reads: the style of the
@@ -32,21 +32,63 @@ function stubDocument(): {
   return { properties, appended, body };
 }
 
-const finding = (where: string, rule: string, target: string): Finding => ({
+const finding = (
+  where: string,
+  rule: string,
+  ...elements: string[]
+): Finding => ({
   where,
   rule,
   help: "Help",
-  targets: [target],
+  elements,
 });
 
 test("first keeps the first finding of each rule on each element", () => {
   const findings = [
-    finding("Slide 1, step 1", "color-contrast", ".line"),
-    finding("Slide 1, step 2", "color-contrast", ".line"),
-    finding("Slide 1, step 2", "color-contrast", ".other"),
-    finding("The menu", "region", ".line"),
+    finding("Slide 1, step 1", "color-contrast", "the text area “a”"),
+    finding("Slide 1, step 2", "color-contrast", "the text area “a”"),
+    finding("Slide 1, step 2", "color-contrast", "the list “b”"),
+    finding("The menu", "region", "the text area “a”"),
   ];
   assert.deepEqual(first(findings), [findings[0], findings[2], findings[3]]);
+});
+
+test("first keeps only the elements of a view that no step gave", () => {
+  const findings = [
+    finding("Slide 1, step 1", "color-contrast", "the text area “a”"),
+    finding(
+      "The overview",
+      "color-contrast",
+      "the text area “a”",
+      "#menu > li",
+    ),
+    finding("The handout view", "color-contrast", "the text area “a”"),
+  ];
+  assert.deepEqual(first(findings), [
+    findings[0],
+    finding("The overview", "color-contrast", "#menu > li"),
+  ]);
+});
+
+test("describe names the element of a slide, and keeps another selector", () => {
+  const area = {
+    classList: { contains: () => false, 0: "text-area" },
+    tagName: "DIV",
+    textContent: "  Grey   on grey  ",
+    querySelector: () => null,
+    closest: () => area,
+  };
+  const item = { closest: () => null };
+  (globalThis as { document?: unknown }).document = {
+    querySelector: (selector: string) => {
+      if (selector === "[") throw new Error("bad selector");
+      return selector === ".text-area" ? area : selector === "li" ? item : null;
+    },
+  };
+  assert.equal(describe(".text-area"), "the text area “Grey on grey”");
+  assert.equal(describe("li"), "li");
+  assert.equal(describe(".none"), ".none");
+  assert.equal(describe("["), "[");
 });
 
 test("engine returns undefined for a page without axe-core", () => {
@@ -90,6 +132,7 @@ test("accessibility reads the slide of each step, then the document in each view
     (index) => shown.push(`step ${index}`),
     [["The menu", () => shown.push("menu")]],
     axe,
+    (selector) => `the element ${selector}`,
   );
 
   assert.deepEqual(shown, ["step 0", "step 1", "step 2", "menu"]);
@@ -104,7 +147,7 @@ test("accessibility reads the slide of each step, then the document in each view
       where: "Slide 2, step 1",
       rule: "color-contrast",
       help: "Contrast",
-      targets: [".dim"],
+      elements: ["the element .dim"],
     },
   ]);
   assert.equal(properties.has("--dur"), false);

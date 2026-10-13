@@ -66,9 +66,16 @@ the whole document in these views:
 - the handout view.
 
 A problem of axe-core gives the step or the view, the id of the rule, the description of
-the rule, and a CSS selector for each element that fails. The check gives each rule on each
-element one time, at the first step or view that has it. The time of each animation is
-zero, so axe-core reads the final color of each element.
+the rule, and the name of each element that fails. The name of an element of a slide is its
+kind and the first 40 characters of its text, such as `the text area “Grey on grey”`, as
+the layout check gives it. Another element, such as an entry of the menu, gives the CSS
+selector of axe-core. The time of each animation is zero, so axe-core reads the final color
+of each element.
+
+The check gives each rule on each element one time, at the first step or view that has it.
+The overview and the handout view hold a copy of each slide, and a copy has the name of its
+element. Therefore a view gives only the elements that no step gave. Two elements with the
+same kind and the same text count as one element.
 
 ### Sizes of the page
 
@@ -167,7 +174,7 @@ Notes:
 
 Problems:
   - Slide 2 “long”, step 2: 1 line breaks in the code “const a = 1; const b = [1, 2, 3, 4, 5, 6…”
-  - Slide 3 “low”, step 1: color-contrast, Elements must meet minimum color contrast ratio thresholds: #slide-3 > div:nth-child(2) > .slide-body > .slide-main > .low.text-area > div
+  - Slide 3 “low”, step 1: color-contrast, Elements must meet minimum color contrast ratio thresholds: the text area “Grey on grey”
 
 2 problems.
 ```
