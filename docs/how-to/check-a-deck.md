@@ -40,10 +40,47 @@ To write the document in the same run, give the output file:
 mix expresso deck.exs deck.html --check
 ```
 
+## Install the tools with one command
+
+The levels `--check=layout`, `--check=a11y` and `--check=browser` need a browser and the
+npm packages `axe-core` and `playwright`. One command installs each of them. The deck does
+not need a `node_modules`, so a Mix project with no Node can use the tools:
+
+1. Install [Node](https://nodejs.org), and make sure that `node` and `npm` are on the
+   `PATH`.
+2. Install the tools:
+
+   ```sh
+   mix expresso --install-check-tools
+   ```
+
+   With the binary, run `expresso --install-check-tools`.
+
+3. In a Mix project, add the Hex package `playwright_ex` to the deps in `mix.exs`, and run
+   `mix deps.get`. Only `--check=browser` needs it, and the binary holds it:
+
+   ```elixir
+   {:playwright_ex, "~> 0.14", only: :dev, runtime: false}
+   ```
+
+4. Run the check:
+
+   ```sh
+   mix expresso deck.exs --check=browser
+   ```
+
+The command puts the npm packages into `~/.cache/expresso` on Linux, or
+`~/Library/Caches/expresso` on macOS. `EXPRESSO_TOOLS` gives a different directory. The
+Chromium and the headless shell go into the cache of Playwright. Run the command again to
+get the versions of a new release of Expresso.
+
+The sections below tell how to install each tool in its own way.
+
 ## Install a browser for the layout check
 
 `--check=layout` runs the layout check of the presenter in a headless browser. Install
-Chrome or Chromium:
+Chrome or Chromium with the command of the system, or with
+`mix expresso --install-check-tools`:
 
 | System | Command |
 | --- | --- |
@@ -81,7 +118,8 @@ gives the same result as 1920 × 1080.
 
 `--check=a11y` also runs [axe-core](https://github.com/dequelabs/axe-core) at each step
 and in each view. It needs the browser of the layout check, and the npm package
-`axe-core`:
+`axe-core`. `mix expresso --install-check-tools` installs it. To install it in the
+directory of the deck in place of that:
 
 1. Go to the directory of the deck, or to a parent directory of it.
 2. Install the package:
@@ -97,8 +135,8 @@ and in each view. It needs the browser of the layout check, and the npm package
    ```
 
 The check looks for `node_modules/axe-core/axe.min.js` in the current directory, in the
-directory of the deck, and in each parent of them. To use a different copy, give its path
-in `EXPRESSO_AXE`.
+directory of the deck, in each parent of them, and then in the directory of
+`--install-check-tools`. To use a different copy, give its path in `EXPRESSO_AXE`.
 
 ## Install Playwright for the browser check
 
@@ -106,7 +144,8 @@ in `EXPRESSO_AXE`.
 and uses the presenter as you do. It presses the key of the next step from the first step
 to the last step, and it opens and closes the menu, the list of keys, the overview and the
 handout view with their keys. It also runs the checks of `--check=a11y` in the same browser,
-so it needs no other Chrome.
+so it needs no other Chrome. `mix expresso --install-check-tools` installs its tools. To
+install them in the directory of the deck in place of that:
 
 1. Install [Node](https://nodejs.org), and make sure that `node` is on the `PATH`.
 2. Go to the directory of the deck, or to a parent directory of it.

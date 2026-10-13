@@ -97,6 +97,10 @@ defmodule Expresso.BurritoEntryPoint do
                          more sizes. The default is 1920x1080.
       -h, --help         Show this help.
           --version      Show the version of Expresso.
+          --install-check-tools
+                         Install the npm packages playwright and axe-core,
+                         and the Chromium of Playwright, for --check. It
+                         needs Node and npm.
 
     The exit status is 0 when the command writes the HTML, and 1 for an error
     or for a problem of --check.

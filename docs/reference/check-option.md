@@ -136,8 +136,23 @@ Each error of the script of the page, each rejected promise with no handler, and
 | Variable | Gives | Without it |
 | --- | --- | --- |
 | `EXPRESSO_CHROMIUM` | The path of Chrome or Chromium | The check looks in [the sequence of the search](#the-search-for-the-browser). |
-| `EXPRESSO_AXE` | The path of `axe.min.js` | The check looks for `node_modules/axe-core/axe.min.js` in the current directory, in the directory of the deck, and in each parent of them. |
+| `EXPRESSO_AXE` | The path of `axe.min.js` | The check looks for `node_modules/axe-core/axe.min.js` in the current directory, in the directory of the deck, in each parent of them, and then in the directory of the tools. |
 | `EXPRESSO_PLAYWRIGHT` | The path of `cli.js` of the npm package `playwright` | The check looks for `node_modules/playwright/cli.js` in the same directories as axe-core. |
+| `EXPRESSO_TOOLS` | The directory of the tools | `--install-check-tools` uses `expresso` in the cache directory of the user, such as `~/.cache/expresso` on Linux and `~/Library/Caches/expresso` on macOS. |
+
+### Install the tools
+
+`mix expresso --install-check-tools`, or `expresso --install-check-tools` with the binary,
+installs the tools of the browser levels. It needs `node` and `npm` on the `PATH`, and it
+takes no other argument. It runs these commands, in sequence:
+
+1. `npm install --prefix <directory> playwright axe-core`, with the directory of
+   `EXPRESSO_TOOLS`. `Expresso.Check.Tools.packages/0` gives the version of each package.
+2. `node <directory>/node_modules/playwright/cli.js install chromium`, which puts the
+   Chromium and the headless shell into the cache of Playwright.
+
+The exit status is 1 when a command fails. The error of a missing tool of a level gives
+this command.
 
 ### The search for the browser
 

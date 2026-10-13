@@ -142,6 +142,8 @@ mix expresso my_deck.exs my_deck.html
   `cat my_deck.exs | mix expresso - -`.
 - `mix expresso --help` shows the help, and `mix expresso --version` shows the version of
   Expresso.
+- `mix expresso --install-check-tools` installs the tools of the browser levels of
+  `--check`. See [Check a deck before the talk](docs/how-to/check-a-deck.md).
 - The task writes each error message, and the usage text, to the standard error. The exit
   status is then 1. An unknown option, such as `--verbose`, is an error, and so is a third
   path.
@@ -183,7 +185,9 @@ mix expresso my_deck.exs --check=a11y     # needs Chrome or Chromium, and axe-co
 mix expresso my_deck.exs --check=browser  # needs Node, Playwright and axe-core
 ```
 
-`--size 1024x768` checks another size of the screen, such as a projector of 4:3. The exit
+`mix expresso --install-check-tools` installs each tool of the browser levels, if Node is
+on the `PATH`. `--size 1024x768` checks another size of the screen, such as a projector of
+4:3. The exit
 status is 1 for a problem, so a continuous integration job can run the check. See
 [Check a deck before the talk](docs/how-to/check-a-deck.md).
 

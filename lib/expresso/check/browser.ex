@@ -178,13 +178,14 @@ defmodule Expresso.Check.Browser do
 
   The variable `EXPRESSO_AXE` in `env` gives the path of the file. Without it,
   the function looks for `node_modules/axe-core/axe.min.js` in each directory
-  of `directories`, and in each parent of them.
+  of `directories`, in each parent of them, and in the directory of
+  `Expresso.Check.Tools`.
   """
   @spec find_axe([Path.t()], %{String.t() => String.t()}) ::
           {:ok, Path.t()} | {:error, String.t()}
   def find_axe(directories, env \\ System.get_env()) do
     case env["EXPRESSO_AXE"] do
-      nil -> search_axe(directories)
+      nil -> search_axe(directories, env)
       path -> given_axe(path)
     end
   end
@@ -195,11 +196,10 @@ defmodule Expresso.Check.Browser do
       else: {:error, "EXPRESSO_AXE gives #{path}, and that file does not exist."}
   end
 
-  defp search_axe(directories) do
+  defp search_axe(directories, env) do
     found =
       directories
-      |> Enum.flat_map(&ancestors(Path.expand(&1)))
-      |> Enum.uniq()
+      |> places(env)
       |> Enum.map(&Path.join(&1, "node_modules/axe-core/axe.min.js"))
       |> Enum.find(&File.regular?/1)
 
@@ -207,9 +207,24 @@ defmodule Expresso.Check.Browser do
       do: {:ok, found},
       else:
         {:error,
-         "--check=a11y needs axe-core. Run `npm install --save-dev axe-core` in the " <>
-           "directory of the deck, or give the path of axe.min.js in EXPRESSO_AXE. " <>
-           "docs/how-to/check-a-deck.md tells how."}
+         "--check=a11y needs axe-core. Run `mix expresso --install-check-tools`, or " <>
+           "`expresso --install-check-tools` with the binary. You can also run " <>
+           "`npm install --save-dev axe-core` in the directory of the deck, or give the path " <>
+           "of axe.min.js in EXPRESSO_AXE. docs/how-to/check-a-deck.md tells how."}
+  end
+
+  @doc """
+  Return the directories where the check looks for `node_modules`
+
+  The list holds each directory of `directories` and each parent of them,
+  and then the directory of `Expresso.Check.Tools.directory/1`.
+  """
+  @spec places([Path.t()], %{String.t() => String.t()}) :: [Path.t()]
+  def places(directories, env \\ System.get_env()) do
+    directories
+    |> Enum.flat_map(&ancestors(Path.expand(&1)))
+    |> Kernel.++([Expresso.Check.Tools.directory(env)])
+    |> Enum.uniq()
   end
 
   @doc false

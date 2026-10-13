@@ -181,8 +181,17 @@ defmodule Expresso.CheckTest do
       assert Browser.find_axe([deck], %{"EXPRESSO_AXE" => axe}) == {:ok, axe}
     end
 
+    test "finds axe-core in the directory of the tools", %{tmp_dir: dir} do
+      axe = Path.join(dir, "tools/node_modules/axe-core/axe.min.js")
+      File.mkdir_p!(Path.dirname(axe))
+      File.write!(axe, "")
+
+      assert Browser.find_axe(["/"], %{"EXPRESSO_TOOLS" => Path.join(dir, "tools")}) == {:ok, axe}
+    end
+
     test "a missing axe-core gives an error that tells how to install it", %{tmp_dir: dir} do
-      assert {:error, message} = Browser.find_axe(["/"], %{})
+      assert {:error, message} = Browser.find_axe(["/"], %{"EXPRESSO_TOOLS" => dir})
+      assert message =~ "mix expresso --install-check-tools"
       assert message =~ "npm install --save-dev axe-core"
 
       assert {:error, message} = Browser.find_axe([dir], %{"EXPRESSO_AXE" => "/none/axe.js"})
@@ -228,7 +237,8 @@ defmodule Expresso.CheckTest do
     end
 
     test "the browser level tells how to install the npm package playwright", %{tmp_dir: dir} do
-      assert {:error, message} = Expresso.Check.Session.find(["/"], %{})
+      assert {:error, message} = Expresso.Check.Session.find(["/"], %{"EXPRESSO_TOOLS" => dir})
+      assert message =~ "mix expresso --install-check-tools"
       assert message =~ "npm install --save-dev playwright axe-core"
 
       assert {:error, message} =

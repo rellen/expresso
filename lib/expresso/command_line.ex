@@ -5,7 +5,7 @@ defmodule Expresso.CommandLine do
   The two commands take the same arguments:
 
       <input> [output] [--watch [--port <port>] | --check[=<level>] [--size <size>]...]
-              [--help | -h] [--version]
+              [--help | -h] [--version] [--install-check-tools]
 
   `parse/1` reads the arguments, and `run/3` runs them. The mix task and the
   binary both call `run/3`, so the two commands agree.
@@ -29,6 +29,8 @@ defmodule Expresso.CommandLine do
 
     * `:help` for `--help` or `-h` in any position.
     * `:version` for `--version` in any position.
+    * `:install_check_tools` for `--install-check-tools` alone. With another
+      argument, the option is an error.
     * `{:error, message}` for an unknown option, a third path, a bad
       `--port` or a bad level of `--check`. Each argument that starts with
       `-` is an option, except `-` alone. `--port` without `--watch` is an
@@ -71,6 +73,9 @@ defmodule Expresso.CommandLine do
       iex> Expresso.CommandLine.parse(["--version"])
       :version
 
+      iex> Expresso.CommandLine.parse(["--install-check-tools"])
+      :install_check_tools
+
       iex> Expresso.CommandLine.parse(["--verbose"])
       {:error, "Unknown option: --verbose"}
 
@@ -80,6 +85,7 @@ defmodule Expresso.CommandLine do
   @spec parse([String.t()]) ::
           :help
           | :version
+          | :install_check_tools
           | {:paths, String.t() | nil, String.t() | nil}
           | {:watch, String.t(), String.t() | nil, :inet.port_number()}
           | {:check, Expresso.Check.level(), String.t(), String.t() | nil,
@@ -92,6 +98,12 @@ defmodule Expresso.CommandLine do
 
       "--version" in args ->
         :version
+
+      args == ["--install-check-tools"] ->
+        :install_check_tools
+
+      "--install-check-tools" in args ->
+        {:error, "--install-check-tools takes no other argument"}
 
       true ->
         args |> take_options(%{watch: false, port: nil, check: nil, sizes: []}, []) |> command()
@@ -214,6 +226,8 @@ defmodule Expresso.CommandLine do
     * `:help` writes `help` to the standard output. The exit status is 0.
     * `:version` writes the version to the standard output. The exit status
       is 0.
+    * `:install_check_tools` calls `Expresso.Check.Tools.install/2`. The exit
+      status is 1 for an error, and 0 otherwise.
     * `{:error, message}` writes the message and the usage text to the
       standard error. The exit status is 1.
     * `{:paths, nil, _}` writes the usage text to the standard error. The exit
@@ -240,6 +254,9 @@ defmodule Expresso.CommandLine do
         IO.puts(version())
         0
 
+      :install_check_tools ->
+        install_check_tools()
+
       {:error, message} ->
         IO.puts(:stderr, [message, ?\n, usage(program)])
         1
@@ -258,6 +275,17 @@ defmodule Expresso.CommandLine do
 
       {:check, level, input_path, output_path, sizes} ->
         Expresso.Check.run(input_path, output_path, level, sizes)
+    end
+  end
+
+  defp install_check_tools do
+    case Expresso.Check.Tools.install() do
+      :ok ->
+        0
+
+      {:error, message} ->
+        IO.puts(:stderr, message)
+        1
     end
   end
 
