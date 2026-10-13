@@ -166,8 +166,7 @@ Examples.CheckDeck
 
 ![A slide with the heading "The plan", two items, and a box of grey text on a grey background that is hard to read](https://raw.githubusercontent.com/rellen/expresso/media/check-deck.png)
 
-`--check=a11y` gives the low contrast as a problem, at the step and in the view that has
-it:
+`--check=a11y` gives the low contrast as a problem, at the first step that has it:
 
 ```text
 Check of check_deck.exs: 1 slide
@@ -177,16 +176,16 @@ Notes:
   - The document is 259 KB.
 
 Problems:
-  - Slide 1 “the plan”, step 1: color-contrast, Elements must meet minimum color contrast ratio thresholds: #slide-1 > div:nth-child(2) > .slide-body > .slide-main > .text-area.quiet > div
-  - The overview: color-contrast, Elements must meet minimum color contrast ratio thresholds: .handout-page > div:nth-child(2) > .slide-body > .slide-main > .text-area.quiet > div
+  - Slide 1 “the plan”, step 1: color-contrast, Elements must meet minimum color contrast ratio thresholds: the text area “Notes for the speaker go in the notes, n…”
 
-2 problems.
+1 problem.
 ```
 
-A problem of axe-core names the step or the view, the rule, and a CSS selector for each
-element that fails. The selector `.text-area.quiet` names the text area with the class
-`quiet`. To correct the deck, give that class a color with more contrast, or remove the
-class. Then run the check again, until it gives `No problems.`
+A problem of axe-core names the step or the view, the rule, and each element that fails.
+The name of an element is its kind and the first 40 characters of its text, as the layout
+check gives it. To correct the deck, give the class `quiet` of that text area a color with
+more contrast, or remove the class. Then run the check again, until it gives
+`No problems.`
 
 The most frequent problem is dimmed text. To correct it, see
 [Keep dimmed text readable](make-a-deck-accessible.md#keep-dimmed-text-readable).

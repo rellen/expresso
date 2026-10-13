@@ -180,7 +180,7 @@ defmodule Expresso.Check do
     accessibility =
       Enum.map(page.accessibility || [], fn finding ->
         "#{finding["where"]}: #{finding["rule"]}, #{finding["help"]}: " <>
-          Enum.join(finding["targets"], ", ")
+          Enum.join(finding["elements"], ", ")
       end)
 
     page.layout ++ accessibility ++ Map.get(page, :session, [])

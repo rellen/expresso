@@ -8,14 +8,19 @@
 // the two checks as JSON into an element `check-result`, and the browser
 // writes the document to its standard output.
 
+import { owner } from "./layout.ts";
+
 // A violation of a rule of axe-core. `where` names the step or the view,
 // `rule` is the id of the rule, `help` is its short description, and
-// `targets` holds a CSS selector for each element that fails.
+// `elements` names each element that fails. The name of an element of a
+// slide is its kind and the start of its text, such as
+// `the text area “Grey on grey”`, as the layout check gives it. Another
+// element keeps the CSS selector of axe-core.
 export type Finding = Readonly<{
   where: string;
   rule: string;
   help: string;
-  targets: readonly string[];
+  elements: readonly string[];
 }>;
 
 // The part of the API of axe-core that the check uses.
@@ -52,23 +57,46 @@ export function engine(): Axe | undefined {
 // does not read them.
 const OPTIONS = { resultTypes: ["violations"] };
 
-// Keep the first finding of each rule on each element. A dimmed line that
-// fails at each step of its slide then gives one finding.
+// Keep each rule on each element one time, at the first step or view that
+// has it. A dimmed line that fails at each step of its slide then gives one
+// finding. The overview and the handout view hold a copy of each slide, and
+// a copy has the name of its element, so a view gives only the elements that
+// no step gave. A finding with no element left goes.
 export function first(findings: readonly Finding[]): Finding[] {
-  const kept = new Map<string, Finding>();
+  const seen = new Set<string>();
+  const kept: Finding[] = [];
   for (const finding of findings) {
-    const key = `${finding.rule} ${finding.targets.join(", ")}`;
-    if (!kept.has(key)) {
-      kept.set(key, finding);
+    const elements = finding.elements.filter((element) => {
+      const key = `${finding.rule} ${element}`;
+      const fresh = !seen.has(key);
+      seen.add(key);
+      return fresh;
+    });
+    if (elements.length > 0) {
+      kept.push({ ...finding, elements });
     }
   }
-  return Array.from(kept.values());
+  return kept;
+}
+
+// The name of the element that a selector of axe-core finds, or the selector
+// for an element outside each element of a slide.
+export function describe(selector: string): string {
+  let element: Element | null = null;
+  try {
+    element = document.querySelector(selector);
+  } catch {
+    // A selector into a frame is not a selector of the document.
+  }
+  const name = element === null ? null : owner(element);
+  return name === null ? selector : `the ${name}`;
 }
 
 // Show each step with `show`, and run axe-core on its slide. Then show each
 // view, and run axe-core on the document. `views` gives the name of each view
 // and the function that shows it. The first view is the present view, so the
-// rules of the whole document run one time for it. The animations take no
+// rules of the whole document run one time for it. `name` names the element
+// of a selector. The animations take no
 // time during the check, because a color in the middle of a transition can
 // fail a rule of contrast.
 export async function accessibility(
@@ -76,6 +104,7 @@ export async function accessibility(
   show: (index: number) => void,
   views: readonly (readonly [string, () => void])[],
   axe: Axe,
+  name: (selector: string) => string = describe,
 ): Promise<Finding[]> {
   const root = document.documentElement.style;
   root.setProperty("--dur", "0s");
@@ -91,7 +120,7 @@ export async function accessibility(
         where,
         rule: violation.id,
         help: violation.help,
-        targets: violation.nodes.map((node) => node.target.join(" ")),
+        elements: violation.nodes.map((node) => name(node.target.join(" "))),
       });
     }
   };

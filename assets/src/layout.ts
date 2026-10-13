@@ -152,6 +152,14 @@ function name(measured: Element): string {
   return label(kind(element), element.textContent ?? "");
 }
 
+// The name of the element of a slide that holds a node, such as
+// `text area “Notes for the speaker”`, or null for a node outside each
+// element of a slide, such as an entry of the menu. A copy of a slide in the
+// overview or in the handout view gives the same name as the slide.
+export function owner(node: Element): string | null {
+  return node.closest(ELEMENTS) === null ? null : name(node);
+}
+
 // The texts for a screen reader. The style sheet hides each from the eye in a
 // box of 1 px, and its text runs out of that box, so the check skips them.
 const SCREEN_READER = ".chart-table, .stat-text";
