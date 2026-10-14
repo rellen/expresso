@@ -692,6 +692,25 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .chart-fade {
   transition: opacity var(--dur) var(--ease);
 }
+/*
+ * A sankey. A node has the color of its series, and a link has a tint of the
+ * color of its source, so the text of a label stays readable on it. A label
+ * has a halo in the color of the background, because it can sit on a link.
+ */
+.chart-node {
+  fill: var(--series);
+}
+.chart-link {
+  fill: color-mix(in oklab, var(--series) 35%, var(--background));
+}
+.chart-node-label {
+  fill: var(--text);
+  font-size: 18px;
+  paint-order: stroke;
+  stroke: var(--background);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
 .chart-frame {
   fill: var(--muted);
   font-size: 32px;

@@ -37,6 +37,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/show-data-in-a-chart.md",
         "docs/how-to/show-a-change-over-time-in-a-chart.md",
         "docs/how-to/show-parts-of-a-whole-in-a-treemap-or-a-sunburst.md",
+        "docs/how-to/show-flows-in-a-sankey-chart.md",
         "docs/how-to/show-code.md",
         "docs/how-to/check-the-layout.md",
         "docs/how-to/check-a-deck.md",

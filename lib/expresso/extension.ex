@@ -318,11 +318,26 @@ defmodule Expresso.Extension do
     ]
   }
 
+  @flow %Spark.Dsl.Entity{
+    name: :flow,
+    target: Expresso.Element.Flow,
+    args: [:from, :to, :value],
+    schema: [
+      from: [type: :string, required: true, doc: "The node where the flow starts."],
+      to: [type: :string, required: true, doc: "The node where the flow ends."],
+      value: [
+        type: {:or, [:integer, :float]},
+        required: true,
+        doc: "The size of the flow, zero or more."
+      ]
+    ]
+  }
+
   @chart %Spark.Dsl.Entity{
     name: :chart,
     target: Expresso.Element.Chart,
     args: [:kind],
-    entities: [elements: [@series], timeline: [@frame], on: [@on]],
+    entities: [elements: [@series], timeline: [@frame], flows: [@flow], on: [@on]],
     transform: {Expresso.Element.Chart, :check, []},
     schema:
       @overlay_schema ++
@@ -332,7 +347,7 @@ defmodule Expresso.Extension do
             type: {:in, Expresso.Element.Chart.kinds()},
             required: true,
             doc:
-              "The kind of the chart: :bar, :line, :pie, :treemap or :sunburst. See docs/reference/chart-element.md."
+              "The kind of the chart: :bar, :line, :pie, :treemap, :sunburst or :sankey. See docs/reference/chart-element.md."
           ],
           title: [
             type: :string,
@@ -352,7 +367,7 @@ defmodule Expresso.Extension do
           categories: [
             type: {:list, {:or, [:string, {:list, :string}]}},
             doc:
-              "The name of each category, such as [\"2023\", \"2024\"]. A category of a treemap or a sunburst can be a list of its levels, such as [\"Production\", \"Press\"]."
+              "The name of each category, such as [\"2023\", \"2024\"]. A category of a treemap or a sunburst can be a list of its levels, such as [\"Production\", \"Press\"], and a category of a sankey is a path of nodes, such as [\"Coal\", \"Electricity\"]."
           ],
           src: [
             type: :string,
@@ -376,7 +391,8 @@ defmodule Expresso.Extension do
           reveal: [
             type: :boolean,
             default: false,
-            doc: "Show the series one after the other. A pie takes no reveal option."
+            doc:
+              "Show the series one after the other, or the links of a sankey one column at a time. A pie takes no reveal option."
           ],
           dim: [
             type: :boolean,
@@ -392,7 +408,7 @@ defmodule Expresso.Extension do
           levels: [
             type: {:list, :string},
             doc:
-              "The headings of the columns of a CSV file that hold the levels of the categories of a treemap or a sunburst, from the top level down. Requires the src option."
+              "The headings of the columns of a CSV file that hold the levels of the categories of a treemap or a sunburst, from the top level down, or the nodes of each path of a sankey. Requires the src option."
           ],
           frames: [
             type: :string,

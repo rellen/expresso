@@ -1,10 +1,10 @@
 defmodule Expresso.Element.Chart do
   @moduledoc """
-  An element that draws a bar chart, a line chart, a pie chart, a treemap or
-  a sunburst
+  An element that draws a bar chart, a line chart, a pie chart, a treemap, a
+  sunburst or a sankey
 
   The `chart` entity takes the kind as its first argument: `:bar`, `:line`,
-  `:pie`, `:treemap` or `:sunburst`. A slash in a category of a treemap or a
+  `:pie`, `:treemap`, `:sunburst` or `:sankey`. A slash in a category of a treemap or a
   sunburst names a part of a group, and `Expresso.Element.Chart.Hierarchy`
   draws them. The `categories` option gives the names of the categories, and each
   `series` entity gives a name and one value for each category. The `src`
@@ -26,23 +26,31 @@ defmodule Expresso.Element.Chart do
   after the first takes one step. A chart with frames, or with the effect
   `:grow`, moves its marks: `Expresso.Element.Chart.Motion` draws them.
   `docs/reference/chart-element.md` gives the rules.
+
+  A category of a sankey is a path of nodes, and `flow` entities give the
+  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws it. With
+  `reveal true`, the check makes one series for each column of links, so the
+  links show one column at a time.
   """
 
   use Expresso.Element
 
-  alias Expresso.Element.Chart.{Csv, Hierarchy, Motion, Plot}
-  alias Expresso.Element.{Frame, Series}
+  alias Expresso.Element.Chart.{Csv, Hierarchy, Motion, Plot, Sankey}
+  alias Expresso.Element.{Flow, Frame, Series}
 
   @typedoc "The struct of a chart"
   @type t :: %__MODULE__{}
 
-  @kinds [:bar, :line, :pie, :treemap, :sunburst]
+  @kinds [:bar, :line, :pie, :treemap, :sunburst, :sankey]
 
   # The kinds of one series, which take no reveal option.
   @single [:pie, :treemap, :sunburst]
 
   # The kinds that show the parts of a whole in groups.
   @parts [:treemap, :sunburst]
+
+  # The kinds with a list of names in a category.
+  @paths [:sankey | @parts]
 
   # The colors of a palette for the series, so the most series of a chart.
   @colors 8
@@ -80,6 +88,7 @@ defmodule Expresso.Element.Chart do
     thumbnail: :first,
     elements: [],
     timeline: [],
+    flows: [],
     on: [],
     __spark_metadata__: nil
   ]
@@ -88,7 +97,7 @@ defmodule Expresso.Element.Chart do
   Return the kinds of a chart
 
       iex> Expresso.Element.Chart.kinds()
-      [:bar, :line, :pie, :treemap, :sunburst]
+      [:bar, :line, :pie, :treemap, :sunburst, :sankey]
   """
   @spec kinds() :: [atom()]
   def kinds, do: @kinds
@@ -101,6 +110,27 @@ defmodule Expresso.Element.Chart do
   option of the deck can change the path, and `build/1` then reads it.
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
+  def check(%__MODULE__{flows: [_ | _], kind: kind}) when kind != :sankey,
+    do: {:error, "a flow is a link of a sankey, so a #{kind} chart takes no flow"}
+
+  def check(%__MODULE__{flows: [_ | _] = flows} = chart) do
+    if chart.src != nil or chart.categories != nil or chart.elements != [] or
+         chart.timeline != [] do
+      {:error,
+       "a sankey takes flow entities, or categories and a series, or the src option, " <>
+         "and only one of them"}
+    else
+      check(%__MODULE__{
+        chart
+        | flows: [],
+          categories: Enum.map(flows, fn %Flow{from: from, to: to} -> [from, to] end),
+          elements: [
+            %Series{name: chart.value_label || "Value", values: Enum.map(flows, & &1.value)}
+          ]
+      })
+    end
+  end
+
   def check(%__MODULE__{src: src} = chart) when is_binary(src) do
     if chart.categories != nil or chart.elements != [] or chart.timeline != [],
       do:
@@ -212,10 +242,24 @@ defmodule Expresso.Element.Chart do
   defp options(%__MODULE__{kind: kind, reveal: true}) when kind in @single,
     do: {:error, "a #{kind} has one series, so it takes no reveal option. Give it an at option."}
 
-  defp options(%__MODULE__{kind: kind, levels: [_ | _]}) when kind not in @parts,
+  defp options(%__MODULE__{kind: kind, levels: [_ | _]}) when kind not in @paths,
     do:
       {:error,
-       "the levels option gives the groups of a treemap or a sunburst, so a #{kind} chart takes no levels option"}
+       "the levels option gives the groups of a treemap or a sunburst, or the paths of a sankey, " <>
+         "so a #{kind} chart takes no levels option"}
+
+  defp options(%__MODULE__{kind: :sankey, levels: [_]}),
+    do:
+      {:error,
+       "the levels option of a sankey names two columns or more, one for each node of a path"}
+
+  defp options(%__MODULE__{kind: :sankey} = chart)
+       when chart.frames != nil or chart.timeline != [],
+       do: {:error, "a sankey takes no frames"}
+
+  defp options(%__MODULE__{kind: :sankey} = chart)
+       when chart.effect == :grow or chart.count == true,
+       do: {:error, "a sankey takes no effect :grow and no count option"}
 
   defp options(%__MODULE__{separator: ""}),
     do: {:error, "the separator option needs at least one character"}
@@ -276,9 +320,9 @@ defmodule Expresso.Element.Chart do
       Enum.all?(categories, &is_binary/1) ->
         :ok
 
-      kind not in @parts ->
+      kind not in @paths ->
         {:error,
-         "a category of a #{kind} chart is a string. A list of levels is for a treemap or a sunburst."}
+         "a category of a #{kind} chart is a string. A list of levels is for a treemap, a sunburst or a sankey."}
 
       Enum.all?(
         categories,
@@ -341,7 +385,40 @@ defmodule Expresso.Element.Chart do
   defp single(%__MODULE__{kind: kind}) when kind in @single,
     do: {:error, "a #{kind} has one series"}
 
+  defp single(%__MODULE__{kind: :sankey, elements: [%Series{effect: :grow}]}),
+    do: {:error, "a sankey takes no effect :grow and no count option"}
+
+  defp single(%__MODULE__{kind: :sankey, elements: [%Series{} = series]} = chart) do
+    with :ok <- Sankey.check(chart.categories, series.values, chart.separator) do
+      links = Sankey.links(chart.categories, series.values, chart.separator)
+      categories = Enum.map(links, &[&1.from, &1.to])
+      values = Enum.map(links, & &1.value)
+
+      elements =
+        if chart.reveal,
+          do: stages(links, series),
+          else: [%Series{series | values: values}]
+
+      {:ok, %__MODULE__{chart | categories: categories, elements: elements}}
+    end
+  end
+
+  defp single(%__MODULE__{kind: :sankey}), do: {:error, "a sankey has one series"}
+
   defp single(chart), do: {:ok, chart}
+
+  # The series of a sankey with reveal: one series for each column of the
+  # sources of the links. Each series holds the value of the links of its
+  # column, and zero for each other link.
+  defp stages(links, %Series{} = series) do
+    columns = Sankey.columns(links)
+    stages = links |> Enum.map(&columns[&1.from]) |> Enum.uniq() |> Enum.sort()
+
+    for {stage, index} <- Enum.with_index(stages, 1) do
+      values = Enum.map(links, &if(columns[&1.from] == stage, do: &1.value, else: 0))
+      %Series{name: "#{series.name} #{index}", values: values, class: series.class}
+    end
+  end
 
   @doc """
   Make the assigns of the render function from the struct
@@ -461,7 +538,9 @@ defmodule Expresso.Element.Chart do
           end
         end
 
-        c(&table/1, rest!: assigns)
+        if @kind == :sankey,
+          do: c(&Sankey.table/1, rest!: assigns),
+          else: c(&table/1, rest!: assigns)
       end
     end
   end
@@ -551,6 +630,8 @@ defmodule Expresso.Element.Chart do
   end
 
   # The kinds of a chart. Each one writes the content of the SVG.
+  defp plot(%{kind: :sankey} = assigns), do: Sankey.render(assigns)
+
   defp plot(%{kind: kind} = assigns) when kind in [:treemap, :sunburst],
     do: Motion.render(assigns)
 
@@ -562,7 +643,7 @@ defmodule Expresso.Element.Chart do
   # the function from a value to its coordinate, and the legend. A pie has no
   # axis.
   defp layout(%{kind: :pie} = assigns), do: Map.put(assigns, :legend_item, &legend_item/1)
-  defp layout(%{kind: :sunburst} = assigns), do: assigns
+  defp layout(%{kind: kind} = assigns) when kind in [:sunburst, :sankey], do: assigns
 
   # A treemap fills the SVG. The label of the frame takes a row at the top.
   defp layout(%{kind: :treemap} = assigns) do
