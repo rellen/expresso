@@ -1,7 +1,8 @@
 # The chart element
 
-The `chart` element draws a bar chart, a line chart, a pie chart, a treemap, a sunburst or a
-sankey from numbers in the deck or in a CSV file. The document holds the chart as SVG, so it needs no script and it prints.
+The `chart` element draws a chart from numbers in the deck or in a CSV file.
+[The kinds](#the-kinds) gives each kind of chart. The document holds the chart as SVG, so the
+chart needs no script, and it prints.
 
 ```elixir
 slide "orders" do
@@ -24,16 +25,16 @@ end
 | --- | --- | --- |
 | The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst` or `:sankey` | The kind of the chart. |
 | `title` | A string, required | The name of the chart for a screen reader, and the caption of its table. |
-| `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels, and a category of a sankey is a path of nodes. |
+| `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels. A category of a chart of flows is a path of nodes. |
 | `category_label` | A string | The name of the categories, such as `"Year"`. See [the names of the axes](#the-names-of-the-axes). A chart with `src` takes the first heading of its file. |
 | `value_label` | A string | The name of the values, such as `"Widgets an hour"`. See [the names of the axes](#the-names-of-the-axes). |
 | `src` | The path of a CSV file or a TSV file | The categories and the series, in place of `categories` and `series`. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. |
 | `delimiter` | One character, such as `";"` | The character between two cells of the `src` file. The default is a tab for a file that ends in `.tsv`, and a comma for each other file. Requires `src`. |
 | `values` | `true` or `false` | Show the value of each bar. The default is `true`. |
-| `reveal` | `true` or `false` | Show each series at its own step, or the links of a sankey one column at a time. The default is `false`. A pie takes no `reveal`. |
+| `reveal` | `true` or `false` | Show each series at its own step. A chart of flows has its own steps, which [reveal](#reveal) gives. The default is `false`. A pie takes no `reveal`. |
 | `dim` | `true` or `false` | Dim each series when a later series shows. The default is `false`. |
 | `separator` | A string | The text between two levels of a category of a treemap or a sunburst. The default is `"/"`. |
-| `levels` | A list of strings | The headings of the columns of the CSV file that hold the levels of the categories of a treemap or a sunburst, from the top level down, or the nodes of each path of a sankey. Requires `src`. |
+| `levels` | A list of strings | The headings of the CSV columns that hold the levels of a treemap or a sunburst, from the top level down. For a chart of flows, the headings of the CSV columns that hold the nodes of each path. Requires `src`. |
 | `frames` | A string | The heading of the column of the CSV file that names the frame of each row. Requires `src`. |
 | `frame_label` | `:top_right`, `:top_left` or `:none` | The place of the label of the frame in a chart with frames. The default is `:top_right`. |
 | `sort` | `true` or `false` | Put the categories of a bar chart in order of their totals, from the largest, in each frame. The default is `false`. |
@@ -148,7 +149,7 @@ first frame. The numbers with `count true` need the script of the presenter.
 | `:pie` | Exactly one. Each category is a slice, from the top and clockwise. | The name and the part in percent of each slice, in a legend at the right. |
 | `:treemap` | Exactly one. Each category is a box, and a group holds its parts. | The name and the value of each part, and the name of each group in a strip at its top. |
 | `:sunburst` | Exactly one. Each level of the groups is a ring, and each category is an arc of the outer rings. | The name of each arc, and the part in percent of each group of the top level, in a legend at the right. |
-| `:sankey` | Exactly one. Each category is a path of nodes, and its value flows along each link of the path. | The name and the value of each node, at its right, or at its left in the last column. |
+| `:sankey` | Exactly one. Each category is a path of nodes, and its value goes along each link of the path. | The name and the value of each node. See [the labels](#the-labels). |
 
 A bar chart and a line chart have one axis, which starts at zero and holds each value, with
 approximately five round ticks. The axis stays the same at each step, so it does not move
@@ -190,10 +191,16 @@ A treemap divides its box into rectangles that are close to squares. A sunburst 
 its center, and each level is a ring of the same width. A treemap with frames has the label of
 the frame in a row above the boxes.
 
-## The flows of a sankey
+## The charts of flows
 
-A `flow` entity gives one flow of a sankey: the node where it starts, the node where it ends,
-and its value. A sankey with flows holds no `categories`, no `series` and no `src`:
+A **chart of flows** shows how an amount goes between the nodes of a graph. A sankey is a
+chart of flows. In this section, a **flow** is an item of the data, and a **link** is the mark
+that shows one or more flows.
+
+### The flows
+
+A `flow` entity gives one flow: the node where it starts, the node where it ends, and its
+value. A chart with flows holds no `categories`, no `series` and no `src`:
 
 ```elixir
 slide "energy" do
@@ -213,37 +220,53 @@ end
 | The second argument | A string | The node where the flow ends. |
 | The third argument | A number, zero or more | The value of the flow. |
 
-The categories and one series give the same data. A category is a path of two nodes or more,
-such as `["Coal", "Electricity"]`, `"Gas/Electricity/Homes"` with the `separator`, or a row
-of a CSV file with the `levels` option. Its value flows along each link of the path. The
-values of the same link add, and the table for a screen reader holds one row for each link,
-with the headers "From", "To" and the `value_label`, or "Value".
+The categories and one series give the same data. A category is a path of two nodes or more.
+Examples are `["Coal", "Electricity"]`, `"Gas/Electricity/Homes"` with the `separator`, and a
+row of a CSV file with the `levels` option. The value of a category goes along each link of
+its path. The values of the same link add. A name is one node in the whole chart.
 
-These rules give the layout:
+The table for a screen reader holds one row for each link. Its headers are "From", "To" and
+the `value_label`, or "Value".
+
+### The layout of a sankey
+
+The layout obeys these rules:
 
 1. A node with no flow into it is in the first column. Each other node is one column after
-   its furthest source, so a link can skip a column.
-2. The height of a node is the larger of the flow into it and the flow out of it. Each
-   column is in the middle of the height of the chart.
+   its last source. Thus a link can go across a column.
+2. The height of a node is the larger of the flow into it and the flow out of it. One scale
+   sets the height of each node. The nodes of each column are in the vertical middle of the
+   chart.
 3. The nodes of a column have the order of the data. At each node, the links have the order
    of the nodes at their other ends, so few links cross.
-4. A link is a ribbon between two Bézier curves. It leaves and enters each node level, and
-   its height is its value at each point.
+4. A link is a ribbon between two Bézier curves. It leaves and enters each node
+   horizontally, and its height is its value at each point.
 
-A node has a color of the theme, in the order of the nodes, and a link has a tint of the
-color of its source. A label shows only when its node is 16 units high or more. A name is
-one node in the whole chart.
+A node has a color of the theme, in the order of the nodes. A link has a light color, made
+from the color of its source and the color of the background.
 
-A `frame` of a sankey holds `flow` entities, or one series. The frames share the columns,
-the order and the colors of the nodes, from the links of each frame together, and one scale
-for the heights. A link that a frame does not hold has the value 0 in it, and a node or a link
-with no value in a frame does not show in that frame. The chart has one layer for each frame,
-and the layers fade from one frame to the next, so the links do not move. The table has a
-column for each frame.
+### The labels
 
-With `reveal true`, the chart has one series for each column of the sources of the links.
-The links of a column show at their own step, and a node shows with the first link that
-touches it. `dim true` dims the links of a column when a later column shows.
+A label shows the name of its node and, with `values true`, its value. A label shows only when
+its node is 16 units high or more.
+
+### The frames of a chart of flows
+
+A `frame` holds `flow` entities, or one series. The frames share these items:
+
+- the columns, the order and the colors of the nodes, from the links of all the frames;
+- one scale for the heights.
+
+A frame that does not hold a link has the value 0 for it. A node or a link with no value in a
+frame does not show in that frame. The chart has one layer for each frame, and the links do
+not move. At each step, the opacity of the previous layer decreases to 0, and the opacity of
+the next layer increases to 1. The table has a column for each frame.
+
+### Reveal
+
+With `reveal true`, a sankey has one series for each source column of the links. The links of
+a column show at their own step. A node shows with the first link that touches it. `dim true`
+dims the links of a column when a later column shows.
 
 ## The CSV file
 
@@ -319,16 +342,15 @@ The compiler gives an error for these:
 - `delimiter` without `src`, and a `delimiter` that is not one character, or that is a
   quote or a line break;
 - a `thumbnail` with the number of a frame that the chart does not have;
-- a `flow` in a chart that is not a sankey, and a sankey with flows and also `categories`,
-  a `series` or `src`;
-- a sankey with more than one series, with the effect `:grow` or with `count`, and a sankey
-  with frames and `reveal`;
-- a flow in a frame of a chart that is not a sankey, and a frame of a sankey with flows and a
-  series;
-- a category of a sankey with one node, a node with no name, a flow from a node to the same
-  node, a negative value, and flows that make a loop. The message of a loop names its
-  nodes;
-- a sankey with `levels` that names one column.
+- a `flow` in a chart that is not a chart of flows, also in a frame;
+- a chart of flows with flows and also `categories`, a `series` or `src`;
+- a frame with flows and also a series;
+- a chart of flows with more than one series, with the effect `:grow` or with `count`;
+- a chart of flows with frames and `reveal`;
+- a category with one node, a node with no name, a flow from a node to the same node, and a
+  negative value;
+- flows that make a loop. The message names the nodes of the loop;
+- a chart of flows with `levels` that names one column.
 
 The compiler gives an error for a file that it cannot read, for a quote with no closing
 quote, for text after a closing quote, and for a row with a cell that is not a number. The
@@ -351,15 +373,22 @@ for the heading.
 ## The HTML
 
 The document writes a `figure` element with the classes `chart` and `chart-bar`,
-`chart-line`, `chart-pie`, `chart-treemap`, `chart-sunburst` or `chart-sankey`. It holds an `svg` element with `role="img"` and the `title`
-as its `aria-label`, and a `table` with the class `chart-table` that holds each value. The
-style sheet hides the table from the eye and not from a screen reader. The table has a
-column header for each series and a row header for each category. Its top left corner is a
-`td` cell, because it names nothing. Each series is a `g` element with the class
-`chart-series`. A node of a sankey is a `rect` with the class `chart-node`, and a link is a
-`path` with the class `chart-link`. A sankey with frames has a `g` element with the class
-`chart-layer` for each frame. The labels of the nodes of a series are in a `g` element
-with the class `chart-labels` after each series, with the same steps.
+`chart-line`, `chart-pie`, `chart-treemap`, `chart-sunburst` or `chart-sankey`. It holds an
+`svg` element with `role="img"` and the `title` as its `aria-label`. It also holds a `table`
+with the class `chart-table` that holds each value. The style sheet hides the table from the
+eye and not from a screen reader. The table has a column header for each series and a row
+header for each category. Its top left corner is a `td` cell, because it names nothing. Each
+series is a `g` element with the class `chart-series`.
+
+A chart of flows writes these elements:
+
+| Mark | Element | Classes |
+| --- | --- | --- |
+| A node | `rect` | `chart-node` and `chart-c1` to `chart-c8` |
+| A link | `path` | `chart-link` |
+| The labels of a series | `g`, after the series, with the same steps | `chart-labels` |
+| A label | `text` | `chart-node-label` |
+| A frame | `g` | `chart-layer` |
 
 A chart with frames or with the effect `:grow` has a `data-el` attribute. Its marks have the
 class `chart-mark`, `chart-segment`, `chart-arc` or `chart-gap`, and the label of the frame

@@ -373,13 +373,13 @@ defmodule Expresso.Element.Chart.Motion do
     )
   end
 
-  # The label of the frame, in the row of the legend. Each frame has a copy,
-  # and the copies fade.
   @doc """
   Draw the label of the frame that shows, at the top of the chart
 
-  A chart of one frame, and a chart with `frame_label: :none`, has no label.
-  The label has one copy for each frame, and the copies fade.
+  A chart of one frame has no label, and a chart with `frame_label: :none`
+  has no label. The label has one copy for each frame. At each step, the
+  opacity of one copy changes to 0, and the opacity of the next copy
+  changes to 1.
   """
   @spec frame_label(map()) :: Phoenix.HTML.safe()
   def frame_label(%{frame_label: :none} = assigns), do: empty(assigns)

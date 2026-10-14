@@ -1331,37 +1331,38 @@ are the reasons for this design:
 - **A label shows only when it fits.** The renderer estimates the width of the text of each
   label in each frame, and a channel hides a label that does not fit.
 
-### The sankey
+### The charts of flows
 
-A sankey shows how an amount flows between the nodes of a graph.
-`Expresso.Element.Chart.Sankey` builds the links, places the nodes and draws them. These are
-the reasons for this design:
+A chart of flows shows how an amount goes between the nodes of a graph. A sankey is a chart
+of flows. `Expresso.Element.Chart.Sankey` makes the links, places the nodes and draws them.
+These are the reasons for this design:
 
-- **A category holds a path.** A category such as `["Coal", "Electricity"]` is a link, and a
+- **A category holds a path.** A category such as `["Coal", "Electricity"]` is a link. A
   longer path is a link for each pair of neighbors. Therefore the categories, the one series
   and the `levels` option of a CSV file give the data, as for a treemap. The same reader
-  takes an edge list and the records of an alluvial chart. The `flow` entity is a short form,
-  and the check turns the flows into categories and a series.
+  reads a list of flows and the records of a path. The `flow` entity is a short form. The
+  check (`Expresso.Element.Chart.check/1`) changes the flows into categories and a series.
 - **The check adds the links.** The check adds the values of the same link, and it keeps one
-  category for each link. The table for a screen reader then has one row for each link.
+  category for each link. Thus the table for a screen reader has one row for each link.
 - **Reveal makes a series for each column.** With `reveal true`, the check divides the one
-  series into one series for each column of the sources of the links. The steps, `dim` and
-  the overlay options of a series then apply to a column of links, with no new mechanism.
+  series into one series for each source column. The steps, `dim` and the overlay options of
+  a series then apply to a column of links. No new mechanism is necessary.
 - **A ribbon, and not a thick stroke.** A link is a closed shape between two cubic Bézier
-  curves, with the control points at the middle of the two columns. A stroke has its width at
-  a right angle to the curve, so a steep link looks thinner than its value. A ribbon has its
-  value as its height at each point.
-- **The labels are above the links.** The labels of the nodes of each series are in a group
-  of their own after each series, with the same steps. A later column of links therefore
-  does not cover a label. A label has a halo in the color of the background.
+  curves. The control points are at the middle between the two columns. A stroke has its
+  width at a right angle to the curve, so a steep link looks thinner than its value. A ribbon
+  has its value as its height at each point.
+- **The labels are above the links.** The node labels of each series are in a group after
+  the series, with the same steps. Thus a later column of links does not cover a label. A
+  label has a halo in the color of the background.
 - **No loop.** A loop has no first column, so the check refuses it and names its nodes.
-- **The frames fade, and they do not move.** A link is a curve, and a transform cannot change
-  the curve from one frame to the next, so the channels of the other charts cannot move it.
-  The CSS property `d` can, but Safari does not support it, and Safari would then show the
-  links of the first frame at each step. Therefore the chart draws one layer for each frame,
-  and the channel `--k<n>` gives the opacity of each layer, as for the texts of the other
-  charts that change. The frames share the columns, the order of the nodes and one scale, so
-  a node stays in its place. A sankey takes no effect `:grow`, for the same reason.
+- **The frames change their opacity, and they do not move.** A link is a curve. A transform
+  cannot change a curve between two frames, so the channels of the other charts cannot move
+  a link. The CSS property `d` can change a curve, but Safari does not support it. Safari
+  would then show the links of the first frame at each step. Therefore the chart draws one
+  layer for each frame. The channel `--k<n>` sets the opacity of each layer, as it does for
+  the texts of the other charts that change. The frames share the columns, the order of the
+  nodes and one scale, so a node stays in its place. For the same reason, a sankey takes no
+  effect `:grow`.
 
 ### The motion of a chart
 
