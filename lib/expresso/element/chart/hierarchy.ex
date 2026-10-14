@@ -436,7 +436,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
   end
 
   defp box_style(part, scene) do
-    channel = fn name, key -> Motion.ref("#{name}#{part.id}", boxes(scene, part, key)) end
+    channel = fn name, key -> Motion.ref("#{name}#{part.id}", places(scene, part, key)) end
 
     Motion.style([
       {"--chart-u", channel.("rx", :x)},
@@ -446,9 +446,12 @@ defmodule Expresso.Element.Chart.Hierarchy do
     ])
   end
 
-  defp boxes(scene, part, key),
+  # The value of a key of the place of a part in each frame: of its box in a
+  # treemap, or of its arc in a sunburst.
+  defp places(scene, part, key),
     do: Enum.map(scene.places, &(&1 |> Map.fetch!(part.id) |> Map.fetch!(key)))
 
+  # 1 in each frame where the label of a part fits its place, else 0.
   defp shown(scene, part) do
     Enum.map(scene.places, &if(Map.fetch!(&1, part.id).label, do: 1, else: 0))
   end
@@ -464,8 +467,8 @@ defmodule Expresso.Element.Chart.Hierarchy do
 
     style =
       Motion.style([
-        {"--chart-u", Motion.ref("rx#{part.id}", boxes(scene, part, :x))},
-        {"--chart-v", Motion.ref("ry#{part.id}", boxes(scene, part, :y))},
+        {"--chart-u", Motion.ref("rx#{part.id}", places(scene, part, :x))},
+        {"--chart-v", Motion.ref("ry#{part.id}", places(scene, part, :y))},
         {"--chart-h", Motion.ref("ro#{part.id}", shown(scene, part))}
       ])
 
@@ -532,9 +535,9 @@ defmodule Expresso.Element.Chart.Hierarchy do
                      " " <>
                      Motion.style([
                        {"--chart-v",
-                        Motion.grow(Motion.ref("sl#{part.id}", arcs(scene, part, :length)), 0)},
+                        Motion.grow(Motion.ref("sl#{part.id}", places(scene, part, :length)), 0)},
                        {"--chart-w",
-                        Motion.grow(Motion.ref("sa#{part.id}", arcs(scene, part, :start)), 0)}
+                        Motion.grow(Motion.ref("sa#{part.id}", places(scene, part, :start)), 0)}
                      ])
         end
 
@@ -549,7 +552,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
                    " " <>
                    Motion.style([
                      {"--chart-w",
-                      Motion.grow(Motion.ref("sa#{part.id}", arcs(scene, part, :start)), 0)}
+                      Motion.grow(Motion.ref("sa#{part.id}", places(scene, part, :start)), 0)}
                    ])
         end
 
@@ -557,9 +560,9 @@ defmodule Expresso.Element.Chart.Hierarchy do
           g class: "chart-mark chart-label",
             style:
               Motion.style([
-                {"--chart-u", Motion.ref("su#{part.id}", arcs(scene, part, :x))},
-                {"--chart-v", Motion.ref("sv#{part.id}", arcs(scene, part, :y))},
-                {"--chart-h", Motion.ref("so#{part.id}", sun_shown(scene, part))}
+                {"--chart-u", Motion.ref("su#{part.id}", places(scene, part, :x))},
+                {"--chart-v", Motion.ref("sv#{part.id}", places(scene, part, :y))},
+                {"--chart-h", Motion.ref("so#{part.id}", shown(scene, part))}
               ]) do
             text x: 0, y: 6, text_anchor: "middle", class: "chart-part" do
               part.name
@@ -596,11 +599,4 @@ defmodule Expresso.Element.Chart.Hierarchy do
   end
 
   defp middle(part, ring), do: @hole + (part.depth - 0.5) * ring
-
-  defp arcs(scene, part, key),
-    do: Enum.map(scene.places, &(&1 |> Map.fetch!(part.id) |> Map.fetch!(key)))
-
-  defp sun_shown(scene, part) do
-    Enum.map(scene.places, &if(Map.fetch!(&1, part.id).label, do: 1, else: 0))
-  end
 end

@@ -30,7 +30,7 @@ defmodule Expresso.Element.Chart.Chord do
   import Temple
   use Temple.Component
 
-  alias Expresso.Element.Chart.{Motion, Plot, Sankey}
+  alias Expresso.Element.Chart.{Layers, Plot, Sankey}
 
   # The box of the chart in the units of the SVG, the width of the ring, the
   # gap between two arcs in radians, the room for a label outside the ring,
@@ -167,7 +167,7 @@ defmodule Expresso.Element.Chart.Chord do
   end
 
   defp color(name, shared) do
-    rem(Enum.find_index(shared.appearance, &(&1 == name)), 8) + 1
+    shared.appearance |> Enum.find_index(&(&1 == name)) |> Layers.color()
   end
 
   defp arc({name, start, stop}, links, total, shared) do
@@ -243,51 +243,11 @@ defmodule Expresso.Element.Chart.Chord do
   def render(%{frames: frames} = assigns) do
     layouts =
       frames
-      |> Enum.map(&links(assigns.categories, &1.values))
+      |> Enum.map(&Layers.links(assigns.categories, &1.values))
       |> layout(assigns.box.top, assigns.node_settings)
 
-    layers =
-      for {layout, k} <- Enum.with_index(layouts, 1),
-          do: {k, Map.merge(layout, %{numbered: numbered(assigns, k), values: assigns.values})}
-
-    assigns = Map.put(assigns, :layers, layers)
-
-    temple do
-      Motion.frame_label(assigns)
-
-      if length(@layers) == 1 do
-        c(&drawing/1, rest!: @layers |> hd() |> elem(1))
-      else
-        for {k, layer} <- @layers do
-          g class: "chart-layer chart-fade",
-            style: "opacity: var(--k#{k}, #{if k == 1, do: 1, else: 0});" do
-            c(&drawing/1, rest!: layer)
-          end
-        end
-      end
-    end
+    Layers.render(assigns, layouts, &drawing/1)
   end
-
-  # The link of each category in the series that holds its value. `values`
-  # holds the values of each series.
-  defp links(categories, values) do
-    for {[from, to], index} <- Enum.with_index(categories),
-        {series, number} <- Enum.with_index(values, 1),
-        value = Enum.at(series, index),
-        value > 0,
-        do: %{from: from, to: to, value: value, series: number}
-  end
-
-  # Each series with its number from 1. A layer after the first has no morph
-  # key, so the morph between two slides finds one copy of each mark.
-  defp numbered(assigns, 1), do: Enum.with_index(assigns.series, 1)
-
-  defp numbered(assigns, _layer) do
-    for {series, number} <- Enum.with_index(assigns.series, 1),
-        do: {%{series | overlay: no_morph(series.overlay)}, number}
-  end
-
-  defp no_morph(overlay), do: Enum.reject(overlay, &(elem(&1, 0) == "data-morph-key"))
 
   defp drawing(assigns) do
     temple do
