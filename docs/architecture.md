@@ -1331,6 +1331,33 @@ are the reasons for this design:
 - **A label shows only when it fits.** The renderer estimates the width of the text of each
   label in each frame, and a channel hides a label that does not fit.
 
+### The sankey
+
+A sankey shows how an amount flows between the nodes of a graph.
+`Expresso.Element.Chart.Sankey` builds the links, places the nodes and draws them. These are
+the reasons for this design:
+
+- **A category holds a path.** A category such as `["Coal", "Electricity"]` is a link, and a
+  longer path is a link for each pair of neighbors. Therefore the categories, the one series
+  and the `levels` option of a CSV file give the data, as for a treemap. The same reader
+  takes an edge list and the records of an alluvial chart. The `flow` entity is a short form,
+  and the check turns the flows into categories and a series.
+- **The check adds the links.** The check adds the values of the same link, and it keeps one
+  category for each link. The table for a screen reader then has one row for each link.
+- **Reveal makes a series for each column.** With `reveal true`, the check divides the one
+  series into one series for each column of the sources of the links. The steps, `dim` and
+  the overlay options of a series then apply to a column of links, with no new mechanism.
+- **A ribbon, and not a thick stroke.** A link is a closed shape between two cubic Bézier
+  curves, with the control points at the middle of the two columns. A stroke has its width at
+  a right angle to the curve, so a steep link looks thinner than its value. A ribbon has its
+  value as its height at each point.
+- **The labels are above the links.** The labels of the nodes of each series are in a group
+  of their own after each series, with the same steps. A later column of links therefore
+  does not cover a label. A label has a halo in the color of the background.
+- **No loop, no frames.** A loop has no first column, so the check refuses it and names its
+  nodes. A sankey takes no frames and no effect `:grow` in this version, because a link
+  would need channels for the six numbers of its path.
+
 ### The motion of a chart
 
 A chart with frames moves its marks from the values of one frame to the values of the next,

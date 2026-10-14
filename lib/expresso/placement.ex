@@ -23,6 +23,7 @@ defmodule Expresso.Placement do
     Columns,
     Diagram,
     Embed,
+    Flow,
     Footnote,
     Frame,
     Icon,
@@ -83,7 +84,7 @@ defmodule Expresso.Placement do
     Item => [elements: [List]],
     Table => [elements: [Row]],
     Diagram => [elements: [Part]],
-    Chart => [elements: [Series], timeline: [Frame]],
+    Chart => [elements: [Series], timeline: [Frame], flows: [Flow]],
     Frame => [elements: [Series]],
     Code => [elements: [Lines]],
     Toc => [elements: [TocEntry]]

@@ -97,6 +97,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "chart-grow", deck: "chart_grow.exs", actions: ["j"]},
     %{name: "chart-treemap", deck: "chart_treemap.exs", actions: ["j"]},
     %{name: "chart-sunburst", deck: "chart_sunburst.exs", actions: ["j"]},
+    %{name: "chart-sankey", deck: "chart_sankey.exs", actions: ["j", "j"]},
     %{name: "chart-levels", deck: "chart_levels.exs", still: true},
     %{name: "chart-tsv", deck: "chart_tsv.exs", still: true},
     %{name: "chart-labels", deck: "chart_labels.exs", still: true},
