@@ -19,7 +19,6 @@ defmodule Expresso.Extension do
   @speed {:or, [{:in, [:fast, :normal, :slow]}, :pos_integer]}
 
   # A template is a module, or a built-in template such as {:builtins, :default}.
-  @template {:or, [{:tuple, [{:in, [:builtins]}, :atom]}, :atom]}
   @easings [:ease_in_out, :ease_out, :linear, :spring]
 
   @overlay_schema [
@@ -972,7 +971,7 @@ defmodule Expresso.Extension do
           "The title of the section that starts at this slide. The section runs to the next slide with a section. A toc lists the sections. See docs/reference/toc-element.md."
       ],
       template: [
-        type: @template,
+        type: {:custom, Expresso.Template, :validate, [:slide]},
         doc:
           "The slide template: a module, or {:builtins, name}. See docs/architecture.md. The default is {:builtins, :default}."
       ],
@@ -1122,12 +1121,12 @@ defmodule Expresso.Extension do
           "Show the number of each slide and the number of slides, such as 3 / 12, in a corner of the slide. Slide 1 shows no number."
       ],
       template: [
-        type: @template,
+        type: {:custom, Expresso.Template, :validate, [:deck]},
         doc:
           "The deck template, which gives the header and the footer: a module, or {:builtins, name}. See docs/architecture.md. The default is {:builtins, :default}."
       ],
       slide_template: [
-        type: @template,
+        type: {:custom, Expresso.Template, :validate, [:slide]},
         doc:
           "The slide template of each slide without a template option: a module, or {:builtins, name}. See docs/reference/template-option.md. The default is {:builtins, :default}."
       ],

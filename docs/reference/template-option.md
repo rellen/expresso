@@ -23,13 +23,20 @@ slide. For the steps, see [Make templates of your own](../how-to/make-templates.
 | `{:builtins, :default}` | The built-in template. It is the only built-in template at this time. |
 | A module, such as `MySlideTemplate` | That module. |
 
-The DSL refuses a value of a different type. The module must exist when the deck renders.
-A module that does not exist gives an `UndefinedFunctionError` at render.
+The DSL and `Expresso.Builder` refuse a value of a different type, and a built-in template
+that does not exist, such as `{:builtins, :fancy}`. The error names the built-in templates.
+
+The module must exist when the deck renders, and it must define the functions of its kind.
+At render, a module that is not loaded, or that does not define a function, gives an
+`ArgumentError` with the reason, such as
+`the slide template MyTemplate has no render/1`.
 
 ## A deck template
 
 A deck template uses `Expresso.Template.Deck`, and it defines `header/1` and `footer/1`.
-Each function takes the assigns `@deck` and `@slide`, and it returns HTML from Temple:
+Each function takes the assigns `@deck` and `@slide`, and it returns HTML from Temple. The
+template can call `c/2` with a component. The compiler gives a warning for a deck template
+without `header/1` or `footer/1`:
 
 ```elixir
 defmodule MyDeckTemplate do
@@ -62,7 +69,9 @@ each deck template.
 
 A slide template uses `Expresso.Template`, and it defines `render/1`. The function takes
 the assigns `@name`, `@metadata` and `@elements` of the slide.
-`Expresso.Template.render_elements/1` writes the elements:
+`Expresso.Template.render_elements/1` writes the elements. `use Expresso.Template` declares
+the behaviour `Expresso.Template.Slide`, so the compiler gives a warning for a slide
+template without `render/1`:
 
 ```elixir
 defmodule MySlideTemplate do
