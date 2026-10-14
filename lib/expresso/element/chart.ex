@@ -28,15 +28,17 @@ defmodule Expresso.Element.Chart do
   `:grow`, moves its marks: `Expresso.Element.Chart.Motion` draws them.
   `docs/reference/chart-element.md` gives the rules.
 
-  A category of a sankey is a path of nodes, and `flow` entities give the
-  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws it. With
-  `reveal true`, the check makes one series for each column of links, so the
-  links show one column at a time. An alluvial chart is a sankey with one
-  node for each name in each column: the place of a name in its path gives
-  its column. A parallel sets chart has the nodes of an alluvial chart, and
-  `Expresso.Element.Chart.ParallelSets` draws each category as one ribbon
-  through the columns. A chord chart takes the flows of a sankey, and
-  `Expresso.Element.Chart.Chord` draws its nodes on a circle.
+  A category of a sankey is a path of nodes. The `flow` entities give the
+  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws a
+  sankey. With `reveal true`, the check makes one series for each step: a
+  source column of the links in a sankey or an alluvial chart, a node of the
+  first column in a parallel sets chart, and a source in a chord chart. An
+  alluvial chart is a sankey with one node for each name in each column. The
+  place of a name in its path sets its column. A parallel sets chart has the
+  nodes of an alluvial chart. `Expresso.Element.Chart.ParallelSets` draws
+  each of its categories as one ribbon through the columns. A chord chart
+  takes the flows of a sankey. `Expresso.Element.Chart.Chord` draws its
+  nodes as arcs of a ring.
   """
 
   use Expresso.Element
@@ -575,7 +577,7 @@ defmodule Expresso.Element.Chart do
 
       chart.kind != :sankey and Enum.any?(nodes, &(&1.column != nil)) ->
         {:error,
-         "only a sankey puts a node in a column of your choice, " <>
+         "only a sankey takes the column option of a node entity, " <>
            "so a node entity of #{named(chart.kind)} takes no column option"}
 
       true ->
@@ -596,7 +598,7 @@ defmodule Expresso.Element.Chart do
       do: :ok,
       else:
         {:error,
-         "the levels option of #{if kind == :alluvial, do: "an alluvial chart", else: "a parallel sets chart"} " <>
+         "the levels option of #{named(kind)} " <>
            "gives a title for each column, " <>
            "so give #{count} titles"}
   end
@@ -637,8 +639,9 @@ defmodule Expresso.Element.Chart do
     end)
   end
 
-  # The series of a chord chart with reveal: one series for each source, with
-  # the value of the links from it, and zero for each other link.
+  # The series of a chord chart with reveal: one series for each source. Each
+  # series holds the values of the links from its source, and zero for each
+  # other link.
   defp stages(links, %Series{} = series, :chord) do
     for source <- links |> Enum.map(& &1.from) |> Enum.uniq() do
       values = Enum.map(links, &if(&1.from == source, do: &1.value, else: 0))
@@ -648,9 +651,9 @@ defmodule Expresso.Element.Chart do
 
   defp stages(links, series, _kind), do: stages(links, series)
 
-  # The series of a sankey with reveal: one series for each column of the
-  # sources of the links. Each series holds the value of the links of its
-  # column, and zero for each other link.
+  # The series of a sankey with reveal: one series for each source column.
+  # Each series holds the values of the links that start in its column, and
+  # zero for each other link.
   defp stages(links, %Series{} = series) do
     columns = Sankey.columns(links)
     stages = links |> Enum.map(&columns[&1.from]) |> Enum.uniq() |> Enum.sort()

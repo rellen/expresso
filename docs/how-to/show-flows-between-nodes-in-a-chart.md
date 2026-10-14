@@ -317,6 +317,51 @@ Each ribbon has the color of its node in the first column. With `reveal true`, t
 first. Then the ribbons of each node in the first column show at their own step. The `levels`
 option, a CSV file, frames and node entities work as in an alluvial chart.
 
+## Show flows in two directions in a chord chart
+
+Use a chord chart when the flows go in two directions between the same nodes. An example is
+the people who move between cities.
+
+1. Write a `chart` element with the kind `:chord`.
+2. Write a `flow` entity for each flow, as for a sankey.
+3. To show the flows of one source at each step, add `reveal true`.
+
+```elixir
+defmodule Examples.ChartChord do
+  use Expresso
+
+  slide "moves" do
+    heading "Who moved where"
+
+    chart :chord do
+      title "The people that moved between four cities in a year, in thousands"
+      value_label "Thousands"
+      reveal true
+
+      flow "Northport", "Eastbury", 42
+      flow "Northport", "Southvale", 18
+      flow "Northport", "Westford", 25
+      flow "Eastbury", "Northport", 30
+      flow "Eastbury", "Southvale", 12
+      flow "Southvale", "Northport", 22
+      flow "Southvale", "Westford", 35
+      flow "Westford", "Northport", 15
+      flow "Westford", "Eastbury", 20
+      flow "Westford", "Southvale", 10
+    end
+  end
+end
+
+Examples.ChartChord
+```
+
+![A chord chart of four cities on a ring, with a chord for each move between two cities, and the chords of each city at their own step](https://raw.githubusercontent.com/rellen/expresso/media/chart-chord.gif)
+
+Each node is an arc of a ring, and each flow is a chord between two arcs. With `reveal true`,
+the ring shows first. Then the chords of each source show at their own step. Frames, node
+entities, the `levels` option and a CSV file work as in a sankey. For the rules, see
+[a chord chart](../reference/chart-element.md#a-chord-chart).
+
 ## Show a loop
 
 Use a loop to show an amount that goes back to an earlier node, such as the steel that a mill

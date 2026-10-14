@@ -1376,6 +1376,12 @@ These are the reasons for this design:
 - **The labels are above the links.** The node labels of each series are in a group after
   the series, with the same steps. Thus a later column of links does not cover a label. A
   label has a halo in the color of the background.
+- **A chord chart puts the nodes on a ring.** `Expresso.Element.Chart.Chord` takes the
+  flows, the node entities and the table of a sankey. Only the drawing is different. An arc
+  holds the flows out of its node, then the flows into it, so a chord has a width at each end.
+  The ends in an arc have the counterclockwise order of the other nodes. Thus the chords of an
+  arc do not cross. The arcs are outside the series, as in a parallel sets chart. Thus
+  `reveal` adds the chords of one source at each step.
 - **A loop has back links.** A loop has no first column. A depth-first search in the order of
   the data finds the links that close each loop. The layout finds the columns from the other
   links. A back link goes from the right side of its source, through a lane under the nodes,

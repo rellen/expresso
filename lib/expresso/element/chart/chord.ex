@@ -1,25 +1,25 @@
 defmodule Expresso.Element.Chart.Chord do
   @moduledoc """
   Draws a chord chart: the flows between the nodes of a graph, with the
-  nodes on a circle
+  nodes on a ring
 
   A chord chart takes the flows of a sankey, as `flow` entities, categories
-  and one series, or a CSV file. It suits flows in each direction between
-  the same nodes, such as the trade between countries, which a sankey can
-  show only with loops.
+  and one series, or a CSV file. Use it for flows in the two directions
+  between the same nodes, such as the trade between countries. A sankey can
+  show these flows only with loops.
 
   The layout has these rules:
 
   1. Each node is an arc of a ring, from the top and clockwise, in the order
      of the data or the `order` of its node entity. The length of the arc is
-     the flow out of the node and the flow into it together.
-  2. One scale gives the angles of each frame, so a smaller total in a later
-     frame leaves a gap at the end of the ring.
+     the sum of the flow out of the node and the flow into it.
+  2. One scale sets the angles in all the frames. Thus a smaller total in a
+     later frame leaves an empty part at the end of the ring.
   3. A flow is a chord between the arcs of its two nodes. It has the width of
-     its value at each end, and two quadratic Bézier curves through the
-     middle of the circle join the two ends. At its source, a chord is in the
-     part of the arc for the flows out, and at its target, in the part for
-     the flows in.
+     its value at each end. Two quadratic Bézier curves join the two ends,
+     with their control point at the center of the ring. At its source, a
+     chord is in the part of the arc for the flows out. At its target, it is
+     in the part for the flows in.
   4. A chord has the color of its source.
 
   `render/1` draws each series as a group with its chords. The arcs and their
@@ -136,8 +136,8 @@ defmodule Expresso.Element.Chart.Chord do
   end
 
   # The span of each end of each chord. In the arc of a node, the flows out
-  # come first, then the flows in. Each part has the order of the other
-  # nodes from the last on the ring to the next, so the chords of an arc do
+  # come first, then the flows in. Each part has the counterclockwise order
+  # of the other nodes, from the nearest one. Thus the chords of an arc do
   # not cross.
   defp ends(links, starts, place, scale) do
     count = map_size(place)
