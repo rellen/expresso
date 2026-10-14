@@ -41,6 +41,11 @@ export function program(): Program {
   return parseProgram(element.textContent ?? "");
 }
 
+// The number of the last transition with pairs, and the transition that
+// gave each element its name.
+let transitions = 0;
+const owners = new WeakMap<Element, number>();
+
 // Run a change of the document as a transition, or run it at once. The
 // browser needs the View Transitions API, and the reader must not ask for
 // reduced motion. The kind and the direction go on the `html` element, and
@@ -51,6 +56,11 @@ export function program(): Program {
 // shows. A change with a pair fades the rest of the slide, whatever its kind,
 // because a slide or a zoom would move against the pairs. The names go away
 // at the end of the transition.
+//
+// A key press during a transition starts a second transition, and the browser
+// stops the first one. The second transition can name the partners of the
+// first one before the end of the first one, so a transition removes only
+// the names that it gave and that no later transition gave again.
 export function animate(
   change: Transition | null,
   update: () => void,
@@ -75,29 +85,39 @@ export function animate(
     document.startViewTransition(update);
     return;
   }
+  const owner = ++transitions;
   for (const pair of named) {
-    name(pair.from, pair.name);
+    name(pair.from, pair.name, owner);
   }
   const transition = document.startViewTransition(() => {
     for (const pair of named) {
-      name(pair.from, "");
+      unname(pair.from, owner);
     }
     update();
     for (const pair of named) {
       if (visible(pair.to)) {
-        name(pair.to, pair.name);
+        name(pair.to, pair.name, owner);
       }
     }
   });
   void transition.finished.finally(() => {
     for (const pair of named) {
-      name(pair.to, "");
+      unname(pair.to, owner);
     }
   });
 }
 
-function name(element: Element, value: string): void {
+function name(element: Element, value: string, owner: number): void {
   (element as HTMLElement).style.viewTransitionName = value;
+  owners.set(element, owner);
+}
+
+// Remove the name of an element, but only when the transition gave the name.
+function unname(element: Element, owner: number): void {
+  if (owners.get(element) === owner) {
+    (element as HTMLElement).style.viewTransitionName = "";
+    owners.delete(element);
+  }
 }
 
 // Read a slide by its number. A missing slide is a defect of the renderer, so

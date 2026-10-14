@@ -2071,6 +2071,12 @@ then takes the new boxes. When the transition ends, it removes the new names. Th
 element keeps a name between two transitions, and two names never occur in the document
 at the same time.
 
+A key press during a transition starts a second transition, and the browser stops the
+first one. The second transition can name a new element of the first one before the first
+one ends. Therefore `animate` gives each transition a number, and it records the
+transition that named each element. A transition removes only a name that it gave and that
+no later transition gave again.
+
 The style sheet gives each `::view-transition-group` of a morph the duration and the easing
 of the transition. The old and the new image of a group have `object-fit: contain` and the
 full height of the group, so an element that changes its aspect ratio does not show two
