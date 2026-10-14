@@ -27,12 +27,12 @@ defmodule Expresso.Element.Chart do
   `:grow`, moves its marks: `Expresso.Element.Chart.Motion` draws them.
   `docs/reference/chart-element.md` gives the rules.
 
-  A category of a sankey is a path of nodes, and `flow` entities give the
-  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws it. With
-  `reveal true`, the check makes one series for each column of links, so the
-  links show one column at a time. An alluvial chart is a sankey with one
-  node for each name in each column: the place of a name in its path gives
-  its column.
+  A category of a sankey is a path of nodes. The `flow` entities give the
+  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws a
+  sankey. With `reveal true`, the check makes one series for each source
+  column of the links, so the links show one column at a time. An alluvial
+  chart is a sankey with one node for each name in each column. The place of
+  a name in its path sets its column.
   """
 
   use Expresso.Element
@@ -533,7 +533,7 @@ defmodule Expresso.Element.Chart do
 
       chart.kind == :alluvial and Enum.any?(nodes, &(&1.column != nil)) ->
         {:error,
-         "the place of a name in its path gives its column in an alluvial chart, " <>
+         "the place of a name in its path sets its column in an alluvial chart, " <>
            "so a node entity of an alluvial chart takes no column option"}
 
       chart.kind == :alluvial ->
@@ -564,7 +564,7 @@ defmodule Expresso.Element.Chart do
       else:
         {:error,
          "the levels option of an alluvial chart gives a title for each column, " <>
-           "so it names #{count} columns"}
+           "so give #{count} titles"}
   end
 
   defp titles_check(_chart, _links), do: :ok
@@ -825,8 +825,8 @@ defmodule Expresso.Element.Chart do
   defp layout(%{kind: :pie} = assigns), do: Map.put(assigns, :legend_item, &legend_item/1)
   defp layout(%{kind: :sunburst} = assigns), do: assigns
 
-  # A sankey fills the SVG. The label of the frame takes a row at the top,
-  # and the titles of the columns of an alluvial chart take a row under it.
+  # A sankey fills the SVG. The label of the frame takes a row at the top.
+  # An alluvial chart with `levels` has a row for the column titles under it.
   defp layout(%{kind: kind} = assigns) when kind in @flows do
     rows = Enum.count([label?(assigns), Sankey.titles?(assigns)], & &1)
     top = 8 + 44 * rows

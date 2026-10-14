@@ -196,13 +196,57 @@ chart :sankey do
 end
 ```
 
-## Show the paths of records
+## Draw an alluvial chart
 
-Use paths when each record goes through more than two nodes, such as the class, the sex and
-the survival of each person.
+Use an alluvial chart to show how the same records change from one column to the next. An
+example is the answers of the same people in each year.
 
-1. Put one record, or one group of records, on each row of a CSV file.
-2. Give the columns of the path in the `levels` option, in the order of the path.
+1. Write a `chart` element with the kind `:alluvial`.
+2. Write each category as the path of a group of records, with one name for each column.
+3. Give the number of records in each group in the series.
+4. To put a title over each column, give the titles in the `levels` option.
+
+```elixir
+defmodule Examples.ChartAlluvial do
+  use Expresso
+
+  slide "commute" do
+    heading "The commute"
+
+    chart :alluvial do
+      title "How 1,000 people of the staff got to work in 2020, in 2023 and in 2026"
+      value_label "People"
+      levels ["2020", "2023", "2026"]
+      reveal true
+
+      categories [
+        ["Car", "Car", "Car"],
+        ["Car", "Car", "Train"],
+        ["Car", "Home", "Home"],
+        ["Car", "Bike", "Bike"],
+        ["Train", "Train", "Train"],
+        ["Train", "Home", "Home"],
+        ["Train", "Home", "Train"],
+        ["Bike", "Bike", "Bike"],
+        ["Bike", "Train", "Train"]
+      ]
+
+      series "People", [310, 60, 140, 50, 170, 90, 60, 90, 30]
+    end
+  end
+end
+
+Examples.ChartAlluvial
+```
+
+![An alluvial chart shows how the staff got to work in 2020, 2023 and 2026: car, train, home and bike in each column, with ribbons between them](https://raw.githubusercontent.com/rellen/expresso/media/chart-alluvial.gif)
+
+Each column has its own node for each name, so a name can go to the same name, such as "Car"
+to "Car". A sankey has one node for each name in the whole chart. Thus use `:alluvial` when the
+same name can show in two columns.
+
+A CSV file with one row for each group of records gives the same data. The `levels` option
+names the CSV columns that hold the path. Their headings are the titles of the chart columns:
 
 ```
 class,sex,survived,people
@@ -213,15 +257,12 @@ Third,Male,No,422
 ```
 
 ```elixir
-chart :sankey do
+chart :alluvial do
   title "Who survived the Titanic, by class and by sex"
   src "titanic.csv"
   levels ["class", "sex", "survived"]
 end
 ```
-
-A name is one node in the whole chart. When the same value can show in two columns, give
-each column its own names, such as "2024: Red" and "2025: Red".
 
 ## Correct a loop
 

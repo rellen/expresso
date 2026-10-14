@@ -642,7 +642,7 @@ defmodule Expresso.ChartSankeyTest do
     end
 
     test "the errors" do
-      assert_raise ArgumentError, ~r/gives a title for each column, so it names 3 columns/, fn ->
+      assert_raise ArgumentError, ~r/gives a title for each column, so give 3 titles/, fn ->
         alluvial(levels: ["2020", "2026"])
       end
 
