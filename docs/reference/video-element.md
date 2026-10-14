@@ -24,7 +24,7 @@ end
 | `title` | A string | The name of the video for a screen reader, and the text of the poster. Required. |
 | `poster` | The path of an image | The image that shows on paper, in the handout view, in the speaker view, in the overview, in the menu and while the video loads. Required. |
 | `captions` | The path of a `.vtt` file, relative to [the root option](root-option.md) of the deck | The captions of the video, in the WebVTT format. The browser shows them on the video. See "The captions". |
-| `width` | A width, such as `900px` or `60%` | The width of the video. The default is `80%`. |
+| `width` | A width, such as `900px` or `60%` | The largest width of the video. The default is `80%`. The video is narrower when the slide does not have the height for this width, as an embed is. |
 | `aspect` | A ratio, such as `"4/3"` | The ratio of the width to the height. The default is `"16/9"`. |
 | `loop` | `true` or `false` | Play the video again from the start at its end. The default is `true`. |
 | `controls` | `true` or `false` | Show the controls of the browser, so the presenter can turn the sound on. The default is `false`. |

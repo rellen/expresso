@@ -248,6 +248,32 @@ defmodule Expresso.E2E.CheckTest do
     assert small =~ "the layout at 1920 × 1080\n"
   end
 
+  # The name of the deck takes a line above the heading. The chart takes the
+  # height that is left, so it fits in a small window (issue #238).
+  @named_chart """
+  defmodule NamedChartDeck do
+    use Expresso
+
+    name "named chart deck"
+
+    slide "energy" do
+      heading "Energy in a year"
+
+      chart :bar do
+        title "Energy"
+        categories ["a", "b"]
+        series "x", [1, 2]
+      end
+    end
+  end
+  """
+
+  test "--check=layout finds no problem for a chart in a deck with a name in a small window",
+       %{tmp_dir: dir} do
+    assert {0, output} = check(dir, @named_chart, :layout, [{1280, 720}, {1920, 1080}])
+    assert output =~ "the layout at 1280 × 720 and 1920 × 1080\n"
+  end
+
   test "--check=browser checks each size in Playwright", %{tmp_dir: dir} do
     {status, output} = check(dir, @wide, :browser, [{1920, 1080}, {1024, 768}])
 

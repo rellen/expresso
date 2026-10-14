@@ -91,6 +91,7 @@ a.goto {
 }
 .slide-main {
   flex-grow: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -434,9 +435,10 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
  * color to its marks as `--series`. Text keeps the colors of text, and only a
  * mark has the color of its series. The grid and the axis are thin and in the
  * color `--muted`. A line and the edge of a mark keep their width when the
- * SVG scales. The SVG takes the width of `--chart-width` and at most the
- * height of `--chart-height`, and the chart fits inside that box. The
- * default height leaves room for the heading of the default template.
+ * SVG scales. The SVG takes the width of `--chart-width`. Its height is at
+ * most `--chart-height`, and at most the height that is left in the slide,
+ * so the chart fits under a heading and the name of the deck. The chart fits
+ * inside that box.
  */
 .chart {
   flex-grow: 1;
@@ -449,7 +451,7 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .chart svg {
   width: var(--chart-width, 80vw);
   max-width: 100%;
-  max-height: var(--chart-height, 72vh);
+  max-height: min(var(--chart-height, 72vh), 100%);
   overflow: visible;
   font-size: 20px;
 }
@@ -894,6 +896,11 @@ body[data-view="handout"] .chart-frames {
  * the slide is not high enough. The fallback image or the placeholder is
  * under the frame, so it shows while the page loads.
  *
+ * The element is a size container, so `100cqh` is the height that is left in
+ * the slide. A page of the handout view on a screen has no fixed height, so
+ * there the element is not a container, and the box uses the height of the
+ * window less the room for a heading.
+ *
  * Only the frame of the present view gets a source, so the handout view, the
  * overview and paper show the fallback, and they hide the frame. A frame that
  * is not interactive takes no click, and the click goes to the presenter.
@@ -904,15 +911,27 @@ body[data-view="handout"] .chart-frames {
   justify-content: center;
   align-items: center;
   min-height: 0;
+  container-type: size;
 }
 .embed-box {
   position: relative;
   width: min(
     var(--embed-width, 80vw),
-    calc((100vh - 6rem) * var(--embed-aspect, 16/9))
+    calc(100cqh * var(--embed-aspect, 16/9))
   );
   max-width: 100%;
   aspect-ratio: var(--embed-aspect, 16/9);
+}
+@media screen {
+  body[data-view="handout"] .embed {
+    container-type: normal;
+  }
+  body[data-view="handout"] .embed-box {
+    width: min(
+      var(--embed-width, 80vw),
+      calc((100vh - 6rem) * var(--embed-aspect, 16/9))
+    );
+  }
 }
 .embed-fallback,
 .embed-frame {

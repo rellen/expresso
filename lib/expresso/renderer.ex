@@ -304,7 +304,11 @@ defmodule Expresso.Renderer do
         c(&Expresso.Template.render_deck_template(:header, &1), deck: @deck, slide: @slide)
       end
 
-      div style: "width: 100%; flex-grow: 1; display: flex; justify-content: center;" do
+      # The body takes the height that the header and the footer leave. With
+      # `min-height: 0`, it can be shorter than its content, so an element
+      # such as a chart can fit into the height that is left.
+      div style:
+            "width: 100%; flex-grow: 1; min-height: 0; display: flex; justify-content: center;" do
         @body
       end
 
