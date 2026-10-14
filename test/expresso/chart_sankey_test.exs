@@ -60,8 +60,8 @@ defmodule Expresso.ChartSankeyTest do
           chart :sankey do
             title "Energy"
             value_label "TWh"
-            flow("Coal", "Electricity", 120)
-            flow("Electricity", "Homes", 120.5)
+            flow "Coal", "Electricity", 120
+            flow "Electricity", "Homes", 120.5
           end
         end
       end

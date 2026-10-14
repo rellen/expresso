@@ -24,14 +24,14 @@ defmodule Examples.ChartSankey do
       value_label "GWh"
       reveal true
 
-      flow("Coal", "Electricity", 120)
-      flow("Gas", "Electricity", 95)
-      flow("Gas", "Heat", 40)
-      flow("Solar", "Electricity", 30)
-      flow("Electricity", "Homes", 90)
-      flow("Electricity", "Industry", 115)
-      flow("Electricity", "Losses", 40)
-      flow("Heat", "Homes", 40)
+      flow "Coal", "Electricity", 120
+      flow "Gas", "Electricity", 95
+      flow "Gas", "Heat", 40
+      flow "Solar", "Electricity", 30
+      flow "Electricity", "Homes", 90
+      flow "Electricity", "Industry", 115
+      flow "Electricity", "Losses", 40
+      flow "Heat", "Homes", 40
     end
   end
 end
@@ -63,24 +63,24 @@ defmodule Examples.ChartSankeyFrames do
       value_label "GWh"
 
       frame "2015" do
-        flow("Coal", "Electricity", 180)
-        flow("Gas", "Electricity", 60)
-        flow("Gas", "Heat", 50)
-        flow("Electricity", "Homes", 110)
-        flow("Electricity", "Industry", 90)
-        flow("Electricity", "Losses", 40)
-        flow("Heat", "Homes", 50)
+        flow "Coal", "Electricity", 180
+        flow "Gas", "Electricity", 60
+        flow "Gas", "Heat", 50
+        flow "Electricity", "Homes", 110
+        flow "Electricity", "Industry", 90
+        flow "Electricity", "Losses", 40
+        flow "Heat", "Homes", 50
       end
 
       frame "2025" do
-        flow("Coal", "Electricity", 40)
-        flow("Gas", "Electricity", 70)
-        flow("Solar", "Electricity", 90)
-        flow("Gas", "Heat", 35)
-        flow("Electricity", "Homes", 95)
-        flow("Electricity", "Industry", 80)
-        flow("Electricity", "Losses", 25)
-        flow("Heat", "Homes", 35)
+        flow "Coal", "Electricity", 40
+        flow "Gas", "Electricity", 70
+        flow "Solar", "Electricity", 90
+        flow "Gas", "Heat", 35
+        flow "Electricity", "Homes", 95
+        flow "Electricity", "Industry", 80
+        flow "Electricity", "Losses", 25
+        flow "Heat", "Homes", 35
       end
     end
   end
