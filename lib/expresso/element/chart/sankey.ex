@@ -52,6 +52,12 @@ defmodule Expresso.Element.Chart.Sankey do
   @gap 14
   @label 16
 
+  # The least distance between the middles of two labels in a column: the
+  # height of one line of a label, and the width of one character of a
+  # label, which is a little more than the mean of the font.
+  @line 22
+  @character 10
+
   @doc """
   Return the nodes of a category of a sankey, as a list of names
 
@@ -284,7 +290,7 @@ defmodule Expresso.Element.Chart.Sankey do
       last: Enum.max(Map.values(columns))
     }
 
-    shared = Map.put(shared, :scale, scale(sizes, shared))
+    shared = Map.merge(shared, %{scale: scale(sizes, shared), right: right(sizes, shared)})
 
     for {links, size} <- Enum.zip(frames, sizes), do: frame(links, size, shared)
   end
@@ -338,15 +344,30 @@ defmodule Expresso.Element.Chart.Sankey do
     |> Enum.min()
   end
 
+  # The room at the right of the last column for its labels: the widest of
+  # them in each frame, at most a third of the width.
+  defp right(sizes, shared) do
+    widest =
+      for size <- sizes,
+          {name, value} <- size,
+          shared.columns[name] == shared.last do
+        label = Map.get(shared.settings, name, %{label: nil}).label || name
+        String.length("#{label} #{Plot.label(value)}") * @character
+      end
+      |> Enum.max()
+
+    min(widest + 8, @width / 3)
+  end
+
   # The nodes of a frame in each column, in the order of the nodes.
   defp stacks(size, shared) do
     shared.order |> Enum.filter(&Map.has_key?(size, &1)) |> Enum.group_by(&shared.columns[&1])
   end
 
   defp frame(links, size, shared) do
-    %{scale: scale, top: top, last: last} = shared
+    %{scale: scale, top: top, last: last, right: right} = shared
     bottom = @height - 8
-    x = fn column -> 4 + column * (@width - 8 - @node) / max(last, 1) end
+    x = fn column -> 4 + column * (@width - 8 - right - @node) / max(last, 1) end
 
     boxes =
       size
@@ -377,13 +398,12 @@ defmodule Expresso.Element.Chart.Sankey do
           class: setting.(name).class,
           value: size[name],
           color: color.(name),
-          series: touching |> Enum.map(& &1.series) |> Enum.min(),
-          last: box.column == last
+          series: touching |> Enum.map(& &1.series) |> Enum.min()
         })
       end
 
     %{
-      nodes: nodes,
+      nodes: labeled(nodes),
       links: links |> place(boxes, scale) |> Enum.map(&Map.put(&1, :color, color.(&1.from))),
       node_width: @node
     }
@@ -523,7 +543,7 @@ defmodule Expresso.Element.Chart.Sankey do
 
       for {series, number} <- @numbered do
         g class: "chart-labels", rest!: no_morph(series.overlay) do
-          for node <- @nodes, node.series == number, label?(node) do
+          for node <- @nodes, node.series == number, node.labeled do
             text [class: "chart-node-label"] ++ label_place(node) do
               label_text(node, @values)
             end
@@ -543,13 +563,9 @@ defmodule Expresso.Element.Chart.Sankey do
         do: %{from: from, to: to, value: value, series: number}
   end
 
-  # A label is at the right of its node, or at the left of a node of the last
-  # column, and in the middle of the height of the node.
+  # A label is at the right of its node, and in the middle of its height.
   defp label_place(node) do
-    {x, anchor} =
-      if node.last, do: {node.x - 8, "end"}, else: {node.x + @node + 8, "start"}
-
-    [x: Plot.f(x), y: Plot.f(node.y + node.height / 2 + 7), text_anchor: anchor]
+    [x: Plot.f(node.x + @node + 8), y: Plot.f(node.y + node.height / 2 + 7), text_anchor: "start"]
   end
 
   defp label_text(node, true), do: "#{node.label} #{Plot.label(node.value)}"
@@ -642,13 +658,41 @@ defmodule Expresso.Element.Chart.Sankey do
   def node_width, do: @node
 
   @doc """
-  Tell whether a node is high enough for its label
+  Mark each node that shows its label with the key `labeled`
 
-      iex> Expresso.Element.Chart.Sankey.label?(%{height: 20})
-      true
-      iex> Expresso.Element.Chart.Sankey.label?(%{height: 4})
-      false
+  A node as high as a label shows its label. A shorter node shows its label
+  when the middle of the label is one line or more from the middle of each
+  other label in its column, from the top down, so two labels do not cover
+  each other.
+
+      iex> nodes = [
+      ...>   %{name: "A", column: 0, y: 0, height: 40},
+      ...>   %{name: "B", column: 0, y: 54, height: 6},
+      ...>   %{name: "C", column: 0, y: 64, height: 4}
+      ...> ]
+      iex> nodes |> Expresso.Element.Chart.Sankey.labeled() |> Enum.map(& &1.labeled)
+      [true, true, false]
   """
-  @spec label?(%{height: number()}) :: boolean()
-  def label?(%{height: height}), do: height >= @label
+  @spec labeled([map()]) :: [map()]
+  def labeled(nodes) do
+    middle = fn node -> node.y + node.height / 2 end
+    {tall, short} = Enum.split_with(nodes, &(&1.height >= @label))
+    taken = Enum.map(tall, &{&1.column, middle.(&1)})
+
+    shown =
+      short
+      |> Enum.sort_by(middle)
+      |> Enum.reduce({MapSet.new(Enum.map(tall, & &1.name)), taken}, fn node, {shown, taken} ->
+        place = {node.column, middle.(node)}
+
+        if Enum.all?(taken, &apart?(&1, place)),
+          do: {MapSet.put(shown, node.name), [place | taken]},
+          else: {shown, taken}
+      end)
+      |> elem(0)
+
+    Enum.map(nodes, &Map.put(&1, :labeled, MapSet.member?(shown, &1.name)))
+  end
+
+  defp apart?({column, y}, {other, middle}), do: column != other or abs(y - middle) >= @line
 end

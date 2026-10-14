@@ -204,16 +204,22 @@ defmodule Expresso.ChartSankeyTest do
       assert path =~ ~r/^M[\d.]+,[\d.]+ C[\d.]+,[\d.]+ [\d.]+,[\d.]+ [\d.]+,[\d.]+ L.* Z$/
     end
 
-    test "the nodes of the last column have their labels at the left" do
+    test "each label is at the right of its node, and the last column keeps room for its labels" do
       svg = chart() |> figure() |> Floki.find("figure.chart > svg")
+      labels = Floki.find(svg, "text.chart-node-label")
 
-      anchors =
-        svg
-        |> Floki.find("text.chart-node-label")
-        |> Enum.map(&{Floki.text(&1), hd(Floki.attribute(&1, "text-anchor"))})
+      assert labels |> Enum.map(&hd(Floki.attribute(&1, "text-anchor"))) |> Enum.uniq() == [
+               "start"
+             ]
 
-      assert {"Homes 130", "end"} in anchors
-      assert {"Coal 120", "start"} in anchors
+      # "Industry 125" is the widest label of the last column: 12 characters.
+      [right] =
+        for label <- labels, Floki.text(label) == "Industry 125" do
+          {x, ""} = label |> Floki.attribute("x") |> hd() |> Float.parse()
+          x + 12 * 10
+        end
+
+      assert right <= 800
     end
 
     test "values false shows the names of the nodes only" do
@@ -421,6 +427,47 @@ defmodule Expresso.ChartSankeyTest do
                        ]
                      )
                    end
+    end
+  end
+
+  describe "the labels" do
+    test "a short node shows its label when the label has room in its column" do
+      figure =
+        Builder.chart(:sankey,
+          title: "Funnel",
+          flows: [
+            Builder.flow("Visits", "Trial", 2400),
+            Builder.flow("Visits", "Bounced", 7600),
+            Builder.flow("Trial", "Paid", 600),
+            Builder.flow("Trial", "Left", 1800),
+            Builder.flow("Paid", "Renewed", 450),
+            Builder.flow("Paid", "Cancelled", 150)
+          ]
+        )
+        |> figure()
+
+      labels = figure |> Floki.find("text.chart-node-label") |> Enum.map(&Floki.text/1)
+
+      assert "Cancelled 150" in labels
+      assert length(labels) == 7
+    end
+
+    test "a short node hides its label when it would cover another label" do
+      figure =
+        Builder.chart(:sankey,
+          title: "Small",
+          flows: [
+            Builder.flow("A", "B", 1000),
+            Builder.flow("A", "C", 2),
+            Builder.flow("A", "D", 2)
+          ]
+        )
+        |> figure()
+
+      labels = figure |> Floki.find("text.chart-node-label") |> Enum.map(&Floki.text/1)
+
+      assert "C 2" in labels
+      refute "D 2" in labels
     end
   end
 
