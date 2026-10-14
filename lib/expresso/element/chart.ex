@@ -1,10 +1,11 @@
 defmodule Expresso.Element.Chart do
   @moduledoc """
   An element that draws a bar chart, a line chart, a pie chart, a treemap, a
-  sunburst, a sankey, an alluvial chart or a parallel sets chart
+  sunburst, a sankey, an alluvial chart, a parallel sets chart or a chord chart
 
   The `chart` entity takes the kind as its first argument: `:bar`, `:line`,
-  `:pie`, `:treemap`, `:sunburst`, `:sankey`, `:alluvial` or `:parallel_sets`. A slash in a category of a treemap or a
+  `:pie`, `:treemap`, `:sunburst`, `:sankey`, `:alluvial`, `:parallel_sets` or
+  `:chord`. A slash in a category of a treemap or a
   sunburst names a part of a group, and `Expresso.Element.Chart.Hierarchy`
   draws them. The `categories` option gives the names of the categories, and each
   `series` entity gives a name and one value for each category. The `src`
@@ -27,26 +28,26 @@ defmodule Expresso.Element.Chart do
   `:grow`, moves its marks: `Expresso.Element.Chart.Motion` draws them.
   `docs/reference/chart-element.md` gives the rules.
 
-  A category of a sankey is a path of nodes. The `flow` entities give the
-  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws a
-  sankey. With `reveal true`, the check makes one series for each step: a
-  source column of the links in a sankey or an alluvial chart, and a node of
-  the first column in a parallel sets chart. An alluvial chart is a sankey
-  with one node for each name in each column. The place of a name in its
-  path sets its column. A parallel sets chart has the nodes of an alluvial
-  chart. `Expresso.Element.Chart.ParallelSets` draws each of its categories
-  as one ribbon through the columns.
+  A category of a sankey is a path of nodes, and `flow` entities give the
+  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws it. With
+  `reveal true`, the check makes one series for each column of links, so the
+  links show one column at a time. An alluvial chart is a sankey with one
+  node for each name in each column: the place of a name in its path gives
+  its column. A parallel sets chart has the nodes of an alluvial chart, and
+  `Expresso.Element.Chart.ParallelSets` draws each category as one ribbon
+  through the columns. A chord chart takes the flows of a sankey, and
+  `Expresso.Element.Chart.Chord` draws its nodes on a circle.
   """
 
   use Expresso.Element
 
-  alias Expresso.Element.Chart.{Csv, Hierarchy, Motion, ParallelSets, Plot, Sankey}
+  alias Expresso.Element.Chart.{Chord, Csv, Hierarchy, Motion, ParallelSets, Plot, Sankey}
   alias Expresso.Element.{Flow, Frame, Series}
 
   @typedoc "The struct of a chart"
   @type t :: %__MODULE__{}
 
-  @kinds [:bar, :line, :pie, :treemap, :sunburst, :sankey, :alluvial, :parallel_sets]
+  @kinds [:bar, :line, :pie, :treemap, :sunburst, :sankey, :alluvial, :parallel_sets, :chord]
 
   # The kinds of one series, which take no reveal option.
   @single [:pie, :treemap, :sunburst]
@@ -55,7 +56,7 @@ defmodule Expresso.Element.Chart do
   @parts [:treemap, :sunburst]
 
   # The kinds that show flows between nodes.
-  @flows [:sankey, :alluvial, :parallel_sets]
+  @flows [:sankey, :alluvial, :parallel_sets, :chord]
 
   # The kinds with a list of names in a category.
   @paths @flows ++ @parts
@@ -105,7 +106,7 @@ defmodule Expresso.Element.Chart do
   Return the kinds of a chart
 
       iex> Expresso.Element.Chart.kinds()
-      [:bar, :line, :pie, :treemap, :sunburst, :sankey, :alluvial, :parallel_sets]
+      [:bar, :line, :pie, :treemap, :sunburst, :sankey, :alluvial, :parallel_sets, :chord]
   """
   @spec kinds() :: [atom()]
   def kinds, do: @kinds
@@ -544,7 +545,7 @@ defmodule Expresso.Element.Chart do
 
       elements =
         if chart.reveal,
-          do: stages(links, series),
+          do: stages(links, series, kind),
           else: [%Series{series | values: values}]
 
       {:ok, %__MODULE__{chart | categories: categories, elements: elements}}
@@ -574,13 +575,17 @@ defmodule Expresso.Element.Chart do
 
       chart.kind != :sankey and Enum.any?(nodes, &(&1.column != nil)) ->
         {:error,
-         "the place of a name in its path sets its column in an alluvial chart, " <>
-           "so a node entity of an alluvial chart takes no column option"}
+         "only a sankey puts a node in a column of your choice, " <>
+           "so a node entity of #{named(chart.kind)} takes no column option"}
 
       true ->
         :ok
     end
   end
+
+  defp named(:alluvial), do: "an alluvial chart"
+  defp named(:parallel_sets), do: "a parallel sets chart"
+  defp named(kind), do: "a #{kind} chart"
 
   # The levels of an alluvial chart give a title to each column.
   defp titles_check(%__MODULE__{kind: kind, levels: [_ | _] = levels}, links)
@@ -632,9 +637,20 @@ defmodule Expresso.Element.Chart do
     end)
   end
 
-  # The series of a sankey with reveal: one series for each source column.
-  # Each series holds the values of the links that start in its column, and
-  # zero for each other link.
+  # The series of a chord chart with reveal: one series for each source, with
+  # the value of the links from it, and zero for each other link.
+  defp stages(links, %Series{} = series, :chord) do
+    for source <- links |> Enum.map(& &1.from) |> Enum.uniq() do
+      values = Enum.map(links, &if(&1.from == source, do: &1.value, else: 0))
+      %Series{name: source, values: values, class: series.class}
+    end
+  end
+
+  defp stages(links, series, _kind), do: stages(links, series)
+
+  # The series of a sankey with reveal: one series for each column of the
+  # sources of the links. Each series holds the value of the links of its
+  # column, and zero for each other link.
   defp stages(links, %Series{} = series) do
     columns = Sankey.columns(links)
     stages = links |> Enum.map(&columns[&1.from]) |> Enum.uniq() |> Enum.sort()
@@ -767,7 +783,7 @@ defmodule Expresso.Element.Chart do
 
         case @kind do
           :parallel_sets -> c(&ParallelSets.table/1, rest!: assigns)
-          kind when kind in [:sankey, :alluvial] -> c(&Sankey.table/1, rest!: assigns)
+          kind when kind in [:sankey, :alluvial, :chord] -> c(&Sankey.table/1, rest!: assigns)
           _other -> c(&table/1, rest!: assigns)
         end
       end
@@ -863,6 +879,7 @@ defmodule Expresso.Element.Chart do
 
   # The kinds of a chart. Each one writes the content of the SVG.
   defp plot(%{kind: :parallel_sets} = assigns), do: ParallelSets.render(assigns)
+  defp plot(%{kind: :chord} = assigns), do: Chord.render(assigns)
   defp plot(%{kind: kind} = assigns) when kind in @flows, do: Sankey.render(assigns)
 
   defp plot(%{kind: kind} = assigns) when kind in [:treemap, :sunburst],
