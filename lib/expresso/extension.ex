@@ -319,6 +319,31 @@ defmodule Expresso.Extension do
     ]
   }
 
+  @node %Spark.Dsl.Entity{
+    name: :node,
+    target: Expresso.Element.Node,
+    args: [:name],
+    schema:
+      @class_schema ++
+        [
+          name: [type: :string, required: true, doc: "The name of the node in the flows."],
+          label: [
+            type: :string,
+            doc: "The text of the label of the node. The default is the name."
+          ],
+          column: [
+            type: :pos_integer,
+            doc:
+              "The column of the node, from 1 at the left. The default is one column after its furthest source."
+          ],
+          order: [
+            type: :integer,
+            doc:
+              "The place of the node in its column, from the top. The default is its place in the data."
+          ]
+        ]
+  }
+
   @frame %Spark.Dsl.Entity{
     name: :frame,
     target: Expresso.Element.Frame,
@@ -337,7 +362,12 @@ defmodule Expresso.Extension do
     name: :chart,
     target: Expresso.Element.Chart,
     args: [:kind],
-    entities: [elements: [@series], timeline: [@frame], flows: [@flow], on: [@on]],
+    entities: [
+      elements: [@series],
+      timeline: [@frame],
+      flows: [@flow, @node],
+      on: [@on]
+    ],
     transform: {Expresso.Element.Chart, :check, []},
     schema:
       @overlay_schema ++

@@ -15,9 +15,12 @@ defmodule Expresso.ChartSankeyTest do
     {"Heat", "Homes", 40}
   ]
 
+  # A chart of the flows of @flows. The option `nodes` adds node entities to
+  # the flows, as the DSL puts them under the same key.
   defp chart(opts \\ []) do
+    {nodes, opts} = Keyword.pop(opts, :nodes, [])
     flows = for {from, to, value} <- @flows, do: Builder.flow(from, to, value)
-    Builder.chart(:sankey, Keyword.merge([title: "Energy", flows: flows], opts))
+    Builder.chart(:sankey, Keyword.merge([title: "Energy", flows: flows ++ nodes], opts))
   end
 
   defp render(chart) do
@@ -347,6 +350,74 @@ defmodule Expresso.ChartSankeyTest do
                        timeline: [
                          Builder.frame("1", flows: [Builder.flow("A", "B", 1)]),
                          Builder.frame("2", elements: [Builder.series("x", [1])])
+                       ]
+                     )
+                   end
+    end
+  end
+
+  describe "the node entity" do
+    defp rect_of(figure, label) do
+      figure
+      |> Floki.find("figure.chart > svg rect.chart-node")
+      |> Enum.zip(Floki.find(figure, "figure.chart > svg text.chart-node-label"))
+      |> Enum.find_value(fn {rect, text} ->
+        String.starts_with?(Floki.text(text), label) && rect
+      end)
+    end
+
+    defp number(element, attribute) do
+      {number, ""} = element |> Floki.attribute(attribute) |> hd() |> Float.parse()
+      number
+    end
+
+    test "a node gives the label, the class, the column and the order of a node" do
+      figure =
+        chart(
+          nodes: [
+            Builder.node("Heat", label: "District heat", class: "warm"),
+            Builder.node("Industry", column: 4),
+            Builder.node("Gas", order: 0)
+          ]
+        )
+        |> figure()
+
+      labels = figure |> Floki.find("text.chart-node-label") |> Enum.map(&Floki.text/1)
+      assert "District heat 40" in labels
+
+      assert figure |> Floki.find("rect.chart-node.warm") |> length() == 1
+      assert number(rect_of(figure, "Industry"), "x") > number(rect_of(figure, "Homes"), "x")
+      assert number(rect_of(figure, "Gas"), "y") < number(rect_of(figure, "Coal"), "y")
+
+      rows = figure |> Floki.find("table.chart-table tbody tr") |> Enum.map(&Floki.text/1)
+      assert "GasDistrict heat40" in rows
+    end
+
+    test "a node is for a sankey, one time, for a node of the flows, in a later column" do
+      assert_raise ArgumentError, ~r/a bar chart takes no node/, fn ->
+        Builder.chart(:bar,
+          title: "Bar",
+          categories: ["a"],
+          elements: [Builder.series("x", [1])],
+          flows: [Builder.node("a")]
+        )
+      end
+
+      assert_raise ArgumentError, ~r/"Gas" has two node entities/, fn ->
+        chart(nodes: [Builder.node("Gas"), Builder.node("Gas", label: "Natural gas")])
+      end
+
+      assert_raise ArgumentError, ~r/"Oil" names no node of the flows/, fn ->
+        chart(nodes: [Builder.node("Oil")])
+      end
+
+      assert_raise ArgumentError,
+                   ~r/"Electricity" in column 3 to "Homes" in column 2 goes to the left/,
+                   fn ->
+                     chart(
+                       nodes: [
+                         Builder.node("Electricity", column: 3),
+                         Builder.node("Homes", column: 2)
                        ]
                      )
                    end
