@@ -104,9 +104,7 @@ defmodule Expresso.E2E.MorphTest do
 
   # Wait for the end of the view transition. A transition names its elements
   # before its animations start, and it removes the names at its end. Thus a
-  # transition with no animation and with names has not started yet. A key
-  # press in that time stops it, and its end then removes the names of the
-  # next transition.
+  # transition with no animation and with names has not started yet.
   defp settle(page) do
     wait_for(
       page,
@@ -152,6 +150,19 @@ defmodule Expresso.E2E.MorphTest do
     page |> navigate("#2.1") |> press("j") |> started()
 
     assert groups(page) == ["::view-transition-group(expresso-morph-1)"]
+  end
+
+  # The second press comes during the transition from slide 1 to slide 2, and
+  # it stops that transition. The end of the stopped transition must not
+  # remove the names of the next one.
+  test "a key press during a transition keeps the morph of the next change", %{moving: page} do
+    press(page, "j")
+    wait_for(page, "document.getElementById('slide-2').style.display === 'flex'")
+    page |> press("j") |> started()
+
+    assert groups(page) == ["::view-transition-group(expresso-morph-1)"]
+    settle(page)
+    assert position(page) == "3.1"
   end
 
   test "the mode off morphs no element", %{moving: page} do
