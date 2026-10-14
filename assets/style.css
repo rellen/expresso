@@ -701,6 +701,9 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .chart-node {
   fill: var(--series);
 }
+.chart-node-plain {
+  fill: var(--muted);
+}
 .chart-link {
   fill: color-mix(in oklab, var(--series) 35%, var(--background));
 }
