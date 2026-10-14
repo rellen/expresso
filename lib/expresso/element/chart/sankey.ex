@@ -203,18 +203,22 @@ defmodule Expresso.Element.Chart.Sankey do
   @doc """
   Return the column of each node, from 0
 
-  A node with no link into it is in column 0. Each other node is one column
-  after its last source.
+  A node with no link into it is in column 0, and each other node is one
+  column after its furthest source. `pinned` gives the column of some nodes,
+  from 0, and the columns after them follow from them.
 
       iex> links = [%{from: "A", to: "B"}, %{from: "B", to: "C"}, %{from: "A", to: "C"}]
       iex> Expresso.Element.Chart.Sankey.columns(links)
       %{"A" => 0, "B" => 1, "C" => 2}
+      iex> Expresso.Element.Chart.Sankey.columns(links, %{"C" => 4})
+      %{"A" => 0, "B" => 1, "C" => 4}
   """
-  @spec columns([%{from: String.t(), to: String.t()}]) :: %{String.t() => non_neg_integer()}
-  def columns(links) do
+  @spec columns([%{from: String.t(), to: String.t()}], %{String.t() => non_neg_integer()}) ::
+          %{String.t() => non_neg_integer()}
+  def columns(links, pinned \\ %{}) do
     sources = Enum.group_by(links, & &1.to, & &1.from)
     nodes = links |> Enum.flat_map(&[&1.from, &1.to]) |> Enum.uniq()
-    Enum.reduce(nodes, %{}, fn node, known -> elem(column(node, sources, known), 1) end)
+    Enum.reduce(nodes, pinned, fn node, known -> elem(column(node, sources, known), 1) end)
   end
 
   defp column(node, sources, known) do
@@ -241,13 +245,15 @@ defmodule Expresso.Element.Chart.Sankey do
   `links` holds each link with its value and the number of its series, from
   1. The function returns the nodes, with their boxes, colors and the number
   of their first series, and the links, with their paths. `top` is the top of
-  the box.
+  the box, and `settings` holds the `Expresso.Element.Node` of each node with
+  a `node` entity.
   """
   @spec layout(
           [%{from: String.t(), to: String.t(), value: number(), series: pos_integer()}],
-          number()
+          number(),
+          %{String.t() => Expresso.Element.Node.t()}
         ) :: %{nodes: [map()], links: [map()], node_width: pos_integer()}
-  def layout(links, top \\ 8), do: hd(layout_frames([links], top))
+  def layout(links, top \\ 8, settings \\ %{}), do: hd(layout_frames([links], top, settings))
 
   @doc """
   Place the nodes and the links of each frame of a sankey
@@ -258,19 +264,60 @@ defmodule Expresso.Element.Chart.Sankey do
   value in each frame. A node or a link with no value in a frame does not
   show in that frame.
   """
-  @spec layout_frames([[map()]], number()) :: [
+  @spec layout_frames([[map()]], number(), %{String.t() => Expresso.Element.Node.t()}) :: [
           %{nodes: [map()], links: [map()], node_width: pos_integer()}
         ]
-  def layout_frames(frames, top) do
+  def layout_frames(frames, top, settings \\ %{}) do
     frames = Enum.map(frames, fn links -> Enum.filter(links, &(&1.value > 0)) end)
     union = frames |> List.flatten() |> Enum.uniq_by(&{&1.from, &1.to})
-    columns = columns(union)
-    order = union |> Enum.flat_map(&[&1.from, &1.to]) |> Enum.uniq()
+    columns = columns(union, pinned(settings))
+    appearance = union |> Enum.flat_map(&[&1.from, &1.to]) |> Enum.uniq()
+    order = sort(appearance, columns, settings)
     sizes = Enum.map(frames, &sizes/1)
-    shared = %{columns: columns, order: order, top: top, last: Enum.max(Map.values(columns))}
+
+    shared = %{
+      columns: columns,
+      order: order,
+      appearance: appearance,
+      top: top,
+      settings: settings,
+      last: Enum.max(Map.values(columns))
+    }
+
     shared = Map.put(shared, :scale, scale(sizes, shared))
 
     for {links, size} <- Enum.zip(frames, sizes), do: frame(links, size, shared)
+  end
+
+  @doc """
+  Return the columns that the `node` entities give, from 0
+
+      iex> Expresso.Element.Chart.Sankey.pinned(%{"A" => %Expresso.Element.Node{name: "A", column: 3}})
+      %{"A" => 2}
+  """
+  @spec pinned(%{String.t() => Expresso.Element.Node.t()}) :: %{String.t() => non_neg_integer()}
+  def pinned(settings) do
+    for {name, %{column: column}} <- settings, column != nil, into: %{}, do: {name, column - 1}
+  end
+
+  # The nodes in their order in each column: the `order` of a node entity,
+  # else the place of the node in its column in the data.
+  defp sort(order, columns, settings) do
+    order
+    |> Enum.group_by(&columns[&1])
+    |> Enum.flat_map(fn {_column, names} ->
+      names
+      |> Enum.with_index(1)
+      |> Enum.sort_by(fn {name, place} -> {order_of(settings, name, place), place} end)
+      |> Enum.map(&elem(&1, 0))
+    end)
+  end
+
+  defp order_of(settings, name, place) do
+    case settings do
+      %{^name => %{order: order}} when order != nil -> order
+      _other -> place
+    end
   end
 
   # The size of each node of a frame: the larger of the flow into it and the
@@ -317,14 +364,17 @@ defmodule Expresso.Element.Chart.Sankey do
       end)
       |> Map.new()
 
-    color = fn name -> rem(Enum.find_index(shared.order, &(&1 == name)), 8) + 1 end
+    color = fn name -> rem(Enum.find_index(shared.appearance, &(&1 == name)), 8) + 1 end
+    setting = fn name -> Map.get(shared.settings, name, %{label: nil, class: nil}) end
 
     nodes =
-      for name <- shared.order, box = boxes[name], box != nil do
+      for name <- shared.appearance, box = boxes[name], box != nil do
         touching = Enum.filter(links, &(&1.from == name or &1.to == name))
 
         Map.merge(box, %{
           name: name,
+          label: setting.(name).label || name,
+          class: setting.(name).class,
           value: size[name],
           color: color.(name),
           series: touching |> Enum.map(& &1.series) |> Enum.min(),
@@ -413,7 +463,7 @@ defmodule Expresso.Element.Chart.Sankey do
     layouts =
       frames
       |> Enum.map(&links(assigns.categories, &1.values))
-      |> layout_frames(assigns.box.top)
+      |> layout_frames(assigns.box.top, assigns.node_settings)
 
     layers =
       for {layout, k} <- Enum.with_index(layouts, 1),
@@ -434,7 +484,11 @@ defmodule Expresso.Element.Chart.Sankey do
   end
 
   def render(assigns) do
-    layout = links(assigns.categories, Enum.map(assigns.series, & &1.values)) |> layout()
+    layout =
+      assigns.categories
+      |> links(Enum.map(assigns.series, & &1.values))
+      |> layout(8, assigns.node_settings)
+
     drawing(Map.merge(layout, %{numbered: numbered(assigns, 1), values: assigns.values}))
   end
 
@@ -458,7 +512,7 @@ defmodule Expresso.Element.Chart.Sankey do
           end
 
           for node <- @nodes, node.series == number do
-            rect class: "chart-node chart-c#{node.color}",
+            rect class: Expresso.Element.classes("chart-node chart-c#{node.color}", node.class),
                  x: Plot.f(node.x),
                  y: Plot.f(node.y),
                  width: @node_width,
@@ -498,8 +552,8 @@ defmodule Expresso.Element.Chart.Sankey do
     [x: Plot.f(x), y: Plot.f(node.y + node.height / 2 + 7), text_anchor: anchor]
   end
 
-  defp label_text(node, true), do: "#{node.name} #{Plot.label(node.value)}"
-  defp label_text(node, false), do: node.name
+  defp label_text(node, true), do: "#{node.label} #{Plot.label(node.value)}"
+  defp label_text(node, false), do: node.label
 
   @doc """
   Write the table of a sankey: one row for each link, with its source, its
@@ -519,7 +573,7 @@ defmodule Expresso.Element.Chart.Sankey do
           for frame <- assigns.frames,
               do: frame.values |> Enum.map(&Enum.at(&1, index)) |> Enum.sum()
 
-        {from, to, values}
+        {label(assigns, from), label(assigns, to), values}
       end
 
     assigns = Map.merge(assigns, %{rows: rows, columns: columns})
@@ -546,6 +600,13 @@ defmodule Expresso.Element.Chart.Sankey do
           end
         end
       end
+    end
+  end
+
+  defp label(%{node_settings: settings}, name) do
+    case settings do
+      %{^name => %{label: label}} when label != nil -> label
+      _other -> name
     end
   end
 

@@ -110,13 +110,22 @@ defmodule Expresso.Element.Chart do
   option of the deck can change the path, and `build/1` then reads it.
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
-  def check(%__MODULE__{flows: [_ | _], kind: kind}) when kind != :sankey,
-    do: {:error, "a flow is a link of a sankey, so a #{kind} chart takes no flow"}
+  def check(%__MODULE__{} = chart), do: with({:ok, chart} <- flows(chart), do: data(chart))
 
-  def check(%__MODULE__{kind: kind, timeline: [%Frame{flows: [_ | _]} | _]}) when kind != :sankey,
-    do: {:error, "a flow is a link of a sankey, so a #{kind} chart takes no flow"}
+  # The flows and the nodes of a sankey. The flows of the chart and of its
+  # frames become its categories and its series, and the `flows` field then
+  # holds only the node entities.
+  defp flows(%__MODULE__{flows: [_ | _] = items, kind: kind}) when kind != :sankey do
+    if Enum.any?(items, &is_struct(&1, Flow)),
+      do: {:error, "a flow is a link of a sankey, so a #{kind} chart takes no flow"},
+      else: {:error, "a node entity gives a node of a sankey, so a #{kind} chart takes no node"}
+  end
 
-  def check(%__MODULE__{timeline: [%Frame{flows: [_ | _]} | _] = timeline} = chart) do
+  defp flows(%__MODULE__{kind: kind, timeline: [%Frame{flows: [_ | _]} | _]})
+       when kind != :sankey,
+       do: {:error, "a flow is a link of a sankey, so a #{kind} chart takes no flow"}
+
+  defp flows(%__MODULE__{timeline: [%Frame{flows: [_ | _]} | _] = timeline} = chart) do
     cond do
       chart.categories != nil or chart.src != nil ->
         {:error, "a sankey with flows in its frames takes no categories and no src option"}
@@ -133,53 +142,60 @@ defmodule Expresso.Element.Chart do
 
         name = chart.value_label || "Value"
         timeline = Enum.map(timeline, &flow_frame(&1, pairs, name))
-        check(%__MODULE__{chart | categories: pairs, timeline: timeline})
+        flows(%__MODULE__{chart | categories: pairs, timeline: timeline})
     end
   end
 
-  def check(%__MODULE__{flows: [_ | _] = flows} = chart) do
-    if chart.src != nil or chart.categories != nil or chart.elements != [] or
-         chart.timeline != [] do
-      {:error,
-       "a sankey takes flow entities, or categories and a series, or the src option, " <>
-         "and only one of them"}
-    else
-      check(%__MODULE__{
-        chart
-        | flows: [],
-          categories: Enum.map(flows, fn %Flow{from: from, to: to} -> [from, to] end),
-          elements: [
-            %Series{name: chart.value_label || "Value", values: Enum.map(flows, & &1.value)}
-          ]
-      })
+  defp flows(%__MODULE__{flows: items} = chart) do
+    case Enum.split_with(items, &is_struct(&1, Flow)) do
+      {[], _nodes} ->
+        {:ok, chart}
+
+      {_flows, _nodes}
+      when chart.src != nil or chart.categories != nil or chart.elements != [] or
+             chart.timeline != [] ->
+        {:error,
+         "a sankey takes flow entities, or categories and a series, or the src option, " <>
+           "and only one of them"}
+
+      {flows, nodes} ->
+        {:ok,
+         %__MODULE__{
+           chart
+           | flows: nodes,
+             categories: Enum.map(flows, fn %Flow{from: from, to: to} -> [from, to] end),
+             elements: [
+               %Series{name: chart.value_label || "Value", values: Enum.map(flows, & &1.value)}
+             ]
+         }}
     end
   end
 
-  def check(%__MODULE__{src: src} = chart) when is_binary(src) do
+  defp data(%__MODULE__{src: src} = chart) when is_binary(src) do
     if chart.categories != nil or chart.elements != [] or chart.timeline != [],
       do:
         {:error, "a chart takes the src option, or categories and series or frames, and not both"},
       else: with(:ok <- delimiter_option(chart.delimiter), do: options(chart))
   end
 
-  def check(%__MODULE__{frames: frames}) when is_binary(frames),
+  defp data(%__MODULE__{frames: frames}) when is_binary(frames),
     do: {:error, "the frames option names a column of a CSV file, so it needs the src option"}
 
-  def check(%__MODULE__{delimiter: delimiter}) when is_binary(delimiter),
+  defp data(%__MODULE__{delimiter: delimiter}) when is_binary(delimiter),
     do:
       {:error,
        "the delimiter option gives the character between two cells of a chart file, so it needs the src option"}
 
-  def check(%__MODULE__{levels: [_ | _]}),
+  defp data(%__MODULE__{levels: [_ | _]}),
     do:
       {:error,
        "the levels option names columns of a CSV file, so it needs the src option. " <>
          "Give a list of levels in the categories option, such as [\"Production\", \"Press\"]."}
 
-  def check(%__MODULE__{timeline: [_ | _], elements: [_ | _]}),
+  defp data(%__MODULE__{timeline: [_ | _], elements: [_ | _]}),
     do: {:error, "a chart with frames holds its series in each frame, and not in the chart"}
 
-  def check(%__MODULE__{} = chart), do: chart |> first_frame() |> validate()
+  defp data(%__MODULE__{} = chart), do: chart |> first_frame() |> validate()
 
   # A frame of a sankey with flows, with one series in place of its flows. The
   # series holds a value for each link of `pairs`, and 0 for a link that the
@@ -429,8 +445,9 @@ defmodule Expresso.Element.Chart do
 
   defp single(%__MODULE__{kind: :sankey, timeline: [_ | _] = timeline} = chart) do
     with {:ok, series} <- frame_series(timeline),
-         :ok <- each_frame(series, &Sankey.check(chart.categories, &1.values, chart.separator)) do
-      frames = Enum.map(series, &Sankey.links(chart.categories, &1.values, chart.separator))
+         :ok <- each_frame(series, &Sankey.check(chart.categories, &1.values, chart.separator)),
+         frames = Enum.map(series, &Sankey.links(chart.categories, &1.values, chart.separator)),
+         :ok <- nodes_check(chart, List.flatten(frames)) do
       pairs = frames |> List.flatten() |> Enum.map(&[&1.from, &1.to]) |> Enum.uniq()
 
       timeline =
@@ -455,8 +472,9 @@ defmodule Expresso.Element.Chart do
   end
 
   defp single(%__MODULE__{kind: :sankey, elements: [%Series{} = series]} = chart) do
-    with :ok <- Sankey.check(chart.categories, series.values, chart.separator) do
-      links = Sankey.links(chart.categories, series.values, chart.separator)
+    with :ok <- Sankey.check(chart.categories, series.values, chart.separator),
+         links = Sankey.links(chart.categories, series.values, chart.separator),
+         :ok <- nodes_check(chart, links) do
       categories = Enum.map(links, &[&1.from, &1.to])
       values = Enum.map(links, & &1.value)
 
@@ -472,6 +490,38 @@ defmodule Expresso.Element.Chart do
   defp single(%__MODULE__{kind: :sankey}), do: {:error, "a sankey has one series"}
 
   defp single(chart), do: {:ok, chart}
+
+  # The node entities of a sankey: one for each node at most, each for a node
+  # of the flows, and with columns that keep each flow going to the right.
+  defp nodes_check(%__MODULE__{flows: []}, _links), do: :ok
+
+  defp nodes_check(%__MODULE__{flows: nodes}, links) do
+    names = links |> Enum.flat_map(&[&1.from, &1.to]) |> MapSet.new()
+    given = Enum.map(nodes, & &1.name)
+    twice = given -- Enum.uniq(given)
+
+    cond do
+      twice != [] ->
+        {:error, "the node \"#{hd(twice)}\" has two node entities, and a node has one"}
+
+      unknown = Enum.find(given, &(not MapSet.member?(names, &1))) ->
+        {:error, "the node entity \"#{unknown}\" names no node of the flows"}
+
+      true ->
+        columns = Sankey.columns(links, Sankey.pinned(Map.new(nodes, &{&1.name, &1})))
+
+        case Enum.find(links, &(columns[&1.from] >= columns[&1.to])) do
+          nil ->
+            :ok
+
+          link ->
+            {:error,
+             "the flow from \"#{link.from}\" in column #{columns[link.from] + 1} to " <>
+               "\"#{link.to}\" in column #{columns[link.to] + 1} goes to the left. " <>
+               "A flow goes to a later column."}
+        end
+    end
+  end
 
   # The one series of each frame of a sankey.
   defp frame_series(timeline) do
@@ -545,6 +595,7 @@ defmodule Expresso.Element.Chart do
       frame_label: chart.frame_label,
       separator: chart.separator,
       thumbnail: chart.thumbnail,
+      node_settings: Map.new(chart.flows, &{&1.name, &1}),
       overlay: Expresso.Overlay.Render.attributes(chart) ++ width
     }
   end

@@ -32,6 +32,7 @@ defmodule Expresso.Placement do
     Lines,
     List,
     Math,
+    Node,
     Part,
     Pause,
     QrCode,
@@ -84,7 +85,7 @@ defmodule Expresso.Placement do
     Item => [elements: [List]],
     Table => [elements: [Row]],
     Diagram => [elements: [Part]],
-    Chart => [elements: [Series], timeline: [Frame], flows: [Flow]],
+    Chart => [elements: [Series], timeline: [Frame], flows: [Flow, Node]],
     Frame => [elements: [Series], flows: [Flow]],
     Code => [elements: [Lines]],
     Toc => [elements: [TocEntry]]
