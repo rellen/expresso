@@ -282,7 +282,7 @@ These are the reasons for its design:
   the check of the Line 4 deck took 49 s and not 200 s.
 - **The steps run without the parts outside the slides.** A run of axe-core reads the
   whole document, even for the context of one slide. Its fixed cost was about 0.6 s for
-  each run, and the 74 steps of the Line 4 deck took 44 s of 60 s. During the steps,
+  each run, and the 76 steps of the Line 4 deck took 44 s of 60 s. During the steps,
   `detach` in `check.ts` takes the menu, the list of keys and the copies of the slides out
   of the document, and it puts them back for the views. The check then took 30 s. A run
   with only the rules of the WCAG tags, or with `color-contrast` only at the later steps
