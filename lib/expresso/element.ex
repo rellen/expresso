@@ -89,4 +89,55 @@ defmodule Expresso.Element do
   @spec classes(String.t(), String.t() | nil) :: String.t()
   def classes(base, nil), do: base
   def classes(base, extra), do: base <> " " <> extra
+
+  # A percentage of the slide, and not of the container of the element. The pattern
+  # takes each form of a CSS number: a sign, a decimal part and an exponent are
+  # each optional, and a number such as `.5` has no whole part.
+  @percentage ~r/\A\s*([+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?)\s*%\s*\z/
+
+  @doc """
+  Write a width in percent as a viewport unit
+
+  A value that is one number and a percent sign becomes the same number in
+  `vw`, and each other value comes back as it is. A slide takes the full width
+  of the screen and of the page, so a percentage of the slide is a viewport
+  unit. `Expresso.Element.Image` gives the reasons.
+
+      iex> Expresso.Element.viewport_unit("60%")
+      "60vw"
+      iex> Expresso.Element.viewport_unit(".5%")
+      ".5vw"
+      iex> Expresso.Element.viewport_unit("calc(50% + 10px)")
+      "calc(50% + 10px)"
+  """
+  @spec viewport_unit(String.t()) :: String.t()
+  def viewport_unit(width) do
+    case Regex.run(@percentage, width, capture: :all_but_first) do
+      [number] -> number <> "vw"
+      nil -> width
+    end
+  end
+
+  @doc """
+  Return the style attribute of the box of an embed or of a video
+
+  The box takes the `width` option and the `aspect` option. An element
+  without both gets no attribute.
+
+      iex> Expresso.Element.box_style("60%", "4/3")
+      [{"style", "--embed-width: 60vw; --embed-aspect: 4/3"}]
+      iex> Expresso.Element.box_style(nil, nil)
+      []
+  """
+  @spec box_style(String.t() | nil, String.t() | nil) :: [{String.t(), String.t()}]
+  def box_style(width, aspect) do
+    case [
+           width && "--embed-width: #{viewport_unit(width)}",
+           aspect && "--embed-aspect: #{aspect}"
+         ]
+         |> Enum.reject(&is_nil/1) do
+      [] -> []
+      style -> [{"style", Enum.join(style, "; ")}]
+    end
+  end
 end

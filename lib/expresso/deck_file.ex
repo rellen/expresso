@@ -4,7 +4,8 @@ defmodule Expresso.DeckFile do
 
   A deck can name an image, a diagram, a code file, a page, a style sheet and
   a file of a `url()` of the style sheet. The module of each reads the file
-  with `read/1`, and each module writes its own error message.
+  with `read/1` or `read!/2`. An element gives the message of `read_error/3`
+  for a file that it cannot read.
 
   `Expresso.Watch` renders a deck inside `track/1`. That function returns each
   path that `read/1` read during the render, so the watch mode knows which
@@ -33,6 +34,37 @@ defmodule Expresso.DeckFile do
   def read(path) do
     record(path)
     File.read(path)
+  end
+
+  @doc """
+  Read a file that a deck names, and raise for a file that it cannot read
+
+  The `noun` names the file in the message, such as `"diagram"`. The message
+  is the text of `read_error/3`.
+  """
+  @spec read!(Path.t(), String.t()) :: binary()
+  def read!(path, noun) do
+    case read(path) do
+      {:ok, bytes} -> bytes
+      {:error, reason} -> raise ArgumentError, read_error(path, noun, reason)
+    end
+  end
+
+  @doc """
+  Return the message for a file of a deck that cannot be read
+
+  Each element that reads a file gives this message: the noun, the path, the
+  reason from `:file.format_error/1`, and where a relative path starts.
+
+      iex> Expresso.DeckFile.read_error("a.svg", "diagram", :enoent)
+      ~s(cannot read the diagram "a.svg": no such file or directory. A path is relative to ) <>
+        "the working directory of the command, or to the root option of the deck."
+  """
+  @spec read_error(Path.t(), String.t(), File.posix()) :: String.t()
+  def read_error(path, noun, reason) do
+    "cannot read the #{noun} \"#{path}\": #{:file.format_error(reason)}. " <>
+      "A path is relative to the working directory of the command, or to the root option " <>
+      "of the deck."
   end
 
   @doc """

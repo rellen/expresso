@@ -318,6 +318,17 @@ The watch mode watches these files:
   `Expresso.DeckFile.track/1`. Thus no module needs code for the watch mode.
 - The custom templates in `./priv/templates/`. See "The templates".
 
+Each element that reads a file gives the same message for a file that it cannot read.
+`Expresso.DeckFile.read!/2` raises it at render time, for an image, a diagram, a page, a
+video, a poster, captions and a sound. A code file and a chart file give it as an error of
+the compiler, from `Expresso.DeckFile.read_error/3`. The message names the file, gives
+the reason from `:file.format_error/1`, and tells where a relative path starts:
+
+```text
+cannot read the diagram "no/such.svg": no such file or directory. A path is relative to
+the working directory of the command, or to the root option of the deck.
+```
+
 `Expresso.DeckFile.read/1` reads a relative path from the working directory of the
 command. A deck file is a script, and `Code.eval_file/1` gives it no base directory of its
 own. The `root` option of the deck gives one, such as `root __DIR__`, and
@@ -470,6 +481,11 @@ html               lang "en", and data-variants for a theme with two variants
                      "expresso-audios", when the deck has such an element
       script         priv/static/presenter.js, the presenter bundle
 ```
+
+The renderer writes each `script` element of JSON with one component, and
+`Expresso.Json.for_script/1` makes each JSON text. That function writes each `<` as the
+escape of JSON for it, so a text of the deck, such as a page of an embed with
+`</script>`, cannot close the element.
 
 The two views hold the same slides. Therefore a selector on the full document finds each
 element two times. A test that counts an element, or that reads its text, must select
@@ -1209,7 +1225,9 @@ for the user. These are the reasons for its design:
   once for each step of the slide, and a local file would go into the document many times.
   Therefore `Expresso.Element.Embed.number/1` gives each embed a number, the frame holds
   only `data-embed`, and the renderer writes the sources one time into the element
-  `expresso-embeds`. The form `written_embeds` of `Expresso.Presenter.Schema` describes it.
+  `expresso-embeds`. The function calls `Expresso.Media.number/3`, as the video and the
+  sound do, with a key of its own for each embed: a video holds one number for each file,
+  and an embed holds one number for each element. The form `written_embeds` of `Expresso.Presenter.Schema` describes it.
 - **The presenter loads a page when its slide shows.** `embed.ts` gives the frame of the
   present view its source, after the load of the document. The slides then show at once, a
   page that loads slowly does not hold the load of the document, and the layout check does
@@ -1293,7 +1311,7 @@ design:
   render function removes it and draws a border of four modules, as the standard asks.
 
 The `size` option goes into the custom property `--qr-size`, with the rule of the width of
-an image: `Expresso.Element.Image.viewport_unit/1` writes a percentage as `vw`.
+an image: `Expresso.Element.viewport_unit/1` writes a percentage as `vw`.
 
 ### The footnote
 

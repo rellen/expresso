@@ -19,22 +19,39 @@ defmodule Expresso.Media do
   @doc """
   Give each element of a module in a deck its number
 
-  Each file gets a number in document order, from 0, and two elements with
-  the same file get the same number. `sources/3` writes the file at that
-  position, so the document holds each file one time.
+  Each key gets a number in document order, from 0, and two elements with the
+  same key get the same number. The default key is the file, so `sources/4`
+  writes each file one time. `Expresso.Element.Embed` gives each embed a key
+  of its own with `make_ref/0`, so each embed gets its own number.
   """
-  @spec number(Expresso.Deck.t(), module()) :: Expresso.Deck.t()
-  def number(%Expresso.Deck{} = deck, module) do
-    {deck, _files} = Tree.map_reduce_deck(deck, %{}, &number_one(&1, &2, module))
+  @spec number(Expresso.Deck.t(), module(), (struct() -> term())) :: Expresso.Deck.t()
+  def number(%Expresso.Deck{} = deck, module, key \\ & &1.src) do
+    {deck, _keys} = Tree.map_reduce_deck(deck, %{}, &number_one(&1, &2, module, key))
     deck
   end
 
-  defp number_one(%module{src: src} = medium, files, module) do
-    files = Map.put_new(files, src, map_size(files))
-    {%{medium | index: files[src]}, files}
+  defp number_one(%module{} = element, keys, module, key) do
+    key = key.(element)
+    keys = Map.put_new(keys, key, map_size(keys))
+    {%{element | index: keys[key]}, keys}
   end
 
-  defp number_one(element, files, _module), do: {element, files}
+  defp number_one(element, keys, _module, _key), do: {element, keys}
+
+  @doc """
+  Return one element of a module for each number in a deck, in the order of
+  the numbers
+
+  `number/3` gives the numbers first.
+  """
+  @spec numbered(Expresso.Deck.t(), module()) :: [struct()]
+  def numbered(%Expresso.Deck{slides: slides}, module) do
+    slides
+    |> Enum.flat_map(&Tree.descendants(&1.elements))
+    |> Enum.filter(&is_struct(&1, module))
+    |> Enum.uniq_by(& &1.index)
+    |> Enum.sort_by(& &1.index)
+  end
 
   @doc """
   Return the data URI of each file of the elements of a module in a deck, in
@@ -47,38 +64,25 @@ defmodule Expresso.Media do
   """
   @spec sources(Expresso.Deck.t(), module(), %{String.t() => String.t()}, String.t()) ::
           [String.t()]
-  def sources(%Expresso.Deck{slides: slides}, module, types, noun) do
-    slides
-    |> Enum.flat_map(&Tree.descendants(&1.elements))
-    |> Enum.filter(&is_struct(&1, module))
-    |> Enum.uniq_by(& &1.index)
-    |> Enum.sort_by(& &1.index)
-    |> Enum.map(&data_uri(&1.src, types, noun))
+  def sources(%Expresso.Deck{} = deck, module, types, noun) do
+    deck |> numbered(module) |> Enum.map(&data_uri(&1.src, types, noun))
   end
 
   defp data_uri(src, types, noun) do
-    case Expresso.DeckFile.read(src) do
-      {:ok, bytes} ->
-        "data:#{Map.fetch!(types, extension(src))};base64," <> Base.encode64(bytes)
-
-      {:error, reason} ->
-        raise ArgumentError,
-              "cannot read the #{noun} \"#{src}\": #{:file.format_error(reason)}. " <>
-                "A path is relative to the working directory of the command, or to the " <>
-                "root option of the deck."
-    end
+    bytes = Expresso.DeckFile.read!(src, noun)
+    "data:#{Map.fetch!(types, extension(src))};base64," <> Base.encode64(bytes)
   end
 
   @doc """
   Write a list of data URIs as JSON, or return `nil` for an empty list
 
-  The renderer writes the value into a `script` element. A data URI holds no
-  `<`, and the function escapes each `<` as for the list of the steps. A deck
-  with no file of a kind gets `nil`, and the document then holds no element.
+  The renderer writes the value into a `script` element with
+  `Expresso.Json.for_script/1`. A deck with no file of a kind gets `nil`, and
+  the document then holds no element.
   """
   @spec json([String.t()]) :: String.t() | nil
   def json([]), do: nil
-  def json(sources), do: sources |> JSON.encode!() |> String.replace("<", "\\u003c")
+  def json(sources), do: Expresso.Json.for_script(sources)
 
   @doc """
   Return the extension of a path in lower case, such as `".webm"`

@@ -84,10 +84,7 @@ defmodule Expresso.Image do
         {:ok, bytes}
 
       {:error, reason} ->
-        {:error,
-         "Expresso cannot read the image #{inspect(path)}: #{:file.format_error(reason)}. " <>
-           "A path is relative to the working directory of the command, or to the root " <>
-           "option of the deck."}
+        {:error, Expresso.DeckFile.read_error(path, "image", reason)}
     end
   end
 end
