@@ -34,6 +34,8 @@ defmodule Expresso.Element.Chart.Motion do
   import Temple
   use Temple.Component
 
+  import Expresso.Element.Chart.Kinds
+
   alias Expresso.Element.Chart.{Hierarchy, Plot}
 
   # The length of the shape of a bar, in the units of the SVG. A clip at the
@@ -114,23 +116,19 @@ defmodule Expresso.Element.Chart.Motion do
         :bar -> c(&bars/1, rest!: assigns)
         :line -> c(&lines/1, rest!: assigns)
         :pie -> c(&pie/1, rest!: assigns)
-        _hierarchy -> Hierarchy.render(assigns)
+        kind when is_part(kind) -> Hierarchy.render(assigns)
       end
     end
   end
 
   # The places of the marks of each frame, and the channels that hold them.
 
-  defp scene(%{kind: kind} = assigns) when kind in [:treemap, :sunburst],
-    do: Hierarchy.scene(assigns)
-
-  defp scene(%{kind: kind, frames: frames})
-       when kind in [:sankey, :alluvial, :parallel_sets, :chord],
-       do: %{channels: flags(frames)}
+  defp scene(%{kind: kind} = assigns) when is_part(kind), do: Hierarchy.scene(assigns)
+  defp scene(%{kind: kind, frames: frames}) when is_flow(kind), do: %{channels: flags(frames)}
 
   defp scene(%{kind: :pie} = assigns), do: pie_scene(assigns)
   defp scene(%{kind: :line} = assigns), do: line_scene(assigns)
-  defp scene(assigns), do: bar_scene(assigns)
+  defp scene(%{kind: :bar} = assigns), do: bar_scene(assigns)
 
   # The value of series `s` in category `i` in each frame.
   defp values(frames, s, i), do: Enum.map(frames, &(&1.values |> Enum.at(s) |> Enum.at(i)))
@@ -391,7 +389,7 @@ defmodule Expresso.Element.Chart.Motion do
   def frame_label(assigns) do
     {x, anchor} =
       case {assigns.kind, assigns.frame_label} do
-        {kind, _place} when kind in [:pie, :sunburst] -> {784, "end"}
+        {kind, _place} when is_round(kind) -> {784, "end"}
         {_kind, :top_left} -> {assigns.box.left, "start"}
         {_kind, :top_right} -> {assigns.box.right, "end"}
       end

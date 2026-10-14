@@ -1357,6 +1357,39 @@ to the items of a list. These are the reasons for this design:
   because a spreadsheet writes the groups of digits so. A comma as the decimal mark, such as
   `12,5`, is an error and not a number, because `1,250` then has two meanings.
 
+### The kinds of a chart
+
+`Expresso.Element.Chart.Kinds` holds one table of the kinds of a chart. Each kind has a
+family, and the family decides which code draws it:
+
+| Family | Kinds | The module that draws it |
+| --- | --- | --- |
+| `:axis` | `:bar`, `:line` | `Expresso.Element.Chart` |
+| `:pie` | `:pie` | `Expresso.Element.Chart` |
+| `:parts` | `:treemap`, `:sunburst` | `Expresso.Element.Chart.Hierarchy` |
+| `:flows` | `:sankey`, `:alluvial`, `:parallel_sets`, `:chord` | `Expresso.Element.Chart.Sankey`, `ParallelSets` and `Chord` |
+
+The module makes each group of kinds from the table, and it gives a guard for each group,
+such as `is_flow/1` and `is_part/1`. `Expresso.Element.Chart`, `Motion` and `Sankey` use
+these guards in their function heads, and no module holds a list of kinds. The DSL takes
+the kinds of `Kinds.all/0`. These are the reasons for this design:
+
+- **A new kind changes one table.** Before, the commit of the chord kind changed seven
+  places in the chart module and one in the motion module.
+- **No catch-all clause.** A function that branches on the kind has one clause for each
+  family, so a new kind without a clause raises `FunctionClauseError` in its first render
+  test. Before, `plot/1` and `layout/1` drew such a kind as an axis chart.
+- **No dependencies.** The module depends on no other module of Expresso, so each chart
+  module can use its guards at compile time with no cycle. The guards are not in
+  `Expresso.Element.Chart`, because `Motion` and `Sankey` would then depend on it at
+  compile time.
+
+Inside the axis family, a few functions still match `:bar` or `:line`, because a bar and a
+line differ in their marks, in their box and in the place of a category.
+
+`single/1` checks the frames of a chart of flows with the whole timeline. The check of each
+later frame therefore does not call it again for such a chart.
+
 ### The treemap and the sunburst
 
 A treemap and a sunburst show the parts of a whole in groups.
