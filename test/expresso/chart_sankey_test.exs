@@ -119,14 +119,7 @@ defmodule Expresso.ChartSankeyTest do
   end
 
   describe "the errors" do
-    test "a loop, a flow to the same node, a path of one node and a negative value" do
-      assert_raise ArgumentError, ~r/make a loop: A → B → A/, fn ->
-        Builder.chart(:sankey,
-          title: "Loop",
-          flows: [Builder.flow("A", "B", 1), Builder.flow("B", "A", 1)]
-        )
-      end
-
+    test "a flow to the same node, a path of one node and a negative value" do
       assert_raise ArgumentError, ~r/goes from "A" to "A"/, fn ->
         Builder.chart(:sankey, title: "Self", flows: [Builder.flow("A", "A", 1)])
       end
@@ -399,7 +392,7 @@ defmodule Expresso.ChartSankeyTest do
       assert "GasDistrict heat40" in rows
     end
 
-    test "a node is for a sankey, one time, for a node of the flows, in a later column" do
+    test "a node is for a sankey, one time, and for a node of the flows" do
       assert_raise ArgumentError, ~r/a bar chart takes no node/, fn ->
         Builder.chart(:bar,
           title: "Bar",
@@ -416,17 +409,113 @@ defmodule Expresso.ChartSankeyTest do
       assert_raise ArgumentError, ~r/"Oil" names no node of the flows/, fn ->
         chart(nodes: [Builder.node("Oil")])
       end
+    end
+  end
 
-      assert_raise ArgumentError,
-                   ~r/"Electricity" in column 3 to "Homes" in column 2 goes to the left/,
-                   fn ->
-                     chart(
-                       nodes: [
-                         Builder.node("Electricity", column: 3),
-                         Builder.node("Homes", column: 2)
-                       ]
-                     )
-                   end
+  describe "a loop" do
+    defp loop(opts \\ []) do
+      Builder.chart(
+        :sankey,
+        [
+          title: "Steel",
+          flows: [
+            Builder.flow("Ore", "Mill", 7),
+            Builder.flow("Mill", "Products", 9),
+            Builder.flow("Mill", "Scrap", 1),
+            Builder.flow("Scrap", "Mill", 1),
+            Builder.flow("Products", "Recycling", 5),
+            Builder.flow("Products", "Landfill", 4),
+            Builder.flow("Recycling", "Mill", 2),
+            Builder.flow("Recycling", "Export", 3)
+          ]
+        ] ++ opts
+      )
+    end
+
+    defp backs(figure) do
+      figure
+      |> Floki.find("figure.chart > svg path.chart-back")
+      |> Enum.map(&(&1 |> Floki.attribute("d") |> hd()))
+    end
+
+    test "a link that closes a loop is a back link, and the columns come from the other links" do
+      figure = figure(loop())
+      columns = Sankey.columns(Enum.map(loop().categories, fn [a, b] -> %{from: a, to: b} end))
+
+      assert columns == %{
+               "Ore" => 0,
+               "Mill" => 1,
+               "Products" => 2,
+               "Scrap" => 2,
+               "Recycling" => 3,
+               "Landfill" => 3,
+               "Export" => 4
+             }
+
+      assert length(backs(figure)) == 2
+      assert figure |> Floki.find("path.chart-link") |> length() == 8
+
+      for back <- Floki.find(figure, "path.chart-back") do
+        [width] = Floki.attribute(back, "stroke-width")
+        assert {_number, ""} = Float.parse(width)
+      end
+    end
+
+    test "a back link goes under the nodes, and a longer back link has a lower lane" do
+      figure = figure(loop())
+
+      bottoms =
+        figure
+        |> Floki.find("rect.chart-node")
+        |> Enum.map(fn rect ->
+          {y, ""} = rect |> Floki.attribute("y") |> hd() |> Float.parse()
+          {height, ""} = rect |> Floki.attribute("height") |> hd() |> Float.parse()
+          y + height
+        end)
+
+      # The lane of a back link is the y of its horizontal part, after the
+      # second command V.
+      lanes =
+        for d <- backs(figure) do
+          [_, after_v] = String.split(d, " V", parts: 2)
+          [_, lane] = Regex.run(~r/Q[\d.]+,([\d.]+)/, after_v)
+          {lane, ""} = Float.parse(lane)
+          lane
+        end
+
+      assert Enum.all?(lanes, &(&1 > Enum.max(bottoms)))
+
+      # Scrap → Mill spans one column, and Recycling → Mill spans two.
+      [scrap, recycling] = lanes
+      assert scrap < recycling
+    end
+
+    test "the back links draw first, under the other links of their series" do
+      [series] = figure(loop()) |> Floki.find("figure.chart > svg > g.chart-series")
+
+      classes =
+        series |> Floki.find("path") |> Enum.map(&(&1 |> Floki.attribute("class") |> hd()))
+
+      assert classes |> Enum.take(2) |> Enum.all?(&(&1 =~ "chart-back"))
+      refute classes |> Enum.drop(2) |> Enum.any?(&(&1 =~ "chart-back"))
+    end
+
+    test "a column of a node entity that puts a target before its source makes a back link" do
+      figure =
+        chart(nodes: [Builder.node("Electricity", column: 3), Builder.node("Homes", column: 2)])
+        |> figure()
+
+      # Electricity → Homes goes to the left, and Heat → Homes stays in
+      # column 2.
+      assert length(backs(figure)) == 2
+    end
+
+    test "reveal shows a back link with the other links of the column of its source" do
+      chart = loop(reveal: true)
+      index = Enum.find_index(chart.categories, &(&1 == ["Scrap", "Mill"]))
+
+      assert length(chart.elements) == 4
+      assert chart.elements |> Enum.at(2) |> Map.get(:values) |> Enum.at(index) == 1
     end
   end
 

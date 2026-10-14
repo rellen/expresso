@@ -556,8 +556,8 @@ defmodule Expresso.Element.Chart do
 
   defp single(chart), do: {:ok, chart}
 
-  # The node entities of a sankey: one for each node at most, each for a node
-  # of the flows, and with columns that keep each flow going to the right.
+  # The node entities of a sankey: one for each node at most, and each for a
+  # node of the flows.
   defp nodes_check(%__MODULE__{flows: []}, _links), do: :ok
 
   defp nodes_check(%__MODULE__{flows: nodes} = chart, links) do
@@ -577,22 +577,8 @@ defmodule Expresso.Element.Chart do
          "the place of a name in its path sets its column in an alluvial chart, " <>
            "so a node entity of an alluvial chart takes no column option"}
 
-      chart.kind != :sankey ->
-        :ok
-
       true ->
-        columns = Sankey.columns(links, Sankey.pinned(Map.new(nodes, &{&1.name, &1})))
-
-        case Enum.find(links, &(columns[&1.from] >= columns[&1.to])) do
-          nil ->
-            :ok
-
-          link ->
-            {:error,
-             "the flow from \"#{link.from}\" in column #{columns[link.from] + 1} to " <>
-               "\"#{link.to}\" in column #{columns[link.to] + 1} goes to the left. " <>
-               "A flow goes to a later column."}
-        end
+        :ok
     end
   end
 
