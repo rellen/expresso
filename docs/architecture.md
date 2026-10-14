@@ -745,19 +745,36 @@ A deck template gives a header and a footer. It implements the `Expresso.Templat
 behaviour, which has the callbacks `header/1` and `footer/1`. The footer of the default
 deck template is empty. The `slide_numbers` option gives the numbers of the slides.
 
-A slide template gives the body of a slide. It has a `render/1` function.
+A slide template gives the body of a slide. It implements the `Expresso.Template.Slide`
+behaviour, which has the callback `render/1`.
+
+`use Expresso.Template` makes a slide template, and `use Expresso.Template.Deck` makes a
+deck template. Each one imports Temple and `Expresso.Template`, so a template can call
+`c/2` with a component, and each one declares its behaviour. Thus the compiler gives a
+warning for a template without a callback.
 
 `Expresso.Template` selects a template from the metadata. A slide template comes from
 `slide.metadata[:template]`, then from `deck.metadata[:slide_template]`, and a deck
 template comes from `deck.metadata[:template]`. The default value of each is
 `{:builtins, :default}`. The `meta` option of a slide goes into `slide.metadata[:meta]`,
 and not into the metadata itself, so a value of the user cannot replace a key that
-Expresso reads. The private function
-`module_from_template_definition/2` maps this value to a module name.
+Expresso reads. `Expresso.Template.module/2` maps this value to a module.
 
 The value takes one of two forms. The tuple `{:builtins, name}` selects a built-in template.
 A module selects that module. Therefore a template that `Expresso.load_templates/0` compiles
 from `./priv/templates/` is available as a module.
+
+The checks of a template occur at two times:
+
+- `Expresso.Template.validate/2` is the custom type of the options `template` and
+  `slide_template`. It refuses a value that is not a module or a tuple, and a built-in name
+  that the table of the built-in templates does not hold. The DSL and `Expresso.Builder`
+  thus give the error at compile time.
+- `Expresso.Template.module/2` checks a module at render. It loads the module, and it
+  makes sure that the module exports the callbacks of its kind. A module that fails gives an
+  `ArgumentError` with the reason. A module cannot be checked earlier, because
+  `Expresso.load_templates/0` compiles the templates of `./priv/templates/` only before a
+  render. A deck struct from data does not go through the DSL, so this check covers it too.
 
 The `template` option of the deck and of a slide gives each kind:
 
