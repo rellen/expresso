@@ -234,7 +234,7 @@ gives an error. Then give a different browser in `EXPRESSO_CHROMIUM`.
 Most of the time of `--check=a11y` goes to axe-core, at about 0.2 s for each step. During
 the steps, the check takes the menu, the list of keys and the copies of the slides out of
 the document, because axe-core reads the whole document at each run. For the Line 4 deck
-of `examples/line4`, with 28 slides and 74 steps, these were the times after the compile:
+of `examples/line4`, with 28 slides and 76 steps, these were the times after the compile:
 
 | Level | Time |
 | --- | --- |

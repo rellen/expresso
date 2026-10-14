@@ -4,8 +4,8 @@
 #
 # The copy is the same as the source, with one difference: `@page` is the
 # path of `line-4.html`, a copy of `line-4/index.html` of iso-factories at
-# commit 1f436ef. The code slides read their lines from that file, so the
-# line numbers of `highlight` agree with it.
+# commit 1f436ef. The code slides find their lines in that file by their
+# text.
 #
 # Run the command from the root of this repository:
 #
@@ -80,34 +80,12 @@ defmodule Line4Talk.Deck do
     base0F: "#c8a061"
   }
 
+  # Dimmed text keeps 4.5:1, as WCAG 1.4.3 asks for text under 24 px.
+  dim_contrast 4.5
+
   css ~S"""
-  /* Expresso dims a role of text to 3:1. Text under 24 px needs 4.5:1 (WCAG
-     1.4.3), so each dimmed colour here is its role blended on its background at
-     the smallest multiple of 0.05 that keeps 4.5:1. */
-  :root {
-    --text-dim: #8b9198;
-    --muted-dim: #808d99;
-    --accent-dim: #aa8b36;
-    --warning-dim: #bb8636;
-    --danger-dim: #ba7978;
-    --success-dim: #42a164;
-    --emphasis-dim: #6c8dbf;
-    --code-text-dim: #8e959d;
-    --code-comment-dim: #8a96a4;
-    --code-tag-dim: #c78280;
-    --code-number-dim: #bd893a;
-    --code-type-dim: #a8972f;
-    --code-string-dim: #45a569;
-    --code-support-dim: #7896a6;
-    --code-function-dim: #ad8e39;
-    --code-keyword-dim: #7496cc;
-  }
   .code pre {
     font-size: 0.42rem;
-  }
-  /* The class of a slide whose code has the page's longest lines. */
-  .dense .code pre {
-    font-size: 0.34rem;
   }
   .table {
     font-size: 0.55rem;
@@ -240,7 +218,6 @@ defmodule Line4Talk.Deck do
   slide "boxes" do
     section "The picture"
     heading "Every thing is a box"
-    class "dense"
 
     notes """
     The scene is axis-aligned boxes and nothing else: about 2,400 each frame. B() makes
@@ -251,7 +228,9 @@ defmodule Line4Talk.Deck do
     code "js" do
       src @page
       lines from: "function B(x0, y0, z0, x1, y1, z1, c, extra) {", to: :block
-      highlight [612..612, 613..618]
+      highlight [[from: "const b = { x0"], [from: "if (extra) {", to: :block]]
+      trailing_comments false
+      wrap true
     end
   end
 
@@ -377,13 +356,16 @@ defmodule Line4Talk.Deck do
     code "js" do
       src @page
       lines from: "  // The floor both depalletizers reach over", to: "const overShared"
-      highlight [2161..2166, 2167..2169]
+
+      highlight [
+        [from: "// The floor both", to: "would keep the other from the rack.)"],
+        [from: "const SHARED", to: "return false; };"]
+      ]
     end
   end
 
   slide "deadlock" do
     heading "When each waits for the other"
-    class "dense"
 
     notes """
     One gives way: never one already on its way to its rest, then the one waiting for the
@@ -394,7 +376,15 @@ defmodule Line4Talk.Deck do
     code "js" do
       src @page
       lines from: "const stuck = () =>", to: :block
-      highlight [2222..2222, 2223..2226, 2227..2227]
+
+      highlight [
+        [from: "if (!(o.waiting && arm.waiting))"],
+        [from: "if (!sim.armYield) {", to: "+ 1;\n      }"],
+        [from: "return sim.armYield.arm === arm;"]
+      ]
+
+      trailing_comments false
+      wrap true
     end
 
     callout :definition do
@@ -443,14 +433,21 @@ defmodule Line4Talk.Deck do
 
   slide "resHit" do
     heading "The reservation table"
-    class "dense"
 
     notes "resHit is the one question the planners ask: does anyone else's booking meet this one?"
 
     code "js" do
       src @page
       lines from: "  function resHit(m, b, m2) {", to: :block
-      highlight [3589..3590, 3591..3591, 3593..3593]
+
+      highlight [
+        [from: "for (const [who, r] of RES) {", to: "!boxesMeet(r, b)) continue;"],
+        [from: "for (const q of r.list)"],
+        [from: "return hit;"]
+      ]
+
+      trailing_comments false
+      wrap true
     end
   end
 
@@ -591,7 +588,6 @@ defmodule Line4Talk.Deck do
 
   slide "oeeFigures" do
     heading "Two samples, one window"
-    class "dense"
 
     notes "The rolling figure takes a sample a second and differences two samples ten minutes apart."
 
@@ -605,7 +601,14 @@ defmodule Line4Talk.Deck do
           lines from: "  function oeeFigures(from, to) {",
                 to: :block
 
-          highlight [6728..6730, 6732..6734, 6735..6735]
+          highlight [
+            [from: "const planned = to.t - from.t;", to: "planned - (to.stop - from.stop));"],
+            [from: "const A = run / planned;", to: "/ total : 1;"],
+            [from: "return { A, P, Q, oee"]
+          ]
+
+          trailing_comments false
+          wrap true
         end
       end
 
@@ -621,7 +624,6 @@ defmodule Line4Talk.Deck do
 
   slide "settings" do
     heading "Settings that start at world class"
-    class "dense"
 
     notes """
     Breakdowns multiply every mean time between faults; a change rescales the clocks
@@ -632,6 +634,8 @@ defmodule Line4Talk.Deck do
     code "js" do
       src @page
       lines from: "  let faultScale = 8;", to: "$('faultRate')"
+      trailing_comments false
+      wrap true
     end
 
     columns do

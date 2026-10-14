@@ -181,8 +181,8 @@ or numbers relative to the first line of the excerpt.
 
 The pull requests #206 to #216 of Expresso close each item of [Minus](#minus) and of
 [Missing features](#missing-features). rellen/iso-factories#10 then removed each workaround
-from the talk. `examples/line4/line4.exs` is still the copy from before that change, so it
-keeps the workarounds.
+from the talk, and rellen/iso-factories#12 gave the last group `to: :block`.
+`examples/line4/line4.exs` is a copy of the talk after these changes.
 
 ### Minus
 
@@ -193,7 +193,7 @@ keeps the workarounds.
 | 3. Dimmed text has a contrast of 3:1 | #209 | `dim_contrast 4.5` in place of the 16 dimmed colors in the `css` option. |
 | 4. Each image is in the document many times | #214 | Nothing. The document holds each large file one time, and it is 1.9 MB in place of 3.9 MB. |
 | 5. A real line of code is too long for a slide | #213 | `trailing_comments false` and `wrap true` in place of the class `dense`. |
-| 6. `highlight` takes line numbers | #212 | Groups of texts, such as `[from: "if (extra) {", to: "break; }\n    }"]`. #230 adds `to: :block` for a group that ends on a line with only `}`. |
+| 6. `highlight` takes line numbers | #212, #230 | Groups of texts. rellen/iso-factories#12 gave one group `to: :block`: `[from: "if (extra) {", to: :block]`. |
 
 ### Missing features
 
