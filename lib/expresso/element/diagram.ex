@@ -145,6 +145,7 @@ defmodule Expresso.Element.Diagram do
   that it cannot read, and for an `id` that the file does not hold.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(diagram) do
     %__MODULE__{src: src, elements: parts, width: width, alt: alt} = diagram
 
@@ -249,6 +250,7 @@ defmodule Expresso.Element.Diagram do
   # The SVG comes from a file that the deck names, as the text of a text area
   # comes from the deck.
   # sobelow_skip ["XSS.Raw"]
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("diagram", assigns[:class]), rest!: @overlay do

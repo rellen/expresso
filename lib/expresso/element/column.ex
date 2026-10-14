@@ -37,6 +37,7 @@ defmodule Expresso.Element.Column do
   `--column-grow`, and the theme reads them.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(column) do
     %__MODULE__{elements: elements, width: width} = column
 
@@ -53,6 +54,7 @@ defmodule Expresso.Element.Column do
   Make the HTML of a column
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("column", assigns[:class]), rest!: @overlay do

@@ -672,6 +672,7 @@ defmodule Expresso.Element.Chart do
   with its color number and its overlay attributes.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(%__MODULE__{} = chart) do
     series =
       chart.elements
@@ -758,6 +759,7 @@ defmodule Expresso.Element.Chart do
   screen reader.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     assigns = assigns |> Map.put(:view_box, "0 0 #{@width} #{@height}") |> layout()
 

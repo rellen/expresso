@@ -35,6 +35,7 @@ defmodule Expresso.Element.Quotation do
   `Expresso.Overlay.Render.attributes/1`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(quotation) do
     %__MODULE__{text: text, by: by} = quotation
     %{text: text, by: by, overlay: Expresso.Overlay.Render.attributes(quotation)}
@@ -48,6 +49,7 @@ defmodule Expresso.Element.Quotation do
   element, and a quotation without a `by` option has no such element.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       figure class: Expresso.Element.classes("quotation", assigns[:class]), rest!: @overlay do

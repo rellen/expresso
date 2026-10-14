@@ -46,6 +46,7 @@ defmodule Expresso.Element.List do
   `Expresso.Overlay.Render.attributes/1`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(list) do
     %__MODULE__{elements: elements, ordered: ordered} = list
     %{elements: elements, ordered: ordered, overlay: Expresso.Overlay.Render.attributes(list)}
@@ -57,6 +58,7 @@ defmodule Expresso.Element.List do
   An ordered list is an `ol` element, and the other list is a `ul` element.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       if @ordered do

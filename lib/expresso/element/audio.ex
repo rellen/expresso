@@ -95,6 +95,7 @@ defmodule Expresso.Element.Audio do
   Make the assigns of the render function from the struct
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(audio) do
     %{
       title: audio.title,
@@ -114,6 +115,7 @@ defmodule Expresso.Element.Audio do
   view and on paper, and the style sheet hides it in the present view.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       figure class: Expresso.Element.classes("audio", assigns[:class]), rest!: @overlay do

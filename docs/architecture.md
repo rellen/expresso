@@ -822,26 +822,36 @@ An element is the content of a slide. These are the elements at this time:
 
 ### The parts of an element module
 
-An element module has these parts:
+An element module has `use Expresso.Element`, and these parts:
 
 - A struct with a `__spark_metadata__` field, with the `at`, `on`, `steps` and `el`
   fields of the overlays, and with the `class` field of the `class` option.
-- A `get_assigns/1` function. It makes a map of assigns from the struct. The key `overlay`
-  holds the attributes from `Expresso.Overlay.Render.attributes/1`.
-- A `render/1` function. It makes the HTML from the assigns, and it puts the `overlay`
-  list on the root tag with `rest!: @overlay`. An element that writes text from the deck
-  puts that text in one block element inside the root tag.
+- `get_assigns/1`, a callback of the behaviour `Expresso.Element`. It makes a map of
+  assigns from the struct. The key `overlay` holds the attributes from
+  `Expresso.Overlay.Render.attributes/1`.
+- `render/1`, the other callback. It makes the HTML from the assigns, and it puts the
+  `overlay` list on the root tag with `rest!: @overlay`. An element that writes text from
+  the deck puts that text in one block element inside the root tag.
 
-`Expresso.Template.render_elements/1` matches `%module{}` for each element. It then calls
-`module.get_assigns/1` and `module.render/1`. There is no `@behaviour` for an element, and
-the compiler does not make sure that a module has the two functions.
+`use Expresso.Element` declares the behaviour. Thus the compiler gives a warning for an
+element module without one of the two callbacks, and `mix compile --warnings-as-errors`
+fails. The macro also imports Temple and `Expresso.Component`. That module holds
+`component/3`, the function that `c/2` of Temple calls, so the element modules share one
+copy of it. Before, `use Temple.Component` defined a copy in each element module.
 
-`render_elements/1` also puts the `class` field into the assigns, so `get_assigns/1` does
-not need it. The render function writes `Expresso.Element.classes/2` of its own class and
-`assigns[:class]` on the root tag. The class of the theme comes first, so each rule of the
-theme still selects the element. The option is not part of the overlay attributes,
-because the root tag already has a `class` attribute, and HTML takes only the first of
-two. A table renders its rows itself, so it puts the class of each row into its assigns.
+The dispatch is on the module of a struct, and each element struct is the target of one
+Spark entity. A behaviour fits this dispatch. A protocol would need a `defimpl` block for
+each element, and the protocols would need consolidation in the build of the binary.
+
+`Expresso.Template.render_elements/1` matches `%module{}` for each element. It calls
+`module.render/1` with the assigns from `Expresso.Element.assigns/1`. That function calls
+`module.get_assigns/1`, and it puts the `class` field into the assigns, so `get_assigns/1`
+does not need it. The renderer uses the same function for a footnote and a shape, and a
+table uses it for each of its rows. The render function writes `Expresso.Element.classes/2`
+of its own class and `assigns[:class]` on the root tag. The class of the theme comes first,
+so each rule of the theme still selects the element. The option is not part of the overlay
+attributes, because the root tag already has a `class` attribute, and HTML takes only the
+first of two.
 
 ### The text box and the text area
 

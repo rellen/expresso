@@ -37,6 +37,7 @@ defmodule Expresso.Element.Math do
   `Expresso.Overlay.Render.attributes/1`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(math) do
     %__MODULE__{text: text} = math
     %{text: text, overlay: Expresso.Overlay.Render.attributes(math)}
@@ -48,6 +49,7 @@ defmodule Expresso.Element.Math do
   The MathML goes into one block element inside the root tag.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("math", assigns[:class]), rest!: @overlay do

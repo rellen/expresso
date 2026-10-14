@@ -66,6 +66,7 @@ defmodule Expresso.Element.Image do
   `goto` holds the link of the `goto` option, or `nil`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(image) do
     %__MODULE__{src: src, alt: alt, width: width, goto: goto} = image
 
@@ -110,6 +111,7 @@ defmodule Expresso.Element.Image do
   option.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("image", assigns[:class]), rest!: @overlay do

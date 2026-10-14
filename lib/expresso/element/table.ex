@@ -45,6 +45,7 @@ defmodule Expresso.Element.Table do
   or `nil`, and the key `body` holds the other rows.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(table) do
     %__MODULE__{elements: rows, header: header} = table
 
@@ -61,6 +62,7 @@ defmodule Expresso.Element.Table do
   Make the HTML of a table
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       table class: Expresso.Element.classes("table", assigns[:class]), rest!: @overlay do
@@ -82,5 +84,5 @@ defmodule Expresso.Element.Table do
   defp header_assigns(row), do: row |> row_assigns() |> Map.put(:header, true)
 
   defp row_assigns(row),
-    do: row |> Expresso.Element.Row.get_assigns() |> Map.put(:class, row.class)
+    do: Expresso.Element.assigns(row)
 end

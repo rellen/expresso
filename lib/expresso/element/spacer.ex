@@ -32,6 +32,7 @@ defmodule Expresso.Element.Spacer do
   `Expresso.Overlay.Render.attributes/1`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(spacer) do
     %{overlay: Expresso.Overlay.Render.attributes(spacer)}
   end
@@ -40,6 +41,7 @@ defmodule Expresso.Element.Spacer do
   Make the HTML of a spacer
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("spacer", assigns[:class]), rest!: @overlay

@@ -53,6 +53,7 @@ defmodule Expresso.Element.Icon do
   `Expresso.Overlay.Render.attributes/1`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(%__MODULE__{} = icon) do
     %{
       svg: icon.svg,
@@ -69,6 +70,7 @@ defmodule Expresso.Element.Icon do
   The icon is a `figure` with the SVG and, with a label, a `figcaption`.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       figure class: Expresso.Element.classes("icon icon-#{@color}", assigns[:class]),

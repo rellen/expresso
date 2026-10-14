@@ -33,6 +33,7 @@ defmodule Expresso.Element.Row do
   row is the header of the table, and the table puts it in.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(row) do
     %__MODULE__{cells: cells} = row
     %{cells: cells, header: false, overlay: Expresso.Overlay.Render.attributes(row)}
@@ -48,6 +49,7 @@ defmodule Expresso.Element.Row do
   # Each cell comes from the deck, as the text of a text area does, and the
   # author of the deck writes the HTML.
   # sobelow_skip ["XSS.Raw"]
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       tr class: Expresso.Element.classes("row", assigns[:class]), rest!: @overlay do

@@ -101,6 +101,7 @@ defmodule Expresso.Element.Callout do
   the header, or `nil` for no header.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(%__MODULE__{} = callout) do
     title =
       case callout.title do
@@ -126,6 +127,7 @@ defmodule Expresso.Element.Callout do
   slide.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("callout callout-#{@kind}", assigns[:class]),

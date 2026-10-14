@@ -67,6 +67,7 @@ defmodule Expresso.Element.QrCode do
   the key `side` holds the number of modules on a side, with the quiet zone.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(qr_code) do
     %__MODULE__{text: text, size: size, label: label, title: title, level: level} = qr_code
     {path, side} = path(text, level)
@@ -137,6 +138,7 @@ defmodule Expresso.Element.QrCode do
   Make the HTML of a QR code
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       figure class: Expresso.Element.classes("qr-code", assigns[:class]), rest!: @overlay do

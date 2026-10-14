@@ -39,6 +39,7 @@ defmodule Expresso.Element.Columns do
   `Expresso.Overlay.Render.attributes/1`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(columns) do
     %__MODULE__{elements: elements} = columns
     %{elements: elements, overlay: Expresso.Overlay.Render.attributes(columns)}
@@ -48,6 +49,7 @@ defmodule Expresso.Element.Columns do
   Make the HTML of a columns element
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("columns", assigns[:class]), rest!: @overlay do

@@ -1,18 +1,48 @@
 defmodule Expresso.Element do
   @moduledoc """
-  An element of a slide
+  The behaviour of an element of a slide
 
-  `use Expresso.Element` imports Temple for the render function of the
+  `use Expresso.Element` declares this behaviour, so the compiler gives a
+  warning for an element module without `get_assigns/1` or `render/1`. It
+  also imports Temple and `Expresso.Component` for the render function of the
   element. The module also holds the functions of the `class` option, which
   each element and each slide takes.
   """
 
+  @doc """
+  Make the assigns of the render function from the struct of an element
+
+  The key `overlay` holds the attributes from
+  `Expresso.Overlay.Render.attributes/1`. `assigns/1` adds the key `class`.
+  """
+  @callback get_assigns(element :: struct()) :: map()
+
+  @doc """
+  Make the HTML of an element from its assigns
+
+  The root tag gets the attributes of `@overlay` with `rest!: @overlay`, and
+  the classes of the element with `classes/2`.
+  """
+  @callback render(assigns :: map()) :: Phoenix.HTML.safe()
+
   defmacro __using__(_opts) do
     quote do
       import Temple
-      use Temple.Component
+      import Expresso.Component
+
+      @behaviour Expresso.Element
     end
   end
+
+  @doc """
+  Return the assigns of an element for its render function
+
+  The function calls `get_assigns/1` of the module of the element, and it
+  adds the `class` field of the element under the key `class`.
+  """
+  @spec assigns(struct()) :: map()
+  def assigns(%module{} = element),
+    do: element |> module.get_assigns() |> Map.put(:class, Map.get(element, :class))
 
   # A CSS class name: a letter, an underscore or a hyphen and a letter at the
   # start, then letters, digits, underscores and hyphens.

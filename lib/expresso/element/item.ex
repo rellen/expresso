@@ -35,6 +35,7 @@ defmodule Expresso.Element.Item do
   `goto` option, or `nil`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(item) do
     %__MODULE__{text: text, elements: elements, goto: goto} = item
 
@@ -54,6 +55,7 @@ defmodule Expresso.Element.Item do
   a link, and a nested list stays outside the link.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       li class: Expresso.Element.classes("item", assigns[:class]), rest!: @overlay do
