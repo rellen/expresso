@@ -585,8 +585,8 @@ defmodule Expresso.Element.Chart.Sankey do
   end
 
   @doc """
-  Tell whether a chart shows a title over each column: an alluvial chart
-  with the `levels` option
+  Tell whether a chart shows a title over each column: an alluvial chart or
+  a parallel sets chart with the `levels` option
 
       iex> Expresso.Element.Chart.Sankey.titles?(%{kind: :alluvial, levels: ["2020", "2026"]})
       true
@@ -594,15 +594,21 @@ defmodule Expresso.Element.Chart.Sankey do
       false
   """
   @spec titles?(map()) :: boolean()
-  def titles?(%{kind: :alluvial, levels: [_ | _]}), do: true
+  def titles?(%{kind: kind, levels: [_ | _]}) when kind in [:alluvial, :parallel_sets],
+    do: true
+
   def titles?(_assigns), do: false
 
-  # The title of each column of an alluvial chart, in the row above the
-  # nodes. The first title is at the left edge of its column, and the last
-  # title is at the right edge of its column. Each other title is at the
-  # middle of its column. The key `xs` holds the x of each column, as the
-  # layout returns it.
-  defp titles(assigns) do
+  @doc """
+  Draw the title of each column of an alluvial chart or a parallel sets
+  chart, in the row above the nodes
+
+  A title is at the left edge of its first column, in the middle of a column
+  between, and at the right edge of the last column. The key `xs` holds the
+  x of each column, as the layout returns it.
+  """
+  @spec titles(map()) :: Phoenix.HTML.safe()
+  def titles(assigns) do
     if titles?(assigns) do
       last = length(assigns.levels) - 1
 
@@ -683,13 +689,28 @@ defmodule Expresso.Element.Chart.Sankey do
         do: %{from: from, to: to, value: value, series: number}
   end
 
-  # A label is at the right of its node, and in the middle of its height.
-  defp label_place(node) do
+  @doc """
+  Return the attributes that place the label of a node: at the right of the
+  node, and in the middle of its height
+
+      iex> Expresso.Element.Chart.Sankey.label_place(%{x: 4, y: 10, height: 20})
+      [x: "28", y: "27", text_anchor: "start"]
+  """
+  @spec label_place(map()) :: keyword()
+  def label_place(node) do
     [x: Plot.f(node.x + @node + 8), y: Plot.f(node.y + node.height / 2 + 7), text_anchor: "start"]
   end
 
-  defp label_text(node, true), do: "#{node.label} #{Plot.label(node.value)}"
-  defp label_text(node, false), do: node.label
+  @doc """
+  Return the text of the label of a node: its label, and its value when the
+  chart shows the values
+
+      iex> Expresso.Element.Chart.Sankey.label_text(%{label: "Gas", value: 95}, true)
+      "Gas 95"
+  """
+  @spec label_text(map(), boolean()) :: String.t()
+  def label_text(node, true), do: "#{node.label} #{Plot.label(node.value)}"
+  def label_text(node, false), do: node.label
 
   @doc """
   Write the table of a sankey: one row for each link, with its source, its
@@ -739,9 +760,14 @@ defmodule Expresso.Element.Chart.Sankey do
     end
   end
 
-  # The text of a node in the table. A node of an alluvial chart names its
-  # column, because one name can be in each column.
-  defp cell(assigns, {column, name}) do
+  @doc """
+  Return the text of a node in the table
+
+  A node of an alluvial chart names its column, because one name can be in
+  each column.
+  """
+  @spec cell(map(), key()) :: String.t()
+  def cell(assigns, {column, name}) do
     title =
       if titles?(assigns),
         do: Enum.at(assigns.levels, column),
@@ -750,7 +776,7 @@ defmodule Expresso.Element.Chart.Sankey do
     "#{label(assigns, name)} (#{title})"
   end
 
-  defp cell(assigns, name), do: label(assigns, name)
+  def cell(assigns, name), do: label(assigns, name)
 
   defp label(%{node_settings: settings}, name) do
     case settings do
