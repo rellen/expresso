@@ -717,6 +717,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   font-size: 32px;
   font-weight: bold;
 }
+.chart-column {
+  fill: var(--muted);
+  font-size: 22px;
+  font-weight: bold;
+}
 :is(.chart, .chart-series)[data-effect="grow"] {
   --enter-scale: 1;
   --chart-shown: var(--shown);
