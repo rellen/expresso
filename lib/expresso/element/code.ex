@@ -600,6 +600,7 @@ defmodule Expresso.Element.Code do
   option.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(code) do
     %__MODULE__{text: text, lang: lang, elements: groups, first: first} = code
 
@@ -660,6 +661,7 @@ defmodule Expresso.Element.Code do
   # `Expresso.Highlight` escapes each line, with Makeup or with
   # `Phoenix.HTML.html_escape/1`.
   # sobelow_skip ["XSS.Raw"]
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       div class:

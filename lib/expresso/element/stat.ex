@@ -97,6 +97,7 @@ defmodule Expresso.Element.Stat do
   `Expresso.Overlay.Render.attributes/1`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(%__MODULE__{} = stat) do
     decimals = stat.decimals || decimals(stat.value)
     number = format(stat.value, decimals, stat.group)
@@ -123,6 +124,7 @@ defmodule Expresso.Element.Stat do
   screen reader. With `count`, the number has the class `stat-count`.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       figure class: Expresso.Element.classes("stat", assigns[:class]), rest!: @overlay do

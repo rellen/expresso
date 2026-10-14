@@ -64,6 +64,7 @@ defmodule Expresso.Element.Toc do
   entries, each with its own attributes.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(%__MODULE__{} = toc) do
     %{
       progress: toc.progress |> Atom.to_string() |> String.replace("_", "-"),
@@ -80,6 +81,7 @@ defmodule Expresso.Element.Toc do
   link of the `goto` option to the first slide of its section.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       nav class: Expresso.Element.classes("toc toc-#{@progress}", assigns[:class]),

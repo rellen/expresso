@@ -67,6 +67,7 @@ defmodule Expresso.Element.Footnote do
   `Expresso.Overlay.Render.attributes/1`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(footnote) do
     %__MODULE__{text: text} = footnote
     %{text: text, overlay: Expresso.Overlay.Render.attributes(footnote)}
@@ -92,6 +93,7 @@ defmodule Expresso.Element.Footnote do
   footnote of the slide.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       li class: Expresso.Element.classes("footnote", assigns[:class]), rest!: @overlay do

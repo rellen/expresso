@@ -198,7 +198,7 @@ defmodule Expresso.Template do
             Expresso.Element.Shape
           ] do
         c(&do_render_element(module, &1),
-          rest!: element |> module.get_assigns() |> Map.put(:class, Map.get(element, :class))
+          rest!: Expresso.Element.assigns(element)
         )
       end
     end

@@ -212,6 +212,7 @@ defmodule Expresso.Element.Embed do
   holds the `sandbox` attribute of the frame.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(embed) do
     %__MODULE__{src: src, title: title, width: width, aspect: aspect} = embed
 
@@ -252,6 +253,7 @@ defmodule Expresso.Element.Embed do
   go into it.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("embed", assigns[:class]), rest!: @overlay do

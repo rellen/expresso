@@ -29,6 +29,7 @@ defmodule Expresso.Element.TextBox do
   `Expresso.Overlay.Render.attributes/1`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(text_box) do
     %__MODULE__{elements: elements} = text_box
     %{elements: elements, overlay: Expresso.Overlay.Render.attributes(text_box)}
@@ -38,6 +39,7 @@ defmodule Expresso.Element.TextBox do
   Make the HTML of a text box
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("text-box", assigns[:class]), rest!: @overlay do

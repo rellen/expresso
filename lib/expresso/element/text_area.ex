@@ -31,6 +31,7 @@ defmodule Expresso.Element.TextArea do
   `goto` option, or `nil`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(text_area) do
     %__MODULE__{text: text, goto: goto} = text_area
     %{text: text, goto: goto, overlay: Expresso.Overlay.Render.attributes(text_area)}
@@ -48,6 +49,7 @@ defmodule Expresso.Element.TextArea do
   then hold no link, because HTML does not permit a link inside a link.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("text-area", assigns[:class]), rest!: @overlay do

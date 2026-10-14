@@ -342,7 +342,7 @@ defmodule Expresso.Renderer do
         ol class: "footnotes" do
           for footnote <- @footnotes do
             c(&Footnote.render/1,
-              rest!: footnote |> Footnote.get_assigns() |> Map.put(:class, footnote.class)
+              rest!: Expresso.Element.assigns(footnote)
             )
           end
         end
@@ -356,7 +356,7 @@ defmodule Expresso.Renderer do
         div class: "shapes" do
           for shape <- @shapes do
             c(&Shape.render/1,
-              rest!: shape |> Shape.get_assigns() |> Map.put(:class, shape.class)
+              rest!: Expresso.Element.assigns(shape)
             )
           end
         end

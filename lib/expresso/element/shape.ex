@@ -127,6 +127,7 @@ defmodule Expresso.Element.Shape do
   shape again, so each copy gets its own id, as the copies of a diagram do.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(%__MODULE__{} = shape) do
     box =
       if shape.kind in [:rect, :ellipse],
@@ -157,6 +158,7 @@ defmodule Expresso.Element.Shape do
   slide, in the layer of the shapes.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(%{kind: kind} = assigns) when kind in [:rect, :ellipse] do
     temple do
       div class: Expresso.Element.classes("shape shape-#{@kind}", assigns[:class]),

@@ -109,6 +109,7 @@ defmodule Expresso.Element.Video do
   captions, or `nil`.
   """
   @spec get_assigns(t()) :: map()
+  @impl Expresso.Element
   def get_assigns(video) do
     %__MODULE__{title: title, width: width, aspect: aspect} = video
 
@@ -179,6 +180,7 @@ defmodule Expresso.Element.Video do
   `tabindex="-1"`, so the key Tab does not go into it.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
+  @impl Expresso.Element
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("embed video", assigns[:class]), rest!: @overlay do
