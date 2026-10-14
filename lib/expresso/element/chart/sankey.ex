@@ -12,13 +12,14 @@ defmodule Expresso.Element.Chart.Sankey do
 
   1. A node with no flow into it is in the first column. Each other node is
      one column after its last source. Thus a link can go across a column.
+     The `column` of a node entity sets the column of its node.
   2. The height of a node is the larger of the flow into it and the flow out
      of it. One scale sets the height of each node, and the fullest column
      fills the height of the chart. The nodes of each column are in the
      vertical middle of the chart.
-  3. The nodes of a column keep the order of the data. At each node, the
-     links have the order of their other ends, from the top, so few links
-     cross.
+  3. The nodes of a column keep the order of the data, or the `order` of
+     their node entity. At each node, the links have the order of their
+     other ends, from the top, so few links cross.
   4. A link is a ribbon between two cubic Bézier curves. The control points
      are at the middle between the two columns, so a link leaves and enters
      each node horizontally. The ribbon is a filled shape, and not a thick
@@ -53,9 +54,11 @@ defmodule Expresso.Element.Chart.Sankey do
   @label 16
 
   # The least distance between the middles of two labels in a column: the
-  # height of one line of a label, and the width of one character of a
-  # label, which is a little more than the mean of the font.
+  # height of one line of a label.
   @line 22
+
+  # The width of one character of a label, a little more than the mean
+  # width of the font.
   @character 10
 
   @doc """
@@ -209,9 +212,9 @@ defmodule Expresso.Element.Chart.Sankey do
   @doc """
   Return the column of each node, from 0
 
-  A node with no link into it is in column 0, and each other node is one
-  column after its furthest source. `pinned` gives the column of some nodes,
-  from 0, and the columns after them follow from them.
+  A node with no link into it is in column 0. Each other node is one column
+  after its last source. `pinned` holds the columns of some nodes, from 0,
+  and the nodes after them move to follow them.
 
       iex> links = [%{from: "A", to: "B"}, %{from: "B", to: "C"}, %{from: "A", to: "C"}]
       iex> Expresso.Element.Chart.Sankey.columns(links)
@@ -344,8 +347,8 @@ defmodule Expresso.Element.Chart.Sankey do
     |> Enum.min()
   end
 
-  # The room at the right of the last column for its labels: the widest of
-  # them in each frame, at most a third of the width.
+  # The space at the right of the last column for its labels: the width of
+  # the widest label in the frames, and a maximum of one third of the width.
   defp right(sizes, shared) do
     widest =
       for size <- sizes,

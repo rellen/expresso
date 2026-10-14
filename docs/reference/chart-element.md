@@ -228,27 +228,49 @@ its path. The values of the same link add. A name is one node in the whole chart
 The table for a screen reader holds one row for each link. Its headers are "From", "To" and
 the `value_label`, or "Value".
 
+### The node entity
+
+A `node` entity changes how the chart shows one node:
+
+| Option of `node` | Value | Effect |
+| --- | --- | --- |
+| The first argument | A string | The name of the node in the flows. |
+| `label` | A string | The text of the label and of the table. The default is the name. |
+| `column` | An integer, 1 or more | The column of the node, from the left. The default comes from [the layout](#the-layout-of-a-sankey). |
+| `order` | An integer | The place of the node in its column, from the top. A node without `order` has the number of its place in the data. Thus `order: 0` puts a node at the top. |
+| `class` | CSS class names | The classes of the `rect` of the node. See [the class option](class-option.md). |
+
+`Expresso.Builder` takes the node entities in the `flows:` list of the chart, with the flows.
+An example is
+`chart(:sankey, title: "Energy", flows: [flow("A", "B", 1), node("B", label: "Bee")])`.
+
 ### The layout of a sankey
 
 The layout obeys these rules:
 
 1. A node with no flow into it is in the first column. Each other node is one column after
-   its last source. Thus a link can go across a column.
+   its last source. Thus a link can go across a column. The `column` option of a node entity
+   sets the column of its node, and the columns after it move.
 2. The height of a node is the larger of the flow into it and the flow out of it. One scale
    sets the height of each node. The nodes of each column are in the vertical middle of the
    chart.
-3. The nodes of a column have the order of the data. At each node, the links have the order
-   of the nodes at their other ends, so few links cross.
+3. The nodes of a column have the order of the data, or the `order` of their node entity. At
+   each node, the links have the order of the nodes at their other ends, so few links cross.
 4. A link is a ribbon between two Bézier curves. It leaves and enters each node
    horizontally, and its height is its value at each point.
 
-A node has a color of the theme, in the order of the nodes. A link has a light color, made
+A node has a color of the theme, in the order of the nodes in the data. The `order` option
+does not change the color of a node. A link has a light color, made
 from the color of its source and the color of the background.
 
 ### The labels
 
-A label shows the name of its node and, with `values true`, its value. A label shows only when
-its node is 16 units high or more.
+A label shows the name of its node and, with `values true`, its value. Each label is at the
+right of its node. The layout keeps space at the right edge for the widest label of the last
+column. This space is a maximum of one third of the width.
+
+A label shows when its node is 16 units high or more. A label of a shorter node shows when
+its middle is one line or more from the middle of each other label in its column.
 
 ### The frames of a chart of flows
 
@@ -350,7 +372,10 @@ The compiler gives an error for these:
 - a category with one node, a node with no name, a flow from a node to the same node, and a
   negative value;
 - flows that make a loop. The message names the nodes of the loop;
-- a chart of flows with `levels` that names one column.
+- a chart of flows with `levels` that names one column;
+- a `node` in a chart that is not a chart of flows;
+- two `node` entities for one node, and a `node` with a name that no flow has;
+- a `column` that puts the target of a flow in the same column as its source, or before it.
 
 The compiler gives an error for a file that it cannot read, for a quote with no closing
 quote, for text after a closing quote, and for a row with a cell that is not a number. The
@@ -384,7 +409,7 @@ A chart of flows writes these elements:
 
 | Mark | Element | Classes |
 | --- | --- | --- |
-| A node | `rect` | `chart-node` and `chart-c1` to `chart-c8` |
+| A node | `rect` | `chart-node`, `chart-c1` to `chart-c8`, and the `class` of its node entity |
 | A link | `path` | `chart-link` |
 | The labels of a series | `g`, after the series, with the same steps | `chart-labels` |
 | A label | `text` | `chart-node-label` |
