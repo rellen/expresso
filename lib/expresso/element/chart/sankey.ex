@@ -73,14 +73,16 @@ defmodule Expresso.Element.Chart.Sankey do
   Return the nodes of a category of a sankey, as a list of names
 
   A category is a list of names, or a string with the separator between two
-  names. The spaces next to a name do not count.
+  names. The spaces next to a name do not count. A path of an alluvial chart
+  after the check holds its nodes, and the function returns them.
 
       iex> Expresso.Element.Chart.Sankey.path("Gas / Electricity", "/")
       ["Gas", "Electricity"]
       iex> Expresso.Element.Chart.Sankey.path(["I/O", "Disks"], "/")
       ["I/O", "Disks"]
   """
-  @spec path(String.t() | [String.t()], String.t()) :: [String.t()]
+  @spec path(String.t() | [String.t()] | [key()], String.t()) :: [key()]
+  def path([{_column, _name} | _] = nodes, _separator), do: nodes
   def path(category, _separator) when is_list(category), do: Enum.map(category, &String.trim/1)
 
   def path(category, separator),
@@ -234,6 +236,7 @@ defmodule Expresso.Element.Chart.Sankey do
     end)
   end
 
+  defp nodes([{_column, _name} | _] = path, true), do: path
   defp nodes(path, true), do: Enum.with_index(path, fn name, column -> {column, name} end)
   defp nodes(path, false), do: path
 
