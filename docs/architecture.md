@@ -1351,6 +1351,15 @@ These are the reasons for this design:
   curves. The control points are at the middle between the two columns. A stroke has its
   width at a right angle to the curve, so a steep link looks thinner than its value. A ribbon
   has its value as its height at each point.
+- **A node entity changes only how a node shows.** The flows give the graph. A `node` entity
+  gives a label, a class, a column or an order to one node. A pinned column moves the nodes
+  after it, and the check refuses a flow that then goes to the left. The colors keep the order
+  of the data, so an `order` does not change the color of a node.
+- **The labels are at the right of the nodes.** A label at the left of a node in the last
+  column can cover a label of the column before it. Therefore each label is at the right. The
+  layout keeps space at the right edge for the widest label of the last column. This space is
+  a maximum of one third of the width. A label of a node shorter than one line shows when it
+  is one line or more from each other label in its column.
 - **The labels are above the links.** The node labels of each series are in a group after
   the series, with the same steps. Thus a later column of links does not cover a label. A
   label has a halo in the color of the background.

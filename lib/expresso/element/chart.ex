@@ -118,7 +118,9 @@ defmodule Expresso.Element.Chart do
   defp flows(%__MODULE__{flows: [_ | _] = items, kind: kind}) when kind != :sankey do
     if Enum.any?(items, &is_struct(&1, Flow)),
       do: {:error, "a flow is a link of a sankey, so a #{kind} chart takes no flow"},
-      else: {:error, "a node entity gives a node of a sankey, so a #{kind} chart takes no node"}
+      else:
+        {:error,
+         "a node entity changes a node of a sankey, so a #{kind} chart takes no node entity"}
   end
 
   defp flows(%__MODULE__{kind: kind, timeline: [%Frame{flows: [_ | _]} | _]})

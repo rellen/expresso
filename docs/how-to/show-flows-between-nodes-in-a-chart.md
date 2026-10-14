@@ -48,6 +48,55 @@ Examples.ChartSankey
 The height of each node and each link shows its value. The table for a screen reader holds
 each flow.
 
+## Name, place and style the nodes
+
+Use a `node` entity to change how the chart shows one node.
+
+1. Write a `node` entity with the name of the node in the flows.
+2. To change the text of its label, give `label`.
+3. To change its color or another style, give `class`, and select the class in the `css`
+   option of the deck.
+4. To move it, give `column` or `order`.
+
+A funnel shows each stage and the people who leave at each stage. Each node for the people
+who leave is gray, and two nodes have longer labels:
+
+```elixir
+defmodule Examples.ChartSankeyFunnel do
+  use Expresso
+
+  css ".chart-node.drop { fill: var(--muted); }"
+
+  slide "funnel" do
+    heading "Where the visitors go"
+
+    chart :sankey do
+      title "The visitors of a month, from the first visit to the second year"
+      value_label "People"
+
+      flow "Visits", "Trial", 2400
+      flow "Visits", "Bounced", 7600
+      flow "Trial", "Paid", 600
+      flow "Trial", "Left the trial", 1800
+      flow "Paid", "Renewed", 450
+      flow "Paid", "Cancelled", 150
+
+      node "Bounced", label: "Left after one visit", class: "drop"
+      node "Left the trial", class: "drop"
+      node "Cancelled", class: "drop"
+      node "Renewed", label: "Renewed for a year"
+    end
+  end
+end
+
+Examples.ChartSankeyFunnel
+```
+
+![A funnel from 10,000 visits to 2,400 trials, 600 payments and 450 renewals, with a gray node next to each stage for the people who leave](https://raw.githubusercontent.com/rellen/expresso/media/chart-sankey-funnel.png)
+
+For the values of each option, see
+[the node entity](../reference/chart-element.md#the-node-entity).
+
 ## Show a change over time
 
 Use frames to show the flows at two or more points in time.
