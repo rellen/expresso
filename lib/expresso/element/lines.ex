@@ -12,5 +12,5 @@ defmodule Expresso.Element.Lines do
   @typedoc "The struct of a group of lines"
   @type t :: %__MODULE__{}
 
-  defstruct [:at, :steps, :el, :effect, :speed, :morph, :easing, numbers: [], on: []]
+  defstruct [numbers: []] ++ Expresso.Overlay.fields()
 end

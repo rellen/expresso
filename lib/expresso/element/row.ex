@@ -12,18 +12,10 @@ defmodule Expresso.Element.Row do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :class,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    cells: [],
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              cells: [],
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Make the assigns of the render function from the struct

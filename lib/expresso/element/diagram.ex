@@ -51,21 +51,13 @@ defmodule Expresso.Element.Diagram do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :class,
-    :src,
-    :width,
-    :alt,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    on: [],
-    elements: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              :src,
+              :width,
+              :alt,
+              elements: [],
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Replace each `move_to` of the parts of a deck with a move

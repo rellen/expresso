@@ -31,21 +31,13 @@ defmodule Expresso.Element.Toc do
   @progress [:dim_rest, :dim_earlier, :check_earlier, :strike_earlier]
 
   defstruct [
-    :class,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    reveal: false,
-    dim: false,
-    progress: :dim_rest,
-    elements: [],
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              reveal: false,
+              dim: false,
+              progress: :dim_rest,
+              elements: [],
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Return the values of the `progress` option

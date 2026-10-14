@@ -27,6 +27,26 @@ defmodule Expresso.Overlay do
 
   defstruct pairs: []
 
+  @doc """
+  Return the overlay fields of an element struct
+
+  Each element with the `at` option adds these fields to its own fields, as
+  in `defstruct [:src] ++ Expresso.Overlay.fields()`. The fields are these:
+
+  - `at`, `effect`, `speed`, `easing` and `morph` hold the overlay options of
+    the DSL.
+  - `steps` holds the step numbers that the transformer resolves from `at`.
+  - `el` holds the identity that `Expresso.Overlay.Render.identify/1` writes.
+  - `on` holds the `on` entities. Its default is an empty list.
+
+  The overlay code reads each field by name. A new overlay option needs its
+  field in this list and its schema in `Expresso.Extension`.
+  `test/expresso/overlay_fields_test.exs` makes sure that each entity and each
+  struct agree on the options and on the fields.
+  """
+  @spec fields() :: [atom() | {:on, []}]
+  def fields, do: [:at, :steps, :el, :effect, :speed, :morph, :easing, on: []]
+
   @forms """
   an integer, a range, :next, or a list of those and of from: items, \
   such as 3, 2..4, [2, 5..7], [from: 2], :next, [from: :next] or [2, from: 5]\

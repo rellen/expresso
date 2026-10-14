@@ -40,21 +40,13 @@ defmodule Expresso.Element.Image do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :class,
-    :src,
-    :alt,
-    :width,
-    :goto,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              :src,
+              :alt,
+              :width,
+              :goto,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Make the assigns of the render function from the struct

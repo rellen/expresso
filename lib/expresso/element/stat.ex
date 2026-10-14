@@ -21,25 +21,17 @@ defmodule Expresso.Element.Stat do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :value,
-    :label,
-    :prefix,
-    :suffix,
-    :decimals,
-    :class,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    group: true,
-    count: false,
-    from: 0,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :value,
+              :label,
+              :prefix,
+              :suffix,
+              :decimals,
+              :class,
+              group: true,
+              count: false,
+              from: 0,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Return the number of decimals of a value: 0 for an integer, else the

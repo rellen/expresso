@@ -13,17 +13,9 @@ defmodule Expresso.Element.Spacer do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :class,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Make the assigns of the render function from the struct

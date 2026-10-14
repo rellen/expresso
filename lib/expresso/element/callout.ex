@@ -44,20 +44,12 @@ defmodule Expresso.Element.Callout do
   }
 
   defstruct [
-    :kind,
-    :class,
-    :elements,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    title: nil,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :kind,
+              :class,
+              :elements,
+              title: nil,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Return the kinds of a callout

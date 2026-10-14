@@ -34,24 +34,16 @@ defmodule Expresso.Element.Embed do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :class,
-    :src,
-    :title,
-    :width,
-    :aspect,
-    :fallback,
-    :index,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    interactive: false,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              :src,
+              :title,
+              :width,
+              :aspect,
+              :fallback,
+              :index,
+              interactive: false,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @source_error "an embed takes an address that starts with https:// or http://, or the path of a local .html file"
 

@@ -12,20 +12,12 @@ defmodule Expresso.Element.Item do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :class,
-    :text,
-    :goto,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    on: [],
-    elements: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              :text,
+              :goto,
+              elements: [],
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Make the assigns of the render function from the struct

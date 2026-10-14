@@ -26,18 +26,10 @@ defmodule Expresso.Element.Footnote do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :class,
-    :text,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              :text,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Return the footnotes of a slide, in the order of the deck

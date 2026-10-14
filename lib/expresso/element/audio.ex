@@ -26,22 +26,14 @@ defmodule Expresso.Element.Audio do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :class,
-    :src,
-    :title,
-    :index,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    loop: false,
-    controls: false,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              :src,
+              :title,
+              :index,
+              loop: false,
+              controls: false,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   # The media type of each extension of a sound file.
   @types %{

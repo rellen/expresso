@@ -14,18 +14,10 @@ defmodule Expresso.Element.TocEntry do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :text,
-    :goto,
-    :class,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    place: :none,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :text,
+              :goto,
+              :class,
+              place: :none,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 end

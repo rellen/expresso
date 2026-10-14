@@ -9,18 +9,10 @@ defmodule Expresso.Element.TextBox do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :class,
-    :elements,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              :elements,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Make the assigns of the render function from the struct

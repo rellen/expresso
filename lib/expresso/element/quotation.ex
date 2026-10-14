@@ -14,19 +14,11 @@ defmodule Expresso.Element.Quotation do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :class,
-    :text,
-    :by,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              :text,
+              :by,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Make the assigns of the render function from the struct
