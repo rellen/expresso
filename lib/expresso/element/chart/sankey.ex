@@ -48,7 +48,7 @@ defmodule Expresso.Element.Chart.Sankey do
 
   import Expresso.Element.Chart.Kinds
 
-  alias Expresso.Element.Chart.{Motion, Plot}
+  alias Expresso.Element.Chart.{Layers, Plot, Table}
 
   @typedoc "A node: its name, or its column from 0 and its name in an alluvial chart"
   @type key :: String.t() | {non_neg_integer(), String.t()}
@@ -479,7 +479,7 @@ defmodule Expresso.Element.Chart.Sankey do
       |> Map.new()
 
     names = shared.appearance |> Enum.map(&name/1) |> Enum.uniq()
-    color = fn node -> rem(Enum.find_index(names, &(&1 == name(node))), 8) + 1 end
+    color = fn node -> names |> Enum.find_index(&(&1 == name(node))) |> Layers.color() end
     setting = fn node -> Map.get(shared.settings, name(node), %{label: nil, class: nil}) end
 
     nodes =
@@ -648,43 +648,19 @@ defmodule Expresso.Element.Chart.Sankey do
   def render(%{frames: [_, _ | _] = frames} = assigns) do
     layouts =
       frames
-      |> Enum.map(&links(assigns.categories, &1.values))
+      |> Enum.map(&Layers.links(assigns.categories, &1.values))
       |> layout_frames(assigns.box.top, assigns.node_settings)
 
-    layers =
-      for {layout, k} <- Enum.with_index(layouts, 1),
-          do: {k, Map.merge(layout, %{numbered: numbered(assigns, k), values: assigns.values})}
-
-    assigns = Map.merge(assigns, %{layers: layers, xs: hd(layouts).xs})
-
-    temple do
-      Motion.frame_label(assigns)
-      titles(assigns)
-
-      for {k, layer} <- @layers do
-        g class: "chart-layer chart-fade",
-          style: "opacity: var(--k#{k}, #{if k == 1, do: 1, else: 0});" do
-          c(&drawing/1, rest!: layer)
-        end
-      end
-    end
+    Layers.render(assigns, layouts, &drawing/1)
   end
 
   def render(assigns) do
     layout =
       assigns.categories
-      |> links(Enum.map(assigns.series, & &1.values))
+      |> Layers.links(Enum.map(assigns.series, & &1.values))
       |> layout(assigns.box.top, assigns.node_settings)
 
-    drawing =
-      drawing(Map.merge(layout, %{numbered: numbered(assigns, 1), values: assigns.values}))
-
-    assigns = Map.merge(assigns, %{drawing: drawing, xs: layout.xs})
-
-    temple do
-      titles(assigns)
-      @drawing
-    end
+    Layers.render(assigns, [layout], &drawing/1)
   end
 
   @doc """
@@ -740,17 +716,6 @@ defmodule Expresso.Element.Chart.Sankey do
     end
   end
 
-  # Each series with its number from 1. A layer after the first has no morph
-  # key, so the morph between two slides finds one copy of each mark.
-  defp numbered(assigns, 1), do: Enum.with_index(assigns.series, 1)
-
-  defp numbered(assigns, _layer) do
-    for {series, number} <- Enum.with_index(assigns.series, 1),
-        do: {%{series | overlay: no_morph(series.overlay)}, number}
-  end
-
-  defp no_morph(overlay), do: Enum.reject(overlay, &(elem(&1, 0) == "data-morph-key"))
-
   defp drawing(assigns) do
     temple do
       for {series, number} <- @numbered do
@@ -770,7 +735,7 @@ defmodule Expresso.Element.Chart.Sankey do
       end
 
       for {series, number} <- @numbered do
-        g class: "chart-labels", rest!: no_morph(series.overlay) do
+        g class: "chart-labels", rest!: Layers.no_morph(series.overlay) do
           for node <- @nodes, node.series == number, node.labeled do
             text [class: "chart-node-label"] ++ label_place(node) do
               label_text(node, @values)
@@ -783,16 +748,6 @@ defmodule Expresso.Element.Chart.Sankey do
 
   defp link_class(%{stroke: nil, color: color}), do: "chart-link chart-c#{color}"
   defp link_class(%{color: color}), do: "chart-link chart-back chart-c#{color}"
-
-  # The link of each category in the series that holds its value. `values`
-  # holds the values of each series.
-  defp links(categories, values) do
-    for {[from, to], index} <- Enum.with_index(categories),
-        {series, number} <- Enum.with_index(values, 1),
-        value = Enum.at(series, index),
-        value > 0,
-        do: %{from: from, to: to, value: value, series: number}
-  end
 
   @doc """
   Return the attributes that place the label of a node: at the right of the
@@ -818,51 +773,19 @@ defmodule Expresso.Element.Chart.Sankey do
   def label_text(node, false), do: node.label
 
   @doc """
-  Write the table of a sankey: one row for each link, with its source, its
-  target and its value
+  Return the headers and the rows of the table of a sankey: one row for each
+  link, with its source, its target and its value in each frame
   """
-  @spec table(map()) :: Phoenix.HTML.safe()
+  @spec table(map()) :: %{headers: [String.t()], rows: [[String.t()]]}
   def table(assigns) do
-    columns =
-      case assigns.frames do
-        [_one] -> [assigns.value_label || "Value"]
-        frames -> Enum.map(frames, & &1.label)
-      end
-
     rows =
-      for {[from, to], index} <- Enum.with_index(assigns.categories) do
-        values =
-          for frame <- assigns.frames,
-              do: frame.values |> Enum.map(&Enum.at(&1, index)) |> Enum.sum()
+      for {[from, to], index} <- Enum.with_index(assigns.categories),
+          do: [cell(assigns, from), cell(assigns, to) | Table.values(assigns.frames, index)]
 
-        {cell(assigns, from), cell(assigns, to), values}
-      end
-
-    assigns = Map.merge(assigns, %{rows: rows, columns: columns})
-
-    temple do
-      table class: "chart-table" do
-        caption do
-          if @value_label, do: "#{@title} (#{@value_label})", else: @title
-        end
-
-        thead do
-          tr do
-            for column <- ["From", "To" | @columns] do
-              th scope: "col" do
-                column
-              end
-            end
-          end
-        end
-
-        tbody do
-          for row <- @rows do
-            c(&row/1, row: row)
-          end
-        end
-      end
-    end
+    %{
+      headers: ["From", "To" | Table.value_headers(assigns.frames, assigns.value_label)],
+      rows: rows
+    }
   end
 
   @doc """
@@ -887,28 +810,6 @@ defmodule Expresso.Element.Chart.Sankey do
     case settings do
       %{^name => %{label: label}} when label != nil -> label
       _other -> name
-    end
-  end
-
-  defp row(%{row: {from, to, values}} = assigns) do
-    assigns = Map.merge(assigns, %{from: from, to: to, values: values})
-
-    temple do
-      tr do
-        th scope: "row" do
-          @from
-        end
-
-        td do
-          @to
-        end
-
-        for value <- @values do
-          td do
-            Plot.label(value)
-          end
-        end
-      end
     end
   end
 

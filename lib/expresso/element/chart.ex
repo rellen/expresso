@@ -45,7 +45,7 @@ defmodule Expresso.Element.Chart do
 
   import Expresso.Element.Chart.Kinds
 
-  alias Expresso.Element.Chart.{Chord, Csv, Hierarchy, Motion, ParallelSets, Plot, Sankey}
+  alias Expresso.Element.Chart.{Chord, Csv, Hierarchy, Motion, ParallelSets, Plot, Sankey, Table}
   alias Expresso.Element.{Flow, Frame, Series}
 
   @typedoc "The struct of a chart"
@@ -761,11 +761,7 @@ defmodule Expresso.Element.Chart do
           end
         end
 
-        case @kind do
-          :parallel_sets -> c(&ParallelSets.table/1, rest!: assigns)
-          kind when is_flow(kind) -> c(&Sankey.table/1, rest!: assigns)
-          kind when is_axis(kind) or is_single(kind) -> c(&table/1, rest!: assigns)
-        end
+        c(&Table.render/1, rest!: table(assigns))
       end
     end
   end
@@ -783,8 +779,21 @@ defmodule Expresso.Element.Chart do
     %{assigns | series: series, moves: false, frames: [frame]}
   end
 
-  # The table holds one column for each series in each frame.
+  # The caption, the headers and the rows of the table of a chart, for a
+  # screen reader.
   defp table(assigns) do
+    assigns
+    |> rows()
+    |> Map.put(:caption, Table.caption(assigns.title, assigns.value_label))
+  end
+
+  defp rows(%{kind: :parallel_sets} = assigns), do: ParallelSets.table(assigns)
+  defp rows(%{kind: kind} = assigns) when is_flow(kind), do: Sankey.table(assigns)
+
+  # The table of a chart with an axis, a pie, a treemap or a sunburst holds
+  # one column for each series in each frame. The corner names the
+  # categories, and a chart without a name for them has no header there.
+  defp rows(%{kind: kind} = assigns) when is_axis(kind) or is_single(kind) do
     columns =
       for frame <- assigns.frames, {series, s} <- Enum.with_index(assigns.series) do
         name =
@@ -797,64 +806,13 @@ defmodule Expresso.Element.Chart do
         {name, Enum.at(frame.values, s)}
       end
 
-    assigns = Map.put(assigns, :columns, columns)
-
-    temple do
-      table class: "chart-table" do
-        caption do
-          caption_text(@title, @value_label)
-        end
-
-        thead do
-          tr do
-            c(&corner/1, category_label: @category_label)
-
-            for {name, _values} <- @columns do
-              th scope: "col" do
-                name
-              end
-            end
-          end
-        end
-
-        tbody do
-          for {category, index} <- Enum.with_index(@categories) do
-            tr do
-              th scope: "row" do
-                if is_list(category), do: Enum.join(category, " / "), else: category
-              end
-
-              for {_name, values} <- @columns do
-                td do
-                  Plot.label(Enum.at(values, index))
-                end
-              end
-            end
-          end
-        end
+    rows =
+      for {category, index} <- Enum.with_index(assigns.categories) do
+        name = if is_list(category), do: Enum.join(category, " / "), else: category
+        [name | Enum.map(columns, fn {_name, values} -> Plot.label(Enum.at(values, index)) end)]
       end
-    end
-  end
 
-  defp caption_text(title, nil), do: title
-  defp caption_text(title, value_label), do: "#{title} (#{value_label})"
-
-  # The corner is the header of the column of the categories when the chart
-  # has a name for them. Without one, it names nothing, so it is a cell: a
-  # header with no text has no name for a screen reader.
-  defp corner(%{category_label: nil} = _assigns) do
-    temple do
-      td do
-      end
-    end
-  end
-
-  defp corner(assigns) do
-    temple do
-      th scope: "col" do
-        @category_label
-      end
-    end
+    %{headers: [assigns.category_label | Enum.map(columns, &elem(&1, 0))], rows: rows}
   end
 
   # The kinds of a chart. Each one writes the content of the SVG.

@@ -1517,6 +1517,38 @@ These are the reasons for this design:
   nodes and one scale, so a node stays in its place. For the same reason, a sankey takes no
   effect `:grow`.
 
+The three modules of the charts of flows share their layers. `Expresso.Element.Chart.Sankey`,
+`ParallelSets` and `Chord` each make one layout for each frame, and each one has a function
+that draws one layout. `Expresso.Element.Chart.Layers.render/3` then writes the label of
+the frame, the titles of the columns and the drawing of each layout. A chart with one frame
+has one drawing with no layer around it. `Layers` also holds these functions:
+
+- `numbered/2` gives each series its number. A layer after the first takes no morph key, so
+  the morph between two slides finds one copy of each mark.
+- `links/2` makes the link of each category in the series that holds its value.
+- `color/1` gives the color of a node from its position, from 1 to 8.
+
+`Layers` holds plain functions, and not a macro with `defoverridable`. A macro would hide
+private functions in each module, and Credo, Dialyzer and the coverage would point at the
+macro.
+
+### The table of a chart
+
+Each chart writes a table of its values for a screen reader, because the SVG has
+`role="img"` and only the title. `Expresso.Element.Chart.Table.render/1` writes the table
+from data: the caption, the headers of the columns, and the cells of each row. Each kind
+returns its headers and its rows as text, so a test can read them without HTML:
+
+| Kind | The function | A row |
+| --- | --- | --- |
+| An axis chart, a pie, a treemap, a sunburst | `rows/1` of `Expresso.Element.Chart` | A category, then the value of each series in each frame. |
+| A sankey, an alluvial chart, a chord chart | `Sankey.table/1` | The source, the target, then the value in each frame. |
+| A parallel sets chart | `ParallelSets.table/1` | The node in each column, then the value in each frame. |
+
+The first cell of each row is the header of the row. The first header of the columns can be
+`nil`: the corner then names nothing, so it is a `td` cell. A header with no text has no
+name for a screen reader. `Table.caption/2` puts the name of the values after the title.
+
 ### The motion of a chart
 
 A chart with frames moves its marks from the values of one frame to the values of the next,

@@ -31,7 +31,7 @@ defmodule Expresso.Element.Chart.ParallelSets do
   import Temple
   use Temple.Component
 
-  alias Expresso.Element.Chart.{Motion, Plot, Sankey}
+  alias Expresso.Element.Chart.{Layers, Plot, Sankey, Table}
 
   @doc """
   Return the paths of the categories and the total value for each path
@@ -109,7 +109,7 @@ defmodule Expresso.Element.Chart.ParallelSets do
       paths
       |> Enum.map(&hd/1)
       |> Enum.uniq()
-      |> Enum.with_index(fn first, index -> {first, rem(index, 8) + 1} end)
+      |> Enum.with_index(fn first, index -> {first, Layers.color(index)} end)
       |> Map.new()
 
     links =
@@ -202,39 +202,8 @@ defmodule Expresso.Element.Chart.ParallelSets do
         assigns.node_settings
       )
 
-    layers =
-      for {layout, k} <- Enum.with_index(layouts, 1),
-          do: {k, Map.merge(layout, %{numbered: numbered(assigns, k), values: assigns.values})}
-
-    assigns = Map.merge(assigns, %{layers: layers, xs: hd(layouts).xs})
-
-    temple do
-      Motion.frame_label(assigns)
-      Sankey.titles(assigns)
-
-      if length(@layers) == 1 do
-        c(&drawing/1, rest!: @layers |> hd() |> elem(1))
-      else
-        for {k, layer} <- @layers do
-          g class: "chart-layer chart-fade",
-            style: "opacity: var(--k#{k}, #{if k == 1, do: 1, else: 0});" do
-            c(&drawing/1, rest!: layer)
-          end
-        end
-      end
-    end
+    Layers.render(assigns, layouts, &drawing/1)
   end
-
-  # Each series with its number from 1. A layer after the first has no morph
-  # key, so the morph between two slides finds one copy of each mark.
-  defp numbered(assigns, 1), do: Enum.with_index(assigns.series, 1)
-
-  defp numbered(assigns, _layer) do
-    for {series, number} <- Enum.with_index(assigns.series, 1),
-        do: {%{series | overlay: no_morph(series.overlay)}, number}
-  end
-
-  defp no_morph(overlay), do: Enum.reject(overlay, &(elem(&1, 0) == "data-morph-key"))
 
   defp drawing(assigns) do
     temple do
@@ -268,45 +237,19 @@ defmodule Expresso.Element.Chart.ParallelSets do
   defp node_class(%{color: color}), do: "chart-node chart-c#{color}"
 
   @doc """
-  Write the table of a parallel sets chart: one row for each path, with the
-  name of its node in each column and its value
+  Return the headers and the rows of the table of a parallel sets chart: one
+  row for each path, with the name of its node in each column and its value
+  in each frame
   """
-  @spec table(map()) :: Phoenix.HTML.safe()
+  @spec table(map()) :: %{headers: [String.t()], rows: [[String.t()]]}
   def table(assigns) do
     rows =
-      for {path, index} <- Enum.with_index(assigns.categories) do
-        values =
-          for frame <- assigns.frames,
-              do: frame.values |> Enum.map(&Enum.at(&1, index)) |> Enum.sum()
+      for {path, index} <- Enum.with_index(assigns.categories),
+          do:
+            Enum.map(path, &Sankey.cell(assigns, Sankey.name(&1))) ++
+              Table.values(assigns.frames, index)
 
-        {Enum.map(path, &Sankey.cell(assigns, Sankey.name(&1))), values}
-      end
-
-    assigns = Map.merge(assigns, %{rows: rows, headers: headers(assigns)})
-
-    temple do
-      table class: "chart-table" do
-        caption do
-          if @value_label, do: "#{@title} (#{@value_label})", else: @title
-        end
-
-        thead do
-          tr do
-            for words <- @headers do
-              th scope: "col" do
-                words
-              end
-            end
-          end
-        end
-
-        tbody do
-          for row <- @rows do
-            c(&row/1, row: row)
-          end
-        end
-      end
-    end
+    %{headers: headers(assigns), rows: rows}
   end
 
   # A title for each node column, then one column for each frame.
@@ -318,36 +261,6 @@ defmodule Expresso.Element.Chart.ParallelSets do
         do: assigns.levels,
         else: Enum.map(1..count, &"Column #{&1}")
 
-    columns =
-      case assigns.frames do
-        [_one] -> [assigns.value_label || "Value"]
-        frames -> Enum.map(frames, & &1.label)
-      end
-
-    titles ++ columns
-  end
-
-  defp row(%{row: {[first | names], values}} = assigns) do
-    assigns = Map.merge(assigns, %{first: first, names: names, values: values})
-
-    temple do
-      tr do
-        th scope: "row" do
-          @first
-        end
-
-        for name <- @names do
-          td do
-            name
-          end
-        end
-
-        for value <- @values do
-          td do
-            Plot.label(value)
-          end
-        end
-      end
-    end
+    titles ++ Table.value_headers(assigns.frames, assigns.value_label)
   end
 end
