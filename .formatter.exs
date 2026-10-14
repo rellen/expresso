@@ -52,6 +52,8 @@ spark_locals_without_parens = [
   fallback: 1,
   fill: 1,
   flag: 1,
+  flow: 3,
+  flow: 4,
   footnote: 1,
   footnote: 2,
   frame: 1,
