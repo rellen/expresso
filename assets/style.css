@@ -693,13 +693,17 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   transition: opacity var(--dur) var(--ease);
 }
 /*
- * A chart of flows. A node has the color of its class chart-c1 to chart-c8.
- * A link has a light color, made from the color of its source and the color
- * of the background, so the text of a label stays readable on it. A label
- * has a halo in the color of the background, because it can be on a link.
+ * A sankey. A node has the color of its series, and a link has a tint of the
+ * color of its source, so the text of a label stays readable on it. A label
+ * has a halo in the color of the background, because it can sit on a link.
+ * A back link of a loop is a stroke with the same tint, and no fill.
  */
 .chart-node {
   fill: var(--series);
+}
+.chart-link.chart-back {
+  fill: none;
+  stroke: color-mix(in oklab, var(--series) 35%, var(--background));
 }
 .chart-node-plain {
   fill: var(--muted);

@@ -30,10 +30,10 @@ defmodule Expresso.Element.Chart.Sankey do
   two nodes. Its node is the tuple `{column, name}`, as `links/4` returns it. The
   nodes of one name have one color and one place in each column.
 
-  A graph with a loop has no first column, so `check/4` refuses it. The
-  frames of a chart share the columns, the order and the scale of the nodes,
-  as `layout_frames/3` returns them. Each frame is a layer, and the opacity
-  of the layers changes from one frame to the next.
+  A graph with a loop has no first column. `back_links/1` finds the links
+  that close a loop, the other links give the columns, and a back link goes
+  in a lane under the nodes. The frames of a chart share the columns, the order and the scale of the nodes,
+  as `layout_frames/2` gives them, and each frame is a layer that fades.
 
   `render/1` draws each series of the chart as a group. The group holds the
   links of the series and the nodes that show first with it. The node labels
@@ -69,6 +69,11 @@ defmodule Expresso.Element.Chart.Sankey do
   # width of the font.
   @character 10
 
+  # The gap between two lanes of the back links, and the least distance from
+  # a node to the turn of a back link.
+  @lane 6
+  @turn 8
+
   @doc """
   Return the nodes of a category of a sankey, as a list of names
 
@@ -89,17 +94,20 @@ defmodule Expresso.Element.Chart.Sankey do
     do: category |> String.split(separator) |> Enum.map(&String.trim/1)
 
   @doc """
-  Make sure that the categories and the values make a graph with no loop
+  Make sure that the categories and the values make a graph
 
   Each category names two nodes or more, each node has a name, and no link
   goes from a node to the same node. Each value is zero or more, and their
-  sum is more than zero. With `alluvial` true, each column has its own
-  nodes, so a name can follow the same name and no loop can occur.
+  sum is more than zero. A loop of two nodes or more is correct:
+  `back_links/1` finds the links that close it. With `alluvial` true, each
+  column has its own nodes, so a name can follow the same name.
 
       iex> Expresso.Element.Chart.Sankey.check([["A", "B"], "B/C"], [1, 2], "/")
       :ok
       iex> Expresso.Element.Chart.Sankey.check([["A", "B"], ["B", "A"]], [1, 2], "/")
-      {:error, "the flows of a sankey make a loop: A → B → A. A sankey goes in one direction, so give a node in the loop a different name, such as \\"A (again)\\"."}
+      :ok
+      iex> Expresso.Element.Chart.Sankey.check([["A", "A"]], [1], "/")
+      {:error, "a flow of a sankey goes from \\"A\\" to \\"A\\". A flow goes to another node."}
       iex> Expresso.Element.Chart.Sankey.check([["A", "A"], ["A", "B"]], [1, 2], "/", true)
       :ok
   """
@@ -117,89 +125,66 @@ defmodule Expresso.Element.Chart.Sankey do
       Enum.any?(paths, &Enum.member?(&1, "")) ->
         {:error, "a node of a sankey has no name"}
 
-      alluvial ->
-        values_check(values)
-
-      same = Enum.find_value(paths, &same_node/1) ->
+      same = not alluvial and Enum.find_value(paths, &same_node/1) ->
         {:error,
          "a flow of a sankey goes from \"#{same}\" to \"#{same}\". A flow goes to another node."}
 
-      values_check(values) != :ok ->
-        values_check(values)
+      Enum.any?(values, &(&1 < 0)) or Enum.sum(values) <= 0 ->
+        {:error, "the values of a sankey are zero or more, and their sum is more than zero"}
 
       true ->
-        loop(paths)
+        :ok
     end
-  end
-
-  defp values_check(values) do
-    if Enum.any?(values, &(&1 < 0)) or Enum.sum(values) <= 0,
-      do: {:error, "the values of a sankey are zero or more, and their sum is more than zero"},
-      else: :ok
   end
 
   defp same_node(path) do
     path |> Enum.chunk_every(2, 1, :discard) |> Enum.find_value(fn [a, b] -> a == b and a end)
   end
 
-  defp loop(paths) do
-    edges = paths |> Enum.flat_map(&Enum.chunk_every(&1, 2, 1, :discard)) |> Enum.uniq()
+  @doc """
+  Return the links that close a loop, as pairs of a source and a target
 
-    case cycle(edges) do
-      nil ->
-        :ok
+  A depth-first search from each node, in the order of the data, follows
+  the links in their order. A link to a node on the path of the search
+  closes a loop. The graph without these links has no loop, so it gives the
+  columns.
 
-      [first | _] = nodes ->
-        {:error,
-         "the flows of a sankey make a loop: #{Enum.join(nodes ++ [first], " → ")}. " <>
-           "A sankey goes in one direction, so give a node in the loop a different name, " <>
-           "such as #{inspect(first <> " (again)")}."}
+      iex> links = [%{from: "A", to: "B"}, %{from: "B", to: "C"}, %{from: "C", to: "A"}]
+      iex> Expresso.Element.Chart.Sankey.back_links(links)
+      MapSet.new([{"C", "A"}])
+  """
+  @spec back_links([%{from: key(), to: key()}]) :: MapSet.t({key(), key()})
+  def back_links(links) do
+    next = Enum.group_by(links, & &1.from, & &1.to)
+    nodes = links |> Enum.flat_map(&[&1.from, &1.to]) |> Enum.uniq()
+
+    nodes
+    |> Enum.reduce({%{}, []}, &search(&1, next, %{}, &2))
+    |> elem(1)
+    |> MapSet.new()
+  end
+
+  # The search keeps the nodes that it finished and the nodes on its path as
+  # the keys of maps, and the back links as a list.
+  defp search(node, next, path, {done, back}) do
+    if Map.has_key?(done, node) do
+      {done, back}
+    else
+      path = Map.put(path, node, true)
+
+      {done, back} =
+        next
+        |> Map.get(node, [])
+        |> Enum.reduce({done, back}, &follow(node, &1, next, path, &2))
+
+      {Map.put(done, node, true), back}
     end
   end
 
-  # A loop of the graph as a list of its nodes, or nil. A depth-first search
-  # finds a link back to a node on the path of the search.
-  defp cycle(edges) do
-    next = Enum.group_by(edges, &hd/1, &List.last/1)
-    nodes = edges |> List.flatten() |> Enum.uniq()
-
-    Enum.reduce_while(nodes, MapSet.new(), fn node, done ->
-      case visit(node, next, [], done) do
-        {:loop, loop} -> {:halt, {:loop, loop}}
-        {:ok, done} -> {:cont, done}
-      end
-    end)
-    |> case do
-      {:loop, loop} -> loop
-      _done -> nil
-    end
-  end
-
-  defp visit(node, next, path, done) do
-    cond do
-      node in path ->
-        {:loop, path |> Enum.reverse() |> Enum.drop_while(&(&1 != node))}
-
-      MapSet.member?(done, node) ->
-        {:ok, done}
-
-      true ->
-        case children(node, next, path, done) do
-          {:ok, done} -> {:ok, MapSet.put(done, node)}
-          loop -> loop
-        end
-    end
-  end
-
-  defp children(node, next, path, done) do
-    next
-    |> Map.get(node, [])
-    |> Enum.reduce_while({:ok, done}, fn child, {:ok, done} ->
-      case visit(child, next, [node | path], done) do
-        {:ok, done} -> {:cont, {:ok, done}}
-        loop -> {:halt, loop}
-      end
-    end)
+  defp follow(node, child, next, path, {done, back}) do
+    if Map.has_key?(path, child),
+      do: {done, [{node, child} | back]},
+      else: search(child, next, path, {done, back})
   end
 
   @doc """
@@ -255,23 +240,28 @@ defmodule Expresso.Element.Chart.Sankey do
   @doc """
   Return the column of each node, from 0
 
-  A node with no link into it is in column 0. Each other node is one column
-  after its last source. `pinned` holds the columns of some nodes, from 0,
-  and the nodes after them move to follow them. A node of an alluvial chart
-  holds its column.
+  A node with no link into it is in column 0, and each other node is one
+  column after its furthest source. A link that closes a loop, as
+  `back_links/1` finds it, does not count. `pinned` gives the column of some nodes,
+  from 0, and the columns after them follow from them. A node of an alluvial
+  chart holds its column.
 
       iex> links = [%{from: "A", to: "B"}, %{from: "B", to: "C"}, %{from: "A", to: "C"}]
       iex> Expresso.Element.Chart.Sankey.columns(links)
       %{"A" => 0, "B" => 1, "C" => 2}
       iex> Expresso.Element.Chart.Sankey.columns(links, %{"C" => 4})
       %{"A" => 0, "B" => 1, "C" => 4}
+      iex> Expresso.Element.Chart.Sankey.columns([%{from: "A", to: "B"}, %{from: "B", to: "A"}])
+      %{"A" => 0, "B" => 1}
       iex> Expresso.Element.Chart.Sankey.columns([%{from: {0, "A"}, to: {1, "A"}}])
       %{{0, "A"} => 0, {1, "A"} => 1}
   """
   @spec columns([%{from: key(), to: key()}], %{String.t() => non_neg_integer()}) ::
           %{key() => non_neg_integer()}
   def columns(links, pinned \\ %{}) do
-    sources = Enum.group_by(links, & &1.to, & &1.from)
+    loops = back_links(links)
+    forward = Enum.reject(links, &MapSet.member?(loops, {&1.from, &1.to}))
+    sources = Enum.group_by(forward, & &1.to, & &1.from)
     nodes = links |> Enum.flat_map(&[&1.from, &1.to]) |> Enum.uniq()
 
     pinned =
@@ -331,6 +321,7 @@ defmodule Expresso.Element.Chart.Sankey do
     union = frames |> List.flatten() |> Enum.uniq_by(&{&1.from, &1.to})
     columns = columns(union, pinned(settings))
     appearance = union |> Enum.flat_map(&[&1.from, &1.to]) |> Enum.uniq()
+
     order = sort(appearance, columns, settings)
     sizes = Enum.map(frames, &sizes/1)
 
@@ -340,12 +331,59 @@ defmodule Expresso.Element.Chart.Sankey do
       appearance: appearance,
       top: top,
       settings: settings,
-      last: Enum.max(Map.values(columns))
+      last: Enum.max(Map.values(columns)),
+      lanes: lanes(union, columns)
     }
 
-    shared = Map.merge(shared, %{scale: scale(sizes, shared), right: right(sizes, shared)})
+    shared = Map.merge(shared, room(frames, sizes, shared))
+    shared = Map.put(shared, :right, right(sizes, shared))
 
     for {links, size} <- Enum.zip(frames, sizes), do: frame(links, size, shared)
+  end
+
+  # The lane of each back link, from 0 next to the nodes. A back link goes
+  # from a column to the same column or to an earlier column. A shorter back
+  # link has a lane nearer to the nodes, so its turns are inside the turns of
+  # a longer back link.
+  defp lanes(links, columns) do
+    links
+    |> Enum.filter(&(columns[&1.to] <= columns[&1.from]))
+    |> Enum.with_index()
+    |> Enum.sort_by(fn {link, index} -> {columns[link.from] - columns[link.to], index} end)
+    |> Enum.with_index(fn {link, _index}, lane -> {{link.from, link.to}, lane} end)
+    |> Map.new()
+  end
+
+  defp back?(link, shared), do: Map.has_key?(shared.lanes, {link.from, link.to})
+
+  # The scale, the bottom of the nodes and the margin at the two sides. The
+  # lanes of the back links take a row under the nodes, and the turns of the
+  # back links take a margin at the left and at the right.
+  defp room(frames, sizes, shared) do
+    backs = Enum.map(frames, fn links -> Enum.filter(links, &back?(&1, shared)) end)
+    lanes = map_size(shared.lanes)
+    reserve = if lanes == 0, do: 0, else: @gap + @lane * (lanes - 1)
+    extra = backs |> Enum.map(fn links -> links |> Enum.map(& &1.value) |> Enum.sum() end)
+    extra = Enum.max(extra)
+
+    scale =
+      for size <- sizes,
+          {_column, names} <- stacks(size, shared) do
+        (@height - 8 - shared.top - reserve - @gap * (length(names) - 1)) /
+          (Enum.sum(Enum.map(names, &size[&1])) + extra)
+      end
+      |> Enum.min()
+
+    sides =
+      for links <- backs,
+          side <- [:from, :to],
+          {_node, values} <- Enum.group_by(links, &Map.get(&1, side), & &1.value),
+          do: Enum.sum(values)
+
+    margin = if sides == [], do: 0, else: @turn + Enum.max(sides) * scale
+    bottom = @height - 8 - if(lanes == 0, do: 0, else: reserve + extra * scale)
+
+    %{scale: scale, bottom: bottom, margin: margin}
   end
 
   @doc """
@@ -395,18 +433,8 @@ defmodule Expresso.Element.Chart.Sankey do
     Map.merge(into, out, fn _node, a, b -> max(a, b) end)
   end
 
-  # The scale that fits the fullest column of each frame into the height.
-  defp scale(sizes, shared) do
-    for size <- sizes,
-        {_column, names} <- stacks(size, shared) do
-      (@height - 8 - shared.top - @gap * (length(names) - 1)) /
-        Enum.sum(Enum.map(names, &size[&1]))
-    end
-    |> Enum.min()
-  end
-
-  # The space at the right of the last column for its labels: the width of
-  # the widest label in the frames, and a maximum of one third of the width.
+  # The room at the right of the last column for its labels: the widest of
+  # them in each frame, at most a third of the width.
   defp right(sizes, shared) do
     widest =
       for size <- sizes,
@@ -426,9 +454,9 @@ defmodule Expresso.Element.Chart.Sankey do
   end
 
   defp frame(links, size, shared) do
-    %{scale: scale, top: top, last: last, right: right} = shared
-    bottom = @height - 8
-    x = fn column -> 4 + column * (@width - 8 - right - @node) / max(last, 1) end
+    %{scale: scale, top: top, last: last, bottom: bottom, margin: margin, right: right} = shared
+    width = @width - 8 - 2 * margin - right - @node
+    x = fn column -> 4 + margin + column * width / max(last, 1) end
 
     boxes =
       size
@@ -467,42 +495,112 @@ defmodule Expresso.Element.Chart.Sankey do
     %{
       nodes: labeled(nodes),
       xs: Enum.map(0..last, x),
-      links: links |> place(boxes, scale) |> Enum.map(&Map.put(&1, :color, color.(&1.from))),
+      links:
+        links
+        |> place(boxes, shared)
+        |> Enum.map(&Map.put(&1, :color, color.(&1.from)))
+        |> Enum.sort_by(&is_nil(&1.stroke)),
       node_width: @node
     }
   end
 
   # The place of each link at its two nodes. The links out of a node have
   # the order of their targets from the top, and the links into a node have
-  # the order of their sources.
-  defp place(links, nodes, scale) do
+  # the order of their sources. The back links are at the bottom of a node,
+  # and the back link with the lowest lane is the highest of them.
+  defp place(links, nodes, shared) do
+    scale = shared.scale
     center = fn name -> nodes[name].y + nodes[name].height / 2 end
+
+    key = fn link, other ->
+      if back?(link, shared), do: {1, -lane(link, shared)}, else: {0, other}
+    end
 
     outs =
       links
       |> Enum.group_by(& &1.from)
-      |> Map.new(fn {node, out} -> {node, offsets(Enum.sort_by(out, &center.(&1.to)), scale)} end)
+      |> Map.new(fn {node, out} -> {node, Enum.sort_by(out, &key.(&1, center.(&1.to)))} end)
 
     ins =
       links
       |> Enum.group_by(& &1.to)
-      |> Map.new(fn {node, into} ->
-        {node, offsets(Enum.sort_by(into, &center.(&1.from)), scale)}
-      end)
+      |> Map.new(fn {node, into} -> {node, Enum.sort_by(into, &key.(&1, center.(&1.from)))} end)
+
+    out_offsets = Map.new(outs, fn {node, out} -> {node, offsets(out, scale)} end)
+    in_offsets = Map.new(ins, fn {node, into} -> {node, offsets(into, scale)} end)
+    turns = Map.merge(turns(outs, :out, shared), turns(ins, :in, shared))
+    lane_y = lane_centers(links, shared)
 
     Enum.map(links, fn link ->
       source = nodes[link.from]
       target = nodes[link.to]
       thickness = link.value * scale
-      y0 = source.y + outs[link.from][link]
-      y1 = target.y + ins[link.to][link]
+      y0 = source.y + out_offsets[link.from][link]
+      y1 = target.y + in_offsets[link.to][link]
 
-      Map.put(
-        link,
-        :path,
-        ribbon(source.x + @node, y0, target.x, y1, thickness)
-      )
+      if back?(link, shared) do
+        ends = {source.x + @node, y0 + thickness / 2, target.x, y1 + thickness / 2}
+        turn = {turns[{:out, link}], turns[{:in, link}]}
+
+        Map.merge(link, %{
+          path: back_path(ends, lane_y[{link.from, link.to}], turn, thickness),
+          stroke: Plot.f(thickness)
+        })
+      else
+        Map.merge(link, %{
+          path: ribbon(source.x + @node, y0, target.x, y1, thickness),
+          stroke: nil
+        })
+      end
     end)
+  end
+
+  defp lane(link, shared), do: shared.lanes[{link.from, link.to}]
+
+  # The distance from a node to the turn of each back link at that node. A
+  # back link lower at the node turns nearer to it, so the turns do not
+  # cross.
+  defp turns(stacks, side, shared) do
+    for {_node, stack} <- stacks, reduce: %{} do
+      turns ->
+        stack
+        |> Enum.filter(&back?(&1, shared))
+        |> Enum.reverse()
+        |> Enum.reduce({turns, 0}, fn link, {turns, below} ->
+          width = link.value * shared.scale
+          {Map.put(turns, {side, link}, @turn + below + width / 2), below + width}
+        end)
+        |> elem(0)
+    end
+  end
+
+  # The center of the lane of each back link of a frame, under the nodes.
+  defp lane_centers(links, shared) do
+    links
+    |> Enum.filter(&back?(&1, shared))
+    |> Enum.sort_by(&lane(&1, shared))
+    |> Enum.map_reduce(shared.bottom + @gap, fn link, y ->
+      height = link.value * shared.scale
+      {{{link.from, link.to}, y + height / 2}, y + height + @lane}
+    end)
+    |> elem(0)
+    |> Map.new()
+  end
+
+  # The center line of a back link: from the right side of its source to a
+  # turn, down to its lane, to the left along the lane, up at a turn before
+  # its target, and into the left side of the target. The corners are round,
+  # and the stroke of the line has the height of the link.
+  defp back_path({x0, y0, x1, y1}, lane, {out, into}, height) do
+    f = &Plot.f/1
+    r = height / 2 + 2
+    xr = x0 + out
+    xl = x1 - into
+
+    "M#{f.(x0)},#{f.(y0)} H#{f.(xr - r)} Q#{f.(xr)},#{f.(y0)} #{f.(xr)},#{f.(y0 + r)} " <>
+      "V#{f.(lane - r)} Q#{f.(xr)},#{f.(lane)} #{f.(xr - r)},#{f.(lane)} " <>
+      "H#{f.(xl + r)} Q#{f.(xl)},#{f.(lane)} #{f.(xl)},#{f.(lane - r)} " <>
+      "V#{f.(y1 + r)} Q#{f.(xl)},#{f.(y1)} #{f.(xl + r)},#{f.(y1)} H#{f.(x1)}"
   end
 
   # The distance of each link from the top of its node.
@@ -654,7 +752,7 @@ defmodule Expresso.Element.Chart.Sankey do
       for {series, number} <- @numbered do
         g class: Expresso.Element.classes("chart-series", series.class), rest!: series.overlay do
           for link <- @links, link.series == number do
-            path class: "chart-link chart-c#{link.color}", d: link.path
+            path class: link_class(link), d: link.path, stroke_width: link.stroke
           end
 
           for node <- @nodes, node.series == number do
@@ -678,6 +776,9 @@ defmodule Expresso.Element.Chart.Sankey do
       end
     end
   end
+
+  defp link_class(%{stroke: nil, color: color}), do: "chart-link chart-c#{color}"
+  defp link_class(%{color: color}), do: "chart-link chart-back chart-c#{color}"
 
   # The link of each category in the series that holds its value. `values`
   # holds the values of each series.
