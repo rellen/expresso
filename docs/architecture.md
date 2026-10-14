@@ -1353,7 +1353,7 @@ These are the reasons for this design:
   has its value as its height at each point.
 - **A node entity changes only how a node shows.** The flows give the graph. A `node` entity
   gives a label, a class, a column or an order to one node. A pinned column moves the nodes
-  after it, and the check refuses a flow that then goes to the left. The colors keep the order
+  after it, and a flow that then goes to the left becomes a back link. The colors keep the order
   of the data, so an `order` does not change the color of a node.
 - **The labels are at the right of the nodes.** A label at the left of a node in the last
   column can cover a label of the column before it. Therefore each label is at the right. The
@@ -1376,7 +1376,13 @@ These are the reasons for this design:
 - **The labels are above the links.** The node labels of each series are in a group after
   the series, with the same steps. Thus a later column of links does not cover a label. A
   label has a halo in the color of the background.
-- **No loop.** A loop has no first column, so the check refuses it and names its nodes.
+- **A loop has back links.** A loop has no first column. A depth-first search in the order of
+  the data finds the links that close each loop. The layout finds the columns from the other
+  links. A back link goes from the right side of its source, through a lane under the nodes,
+  into the left side of its target. It is a stroke and not a ribbon, because each part of it
+  is horizontal or vertical. Thus a stroke has the height of its value. A shorter back link
+  has a lane nearer to the nodes, so the back links do not cross. The back links draw first,
+  so the other links are on top of their turns.
 - **The frames change their opacity, and they do not move.** A link is a curve. A transform
   cannot change a curve between two frames, so the channels of the other charts cannot move
   a link. The CSS property `d` can change a curve, but Safari does not support it. Safari

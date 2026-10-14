@@ -238,7 +238,7 @@ A `node` entity changes how the chart shows one node:
 | --- | --- | --- |
 | The first argument | A string | The name of the node in the flows. |
 | `label` | A string | The text of the label and of the table. The default is the name. |
-| `column` | An integer, 1 or more | The column of the node, from the left. The default comes from [the layout](#the-layout-of-a-sankey). |
+| `column` | An integer, 1 or more | The column of the node, from the left. The default comes from [the layout](#the-layout-of-a-sankey). A column that puts the target of a flow in the column of its source, or before it, makes the flow a back link. |
 | `order` | An integer | The place of the node in its column, from the top. A node without `order` has the number of its place in the data. Thus `order: 0` puts a node at the top. |
 | `class` | CSS class names | The classes of the `rect` of the node. See [the class option](class-option.md). |
 
@@ -251,7 +251,7 @@ An example is
 The layout obeys these rules:
 
 1. A node with no flow into it is in the first column. Each other node is one column after
-   its last source. Thus a link can go across a column. The `column` option of a node entity
+   its last source. A back link does not count, as [loops](#loops) tells. Thus a link can go across a column. The `column` option of a node entity
    sets the column of its node, and the columns after it move.
 2. The height of a node is the larger of the flow into it and the flow out of it. One scale
    sets the height of each node. The nodes of each column are in the vertical middle of the
@@ -264,6 +264,23 @@ The layout obeys these rules:
 A node has a color of the theme, in the order of the nodes in the data. The `order` option
 does not change the color of a node. A link has a light color, made
 from the color of its source and the color of the background.
+
+### Loops
+
+A flow back to an earlier node makes a loop. A loop has no first column, so the layout obeys
+these rules:
+
+1. A depth-first search from each node, in the order of the data, finds each flow back to a
+   node on its path. These flows are the **back links**.
+2. The layout finds the columns from the other links.
+3. A link to the column of its source, or to an earlier column, is also a back link. A
+   `column` of a node entity can make such a link.
+4. A back link leaves the right side of its source, and it goes down to a lane under the
+   nodes. It goes to the left in its lane, and it goes up into the left side of its target.
+5. A shorter back link has a lane nearer to the nodes, so two back links do not cross.
+6. The back links draw first, so the other links are on top of them.
+
+A flow from a node to the same node gives an error.
 
 ### An alluvial chart
 
@@ -406,7 +423,6 @@ The compiler gives an error for these:
 - a chart of flows with frames and `reveal`;
 - a category with one node, a node with no name, a flow from a node to the same node, and a
   negative value;
-- flows that make a loop. The message names the nodes of the loop;
 - a chart of flows with `levels` that names one column;
 - an alluvial chart or a parallel sets chart with `levels` that does not give one title for
   each column;
@@ -414,7 +430,6 @@ The compiler gives an error for these:
   first category;
 - a `node` in a chart that is not a chart of flows;
 - two `node` entities for one node, and a `node` with a name that no flow has;
-- a `column` that puts the target of a flow in the same column as its source, or before it;
 - a `node` with `column` in an alluvial chart or a parallel sets chart.
 
 The compiler gives an error for a file that it cannot read, for a quote with no closing
@@ -452,6 +467,7 @@ A chart of flows writes these elements:
 | --- | --- | --- |
 | A node | `rect` | `chart-node`, `chart-c1` to `chart-c8`, and the `class` of its node entity |
 | A link | `path` | `chart-link` |
+| A back link | `path` with a `stroke-width`, because it is a stroke and not a filled shape | `chart-link` and `chart-back` |
 | The labels of a series | `g`, after the series, with the same steps | `chart-labels` |
 | A label | `text` | `chart-node-label` |
 | A frame | `g` | `chart-layer` |
