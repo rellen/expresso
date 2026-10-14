@@ -25,7 +25,7 @@ defmodule Expresso.Overlay.PropertyVerifier do
   @impl Verifier
   @spec verify(map()) :: :ok | {:warn, [Properties.warning()]}
   def verify(dsl_state) do
-    names = theme_and_deck_names(Verifier.get_option(dsl_state, [:deck], :css))
+    names = theme_and_deck_names(dsl_state)
 
     warnings =
       dsl_state
@@ -35,9 +35,9 @@ defmodule Expresso.Overlay.PropertyVerifier do
     if warnings == [], do: :ok, else: {:warn, warnings}
   end
 
-  defp theme_and_deck_names(css) do
-    case Expresso.Css.resolve(css) do
-      {:ok, css} -> Expresso.Css.merge(Theme.names(), Expresso.Css.scan(css))
+  defp theme_and_deck_names(dsl_state) do
+    case Expresso.Dsl.css_names(dsl_state) do
+      {:ok, names} -> Expresso.Css.merge(Theme.names(), names)
       {:error, _reported_by_effect_verifier} -> Theme.names()
     end
   end

@@ -2,16 +2,18 @@ defmodule Expresso.Overlay.EffectVerifier do
   @moduledoc """
   The Spark verifier of the `css` option and of the effects
 
-  It runs one time for each deck module at compile time. It reads the `css`
-  option of the deck with `Expresso.Css.resolve/1`, and a file that it cannot
-  read is an error. It then makes sure that each effect of the deck, of a
-  slide and of an element has a rule. The theme gives the rules of the effects
-  of this project, and the CSS of the deck can give more, such as
-  `[data-effect="spin"]` for `effect :spin`. The fade needs no rule.
+  It runs one time for each deck module at compile time. It reads the names
+  of the `css` option from `Expresso.Dsl.css_names/1`, and a file that
+  `Expresso.CssTransformer` cannot read is an error. It then makes sure that
+  each effect of the deck, of a slide and of an element has a rule. The theme
+  gives the rules of the effects of this project, and the CSS of the deck can
+  give more, such as `[data-effect="spin"]` for `effect :spin`. The fade needs
+  no rule.
   """
 
   use Spark.Dsl.Verifier
 
+  alias Expresso.Dsl
   alias Expresso.Element.Tree
   alias Expresso.Theme
   alias Shoddy.Result
@@ -25,37 +27,29 @@ defmodule Expresso.Overlay.EffectVerifier do
   def verify(dsl_state) do
     module = Verifier.get_persisted(dsl_state, :module)
 
-    case dsl_state |> Verifier.get_option([:deck], :css) |> Expresso.Css.resolve() do
-      {:ok, css} ->
-        effects = MapSet.union(Theme.effects(), Expresso.Css.scan(css).effects)
-        check_deck(dsl_state, module, effects)
-
-      {:error, message} ->
-        {:error, error(module, [:deck, :css], message)}
+    case Dsl.css_names(dsl_state) do
+      {:ok, names} -> check_deck(dsl_state, module, MapSet.union(Theme.effects(), names.effects))
+      {:error, message} -> {:error, Dsl.error(module, [:deck, :css], message)}
     end
   end
 
   defp check_deck(dsl_state, module, effects) do
-    with :ok <-
-           check([Verifier.get_option(dsl_state, [:deck], :effect)], effects, module, [:deck]) do
-      dsl_state
-      |> Verifier.get_entities([:deck])
-      |> Stream.map(&check_slide(&1, effects, module))
-      |> Result.collect()
-      |> Result.ignore()
+    deck = check([Verifier.get_option(dsl_state, [:deck], :effect)], effects)
+
+    with :ok <- Result.map_error(deck, &Dsl.error(module, [:deck], &1)) do
+      dsl_state |> Dsl.map_slides(&check_slide(&1, effects)) |> Result.ignore()
     end
   end
 
-  defp check_slide(slide, effects, module) do
-    path = [:deck, :slide] ++ List.wrap(slide.name)
+  defp check_slide(slide, effects) do
     values = slide.elements |> Tree.descendants() |> Enum.map(&Map.get(&1, :effect))
-    check([slide.effect | values], effects, module, path)
+    check([slide.effect | values], effects)
   end
 
-  defp check(values, effects, module, path) do
+  defp check(values, effects) do
     case Enum.find(values, &without_rule?(&1, effects)) do
       nil -> :ok
-      effect -> {:error, error(module, path, message(effect))}
+      effect -> {:error, message(effect)}
     end
   end
 
@@ -67,9 +61,5 @@ defmodule Expresso.Overlay.EffectVerifier do
 
     "the effect #{inspect(effect)} has no rule in the theme or in the CSS of the deck. " <>
       ~s(Give it a rule for [data-effect="#{name}"] in the css option of the deck)
-  end
-
-  defp error(module, path, message) do
-    Spark.Error.DslError.exception(module: module, message: message, path: path)
   end
 end

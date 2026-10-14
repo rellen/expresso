@@ -15,7 +15,7 @@ defmodule Expresso.TransitionVerifier do
 
   use Spark.Dsl.Verifier
 
-  alias Expresso.Theme
+  alias Expresso.{Dsl, Theme}
   alias Spark.Dsl.Verifier
 
   @doc """
@@ -27,20 +27,20 @@ defmodule Expresso.TransitionVerifier do
     module = Verifier.get_persisted(dsl_state, :module)
 
     transitions =
-      case dsl_state |> Verifier.get_option([:deck], :css) |> Expresso.Css.resolve() do
-        {:ok, css} -> MapSet.union(Theme.transitions(), Expresso.Css.scan(css).transitions)
+      case Dsl.css_names(dsl_state) do
+        {:ok, names} -> MapSet.union(Theme.transitions(), names.transitions)
         {:error, _reported_by_effect_verifier} -> Theme.transitions()
       end
 
     slides =
       for slide <- Verifier.get_entities(dsl_state, [:deck]),
-          do: {slide.transition, [:deck, :slide] ++ List.wrap(slide.name)}
+          do: {slide.transition, Dsl.slide_path(slide)}
 
     [{Verifier.get_option(dsl_state, [:deck], :transition), [:deck]} | slides]
     |> Enum.find(fn {transition, _path} -> without_rule?(transition, transitions) end)
     |> case do
       nil -> :ok
-      {transition, path} -> {:error, error(module, path, message(transition))}
+      {transition, path} -> {:error, Dsl.error(module, path, message(transition))}
     end
   end
 
@@ -53,9 +53,5 @@ defmodule Expresso.TransitionVerifier do
     "the transition #{inspect(transition)} has no rule in the theme or in the CSS of the deck. " <>
       ~s|Give it a rule for html[data-transition="#{name}"]::view-transition-new(slide) | <>
       "in the css option of the deck"
-  end
-
-  defp error(module, path, message) do
-    Spark.Error.DslError.exception(module: module, message: message, path: path)
   end
 end

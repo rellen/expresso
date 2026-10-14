@@ -9,6 +9,7 @@ defmodule Expresso.Overlay.Verifier do
 
   use Spark.Dsl.Verifier
 
+  alias Expresso.Dsl
   alias Expresso.Overlay.Check
   alias Shoddy.Result
   alias Spark.Dsl.Verifier
@@ -19,22 +20,6 @@ defmodule Expresso.Overlay.Verifier do
   @impl Verifier
   @spec verify(map()) :: :ok | {:error, Spark.Error.DslError.t()}
   def verify(dsl_state) do
-    module = Verifier.get_persisted(dsl_state, :module)
-
-    dsl_state
-    |> Verifier.get_entities([:deck])
-    |> Stream.map(fn slide ->
-      slide |> Check.slide() |> Result.map_error(&dsl_error(module, slide, &1))
-    end)
-    |> Result.collect()
-    |> Result.ignore()
-  end
-
-  defp dsl_error(module, slide, message) do
-    Spark.Error.DslError.exception(
-      module: module,
-      message: message,
-      path: [:deck, :slide] ++ List.wrap(slide.name)
-    )
+    dsl_state |> Dsl.map_slides(&Check.slide/1) |> Result.ignore()
   end
 end

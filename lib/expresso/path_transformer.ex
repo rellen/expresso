@@ -23,7 +23,7 @@ defmodule Expresso.PathTransformer do
   use Spark.Dsl.Transformer
 
   alias Expresso.Element.{Audio, Chart, Code, Diagram, Embed, Image, Tree, Video}
-  alias Shoddy.Result
+  alias Expresso.Dsl
   alias Spark.Dsl.Transformer
 
   @doc """
@@ -40,17 +40,11 @@ defmodule Expresso.PathTransformer do
   @impl Transformer
   @spec transform(map()) :: {:ok, map()} | {:error, Spark.Error.DslError.t()}
   def transform(dsl_state) do
-    module = Transformer.get_persisted(dsl_state, :module)
     root = dsl_state |> Transformer.get_option([:deck], :root) |> expand()
     dsl_state = put_root(dsl_state, root)
 
-    dsl_state
-    |> Transformer.get_entities([:deck])
-    |> Stream.map(fn slide ->
-      slide |> slide(root) |> Result.map_error(&dsl_error(module, slide, &1))
-    end)
-    |> Result.collect()
-    |> Result.map_ok(&put_slides(dsl_state, &1))
+    with {:ok, slides} <- Dsl.map_slides(dsl_state, &slide(&1, root)),
+         do: {:ok, Dsl.put_slides(dsl_state, slides)}
   end
 
   defp expand(nil), do: nil
@@ -110,16 +104,4 @@ defmodule Expresso.PathTransformer do
   defp path(nil, _root), do: nil
   defp path(path, nil), do: path
   defp path(path, root), do: Path.expand(path, root)
-
-  defp put_slides(dsl_state, slides) do
-    Map.replace_lazy(dsl_state, [:deck], &Map.put(&1, :entities, slides))
-  end
-
-  defp dsl_error(module, slide, message) do
-    Spark.Error.DslError.exception(
-      module: module,
-      message: message,
-      path: [:deck, :slide] ++ List.wrap(slide.name)
-    )
-  end
 end
