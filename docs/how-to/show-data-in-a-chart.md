@@ -200,5 +200,5 @@ To move the bars, the lines or the slices of a chart from one point in time to t
 To show the parts of a whole in groups, see
 [Show the parts of a whole in a treemap or a sunburst](show-parts-of-a-whole-in-a-treemap-or-a-sunburst.md).
 
-To show how an amount flows from sources to targets, see
-[Show flows in a sankey chart](show-flows-in-a-sankey-chart.md).
+To show how an amount goes from sources to targets, see
+[Show flows between nodes in a chart](show-flows-between-nodes-in-a-chart.md).

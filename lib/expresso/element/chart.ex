@@ -27,10 +27,10 @@ defmodule Expresso.Element.Chart do
   `:grow`, moves its marks: `Expresso.Element.Chart.Motion` draws them.
   `docs/reference/chart-element.md` gives the rules.
 
-  A category of a sankey is a path of nodes, and `flow` entities give the
-  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws it. With
-  `reveal true`, the check makes one series for each column of links, so the
-  links show one column at a time.
+  A category of a sankey is a path of nodes. The `flow` entities give the
+  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws a
+  sankey. With `reveal true`, the check makes one series for each source
+  column of the links, so the links show one column at a time.
   """
 
   use Expresso.Element
@@ -489,9 +489,9 @@ defmodule Expresso.Element.Chart do
     end)
   end
 
-  # The series of a sankey with reveal: one series for each column of the
-  # sources of the links. Each series holds the value of the links of its
-  # column, and zero for each other link.
+  # The series of a sankey with reveal: one series for each source column.
+  # Each series holds the values of the links that start in its column, and
+  # zero for each other link.
   defp stages(links, %Series{} = series) do
     columns = Sankey.columns(links)
     stages = links |> Enum.map(&columns[&1.from]) |> Enum.uniq() |> Enum.sort()

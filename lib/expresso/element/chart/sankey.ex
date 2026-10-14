@@ -3,34 +3,36 @@ defmodule Expresso.Element.Chart.Sankey do
   Draws a sankey chart: the flows between the nodes of a graph
 
   A category of a sankey is a path of two nodes or more, such as
-  `["Coal", "Electricity"]` or `"Gas/Electricity/Homes"`, and its value flows
-  along each link of the path. `links/3` adds the values of the same link
-  together, so a CSV file can hold one row for each flow, or one row for each
-  record of an alluvial chart with the `levels` option.
+  `["Coal", "Electricity"]` or `"Gas/Electricity/Homes"`. Its value goes
+  along each link of the path. `links/3` adds the values of the same link.
+  Thus a CSV file can hold one row for each flow, or one row for each record
+  of a path with the `levels` option.
 
   The layout has these rules:
 
   1. A node with no flow into it is in the first column. Each other node is
-     one column after its furthest source, so a link can skip a column.
+     one column after its last source. Thus a link can go across a column.
   2. The height of a node is the larger of the flow into it and the flow out
-     of it. One scale gives the heights of each column, and the fullest
-     column fills the height of the chart. Each column is in the middle.
+     of it. One scale sets the height of each node, and the fullest column
+     fills the height of the chart. The nodes of each column are in the
+     vertical middle of the chart.
   3. The nodes of a column keep the order of the data. At each node, the
-     links have the order of the other ends, from the top, so few links
+     links have the order of their other ends, from the top, so few links
      cross.
   4. A link is a ribbon between two cubic Bézier curves. The control points
-     are at the middle of the two columns, so a link leaves and enters each
-     node level. The ribbon is a filled shape, and not a thick stroke, so its
-     height is the value at each point.
+     are at the middle between the two columns, so a link leaves and enters
+     each node horizontally. The ribbon is a filled shape, and not a thick
+     stroke, so its height is its value at each point.
 
   A graph with a loop has no first column, so `check/3` refuses it. The
   frames of a chart share the columns, the order and the scale of the nodes,
-  as `layout_frames/2` gives them, and each frame is a layer that fades.
+  as `layout_frames/2` returns them. Each frame is a layer, and the opacity
+  of the layers changes from one frame to the next.
 
-  `render/1` draws each series of the chart as a group with its links and the
-  nodes that show first with it. The labels of the nodes are in groups of
-  their own above each link, with the same steps. `table/1` writes a row for
-  each link for a screen reader.
+  `render/1` draws each series of the chart as a group. The group holds the
+  links of the series and the nodes that show first with it. The node labels
+  of each series are in a group after the links, with the same steps.
+  `table/1` writes a row for each link for a screen reader.
   """
 
   import Temple
@@ -201,8 +203,8 @@ defmodule Expresso.Element.Chart.Sankey do
   @doc """
   Return the column of each node, from 0
 
-  A node with no link into it is in column 0, and each other node is one
-  column after its furthest source.
+  A node with no link into it is in column 0. Each other node is one column
+  after its last source.
 
       iex> links = [%{from: "A", to: "B"}, %{from: "B", to: "C"}, %{from: "A", to: "C"}]
       iex> Expresso.Element.Chart.Sankey.columns(links)
@@ -381,8 +383,8 @@ defmodule Expresso.Element.Chart.Sankey do
   @doc """
   Return the path of a ribbon from `(x0, y0)` to `(x1, y1)`, with a height
 
-  The top edge and the bottom edge are cubic Bézier curves with their
-  control points at the middle, so the ribbon leaves and enters level.
+  The top edge and the bottom edge are cubic Bézier curves. Their control
+  points are at the middle, so the ribbon leaves and enters horizontally.
 
       iex> Expresso.Element.Chart.Sankey.ribbon(0, 0, 100, 50, 10)
       "M0,0 C50,0 50,50 100,50 L100,60 C50,60 50,10 0,10 Z"
@@ -402,9 +404,9 @@ defmodule Expresso.Element.Chart.Sankey do
 
   The assigns are the assigns of `Expresso.Element.Chart`. Each category is a
   link, and the value of a link is in one series. A chart with frames has one
-  layer for each frame, and the layer of the frame that shows has the
-  opacity 1: the channel `--k<n>` of `Expresso.Element.Chart.Motion` gives it,
-  and the layers fade from one frame to the next.
+  layer for each frame. The layer of the frame that shows has the opacity 1.
+  The channel `--k<n>` of `Expresso.Element.Chart.Motion` sets the opacity,
+  so the opacity of the layers changes from one frame to the next.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
   def render(%{frames: [_, _ | _] = frames} = assigns) do

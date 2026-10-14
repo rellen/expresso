@@ -580,7 +580,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Show data in a chart](docs/how-to/show-data-in-a-chart.md)
 - [Show a change over time in a chart](docs/how-to/show-a-change-over-time-in-a-chart.md)
 - [Show the parts of a whole in a treemap or a sunburst](docs/how-to/show-parts-of-a-whole-in-a-treemap-or-a-sunburst.md)
-- [Show flows in a sankey chart](docs/how-to/show-flows-in-a-sankey-chart.md)
+- [Show flows between nodes in a chart](docs/how-to/show-flows-between-nodes-in-a-chart.md)
 - [Show code on a slide](docs/how-to/show-code.md)
 - [Check that a deck fits the screen](docs/how-to/check-the-layout.md)
 - [Check a deck before the talk](docs/how-to/check-a-deck.md)

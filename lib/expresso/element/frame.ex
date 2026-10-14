@@ -14,8 +14,8 @@ defmodule Expresso.Element.Frame do
   chart without frames. `Expresso.Overlay.Expand` writes the steps of each
   frame into its `steps` field.
 
-  A frame of a sankey can hold `flow` entities in place of a series. The
-  check of the chart turns them into one series.
+  A frame of a chart of flows can hold `flow` entities in place of a series.
+  `Expresso.Element.Chart.check/1` changes them into one series.
   """
 
   @typedoc "The struct of a frame"

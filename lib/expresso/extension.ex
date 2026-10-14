@@ -314,7 +314,7 @@ defmodule Expresso.Extension do
       value: [
         type: {:or, [:integer, :float]},
         required: true,
-        doc: "The size of the flow, zero or more."
+        doc: "The value of the flow, zero or more."
       ]
     ]
   }
@@ -367,7 +367,7 @@ defmodule Expresso.Extension do
           categories: [
             type: {:list, {:or, [:string, {:list, :string}]}},
             doc:
-              "The name of each category, such as [\"2023\", \"2024\"]. A category of a treemap or a sunburst can be a list of its levels, such as [\"Production\", \"Press\"], and a category of a sankey is a path of nodes, such as [\"Coal\", \"Electricity\"]."
+              "The name of each category, such as [\"2023\", \"2024\"]. A category of a treemap or a sunburst can be a list of its levels, such as [\"Production\", \"Press\"]. A category of a sankey is a path of nodes, such as [\"Coal\", \"Electricity\"]."
           ],
           src: [
             type: :string,
@@ -392,7 +392,7 @@ defmodule Expresso.Extension do
             type: :boolean,
             default: false,
             doc:
-              "Show the series one after the other, or the links of a sankey one column at a time. A pie takes no reveal option."
+              "Show the series one after the other. A sankey shows its links one column at a time. A pie takes no reveal option."
           ],
           dim: [
             type: :boolean,
@@ -408,7 +408,7 @@ defmodule Expresso.Extension do
           levels: [
             type: {:list, :string},
             doc:
-              "The headings of the columns of a CSV file that hold the levels of the categories of a treemap or a sunburst, from the top level down, or the nodes of each path of a sankey. Requires the src option."
+              "For a treemap or a sunburst, the headings of the CSV columns that hold the levels, from the top level down. For a sankey, the headings of the CSV columns that hold the nodes of each path. Requires the src option."
           ],
           frames: [
             type: :string,
