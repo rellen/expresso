@@ -22,6 +22,7 @@ check does not change the report. Reload the page for a new check.
 | --- | --- | --- |
 | Past an edge | The box of an element goes more than 1 pixel past the left, top, right or bottom edge of the window. | The edge, and the distance in pixels. For two or more edges, the edge with the largest distance. |
 | A line breaks | A line of a code element is more than 1.5 times the line height of the element. A code element with `wrap true` breaks its lines on purpose, and the check does not measure them. | The number of lines that break in the code element. |
+| Small text | The smallest text that shows in a chart or a diagram is smaller than 1/60 of the window height: 12 pixels at 1280 × 720, and 18 pixels at 1920 × 1080. | The size of that text in pixels, rounded down to a tenth, and the limit in pixels. |
 
 The check measures these elements, and the content of each:
 
@@ -45,6 +46,13 @@ it moves, while its text can stay in the window.
 An element that does not show at the step, as an overlay specifies, is not measured. A part
 of a diagram is not measured, because a part can move past the box of its diagram.
 
+The check measures the size of text only in the `svg` element of a chart or a diagram. That
+`svg` element takes the height that is left in the slide, and its text becomes smaller with
+it. Thus a long heading can make the text too small to read, while the chart stays in the
+window. The size of a text is its font size times the scale of the `svg` element on the
+screen. A text that does not show at the step, such as a frame of a chart that comes later,
+is not measured.
+
 An element counts only when no element inside it goes past the same edge. Thus the report
 names the innermost element: a formula in a column, and not the column.
 
@@ -63,7 +71,8 @@ the window. It holds:
 - the button `Close`, which removes the report.
 
 The name of an element is its kind and the first 40 characters of its text. An image gives
-its `alt` text, and a diagram gives the `title` of its SVG.
+its `alt` text, and a diagram gives the `title` of its SVG. For small text, a chart gives
+its title.
 
 The console of the browser gets one warning for each problem, with the text of its link.
 The `body` element gets `data-layout="ok"` for no problem, and `data-layout="problems"`
@@ -85,5 +94,6 @@ The check reads the place and the size of each element. It does not find:
   compiler gives a warning for a color of a map under its minimum. See
   [The theme option](theme-option.md). `--check=a11y` runs axe-core, which finds the
   contrast of each text on the slide. See [The check option](check-option.md),
-- text that is too small for the room,
+- small text outside a chart or a diagram, such as the text in an image. Other text keeps
+  its size when the window becomes smaller,
 - an element that covers another element inside the window.

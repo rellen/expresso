@@ -1,8 +1,9 @@
 # Check that a deck fits the screen
 
 This guide shows how to find the parts of a deck that do not fit the screen of the talk:
-an element that goes past an edge, and a line of code that breaks. The layout check of the
-presenter finds them at each step. For each value of the check, see
+an element that goes past an edge, a line of code that breaks, and a chart or a diagram
+with text that is too small to read. The layout check of the presenter finds them at each
+step. For each value of the check, see
 [The layout check](../reference/layout-check.md).
 
 ## Check a deck in a browser
@@ -91,6 +92,20 @@ column. Do one of these:
   The check measures the text of the element, so the distance can be as large as the space
   next to the text.
 - Put fewer elements on the slide, or divide the slide into two slides.
+
+## Correct a chart or a diagram with small text
+
+A chart or a diagram takes the height that is left in the slide, and its text becomes
+smaller with it. The report gives the size of the smallest text, such as
+`the text in the chart “Energy” is 10.2 px, less than 1/60 of the window height (12 px)`.
+Do one of these:
+
+- Make the heading shorter. At 1280 × 720, a heading of three lines takes approximately one
+  half of the window.
+- Move the other elements of the slide, such as a text area or a footnote, to a different
+  slide.
+- Move the element out of a `columns` element, so it gets the full width of the slide.
+- For a diagram, give its text a larger font size in its SVG file.
 
 ## Check a deck with no window
 

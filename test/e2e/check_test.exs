@@ -274,6 +274,27 @@ defmodule Expresso.E2E.CheckTest do
     assert output =~ "the layout at 1280 × 720 and 1920 × 1080\n"
   end
 
+  # A heading of three lines at 1280 × 720 leaves a small height, so the
+  # chart and its text become small. The chart stays in the window (issue
+  # #248).
+  @small_chart String.replace(
+                 @named_chart,
+                 ~s(heading "Energy in a year"),
+                 ~s(heading "Energy in a year, by the source of the energy")
+               )
+
+  test "--check=layout finds a chart with text that is too small to read", %{tmp_dir: dir} do
+    {status, output} = check(dir, @small_chart, :layout, [{1280, 720}, {1920, 1080}])
+
+    assert status == 1
+
+    assert output =~
+             ~r/  - Slide 1 “energy”, step 1 \(1280 × 720\): the text in the chart “Energy” is \d+(\.\d)? px, less than 1\/60 of the window height \(12 px\)\n/
+
+    refute output =~ "(1920 × 1080)"
+    refute output =~ "past the"
+  end
+
   test "--check=browser checks each size in Playwright", %{tmp_dir: dir} do
     {status, output} = check(dir, @wide, :browser, [{1920, 1080}, {1024, 768}])
 

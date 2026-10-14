@@ -498,7 +498,8 @@ the pages that the `handout` options select.
 ### The layout check
 
 `?check` at the end of the address, such as `deck.html?check`, finds an element that goes
-past an edge of the window and a line of code that breaks. A report in a corner of the
+past an edge of the window, a line of code that breaks, and a chart or a diagram with text
+smaller than 1/60 of the window height. A report in a corner of the
 window gives each problem, with a link to its step. See
 [Check that a deck fits the screen](docs/how-to/check-the-layout.md) and
 [the layout check](docs/reference/layout-check.md).
