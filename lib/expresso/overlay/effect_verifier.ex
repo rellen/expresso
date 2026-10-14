@@ -12,7 +12,7 @@ defmodule Expresso.Overlay.EffectVerifier do
 
   use Spark.Dsl.Verifier
 
-  alias Expresso.Element.Pause
+  alias Expresso.Element.Tree
   alias Expresso.Theme
   alias Shoddy.Result
   alias Spark.Dsl.Verifier
@@ -48,7 +48,8 @@ defmodule Expresso.Overlay.EffectVerifier do
 
   defp check_slide(slide, effects, module) do
     path = [:deck, :slide] ++ List.wrap(slide.name)
-    check([slide.effect | element_effects(slide.elements || [])], effects, module, path)
+    values = slide.elements |> Tree.descendants() |> Enum.map(&Map.get(&1, :effect))
+    check([slide.effect | values], effects, module, path)
   end
 
   defp check(values, effects, module, path) do
@@ -60,13 +61,6 @@ defmodule Expresso.Overlay.EffectVerifier do
 
   defp without_rule?(nil, _effects), do: false
   defp without_rule?(effect, effects), do: Atom.to_string(effect) not in effects
-
-  defp element_effects(elements) do
-    Enum.flat_map(elements, fn
-      %Pause{} -> []
-      element -> [Map.get(element, :effect) | element_effects(Map.get(element, :elements) || [])]
-    end)
-  end
 
   defp message(effect) do
     name = effect |> Atom.to_string() |> String.replace("_", "-")

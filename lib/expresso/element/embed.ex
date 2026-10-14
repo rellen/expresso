@@ -113,29 +113,15 @@ defmodule Expresso.Element.Embed do
   `Expresso.Renderer` calls this function before the render.
   """
   @spec number(Expresso.Deck.t()) :: Expresso.Deck.t()
-  def number(%Expresso.Deck{slides: slides} = deck) do
-    {slides, _count} =
-      Enum.map_reduce(slides, 0, fn slide, count ->
-        {elements, count} = number_all(slide.elements || [], count)
-        {%{slide | elements: elements}, count}
-      end)
-
-    %Expresso.Deck{deck | slides: slides}
+  def number(%Expresso.Deck{} = deck) do
+    {deck, _count} = Expresso.Element.Tree.map_reduce_deck(deck, 0, &number_one/2)
+    deck
   end
 
-  defp number_all(elements, count) do
-    Enum.map_reduce(elements, count, fn
-      %__MODULE__{} = embed, count ->
-        {%__MODULE__{embed | index: count}, count + 1}
+  defp number_one(%__MODULE__{} = embed, count),
+    do: {%__MODULE__{embed | index: count}, count + 1}
 
-      %{elements: children} = element, count when is_list(children) ->
-        {children, count} = number_all(children, count)
-        {%{element | elements: children}, count}
-
-      element, count ->
-        {element, count}
-    end)
-  end
+  defp number_one(element, count), do: {element, count}
 
   @doc """
   Return the source of each embed of a deck, in the order of their numbers
@@ -148,17 +134,10 @@ defmodule Expresso.Element.Embed do
   @spec sources(Expresso.Deck.t()) :: [%{kind: String.t(), value: String.t()}]
   def sources(%Expresso.Deck{slides: slides}) do
     slides
-    |> Enum.flat_map(&embeds(&1.elements || []))
+    |> Enum.flat_map(&Expresso.Element.Tree.descendants(&1.elements))
+    |> Enum.filter(&is_struct(&1, __MODULE__))
     |> Enum.sort_by(& &1.index)
     |> Enum.map(&source_of/1)
-  end
-
-  defp embeds(elements) do
-    Enum.flat_map(elements, fn
-      %__MODULE__{} = embed -> [embed]
-      %{elements: children} when is_list(children) -> embeds(children)
-      _element -> []
-    end)
   end
 
   defp source_of(%__MODULE__{src: src}) do

@@ -11,7 +11,7 @@ defmodule Expresso.Overlay.Render do
   """
 
   alias Expresso.Deck
-  alias Expresso.Element.{Chart, On, Pause}
+  alias Expresso.Element.{Chart, On, Pause, Tree}
   alias Expresso.Slide
 
   @doc """
@@ -57,11 +57,11 @@ defmodule Expresso.Overlay.Render do
     Map.new(@inherited, fn key -> {key, Map.get(source, key) || values[key]} end)
   end
 
-  defp identify_slide(%Slide{elements: elements, metadata: metadata} = slide, values) do
+  defp identify_slide(%Slide{metadata: metadata} = slide, values) do
     prefix = "s#{metadata.slide_number}"
 
     {elements, _position} =
-      identify_elements(elements || [], prefix, 1, nearest(values, metadata))
+      identify_elements(Tree.children(slide), prefix, 1, nearest(values, metadata))
 
     %Slide{slide | elements: elements}
   end
@@ -76,7 +76,7 @@ defmodule Expresso.Overlay.Render do
         el = if identity?(struct(element, values)), do: "#{prefix}-e#{position}"
 
         {children, position} =
-          identify_elements(children(element), prefix, position + 1, values)
+          identify_elements(Tree.children(element), prefix, position + 1, values)
 
         {struct(element, [el: el, elements: children] ++ Map.to_list(values)), position}
     end)
@@ -181,7 +181,7 @@ defmodule Expresso.Overlay.Render do
   # writes them.
   defp charts(slides) do
     for slide <- slides,
-        %Chart{} = chart <- elements(slide.elements || []),
+        %Chart{} = chart <- Tree.descendants(slide.elements),
         rule <- Chart.rules(chart),
         do: rule
   end
@@ -190,20 +190,13 @@ defmodule Expresso.Overlay.Render do
   # its time. Only an element that animates writes `data-speed`.
   defp speeds(slides) do
     slides
-    |> Enum.flat_map(&elements(&1.elements || []))
+    |> Enum.flat_map(&Tree.descendants(&1.elements))
     |> Enum.filter(&(Map.get(&1, :steps) != nil or Map.get(&1, :el) != nil))
     |> Enum.map(&Map.get(&1, :speed))
     |> Enum.filter(&is_integer/1)
     |> Enum.uniq()
     |> Enum.sort()
     |> Enum.map(&"[data-speed=\"#{&1}\"] { --speed: #{&1}ms; }")
-  end
-
-  defp elements(elements) do
-    Enum.flat_map(elements, fn
-      %Pause{} -> []
-      element -> [element | elements(children(element))]
-    end)
   end
 
   defp properties(ons) do
@@ -261,16 +254,12 @@ defmodule Expresso.Overlay.Render do
 
   # The on entities of a slide, each with the identity of its element
 
-  defp ons(%Slide{elements: elements}), do: Enum.flat_map(elements || [], &element_ons/1)
-
-  defp element_ons(%Pause{}), do: []
-
-  defp element_ons(element) do
-    el = Map.get(element, :el)
-    own = for %On{steps: steps} = on <- on(element), steps not in [nil, []], do: {el, on}
-    own ++ Enum.flat_map(children(element), &element_ons/1)
+  defp ons(%Slide{elements: elements}) do
+    for element <- Tree.descendants(elements),
+        %On{steps: steps} = on <- on(element),
+        steps not in [nil, []],
+        do: {Map.get(element, :el), on}
   end
 
   defp on(element), do: Map.get(element, :on) || []
-  defp children(element), do: Map.get(element, :elements) || []
 end

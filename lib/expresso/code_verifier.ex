@@ -12,7 +12,7 @@ defmodule Expresso.CodeVerifier do
 
   use Spark.Dsl.Verifier
 
-  alias Expresso.Element.Code
+  alias Expresso.Element.{Code, Tree}
   alias Expresso.Highlight
   alias Expresso.Slide
   alias Spark.Dsl.{Entity, Verifier}
@@ -40,21 +40,13 @@ defmodule Expresso.CodeVerifier do
     path = Enum.join([:deck, :slide | List.wrap(slide.name)], " -> ")
 
     slide.elements
-    |> List.wrap()
-    |> codes()
+    |> Tree.descendants()
+    |> Enum.filter(&is_struct(&1, Code))
     |> Enum.reject(&(is_nil(&1.lang) or &1.lang in languages))
     |> Enum.map(&warning(&1, path, languages))
   end
 
   defp slide(_entity, _languages), do: []
-
-  defp codes(elements) do
-    Enum.flat_map(elements, fn
-      %Code{} = code -> [code]
-      %{elements: children} when is_list(children) -> codes(children)
-      _element -> []
-    end)
-  end
 
   defp warning(%Code{lang: lang} = code, path, languages) do
     text =

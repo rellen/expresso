@@ -14,6 +14,8 @@ defmodule Expresso.Media do
   `%{".webm" => "video/webm"}`.
   """
 
+  alias Expresso.Element.Tree
+
   @doc """
   Give each element of a module in a deck its number
 
@@ -22,30 +24,17 @@ defmodule Expresso.Media do
   position, so the document holds each file one time.
   """
   @spec number(Expresso.Deck.t(), module()) :: Expresso.Deck.t()
-  def number(%Expresso.Deck{slides: slides} = deck, module) do
-    {slides, _files} =
-      Enum.map_reduce(slides, %{}, fn slide, files ->
-        {elements, files} = number_all(slide.elements || [], module, files)
-        {%{slide | elements: elements}, files}
-      end)
-
-    %Expresso.Deck{deck | slides: slides}
+  def number(%Expresso.Deck{} = deck, module) do
+    {deck, _files} = Tree.map_reduce_deck(deck, %{}, &number_one(&1, &2, module))
+    deck
   end
 
-  defp number_all(elements, module, files) do
-    Enum.map_reduce(elements, files, fn
-      %^module{src: src} = medium, files ->
-        files = Map.put_new(files, src, map_size(files))
-        {%{medium | index: files[src]}, files}
-
-      %{elements: children} = element, files when is_list(children) ->
-        {children, files} = number_all(children, module, files)
-        {%{element | elements: children}, files}
-
-      element, files ->
-        {element, files}
-    end)
+  defp number_one(%module{src: src} = medium, files, module) do
+    files = Map.put_new(files, src, map_size(files))
+    {%{medium | index: files[src]}, files}
   end
+
+  defp number_one(element, files, _module), do: {element, files}
 
   @doc """
   Return the data URI of each file of the elements of a module in a deck, in
@@ -60,18 +49,11 @@ defmodule Expresso.Media do
           [String.t()]
   def sources(%Expresso.Deck{slides: slides}, module, types, noun) do
     slides
-    |> Enum.flat_map(&all(&1.elements || [], module))
+    |> Enum.flat_map(&Tree.descendants(&1.elements))
+    |> Enum.filter(&is_struct(&1, module))
     |> Enum.uniq_by(& &1.index)
     |> Enum.sort_by(& &1.index)
     |> Enum.map(&data_uri(&1.src, types, noun))
-  end
-
-  defp all(elements, module) do
-    Enum.flat_map(elements, fn
-      %^module{} = medium -> [medium]
-      %{elements: children} when is_list(children) -> all(children, module)
-      _element -> []
-    end)
   end
 
   defp data_uri(src, types, noun) do
