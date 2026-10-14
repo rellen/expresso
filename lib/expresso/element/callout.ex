@@ -46,8 +46,8 @@ defmodule Expresso.Element.Callout do
   defstruct [
               :kind,
               :class,
-              :elements,
               title: nil,
+              elements: [],
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 

@@ -22,7 +22,7 @@ defmodule Expresso.PathTransformer do
 
   use Spark.Dsl.Transformer
 
-  alias Expresso.Element.{Audio, Chart, Code, Diagram, Embed, Image, Video}
+  alias Expresso.Element.{Audio, Chart, Code, Diagram, Embed, Image, Tree, Video}
   alias Shoddy.Result
   alias Spark.Dsl.Transformer
 
@@ -71,25 +71,11 @@ defmodule Expresso.PathTransformer do
   end
 
   defp slide(%{elements: elements} = slide, root) do
-    with {:ok, elements} <- elements(elements || [], root),
+    with {:ok, elements} <- Tree.map_ok(elements, &own(&1, root)),
          do: {:ok, %{slide | elements: elements}}
   end
 
   defp slide(entity, _root), do: {:ok, entity}
-
-  defp elements(elements, root) do
-    elements |> Enum.map(&element(&1, root)) |> Result.collect()
-  end
-
-  defp element(element, root) do
-    with {:ok, element} <- own(element, root), do: children(element, root)
-  end
-
-  defp children(%{elements: [_ | _] = children} = element, root) do
-    with {:ok, children} <- elements(children, root), do: {:ok, %{element | elements: children}}
-  end
-
-  defp children(element, _root), do: {:ok, element}
 
   defp own(%Code{text: nil, src: src} = code, root) when is_binary(src),
     do: Code.build(%Code{code | src: path(src, root)})

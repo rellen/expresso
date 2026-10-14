@@ -10,6 +10,7 @@ defmodule Expresso.GotoVerifier do
 
   use Spark.Dsl.Verifier
 
+  alias Expresso.Element.Tree
   alias Expresso.Goto
   alias Shoddy.Result
   alias Spark.Dsl.Verifier
@@ -27,20 +28,13 @@ defmodule Expresso.GotoVerifier do
     slides
     |> Stream.map(fn slide ->
       slide.elements
-      |> List.wrap()
-      |> links()
+      |> Tree.descendants()
+      |> Enum.flat_map(&List.wrap(Map.get(&1, :goto)))
       |> first_error(targets)
       |> Result.map_error(&dsl_error(module, slide, &1))
     end)
     |> Result.collect()
     |> Result.ignore()
-  end
-
-  # Each link of a tree of elements.
-  defp links(elements) do
-    Enum.flat_map(elements, fn element ->
-      List.wrap(Map.get(element, :goto)) ++ links(List.wrap(Map.get(element, :elements)))
-    end)
   end
 
   defp first_error(links, targets) do

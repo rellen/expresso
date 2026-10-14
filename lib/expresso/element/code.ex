@@ -515,22 +515,12 @@ defmodule Expresso.Element.Code do
   because a group needs an identity for its `on` entities.
   """
   @spec spotlight(Expresso.Deck.t()) :: Expresso.Deck.t()
-  def spotlight(%Expresso.Deck{slides: slides} = deck) do
-    %Expresso.Deck{deck | slides: Enum.map(slides, &%{&1 | elements: walk(&1.elements || [])})}
-  end
+  def spotlight(%Expresso.Deck{} = deck), do: Expresso.Element.Tree.map_deck(deck, &focus/1)
 
-  defp walk(elements) do
-    Enum.map(elements, fn
-      %__MODULE__{highlight: highlight} = code when highlight != nil ->
-        %__MODULE__{code | elements: dim_others(code.elements)}
+  defp focus(%__MODULE__{highlight: highlight} = code) when highlight != nil,
+    do: %__MODULE__{code | elements: dim_others(code.elements)}
 
-      %{elements: children} = element when is_list(children) ->
-        %{element | elements: walk(children)}
-
-      element ->
-        element
-    end)
-  end
+  defp focus(element), do: element
 
   defp dim_others(groups) do
     focus = Enum.map(groups, &focus_steps/1)

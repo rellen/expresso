@@ -30,6 +30,7 @@ defmodule Expresso.Goto do
   """
 
   alias Expresso.{Deck, Steps}
+  alias Expresso.Element.Tree
   alias Expresso.Overlay.Render
   alias Expresso.Presenter.Program
 
@@ -145,7 +146,7 @@ defmodule Expresso.Goto do
     firsts = deck |> Steps.slides() |> Enum.map(& &1.first)
     link = &commands(&1, firsts, targets(slides))
 
-    %Deck{deck | slides: Enum.map(slides, &%{&1 | elements: walk(&1.elements || [], link)})}
+    Tree.map_deck(deck, &resolve_one(&1, link))
   end
 
   @doc """
@@ -172,17 +173,9 @@ defmodule Expresso.Goto do
     end
   end
 
-  # Each element of the tree, with the commands of its link.
-  defp walk(elements, link) do
-    Enum.map(elements, fn element ->
-      element
-      |> update(:goto, fn goto -> goto && link.(goto) end)
-      |> update(:elements, &walk(&1 || [], link))
-    end)
-  end
+  # An element with the commands of its link.
+  defp resolve_one(%{goto: goto} = element, link) when goto != nil,
+    do: %{element | goto: link.(goto)}
 
-  defp update(element, key, fun) when is_map_key(element, key),
-    do: Map.update!(element, key, fun)
-
-  defp update(element, _key, _fun), do: element
+  defp resolve_one(element, _link), do: element
 end

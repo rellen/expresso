@@ -74,25 +74,13 @@ defmodule Expresso.Element.Diagram do
   an id that the file does not have, and for an element with no shape.
   """
   @spec place(Expresso.Deck.t()) :: Expresso.Deck.t()
-  def place(%Expresso.Deck{slides: slides} = deck) do
-    %Expresso.Deck{
-      deck
-      | slides: Enum.map(slides, &%{&1 | elements: place_all(&1.elements || [])})
-    }
+  def place(%Expresso.Deck{} = deck), do: Expresso.Element.Tree.map_deck(deck, &place_one/1)
+
+  defp place_one(%__MODULE__{elements: parts} = diagram) do
+    if Enum.any?(parts, &moves?/1), do: place_parts(diagram), else: diagram
   end
 
-  defp place_all(elements) do
-    Enum.map(elements, fn
-      %__MODULE__{elements: parts} = diagram ->
-        if Enum.any?(parts, &moves?/1), do: place_parts(diagram), else: diagram
-
-      %{elements: children} = element when is_list(children) ->
-        %{element | elements: place_all(children)}
-
-      element ->
-        element
-    end)
-  end
+  defp place_one(element), do: element
 
   defp moves?(%Expresso.Element.Part{on: on}), do: Enum.any?(on, &(&1.move_to != nil))
 

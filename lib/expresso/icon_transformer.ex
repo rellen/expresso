@@ -15,7 +15,7 @@ defmodule Expresso.IconTransformer do
 
   use Spark.Dsl.Transformer
 
-  alias Expresso.Element.{Icon, Item, TextArea}
+  alias Expresso.Element.{Icon, Item, TextArea, Tree}
   alias Spark.Dsl.Transformer
 
   @doc """
@@ -45,7 +45,7 @@ defmodule Expresso.IconTransformer do
   defp slides(slides, own, module) do
     slides
     |> Enum.reduce_while({:ok, []}, fn slide, {:ok, done} ->
-      case walk(slide.elements || [], own) do
+      case Tree.map_ok(slide.elements, &element(&1, own)) do
         {:ok, elements} -> {:cont, {:ok, [%{slide | elements: elements} | done]}}
         {:error, message} -> {:halt, {:error, error(module, message, slide)}}
       end
@@ -81,19 +81,6 @@ defmodule Expresso.IconTransformer do
     end
   end
 
-  defp walk(elements, own) do
-    Enum.reduce_while(elements, {:ok, []}, fn element, {:ok, done} ->
-      case element(element, own) do
-        {:ok, element} -> {:cont, {:ok, [element | done]}}
-        error -> {:halt, error}
-      end
-    end)
-    |> case do
-      {:ok, done} -> {:ok, Enum.reverse(done)}
-      error -> error
-    end
-  end
-
   defp element(%Icon{name: name} = icon, own) do
     with {:ok, svg} <- Expresso.Icon.svg(name, "icon-svg", own), do: {:ok, %{icon | svg: svg}}
   end
@@ -103,14 +90,7 @@ defmodule Expresso.IconTransformer do
   end
 
   defp element(%Item{text: text} = item, own) when is_binary(text) do
-    with {:ok, text} <- Expresso.Icon.inline(text, own),
-         {:ok, children} <- walk(item.elements || [], own) do
-      {:ok, %{item | text: text, elements: children}}
-    end
-  end
-
-  defp element(%{elements: [_ | _] = children} = element, own) do
-    with {:ok, children} <- walk(children, own), do: {:ok, %{element | elements: children}}
+    with {:ok, text} <- Expresso.Icon.inline(text, own), do: {:ok, %{item | text: text}}
   end
 
   defp element(element, _own), do: {:ok, element}

@@ -867,6 +867,38 @@ so each rule of the theme still selects the element. The option is not part of t
 attributes, because the root tag already has a `class` attribute, and HTML takes only the
 first of two.
 
+### The walks over the tree of elements
+
+A container, such as a text box, a column or a list, holds its children under the key
+`:elements`. `Expresso.Element.Tree` gives the walks over this tree, and each one reads the
+children with `Tree.children/1`. That function returns `[]` for an element without the
+key, such as a `pause`, and for the value `nil`. The walks have four shapes:
+
+| Function | The walk |
+| --- | --- |
+| `descendants/1` | Collect each element under a slide. |
+| `map/2`, `map_deck/2` | Change each element. |
+| `map_reduce/3`, `map_reduce_deck/3` | Change each element, and carry a value, such as a counter. |
+| `map_ok/2` | Change each element, and stop at the first error. |
+
+Each function visits the elements in document order, and an element comes before its
+children. A function that changes the elements walks the children of the element that the
+function of the caller returns. Therefore a code element that `Expresso.PathTransformer`
+reads from a file gets its groups of lines first, and the walk then visits each group.
+
+Before, 13 modules each had their own recursion over `:elements`. They read the children
+in four different ways, and some of them skipped a `pause`. A `pause` has no `on`,
+`effect` or `steps` field, so a walk now needs no special case for it.
+
+The overlay expansion, the overlay check, `Expresso.Overlay.Render.identify/1` and
+`Expresso.Placement` keep their own walks. They carry the context of the parent, or they
+read a different key, such as the `timeline` of a chart. The first three read the children
+with `Tree.children/1`.
+
+The tree is not a protocol. Each container keeps its children under the same key, so
+`Map.get/2` reads each one in the same way. A protocol would need about 30 `defimpl`
+blocks, or a `@fallback_to_any` that calls the same `Map.get/2`.
+
 ### The text box and the text area
 
 A `text_box` contains other elements. A `text_area` contains text. The renderer writes the

@@ -54,7 +54,7 @@ defmodule Expresso.Overlay.Check do
     with :ok <- check_positive(steps, name(element)),
          :ok <- check_inside(steps, parent, "the #{name(element)}"),
          :ok <- check_on(Map.get(element, :on) || [], element),
-         do: check_all(Map.get(element, :elements) || [], element, true)
+         do: check_all(Expresso.Element.Tree.children(element), element, true)
   end
 
   defp check_on(on, element) do

@@ -10,7 +10,7 @@ defmodule Expresso.Overlay.Properties do
   `docs/overlays.md` gives the rules.
   """
 
-  alias Expresso.Element.{On, Pause}
+  alias Expresso.Element.{On, Tree}
   alias Expresso.Slide
   alias Expresso.Theme
   alias Spark.Dsl.Entity
@@ -42,18 +42,10 @@ defmodule Expresso.Overlay.Properties do
   def slide(%Slide{} = slide, names \\ Theme.names()) do
     path = Enum.join([:deck, :slide | List.wrap(slide.name)], " -> ")
 
-    elements(slide.elements || [], {path, names})
-  end
-
-  defp elements(elements, context), do: Enum.flat_map(elements, &element(&1, context))
-
-  defp element(%Pause{}, _context), do: []
-
-  defp element(element, context) do
-    on = Map.get(element, :on) || []
-    children = Map.get(element, :elements) || []
-
-    Enum.flat_map(on, &entity(&1, context)) ++ elements(children, context)
+    for element <- Tree.descendants(slide.elements),
+        on <- Map.get(element, :on) || [],
+        warning <- entity(on, {path, names}),
+        do: warning
   end
 
   defp entity(%On{state: state, set: set} = on, context) do

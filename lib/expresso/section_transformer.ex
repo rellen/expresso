@@ -21,7 +21,7 @@ defmodule Expresso.SectionTransformer do
 
   use Spark.Dsl.Transformer
 
-  alias Expresso.Element.{Toc, TocEntry}
+  alias Expresso.Element.{Toc, TocEntry, Tree}
   alias Spark.Dsl.Transformer
 
   @doc """
@@ -89,32 +89,15 @@ defmodule Expresso.SectionTransformer do
     slide = %{slide | metadata: metadata}
 
     cond do
-      not has_toc?(slide.elements || []) -> slide
+      not Enum.any?(Tree.descendants(slide.elements), &is_struct(&1, Toc)) -> slide
       sections == [] -> {:error, slide}
-      true -> %{slide | elements: fill(slide.elements, sections, current)}
+      true -> %{slide | elements: Tree.map(slide.elements, &fill(&1, sections, current))}
     end
   end
 
-  defp has_toc?(elements) do
-    Enum.any?(elements, fn
-      %Toc{} -> true
-      element -> has_toc?(Map.get(element, :elements) || [])
-    end)
-  end
-
-  # Each toc of the tree, with one entry for each section.
-  defp fill(elements, sections, current) do
-    Enum.map(elements, fn
-      %Toc{} = toc ->
-        %Toc{toc | elements: entries(sections, current)}
-
-      %{elements: [_ | _] = children} = element ->
-        %{element | elements: fill(children, sections, current)}
-
-      element ->
-        element
-    end)
-  end
+  # A toc with one entry for each section.
+  defp fill(%Toc{} = toc, sections, current), do: %Toc{toc | elements: entries(sections, current)}
+  defp fill(element, _sections, _current), do: element
 
   defp entries(sections, current) do
     for {{title, first}, index} <- Enum.with_index(sections) do

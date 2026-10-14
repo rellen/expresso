@@ -10,7 +10,7 @@ defmodule Expresso.Element.TextBox do
 
   defstruct [
               :class,
-              :elements,
+              elements: [],
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 

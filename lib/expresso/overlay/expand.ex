@@ -368,7 +368,7 @@ defmodule Expresso.Overlay.Expand do
 
   defp at(element), do: Map.get(element, :at)
   defp on(element), do: Map.get(element, :on) || []
-  defp children(element), do: Map.get(element, :elements) || []
+  defp children(element), do: Expresso.Element.Tree.children(element)
 
   defp put(element, at, on, children) do
     element = %{element | at: at, on: on}
