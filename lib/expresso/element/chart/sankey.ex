@@ -46,6 +46,8 @@ defmodule Expresso.Element.Chart.Sankey do
   import Temple
   use Temple.Component
 
+  import Expresso.Element.Chart.Kinds
+
   alias Expresso.Element.Chart.{Motion, Plot}
 
   @typedoc "A node: its name, or its column from 0 and its name in an alluvial chart"
@@ -695,8 +697,7 @@ defmodule Expresso.Element.Chart.Sankey do
       false
   """
   @spec titles?(map()) :: boolean()
-  def titles?(%{kind: kind, levels: [_ | _]}) when kind in [:alluvial, :parallel_sets],
-    do: true
+  def titles?(%{kind: kind, levels: [_ | _]}) when is_titled(kind), do: true
 
   def titles?(_assigns), do: false
 

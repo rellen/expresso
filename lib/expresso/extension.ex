@@ -373,10 +373,10 @@ defmodule Expresso.Extension do
         @class_schema ++
         [
           kind: [
-            type: {:in, Expresso.Element.Chart.kinds()},
+            type: {:in, Expresso.Element.Chart.Kinds.all()},
             required: true,
             doc:
-              "The kind of the chart: :bar, :line, :pie, :treemap, :sunburst, :sankey, :alluvial, :parallel_sets or :chord. See docs/reference/chart-element.md."
+              "The kind of the chart: #{Enum.map_join(Expresso.Element.Chart.Kinds.all(), ", ", &inspect/1)}. See docs/reference/chart-element.md."
           ],
           title: [
             type: :string,
