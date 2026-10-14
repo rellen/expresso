@@ -264,6 +264,59 @@ chart :alluvial do
 end
 ```
 
+## Show each group in a parallel sets chart
+
+Use a parallel sets chart to see the path of each group of records through all the columns.
+In an alluvial chart, a ribbon from "Third" to "Adult" and a ribbon from "Adult" to "No" can
+hold different people. In a parallel sets chart, each category is one ribbon from the first
+column to the last.
+
+1. Write a `chart` element with the kind `:parallel_sets`.
+2. Write each category with one name for each column.
+3. Put the names that you compare, such as the class, in the first column.
+
+```elixir
+defmodule Examples.ChartParallelSets do
+  use Expresso
+
+  slide "titanic" do
+    heading "Who survived"
+
+    chart :parallel_sets do
+      title "The 2,201 people on the Titanic, by class, by age and by survival"
+      value_label "People"
+      levels ["Class", "Age", "Survived"]
+      reveal true
+
+      categories [
+        ["First", "Adult", "Yes"],
+        ["First", "Adult", "No"],
+        ["First", "Child", "Yes"],
+        ["Second", "Adult", "Yes"],
+        ["Second", "Adult", "No"],
+        ["Second", "Child", "Yes"],
+        ["Third", "Adult", "Yes"],
+        ["Third", "Adult", "No"],
+        ["Third", "Child", "Yes"],
+        ["Third", "Child", "No"],
+        ["Crew", "Adult", "Yes"],
+        ["Crew", "Adult", "No"]
+      ]
+
+      series "People", [197, 122, 6, 94, 167, 24, 151, 476, 27, 52, 212, 673]
+    end
+  end
+end
+
+Examples.ChartParallelSets
+```
+
+![A parallel sets chart of the Titanic: a ribbon of each class goes through age to survival, and each class shows at its own step](https://raw.githubusercontent.com/rellen/expresso/media/chart-parallel-sets.gif)
+
+Each ribbon has the color of its node in the first column. With `reveal true`, the nodes show
+first. Then the ribbons of each node in the first column show at their own step. The `levels`
+option, a CSV file, frames and node entities work as in an alluvial chart.
+
 ## Correct a loop
 
 A sankey goes in one direction. A flow back to an earlier node gives an error that names

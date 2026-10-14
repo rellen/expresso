@@ -27,14 +27,15 @@ defmodule Expresso.Element.Chart do
   `:grow`, moves its marks: `Expresso.Element.Chart.Motion` draws them.
   `docs/reference/chart-element.md` gives the rules.
 
-  A category of a sankey is a path of nodes, and `flow` entities give the
-  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws it. With
-  `reveal true`, the check makes one series for each column of links, so the
-  links show one column at a time. An alluvial chart is a sankey with one
-  node for each name in each column: the place of a name in its path gives
-  its column. A parallel sets chart has the nodes of an alluvial chart, and
-  `Expresso.Element.Chart.ParallelSets` draws each category as one ribbon
-  through the columns.
+  A category of a sankey is a path of nodes. The `flow` entities give the
+  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws a
+  sankey. With `reveal true`, the check makes one series for each step: a
+  source column of the links in a sankey or an alluvial chart, and a node of
+  the first column in a parallel sets chart. An alluvial chart is a sankey
+  with one node for each name in each column. The place of a name in its
+  path sets its column. A parallel sets chart has the nodes of an alluvial
+  chart. `Expresso.Element.Chart.ParallelSets` draws each of its categories
+  as one ribbon through the columns.
   """
 
   use Expresso.Element
@@ -604,7 +605,8 @@ defmodule Expresso.Element.Chart do
       do: :ok,
       else:
         {:error,
-         "the levels option of an alluvial chart gives a title for each column, " <>
+         "the levels option of #{if kind == :alluvial, do: "an alluvial chart", else: "a parallel sets chart"} " <>
+           "gives a title for each column, " <>
            "so give #{count} titles"}
   end
 

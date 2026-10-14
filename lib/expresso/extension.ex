@@ -422,7 +422,7 @@ defmodule Expresso.Extension do
             type: :boolean,
             default: false,
             doc:
-              "Show the series one after the other. A sankey shows its links one column at a time. A pie takes no reveal option."
+              "Show the series one after the other. A sankey and an alluvial chart show their links one column at a time. A parallel sets chart shows its nodes first, then the ribbons of one first node at a time. A pie takes no reveal option."
           ],
           dim: [
             type: :boolean,
@@ -438,7 +438,7 @@ defmodule Expresso.Extension do
           levels: [
             type: {:list, :string},
             doc:
-              "For a treemap or a sunburst, the headings of the CSV columns that hold the levels, from the top level down. For a sankey or an alluvial chart, the headings of the CSV columns that hold the nodes of each path. Requires the src option, but an alluvial chart can take levels without src to give the title of each column."
+              "For a treemap or a sunburst, the headings of the CSV columns that hold the levels, from the top level down. For a chart of flows, the headings of the CSV columns that hold the nodes of each path. Requires the src option, but an alluvial chart or a parallel sets chart can take levels without src to give the title of each column."
           ],
           frames: [
             type: :string,

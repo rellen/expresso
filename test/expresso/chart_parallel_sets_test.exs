@@ -164,7 +164,9 @@ defmodule Expresso.ChartParallelSetsTest do
     end
 
     test "levels that do not name each column, and a node entity with a column" do
-      assert_raise ArgumentError, ~r/gives a title for each column, so give 3 titles/, fn -> chart(levels: ["A", "B"]) end
+      assert_raise ArgumentError,
+                   ~r/the levels option of a parallel sets chart gives a title for each column, so give 3 titles/,
+                   fn -> chart(levels: ["A", "B"]) end
 
       assert_raise ArgumentError, ~r/takes no column option/, fn ->
         Builder.chart(:parallel_sets,

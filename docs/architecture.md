@@ -1365,6 +1365,14 @@ These are the reasons for this design:
   two nodes, and the layout of the sankey places them. The color and the order come from the
   name, so a name has one color and one place in each column. A kind, and not an option,
   keeps the number of fields in the struct of the chart small.
+- **A parallel sets chart keeps each group.** A sankey and an alluvial chart add the values
+  of the same link. Thus a ribbon does not show the group of records that it holds.
+  `Expresso.Element.Chart.ParallelSets` takes the nodes from the layout of an alluvial chart.
+  It draws each category as one ribbon through the columns. A ribbon has one place in the
+  stack of each node, so it does not break at the node. The stack has the order of the nodes
+  of each path from the first column. Thus the ribbons of one first node stay together, and
+  only the first column has colors. The nodes are outside the series. Thus `reveal` adds the
+  ribbons of one first node at each step.
 - **The labels are above the links.** The node labels of each series are in a group after
   the series, with the same steps. Thus a later column of links does not cover a label. A
   label has a halo in the color of the background.
