@@ -334,7 +334,7 @@ defmodule Expresso.Extension do
           column: [
             type: :pos_integer,
             doc:
-              "The column of the node, from 1 at the left. The default is one column after its furthest source."
+              "The column of the node, from 1 at the left. The default is one column after its last source. Only a sankey takes this option."
           ],
           order: [
             type: :integer,
@@ -422,7 +422,7 @@ defmodule Expresso.Extension do
             type: :boolean,
             default: false,
             doc:
-              "Show the series one after the other. A sankey and an alluvial chart show their links one column at a time. A parallel sets chart shows its nodes first, then the ribbons of one first node at a time. A pie takes no reveal option."
+              "Show the series one after the other. A sankey and an alluvial chart show their links one column at a time. A parallel sets chart shows its nodes first, then the ribbons of one first node at a time. A chord chart shows its ring first, then the chords of one source at a time. A pie takes no reveal option."
           ],
           dim: [
             type: :boolean,

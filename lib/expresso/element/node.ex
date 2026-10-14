@@ -1,11 +1,12 @@
 defmodule Expresso.Element.Node do
   @moduledoc """
-  The settings of one node of a sankey: its label, its column, its order and its class
+  The settings of one node of a chart of flows: its label, its column, its order and its class
 
   The `node` entity takes the name of the node as its argument, such as
   `node "Losses", column: 3`. The name is the name in the flows, and the
   options change only how the chart shows the node.
-  `Expresso.Element.Chart.Sankey` reads them.
+  `Expresso.Element.Chart.Sankey` and `Expresso.Element.Chart.Chord` read
+  them. Only a sankey takes the `column` option.
   """
 
   @typedoc "The struct of a node"

@@ -23,7 +23,7 @@ end
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst`, `:sankey`, `:alluvial` or `:parallel_sets` | The kind of the chart. |
+| The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst`, `:sankey`, `:alluvial`, `:parallel_sets` or `:chord` | The kind of the chart. |
 | `title` | A string, required | The name of the chart for a screen reader, and the caption of its table. |
 | `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels. A category of a chart of flows is a path of nodes. |
 | `category_label` | A string | The name of the categories, such as `"Year"`. See [the names of the axes](#the-names-of-the-axes). A chart with `src` takes the first heading of its file. |
@@ -152,6 +152,7 @@ first frame. The numbers with `count true` need the script of the presenter.
 | `:sankey` | Exactly one. Each category is a path of nodes, and its value goes along each link of the path. | The name and the value of each node. See [the labels](#the-labels). |
 | `:alluvial` | Exactly one. Each category is a path with one name for each column. | As a sankey, and a title over each column. See [an alluvial chart](#an-alluvial-chart). |
 | `:parallel_sets` | Exactly one. Each category is a path with one name for each column, and it is one ribbon through the columns. | As an alluvial chart. See [a parallel sets chart](#a-parallel-sets-chart). |
+| `:chord` | Exactly one. Each category is a path of nodes, as in a sankey, and each link is a chord between two arcs of a ring. | The name and the total of each node, outside its arc. See [a chord chart](#a-chord-chart). |
 
 A bar chart and a line chart have one axis, which starts at zero and holds each value, with
 approximately five round ticks. The axis stays the same at each step, so it does not move
@@ -196,7 +197,7 @@ the frame in a row above the boxes.
 ## The charts of flows
 
 A **chart of flows** shows how an amount goes between the nodes of a graph. A sankey, an
-alluvial chart and a parallel sets chart are charts of flows. In this section, a **flow** is an item of the data, and a **link** is the mark
+alluvial chart, a parallel sets chart and a chord chart are charts of flows. In this section, a **flow** is an item of the data, and a **link** is the mark
 that shows one or more flows.
 
 ### The flows
@@ -311,6 +312,26 @@ the first column to the last. These rules apply:
 - The table has one row for each category. It has a column for each column title and a
   column for each frame.
 
+### A chord chart
+
+A chord chart takes the flows, the node entities and the table of a sankey. Only the drawing
+is different. These rules apply:
+
+- Each node is an arc of a ring. The arcs start at the top and go clockwise, in the order of
+  the data or the `order` of their node entities.
+- The length of an arc is the sum of the flow out of its node and the flow into it.
+- A flow is a **chord** between two arcs. A chord has the width of its value at each end. Two
+  quadratic Bézier curves join the two ends, with their control point at the center of the
+  ring.
+- In an arc, the chords out of the node come first, then the chords into it. Each part has
+  the counterclockwise order of the other nodes, from the nearest one. Thus the chords of an
+  arc do not cross.
+- A chord has the color of its source.
+- A label is outside its arc. It shows when its arc is 14 units long or more.
+- The frames share one scale for the angles. A smaller total in a later frame thus leaves an
+  empty part at the end of the ring.
+- A node entity takes no `column`.
+
 ### The labels
 
 A label shows the name of its node and, with `values true`, its value. Each label is at the
@@ -341,6 +362,9 @@ that touches it. `dim true` dims the links of a column when a later column shows
 With `reveal true`, a parallel sets chart has one series for each node of the first column.
 The nodes and their labels show with the chart. Then the ribbons of each node of the first
 column show at their own step.
+
+With `reveal true`, a chord chart has one series for each source. The arcs and their labels
+show with the chart. Then the chords of each source show at their own step.
 
 ## The CSV file
 
@@ -430,7 +454,7 @@ The compiler gives an error for these:
   first category;
 - a `node` in a chart that is not a chart of flows;
 - two `node` entities for one node, and a `node` with a name that no flow has;
-- a `node` with `column` in an alluvial chart or a parallel sets chart.
+- a `node` with `column` in a chart of flows that is not a sankey.
 
 The compiler gives an error for a file that it cannot read, for a quote with no closing
 quote, for text after a closing quote, and for a row with a cell that is not a number. The
@@ -454,7 +478,7 @@ for the heading.
 
 The document writes a `figure` element with the classes `chart` and `chart-bar`,
 `chart-line`, `chart-pie`, `chart-treemap`, `chart-sunburst`, `chart-sankey`,
-`chart-alluvial` or `chart-parallel-sets`. It holds an
+`chart-alluvial`, `chart-parallel-sets` or `chart-chord`. It holds an
 `svg` element with `role="img"` and the `title` as its `aria-label`. It also holds a `table`
 with the class `chart-table` that holds each value. The style sheet hides the table from the
 eye and not from a screen reader. The table has a column header for each series and a row
@@ -474,6 +498,8 @@ A chart of flows writes these elements:
 | The title of a column | `text` | `chart-column` |
 | The nodes of a parallel sets chart, after the series | `g` | `chart-nodes` |
 | A node of a parallel sets chart after the first column | `rect` | `chart-node` and `chart-node-plain` |
+| An arc of a chord chart, in the group `chart-nodes` | `path` | `chart-node` and `chart-c1` to `chart-c8` |
+| A chord | `path` | `chart-link` and `chart-chord` |
 
 A chart with frames or with the effect `:grow` has a `data-el` attribute. Its marks have the
 class `chart-mark`, `chart-segment`, `chart-arc` or `chart-gap`, and the label of the frame

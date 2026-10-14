@@ -101,6 +101,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "chart-sankey-frames", deck: "chart_sankey_frames.exs", actions: ["j"]},
     %{name: "chart-sankey-funnel", deck: "chart_sankey_funnel.exs", still: true},
     %{name: "chart-sankey-loop", deck: "chart_sankey_loop.exs", still: true},
+    %{name: "chart-chord", deck: "chart_chord.exs", actions: ["j", "j", "j", "j"]},
     %{name: "chart-alluvial", deck: "chart_alluvial.exs", actions: ["j", "j"]},
     %{
       name: "chart-parallel-sets",
