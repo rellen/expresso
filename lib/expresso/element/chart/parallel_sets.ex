@@ -4,12 +4,13 @@ defmodule Expresso.Element.Chart.ParallelSets do
   the columns
 
   A category of a parallel sets chart is a path with one name for each
-  column, as in an alluvial chart, and its value is the number of records
-  in the group. The nodes have the layout of an alluvial chart, which
-  `Expresso.Element.Chart.Sankey.layout_frames/3` gives. Each category is
-  one ribbon from the first column to the last, so the eye can follow one
-  group through each column. A sankey divides the flow at each node, and it
-  loses the group.
+  column, as in an alluvial chart. Its value is the number of records in the
+  group. The nodes have the layout of an alluvial chart, which
+  `Expresso.Element.Chart.Sankey.layout_frames/3` returns. Each category is
+  one ribbon from the first column to the last, so the user can see one
+  group in each column. A sankey adds the flows of each link, so it does not
+  show a group after the first node. Here, a ribbon is a chain of link
+  shapes.
 
   The layout has these rules:
 
@@ -22,8 +23,8 @@ defmodule Expresso.Element.Chart.ParallelSets do
      first column, so the ribbons of one first node stay together.
 
   `render/1` draws each series as a group with its ribbons. The nodes and
-  their labels show with the chart, so `reveal true` adds the groups of
-  ribbons to the nodes, one first node at a time. `table/1` writes a row for
+  their labels show with the chart. Thus `reveal true` adds the ribbons of
+  one first node at each step. `table/1` writes a row for
   each path for a screen reader.
   """
 
@@ -33,7 +34,7 @@ defmodule Expresso.Element.Chart.ParallelSets do
   alias Expresso.Element.Chart.{Motion, Plot, Sankey}
 
   @doc """
-  Return the paths of the categories and the sum of the values of each path
+  Return the paths of the categories and the total value for each path
 
   Two categories with the same path add their values. The paths keep the
   order of their first category, and each node is the tuple of its column
@@ -72,7 +73,7 @@ defmodule Expresso.Element.Chart.ParallelSets do
       iex> Expresso.Element.Chart.ParallelSets.check([["A", "B"], ["B", "C"]], "/")
       :ok
       iex> Expresso.Element.Chart.ParallelSets.check([["A", "B"], ["B", "C", "D"]], "/")
-      {:error, "each category of a parallel sets chart names one node for each column, and \\"B/C/D\\" names 3 nodes where the first category names 2"}
+      {:error, "each category of a parallel sets chart names one node for each column, and \\"B/C/D\\" names 3 nodes, but the first category names 2"}
   """
   @spec check([String.t() | [String.t()]], String.t()) :: :ok | {:error, String.t()}
   def check(categories, separator) do
@@ -85,16 +86,16 @@ defmodule Expresso.Element.Chart.ParallelSets do
       other ->
         {:error,
          "each category of a parallel sets chart names one node for each column, " <>
-           "and #{inspect(Enum.join(other, separator))} names #{length(other)} nodes " <>
-           "where the first category names #{length(first)}"}
+           "and #{inspect(Enum.join(other, separator))} names #{length(other)} nodes, " <>
+           "but the first category names #{length(first)}"}
     end
   end
 
   @doc """
   Place the nodes and the ribbons of each frame of a parallel sets chart
 
-  `frames` holds the values of each frame, as a list of the values of each
-  series, and `paths` holds the path of each category. The nodes have the
+  `frames` holds the values of each frame, as one list of values for each
+  series. `paths` holds the path of each category. The nodes have the
   layout of an alluvial chart. Each ribbon of a frame is a map with its
   path, its color, its series and the `d` attribute of its shape.
   """
@@ -308,7 +309,7 @@ defmodule Expresso.Element.Chart.ParallelSets do
     end
   end
 
-  # The title of each column of the paths, then a column for each frame.
+  # A title for each node column, then one column for each frame.
   defp headers(assigns) do
     count = length(hd(assigns.categories))
 

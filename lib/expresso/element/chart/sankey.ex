@@ -603,9 +603,9 @@ defmodule Expresso.Element.Chart.Sankey do
   Draw the title of each column of an alluvial chart or a parallel sets
   chart, in the row above the nodes
 
-  A title is at the left edge of its first column, in the middle of a column
-  between, and at the right edge of the last column. The key `xs` holds the
-  x of each column, as the layout returns it.
+  The first title is at the left edge of its column, and the last title is
+  at the right edge of its column. Each other title is at the middle of its
+  column. The key `xs` holds the x of each column, as the layout returns it.
   """
   @spec titles(map()) :: Phoenix.HTML.safe()
   def titles(assigns) do
