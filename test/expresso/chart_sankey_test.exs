@@ -615,6 +615,26 @@ defmodule Expresso.ChartSankeyTest do
       assert figure |> Floki.find("rect.chart-node") |> length() == 3
     end
 
+    test "the frames share the nodes of each column" do
+      chart =
+        Builder.chart(:alluvial,
+          title: "Commute",
+          levels: ["2020", "2023", "2026"],
+          categories: [["Car", "Car", "Home"], ["Car", "Bike", "Bike"]],
+          timeline: [
+            Builder.frame("Staff", elements: [Builder.series("People", [5, 3])]),
+            Builder.frame("Visitors", elements: [Builder.series("People", [2, 0])])
+          ]
+        )
+
+      assert [%{elements: [%{values: [5, 5, 3, 3]}]}, %{elements: [%{values: [2, 2, 0, 0]}]}] =
+               chart.timeline
+
+      figure = figure(chart)
+      assert figure |> Floki.find("figure.chart > svg g.chart-layer") |> length() == 2
+      assert figure |> Floki.find("figure.chart > svg text.chart-column") |> length() == 3
+    end
+
     test "reveal shows one column of links at each step" do
       chart = alluvial(reveal: true)
 
