@@ -495,4 +495,151 @@ defmodule Expresso.ChartSankeyTest do
       assert Enum.map(labels, &Floki.attribute(&1, "data-on")) == [["1 2"], ["2"]]
     end
   end
+
+  describe "an alluvial chart" do
+    defp alluvial(opts \\ []) do
+      Builder.chart(
+        :alluvial,
+        Keyword.merge(
+          [
+            title: "Commute",
+            categories: [["Car", "Car", "Home"], ["Car", "Bike", "Bike"], ["Bike", "Car", "Car"]],
+            elements: [Builder.series("People", [5, 3, 2])]
+          ],
+          opts
+        )
+      )
+    end
+
+    test "one name is one node in each column, and a name can follow the same name" do
+      chart = alluvial()
+
+      assert chart.categories == [
+               [{0, "Car"}, {1, "Car"}],
+               [{1, "Car"}, {2, "Home"}],
+               [{0, "Car"}, {1, "Bike"}],
+               [{1, "Bike"}, {2, "Bike"}],
+               [{0, "Bike"}, {1, "Car"}],
+               [{1, "Car"}, {2, "Car"}]
+             ]
+
+      assert [%{values: [5, 5, 3, 3, 2, 2]}] = chart.elements
+    end
+
+    test "the nodes of one name have one color and one place in each column" do
+      figure = alluvial() |> figure()
+      rects = Floki.find(figure, "figure.chart > svg rect.chart-node")
+
+      labels =
+        figure
+        |> Floki.find("figure.chart > svg text.chart-node-label")
+        |> Enum.map(&Floki.text/1)
+
+      assert labels == ["Car 8", "Car 7", "Home 5", "Bike 3", "Bike 3", "Bike 2", "Car 2"]
+
+      colors =
+        rects
+        |> Enum.zip(labels)
+        |> Map.new(fn {rect, label} ->
+          [class] = Floki.attribute(rect, "class")
+          {label, class}
+        end)
+
+      assert colors["Car 8"] == colors["Car 7"]
+      assert colors["Car 7"] == colors["Car 2"]
+      assert colors["Bike 2"] == colors["Bike 3"]
+      refute colors["Car 8"] == colors["Bike 2"]
+
+      # The names keep the order of the data in each column: Car, Home, Bike.
+      ys =
+        for {rect, label} <- Enum.zip(rects, labels), into: %{} do
+          {label, rect |> Floki.attribute("y") |> hd() |> Float.parse() |> elem(0)}
+        end
+
+      assert ys["Car 2"] < ys["Home 5"]
+      assert ys["Home 5"] < ys["Bike 3"]
+      assert ys["Car 8"] < ys["Bike 2"]
+    end
+
+    test "the levels give a title to each column, and the table names the column" do
+      figure = alluvial(levels: ["2020", "2023", "2026"]) |> figure()
+
+      assert figure |> Floki.find("text.chart-column") |> Enum.map(&Floki.text/1) ==
+               ["2020", "2023", "2026"]
+
+      rows =
+        figure
+        |> Floki.find("table.chart-table tbody tr")
+        |> Enum.map(fn row -> row |> Floki.find("th, td") |> Enum.map(&Floki.text/1) end)
+
+      assert ["Car (2020)", "Car (2023)", "5"] in rows
+      assert ["Car (2023)", "Home (2026)", "5"] in rows
+
+      untitled = alluvial() |> figure()
+      assert Floki.find(untitled, "text.chart-column") == []
+      assert Floki.text(Floki.find(untitled, "tbody tr th")) =~ "Car (Column 1)"
+    end
+
+    test "a flow is a path of two columns, and a node entity applies to each column" do
+      chart =
+        Builder.chart(:alluvial,
+          title: "Votes",
+          flows: [
+            Builder.flow("Red", "Red", 40),
+            Builder.flow("Red", "Blue", 10),
+            Builder.flow("Blue", "Blue", 30),
+            Builder.node("Red", label: "Red party", class: "red")
+          ]
+        )
+
+      figure = figure(chart)
+
+      assert figure |> Floki.find("rect.chart-node.red") |> length() == 2
+
+      assert figure |> Floki.find("text.chart-node-label") |> Enum.map(&Floki.text/1) ==
+               ["Red party 50", "Red party 40", "Blue 40", "Blue 30"]
+    end
+
+    @tag :tmp_dir
+    test "a CSV file with levels gives the paths and the titles", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "commute.csv")
+      File.write!(path, "start,end,people\nCar,Car,5\nCar,Bike,3\n")
+
+      figure =
+        Builder.chart(:alluvial, title: "Commute", src: path, levels: ["start", "end"])
+        |> figure()
+
+      assert figure |> Floki.find("text.chart-column") |> Enum.map(&Floki.text/1) ==
+               ["start", "end"]
+
+      assert figure |> Floki.find("rect.chart-node") |> length() == 3
+    end
+
+    test "reveal shows one column of links at each step" do
+      chart = alluvial(reveal: true)
+
+      assert [%{values: [5, 0, 3, 0, 2, 0]}, %{values: [0, 5, 0, 3, 0, 2]}] = chart.elements
+    end
+
+    test "the errors" do
+      assert_raise ArgumentError, ~r/gives a title for each column, so it names 3 columns/, fn ->
+        alluvial(levels: ["2020", "2026"])
+      end
+
+      assert_raise ArgumentError,
+                   ~r/node entity of an alluvial chart takes no column option/,
+                   fn ->
+                     Builder.chart(:alluvial,
+                       title: "Votes",
+                       flows: [Builder.flow("Red", "Red", 4), Builder.node("Red", column: 2)]
+                     )
+                   end
+
+      assert_raise ArgumentError,
+                   ~r/the levels option of a sankey names two columns or more/,
+                   fn ->
+                     alluvial(levels: ["2020"])
+                   end
+    end
+  end
 end

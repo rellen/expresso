@@ -124,7 +124,9 @@ defmodule Expresso.Element.Chart.Motion do
   defp scene(%{kind: kind} = assigns) when kind in [:treemap, :sunburst],
     do: Hierarchy.scene(assigns)
 
-  defp scene(%{kind: :sankey, frames: frames}), do: %{channels: flags(frames)}
+  defp scene(%{kind: kind, frames: frames}) when kind in [:sankey, :alluvial],
+    do: %{channels: flags(frames)}
+
   defp scene(%{kind: :pie} = assigns), do: pie_scene(assigns)
   defp scene(%{kind: :line} = assigns), do: line_scene(assigns)
   defp scene(assigns), do: bar_scene(assigns)

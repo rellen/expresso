@@ -1,10 +1,10 @@
 defmodule Expresso.Element.Chart do
   @moduledoc """
   An element that draws a bar chart, a line chart, a pie chart, a treemap, a
-  sunburst or a sankey
+  sunburst, a sankey or an alluvial chart
 
   The `chart` entity takes the kind as its first argument: `:bar`, `:line`,
-  `:pie`, `:treemap`, `:sunburst` or `:sankey`. A slash in a category of a treemap or a
+  `:pie`, `:treemap`, `:sunburst`, `:sankey` or `:alluvial`. A slash in a category of a treemap or a
   sunburst names a part of a group, and `Expresso.Element.Chart.Hierarchy`
   draws them. The `categories` option gives the names of the categories, and each
   `series` entity gives a name and one value for each category. The `src`
@@ -27,10 +27,12 @@ defmodule Expresso.Element.Chart do
   `:grow`, moves its marks: `Expresso.Element.Chart.Motion` draws them.
   `docs/reference/chart-element.md` gives the rules.
 
-  A category of a sankey is a path of nodes. The `flow` entities give the
-  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws a
-  sankey. With `reveal true`, the check makes one series for each source
-  column of the links, so the links show one column at a time.
+  A category of a sankey is a path of nodes, and `flow` entities give the
+  same data in a shorter form. `Expresso.Element.Chart.Sankey` draws it. With
+  `reveal true`, the check makes one series for each column of links, so the
+  links show one column at a time. An alluvial chart is a sankey with one
+  node for each name in each column: the place of a name in its path gives
+  its column.
   """
 
   use Expresso.Element
@@ -41,7 +43,7 @@ defmodule Expresso.Element.Chart do
   @typedoc "The struct of a chart"
   @type t :: %__MODULE__{}
 
-  @kinds [:bar, :line, :pie, :treemap, :sunburst, :sankey]
+  @kinds [:bar, :line, :pie, :treemap, :sunburst, :sankey, :alluvial]
 
   # The kinds of one series, which take no reveal option.
   @single [:pie, :treemap, :sunburst]
@@ -49,8 +51,11 @@ defmodule Expresso.Element.Chart do
   # The kinds that show the parts of a whole in groups.
   @parts [:treemap, :sunburst]
 
+  # The kinds that show flows between nodes.
+  @flows [:sankey, :alluvial]
+
   # The kinds with a list of names in a category.
-  @paths [:sankey | @parts]
+  @paths @flows ++ @parts
 
   # The colors of a palette for the series, so the most series of a chart.
   @colors 8
@@ -97,7 +102,7 @@ defmodule Expresso.Element.Chart do
   Return the kinds of a chart
 
       iex> Expresso.Element.Chart.kinds()
-      [:bar, :line, :pie, :treemap, :sunburst, :sankey]
+      [:bar, :line, :pie, :treemap, :sunburst, :sankey, :alluvial]
   """
   @spec kinds() :: [atom()]
   def kinds, do: @kinds
@@ -115,7 +120,7 @@ defmodule Expresso.Element.Chart do
   # The flows and the nodes of a sankey. The flows of the chart and of its
   # frames become its categories and its series, and the `flows` field then
   # holds only the node entities.
-  defp flows(%__MODULE__{flows: [_ | _] = items, kind: kind}) when kind != :sankey do
+  defp flows(%__MODULE__{flows: [_ | _] = items, kind: kind}) when kind not in @flows do
     if Enum.any?(items, &is_struct(&1, Flow)),
       do: {:error, "a flow is a link of a sankey, so a #{kind} chart takes no flow"},
       else:
@@ -124,7 +129,7 @@ defmodule Expresso.Element.Chart do
   end
 
   defp flows(%__MODULE__{kind: kind, timeline: [%Frame{flows: [_ | _]} | _]})
-       when kind != :sankey,
+       when kind not in @flows,
        do: {:error, "a flow is a link of a sankey, so a #{kind} chart takes no flow"}
 
   defp flows(%__MODULE__{timeline: [%Frame{flows: [_ | _]} | _] = timeline} = chart) do
@@ -188,7 +193,7 @@ defmodule Expresso.Element.Chart do
       {:error,
        "the delimiter option gives the character between two cells of a chart file, so it needs the src option"}
 
-  defp data(%__MODULE__{levels: [_ | _]}),
+  defp data(%__MODULE__{levels: [_ | _], kind: kind}) when kind != :alluvial,
     do:
       {:error,
        "the levels option names columns of a CSV file, so it needs the src option. " <>
@@ -303,19 +308,19 @@ defmodule Expresso.Element.Chart do
        "the levels option gives the groups of a treemap or a sunburst, or the paths of a sankey, " <>
          "so a #{kind} chart takes no levels option"}
 
-  defp options(%__MODULE__{kind: :sankey, levels: [_]}),
+  defp options(%__MODULE__{kind: kind, levels: [_]}) when kind in @flows,
     do:
       {:error,
        "the levels option of a sankey names two columns or more, one for each node of a path"}
 
-  defp options(%__MODULE__{kind: :sankey, reveal: true} = chart)
-       when chart.frames != nil or chart.timeline != [],
+  defp options(%__MODULE__{kind: kind, reveal: true} = chart)
+       when kind in @flows and (chart.frames != nil or chart.timeline != []),
        do:
          {:error,
           "a sankey with frames takes no reveal option, because each frame shows the whole chart"}
 
-  defp options(%__MODULE__{kind: :sankey} = chart)
-       when chart.effect == :grow or chart.count == true,
+  defp options(%__MODULE__{kind: kind} = chart)
+       when kind in @flows and (chart.effect == :grow or chart.count == true),
        do: {:error, "a sankey takes no effect :grow and no count option"}
 
   defp options(%__MODULE__{separator: ""}),
@@ -442,14 +447,26 @@ defmodule Expresso.Element.Chart do
   defp single(%__MODULE__{kind: kind}) when kind in @single,
     do: {:error, "a #{kind} has one series"}
 
-  defp single(%__MODULE__{kind: :sankey, elements: [%Series{effect: :grow}]}),
+  defp single(%__MODULE__{kind: kind, elements: [%Series{effect: :grow}]}) when kind in @flows,
     do: {:error, "a sankey takes no effect :grow and no count option"}
 
-  defp single(%__MODULE__{kind: :sankey, timeline: [_ | _] = timeline} = chart) do
+  defp single(%__MODULE__{kind: kind, timeline: [_ | _] = timeline} = chart)
+       when kind in @flows do
+    alluvial = kind == :alluvial
+
     with {:ok, series} <- frame_series(timeline),
-         :ok <- each_frame(series, &Sankey.check(chart.categories, &1.values, chart.separator)),
-         frames = Enum.map(series, &Sankey.links(chart.categories, &1.values, chart.separator)),
-         :ok <- nodes_check(chart, List.flatten(frames)) do
+         :ok <-
+           each_frame(
+             series,
+             &Sankey.check(chart.categories, &1.values, chart.separator, alluvial)
+           ),
+         frames =
+           Enum.map(
+             series,
+             &Sankey.links(chart.categories, &1.values, chart.separator, alluvial)
+           ),
+         :ok <- nodes_check(chart, List.flatten(frames)),
+         :ok <- titles_check(chart, List.flatten(frames)) do
       pairs = frames |> List.flatten() |> Enum.map(&[&1.from, &1.to]) |> Enum.uniq()
 
       timeline =
@@ -473,10 +490,14 @@ defmodule Expresso.Element.Chart do
     end
   end
 
-  defp single(%__MODULE__{kind: :sankey, elements: [%Series{} = series]} = chart) do
-    with :ok <- Sankey.check(chart.categories, series.values, chart.separator),
-         links = Sankey.links(chart.categories, series.values, chart.separator),
-         :ok <- nodes_check(chart, links) do
+  defp single(%__MODULE__{kind: kind, elements: [%Series{} = series]} = chart)
+       when kind in @flows do
+    alluvial = kind == :alluvial
+
+    with :ok <- Sankey.check(chart.categories, series.values, chart.separator, alluvial),
+         links = Sankey.links(chart.categories, series.values, chart.separator, alluvial),
+         :ok <- nodes_check(chart, links),
+         :ok <- titles_check(chart, links) do
       categories = Enum.map(links, &[&1.from, &1.to])
       values = Enum.map(links, & &1.value)
 
@@ -489,7 +510,8 @@ defmodule Expresso.Element.Chart do
     end
   end
 
-  defp single(%__MODULE__{kind: :sankey}), do: {:error, "a sankey has one series"}
+  defp single(%__MODULE__{kind: kind}) when kind in @flows,
+    do: {:error, "a sankey has one series"}
 
   defp single(chart), do: {:ok, chart}
 
@@ -497,8 +519,8 @@ defmodule Expresso.Element.Chart do
   # of the flows, and with columns that keep each flow going to the right.
   defp nodes_check(%__MODULE__{flows: []}, _links), do: :ok
 
-  defp nodes_check(%__MODULE__{flows: nodes}, links) do
-    names = links |> Enum.flat_map(&[&1.from, &1.to]) |> MapSet.new()
+  defp nodes_check(%__MODULE__{flows: nodes} = chart, links) do
+    names = links |> Enum.flat_map(&[Sankey.name(&1.from), Sankey.name(&1.to)]) |> MapSet.new()
     given = Enum.map(nodes, & &1.name)
     twice = given -- Enum.uniq(given)
 
@@ -508,6 +530,14 @@ defmodule Expresso.Element.Chart do
 
       unknown = Enum.find(given, &(not MapSet.member?(names, &1))) ->
         {:error, "the node entity \"#{unknown}\" names no node of the flows"}
+
+      chart.kind == :alluvial and Enum.any?(nodes, &(&1.column != nil)) ->
+        {:error,
+         "the place of a name in its path gives its column in an alluvial chart, " <>
+           "so a node entity of an alluvial chart takes no column option"}
+
+      chart.kind == :alluvial ->
+        :ok
 
       true ->
         columns = Sankey.columns(links, Sankey.pinned(Map.new(nodes, &{&1.name, &1})))
@@ -524,6 +554,20 @@ defmodule Expresso.Element.Chart do
         end
     end
   end
+
+  # The levels of an alluvial chart give a title to each column.
+  defp titles_check(%__MODULE__{kind: :alluvial, levels: [_ | _] = levels}, links) do
+    count = links |> Enum.map(&(elem(&1.to, 0) + 1)) |> Enum.max()
+
+    if length(levels) == count,
+      do: :ok,
+      else:
+        {:error,
+         "the levels option of an alluvial chart gives a title for each column, " <>
+           "so it names #{count} columns"}
+  end
+
+  defp titles_check(_chart, _links), do: :ok
 
   # The one series of each frame of a sankey.
   defp frame_series(timeline) do
@@ -596,6 +640,7 @@ defmodule Expresso.Element.Chart do
       sort: chart.sort,
       frame_label: chart.frame_label,
       separator: chart.separator,
+      levels: chart.levels,
       thumbnail: chart.thumbnail,
       node_settings: Map.new(chart.flows, &{&1.name, &1}),
       overlay: Expresso.Overlay.Render.attributes(chart) ++ width
@@ -673,7 +718,7 @@ defmodule Expresso.Element.Chart do
           end
         end
 
-        if @kind == :sankey,
+        if @kind in [:sankey, :alluvial],
           do: c(&Sankey.table/1, rest!: assigns),
           else: c(&table/1, rest!: assigns)
       end
@@ -765,7 +810,7 @@ defmodule Expresso.Element.Chart do
   end
 
   # The kinds of a chart. Each one writes the content of the SVG.
-  defp plot(%{kind: :sankey} = assigns), do: Sankey.render(assigns)
+  defp plot(%{kind: kind} = assigns) when kind in @flows, do: Sankey.render(assigns)
 
   defp plot(%{kind: kind} = assigns) when kind in [:treemap, :sunburst],
     do: Motion.render(assigns)
@@ -780,9 +825,11 @@ defmodule Expresso.Element.Chart do
   defp layout(%{kind: :pie} = assigns), do: Map.put(assigns, :legend_item, &legend_item/1)
   defp layout(%{kind: :sunburst} = assigns), do: assigns
 
-  # A sankey fills the SVG. The label of the frame takes a row at the top.
-  defp layout(%{kind: :sankey} = assigns) do
-    top = if label?(assigns), do: 52, else: 8
+  # A sankey fills the SVG. The label of the frame takes a row at the top,
+  # and the titles of the columns of an alluvial chart take a row under it.
+  defp layout(%{kind: kind} = assigns) when kind in @flows do
+    rows = Enum.count([label?(assigns), Sankey.titles?(assigns)], & &1)
+    top = 8 + 44 * rows
     Map.put(assigns, :box, %{left: 4, right: @width - 4, top: top, bottom: @height - 8})
   end
 

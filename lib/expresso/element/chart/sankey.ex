@@ -25,7 +25,12 @@ defmodule Expresso.Element.Chart.Sankey do
      each node horizontally. The ribbon is a filled shape, and not a thick
      stroke, so its height is its value at each point.
 
-  A graph with a loop has no first column, so `check/3` refuses it. The
+  An alluvial chart has one node for each name in each column: the column of
+  a node is its place in the path, so the same name in two columns gives two
+  nodes. Its node is the tuple `{column, name}`, as `links/4` returns it. The
+  nodes of one name have one color and one place in each column.
+
+  A graph with a loop has no first column, so `check/4` refuses it. The
   frames of a chart share the columns, the order and the scale of the nodes,
   as `layout_frames/2` returns them. Each frame is a layer, and the opacity
   of the layers changes from one frame to the next.
@@ -41,8 +46,11 @@ defmodule Expresso.Element.Chart.Sankey do
 
   alias Expresso.Element.Chart.{Motion, Plot}
 
+  @typedoc "A node: its name, or its column from 0 and its name in an alluvial chart"
+  @type key :: String.t() | {non_neg_integer(), String.t()}
+
   @typedoc "A link: two nodes and a value"
-  @type link :: %{from: String.t(), to: String.t(), value: number()}
+  @type link :: %{from: key(), to: key(), value: number()}
 
   # The box of the chart in the units of the SVG, the width of a node, the
   # gap between two nodes of a column, and the least height of a node with a
@@ -83,15 +91,19 @@ defmodule Expresso.Element.Chart.Sankey do
 
   Each category names two nodes or more, each node has a name, and no link
   goes from a node to the same node. Each value is zero or more, and their
-  sum is more than zero.
+  sum is more than zero. With `alluvial` true, each column has its own
+  nodes, so a name can follow the same name and no loop can occur.
 
       iex> Expresso.Element.Chart.Sankey.check([["A", "B"], "B/C"], [1, 2], "/")
       :ok
       iex> Expresso.Element.Chart.Sankey.check([["A", "B"], ["B", "A"]], [1, 2], "/")
       {:error, "the flows of a sankey make a loop: A → B → A. A sankey goes in one direction, so give a node in the loop a different name, such as \\"A (again)\\"."}
+      iex> Expresso.Element.Chart.Sankey.check([["A", "A"], ["A", "B"]], [1, 2], "/", true)
+      :ok
   """
-  @spec check([String.t() | [String.t()]], [number()], String.t()) :: :ok | {:error, String.t()}
-  def check(categories, values, separator) do
+  @spec check([String.t() | [String.t()]], [number()], String.t(), boolean()) ::
+          :ok | {:error, String.t()}
+  def check(categories, values, separator, alluvial \\ false) do
     paths = Enum.map(categories, &path(&1, separator))
 
     cond do
@@ -103,16 +115,25 @@ defmodule Expresso.Element.Chart.Sankey do
       Enum.any?(paths, &Enum.member?(&1, "")) ->
         {:error, "a node of a sankey has no name"}
 
+      alluvial ->
+        values_check(values)
+
       same = Enum.find_value(paths, &same_node/1) ->
         {:error,
          "a flow of a sankey goes from \"#{same}\" to \"#{same}\". A flow goes to another node."}
 
-      Enum.any?(values, &(&1 < 0)) or Enum.sum(values) <= 0 ->
-        {:error, "the values of a sankey are zero or more, and their sum is more than zero"}
+      values_check(values) != :ok ->
+        values_check(values)
 
       true ->
         loop(paths)
     end
+  end
+
+  defp values_check(values) do
+    if Enum.any?(values, &(&1 < 0)) or Enum.sum(values) <= 0,
+      do: {:error, "the values of a sankey are zero or more, and their sum is more than zero"},
+      else: :ok
   end
 
   defp same_node(path) do
@@ -183,18 +204,22 @@ defmodule Expresso.Element.Chart.Sankey do
   Return the links of the paths, with the sum of the values of each link
 
   The links keep the order of their first path, and each pair of neighbors
-  in a path is a link.
+  in a path is a link. With `alluvial` true, each node is the tuple of its
+  place in the path and its name.
 
       iex> Expresso.Element.Chart.Sankey.links([["A", "B", "C"], ["A", "B"]], [2, 3], "/")
       [%{from: "A", to: "B", value: 5}, %{from: "B", to: "C", value: 2}]
+      iex> Expresso.Element.Chart.Sankey.links([["A", "A"]], [2], "/", true)
+      [%{from: {0, "A"}, to: {1, "A"}, value: 2}]
   """
-  @spec links([String.t() | [String.t()]], [number()], String.t()) :: [link()]
-  def links(categories, values, separator) do
+  @spec links([String.t() | [String.t()]], [number()], String.t(), boolean()) :: [link()]
+  def links(categories, values, separator, alluvial \\ false) do
     categories
     |> Enum.zip(values)
     |> Enum.flat_map(fn {category, value} ->
       category
       |> path(separator)
+      |> nodes(alluvial)
       |> Enum.chunk_every(2, 1, :discard)
       |> Enum.map(fn [from, to] -> {{from, to}, value} end)
     end)
@@ -209,24 +234,46 @@ defmodule Expresso.Element.Chart.Sankey do
     end)
   end
 
+  defp nodes(path, true), do: Enum.with_index(path, fn name, column -> {column, name} end)
+  defp nodes(path, false), do: path
+
+  @doc """
+  Return the name of a node
+
+      iex> Expresso.Element.Chart.Sankey.name("Gas")
+      "Gas"
+      iex> Expresso.Element.Chart.Sankey.name({2, "Gas"})
+      "Gas"
+  """
+  @spec name(key()) :: String.t()
+  def name({_column, name}), do: name
+  def name(name), do: name
+
   @doc """
   Return the column of each node, from 0
 
-  A node with no link into it is in column 0. Each other node is one column
-  after its last source. `pinned` holds the columns of some nodes, from 0,
-  and the nodes after them move to follow them.
+  A node with no link into it is in column 0, and each other node is one
+  column after its furthest source. `pinned` gives the column of some nodes,
+  from 0, and the columns after them follow from them. A node of an alluvial
+  chart holds its column.
 
       iex> links = [%{from: "A", to: "B"}, %{from: "B", to: "C"}, %{from: "A", to: "C"}]
       iex> Expresso.Element.Chart.Sankey.columns(links)
       %{"A" => 0, "B" => 1, "C" => 2}
       iex> Expresso.Element.Chart.Sankey.columns(links, %{"C" => 4})
       %{"A" => 0, "B" => 1, "C" => 4}
+      iex> Expresso.Element.Chart.Sankey.columns([%{from: {0, "A"}, to: {1, "A"}}])
+      %{{0, "A"} => 0, {1, "A"} => 1}
   """
-  @spec columns([%{from: String.t(), to: String.t()}], %{String.t() => non_neg_integer()}) ::
-          %{String.t() => non_neg_integer()}
+  @spec columns([%{from: key(), to: key()}], %{String.t() => non_neg_integer()}) ::
+          %{key() => non_neg_integer()}
   def columns(links, pinned \\ %{}) do
     sources = Enum.group_by(links, & &1.to, & &1.from)
     nodes = links |> Enum.flat_map(&[&1.from, &1.to]) |> Enum.uniq()
+
+    pinned =
+      Map.merge(pinned, for({column, _name} = node <- nodes, into: %{}, do: {node, column}))
+
     Enum.reduce(nodes, pinned, fn node, known -> elem(column(node, sources, known), 1) end)
   end
 
@@ -261,7 +308,7 @@ defmodule Expresso.Element.Chart.Sankey do
           [%{from: String.t(), to: String.t(), value: number(), series: pos_integer()}],
           number(),
           %{String.t() => Expresso.Element.Node.t()}
-        ) :: %{nodes: [map()], links: [map()], node_width: pos_integer()}
+        ) :: %{nodes: [map()], links: [map()], node_width: pos_integer(), xs: [number()]}
   def layout(links, top \\ 8, settings \\ %{}), do: hd(layout_frames([links], top, settings))
 
   @doc """
@@ -274,7 +321,7 @@ defmodule Expresso.Element.Chart.Sankey do
   show in that frame.
   """
   @spec layout_frames([[map()]], number(), %{String.t() => Expresso.Element.Node.t()}) :: [
-          %{nodes: [map()], links: [map()], node_width: pos_integer()}
+          %{nodes: [map()], links: [map()], node_width: pos_integer(), xs: [number()]}
         ]
   def layout_frames(frames, top, settings \\ %{}) do
     frames = Enum.map(frames, fn links -> Enum.filter(links, &(&1.value > 0)) end)
@@ -310,14 +357,22 @@ defmodule Expresso.Element.Chart.Sankey do
   end
 
   # The nodes in their order in each column: the `order` of a node entity,
-  # else the place of the node in its column in the data.
+  # else the place of the node in its column in the data. The nodes of an
+  # alluvial chart take the place of their name in the data, so one name has
+  # one place in each column.
   defp sort(order, columns, settings) do
+    ranks = order |> Enum.map(&name/1) |> Enum.uniq() |> Enum.with_index(1) |> Map.new()
+
     order
     |> Enum.group_by(&columns[&1])
     |> Enum.flat_map(fn {_column, names} ->
       names
       |> Enum.with_index(1)
-      |> Enum.sort_by(fn {name, place} -> {order_of(settings, name, place), place} end)
+      |> Enum.map(fn
+        {{_column, name} = node, _place} -> {node, ranks[name]}
+        other -> other
+      end)
+      |> Enum.sort_by(fn {node, place} -> {order_of(settings, name(node), place), place} end)
       |> Enum.map(&elem(&1, 0))
     end)
   end
@@ -354,7 +409,7 @@ defmodule Expresso.Element.Chart.Sankey do
       for size <- sizes,
           {name, value} <- size,
           shared.columns[name] == shared.last do
-        label = Map.get(shared.settings, name, %{label: nil}).label || name
+        label = Map.get(shared.settings, name(name), %{label: nil}).label || name(name)
         String.length("#{label} #{Plot.label(value)}") * @character
       end
       |> Enum.max()
@@ -388,25 +443,27 @@ defmodule Expresso.Element.Chart.Sankey do
       end)
       |> Map.new()
 
-    color = fn name -> rem(Enum.find_index(shared.appearance, &(&1 == name)), 8) + 1 end
-    setting = fn name -> Map.get(shared.settings, name, %{label: nil, class: nil}) end
+    names = shared.appearance |> Enum.map(&name/1) |> Enum.uniq()
+    color = fn node -> rem(Enum.find_index(names, &(&1 == name(node))), 8) + 1 end
+    setting = fn node -> Map.get(shared.settings, name(node), %{label: nil, class: nil}) end
 
     nodes =
-      for name <- shared.appearance, box = boxes[name], box != nil do
-        touching = Enum.filter(links, &(&1.from == name or &1.to == name))
+      for node <- shared.appearance, box = boxes[node], box != nil do
+        touching = Enum.filter(links, &(&1.from == node or &1.to == node))
 
         Map.merge(box, %{
-          name: name,
-          label: setting.(name).label || name,
-          class: setting.(name).class,
-          value: size[name],
-          color: color.(name),
+          name: node,
+          label: setting.(node).label || name(node),
+          class: setting.(node).class,
+          value: size[node],
+          color: color.(node),
           series: touching |> Enum.map(& &1.series) |> Enum.min()
         })
       end
 
     %{
       nodes: labeled(nodes),
+      xs: Enum.map(0..last, x),
       links: links |> place(boxes, scale) |> Enum.map(&Map.put(&1, :color, color.(&1.from))),
       node_width: @node
     }
@@ -492,10 +549,11 @@ defmodule Expresso.Element.Chart.Sankey do
       for {layout, k} <- Enum.with_index(layouts, 1),
           do: {k, Map.merge(layout, %{numbered: numbered(assigns, k), values: assigns.values})}
 
-    assigns = Map.put(assigns, :layers, layers)
+    assigns = Map.merge(assigns, %{layers: layers, xs: hd(layouts).xs})
 
     temple do
       Motion.frame_label(assigns)
+      titles(assigns)
 
       for {k, layer} <- @layers do
         g class: "chart-layer chart-fade",
@@ -510,9 +568,64 @@ defmodule Expresso.Element.Chart.Sankey do
     layout =
       assigns.categories
       |> links(Enum.map(assigns.series, & &1.values))
-      |> layout(8, assigns.node_settings)
+      |> layout(assigns.box.top, assigns.node_settings)
 
-    drawing(Map.merge(layout, %{numbered: numbered(assigns, 1), values: assigns.values}))
+    drawing =
+      drawing(Map.merge(layout, %{numbered: numbered(assigns, 1), values: assigns.values}))
+
+    assigns = Map.merge(assigns, %{drawing: drawing, xs: layout.xs})
+
+    temple do
+      titles(assigns)
+      @drawing
+    end
+  end
+
+  @doc """
+  Tell whether a chart shows a title over each column: an alluvial chart
+  with the `levels` option
+
+      iex> Expresso.Element.Chart.Sankey.titles?(%{kind: :alluvial, levels: ["2020", "2026"]})
+      true
+      iex> Expresso.Element.Chart.Sankey.titles?(%{kind: :sankey, levels: ["from", "to"]})
+      false
+  """
+  @spec titles?(map()) :: boolean()
+  def titles?(%{kind: :alluvial, levels: [_ | _]}), do: true
+  def titles?(_assigns), do: false
+
+  # The title of each column of an alluvial chart, in the row above the
+  # nodes. A title is at the left edge of its first column, in the middle of
+  # a column between, and at the right edge of the last column. The key `xs`
+  # holds the x of each column, as the layout returns it.
+  defp titles(assigns) do
+    if titles?(assigns) do
+      last = length(assigns.levels) - 1
+
+      places =
+        for {words, column} <- Enum.with_index(assigns.levels),
+            do: Tuple.insert_at(title_place(column, last, Enum.at(assigns.xs, column)), 0, words)
+
+      assigns = Map.merge(assigns, %{places: places, y: assigns.box.top - 16})
+
+      temple do
+        for {words, x, anchor} <- @places do
+          text class: "chart-column", x: Plot.f(x), y: Plot.f(@y), text_anchor: anchor do
+            words
+          end
+        end
+      end
+    else
+      Phoenix.HTML.raw("")
+    end
+  end
+
+  defp title_place(column, last, x) do
+    cond do
+      column == 0 -> {x, "start"}
+      column == last -> {x + @node, "end"}
+      true -> {x + @node / 2, "middle"}
+    end
   end
 
   # Each series with its number from 1. A layer after the first has no morph
@@ -592,7 +705,7 @@ defmodule Expresso.Element.Chart.Sankey do
           for frame <- assigns.frames,
               do: frame.values |> Enum.map(&Enum.at(&1, index)) |> Enum.sum()
 
-        {label(assigns, from), label(assigns, to), values}
+        {cell(assigns, from), cell(assigns, to), values}
       end
 
     assigns = Map.merge(assigns, %{rows: rows, columns: columns})
@@ -621,6 +734,19 @@ defmodule Expresso.Element.Chart.Sankey do
       end
     end
   end
+
+  # The text of a node in the table. A node of an alluvial chart names its
+  # column, because one name can be in each column.
+  defp cell(assigns, {column, name}) do
+    title =
+      if titles?(assigns),
+        do: Enum.at(assigns.levels, column),
+        else: "Column #{column + 1}"
+
+    "#{label(assigns, name)} (#{title})"
+  end
+
+  defp cell(assigns, name), do: label(assigns, name)
 
   defp label(%{node_settings: settings}, name) do
     case settings do

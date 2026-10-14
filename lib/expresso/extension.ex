@@ -377,7 +377,7 @@ defmodule Expresso.Extension do
             type: {:in, Expresso.Element.Chart.kinds()},
             required: true,
             doc:
-              "The kind of the chart: :bar, :line, :pie, :treemap, :sunburst or :sankey. See docs/reference/chart-element.md."
+              "The kind of the chart: :bar, :line, :pie, :treemap, :sunburst, :sankey or :alluvial. See docs/reference/chart-element.md."
           ],
           title: [
             type: :string,
@@ -438,7 +438,7 @@ defmodule Expresso.Extension do
           levels: [
             type: {:list, :string},
             doc:
-              "For a treemap or a sunburst, the headings of the CSV columns that hold the levels, from the top level down. For a sankey, the headings of the CSV columns that hold the nodes of each path. Requires the src option."
+              "The headings of the columns of a CSV file that hold the levels of the categories of a treemap or a sunburst, from the top level down, or the nodes of each path of a sankey. Requires the src option, except in an alluvial chart, where the levels give the title of each column."
           ],
           frames: [
             type: :string,
