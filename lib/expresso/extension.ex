@@ -304,20 +304,6 @@ defmodule Expresso.Extension do
         ]
   }
 
-  @frame %Spark.Dsl.Entity{
-    name: :frame,
-    target: Expresso.Element.Frame,
-    args: [:label],
-    entities: [elements: [@series]],
-    schema: [
-      label: [
-        type: :string,
-        required: true,
-        doc: "The name of the point in time, such as \"2024\"."
-      ]
-    ]
-  }
-
   @flow %Spark.Dsl.Entity{
     name: :flow,
     target: Expresso.Element.Flow,
@@ -329,6 +315,20 @@ defmodule Expresso.Extension do
         type: {:or, [:integer, :float]},
         required: true,
         doc: "The size of the flow, zero or more."
+      ]
+    ]
+  }
+
+  @frame %Spark.Dsl.Entity{
+    name: :frame,
+    target: Expresso.Element.Frame,
+    args: [:label],
+    entities: [elements: [@series], flows: [@flow]],
+    schema: [
+      label: [
+        type: :string,
+        required: true,
+        doc: "The name of the point in time, such as \"2024\"."
       ]
     ]
   }

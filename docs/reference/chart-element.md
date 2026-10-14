@@ -234,6 +234,13 @@ A node has a color of the theme, in the order of the nodes, and a link has a tin
 color of its source. A label shows only when its node is 16 units high or more. A name is
 one node in the whole chart.
 
+A `frame` of a sankey holds `flow` entities, or one series. The frames share the columns,
+the order and the colors of the nodes, from the links of each frame together, and one scale
+for the heights. A link that a frame does not hold has the value 0 in it, and a node or a link
+with no value in a frame does not show in that frame. The chart has one layer for each frame,
+and the layers fade from one frame to the next, so the links do not move. The table has a
+column for each frame.
+
 With `reveal true`, the chart has one series for each column of the sources of the links.
 The links of a column show at their own step, and a node shows with the first link that
 touches it. `dim true` dims the links of a column when a later column shows.
@@ -314,7 +321,10 @@ The compiler gives an error for these:
 - a `thumbnail` with the number of a frame that the chart does not have;
 - a `flow` in a chart that is not a sankey, and a sankey with flows and also `categories`,
   a `series` or `src`;
-- a sankey with more than one series, with frames, with the effect `:grow` or with `count`;
+- a sankey with more than one series, with the effect `:grow` or with `count`, and a sankey
+  with frames and `reveal`;
+- a flow in a frame of a chart that is not a sankey, and a frame of a sankey with flows and a
+  series;
 - a category of a sankey with one node, a node with no name, a flow from a node to the same
   node, a negative value, and flows that make a loop. The message of a loop names its
   nodes;
@@ -347,7 +357,8 @@ style sheet hides the table from the eye and not from a screen reader. The table
 column header for each series and a row header for each category. Its top left corner is a
 `td` cell, because it names nothing. Each series is a `g` element with the class
 `chart-series`. A node of a sankey is a `rect` with the class `chart-node`, and a link is a
-`path` with the class `chart-link`. The labels of the nodes of a series are in a `g` element
+`path` with the class `chart-link`. A sankey with frames has a `g` element with the class
+`chart-layer` for each frame. The labels of the nodes of a series are in a `g` element
 with the class `chart-labels` after each series, with the same steps.
 
 A chart with frames or with the effect `:grow` has a `data-el` attribute. Its marks have the

@@ -113,6 +113,30 @@ defmodule Expresso.Element.Chart do
   def check(%__MODULE__{flows: [_ | _], kind: kind}) when kind != :sankey,
     do: {:error, "a flow is a link of a sankey, so a #{kind} chart takes no flow"}
 
+  def check(%__MODULE__{kind: kind, timeline: [%Frame{flows: [_ | _]} | _]}) when kind != :sankey,
+    do: {:error, "a flow is a link of a sankey, so a #{kind} chart takes no flow"}
+
+  def check(%__MODULE__{timeline: [%Frame{flows: [_ | _]} | _] = timeline} = chart) do
+    cond do
+      chart.categories != nil or chart.src != nil ->
+        {:error, "a sankey with flows in its frames takes no categories and no src option"}
+
+      Enum.any?(timeline, &(&1.flows == [] or &1.elements != [])) ->
+        {:error, "each frame of a sankey with flows holds flows, and no series"}
+
+      true ->
+        pairs =
+          timeline
+          |> Enum.flat_map(& &1.flows)
+          |> Enum.map(&[&1.from, &1.to])
+          |> Enum.uniq()
+
+        name = chart.value_label || "Value"
+        timeline = Enum.map(timeline, &flow_frame(&1, pairs, name))
+        check(%__MODULE__{chart | categories: pairs, timeline: timeline})
+    end
+  end
+
   def check(%__MODULE__{flows: [_ | _] = flows} = chart) do
     if chart.src != nil or chart.categories != nil or chart.elements != [] or
          chart.timeline != [] do
@@ -156,6 +180,19 @@ defmodule Expresso.Element.Chart do
     do: {:error, "a chart with frames holds its series in each frame, and not in the chart"}
 
   def check(%__MODULE__{} = chart), do: chart |> first_frame() |> validate()
+
+  # A frame of a sankey with flows, with one series in place of its flows. The
+  # series holds a value for each link of `pairs`, and 0 for a link that the
+  # frame does not hold.
+  defp flow_frame(%Frame{flows: flows} = frame, pairs, name) do
+    sums =
+      Enum.reduce(flows, %{}, fn flow, sums ->
+        Map.update(sums, [flow.from, flow.to], flow.value, &(&1 + flow.value))
+      end)
+
+    values = Enum.map(pairs, &Map.get(sums, &1, 0))
+    %Frame{frame | flows: [], elements: [%Series{name: name, values: values}]}
+  end
 
   @doc """
   Read the CSV file of a chart with `src`, and make its categories and series
@@ -253,9 +290,11 @@ defmodule Expresso.Element.Chart do
       {:error,
        "the levels option of a sankey names two columns or more, one for each node of a path"}
 
-  defp options(%__MODULE__{kind: :sankey} = chart)
+  defp options(%__MODULE__{kind: :sankey, reveal: true} = chart)
        when chart.frames != nil or chart.timeline != [],
-       do: {:error, "a sankey takes no frames"}
+       do:
+         {:error,
+          "a sankey with frames takes no reveal option, because each frame shows the whole chart"}
 
   defp options(%__MODULE__{kind: :sankey} = chart)
        when chart.effect == :grow or chart.count == true,
@@ -388,6 +427,33 @@ defmodule Expresso.Element.Chart do
   defp single(%__MODULE__{kind: :sankey, elements: [%Series{effect: :grow}]}),
     do: {:error, "a sankey takes no effect :grow and no count option"}
 
+  defp single(%__MODULE__{kind: :sankey, timeline: [_ | _] = timeline} = chart) do
+    with {:ok, series} <- frame_series(timeline),
+         :ok <- each_frame(series, &Sankey.check(chart.categories, &1.values, chart.separator)) do
+      frames = Enum.map(series, &Sankey.links(chart.categories, &1.values, chart.separator))
+      pairs = frames |> List.flatten() |> Enum.map(&[&1.from, &1.to]) |> Enum.uniq()
+
+      timeline =
+        for {%Frame{} = frame, {links, %Series{} = one}} <-
+              Enum.zip(timeline, Enum.zip(frames, series)) do
+          sums = Map.new(links, &{[&1.from, &1.to], &1.value})
+
+          %Frame{
+            frame
+            | elements: [%Series{one | values: Enum.map(pairs, &Map.get(sums, &1, 0))}]
+          }
+        end
+
+      {:ok,
+       %__MODULE__{
+         chart
+         | categories: pairs,
+           timeline: timeline,
+           elements: hd(timeline).elements
+       }}
+    end
+  end
+
   defp single(%__MODULE__{kind: :sankey, elements: [%Series{} = series]} = chart) do
     with :ok <- Sankey.check(chart.categories, series.values, chart.separator) do
       links = Sankey.links(chart.categories, series.values, chart.separator)
@@ -406,6 +472,22 @@ defmodule Expresso.Element.Chart do
   defp single(%__MODULE__{kind: :sankey}), do: {:error, "a sankey has one series"}
 
   defp single(chart), do: {:ok, chart}
+
+  # The one series of each frame of a sankey.
+  defp frame_series(timeline) do
+    if Enum.all?(timeline, &match?(%Frame{elements: [%Series{}]}, &1)),
+      do: {:ok, Enum.map(timeline, &hd(&1.elements))},
+      else: {:error, "a sankey has one series in each frame"}
+  end
+
+  defp each_frame(series, check) do
+    Enum.find_value(series, :ok, fn one ->
+      case check.(one) do
+        :ok -> nil
+        error -> error
+      end
+    end)
+  end
 
   # The series of a sankey with reveal: one series for each column of the
   # sources of the links. Each series holds the value of the links of its
@@ -643,7 +725,13 @@ defmodule Expresso.Element.Chart do
   # the function from a value to its coordinate, and the legend. A pie has no
   # axis.
   defp layout(%{kind: :pie} = assigns), do: Map.put(assigns, :legend_item, &legend_item/1)
-  defp layout(%{kind: kind} = assigns) when kind in [:sunburst, :sankey], do: assigns
+  defp layout(%{kind: :sunburst} = assigns), do: assigns
+
+  # A sankey fills the SVG. The label of the frame takes a row at the top.
+  defp layout(%{kind: :sankey} = assigns) do
+    top = if label?(assigns), do: 52, else: 8
+    Map.put(assigns, :box, %{left: 4, right: @width - 4, top: top, bottom: @height - 8})
+  end
 
   # A treemap fills the SVG. The label of the frame takes a row at the top.
   defp layout(%{kind: :treemap} = assigns) do

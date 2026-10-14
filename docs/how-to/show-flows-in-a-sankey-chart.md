@@ -46,6 +46,75 @@ column has no flow into it, and each other node is one column after its furthest
 label shows the name and the value of its node. A label that does not fit its node does not
 show, and the table for a screen reader holds each flow.
 
+## Show a change over time
+
+Put the flows of each point in time into a `frame` entity. Each frame after the first takes
+one step, and the chart fades from the flows of one frame to the flows of the next:
+
+```elixir
+defmodule Examples.ChartSankeyFrames do
+  use Expresso
+
+  slide "energy" do
+    heading "Then and now"
+
+    chart :sankey do
+      title "The energy of a town in 2015 and in 2025, from the sources to the users"
+      value_label "GWh"
+
+      frame "2015" do
+        flow("Coal", "Electricity", 180)
+        flow("Gas", "Electricity", 60)
+        flow("Gas", "Heat", 50)
+        flow("Electricity", "Homes", 110)
+        flow("Electricity", "Industry", 90)
+        flow("Electricity", "Losses", 40)
+        flow("Heat", "Homes", 50)
+      end
+
+      frame "2025" do
+        flow("Coal", "Electricity", 40)
+        flow("Gas", "Electricity", 70)
+        flow("Solar", "Electricity", 90)
+        flow("Gas", "Heat", 35)
+        flow("Electricity", "Homes", 95)
+        flow("Electricity", "Industry", 80)
+        flow("Electricity", "Losses", 25)
+        flow("Heat", "Homes", 35)
+      end
+    end
+  end
+end
+
+Examples.ChartSankeyFrames
+```
+
+![A sankey chart of 2015 fades into the sankey chart of 2025, in which solar is a new source and coal is much smaller](https://raw.githubusercontent.com/rellen/expresso/media/chart-sankey-frames.gif)
+
+The frames share the columns and the order of the nodes, so a node stays in its place. One
+scale gives the heights of each frame, so a smaller node in a later frame is a smaller value.
+A frame can leave out a flow, such as the flow from solar in 2015. The label of the frame is at
+the top right of the chart. A frame takes no `reveal`.
+
+A CSV file gives the frames with the `frames` option, as for the other charts:
+
+```
+year,from,to,GWh
+2015,Coal,Electricity,180
+2015,Electricity,Homes,180
+2025,Coal,Electricity,40
+2025,Electricity,Homes,40
+```
+
+```elixir
+chart :sankey do
+  title "The energy of a town"
+  src "energy.csv"
+  levels ["from", "to"]
+  frames "year"
+end
+```
+
 ## Give the flows in a CSV file
 
 Put one flow on each row: the source, the target and the value. Give the headings of the
