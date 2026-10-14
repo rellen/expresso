@@ -22,6 +22,24 @@ defmodule Expresso.E2E.EmbedTest do
     end
   end
 
+  # A deck with a name and a heading on two lines. At 1280 × 720, the slide
+  # has less height for the embed than the window less the room for one
+  # heading.
+  defmodule NamedDeck do
+    use Expresso
+
+    name "named deck"
+
+    slide "local" do
+      heading "Line 4: a factory in one file"
+
+      embed "test/fixtures/page.html" do
+        title "A page that counts"
+        fallback("test/fixtures/dot.png")
+      end
+    end
+  end
+
   defp frames(page) do
     js(page, """
     Array.from(document.querySelectorAll("iframe.embed-frame")).map((frame) => ({
@@ -89,6 +107,25 @@ defmodule Expresso.E2E.EmbedTest do
 
     click(page, 1000, 360)
     assert position(page) == "2.1"
+  end
+
+  test "the box takes the height that is left under the heading and the name of the deck", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(NamedDeck, tmp_dir))
+
+    [heading, box] =
+      js(page, """
+      [".screen #slide-1 h1", ".screen #slide-1 .embed-box"].map((selector) => {
+        const box = document.querySelector(selector).getBoundingClientRect();
+        return {top: box.top, bottom: box.bottom, height: box.height};
+      })
+      """)
+
+    assert heading["height"] > 150
+    assert box["top"] >= heading["bottom"]
+    assert box["bottom"] <= 720
   end
 
   test "the speaker view loads no page", %{page: page, tmp_dir: tmp_dir} do

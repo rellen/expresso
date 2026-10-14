@@ -723,6 +723,13 @@ The class `.screen` gives the container `height: 100vh`, and each `section` gets
 a percentage height cannot resolve against a minimum height. With `height: 100%` on the
 container, each slide takes the height of its content only.
 
+The body of a slide takes the height that the header and the footer leave. The boxes from
+the slide to an element have `min-height: 0`, because a flex item is otherwise as high as
+its content and cannot become smaller. An image, a diagram, a QR code and a chart then take
+at most the height that is left, with `max-height: 100%`. An embed and a video get it from
+a size container. A page of the handout view on a screen has only a minimum height, so
+there each element keeps the height of its content.
+
 A slide of the present view takes the full width of the window, and its `.slide-body`
 takes the full width of the slide. A page of the handout view does the same in the width of
 the page. A `columns` element thus divides the width of the window, and not the width of
@@ -1144,6 +1151,11 @@ for the user. These are the reasons for its design:
 - **A frame takes no click by default.** A key goes to the frame that has the focus, and a
   deck cannot take it back from a page of a different origin. Without `interactive`, the
   frame has `pointer-events: none` and `tabindex="-1"`, so the focus stays on the deck.
+- **The element is a size container.** The box keeps its ratio with `aspect-ratio`, so
+  `max-height` cannot make it smaller without a change to its ratio. Therefore the box
+  takes its width from `100cqh`, the height that is left in the slide, times the ratio.
+  A page of the handout view on a screen has no fixed height, and a size container there
+  can have no height. Thus that view uses the height of the window less `6rem`.
 
 ### The video
 
@@ -1269,9 +1281,10 @@ to the items of a list. These are the reasons for this design:
   on paper and in the handout view, and the overlays show and dim each series with the
   rules that they use for each other element.
 - **A box of 800 by 450 units.** The SVG scales the box to the width of the element. The
-  width is `--chart-width`, and `--chart-height` limits the height, so the chart fits
-  under the heading. A line, the edge of a mark and a line of the grid keep their width in
-  pixels with `vector-effect: non-scaling-stroke`.
+  width is `--chart-width`, and `--chart-height` limits the height. The height that is
+  left in the slide also limits it, so the chart fits under the heading and the name of
+  the deck. "The style of a slide" tells how. A line, the edge of a mark and a line of the
+  grid keep their width in pixels with `vector-effect: non-scaling-stroke`.
 - **Colors of their own.** The colors of a theme are colors of text. A measure of five
   colors of each built-in theme, with a simulation of each deficit of color vision in
   OKLab, showed that most themes have two neighbors that such a reader cannot tell apart. The palette therefore writes `--chart-1` to `--chart-8` from two fixed sets, one

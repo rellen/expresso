@@ -471,8 +471,9 @@ series "Other".
 
 The text of a chart has the colors of text, and only a mark has the color of its series. A
 deck can set `--chart-1` to `--chart-8`, `--chart-width` and `--chart-height`, the largest
-height, in [the css option](css-option.md). The default height is `72vh`, which leaves room
-for the heading.
+height, in [the css option](css-option.md). The default height is `72vh`. A chart also takes
+at most the height that is left in the slide, under the heading, the name of the deck and
+the other elements. Thus a chart fits in a small window.
 
 ## The HTML
 
