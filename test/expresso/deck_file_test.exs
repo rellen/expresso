@@ -1,9 +1,50 @@
 defmodule Expresso.DeckFileTest do
   use ExUnit.Case, async: true
 
+  alias Expresso.Builder
   alias Expresso.DeckFile
 
+  doctest DeckFile
+
   @moduletag :tmp_dir
+
+  describe "read!/2" do
+    test "returns the bytes of a file, and raises the message of read_error/3", %{tmp_dir: dir} do
+      path = Path.join(dir, "a.svg")
+      File.write!(path, "<svg/>")
+
+      assert DeckFile.read!(path, "diagram") == "<svg/>"
+
+      assert_raise ArgumentError, DeckFile.read_error("no/such.svg", "diagram", :enoent), fn ->
+        DeckFile.read!("no/such.svg", "diagram")
+      end
+    end
+
+    # The render of a deck with one element that names a missing file.
+    defp render(element) do
+      [Builder.slide("one", elements: [element])] |> Builder.deck() |> Expresso.Deck.render()
+    end
+
+    test "each element that reads a file at render time gives the same message" do
+      for {element, path, noun} <- [
+            {Builder.diagram("no/such.svg"), "no/such.svg", "diagram"},
+            {Builder.embed("no/such.html", title: "x"), "no/such.html", "page"},
+            {Builder.video("no/such.webm", title: "x", poster: "test/fixtures/dot.png"),
+             "no/such.webm", "video"},
+            {Builder.video("test/fixtures/clip.webm",
+               title: "x",
+               poster: "test/fixtures/dot.png",
+               captions: "no/such.vtt"
+             ), "no/such.vtt", "captions"},
+            {Builder.audio("no/such.ogg", title: "x"), "no/such.ogg", "sound"},
+            {Builder.image("no/such.png"), "no/such.png", "image"}
+          ] do
+        assert_raise ArgumentError, DeckFile.read_error(path, noun, :enoent), fn ->
+          render(element)
+        end
+      end
+    end
+  end
 
   describe "read/1" do
     test "returns the result of File.read/1", %{tmp_dir: dir} do

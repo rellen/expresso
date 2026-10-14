@@ -76,7 +76,7 @@ defmodule Expresso.Element.QrCode do
   defp size(nil), do: []
 
   defp size(size),
-    do: [{"style", "--qr-size: #{Expresso.Element.Image.viewport_unit(size)}"}]
+    do: [{"style", "--qr-size: #{Expresso.Element.viewport_unit(size)}"}]
 
   @doc """
   Return the SVG path of the dark modules of a QR code, and the number of

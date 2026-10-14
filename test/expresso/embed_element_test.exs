@@ -108,7 +108,9 @@ defmodule Expresso.Element.EmbedTest do
     end
 
     test "raises for a local page that it cannot read" do
-      assert_raise ArgumentError, ~s(cannot read the page "no/such.html": enoent), fn ->
+      message = Expresso.DeckFile.read_error("no/such.html", "page", :enoent)
+
+      assert_raise ArgumentError, message, fn ->
         [Builder.slide("one", elements: [Builder.embed("no/such.html", title: "x")])]
         |> Builder.deck()
         |> Expresso.Deck.render()

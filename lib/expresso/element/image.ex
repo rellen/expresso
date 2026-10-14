@@ -27,11 +27,11 @@ defmodule Expresso.Element.Image do
   slide takes the full width of the screen and of the page, so a viewport unit
   gives the meaning that an author expects.
 
-  The function changes a value that is one number and a percent sign only. The
-  number takes each form that CSS permits, so `"60%"`, `"33.5%"`, `".5%"`,
-  `"+60%"` and `"6e1%"` each become a viewport unit. A value such as
-  `"calc(50% + 10px)"` holds a percentage inside a function, and it goes into
-  the document as it is.
+  `Expresso.Element.viewport_unit/1` changes a value that is one number and a
+  percent sign only. The number takes each form that CSS permits, so `"60%"`,
+  `"33.5%"`, `".5%"`, `"+60%"` and `"6e1%"` each become a viewport unit. A
+  value such as `"calc(50% + 10px)"` holds a percentage inside a function, and
+  it goes into the document as it is.
   """
 
   use Expresso.Element
@@ -73,27 +73,7 @@ defmodule Expresso.Element.Image do
   # A custom property inherits, so the property goes on the root tag and the
   # `img` element reads it. An `on` entity can then also set the property.
   defp width(nil), do: []
-  defp width(width), do: [{"style", "--image-width: #{viewport_unit(width)}"}]
-
-  # A percentage of the slide, and not of the container of the image. The pattern
-  # takes each form of a CSS number: a sign, a decimal part and an exponent are
-  # each optional, and a number such as `.5` has no whole part.
-  @percentage ~r/\A\s*([+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?)\s*%\s*\z/
-
-  @doc """
-  Write a width in percent as a viewport unit
-
-  A value that is one number and a percent sign becomes the same number in
-  `vw`, and each other value comes back as it is. The moduledoc gives the
-  reason. `Expresso.Element.Diagram` uses the same rule.
-  """
-  @spec viewport_unit(String.t()) :: String.t()
-  def viewport_unit(width) do
-    case Regex.run(@percentage, width, capture: :all_but_first) do
-      [number] -> number <> "vw"
-      nil -> width
-    end
-  end
+  defp width(width), do: [{"style", "--image-width: #{Expresso.Element.viewport_unit(width)}"}]
 
   @doc """
   Make the HTML of an image

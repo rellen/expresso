@@ -38,8 +38,7 @@ defmodule Expresso.ImageTest do
 
     test "gives an error for a file that it cannot read" do
       assert {:error, message} = Image.data_uri("no/such/file.png")
-      assert message =~ "Expresso cannot read the image"
-      assert message =~ "working directory"
+      assert message == Expresso.DeckFile.read_error("no/such/file.png", "image", :enoent)
     end
 
     test "gives an error for a file of a different type" do

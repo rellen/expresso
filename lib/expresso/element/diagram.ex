@@ -144,7 +144,7 @@ defmodule Expresso.Element.Diagram do
   defp width(nil), do: []
 
   defp width(width) do
-    [{"style", "--diagram-width: #{Expresso.Element.Image.viewport_unit(width)}"}]
+    [{"style", "--diagram-width: #{Expresso.Element.viewport_unit(width)}"}]
   end
 
   defp svg(src, parts) do
@@ -216,12 +216,7 @@ defmodule Expresso.Element.Diagram do
     end)
   end
 
-  defp read(src) do
-    case Expresso.DeckFile.read(src) do
-      {:ok, bytes} -> bytes
-      {:error, reason} -> raise ArgumentError, "cannot read the diagram \"#{src}\": #{reason}"
-    end
-  end
+  defp read(src), do: Expresso.DeckFile.read!(src, "diagram")
 
   @doc """
   Make the HTML of a diagram

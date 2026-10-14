@@ -113,15 +113,8 @@ defmodule Expresso.Element.Embed do
   `Expresso.Renderer` calls this function before the render.
   """
   @spec number(Expresso.Deck.t()) :: Expresso.Deck.t()
-  def number(%Expresso.Deck{} = deck) do
-    {deck, _count} = Expresso.Element.Tree.map_reduce_deck(deck, 0, &number_one/2)
-    deck
-  end
-
-  defp number_one(%__MODULE__{} = embed, count),
-    do: {%__MODULE__{embed | index: count}, count + 1}
-
-  defp number_one(element, count), do: {element, count}
+  def number(%Expresso.Deck{} = deck),
+    do: Expresso.Media.number(deck, __MODULE__, fn _embed -> make_ref() end)
 
   @doc """
   Return the source of each embed of a deck, in the order of their numbers
@@ -132,22 +125,15 @@ defmodule Expresso.Element.Embed do
   change to the file. The function raises for a file that it cannot read.
   """
   @spec sources(Expresso.Deck.t()) :: [%{kind: String.t(), value: String.t()}]
-  def sources(%Expresso.Deck{slides: slides}) do
-    slides
-    |> Enum.flat_map(&Expresso.Element.Tree.descendants(&1.elements))
-    |> Enum.filter(&is_struct(&1, __MODULE__))
-    |> Enum.sort_by(& &1.index)
-    |> Enum.map(&source_of/1)
+  def sources(%Expresso.Deck{} = deck) do
+    deck |> Expresso.Media.numbered(__MODULE__) |> Enum.map(&source_of/1)
   end
 
   defp source_of(%__MODULE__{src: src}) do
     if address?(src) do
       %{kind: "src", value: src}
     else
-      case Expresso.DeckFile.read(src) do
-        {:ok, text} -> %{kind: "srcdoc", value: text}
-        {:error, reason} -> raise ArgumentError, "cannot read the page \"#{src}\": #{reason}"
-      end
+      %{kind: "srcdoc", value: Expresso.DeckFile.read!(src, "page")}
     end
   end
 
@@ -169,8 +155,7 @@ defmodule Expresso.Element.Embed do
       sources ->
         sources
         |> Enum.map(&%{"kind" => &1.kind, "value" => &1.value})
-        |> JSON.encode!()
-        |> String.replace("<", "\\u003c")
+        |> Expresso.Json.for_script()
     end
   end
 
@@ -187,13 +172,6 @@ defmodule Expresso.Element.Embed do
   def get_assigns(embed) do
     %__MODULE__{src: src, title: title, width: width, aspect: aspect} = embed
 
-    style =
-      [
-        width && "--embed-width: #{Expresso.Element.Image.viewport_unit(width)}",
-        aspect && "--embed-aspect: #{aspect}"
-      ]
-      |> Enum.reject(&is_nil/1)
-
     %{
       title: title,
       address: if(address?(src), do: src),
@@ -202,8 +180,7 @@ defmodule Expresso.Element.Embed do
       sandbox: sandbox(src),
       fallback: embed.fallback && Expresso.Image.data_uri!(embed.fallback),
       overlay:
-        Expresso.Overlay.Render.attributes(embed) ++
-          if(style == [], do: [], else: [{"style", Enum.join(style, "; ")}])
+        Expresso.Overlay.Render.attributes(embed) ++ Expresso.Element.box_style(width, aspect)
     }
   end
 

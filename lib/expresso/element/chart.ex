@@ -254,9 +254,7 @@ defmodule Expresso.Element.Chart do
         {:ok, text}
 
       {:error, reason} ->
-        {:error,
-         "cannot read the chart file \"#{src}\": #{:file.format_error(reason)}. A path is " <>
-           "relative to the working directory of the command, or to the root option of the deck."}
+        {:error, Expresso.DeckFile.read_error(src, "chart file", reason)}
     end
   end
 
@@ -664,7 +662,7 @@ defmodule Expresso.Element.Chart do
 
     width =
       if chart.width,
-        do: [{"style", "--chart-width: #{Expresso.Element.Image.viewport_unit(chart.width)}"}],
+        do: [{"style", "--chart-width: #{Expresso.Element.viewport_unit(chart.width)}"}],
         else: []
 
     %{

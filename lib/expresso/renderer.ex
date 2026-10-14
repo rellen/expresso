@@ -409,42 +409,15 @@ defmodule Expresso.Renderer do
         do: {slide, footnotes}
   end
 
-  # The sources of the embeds. The presenter gives a frame its source when its
-  # slide shows, so each page loads one time. A deck with no embed has no such
-  # element. `Expresso.Element.Embed.json/1` escapes each `<`.
+  # A `script` element with JSON for the presenter, or nothing for `nil`. Each
+  # caller makes the JSON with `Expresso.Json.for_script/1`, which escapes
+  # each `<`, so a text of the deck cannot close the element.
   # sobelow_skip ["XSS.Raw"]
-  defp embeds(assigns) do
+  defp json_script(assigns) do
     temple do
-      if json = Expresso.Element.Embed.json(@deck) do
-        script id: "expresso-embeds", type: "application/json" do
-          Phoenix.HTML.raw(json)
-        end
-      end
-    end
-  end
-
-  # The videos, one time each. The presenter gives a video its source when it
-  # plays. A deck with no video has no such element.
-  # `Expresso.Element.Video.json/1` escapes each `<`.
-  # sobelow_skip ["XSS.Raw"]
-  defp videos(assigns) do
-    temple do
-      if json = Expresso.Element.Video.json(@deck) do
-        script id: "expresso-videos", type: "application/json" do
-          Phoenix.HTML.raw(json)
-        end
-      end
-    end
-  end
-
-  # The sounds, one time each, with the rules of the videos.
-  # `Expresso.Element.Audio.json/1` escapes each `<`.
-  # sobelow_skip ["XSS.Raw"]
-  defp audios(assigns) do
-    temple do
-      if json = Expresso.Element.Audio.json(@deck) do
-        script id: "expresso-audios", type: "application/json" do
-          Phoenix.HTML.raw(json)
+      if @json do
+        script id: @id, type: "application/json" do
+          Phoenix.HTML.raw(@json)
         end
       end
     end
@@ -730,21 +703,25 @@ defmodule Expresso.Renderer do
           c(&help_lists/1, groups: Help.groups(Definition.presenter()))
 
           # The list of the steps. The presenter reads it at load, so it comes
-          # before the script. `Expresso.Steps.json/1` escapes each `<`.
-          script id: "expresso-deck", type: "application/json" do
-            Phoenix.HTML.raw(Expresso.Steps.json(@deck))
-          end
+          # before the script.
+          c(&json_script/1, id: "expresso-deck", json: Expresso.Steps.json(@deck))
 
           # The program of the presenter for this deck. The interpreter of the
-          # script runs it. `Expresso.Presenter.Program.json/1` escapes each `<`.
-          script id: "expresso-program", type: "application/json" do
-            Phoenix.HTML.raw(Program.json(@program))
-          end
+          # script runs it.
+          c(&json_script/1, id: "expresso-program", json: Program.json(@program))
 
-          c(&embeds/1, deck: @deck)
+          # The sources of the embeds. The presenter gives a frame its source
+          # when its slide shows, so each page loads one time. The videos and
+          # the sounds hold each file one time, and the presenter gives an
+          # element its source when it plays. A deck with no element of a kind
+          # has no such `script` element.
+          c(&json_script/1,
+            id: "expresso-embeds",
+            json: Expresso.Element.Embed.json(@deck)
+          )
 
-          c(&videos/1, deck: @deck)
-          c(&audios/1, deck: @deck)
+          c(&json_script/1, id: "expresso-videos", json: Expresso.Element.Video.json(@deck))
+          c(&json_script/1, id: "expresso-audios", json: Expresso.Element.Audio.json(@deck))
 
           script do
             Phoenix.HTML.raw(presenter())

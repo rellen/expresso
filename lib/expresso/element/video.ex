@@ -105,13 +105,6 @@ defmodule Expresso.Element.Video do
   def get_assigns(video) do
     %__MODULE__{title: title, width: width, aspect: aspect} = video
 
-    style =
-      [
-        width && "--embed-width: #{Expresso.Element.Image.viewport_unit(width)}",
-        aspect && "--embed-aspect: #{aspect}"
-      ]
-      |> Enum.reject(&is_nil/1)
-
     %{
       title: title,
       index: video.index,
@@ -120,8 +113,7 @@ defmodule Expresso.Element.Video do
       poster: Expresso.Image.data_uri!(video.poster),
       captions: captions_uri(video.captions),
       overlay:
-        Expresso.Overlay.Render.attributes(video) ++
-          if(style == [], do: [], else: [{"style", Enum.join(style, "; ")}])
+        Expresso.Overlay.Render.attributes(video) ++ Expresso.Element.box_style(width, aspect)
     }
   end
 
@@ -150,18 +142,8 @@ defmodule Expresso.Element.Video do
   # deck again after a change to it.
   defp captions_uri(nil), do: nil
 
-  defp captions_uri(path) do
-    case Expresso.DeckFile.read(path) do
-      {:ok, text} ->
-        "data:text/vtt;base64," <> Base.encode64(text)
-
-      {:error, reason} ->
-        raise ArgumentError,
-              "cannot read the captions \"#{path}\": #{:file.format_error(reason)}. " <>
-                "A path is relative to the working directory of the command, or to the " <>
-                "root option of the deck."
-    end
-  end
+  defp captions_uri(path),
+    do: "data:text/vtt;base64," <> Base.encode64(Expresso.DeckFile.read!(path, "captions"))
 
   @doc """
   Make the HTML of a video

@@ -293,7 +293,7 @@ defmodule Expresso.Element.CodeTest do
 
     test "gives an error for a file that it cannot read, and for lines past the end" do
       assert_raise Spark.Error.DslError,
-                   ~r/deck -> slide -> one :\n  cannot read the code file "no\/such.js": enoent/,
+                   ~r/deck -> slide -> one :\n  cannot read the code file "no\/such.js": no such file or directory\. A path is relative/,
                    fn -> built(Builder.code(src: "no/such.js")) end
 
       assert_raise Spark.Error.DslError,

@@ -123,8 +123,8 @@ defmodule Expresso.Steps do
   @doc """
   Return the list of the steps as JSON for the `script` element
 
-  The text has no `<`, so a value cannot close the `script` element. Each `<`
-  becomes `\\u003c`, which JSON reads as the same character.
+  `Expresso.Json.for_script/1` writes the text, so it has no `<`, and a value
+  cannot close the `script` element.
 
   The keys of each object are in alphabetical order, so each render of a deck
   gives the same text.
@@ -143,8 +143,7 @@ defmodule Expresso.Steps do
         end),
       "duration_ms" => duration(deck)
     }
-    |> JSON.encode!()
-    |> String.replace("<", "\\u003c")
+    |> Expresso.Json.for_script()
   end
 
   # The part `index / total`. A total of 0 occurs for a deck with one step.

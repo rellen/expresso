@@ -97,8 +97,8 @@ defmodule Expresso.Presenter.Program do
 
   A command is a JSON array, such as `["step", 1]`, as `json_commands/1`
   shows. The steps and the slides are not in the program, because
-  `Expresso.Steps.json/1` writes them. Each `<` becomes `\\u003c`, as in the
-  list of the steps.
+  `Expresso.Steps.json/1` writes them. `Expresso.Json.for_script/1` writes
+  the text, as for the list of the steps.
   """
   @spec json(t()) :: String.t()
   def json(program) do
@@ -112,8 +112,7 @@ defmodule Expresso.Presenter.Program do
       "modes" => Enum.map(program.modes, &mode_json/1),
       "project" => Projection.json(program.project)
     }
-    |> JSON.encode!()
-    |> String.replace("<", "\\u003c")
+    |> Expresso.Json.for_script()
   end
 
   @doc """
