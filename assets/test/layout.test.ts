@@ -1,6 +1,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { broken, first, label, past, sentence, union } from "../src/layout.ts";
+import {
+  broken,
+  first,
+  label,
+  legible,
+  past,
+  scaled,
+  sentence,
+  smallest,
+  union,
+} from "../src/layout.ts";
 import type { Problem } from "../src/layout.ts";
 
 const window = { left: 0, top: 0, right: 1920, bottom: 1080 };
@@ -62,6 +72,33 @@ test("broken counts no line when the line height is unknown", () => {
   assert.equal(broken([40, 60], Number.NaN), 0);
 });
 
+test("scaled multiplies the font size by the vertical scale of the matrix", () => {
+  assert.equal(scaled(20, { c: 0, d: 0.5 }), 10);
+  // A text that turns by a quarter turn keeps its size.
+  assert.equal(scaled(20, { c: -0.5, d: 0 }), 10);
+  assert.equal(scaled(20, { c: 3, d: 4 }), 100);
+});
+
+test("legible is 1/60 of the window height", () => {
+  assert.equal(legible(720), 12);
+  assert.equal(legible(1080), 18);
+  assert.equal(legible(768), 12.8);
+});
+
+test("smallest returns the smallest size under the limit, rounded down to a tenth", () => {
+  assert.equal(smallest([20, 11.36, 14], 12), 11.3);
+  assert.equal(smallest([6.44], 12), 6.4);
+  assert.equal(smallest([11.99], 12), 11.9);
+  assert.equal(smallest([15.9, 22], 18), 15.9);
+});
+
+test("smallest returns null for no text, for no text under the limit and for a size of zero", () => {
+  assert.equal(smallest([], 12), null);
+  assert.equal(smallest([12, 30], 12), null);
+  assert.equal(smallest([0, 14], 12), null);
+  assert.equal(smallest([10], 8), null);
+});
+
 test("label names the kind and the start of the text", () => {
   assert.equal(label("math", "  s =\n  o + x "), "math “s = o + x”");
   assert.equal(label("diagram", ""), "diagram");
@@ -86,6 +123,16 @@ const wrap: Problem = {
   element: "code “m1”",
 };
 
+const small: Problem = {
+  slide: 22,
+  step: 1,
+  kind: "small",
+  edge: null,
+  amount: 6.4,
+  limit: 12,
+  element: "chart “Widgets”",
+};
+
 test("sentence tells the slide, the step and the problem", () => {
   assert.equal(
     sentence(outside),
@@ -98,6 +145,14 @@ test("sentence tells the slide, the step and the problem", () => {
   assert.equal(
     sentence({ ...wrap, amount: 1 }),
     "Slide 13, step 1: 1 line breaks in the code “m1”",
+  );
+  assert.equal(
+    sentence(small),
+    "Slide 22, step 1: the text in the chart “Widgets” is 6.4 px, less than 1/60 of the window height (12 px)",
+  );
+  assert.equal(
+    sentence({ ...small, amount: 12.4, limit: 12.8 }),
+    "Slide 22, step 1: the text in the chart “Widgets” is 12.4 px, less than 1/60 of the window height (12.8 px)",
   );
 });
 

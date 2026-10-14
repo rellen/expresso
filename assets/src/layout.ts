@@ -1,7 +1,7 @@
 // The layout check of `?check` in the address.
 //
 // The check shows each step of the deck in the present view, one after the
-// other, and it measures the elements of the slide. It finds two kinds of
+// other, and it measures the elements of the slide. It finds three kinds of
 // problem:
 //
 // - `outside`: an element goes past an edge of the window, so a part of it
@@ -10,6 +10,10 @@
 //   box goes past an edge when it moves, while its text stays in the window.
 // - `wrap`: a line of a code element is too long for its box, so the browser
 //   breaks it into two or more lines on the slide.
+// - `small`: a chart or a diagram has text that is smaller than `legible`.
+//   The SVG of a chart or a diagram scales to the height that is left in the
+//   slide, and its text scales with it. Thus a long heading can make the text
+//   too small to read, while the SVG stays in the window.
 //
 // The size of the window changes the layout, so the report gives the size.
 // The check sets the time of each animation to zero, and it then reads the
@@ -18,6 +22,8 @@
 // The functions that calculate take numbers and return numbers, so the tests
 // run them without a document. `audit` and `report` read and write the
 // document.
+
+import { visible } from "./morph.ts";
 
 // A rectangle in the coordinates of the window.
 export type Box = Readonly<{
@@ -30,14 +36,17 @@ export type Box = Readonly<{
 export type Edge = "left" | "top" | "right" | "bottom";
 
 // One problem of the layout. `amount` is the distance past the edge in
-// pixels for `outside`, and the number of broken lines for `wrap`. `step` is
-// the first step that has the problem.
+// pixels for `outside`, the number of broken lines for `wrap`, and the size
+// of the smallest text in pixels for `small`. `limit` is the smallest size
+// that the check accepts, for `small` only. `step` is the first step that has
+// the problem.
 export type Problem = Readonly<{
   slide: number;
   step: number;
-  kind: "outside" | "wrap";
+  kind: "outside" | "wrap" | "small";
   edge: Edge | null;
   amount: number;
+  limit?: number;
   element: string;
 }>;
 
@@ -47,6 +56,10 @@ const TOLERANCE = 1;
 // A line of code that is more than this number of times its line height is a
 // broken line. A line with no break is one line height.
 const BROKEN = 1.5;
+
+// The height of the window divided by this number is the smallest size of
+// text in a chart or a diagram.
+const LINES = 60;
 
 // The smallest box that holds each box. No box returns null.
 export function union(boxes: readonly Box[]): Box | null {
@@ -91,6 +104,36 @@ export function broken(heights: readonly number[], lineHeight: number): number {
   return heights.filter((height) => height > lineHeight * BROKEN).length;
 }
 
+// The size in pixels of a text of an SVG on the screen: its font size in the
+// units of the SVG, times the vertical scale of its transformation matrix.
+// The matrix maps the vertical unit of the text to the vector (c, d).
+export function scaled(
+  fontSize: number,
+  matrix: Readonly<{ c: number; d: number }>,
+): number {
+  return fontSize * Math.hypot(matrix.c, matrix.d);
+}
+
+// The smallest size of text, in pixels, in a chart or a diagram in a window
+// of this height. A projector shows each window at the same height on the
+// screen, so a part of the height is a size that the audience sees the same
+// way at each size of the window: 12 px at 1280 × 720, and 18 px at
+// 1920 × 1080.
+export function legible(height: number): number {
+  return height / LINES;
+}
+
+// The size of the smallest text, rounded down to a tenth of a pixel, when it
+// is smaller than the limit. No text, or no text smaller than the limit,
+// returns null.
+export function smallest(
+  sizes: readonly number[],
+  limit: number,
+): number | null {
+  const found = Math.min(...sizes.filter((size) => size > 0));
+  return found < limit ? Math.floor(found * 10) / 10 : null;
+}
+
 // The text that names an element in the report: its kind and the start of
 // its text. A text of more than 40 characters ends with "…".
 export function label(kind: string, text: string): string {
@@ -106,6 +149,10 @@ export function sentence(problem: Problem): string {
     const lines =
       problem.amount === 1 ? "1 line breaks" : `${problem.amount} lines break`;
     return `${where}: ${lines} in the ${problem.element}`;
+  }
+  if (problem.kind === "small") {
+    const limit = Math.round((problem.limit ?? 0) * 10) / 10;
+    return `${where}: the text in the ${problem.element} is ${problem.amount} px, less than 1/${LINES} of the window height (${limit} px)`;
   }
   return `${where}: the ${problem.element} goes ${problem.amount} px past the ${problem.edge} edge`;
 }
@@ -260,7 +307,49 @@ function measure(slide: HTMLElement, number: number, step: number): Problem[] {
       });
     }
   }
+  const limit = legible(window.innerHeight);
+  for (const svg of Array.from(slide.querySelectorAll(SCALED)).filter(shown)) {
+    const amount = smallest(
+      Array.from(svg.querySelectorAll("text"))
+        .filter(seen)
+        .map((text) => {
+          const matrix = (text as SVGGraphicsElement).getScreenCTM();
+          return matrix === null
+            ? 0
+            : scaled(parseFloat(getComputedStyle(text).fontSize), matrix);
+        }),
+      limit,
+    );
+    if (amount !== null) {
+      problems.push({
+        slide: number,
+        step,
+        kind: "small",
+        edge: null,
+        amount,
+        limit,
+        element: scaledName(svg),
+      });
+    }
+  }
   return problems;
+}
+
+// The SVGs that scale with their element, and their text with them.
+const SCALED = ".chart > svg, .diagram > svg";
+
+// A text that the eye sees at this step. A layer of a chart with frames, or
+// a series before its step, has the opacity 0.
+function seen(text: Element): boolean {
+  return (text.textContent ?? "").trim() !== "" && visible(text);
+}
+
+// The name of a chart is its title, which its SVG holds in `aria-label`. A
+// diagram gives the title of its SVG.
+function scaledName(svg: Element): string {
+  return svg.parentElement?.matches(".chart") === true
+    ? label("chart", svg.getAttribute("aria-label") ?? "")
+    : name(svg);
 }
 
 // Keep the first step of each problem. Two problems are the same problem when

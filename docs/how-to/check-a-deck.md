@@ -13,7 +13,7 @@ one more tool:
 | Command | Checks | Needs |
 | --- | --- | --- |
 | `mix expresso deck.exs --check` | The render, the contrast of the theme, and the text for a screen reader | Nothing |
-| `mix expresso deck.exs --check=layout` | Each element in the window, and each line of code on one line, at each step at 1920 × 1080 | Chrome or Chromium |
+| `mix expresso deck.exs --check=layout` | Each element in the window, each line of code on one line, and the text of each chart and diagram at 1/60 of the window height or more, at each step at 1920 × 1080 | Chrome or Chromium |
 | `mix expresso deck.exs --check=a11y` | The rules of axe-core at each step, and in the menu, the list of keys, the overview and the handout view | Chrome or Chromium, and axe-core |
 | `mix expresso deck.exs --check=browser` | The checks of `--check=a11y`, and the keys of the presenter: each step, each view, the focus and the errors of the script | Node, Playwright, axe-core, and the Hex package `playwright_ex` |
 

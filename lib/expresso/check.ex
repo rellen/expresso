@@ -8,7 +8,7 @@ defmodule Expresso.Check do
   | Level | Option | Checks | Needs |
   | --- | --- | --- | --- |
   | `:basic` | `--check` | The render, the contrast of the theme, the size of the document, and the text for a screen reader | Nothing |
-  | `:layout` | `--check=layout` | Each element in the window, and each line of code on one line, at each step at 1920 × 1080, or at each size of `--size` | Chrome or Chromium |
+  | `:layout` | `--check=layout` | Each element in the window, each line of code on one line, and the text of each chart and diagram at 1/60 of the window height or more, at each step at 1920 × 1080, or at each size of `--size` | Chrome or Chromium |
   | `:a11y` | `--check=a11y` | The rules of axe-core at each step, and in the menu, the list of keys, the overview and the handout view | Chrome or Chromium, and axe-core |
   | `:browser` | `--check=browser` | The checks of `:a11y` in Playwright, and the keys of the presenter: each step, each view, the focus and the errors of the script | Node, the npm packages `playwright` and `axe-core`, and the Hex package `playwright_ex` |
 

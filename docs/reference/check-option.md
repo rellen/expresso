@@ -52,9 +52,10 @@ For the steps and the installation of the tools, see
 Chromium, with `?check` or `?check=a11y` in the address. The page of the copy has the size
 1920 × 1080.
 
-The layout check finds each element that goes past an edge of the window, and each line of
-code that breaks, at each step. Its problems have the same text as the report of
-`?check`, such as `Slide 6, step 3: the math “s = o + x” goes 120 px past the right edge`.
+The layout check finds each element that goes past an edge of the window, each line of code
+that breaks, and each chart or diagram with text smaller than 1/60 of the window height, at
+each step. Its problems have the same text as the report of `?check`, such as
+`Slide 6, step 3: the math “s = o + x” goes 120 px past the right edge`.
 
 The accessibility check runs axe-core on the slide of each step. Then it runs axe-core on
 the whole document in these views:

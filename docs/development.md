@@ -881,8 +881,8 @@ mix expresso examples/dsl_deck.exs --watch
 
 The browser tests cover the behavior of the presenter. Add a test to `test/e2e/` for a
 new behavior. A look at the slides is still necessary after a change to
-`assets/style.css`. `?check` in the address finds an element past an edge of the window
-and a line of code that breaks. `test/e2e/layout_check_test.exs` runs it on
+`assets/style.css`. `?check` in the address finds an element past an edge of the window,
+a line of code that breaks, and small text in a chart or a diagram. `test/e2e/layout_check_test.exs` runs it on
 `examples/line4/line4.exs` at 1920 × 1080, and on each example deck of the GIFs at
 1280 × 720. `mix expresso deck.exs --check=a11y` runs the layout check and axe-core on a
 deck with no window, and `test/e2e/check_test.exs` tests it. The checks do not see an

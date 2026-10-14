@@ -2321,6 +2321,18 @@ gives what it finds. These are the reasons for its design:
 - **It reads `offsetHeight` for a line of code.** An `on` entity can turn a code element,
   and a turned box has a larger bounding box. `offsetHeight` does not change with a
   transform, so a turned line with no break counts as one line.
+- **It measures the size of text only in a chart or a diagram.** The SVG of a chart or a
+  diagram takes the height that is left in the slide, and its text becomes smaller with
+  it. Other text keeps its font size. The size of a text is its font size times the
+  vertical scale of `getScreenCTM()`, so a transform inside the SVG counts too.
+- **The smallest size is 1/60 of the window height.** A projector shows each window at the
+  same height on the screen. Thus a part of the height is a size that the audience sees the
+  same way at each size of the window: 12 pixels at 1280 × 720, and 18 pixels at
+  1920 × 1080. A fixed size in pixels would accept at 1920 × 1080 a text that is
+  physically smaller than the same text at 1280 × 720.
+- **The Line 4 deck has larger text in two diagrams.** With this limit, the text of
+  `axes.svg` and `cache.svg` was too small at 1920 × 1080, at 17 and 15.9 pixels. The text
+  of the two files is 1 to 3 units larger than in the original deck of `iso-factories`.
 
 ## The build
 
