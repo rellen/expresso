@@ -1360,6 +1360,11 @@ These are the reasons for this design:
   layout keeps space at the right edge for the widest label of the last column. This space is
   a maximum of one third of the width. A label of a node shorter than one line shows when it
   is one line or more from each other label in its column.
+- **An alluvial chart is a sankey with a column in each node.** The check changes each name
+  of a path into a tuple of its place and its name. Thus the same name in two columns becomes
+  two nodes, and the layout of the sankey places them. The color and the order come from the
+  name, so a name has one color and one place in each column. A kind, and not an option,
+  keeps the number of fields in the struct of the chart small.
 - **The labels are above the links.** The node labels of each series are in a group after
   the series, with the same steps. Thus a later column of links does not cover a label. A
   label has a halo in the color of the background.

@@ -100,6 +100,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "chart-sankey", deck: "chart_sankey.exs", actions: ["j", "j"]},
     %{name: "chart-sankey-frames", deck: "chart_sankey_frames.exs", actions: ["j"]},
     %{name: "chart-sankey-funnel", deck: "chart_sankey_funnel.exs", still: true},
+    %{name: "chart-alluvial", deck: "chart_alluvial.exs", actions: ["j", "j"]},
     %{name: "chart-levels", deck: "chart_levels.exs", still: true},
     %{name: "chart-tsv", deck: "chart_tsv.exs", still: true},
     %{name: "chart-labels", deck: "chart_labels.exs", still: true},

@@ -4,7 +4,7 @@ defmodule Expresso.Element.Chart.Sankey do
 
   A category of a sankey is a path of two nodes or more, such as
   `["Coal", "Electricity"]` or `"Gas/Electricity/Homes"`. Its value goes
-  along each link of the path. `links/3` adds the values of the same link.
+  along each link of the path. `links/4` adds the values of the same link.
   Thus a CSV file can hold one row for each flow, or one row for each record
   of a path with the `levels` option.
 
@@ -25,14 +25,14 @@ defmodule Expresso.Element.Chart.Sankey do
      each node horizontally. The ribbon is a filled shape, and not a thick
      stroke, so its height is its value at each point.
 
-  An alluvial chart has one node for each name in each column: the column of
-  a node is its place in the path, so the same name in two columns gives two
-  nodes. Its node is the tuple `{column, name}`, as `links/4` returns it. The
+  An alluvial chart has one node for each name in each column. The column of
+  a node is its place in the path, so the same name in two columns becomes
+  two nodes. Its node is the tuple `{column, name}`, as `links/4` returns it. The
   nodes of one name have one color and one place in each column.
 
   A graph with a loop has no first column, so `check/4` refuses it. The
   frames of a chart share the columns, the order and the scale of the nodes,
-  as `layout_frames/2` returns them. Each frame is a layer, and the opacity
+  as `layout_frames/3` returns them. Each frame is a layer, and the opacity
   of the layers changes from one frame to the next.
 
   `render/1` draws each series of the chart as a group. The group holds the
@@ -255,10 +255,10 @@ defmodule Expresso.Element.Chart.Sankey do
   @doc """
   Return the column of each node, from 0
 
-  A node with no link into it is in column 0, and each other node is one
-  column after its furthest source. `pinned` gives the column of some nodes,
-  from 0, and the columns after them follow from them. A node of an alluvial
-  chart holds its column.
+  A node with no link into it is in column 0. Each other node is one column
+  after its last source. `pinned` holds the columns of some nodes, from 0,
+  and the nodes after them move to follow them. A node of an alluvial chart
+  holds its column.
 
       iex> links = [%{from: "A", to: "B"}, %{from: "B", to: "C"}, %{from: "A", to: "C"}]
       iex> Expresso.Element.Chart.Sankey.columns(links)
@@ -598,9 +598,10 @@ defmodule Expresso.Element.Chart.Sankey do
   def titles?(_assigns), do: false
 
   # The title of each column of an alluvial chart, in the row above the
-  # nodes. A title is at the left edge of its first column, in the middle of
-  # a column between, and at the right edge of the last column. The key `xs`
-  # holds the x of each column, as the layout returns it.
+  # nodes. The first title is at the left edge of its column, and the last
+  # title is at the right edge of its column. Each other title is at the
+  # middle of its column. The key `xs` holds the x of each column, as the
+  # layout returns it.
   defp titles(assigns) do
     if titles?(assigns) do
       last = length(assigns.levels) - 1

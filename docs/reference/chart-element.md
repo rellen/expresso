@@ -23,7 +23,7 @@ end
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst` or `:sankey` | The kind of the chart. |
+| The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst`, `:sankey` or `:alluvial` | The kind of the chart. |
 | `title` | A string, required | The name of the chart for a screen reader, and the caption of its table. |
 | `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels. A category of a chart of flows is a path of nodes. |
 | `category_label` | A string | The name of the categories, such as `"Year"`. See [the names of the axes](#the-names-of-the-axes). A chart with `src` takes the first heading of its file. |
@@ -34,7 +34,7 @@ end
 | `reveal` | `true` or `false` | Show each series at its own step. A chart of flows has its own steps, which [reveal](#reveal) gives. The default is `false`. A pie takes no `reveal`. |
 | `dim` | `true` or `false` | Dim each series when a later series shows. The default is `false`. |
 | `separator` | A string | The text between two levels of a category of a treemap or a sunburst. The default is `"/"`. |
-| `levels` | A list of strings | The headings of the CSV columns that hold the levels of a treemap or a sunburst, from the top level down. For a chart of flows, the headings of the CSV columns that hold the nodes of each path. Requires `src`. |
+| `levels` | A list of strings | The headings of the CSV columns that hold the levels of a treemap or a sunburst, from the top level down. For a chart of flows, the headings of the CSV columns that hold the nodes of each path. Requires `src`, but an alluvial chart can take `levels` without `src` to give the title of each column. |
 | `frames` | A string | The heading of the column of the CSV file that names the frame of each row. Requires `src`. |
 | `frame_label` | `:top_right`, `:top_left` or `:none` | The place of the label of the frame in a chart with frames. The default is `:top_right`. |
 | `sort` | `true` or `false` | Put the categories of a bar chart in order of their totals, from the largest, in each frame. The default is `false`. |
@@ -150,6 +150,7 @@ first frame. The numbers with `count true` need the script of the presenter.
 | `:treemap` | Exactly one. Each category is a box, and a group holds its parts. | The name and the value of each part, and the name of each group in a strip at its top. |
 | `:sunburst` | Exactly one. Each level of the groups is a ring, and each category is an arc of the outer rings. | The name of each arc, and the part in percent of each group of the top level, in a legend at the right. |
 | `:sankey` | Exactly one. Each category is a path of nodes, and its value goes along each link of the path. | The name and the value of each node. See [the labels](#the-labels). |
+| `:alluvial` | Exactly one. Each category is a path with one name for each column. | As a sankey, and a title over each column. See [an alluvial chart](#an-alluvial-chart). |
 
 A bar chart and a line chart have one axis, which starts at zero and holds each value, with
 approximately five round ticks. The axis stays the same at each step, so it does not move
@@ -193,8 +194,8 @@ the frame in a row above the boxes.
 
 ## The charts of flows
 
-A **chart of flows** shows how an amount goes between the nodes of a graph. A sankey is a
-chart of flows. In this section, a **flow** is an item of the data, and a **link** is the mark
+A **chart of flows** shows how an amount goes between the nodes of a graph. A sankey and an
+alluvial chart are charts of flows. In this section, a **flow** is an item of the data, and a **link** is the mark
 that shows one or more flows.
 
 ### The flows
@@ -223,7 +224,7 @@ end
 The categories and one series give the same data. A category is a path of two nodes or more.
 Examples are `["Coal", "Electricity"]`, `"Gas/Electricity/Homes"` with the `separator`, and a
 row of a CSV file with the `levels` option. The value of a category goes along each link of
-its path. The values of the same link add. A name is one node in the whole chart.
+its path. The values of the same link add. In a sankey, a name is one node in the whole chart.
 
 The table for a screen reader holds one row for each link. Its headers are "From", "To" and
 the `value_label`, or "Value".
@@ -263,6 +264,20 @@ A node has a color of the theme, in the order of the nodes in the data. The `ord
 does not change the color of a node. A link has a light color, made
 from the color of its source and the color of the background.
 
+### An alluvial chart
+
+An alluvial chart is a sankey with one node for each name in each column. The place of a name
+in its path sets its column. These rules apply:
+
+- A name can go to the same name, such as "Car" to "Car".
+- The nodes of one name have one color, and they have the same place in each column.
+- The `levels` option gives a title to each column. The title is above the nodes. Without
+  `src`, `levels` gives only the titles.
+- A `flow` entity gives a path of two columns.
+- A `node` entity applies to the name in each column. It takes no `column`.
+- A row of the table names the column of each node, such as "Car (2020)", or "Car (Column 1)"
+  without `levels`.
+
 ### The labels
 
 A label shows the name of its node and, with `values true`, its value. Each label is at the
@@ -286,7 +301,7 @@ the next layer increases to 1. The table has a column for each frame.
 
 ### Reveal
 
-With `reveal true`, a sankey has one series for each source column of the links. The links of
+With `reveal true`, a sankey or an alluvial chart has one series for each source column of the links. The links of
 a column show at their own step. A node shows with the first link that touches it. `dim true`
 dims the links of a column when a later column shows.
 
@@ -373,9 +388,11 @@ The compiler gives an error for these:
   negative value;
 - flows that make a loop. The message names the nodes of the loop;
 - a chart of flows with `levels` that names one column;
+- an alluvial chart with `levels` that does not give one title for each column;
 - a `node` in a chart that is not a chart of flows;
 - two `node` entities for one node, and a `node` with a name that no flow has;
-- a `column` that puts the target of a flow in the same column as its source, or before it.
+- a `column` that puts the target of a flow in the same column as its source, or before it;
+- a `node` with `column` in an alluvial chart.
 
 The compiler gives an error for a file that it cannot read, for a quote with no closing
 quote, for text after a closing quote, and for a row with a cell that is not a number. The
@@ -398,7 +415,8 @@ for the heading.
 ## The HTML
 
 The document writes a `figure` element with the classes `chart` and `chart-bar`,
-`chart-line`, `chart-pie`, `chart-treemap`, `chart-sunburst` or `chart-sankey`. It holds an
+`chart-line`, `chart-pie`, `chart-treemap`, `chart-sunburst`, `chart-sankey` or
+`chart-alluvial`. It holds an
 `svg` element with `role="img"` and the `title` as its `aria-label`. It also holds a `table`
 with the class `chart-table` that holds each value. The style sheet hides the table from the
 eye and not from a screen reader. The table has a column header for each series and a row
@@ -414,6 +432,7 @@ A chart of flows writes these elements:
 | The labels of a series | `g`, after the series, with the same steps | `chart-labels` |
 | A label | `text` | `chart-node-label` |
 | A frame | `g` | `chart-layer` |
+| The title of a column | `text` | `chart-column` |
 
 A chart with frames or with the effect `:grow` has a `data-el` attribute. Its marks have the
 class `chart-mark`, `chart-segment`, `chart-arc` or `chart-gap`, and the label of the frame

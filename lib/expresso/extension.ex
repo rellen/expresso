@@ -438,7 +438,7 @@ defmodule Expresso.Extension do
           levels: [
             type: {:list, :string},
             doc:
-              "The headings of the columns of a CSV file that hold the levels of the categories of a treemap or a sunburst, from the top level down, or the nodes of each path of a sankey. Requires the src option, except in an alluvial chart, where the levels give the title of each column."
+              "For a treemap or a sunburst, the headings of the CSV columns that hold the levels, from the top level down. For a sankey or an alluvial chart, the headings of the CSV columns that hold the nodes of each path. Requires the src option, but an alluvial chart can take levels without src to give the title of each column."
           ],
           frames: [
             type: :string,
