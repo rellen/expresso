@@ -159,10 +159,11 @@ defmodule Expresso.ChartSankeyTest do
       end
     end
 
-    test "a sankey takes no frames, no effect :grow and no count" do
-      assert_raise ArgumentError, ~r/a sankey takes no frames/, fn ->
+    test "a sankey takes no effect :grow, and no reveal with frames" do
+      assert_raise ArgumentError, ~r/with frames takes no reveal/, fn ->
         Builder.chart(:sankey,
           title: "Frames",
+          reveal: true,
           categories: [["A", "B"]],
           timeline: [Builder.frame("1", elements: [Builder.series("x", [1])])]
         )
@@ -226,6 +227,129 @@ defmodule Expresso.ChartSankeyTest do
                ["From", "To", "TWh"]
 
       assert figure |> Floki.find("table.chart-table tbody tr") |> length() == 6
+    end
+  end
+
+  describe "the frames" do
+    defp frames do
+      Builder.chart(:sankey,
+        title: "Energy",
+        timeline: [
+          Builder.frame("2015",
+            flows: [
+              Builder.flow("Coal", "Electricity", 180),
+              Builder.flow("Electricity", "Homes", 180)
+            ]
+          ),
+          Builder.frame("2025",
+            flows: [
+              Builder.flow("Coal", "Electricity", 40),
+              Builder.flow("Solar", "Electricity", 90),
+              Builder.flow("Electricity", "Homes", 130)
+            ]
+          )
+        ]
+      )
+    end
+
+    test "the flows of each frame give the links of each frame, with zero for a link that is not in it" do
+      chart = frames()
+
+      assert chart.categories == [
+               ["Coal", "Electricity"],
+               ["Electricity", "Homes"],
+               ["Solar", "Electricity"]
+             ]
+
+      assert [[%{values: [180, 180, 0]}], [%{values: [40, 130, 90]}]] =
+               Enum.map(chart.timeline, & &1.elements)
+    end
+
+    test "a sankey with frames draws a layer for each frame, and the layers fade at their steps" do
+      html = render(frames())
+      figure = html |> Floki.parse_document!() |> Floki.find(".screen figure.chart")
+      layers = Floki.find(figure, "figure.chart > svg > g.chart-layer")
+
+      assert Enum.map(layers, &Floki.attribute(&1, "style")) == [
+               ["opacity: var(--k1, 1);"],
+               ["opacity: var(--k2, 0);"]
+             ]
+
+      # Solar has no flow in 2015, so the first layer has no node for it.
+      [first, second] = layers
+      assert first |> Floki.find("rect.chart-node") |> length() == 3
+      assert second |> Floki.find("rect.chart-node") |> length() == 4
+      assert Floki.text(Floki.find(figure, "text.chart-frame")) =~ "2015"
+      assert html =~ ~r/section\[data-step="2"\] \[data-el="s1-e1"\] \{[^}]*--k2: 1;/
+
+      headers = figure |> Floki.find("table.chart-table thead th") |> Enum.map(&Floki.text/1)
+      assert headers == ["From", "To", "2015", "2025"]
+    end
+
+    test "the frames share the columns, the order and the scale of the nodes" do
+      [one, two] =
+        Sankey.layout_frames(
+          [
+            [%{from: "A", to: "B", value: 10, series: 1}],
+            [
+              %{from: "A", to: "B", value: 5, series: 1},
+              %{from: "C", to: "B", value: 5, series: 1}
+            ]
+          ],
+          8
+        )
+
+      [a1, b1] = one.nodes
+      [a2, b2, c2] = two.nodes
+      assert {a1.name, b1.name, a2.name, b2.name, c2.name} == {"A", "B", "A", "B", "C"}
+      assert_in_delta a2.height * 2, a1.height, 0.01
+      assert_in_delta b2.height, b1.height, 0.01
+      assert {a1.color, b1.color} == {a2.color, b2.color}
+    end
+
+    @tag :tmp_dir
+    test "a CSV file gives the frames with the frames option and the levels option", %{
+      tmp_dir: tmp_dir
+    } do
+      path = Path.join(tmp_dir, "energy.csv")
+
+      File.write!(path, """
+      year,from,to,GWh
+      2015,Coal,Electricity,180
+      2015,Electricity,Homes,180
+      2025,Coal,Electricity,40
+      2025,Electricity,Homes,40
+      """)
+
+      chart =
+        Builder.chart(:sankey, title: "Energy", src: path, levels: ["from", "to"], frames: "year")
+
+      figure = figure(chart)
+      assert figure |> Floki.find("g.chart-layer") |> length() == 2
+
+      assert figure |> Floki.find("table.chart-table tbody tr") |> Enum.map(&Floki.text/1) ==
+               ["CoalElectricity18040", "ElectricityHomes18040"]
+    end
+
+    test "a frame holds flows or a series, and a flow in a frame is for a sankey" do
+      assert_raise ArgumentError, ~r/a bar chart takes no flow/, fn ->
+        Builder.chart(:bar,
+          title: "Bar",
+          timeline: [Builder.frame("1", flows: [Builder.flow("A", "B", 1)])]
+        )
+      end
+
+      assert_raise ArgumentError,
+                   ~r/each frame of a sankey with flows holds flows, and no series/,
+                   fn ->
+                     Builder.chart(:sankey,
+                       title: "Mixed",
+                       timeline: [
+                         Builder.frame("1", flows: [Builder.flow("A", "B", 1)]),
+                         Builder.frame("2", elements: [Builder.series("x", [1])])
+                       ]
+                     )
+                   end
     end
   end
 

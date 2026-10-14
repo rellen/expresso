@@ -124,6 +124,7 @@ defmodule Expresso.Element.Chart.Motion do
   defp scene(%{kind: kind} = assigns) when kind in [:treemap, :sunburst],
     do: Hierarchy.scene(assigns)
 
+  defp scene(%{kind: :sankey, frames: frames}), do: %{channels: flags(frames)}
   defp scene(%{kind: :pie} = assigns), do: pie_scene(assigns)
   defp scene(%{kind: :line} = assigns), do: line_scene(assigns)
   defp scene(assigns), do: bar_scene(assigns)
@@ -374,10 +375,17 @@ defmodule Expresso.Element.Chart.Motion do
 
   # The label of the frame, in the row of the legend. Each frame has a copy,
   # and the copies fade.
-  defp frame_label(%{frame_label: :none} = assigns), do: empty(assigns)
-  defp frame_label(%{frames: [_one]} = assigns), do: empty(assigns)
+  @doc """
+  Draw the label of the frame that shows, at the top of the chart
 
-  defp frame_label(assigns) do
+  A chart of one frame, and a chart with `frame_label: :none`, has no label.
+  The label has one copy for each frame, and the copies fade.
+  """
+  @spec frame_label(map()) :: Phoenix.HTML.safe()
+  def frame_label(%{frame_label: :none} = assigns), do: empty(assigns)
+  def frame_label(%{frames: [_one]} = assigns), do: empty(assigns)
+
+  def frame_label(assigns) do
     {x, anchor} =
       case {assigns.kind, assigns.frame_label} do
         {kind, _place} when kind in [:pie, :sunburst] -> {784, "end"}

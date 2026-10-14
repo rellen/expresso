@@ -1354,9 +1354,14 @@ the reasons for this design:
 - **The labels are above the links.** The labels of the nodes of each series are in a group
   of their own after each series, with the same steps. A later column of links therefore
   does not cover a label. A label has a halo in the color of the background.
-- **No loop, no frames.** A loop has no first column, so the check refuses it and names its
-  nodes. A sankey takes no frames and no effect `:grow` in this version, because a link
-  would need channels for the six numbers of its path.
+- **No loop.** A loop has no first column, so the check refuses it and names its nodes.
+- **The frames fade, and they do not move.** A link is a curve, and a transform cannot change
+  the curve from one frame to the next, so the channels of the other charts cannot move it.
+  The CSS property `d` can, but Safari does not support it, and Safari would then show the
+  links of the first frame at each step. Therefore the chart draws one layer for each frame,
+  and the channel `--k<n>` gives the opacity of each layer, as for the texts of the other
+  charts that change. The frames share the columns, the order of the nodes and one scale, so
+  a node stays in its place. A sankey takes no effect `:grow`, for the same reason.
 
 ### The motion of a chart
 

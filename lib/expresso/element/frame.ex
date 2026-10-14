@@ -13,6 +13,9 @@ defmodule Expresso.Element.Frame do
   `elements` field of the chart, so that `reveal` and `dim` work as for a
   chart without frames. `Expresso.Overlay.Expand` writes the steps of each
   frame into its `steps` field.
+
+  A frame of a sankey can hold `flow` entities in place of a series. The
+  check of the chart turns them into one series.
   """
 
   @typedoc "The struct of a frame"
@@ -23,5 +26,5 @@ defmodule Expresso.Element.Frame do
           steps: [pos_integer()] | nil
         }
 
-  defstruct [:label, :at, :steps, elements: [], __spark_metadata__: nil]
+  defstruct [:label, :at, :steps, elements: [], flows: [], __spark_metadata__: nil]
 end

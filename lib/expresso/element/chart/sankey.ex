@@ -23,7 +23,9 @@ defmodule Expresso.Element.Chart.Sankey do
      node level. The ribbon is a filled shape, and not a thick stroke, so its
      height is the value at each point.
 
-  A graph with a loop has no first column, so `check/3` refuses it.
+  A graph with a loop has no first column, so `check/3` refuses it. The
+  frames of a chart share the columns, the order and the scale of the nodes,
+  as `layout_frames/2` gives them, and each frame is a layer that fades.
 
   `render/1` draws each series of the chart as a group with its links and the
   nodes that show first with it. The labels of the nodes are in groups of
@@ -34,7 +36,7 @@ defmodule Expresso.Element.Chart.Sankey do
   import Temple
   use Temple.Component
 
-  alias Expresso.Element.Chart.Plot
+  alias Expresso.Element.Chart.{Motion, Plot}
 
   @typedoc "A link: two nodes and a value"
   @type link :: %{from: String.t(), to: String.t(), value: number()}
@@ -236,79 +238,102 @@ defmodule Expresso.Element.Chart.Sankey do
 
   `links` holds each link with its value and the number of its series, from
   1. The function returns the nodes, with their boxes, colors and the number
-  of their first series, and the links, with their paths.
+  of their first series, and the links, with their paths. `top` is the top of
+  the box.
   """
-  @spec layout([%{from: String.t(), to: String.t(), value: number(), series: pos_integer()}]) ::
+  @spec layout(
+          [%{from: String.t(), to: String.t(), value: number(), series: pos_integer()}],
+          number()
+        ) :: %{nodes: [map()], links: [map()], node_width: pos_integer()}
+  def layout(links, top \\ 8), do: hd(layout_frames([links], top))
+
+  @doc """
+  Place the nodes and the links of each frame of a sankey
+
+  `frames` holds the links of each frame, as `layout/2` takes them. The
+  frames share the columns, the order and the colors of the nodes, from the
+  links of each frame together, and one scale, so a height means the same
+  value in each frame. A node or a link with no value in a frame does not
+  show in that frame.
+  """
+  @spec layout_frames([[map()]], number()) :: [
           %{nodes: [map()], links: [map()], node_width: pos_integer()}
-  def layout(links) do
-    links = Enum.filter(links, &(&1.value > 0))
-    Map.put(place_all(links), :node_width, @node)
+        ]
+  def layout_frames(frames, top) do
+    frames = Enum.map(frames, fn links -> Enum.filter(links, &(&1.value > 0)) end)
+    union = frames |> List.flatten() |> Enum.uniq_by(&{&1.from, &1.to})
+    columns = columns(union)
+    order = union |> Enum.flat_map(&[&1.from, &1.to]) |> Enum.uniq()
+    sizes = Enum.map(frames, &sizes/1)
+    shared = %{columns: columns, order: order, top: top, last: Enum.max(Map.values(columns))}
+    shared = Map.put(shared, :scale, scale(sizes, shared))
+
+    for {links, size} <- Enum.zip(frames, sizes), do: frame(links, size, shared)
   end
 
-  defp place_all(links) do
-    columns = columns(links)
-    order = links |> Enum.flat_map(&[&1.from, &1.to]) |> Enum.uniq()
-    last = columns |> Map.values() |> Enum.max()
+  # The size of each node of a frame: the larger of the flow into it and the
+  # flow out of it.
+  defp sizes(links) do
+    into = Enum.reduce(links, %{}, &Map.update(&2, &1.to, &1.value, fn v -> v + &1.value end))
+    out = Enum.reduce(links, %{}, &Map.update(&2, &1.from, &1.value, fn v -> v + &1.value end))
+    Map.merge(into, out, fn _node, a, b -> max(a, b) end)
+  end
 
-    size = fn node ->
-      into = links |> Enum.filter(&(&1.to == node)) |> Enum.map(& &1.value) |> Enum.sum()
-      out = links |> Enum.filter(&(&1.from == node)) |> Enum.map(& &1.value) |> Enum.sum()
-      max(into, out)
+  # The scale that fits the fullest column of each frame into the height.
+  defp scale(sizes, shared) do
+    for size <- sizes,
+        {_column, names} <- stacks(size, shared) do
+      (@height - 8 - shared.top - @gap * (length(names) - 1)) /
+        Enum.sum(Enum.map(names, &size[&1]))
     end
+    |> Enum.min()
+  end
 
-    stacks = Enum.group_by(order, &columns[&1])
-    top = 8
+  # The nodes of a frame in each column, in the order of the nodes.
+  defp stacks(size, shared) do
+    shared.order |> Enum.filter(&Map.has_key?(size, &1)) |> Enum.group_by(&shared.columns[&1])
+  end
+
+  defp frame(links, size, shared) do
+    %{scale: scale, top: top, last: last} = shared
     bottom = @height - 8
-
-    scale =
-      stacks
-      |> Map.values()
-      |> Enum.map(fn nodes ->
-        (bottom - top - @gap * (length(nodes) - 1)) / Enum.sum(Enum.map(nodes, size))
-      end)
-      |> Enum.min()
-
     x = fn column -> 4 + column * (@width - 8 - @node) / max(last, 1) end
 
-    nodes =
-      stacks
+    boxes =
+      size
+      |> stacks(shared)
       |> Enum.flat_map(fn {column, names} ->
-        heights = Enum.map(names, &(size.(&1) * scale))
+        heights = Enum.map(names, &(size[&1] * scale))
         used = Enum.sum(heights) + @gap * (length(names) - 1)
-        start = top + (bottom - top - used) / 2
 
         names
         |> Enum.zip(heights)
-        |> Enum.map_reduce(start, fn {name, height}, y ->
+        |> Enum.map_reduce(top + (bottom - top - used) / 2, fn {name, height}, y ->
           {{name, %{x: x.(column), y: y, height: height, column: column}}, y + height + @gap}
         end)
         |> elem(0)
       end)
       |> Map.new()
 
-    placed = place(links, nodes, scale)
+    color = fn name -> rem(Enum.find_index(shared.order, &(&1 == name)), 8) + 1 end
+
+    nodes =
+      for name <- shared.order, box = boxes[name], box != nil do
+        touching = Enum.filter(links, &(&1.from == name or &1.to == name))
+
+        Map.merge(box, %{
+          name: name,
+          value: size[name],
+          color: color.(name),
+          series: touching |> Enum.map(& &1.series) |> Enum.min(),
+          last: box.column == last
+        })
+      end
 
     %{
-      nodes:
-        order
-        |> Enum.with_index()
-        |> Enum.map(fn {name, index} ->
-          node = nodes[name]
-          touching = Enum.filter(links, &(&1.from == name or &1.to == name))
-
-          Map.merge(node, %{
-            name: name,
-            value: size.(name),
-            color: rem(index, 8) + 1,
-            series: touching |> Enum.map(& &1.series) |> Enum.min(),
-            last: node.column == last
-          })
-        end),
-      links:
-        Enum.map(placed, fn link ->
-          color = Enum.find_index(order, &(&1 == link.from))
-          Map.put(link, :color, rem(color, 8) + 1)
-        end)
+      nodes: nodes,
+      links: links |> place(boxes, scale) |> Enum.map(&Map.put(&1, :color, color.(&1.from))),
+      node_width: @node
     }
   end
 
@@ -376,15 +401,53 @@ defmodule Expresso.Element.Chart.Sankey do
   Draw the links, the nodes and the labels of a sankey in its SVG
 
   The assigns are the assigns of `Expresso.Element.Chart`. Each category is a
-  link, and the value of a link is in one series.
+  link, and the value of a link is in one series. A chart with frames has one
+  layer for each frame, and the layer of the frame that shows has the
+  opacity 1: the channel `--k<n>` of `Expresso.Element.Chart.Motion` gives it,
+  and the layers fade from one frame to the next.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
-  def render(assigns) do
-    assigns =
-      assigns
-      |> Map.merge(layout(series_links(assigns)))
-      |> Map.put(:numbered, Enum.with_index(assigns.series, 1))
+  def render(%{frames: [_, _ | _] = frames} = assigns) do
+    layouts =
+      frames
+      |> Enum.map(&links(assigns.categories, &1.values))
+      |> layout_frames(assigns.box.top)
 
+    layers =
+      for {layout, k} <- Enum.with_index(layouts, 1),
+          do: {k, Map.merge(layout, %{numbered: numbered(assigns, k), values: assigns.values})}
+
+    assigns = Map.put(assigns, :layers, layers)
+
+    temple do
+      Motion.frame_label(assigns)
+
+      for {k, layer} <- @layers do
+        g class: "chart-layer chart-fade",
+          style: "opacity: var(--k#{k}, #{if k == 1, do: 1, else: 0});" do
+          c(&drawing/1, rest!: layer)
+        end
+      end
+    end
+  end
+
+  def render(assigns) do
+    layout = links(assigns.categories, Enum.map(assigns.series, & &1.values)) |> layout()
+    drawing(Map.merge(layout, %{numbered: numbered(assigns, 1), values: assigns.values}))
+  end
+
+  # Each series with its number from 1. A layer after the first has no morph
+  # key, so the morph between two slides finds one copy of each mark.
+  defp numbered(assigns, 1), do: Enum.with_index(assigns.series, 1)
+
+  defp numbered(assigns, _layer) do
+    for {series, number} <- Enum.with_index(assigns.series, 1),
+        do: {%{series | overlay: no_morph(series.overlay)}, number}
+  end
+
+  defp no_morph(overlay), do: Enum.reject(overlay, &(elem(&1, 0) == "data-morph-key"))
+
+  defp drawing(assigns) do
     temple do
       for {series, number} <- @numbered do
         g class: Expresso.Element.classes("chart-series", series.class), rest!: series.overlay do
@@ -403,8 +466,7 @@ defmodule Expresso.Element.Chart.Sankey do
       end
 
       for {series, number} <- @numbered do
-        g class: "chart-labels",
-          rest!: Enum.reject(series.overlay, &(elem(&1, 0) == "data-morph-key")) do
+        g class: "chart-labels", rest!: no_morph(series.overlay) do
           for node <- @nodes, node.series == number, label?(node) do
             text [class: "chart-node-label"] ++ label_place(node) do
               label_text(node, @values)
@@ -415,11 +477,12 @@ defmodule Expresso.Element.Chart.Sankey do
     end
   end
 
-  # The link of each category in the series that holds its value.
-  defp series_links(assigns) do
-    for {[from, to], index} <- Enum.with_index(assigns.categories),
-        {series, number} <- Enum.with_index(assigns.series, 1),
-        value = Enum.at(series.values, index),
+  # The link of each category in the series that holds its value. `values`
+  # holds the values of each series.
+  defp links(categories, values) do
+    for {[from, to], index} <- Enum.with_index(categories),
+        {series, number} <- Enum.with_index(values, 1),
+        value = Enum.at(series, index),
         value > 0,
         do: %{from: from, to: to, value: value, series: number}
   end
@@ -442,11 +505,22 @@ defmodule Expresso.Element.Chart.Sankey do
   """
   @spec table(map()) :: Phoenix.HTML.safe()
   def table(assigns) do
-    rows =
-      for {[from, to], index} <- Enum.with_index(assigns.categories),
-          do: {from, to, assigns.series |> Enum.map(&Enum.at(&1.values, index)) |> Enum.sum()}
+    columns =
+      case assigns.frames do
+        [_one] -> [assigns.value_label || "Value"]
+        frames -> Enum.map(frames, & &1.label)
+      end
 
-    assigns = Map.put(assigns, :rows, rows)
+    rows =
+      for {[from, to], index} <- Enum.with_index(assigns.categories) do
+        values =
+          for frame <- assigns.frames,
+              do: frame.values |> Enum.map(&Enum.at(&1, index)) |> Enum.sum()
+
+        {from, to, values}
+      end
+
+    assigns = Map.merge(assigns, %{rows: rows, columns: columns})
 
     temple do
       table class: "chart-table" do
@@ -456,35 +530,39 @@ defmodule Expresso.Element.Chart.Sankey do
 
         thead do
           tr do
-            th scope: "col" do
-              "From"
-            end
-
-            th scope: "col" do
-              "To"
-            end
-
-            th scope: "col" do
-              @value_label || "Value"
+            for column <- ["From", "To" | @columns] do
+              th scope: "col" do
+                column
+              end
             end
           end
         end
 
         tbody do
-          for {from, to, value} <- @rows do
-            tr do
-              th scope: "row" do
-                from
-              end
+          for row <- @rows do
+            c(&row/1, row: row)
+          end
+        end
+      end
+    end
+  end
 
-              td do
-                to
-              end
+  defp row(%{row: {from, to, values}} = assigns) do
+    assigns = Map.merge(assigns, %{from: from, to: to, values: values})
 
-              td do
-                Plot.label(value)
-              end
-            end
+    temple do
+      tr do
+        th scope: "row" do
+          @from
+        end
+
+        td do
+          @to
+        end
+
+        for value <- @values do
+          td do
+            Plot.label(value)
           end
         end
       end
