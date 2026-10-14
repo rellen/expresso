@@ -21,8 +21,13 @@ defmodule Expresso.SectionTransformer do
 
   use Spark.Dsl.Transformer
 
+  alias Expresso.Dsl
   alias Expresso.Element.{Toc, TocEntry, Tree}
   alias Spark.Dsl.Transformer
+
+  # The error of a toc in a deck without sections.
+  @no_sections "a toc lists the sections of the deck, and no slide has the section option. " <>
+                 "Give the first slide of each section a section option, such as section \"Why\"."
 
   @doc """
   Run this transformer before the overlay transformer, which gives the entries their steps
@@ -51,8 +56,8 @@ defmodule Expresso.SectionTransformer do
       end)
 
     case Enum.find(slides, &match?({:error, _slide}, &1)) do
-      nil -> {:ok, Map.replace_lazy(dsl_state, [:deck], &Map.put(&1, :entities, slides))}
-      {:error, slide} -> {:error, dsl_error(module, slide)}
+      nil -> {:ok, Dsl.put_slides(dsl_state, slides)}
+      {:error, slide} -> {:error, Dsl.slide_error(module, slide, @no_sections)}
     end
   end
 
@@ -109,14 +114,4 @@ defmodule Expresso.SectionTransformer do
   defp place(index, current) when index < current, do: :earlier
   defp place(index, current) when index == current, do: :current
   defp place(_index, _current), do: :later
-
-  defp dsl_error(module, slide) do
-    Spark.Error.DslError.exception(
-      module: module,
-      message:
-        "a toc lists the sections of the deck, and no slide has the section option. " <>
-          "Give the first slide of each section a section option, such as section \"Why\".",
-      path: [:deck, :slide] ++ List.wrap(slide.name)
-    )
-  end
 end

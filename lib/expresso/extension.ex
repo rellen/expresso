@@ -1147,6 +1147,7 @@ defmodule Expresso.Extension do
     transformers: [
       Expresso.PlacementTransformer,
       Expresso.PathTransformer,
+      Expresso.CssTransformer,
       Expresso.IconTransformer,
       Expresso.SectionTransformer,
       Expresso.Overlay.Transformer

@@ -37,7 +37,7 @@ defmodule Expresso.CodeVerifier do
   end
 
   defp slide(%Slide{} = slide, languages) do
-    path = Enum.join([:deck, :slide | List.wrap(slide.name)], " -> ")
+    path = slide |> Expresso.Dsl.slide_path() |> Enum.join(" -> ")
 
     slide.elements
     |> Tree.descendants()

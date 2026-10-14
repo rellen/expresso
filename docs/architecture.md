@@ -1799,12 +1799,15 @@ In the present view, the style sheet puts the number in the corner of the window
 
 ### The transformer and the verifiers
 
-The extension imports nothing, and it lists five transformers and eight verifiers:
+The extension imports nothing, and it lists six transformers and eight verifiers:
 
 - `Expresso.PlacementTransformer` refuses an element in a wrong place. It runs first, and it
   changes nothing. See "The definitions of the elements".
 - `Expresso.PathTransformer` joins each relative path of the deck to the `root` option, and
   it builds each code element and each chart with `src`. See "The watch mode".
+- `Expresso.CssTransformer` reads and scans the `css` option of the deck one time, and it
+  persists the names under `:css_names`. It runs after the path transformer, which gives
+  the path of the file.
 - `Expresso.IconTransformer` reads the files of the `icons` option of the deck, and it puts
   the SVG of each icon into its element and into the text of each text area and item. See
   "The icons".
@@ -1817,8 +1820,8 @@ The extension imports nothing, and it lists five transformers and eight verifier
 - `Expresso.Overlay.Verifier` reports a specification that breaks a rule.
 - `Expresso.Overlay.PropertyVerifier` gives a warning for a custom property that neither
   the theme nor the CSS of the deck uses.
-- `Expresso.Overlay.EffectVerifier` reads the `css` option of the deck. It gives an error
-  for an effect without a rule in the theme or in that style sheet.
+- `Expresso.Overlay.EffectVerifier` gives an error for a `css` file that the CSS transformer
+  cannot read, and for an effect without a rule in the theme or in that style sheet.
 - `Expresso.TransitionVerifier` gives an error for a transition without a rule in the theme
   or in the CSS of the deck. See "The transitions".
 - `Expresso.Overlay.SizeVerifier` gives a warning for a slide of very many steps.
@@ -1829,6 +1832,31 @@ The extension imports nothing, and it lists five transformers and eight verifier
 
 A verifier gives errors or warnings, and not both, so each kind of warning has its own
 verifier.
+
+`Expresso.Dsl` holds the plain functions that the transformers and the verifiers share:
+
+| Function | What it does |
+| --- | --- |
+| `slide_path/1` | Returns the path of a slide for an error, such as `[:deck, :slide, "intro"]`. |
+| `error/3`, `slide_error/3` | Make a `Spark.Error.DslError` at a path or at a slide. |
+| `map_slides/2` | Calls a function on each slide, and gives the first error the path of its slide. |
+| `put_slides/2` | Writes the slides back to the state of Spark. |
+| `css_names/1` | Returns the names that the CSS transformer persisted. |
+
+`put_slides/2` is the one place that writes the key `:entities` of the section `[:deck]`.
+Spark gives no function that replaces each entity of a section, so this shape of the state
+is in one module. Before, four transformers wrote it, and six modules each defined their own
+`dsl_error`.
+
+The three verifiers that need the names of the CSS read them from `css_names/1`. Before,
+each one resolved and scanned the `css` option, so one compile read and scanned a file
+three times. `test/expresso/dsl_test.exs` traces `Expresso.Css.scan/1` during one compile,
+and it finds one call.
+
+`Expresso.Dsl` is not a macro, such as `use Expresso.SlideVerifier` with a `slide/2`
+callback. Such a macro would hide the `verify/1` function that Spark calls, and the modules
+differ: some give errors and some give warnings, some check the deck first, and each one
+builds its own context.
 
 After the transformer, each element and each `on` entity holds its step numbers in the
 `steps` field. The metadata of the slide holds the maximum step number in `max_step`. It

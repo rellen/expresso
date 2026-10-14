@@ -14,8 +14,7 @@ defmodule Expresso.PlacementTransformer do
 
   use Spark.Dsl.Transformer
 
-  alias Expresso.Placement
-  alias Shoddy.Result
+  alias Expresso.{Dsl, Placement}
   alias Spark.Dsl.Transformer
 
   @doc """
@@ -31,26 +30,6 @@ defmodule Expresso.PlacementTransformer do
   @impl Transformer
   @spec transform(map()) :: {:ok, map()} | {:error, Spark.Error.DslError.t()}
   def transform(dsl_state) do
-    module = Transformer.get_persisted(dsl_state, :module)
-
-    dsl_state
-    |> Transformer.get_entities([:deck])
-    |> Stream.map(fn slide ->
-      slide |> Placement.slide() |> Result.map_error(&dsl_error(module, slide, &1))
-    end)
-    |> Result.collect()
-    |> Result.ignore()
-    |> case do
-      :ok -> {:ok, dsl_state}
-      error -> error
-    end
-  end
-
-  defp dsl_error(module, slide, message) do
-    Spark.Error.DslError.exception(
-      module: module,
-      message: message,
-      path: [:deck, :slide] ++ List.wrap(slide.name)
-    )
+    with {:ok, _slides} <- Dsl.map_slides(dsl_state, &Placement.slide/1), do: {:ok, dsl_state}
   end
 end

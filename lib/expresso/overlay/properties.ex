@@ -40,7 +40,7 @@ defmodule Expresso.Overlay.Properties do
   """
   @spec slide(Slide.t(), Expresso.Css.names()) :: [warning()]
   def slide(%Slide{} = slide, names \\ Theme.names()) do
-    path = Enum.join([:deck, :slide | List.wrap(slide.name)], " -> ")
+    path = slide |> Expresso.Dsl.slide_path() |> Enum.join(" -> ")
 
     for element <- Tree.descendants(slide.elements),
         on <- Map.get(element, :on) || [],

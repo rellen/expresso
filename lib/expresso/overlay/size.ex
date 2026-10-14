@@ -45,7 +45,7 @@ defmodule Expresso.Overlay.Size do
     max = (slide.metadata || %{})[:max_step] || 1
 
     if max > @maximum do
-      path = Enum.join([:deck, :slide | List.wrap(slide.name)], " -> ")
+      path = slide |> Expresso.Dsl.slide_path() |> Enum.join(" -> ")
 
       message(
         "#{path}: the slide takes #{max} steps, and #{@maximum} is the usual maximum. " <>

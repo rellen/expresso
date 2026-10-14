@@ -15,6 +15,7 @@ defmodule Expresso.IconTransformer do
 
   use Spark.Dsl.Transformer
 
+  alias Expresso.Dsl
   alias Expresso.Element.{Icon, Item, TextArea, Tree}
   alias Spark.Dsl.Transformer
 
@@ -37,23 +38,14 @@ defmodule Expresso.IconTransformer do
     icons = Transformer.get_option(dsl_state, [:deck], :icons) || []
 
     with {:ok, own} <- own(icons, root, module),
-         {:ok, slides} <- slides(Transformer.get_entities(dsl_state, [:deck]), own, module) do
-      {:ok, Map.replace_lazy(dsl_state, [:deck], &Map.put(&1, :entities, slides))}
+         {:ok, slides} <- Dsl.map_slides(dsl_state, &slide(&1, own)) do
+      {:ok, Dsl.put_slides(dsl_state, slides)}
     end
   end
 
-  defp slides(slides, own, module) do
-    slides
-    |> Enum.reduce_while({:ok, []}, fn slide, {:ok, done} ->
-      case Tree.map_ok(slide.elements, &element(&1, own)) do
-        {:ok, elements} -> {:cont, {:ok, [%{slide | elements: elements} | done]}}
-        {:error, message} -> {:halt, {:error, error(module, message, slide)}}
-      end
-    end)
-    |> case do
-      {:ok, done} -> {:ok, Enum.reverse(done)}
-      error -> error
-    end
+  defp slide(slide, own) do
+    with {:ok, elements} <- Tree.map_ok(slide.elements, &element(&1, own)),
+         do: {:ok, %{slide | elements: elements}}
   end
 
   # The SVG of each name of the icons option.
@@ -69,7 +61,7 @@ defmodule Expresso.IconTransformer do
           message =
             "the icon #{inspect(Atom.to_string(name))} of the icons option: #{path} #{problem}"
 
-          {:halt, {:error, error(module, message, nil)}}
+          {:halt, {:error, Dsl.error(module, [:deck, :icons], message)}}
       end
     end)
   end
@@ -94,9 +86,4 @@ defmodule Expresso.IconTransformer do
   end
 
   defp element(element, _own), do: {:ok, element}
-
-  defp error(module, message, slide) do
-    path = if slide, do: [:deck, :slide] ++ List.wrap(slide.name), else: [:deck, :icons]
-    Spark.Error.DslError.exception(module: module, message: message, path: path)
-  end
 end

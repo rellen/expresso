@@ -10,6 +10,7 @@ defmodule Expresso.GotoVerifier do
 
   use Spark.Dsl.Verifier
 
+  alias Expresso.Dsl
   alias Expresso.Element.Tree
   alias Expresso.Goto
   alias Shoddy.Result
@@ -21,19 +22,15 @@ defmodule Expresso.GotoVerifier do
   @impl Verifier
   @spec verify(map()) :: :ok | {:error, Spark.Error.DslError.t()}
   def verify(dsl_state) do
-    module = Verifier.get_persisted(dsl_state, :module)
-    slides = Verifier.get_entities(dsl_state, [:deck])
-    targets = Goto.targets(slides)
+    targets = dsl_state |> Verifier.get_entities([:deck]) |> Goto.targets()
 
-    slides
-    |> Stream.map(fn slide ->
+    dsl_state
+    |> Dsl.map_slides(fn slide ->
       slide.elements
       |> Tree.descendants()
       |> Enum.flat_map(&List.wrap(Map.get(&1, :goto)))
       |> first_error(targets)
-      |> Result.map_error(&dsl_error(module, slide, &1))
     end)
-    |> Result.collect()
     |> Result.ignore()
   end
 
@@ -42,13 +39,5 @@ defmodule Expresso.GotoVerifier do
     |> Stream.map(&Goto.check(&1, targets))
     |> Result.collect()
     |> Result.ignore()
-  end
-
-  defp dsl_error(module, slide, message) do
-    Spark.Error.DslError.exception(
-      module: module,
-      message: message,
-      path: [:deck, :slide] ++ List.wrap(slide.name)
-    )
   end
 end

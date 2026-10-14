@@ -10,8 +10,8 @@ defmodule Expresso.Overlay.Transformer do
 
   use Spark.Dsl.Transformer
 
+  alias Expresso.Dsl
   alias Expresso.Overlay.Expand
-  alias Shoddy.Result
   alias Spark.Dsl.Transformer
 
   @doc """
@@ -20,26 +20,7 @@ defmodule Expresso.Overlay.Transformer do
   @impl Transformer
   @spec transform(map()) :: {:ok, map()} | {:error, Spark.Error.DslError.t()}
   def transform(dsl_state) do
-    module = Transformer.get_persisted(dsl_state, :module)
-
-    dsl_state
-    |> Transformer.get_entities([:deck])
-    |> Stream.map(fn slide ->
-      slide |> Expand.slide() |> Result.map_error(&dsl_error(module, slide, &1))
-    end)
-    |> Result.collect()
-    |> Result.map_ok(&put_slides(dsl_state, &1))
-  end
-
-  defp put_slides(dsl_state, slides) do
-    Map.replace_lazy(dsl_state, [:deck], &Map.put(&1, :entities, slides))
-  end
-
-  defp dsl_error(module, slide, message) do
-    Spark.Error.DslError.exception(
-      module: module,
-      message: message,
-      path: [:deck, :slide] ++ List.wrap(slide.name)
-    )
+    with {:ok, slides} <- Dsl.map_slides(dsl_state, &Expand.slide/1),
+         do: {:ok, Dsl.put_slides(dsl_state, slides)}
   end
 end
