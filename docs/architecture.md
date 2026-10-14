@@ -824,8 +824,8 @@ An element is the content of a slide. These are the elements at this time:
 
 An element module has `use Expresso.Element`, and these parts:
 
-- A struct with a `__spark_metadata__` field, with the `at`, `on`, `steps` and `el`
-  fields of the overlays, and with the `class` field of the `class` option.
+- A struct with a `__spark_metadata__` field, with the `class` field of the `class`
+  option, and with the overlay fields from `Expresso.Overlay.fields/0`.
 - `get_assigns/1`, a callback of the behaviour `Expresso.Element`. It makes a map of
   assigns from the struct. The key `overlay` holds the attributes from
   `Expresso.Overlay.Render.attributes/1`.
@@ -842,6 +842,20 @@ copy of it. Before, `use Temple.Component` defined a copy in each element module
 The dispatch is on the module of a struct, and each element struct is the target of one
 Spark entity. A behaviour fits this dispatch. A protocol would need a `defimpl` block for
 each element, and the protocols would need consolidation in the build of the binary.
+
+The struct of an element adds the overlay fields to its own fields:
+
+```elixir
+defstruct [:class, :src, :alt, :width, :goto, __spark_metadata__: nil] ++
+            Expresso.Overlay.fields()
+```
+
+The overlay fields are `at`, `steps`, `el`, `effect`, `speed`, `morph`, `easing` and `on`.
+The overlay code reads each field by name with `Map.get/2`, so a struct without a field
+fails only at run time. Therefore one list gives the fields, and 29 structs take them from
+it: the 27 targets of the element entities, and `Expresso.Element.Lines` and
+`Expresso.Element.TocEntry`, which no entity makes. `Expresso.Overlay` depends on no
+module of Expresso, so the call at compile time adds no cycle.
 
 `Expresso.Template.render_elements/1` matches `%module{}` for each element. It calls
 `module.render/1` with the assigns from `Expresso.Element.assigns/1`. That function calls
@@ -1644,6 +1658,20 @@ block, is lost before the check, with no error.
 - A slide has a `steps` option and an `auto_reveal` option.
 - A list, a table, a chart and a toc have a `reveal` option and a `dim` option.
 - A code element has a `reveal` option with a list of lines, and a `dim` option.
+
+`Expresso.Extension` adds `@overlay_schema` to the schema of each element entity, with the
+options `at`, `effect`, `speed`, `easing` and `morph`, and it gives each one an `on` child.
+The extension is data that Spark and `Expresso.Builder` read, so it has no macro for this.
+`test/expresso/overlay_fields_test.exs` reads `Expresso.Extension.sections/0`, and it makes
+sure that each of the 27 element entities has these options and the `on` child, and that
+its struct has the fields of `Expresso.Overlay.fields/0`.
+
+To add an overlay option, do these steps:
+
+1. Add its schema to `@overlay_schema` in `Expresso.Extension`.
+2. Add its field to `Expresso.Overlay.fields/0`.
+3. Read the field in `Expresso.Overlay.Render`, and write its attribute or its rule.
+4. Give its meaning in `docs/overlays.md` and in `docs/reference/overlay-options.md`.
 
 A slide also has a `heading` option, a `notes` option and a `handout` option, and
 `Expresso.Slide.put_options_in_metadata/1` puts each into the metadata of the slide. The

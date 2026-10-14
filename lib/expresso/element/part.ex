@@ -11,15 +11,7 @@ defmodule Expresso.Element.Part do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :id,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :id,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 end

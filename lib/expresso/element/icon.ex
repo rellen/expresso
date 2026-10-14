@@ -20,22 +20,14 @@ defmodule Expresso.Element.Icon do
   @colors [:text, :muted, :accent, :success, :emphasis, :warning, :danger]
 
   defstruct [
-    :name,
-    :label,
-    :svg,
-    :class,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    size: "3em",
-    color: :text,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :name,
+              :label,
+              :svg,
+              :class,
+              size: "3em",
+              color: :text,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Return the roles that the `color` option takes

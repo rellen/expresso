@@ -30,26 +30,18 @@ defmodule Expresso.Element.Video do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :class,
-    :src,
-    :title,
-    :poster,
-    :captions,
-    :width,
-    :aspect,
-    :index,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    loop: true,
-    controls: false,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              :src,
+              :title,
+              :poster,
+              :captions,
+              :width,
+              :aspect,
+              :index,
+              loop: true,
+              controls: false,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   # The media type of each extension of a video file.
   @types %{".webm" => "video/webm", ".mp4" => "video/mp4"}

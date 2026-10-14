@@ -12,17 +12,9 @@ defmodule Expresso.Element.Series do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :name,
-    :values,
-    :class,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :name,
+              :values,
+              :class,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 end

@@ -28,26 +28,18 @@ defmodule Expresso.Element.Shape do
   @kinds [:rect, :ellipse, :line, :arrow]
 
   defstruct [
-    :class,
-    :kind,
-    :x,
-    :y,
-    :width,
-    :height,
-    :from,
-    :to,
-    :text,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    fill: false,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              :kind,
+              :x,
+              :y,
+              :width,
+              :height,
+              :from,
+              :to,
+              :text,
+              fill: false,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Return the kinds of a shape

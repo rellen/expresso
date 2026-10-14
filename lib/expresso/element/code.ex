@@ -70,31 +70,23 @@ defmodule Expresso.Element.Code do
   @type t :: %__MODULE__{}
 
   defstruct [
-    :class,
-    :lang,
-    :text,
-    :src,
-    :lines,
-    :reveal,
-    :highlight,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    dim: false,
-    relative: false,
-    trailing_comments: true,
-    wrap: false,
-    line_numbers: false,
-    whole_first: false,
-    first: 1,
-    on: [],
-    elements: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              :lang,
+              :text,
+              :src,
+              :lines,
+              :reveal,
+              :highlight,
+              dim: false,
+              relative: false,
+              trailing_comments: true,
+              wrap: false,
+              line_numbers: false,
+              whole_first: false,
+              first: 1,
+              elements: [],
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Read the source, and make the groups of lines from the `reveal` option

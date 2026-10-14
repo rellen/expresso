@@ -32,22 +32,14 @@ defmodule Expresso.Element.QrCode do
   @levels [:l, :m, :q, :h]
 
   defstruct [
-    :class,
-    :text,
-    :size,
-    :label,
-    :title,
-    :at,
-    :steps,
-    :el,
-    :effect,
-    :speed,
-    :morph,
-    :easing,
-    level: :m,
-    on: [],
-    __spark_metadata__: nil
-  ]
+              :class,
+              :text,
+              :size,
+              :label,
+              :title,
+              level: :m,
+              __spark_metadata__: nil
+            ] ++ Expresso.Overlay.fields()
 
   @doc """
   Return the error correction levels that the `level` option takes
