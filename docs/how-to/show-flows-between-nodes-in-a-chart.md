@@ -317,8 +317,45 @@ Each ribbon has the color of its node in the first column. With `reveal true`, t
 first. Then the ribbons of each node in the first column show at their own step. The `levels`
 option, a CSV file, frames and node entities work as in an alluvial chart.
 
-## Correct a loop
+## Show a loop
 
-A sankey goes in one direction. A flow back to an earlier node gives an error that names
-the loop, such as `the flows of a sankey make a loop: Plant → Store → Plant`. To correct the
-error, give the second copy of the node its own name, such as "Plant (returns)".
+Use a loop to show an amount that goes back to an earlier node, such as the steel that a mill
+makes again from scrap.
+
+1. Write the flows in the usual way.
+2. Put the flows from the start of the process first.
+
+```elixir
+defmodule Examples.ChartSankeyLoop do
+  use Expresso
+
+  slide "steel" do
+    heading "The loop of steel"
+
+    chart :sankey do
+      title "The steel of a region in a year, from the ore to the users and back"
+      value_label "kt"
+
+      flow "Ore", "Mill", 700
+      flow "Mill", "Products", 900
+      flow "Mill", "Scrap", 100
+      flow "Scrap", "Mill", 100
+      flow "Products", "Landfill", 350
+      flow "Products", "Recycling", 550
+      flow "Recycling", "Mill", 200
+      flow "Recycling", "Export", 350
+    end
+  end
+end
+
+Examples.ChartSankeyLoop
+```
+
+![A sankey of steel from the ore to the mill, the products, the landfill and the export, with two back links under the chart from the scrap and from the recycling to the mill](https://raw.githubusercontent.com/rellen/expresso/media/chart-sankey-loop.png)
+
+A flow back to an earlier node shows as a back link under the nodes. The order of the data
+sets which flow is a back link, so the flows from the start of the process must come first.
+For the rules, see [loops](../reference/chart-element.md#loops).
+
+A flow from a node to the same node gives an error. To show the same group at two points in
+time, use [an alluvial chart](#draw-an-alluvial-chart).

@@ -31,9 +31,11 @@ defmodule Expresso.Element.Chart.Sankey do
   nodes of one name have one color and one place in each column.
 
   A graph with a loop has no first column. `back_links/1` finds the links
-  that close a loop, the other links give the columns, and a back link goes
-  in a lane under the nodes. The frames of a chart share the columns, the order and the scale of the nodes,
-  as `layout_frames/2` gives them, and each frame is a layer that fades.
+  that close a loop. The layout finds the columns from the other links, and
+  a back link goes in a lane under the nodes. The frames of a chart share the
+  columns, the order and the scale of the nodes, as `layout_frames/3`
+  returns them. Each frame is a layer, and the opacity of the layers changes
+  from one frame to the next.
 
   `render/1` draws each series of the chart as a group. The group holds the
   links of the series and the nodes that show first with it. The node labels
@@ -146,8 +148,8 @@ defmodule Expresso.Element.Chart.Sankey do
 
   A depth-first search from each node, in the order of the data, follows
   the links in their order. A link to a node on the path of the search
-  closes a loop. The graph without these links has no loop, so it gives the
-  columns.
+  closes a loop. The graph without these links has no loop, so `columns/2`
+  uses it to find the columns.
 
       iex> links = [%{from: "A", to: "B"}, %{from: "B", to: "C"}, %{from: "C", to: "A"}]
       iex> Expresso.Element.Chart.Sankey.back_links(links)
@@ -240,11 +242,11 @@ defmodule Expresso.Element.Chart.Sankey do
   @doc """
   Return the column of each node, from 0
 
-  A node with no link into it is in column 0, and each other node is one
-  column after its furthest source. A link that closes a loop, as
-  `back_links/1` finds it, does not count. `pinned` gives the column of some nodes,
-  from 0, and the columns after them follow from them. A node of an alluvial
-  chart holds its column.
+  A node with no link into it is in column 0. Each other node is one column
+  after its last source. A link that closes a loop, as `back_links/1` finds
+  it, does not count. `pinned` holds the columns of some nodes, from 0, and
+  the nodes after them move to follow them. A node of an alluvial chart
+  holds its column.
 
       iex> links = [%{from: "A", to: "B"}, %{from: "B", to: "C"}, %{from: "A", to: "C"}]
       iex> Expresso.Element.Chart.Sankey.columns(links)
@@ -343,8 +345,8 @@ defmodule Expresso.Element.Chart.Sankey do
 
   # The lane of each back link, from 0 next to the nodes. A back link goes
   # from a column to the same column or to an earlier column. A shorter back
-  # link has a lane nearer to the nodes, so its turns are inside the turns of
-  # a longer back link.
+  # link has a lane nearer to the nodes. Thus its turns are inside the turns
+  # of a longer back link.
   defp lanes(links, columns) do
     links
     |> Enum.filter(&(columns[&1.to] <= columns[&1.from]))
@@ -433,8 +435,8 @@ defmodule Expresso.Element.Chart.Sankey do
     Map.merge(into, out, fn _node, a, b -> max(a, b) end)
   end
 
-  # The room at the right of the last column for its labels: the widest of
-  # them in each frame, at most a third of the width.
+  # The space at the right of the last column for its labels: the width of
+  # the widest label in the frames, and a maximum of one third of the width.
   defp right(sizes, shared) do
     widest =
       for size <- sizes,
@@ -506,8 +508,9 @@ defmodule Expresso.Element.Chart.Sankey do
 
   # The place of each link at its two nodes. The links out of a node have
   # the order of their targets from the top, and the links into a node have
-  # the order of their sources. The back links are at the bottom of a node,
-  # and the back link with the lowest lane is the highest of them.
+  # the order of their sources. The back links are at the bottom of a node.
+  # Among them, the back link in the lane farthest from the nodes is at the
+  # top.
   defp place(links, nodes, shared) do
     scale = shared.scale
     center = fn name -> nodes[name].y + nodes[name].height / 2 end
@@ -558,8 +561,8 @@ defmodule Expresso.Element.Chart.Sankey do
   defp lane(link, shared), do: shared.lanes[{link.from, link.to}]
 
   # The distance from a node to the turn of each back link at that node. A
-  # back link lower at the node turns nearer to it, so the turns do not
-  # cross.
+  # lower back link at the node has its turn nearer to the node, so the
+  # turns do not cross.
   defp turns(stacks, side, shared) do
     for {_node, stack} <- stacks, reduce: %{} do
       turns ->
