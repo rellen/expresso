@@ -101,7 +101,19 @@ defmodule Expresso.E2E.MorphTest do
   end
 
   defp started(page), do: wait_for(page, "(#{@view_transition}).length > 0")
-  defp settle(page), do: wait_for(page, "(#{@view_transition}).length === 0")
+
+  # Wait for the end of the view transition. A transition names its elements
+  # before its animations start, and it removes the names at its end. Thus a
+  # transition with no animation and with names has not started yet. A key
+  # press in that time stops it, and its end then removes the names of the
+  # next transition.
+  defp settle(page) do
+    wait_for(
+      page,
+      "(#{@view_transition}).length === 0 && " <>
+        "document.querySelectorAll('[style*=view-transition-name]').length === 0"
+    )
+  end
 
   defp navigate(page, hash) do
     js(page, "location.hash = '#{hash}'")
