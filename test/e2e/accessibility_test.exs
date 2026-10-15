@@ -23,8 +23,17 @@ defmodule Expresso.E2E.AccessibilityTest do
       end
 
       table do
+        caption "The values"
+        header true
+        row_header true
         row ["Name", "Value"]
         row ["a", "1"]
+      end
+
+      table do
+        caption "The other values"
+        caption_hidden true
+        row ["b", "2"]
       end
 
       callout :tip do
