@@ -80,12 +80,6 @@ defmodule Expresso.Presenter.InterpreterTest do
     test "an unknown key does not change the state" do
       assert effects(at(2, 2), "x") == {at(2, 2), [], false}
     end
-
-    test "upcoming returns the next step, and nil at the end of the deck" do
-      assert @three |> Interpreter.upcoming(at(2, 2)) == at(2, 3)
-      assert @three |> Interpreter.upcoming(at(2, 3)) == at(3, 1)
-      assert @three |> Interpreter.upcoming(at(3, 2)) == nil
-    end
   end
 
   describe "the views" do

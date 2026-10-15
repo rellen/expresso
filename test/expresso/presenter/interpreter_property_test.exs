@@ -89,10 +89,16 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end)
   end
 
-  defp upcoming_all(program, state) do
-    state
-    |> Stream.iterate(&Interpreter.upcoming(program, &1))
-    |> Enum.take_while(& &1)
+  # Each state from `state` to the last step, with the key j.
+  defp forward_all(program, state) do
+    Stream.unfold(state, fn
+      nil ->
+        nil
+
+      state ->
+        ahead = run(program, state, {:key, "j"})
+        {state, if(ahead != state, do: ahead)}
+    end)
   end
 
   property "a reachable state stays inside the deck" do
@@ -104,32 +110,23 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "upcoming goes through each step of the deck one time, in sequence" do
+  property "the key j goes through each step of the deck one time, in sequence" do
     check all program <- decks(), max_runs: @runs do
-      indexes = program |> upcoming_all(Interpreter.initial(program)) |> Enum.map(& &1.index)
+      indexes = program |> forward_all(Interpreter.initial(program)) |> Enum.map(& &1.index)
       assert indexes == Enum.to_list(0..(tuple_size(program.steps) - 1))
     end
   end
 
-  property "a forward key and then k return to the same step, and a forward key that changes nothing is at the last step" do
+  property "a forward key and then k return to the same step, and a forward key changes nothing only at the last step" do
     check all {program, state} <- shown(),
               key <- member_of(@forward),
               max_runs: @runs do
       state = %{state | view: :present, overview: false, digits: ""}
       ahead = run(program, state, {:key, key})
-
-      if ahead == state do
-        assert Interpreter.upcoming(program, state) == nil
-      else
-        assert run(program, ahead, {:key, "k"}).index == state.index
-      end
-    end
-  end
-
-  property "upcoming returns nil only at the last step of the last slide" do
-    check all {program, state} <- reachable(), max_runs: @runs do
       last = state.index == tuple_size(program.steps) - 1
-      assert Interpreter.upcoming(program, state) == nil == last
+
+      assert ahead == state == last
+      unless last, do: assert(run(program, ahead, {:key, "k"}).index == state.index)
     end
   end
 
