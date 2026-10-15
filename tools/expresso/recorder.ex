@@ -11,7 +11,8 @@ defmodule Expresso.Recorder do
   animation to the time of each frame, and it takes a screenshot of each
   frame. The time of the computer then has no effect on the frames. The clock
   of the page is also fixed, and an action can move it, so the timer of the
-  speaker view shows the same time on each run.
+  speaker view shows the same time on each run. Chromium can refuse a
+  screenshot, and `capture/2` then takes it one more time.
 
   The environment variable `EXPRESSO_CHROMIUM` gives the path of a Chromium
   executable, as it does for the browser tests.
@@ -140,15 +141,58 @@ defmodule Expresso.Recorder do
 
   # The picture of the page, from its top.
   defp shot(page, height) do
-    {:ok, png} =
-      Page.screenshot(page.guid,
-        timeout: @timeout,
-        type: "png",
-        full_page: true,
-        clip: %{x: 0, y: 0, width: 1280, height: height}
-      )
+    capture(
+      fn ->
+        Page.screenshot(page.guid,
+          timeout: @timeout,
+          type: "png",
+          full_page: true,
+          clip: %{x: 0, y: 0, width: 1280, height: height}
+        )
+      end,
+      fn -> paint(page) end
+    )
+  end
 
-    Base.decode64!(png)
+  @doc """
+  Return the PNG of a screenshot, and try one more time when Chromium refuses it
+
+  `screenshot` returns the result of `PlaywrightEx.Page.screenshot/2`. Chromium
+  can refuse a screenshot with the message `Unable to capture screenshot`. The
+  function then calls `wait`, which waits until the page paints again, and it
+  calls `screenshot` one more time. A second refusal or a different error
+  raises.
+  """
+  @spec capture((-> {:ok, String.t()} | {:error, term()}), (-> term())) :: binary()
+  def capture(screenshot, wait), do: capture(screenshot, wait, 2)
+
+  defp capture(screenshot, wait, tries) do
+    case screenshot.() do
+      {:ok, png} ->
+        Base.decode64!(png)
+
+      {:error, error} ->
+        if tries > 1 and refused?(error) do
+          wait.()
+          capture(screenshot, wait, tries - 1)
+        else
+          raise "the screenshot failed: #{inspect(error)}"
+        end
+    end
+  end
+
+  defp refused?(%{error: %{message: message}}), do: message =~ "Unable to capture screenshot"
+  defp refused?(_error), do: false
+
+  # Wait for two animation frames, so the compositor paints the page.
+  defp paint(page) do
+    evaluate(page, """
+    async () => {
+      for (let count = 0; count < 2; count++) {
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+    }
+    """)
   end
 
   defp press(page, key) do
