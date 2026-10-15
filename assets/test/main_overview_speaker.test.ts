@@ -4,7 +4,7 @@ import { fakePage, fakeWindow, lastPosition } from "./page.ts";
 import { position } from "./messages.ts";
 
 // The speaker view of three slides of one step each. The present view is the
-// window that opened it.
+// window that opened it. The tests run in sequence on the same page.
 const audience = fakeWindow();
 const page = fakePage([1, 1, 1], { search: "?speaker", opener: audience });
 const { body } = page;

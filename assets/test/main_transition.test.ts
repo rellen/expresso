@@ -3,8 +3,9 @@ import assert from "node:assert/strict";
 import { fakePage } from "./page.ts";
 import { nth } from "./nth.ts";
 
-// Four slides. Slide 2 has two steps. The renderer gives the kinds fade,
-// slide, none and zoom, and the browser has the View Transitions API.
+// Four slides. Slide 2 has two steps. The renderer gives the kinds fade, slide,
+// none and zoom, and the browser has the View Transitions API. The tests run in
+// sequence on the same page.
 const page = fakePage([1, 2, 1, 1], {
   transitions: ["fade", "slide", "none", "zoom"],
   viewTransitions: true,

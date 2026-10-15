@@ -4,6 +4,7 @@ import { fakePage } from "./page.ts";
 import { nth } from "./nth.ts";
 
 // The address holds `?all`, so the handout view and a print show every step.
+// The tests run in sequence on the same page.
 const page = fakePage([1, 2], { search: "?all" });
 
 before(async () => {
