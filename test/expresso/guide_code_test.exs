@@ -1,6 +1,8 @@
 defmodule Expresso.GuideCodeTest do
   use ExUnit.Case, async: true
 
+  alias Expresso.Test.DeckFiles
+
   # The Elixir code blocks of a page, in order.
   defp blocks(page) do
     for [code] <- Regex.scan(~r/```elixir\n(.*?)```/s, File.read!(page), capture: :all_but_first),
@@ -13,8 +15,15 @@ defmodule Expresso.GuideCodeTest do
     deck
   end
 
+  # The first code block is the example deck `talk_from_data.exs`, so the test
+  # reads the deck of that file, as `ExamplesTest` does.
   test "each code block of the guide to a deck from data makes the same deck" do
-    [dsl, builder] = "docs/how-to/make-a-deck-from-data.md" |> blocks() |> Enum.map(&deck/1)
+    file = "examples/animations/talk_from_data.exs"
+    [code, builder_code] = blocks("docs/how-to/make-a-deck-from-data.md")
+    assert code == File.read!(file)
+
+    {:ok, dsl} = file |> DeckFiles.eval() |> Expresso.to_deck()
+    builder = deck(builder_code)
 
     assert Expresso.Deck.render(dsl) == Expresso.Deck.render(builder)
     assert Enum.map(dsl.slides, & &1.metadata.max_step) == [3, 3]
@@ -91,8 +100,7 @@ defmodule Expresso.GuideCodeTest do
     [warnings] = Regex.run(~r/```text\n(.*?)\n```/s, text, capture: :all_but_first)
     for line <- String.split(warnings, "\n"), do: assert(output =~ line <> "\n", line)
 
-    {value, _bindings} = Code.eval_file("examples/animations/theme_map.exs")
-    {:ok, deck} = Expresso.to_deck(value)
+    {:ok, deck} = "examples/animations/theme_map.exs" |> DeckFiles.eval() |> Expresso.to_deck()
     fixed = Map.merge(start, start |> Expresso.Palette.of() |> Expresso.Palette.suggestions())
 
     assert deck.metadata.theme == fixed
