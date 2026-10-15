@@ -87,6 +87,25 @@ needs a change to the other three.
 Do not commit to `main` and do not push to `main`. Make a branch, push the branch, and
 open a pull request. The maintainer merges it.
 
+When a change needs more than one pull request, open the pull requests as a stack:
+
+1. Base the first pull request on `main`.
+2. Base each next pull request on the branch of the pull request before it.
+3. Link the pull requests as a native GitHub stack, in order from the bottom to the top:
+
+   ```sh
+   gh api -X POST 'repos/{owner}/{repo}/stacks' --input - <<'EOF'
+   {"pull_requests": [101, 102, 103]}
+   EOF
+   ```
+
+4. To add a pull request to an open stack, send the same body to
+   `repos/{owner}/{repo}/stacks/<number>/add`.
+
+The API refuses a stack when the base of a pull request is not the branch of the pull
+request before it. `gh api` gets to this endpoint, so you do not need the `gh stack`
+extension. The maintainer merges the stack from the bottom up.
+
 `.github/workflows/check.yml` runs each command of "Build and test" for a pull request, in
 parallel jobs. Do not wait for that result. Run the commands in "Build and test"
 before each commit, because the session gives the same versions as the workflow. Tell the
