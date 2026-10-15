@@ -115,8 +115,6 @@ defmodule Expresso.E2E.ChartHierarchyTest do
   end
 
   describe "with motion" do
-    # Each change lasts 2 seconds, so the test can read the page in the middle
-    # of a change.
     setup %{browser: browser, tmp_dir: tmp_dir} do
       {:ok, context} =
         Browser.new_context(browser.guid,
@@ -134,21 +132,18 @@ defmodule Expresso.E2E.ChartHierarchyTest do
       slow: page,
       url: url
     } do
-      # The address shows the slide with a transition, and a key during that
-      # transition changes the step with no motion.
       page = open(page, url <> "#4")
-      Process.sleep(1000)
-      js(page, "document.documentElement.style.setProperty('--dur', '2s')")
-      press(page, "j")
-      Process.sleep(800)
+      wait_for_position(page, "4.1")
+      slow_motion(page, 10)
 
-      # The arcs grow, and no name shows.
+      # The arcs grow for 10 s, and then the names fade in.
+      press(page, "j")
+      pause_animations(page, "#slide-4", 3000)
       [arc | _rest] = values(page, 4, ".chart-ring", "--chart-v")
       assert arc > 0
       assert Enum.all?(values(page, 4, ".chart-label", "opacity"), &(&1 == 0))
 
-      # After the growth and the fade, the names that fit show.
-      Process.sleep(3600)
+      finish_animations(page, "#slide-4")
       assert Enum.any?(values(page, 4, ".chart-label", "opacity"), &(&1 == 1))
     end
   end

@@ -112,8 +112,6 @@ defmodule Expresso.E2E.ChartTest do
   end
 
   describe "with motion" do
-    # Each change lasts 2 seconds, so the test can read the page in the middle
-    # of a change.
     setup %{browser: browser, tmp_dir: tmp_dir} do
       {:ok, context} =
         Browser.new_context(browser.guid,
@@ -124,16 +122,19 @@ defmodule Expresso.E2E.ChartTest do
 
       on_exit(fn -> BrowserContext.close(context.guid, timeout: 10_000) end)
       {:ok, page} = BrowserContext.new_page(context.guid, timeout: 10_000)
-      url = render(Deck, tmp_dir)
-      page = open(page, url)
-      js(page, "document.documentElement.style.setProperty('--dur', '2s')")
-      %{slow: page, url: url}
+      %{slow: page, url: render(Deck, tmp_dir)}
     end
 
-    test "a bar and its number pass through the values between two frames", %{slow: page} do
+    test "a bar and its number pass through the values between two frames", %{
+      slow: page,
+      url: url
+    } do
+      page = page |> open(url) |> slow_motion(10)
       first = property(page, 1, "path.chart-bar", "--chart-v")
       press(page, "j")
+      pause_animations(page, "#slide-1", 3000)
 
+      # The presenter writes the number of a paused count at the next frame.
       wait_for(page, """
       (() => {
         const value = Number(document.querySelector("#slide-1 .chart-count").textContent);
@@ -143,6 +144,7 @@ defmodule Expresso.E2E.ChartTest do
 
       between = property(page, 1, "path.chart-bar", "--chart-v")
       assert between < first
+      finish_animations(page, "#slide-1")
       wait_for(page, ~s|document.querySelector("#slide-1 .chart-count").textContent === "30"|)
       assert property(page, 1, "path.chart-bar", "--chart-v") < between
     end
@@ -151,14 +153,12 @@ defmodule Expresso.E2E.ChartTest do
       slow: page,
       url: url
     } do
-      # The address shows the slide with a transition, and a key during that
-      # transition changes the step with no motion.
       page = open(page, url <> "#2")
-      Process.sleep(1000)
-      js(page, "document.documentElement.style.setProperty('--dur', '2s')")
+      wait_for_position(page, "2.1")
+      slow_motion(page, 10)
       start = property(page, 2, ".chart-dot", "--chart-v")
       press(page, "j")
-      Process.sleep(600)
+      pause_animations(page, "#slide-2", 3000)
       between = property(page, 2, ".chart-dot", "--chart-v")
       assert between < start
 
@@ -177,8 +177,7 @@ defmodule Expresso.E2E.ChartTest do
       assert_in_delta x1, x2, 0.01
       assert_in_delta y1, y2, 0.01
 
-      # The dot was between its two places when the test read the segments.
-      Process.sleep(2000)
+      finish_animations(page, "#slide-2")
       assert property(page, 2, ".chart-dot", "--chart-v") < between
     end
   end

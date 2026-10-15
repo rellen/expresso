@@ -11,7 +11,9 @@ defmodule Expresso.E2E do
   Each module starts one Playwright connection and one browser. Each test gets
   a new browser context and a new page, so no state goes from one test to the
   next. The context asks for reduced motion, and the theme then sets each
-  duration to zero. Therefore a test can read a style right after a key.
+  duration to zero. Therefore a test can read a style right after a key. A
+  test with motion makes its own context, and it reads a change with
+  `slow_motion/2`, `pause_animations/3` and `finish_animations/2`.
 
   The environment variable `EXPRESSO_CHROMIUM` gives the path of a Chromium
   executable. Without it, Playwright uses its own browser, which
@@ -197,20 +199,20 @@ defmodule Expresso.E2E do
   # `String.to_float/1` needs a digit before and after the point.
   defp normal(number), do: if(String.contains?(number, "."), do: number, else: number <> ".0")
 
+  @position """
+  (() => {
+    const slide = [...document.querySelectorAll("section.slide")]
+      .find((section) => section.style.display === "flex");
+    return slide.id.replace("slide-", "") + "." + slide.dataset.step;
+  })()
+  """
+
   @doc """
   Give the position of the present view, such as `"2.3"`: the number of the
   slide that shows and its step
   """
   @spec position(map()) :: String.t()
-  def position(page) do
-    js(page, """
-    (() => {
-      const slide = [...document.querySelectorAll("section.slide")]
-        .find((section) => section.style.display === "flex");
-      return slide.id.replace("slide-", "") + "." + slide.dataset.step;
-    })()
-    """)
-  end
+  def position(page), do: js(page, @position)
 
   @doc """
   Give the pages of the handout view that a reader sees, such as `["1.1", "2.3"]`
@@ -222,6 +224,93 @@ defmodule Expresso.E2E do
       .filter((page) => getComputedStyle(page).display !== "none")
       .map((page) => page.dataset.slide + "." + page.dataset.step)
     """)
+  end
+
+  @doc """
+  Wait until the present view shows a position, such as `"2.1"`
+
+  With motion, the presenter changes the slide in a view transition, and the
+  browser applies the change after the key press returns.
+  """
+  @spec wait_for_position(map(), String.t()) :: map()
+  def wait_for_position(page, position),
+    do: wait_for(page, "#{@position} === #{JSON.encode!(position)}")
+
+  @doc """
+  Wait until the elements of a selector show the texts of a list, in document
+  order
+  """
+  @spec wait_for_texts(map(), String.t(), [String.t()]) :: map()
+  def wait_for_texts(page, selector, texts) do
+    wait_for(page, """
+    JSON.stringify(Array.from(document.querySelectorAll(#{JSON.encode!(selector)}),
+      (element) => element.textContent)) === JSON.stringify(#{JSON.encode!(texts)})
+    """)
+  end
+
+  @doc """
+  Give each change of a page a duration in seconds, also on an element with
+  the option `speed`
+
+  A long change cannot end before `pause_animations/3` pauses it, also when
+  the browser stops for some seconds.
+  """
+  @spec slow_motion(map(), number()) :: map()
+  def slow_motion(page, seconds) do
+    js(page, """
+    document.head.append(Object.assign(document.createElement("style"), {
+      textContent: ":root, [data-speed] { --dur: #{seconds}s !important; }"
+    }))
+    """)
+
+    page
+  end
+
+  # The animations of each element of a selector and of their descendants.
+  defp animations_js(selector) do
+    """
+    [...document.querySelectorAll(#{JSON.encode!(selector)})]
+      .flatMap((element) => element.getAnimations({ subtree: true }))
+    """
+  end
+
+  @doc """
+  Give the number of animations of the elements of a selector and of their
+  descendants
+  """
+  @spec animations(map(), String.t()) :: non_neg_integer()
+  def animations(page, selector), do: js(page, "#{animations_js(selector)}.length")
+
+  @doc """
+  Pause each animation of the elements of a selector and of their descendants
+  at a time in milliseconds
+
+  The function waits until an animation exists. The page then keeps the state
+  of that time, so a test can read a change before its end on a slow computer
+  too. `finish_animations/2` moves the animations to their end.
+  """
+  @spec pause_animations(map(), String.t(), number()) :: map()
+  def pause_animations(page, selector, time) do
+    wait_for(page, """
+    (() => {
+      const animations = #{animations_js(selector)};
+      for (const animation of animations) {
+        animation.pause();
+        animation.currentTime = #{time};
+      }
+      return animations.length > 0;
+    })()
+    """)
+  end
+
+  @doc """
+  Move each animation of the elements of a selector and of their descendants
+  to its end
+  """
+  @spec finish_animations(map(), String.t()) :: map()
+  def finish_animations(page, selector) do
+    js(page, "#{animations_js(selector)}.forEach((animation) => animation.finish())")
+    page
   end
 
   @doc """
