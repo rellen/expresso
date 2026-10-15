@@ -1,0 +1,32 @@
+{
+  "charts": [
+    {"decimals":0,"labels":["10","20"],"numbers":[10,20]},
+    {"decimals":1,"labels":["30","15.5"],"numbers":[30,15.5]},
+    {"decimals":2,"labels":["12.25","3"],"numbers":[12.25,3]},
+    {"decimals":1,"labels":["-5","2.5"],"numbers":[-5,2.5]},
+    {"decimals":1,"labels":["0.1","0.2","0.3"],"numbers":[0.1,0.2,0.3]},
+    {"decimals":2,"labels":["1250","1250.75"],"numbers":[1250,1250.75]},
+    {"decimals":0,"labels":["1234567","7654321"],"numbers":[1234567,7654321]},
+    {"decimals":1,"labels":["1234567.5","2"],"numbers":[1234567.5,2]},
+    {"decimals":3,"labels":["99.999","100"],"numbers":[99.999,100]},
+    {"decimals":3,"labels":["1.005","2.675"],"numbers":[1.005,2.675]},
+    {"decimals":2,"labels":["-0.5","0.25"],"numbers":[-0.5,0.25]},
+    {"decimals":6,"labels":["0.123457","1"],"numbers":[0.1234567,1]}
+  ],
+  "stats": [
+    {"decimals":0,"group":true,"text":"1,250","value":1250},
+    {"decimals":0,"group":true,"text":"1,250","value":1249.6},
+    {"decimals":0,"group":true,"text":"1,250","value":1249.5},
+    {"decimals":0,"group":false,"text":"1250","value":1250},
+    {"decimals":2,"group":true,"text":"-1,234,567.50","value":-1234567.5},
+    {"decimals":0,"group":false,"text":"1234567","value":1234567},
+    {"decimals":2,"group":true,"text":"1,000.00","value":999.999},
+    {"decimals":2,"group":true,"text":"0.00","value":-0.001},
+    {"decimals":0,"group":true,"text":"-1","value":-0.5},
+    {"decimals":0,"group":true,"text":"12","value":12},
+    {"decimals":2,"group":true,"text":"12.00","value":12},
+    {"decimals":2,"group":true,"text":"12,345.67","value":12345.675},
+    {"decimals":2,"group":true,"text":"0.13","value":0.125},
+    {"decimals":1,"group":false,"text":"4.2","value":4.2}
+  ]
+}

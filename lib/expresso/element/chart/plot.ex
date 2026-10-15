@@ -80,6 +80,30 @@ defmodule Expresso.Element.Chart.Plot do
   end
 
   @doc """
+  Return the most decimals of the labels of a list of numbers
+
+  The renderer writes this number in `data-decimals` of a number that
+  counts. The script then writes each frame of the count with these decimals
+  and with no zero at the end of the fraction, as `label/1` does.
+
+      iex> Expresso.Element.Chart.Plot.decimals([10, 12.5, 3.25])
+      2
+      iex> Expresso.Element.Chart.Plot.decimals([1250, 7])
+      0
+  """
+  @spec decimals([number(), ...]) :: non_neg_integer()
+  def decimals(numbers) do
+    numbers
+    |> Enum.map(fn number ->
+      case number |> label() |> String.split(".") do
+        [_integer, fraction] -> String.length(fraction)
+        [_integer] -> 0
+      end
+    end)
+    |> Enum.max()
+  end
+
+  @doc """
   Return the path of a bar from the base line to a value line, with round
   corners at the end of the value
 

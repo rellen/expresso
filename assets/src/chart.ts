@@ -41,7 +41,8 @@ function counts(): (HTMLElement | SVGTSpanElement)[] {
 
 // Write a number as `Expresso.Element.Chart.Plot.label/1` does: with no more
 // decimals than the values of the chart, and with no zero at the end of the
-// fraction.
+// fraction. `assets/test/fixtures/numbers.json` holds labels from Elixir, and
+// the tests compare this function with them.
 export function format(value: number, decimals: number): string {
   const text = value.toFixed(decimals);
   const trimmed = text.includes(".") ? text.replace(/\.?0+$/, "") : text;
@@ -50,6 +51,8 @@ export function format(value: number, decimals: number): string {
 
 // Write a number as `Expresso.Element.Stat.format/3` does: with each decimal,
 // and with a comma between each group of three digits when `group` is true.
+// The tests compare this function with the texts from Elixir in
+// `assets/test/fixtures/numbers.json`.
 export function formatStat(
   value: number,
   decimals: number,

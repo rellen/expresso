@@ -788,6 +788,27 @@ Sobelow gives a warning for `Phoenix.HTML.raw/1`. When the input is safe, put a
 Prettier formats the files in `assets/`. `package.json` pins the version, and
 `npm install` gives the command. Run `npm run format`, which is not one of the checks.
 
+### The fixture of the number formats
+
+`format` and `formatStat` in `assets/src/chart.ts` write the number of a count at each
+frame. They copy `Expresso.Element.Chart.Plot.label/1` and
+`Expresso.Element.Stat.format/3`, so Git holds numbers and their texts from Elixir in
+`assets/test/fixtures/numbers.json`. `assets/test/chart.test.ts` compares the two functions
+with the file.
+
+`Expresso.Test.NumberFixtures` makes the file, and `test/expresso/number_fixtures_test.exs`
+fails when the file does not agree with it. After a change to a format in Elixir, do these
+steps:
+
+1. Write the file again:
+
+   ```sh
+   EXPRESSO_FIXTURES=write mix test test/expresso/number_fixtures_test.exs
+   ```
+
+2. Run `npm test`, and change the function of the script until the test passes.
+3. Commit the file with the change.
+
 ### The tables of keys
 
 `README.md` holds a table of keys for each mode, and `Expresso.Test.KeyTables` makes each
