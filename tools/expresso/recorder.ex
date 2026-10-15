@@ -12,16 +12,20 @@ defmodule Expresso.Recorder do
   frame. The time of the computer then has no effect on the frames. The clock
   of the page is also fixed, and an action can move it, so the timer of the
   speaker view shows the same time on each run. Chromium can refuse a
-  screenshot, and `capture/2` then takes it one more time.
+  screenshot, and the recorder then records the example again in a new page.
 
   The environment variable `EXPRESSO_CHROMIUM` gives the path of a Chromium
   executable, as it does for the browser tests.
   """
 
-  alias Expresso.Recorder.Frames
+  alias Expresso.Recorder.{Frames, RefusedError}
   alias PlaywrightEx.{Browser, BrowserContext, Connection, Frame, Page}
 
   @timeout 30_000
+
+  # The runs of an example, and the time before a new run, in milliseconds.
+  @tries 3
+  @pause 1000
 
   # The time of the clock of the page at the start of each example.
   @epoch DateTime.to_unix(~U[2026-01-01 09:00:00Z], :millisecond)
@@ -91,9 +95,49 @@ defmodule Expresso.Recorder do
   height of each frame, in the layout of a window of 1280 by 720 pixels. A
   height that is more than the height of the window reaches below the window,
   so a still of the handout view shows several pages.
+
+  When Chromium refuses a screenshot, the function waits one second and
+  records the example again in a new page, up to three runs in total. It
+  writes a line for each new run.
   """
   @spec record(t(), String.t(), [action()], pos_integer()) :: [frame(), ...]
   def record(recorder, url, actions, height) do
+    retry(
+      fn -> record_once(recorder, url, actions, height) end,
+      fn ->
+        Mix.shell().info(
+          "#{Path.basename(url)}: Chromium refused a screenshot. " <>
+            "The recorder records the example again in a new page."
+        )
+
+        Process.sleep(@pause)
+      end,
+      @tries
+    )
+  end
+
+  @doc """
+  Run `attempt`, and run it again when Chromium refuses a screenshot
+
+  `attempt` records an example in a new page. When it raises
+  `Expresso.Recorder.RefusedError`, the function calls `wait` and runs
+  `attempt` again, up to `tries` runs in total. A different error, or a
+  refusal in the last run, raises.
+  """
+  @spec retry((-> result), (-> term()), pos_integer()) :: result when result: term()
+  def retry(attempt, wait, tries) do
+    attempt.()
+  rescue
+    error in RefusedError ->
+      if tries > 1 do
+        wait.()
+        retry(attempt, wait, tries - 1)
+      else
+        reraise error, __STACKTRACE__
+      end
+  end
+
+  defp record_once(recorder, url, actions, height) do
     {:ok, page} = BrowserContext.new_page(recorder.context.guid, timeout: @timeout)
 
     try do
@@ -141,59 +185,39 @@ defmodule Expresso.Recorder do
 
   # The picture of the page, from its top.
   defp shot(page, height) do
-    capture(
-      fn ->
-        Page.screenshot(page.guid,
-          timeout: @timeout,
-          type: "png",
-          full_page: true,
-          clip: %{x: 0, y: 0, width: 1280, height: height}
-        )
-      end,
-      fn -> paint(page) end
-    )
+    capture(fn ->
+      Page.screenshot(page.guid,
+        timeout: @timeout,
+        type: "png",
+        full_page: true,
+        clip: %{x: 0, y: 0, width: 1280, height: height}
+      )
+    end)
   end
 
   @doc """
-  Return the PNG of a screenshot, and try one more time when Chromium refuses it
+  Return the PNG of a screenshot
 
-  `screenshot` returns the result of `PlaywrightEx.Page.screenshot/2`. Chromium
-  can refuse a screenshot with the message `Unable to capture screenshot`. The
-  function then calls `wait`, which waits until the page paints again, and it
-  calls `screenshot` one more time. A second refusal or a different error
-  raises.
+  `screenshot` returns the result of `PlaywrightEx.Page.screenshot/2`. When
+  Chromium refuses the screenshot with the message `Unable to capture
+  screenshot`, the function raises `Expresso.Recorder.RefusedError`. A
+  different error raises a `RuntimeError`.
   """
-  @spec capture((-> {:ok, String.t()} | {:error, term()}), (-> term())) :: binary()
-  def capture(screenshot, wait), do: capture(screenshot, wait, 2)
-
-  defp capture(screenshot, wait, tries) do
+  @spec capture((-> {:ok, String.t()} | {:error, term()})) :: binary()
+  def capture(screenshot) do
     case screenshot.() do
       {:ok, png} ->
         Base.decode64!(png)
 
       {:error, error} ->
-        if tries > 1 and refused?(error) do
-          wait.()
-          capture(screenshot, wait, tries - 1)
-        else
-          raise "the screenshot failed: #{inspect(error)}"
-        end
+        if refused?(error),
+          do: raise(RefusedError, error: error),
+          else: raise("the screenshot failed: #{inspect(error)}")
     end
   end
 
   defp refused?(%{error: %{message: message}}), do: message =~ "Unable to capture screenshot"
   defp refused?(_error), do: false
-
-  # Wait for two animation frames, so the compositor paints the page.
-  defp paint(page) do
-    evaluate(page, """
-    async () => {
-      for (let count = 0; count < 2; count++) {
-        await new Promise((resolve) => requestAnimationFrame(resolve));
-      }
-    }
-    """)
-  end
 
   defp press(page, key) do
     send!(page, :keyboard_press, %{key: key})
