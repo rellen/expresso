@@ -178,6 +178,20 @@ browser. `playwright_ex` is the Elixir client, and it starts the driver of
 is the case template. It starts one browser for each module and a new context for each
 test, and it gives the helpers, such as `press/2`, `position/1` and `pdf_pages/1`.
 
+A key press returns before the presenter applies the step. The presenter applies the
+step inside `document.startViewTransition`, and the browser runs that update later. On a
+slow computer, such as a run of `mix check` that builds the release at the same time, the
+update can come more than a second later. Therefore a test waits for a condition, and not
+for a time:
+
+- Wait for the step with `wait_for/2`, such as the position of the slide or the text of an
+  element.
+- To read the middle of an animation, wait until the element has the animation, then pause
+  it and set its `currentTime`. `test/e2e/stat_test.exs` pauses the count of a stat at half
+  its time, and the presenter then writes the middle value.
+- Do not read a value after `Process.sleep/1`. A test that did so in
+  `test/e2e/stat_test.exs` read the value of the HTML when the step came late.
+
 The variable `EXPRESSO_CHROMIUM` gives the path of a Chromium executable. A remote session
 has no browser at the path of Playwright, so the hook sets the variable to the Chromium
 of the container. Without the variable, Playwright uses its own browser:
