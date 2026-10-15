@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { fakePage } from "./page.ts";
 
 // A deck of a slide with one step and a slide with two steps. The renderer
-// gives each slide a name for a screen reader in `aria-label`.
+// gives each slide a name for a screen reader in `aria-label`. The tests run in
+// sequence on the same page.
 const page = fakePage([1, 2]);
 page.slides[0]?.setAttribute("aria-label", "Slide 1 of 2: Hello");
 page.slides[1]?.setAttribute("aria-label", "Slide 2 of 2");

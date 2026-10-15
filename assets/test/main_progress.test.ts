@@ -4,7 +4,7 @@ import { fakePage } from "./page.ts";
 
 // A deck that hides the progress bar: the renderer writes
 // `data-progress="false"` on the `body`, and the program starts with no
-// progress bar.
+// progress bar. The tests run in sequence on the same page.
 const page = fakePage([1, 2], { progress: "false" });
 
 before(async () => {

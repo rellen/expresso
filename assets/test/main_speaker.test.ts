@@ -6,6 +6,7 @@ import { position } from "./messages.ts";
 
 // The speaker view of a deck with two slides. Slide 1 has two steps and notes,
 // and slide 2 has one step and no notes. The present view opened this window.
+// The tests run in sequence on the same page.
 const opener = fakeWindow();
 const page = fakePage([2, 1], {
   search: "?speaker",

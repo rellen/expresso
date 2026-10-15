@@ -5,7 +5,8 @@ import { nth } from "./nth.ts";
 import { position } from "./messages.ts";
 
 // The present view of a deck with a light and a dark variant, on a screen with
-// a dark scheme. The address chooses the light variant.
+// a dark scheme. The address chooses the light variant. The tests run in
+// sequence on the same page.
 const page = fakePage([1, 2], {
   search: "?scheme=light",
   variants: true,

@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { fakePage } from "./page.ts";
 import { nth } from "./nth.ts";
 
-// The address holds the fragment of step 2 of slide 2 at load.
+// The address holds the fragment of step 2 of slide 2 at load. The tests run in
+// sequence on the same page.
 const page = fakePage([1, 2], { hash: "#2.2" });
 
 before(async () => {

@@ -3,9 +3,10 @@ import assert from "node:assert/strict";
 import { fakePage, fakeWindow } from "./page.ts";
 import { nth } from "./nth.ts";
 
-// The speaker view of four slides of one step each. The deck gives a talk of
-// 20 minutes, and the address gives 10 minutes, so the talk has 10 minutes.
-// Each slide is then 2.5 minutes of the talk.
+// The speaker view of four slides of one step each. The deck gives a talk of 20
+// minutes, and the address gives 10 minutes, so the talk has 10 minutes. Each
+// slide is then 2.5 minutes of the talk. The tests run in sequence on the same
+// page.
 const page = fakePage([1, 1, 1, 1], {
   search: "?speaker&duration=10",
   hash: "#1.1",

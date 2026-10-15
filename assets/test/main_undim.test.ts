@@ -5,7 +5,8 @@ import { nth } from "./nth.ts";
 import type { Field, Message } from "../src/schema.ts";
 import { position } from "./messages.ts";
 
-// The present view of a deck with two slides. Slide 1 has two steps.
+// The present view of a deck with two slides. Slide 1 has two steps. The tests
+// run in sequence on the same page.
 const page = fakePage([2, 1]);
 const { body } = page;
 
