@@ -319,7 +319,7 @@ defmodule Expresso.Element.Chart.Motion do
             @prefix
 
             tspan class: "chart-count",
-                  data_decimals: decimals(@numbers),
+                  data_decimals: Plot.decimals(@numbers),
                   data_texts: texts(@numbers),
                   style: style([{"--chart-n", @number}]) do
               Plot.label(List.first(@numbers))
@@ -348,17 +348,6 @@ defmodule Expresso.Element.Chart.Motion do
   # text of `--chart-n`.
   defp texts(numbers) do
     [0 | numbers] |> Enum.map(&Plot.label/1) |> Enum.uniq() |> JSON.encode!()
-  end
-
-  defp decimals(numbers) do
-    numbers
-    |> Enum.map(fn number ->
-      case Plot.label(number) |> String.split(".") do
-        [_integer, fraction] -> String.length(fraction)
-        [_integer] -> 0
-      end
-    end)
-    |> Enum.max()
   end
 
   @doc """

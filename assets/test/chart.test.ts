@@ -1,8 +1,40 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { format, formatStat, write } from "../src/chart.ts";
 import type { Count, Reading } from "../src/chart.ts";
 
+// The numbers and their texts from Elixir. `Expresso.Test.NumberFixtures`
+// tells how to write the file again.
+type Numbers = {
+  charts: { numbers: number[]; decimals: number; labels: string[] }[];
+  stats: { value: number; decimals: number; group: boolean; text: string }[];
+};
+
+const numbers: Numbers = JSON.parse(
+  readFileSync(new URL("./fixtures/numbers.json", import.meta.url), "utf8"),
+);
+
+test("format writes each number of a chart as Plot.label/1 does", () => {
+  for (const chart of numbers.charts) {
+    assert.deepEqual(
+      chart.numbers.map((value) => format(value, chart.decimals)),
+      chart.labels,
+    );
+  }
+});
+
+test("formatStat writes each number of a stat as Stat.format/3 does", () => {
+  for (const stat of numbers.stats) {
+    assert.equal(
+      formatStat(stat.value, stat.decimals, stat.group),
+      stat.text,
+      JSON.stringify(stat),
+    );
+  }
+});
+
+// A frame of a count can have more decimals than the chart.
 test("a number has the decimals of the chart, with no zero at the end of the fraction", () => {
   assert.equal(format(12.3456, 1), "12.3");
   assert.equal(format(40.0001, 1), "40");
@@ -51,15 +83,6 @@ test("write keeps the text of a number without a value", () => {
   const counts = [count("10")];
   assert.equal(write(counts, still(Number.NaN)), false);
   assert.equal(counts[0]!.textContent, "10");
-});
-
-test("the number of a stat keeps each decimal, and groups the digits by three", () => {
-  assert.equal(formatStat(1250, 0, true), "1,250");
-  assert.equal(formatStat(-1234567.5, 2, true), "-1,234,567.50");
-  assert.equal(formatStat(1250, 0, false), "1250");
-  assert.equal(formatStat(999.999, 2, true), "1,000.00");
-  assert.equal(formatStat(-0.001, 2, true), "0.00");
-  assert.equal(formatStat(12, 0, true), "12");
 });
 
 test("write uses the format of a stat for a number with data-group", () => {

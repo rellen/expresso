@@ -1,5 +1,6 @@
-# `Expresso.Test.PresenterFixtures` writes this file, and a test compares it
-# with a new copy. A change of the format makes that test fail.
+# `Expresso.Test.PresenterFixtures` and `Expresso.Test.NumberFixtures` write
+# these files, and a test compares each one with a new copy. A change of the
+# format makes that test fail.
 assets/test/fixtures/
 
 # `Expresso.Test.SchemaWriter` writes this file, and a test compares it with a
