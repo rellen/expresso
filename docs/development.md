@@ -297,6 +297,32 @@ The CLI of Elixir then ran each deck a second time, and it gave the exit status.
 took a long time to render gave no file and the exit status 0. The tests of `test/release/`
 find this defect.
 
+### Flaky tests
+
+A flaky test passes in one run and fails in a different run of the same code. To find one,
+run a suite again and again:
+
+```sh
+mix test --repeat-until-failure 30                # the unit tests, in one VM
+mix test --only e2e --repeat-until-failure 20     # the browser tests, in one VM
+for i in $(seq 30); do mix test || break; done    # the unit tests, in a new VM each time
+```
+
+A run without `--seed` gets a new seed, so each run has a new order of the tests and new
+values for the property tests. The output of each run gives its seed, and
+`mix test --seed <seed>` gives the same run again. Run two suites at the same time, so that
+each suite gets the load of a run of `mix check`.
+
+The tests of the presenter script run in a fixed order in each file. Each file
+`assets/test/main_*.test.ts` loads `main.ts` one time, and each test uses the page of the
+test before it. Therefore use `node --test --test-randomize` only for the other files.
+
+The standard error is global. When an async test captures it with `capture_io(:stderr, ...)`,
+ExUnit removes the name `:standard_error` for a moment. A write from a different test in that
+moment raises `the device does not exist`. Therefore an async test must not write to the
+standard error outside a capture. `test/test_helper.exs` sets the compiler option
+`:ignore_module_conflict`, so a second compile of a module writes no warning.
+
 ### The checks of a pull request
 
 `.github/workflows/check.yml` runs the checks for a pull request and for a push to `main`.
