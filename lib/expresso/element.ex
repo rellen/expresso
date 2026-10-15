@@ -26,18 +26,10 @@ defmodule Expresso.Element do
   @callback render(assigns :: map()) :: Phoenix.HTML.safe()
 
   @typedoc """
-  The content that the auto morph compares for two elements of one kind
-
-    * `:text` - the text of the element.
-    * `:source` - the address of its image or of its page.
-    * `:file` - the number of its file, which `Expresso.Media.number/3` gives.
-    * `:drawing` - its SVG.
-    * `:language` - the language of its code.
-    * `:label` - the text of its label.
+  The content that the auto morph compares for two elements of one kind.
+  `Expresso.Morph` tells what each one is.
   """
   @type morph_content :: :text | :source | :file | :drawing | :language | :label
-
-  @morph_contents [:text, :source, :file, :drawing, :language, :label]
 
   @typedoc """
   A kind of element: its module, the class of its root tag, its name, and the
@@ -79,18 +71,14 @@ defmodule Expresso.Element do
   of its root tag
 
   The script finds the kind of an element from the first kind in the list
-  whose class the element has. The morph uses the kinds with a content, and
-  the layout check measures each kind. `Expresso.Presenter.Schema` writes the
-  list into `assets/src/schema.ts`. The list has no item of a list, no row of
-  a table and no spacer, because each is a part of an element or shows
-  nothing.
+  whose class the element has, and the layout check measures each kind.
+  `Expresso.Presenter.Schema` writes the class and the name of each kind into
+  `assets/src/schema.ts`. `Expresso.Morph` gives a signature to each element
+  of a kind with a content. The list has no item of a list, no row of a table
+  and no spacer, because each is a part of an element or shows nothing.
   """
   @spec kinds() :: [kind()]
   def kinds, do: @kinds
-
-  @doc "Return each content that the auto morph can compare"
-  @spec morph_contents() :: [morph_content()]
-  def morph_contents, do: @morph_contents
 
   defmacro __using__(_opts) do
     quote do

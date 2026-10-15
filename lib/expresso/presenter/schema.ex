@@ -229,12 +229,8 @@ defmodule Expresso.Presenter.Schema do
         fields: {:partial, for({field, kind} <- @fields, do: {field, kind(kind)})},
         scheme: {:ref, :scheme},
         time: {:number, nil, nil}}},
-      {:morph_content,
-       "The content that the auto morph compares for two elements of one kind. `Expresso.Element` tells what each one is.",
-       strings(Expresso.Element.morph_contents())},
-      {:element_kind,
-       "A kind of element: the class of its root tag, its name, and the content that the auto morph compares, or null for a kind that the morph does not use.",
-       {:tuple, [:string, :string, {:nullable, {:ref, :morph_content}}]}}
+      {:element_kind, "A kind of element: the class of its root tag, and its name.",
+       {:tuple, [:string, :string]}}
     ]
   end
 
@@ -251,9 +247,7 @@ defmodule Expresso.Presenter.Schema do
       {:element_kinds,
        "Each kind of element that the script finds by the class of its root tag, in the order of the search. `Expresso.Element.kinds/0` tells how the script uses them.",
        {:list, {:ref, :element_kind}},
-       for {_module, class, kind, content} <- Expresso.Element.kinds() do
-         [class, kind, content && Atom.to_string(content)]
-       end},
+       for({_module, class, kind, _content} <- Expresso.Element.kinds(), do: [class, kind])},
       {:command_holders,
        "The selectors of the three kinds of element that hold the commands of a click: a link of the `goto` option, a page of the overview and a row of the menu. The script reads commands only from these elements.",
        {:object, link: :string, page: :string, row: :string},

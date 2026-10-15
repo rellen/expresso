@@ -3,6 +3,8 @@ defmodule Expresso.MorphTest do
 
   alias Expresso.Builder
 
+  doctest Expresso.Morph
+
   defp document(slides, opts \\ []) do
     slides
     |> Builder.deck(Keyword.merge([name: "morph"], opts))
@@ -43,14 +45,6 @@ defmodule Expresso.MorphTest do
     assert keys == ["brand", "count"]
   end
 
-  test "a code element names its language, so the morph can compare two codes" do
-    document = document([Builder.slide("a", elements: [Builder.code("elixir", text: "x = 1")])])
-
-    assert document |> Floki.find(".screen .code") |> Floki.attribute("data-language") == [
-             "elixir"
-           ]
-  end
-
   test "the compiler refuses a mode that is not :auto, :named or :off" do
     assert_raise ArgumentError, ~r/morph/, fn -> Builder.slide("a", morph: :fade) end
     assert_raise ArgumentError, ~r/morph/, fn -> Builder.deck([], name: "x", morph: true) end
@@ -80,5 +74,144 @@ defmodule Expresso.MorphTest do
     document = deck |> Expresso.Deck.render() |> Floki.parse_document!()
     assert modes(document) == ["named", "auto"]
     assert length(Floki.find(document, ~s(.screen [data-morph-key="brand"]))) == 2
+  end
+
+  @poster "examples/animations/clip.png"
+
+  # The signature of the element with a class on each slide, in the present
+  # view.
+  defp signatures(slides, class) do
+    slides
+    |> document()
+    |> Floki.find(".screen .#{class}")
+    |> Enum.map(&(&1 |> Floki.attribute("data-morph-signature") |> List.first()))
+  end
+
+  # A slide for each element.
+  defp slides(elements) do
+    for {element, index} <- Enum.with_index(elements),
+        do: Builder.slide("s#{index}", elements: [element])
+  end
+
+  test "two elements with the same text get the same signature, and a different text a different one" do
+    [first, second, third] =
+      [
+        Builder.text_area(text: "A <em>box</em>"),
+        Builder.text_area(text: "A   <strong>box</strong>"),
+        Builder.text_area(text: "A crate")
+      ]
+      |> slides()
+      |> signatures("text-area")
+
+    assert first == second
+    assert first != third
+  end
+
+  test "the kind is part of the signature" do
+    [text] =
+      signatures([Builder.slide("one", elements: [Builder.text_area(text: "cups")])], "text-area")
+
+    [stat] =
+      signatures([Builder.slide("one", elements: [Builder.stat(1, label: "cups")])], "stat")
+
+    assert text != stat
+  end
+
+  test "a kind without a content and an element with a morph key get no signature" do
+    assert [nil] =
+             [
+               Builder.slide("one",
+                 elements: [Builder.text_box(elements: [Builder.text_area(text: "a")])]
+               )
+             ]
+             |> signatures("text-box")
+
+    assert [nil] =
+             [Builder.slide("one", elements: [Builder.text_area(text: "a", morph: "key")])]
+             |> signatures("text-area")
+  end
+
+  test "a video and a sound compare their file, and not their poster or title" do
+    [clip, run, again] =
+      [
+        Builder.video("examples/animations/clip.webm", title: "a", poster: @poster),
+        Builder.video("examples/line4/run.webm", title: "a", poster: @poster),
+        Builder.video("examples/line4/run.webm",
+          title: "b",
+          poster: "examples/animations/demo.png"
+        )
+      ]
+      |> slides()
+      |> signatures("video")
+
+    assert clip != run
+    assert run == again
+
+    [bell, chime] =
+      [
+        Builder.audio("examples/animations/chime.ogg", title: "a"),
+        Builder.audio("examples/animations/chime.ogg", title: "b")
+      ]
+      |> slides()
+      |> signatures("audio")
+
+    assert bell == chime
+  end
+
+  test "an embed compares its address, and not its fallback image" do
+    [first, second, other] =
+      [
+        Builder.embed("https://example.com/", title: "a", fallback: @poster),
+        Builder.embed("https://example.com/", title: "b"),
+        Builder.embed("https://example.org/", title: "a", fallback: @poster)
+      ]
+      |> slides()
+      |> signatures("embed")
+
+    assert first == second
+    assert first != other
+  end
+
+  test "a code compares its language, a stat its label, and an icon its drawing" do
+    [elixir, more_elixir, js] =
+      [
+        Builder.code("elixir", text: "x = 1"),
+        Builder.code("elixir", text: "y = 2"),
+        Builder.code("js", text: "x")
+      ]
+      |> slides()
+      |> signatures("code")
+
+    assert elixir == more_elixir
+    assert elixir != js
+
+    [cups, more_cups] =
+      [Builder.stat(1, label: "cups"), Builder.stat(2, label: "cups")]
+      |> slides()
+      |> signatures("stat")
+
+    assert cups == more_cups
+
+    [check, danger_check, coffee] =
+      [Builder.icon("check"), Builder.icon("check", color: :danger), Builder.icon("coffee")]
+      |> slides()
+      |> signatures("icon")
+
+    assert check == danger_check
+    assert check != coffee
+  end
+
+  test "the heading of the default template has the signature of its text" do
+    [first, second, other] =
+      [
+        Builder.slide("a", heading: "Coffee"),
+        Builder.slide("b", heading: "Coffee"),
+        Builder.slide("c", heading: "Tea")
+      ]
+      |> signatures("slide-heading-container")
+
+    assert first == second
+    assert first == Expresso.Morph.signature("heading", "Coffee")
+    assert first != other
   end
 end

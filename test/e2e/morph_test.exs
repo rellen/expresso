@@ -6,7 +6,8 @@ defmodule Expresso.E2E.MorphTest do
   # Slides 1 and 2 share a heading, a stat and a key. Slide 3 asks for the keys
   # only, and slide 4 asks for no morph. Slides 5 and 6 hold two codes. Slides
   # 7 and 8 hold two videos with the same poster, and slides 8 and 9 hold the
-  # same video with two posters.
+  # same video with two posters. Slides 10 and 11 hold the same page with no
+  # fallback image.
   defmodule Deck do
     use Expresso
 
@@ -87,6 +88,18 @@ defmodule Expresso.E2E.MorphTest do
       video "examples/line4/run.webm" do
         title "A run"
         poster "examples/animations/demo.png"
+      end
+    end
+
+    slide "tenth" do
+      embed "https://example.com/" do
+        title "A page"
+      end
+    end
+
+    slide "eleventh" do
+      embed "https://example.com/" do
+        title "A page"
       end
     end
   end
@@ -211,6 +224,15 @@ defmodule Expresso.E2E.MorphTest do
     settle(page)
 
     page |> press("j") |> started()
+    assert length(groups(page)) == 1
+  end
+
+  # The frame of slide 10 gets its address when its slide shows, and the frame
+  # of slide 11 gets its address only after the change.
+  test "two embeds of the same page morph, also when only one frame has its address", %{
+    moving: page
+  } do
+    page |> navigate("#10.1") |> press("j") |> started()
     assert length(groups(page)) == 1
   end
 
