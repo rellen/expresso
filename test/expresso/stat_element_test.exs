@@ -58,6 +58,18 @@ defmodule Expresso.StatElementTest do
     assert still |> Floki.find(".stat-number") |> Floki.attribute("class") == ["stat-number"]
   end
 
+  test "count gives the texts of the number at rest, with each digit, one time each" do
+    texts = fn stat ->
+      [figure] = render(stat)
+      figure |> Floki.find(".stat-number") |> Floki.attribute("data-texts")
+    end
+
+    assert texts.(Builder.stat(1_234_567, count: true, from: 5)) == [~s(["5","1,234,567"])]
+    assert texts.(Builder.stat(12_345.67, count: true)) == [~s(["0.00","12,345.67"])]
+    assert texts.(Builder.stat(1250, count: true, from: 1250)) == [~s(["1,250"])]
+    assert texts.(Builder.stat(1250)) == []
+  end
+
   test "a stat without a label has no caption, and a stat takes the overlay options" do
     [figure] = render(Builder.stat(3, at: [from: 2]))
     assert Floki.find(figure, "figcaption") == []

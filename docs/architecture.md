@@ -1605,7 +1605,9 @@ browser runs no script for a mark. These are the reasons for this design:
   `n`, and the copies fade. With `count true`, a number has one copy, and its registered
   number `--chart-n` moves. `assets/src/chart.ts` writes that number as the text at each
   frame of the browser while a transition of a number runs. The style sheet still gives
-  the time, so the count and the bar finish together.
+  the time, so the count and the bar finish together. When the transition ends, the
+  script writes the label of the frame from the attribute `data-texts`, because Chromium
+  keeps only six significant digits in the text of `--chart-n`.
 - **Paper shows each frame.** A printed page shows one step, so a chart with frames also
   holds a small chart of each frame without motion. On paper and in the handout view, the
   small charts show in a grid, and the chart that moves does not show. The overview and the
@@ -1677,8 +1679,10 @@ design:
   goes into the `prefix`, the number and the `suffix`.
 - **The count of a chart.** The number reads the registered property `--chart-n`, and the
   script that writes the numbers of a chart with frames writes it too. The format of a
-  stat keeps each decimal and the commas, so the script writes the same text as the
-  renderer at the end of the count.
+  stat keeps each decimal and the commas during the count. The renderer writes the text
+  of `from` and of the value in the attribute `data-texts`, and the script writes one of
+  them at the end of the count. Thus the number shows each digit, also when it has more
+  than the six significant digits that Chromium keeps in the text of `--chart-n`.
 - **`@starting-style` for a count when the slide shows.** A slide shows with `display`,
   and a transition does not run from `display: none`. `@starting-style` gives the start
   of the count to a stat that shows with its slide. A stat with steps copies `--shown`

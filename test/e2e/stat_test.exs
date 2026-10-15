@@ -4,7 +4,8 @@ defmodule Expresso.E2E.StatTest do
   alias PlaywrightEx.{Browser, BrowserContext}
 
   # A first slide, then a stat that counts when its slide shows and a stat
-  # that counts at step 2.
+  # that counts at step 2. The last slide has two numbers with more than six
+  # digits, and they count at step 2.
   defmodule Deck do
     use Expresso
 
@@ -27,11 +28,27 @@ defmodule Expresso.E2E.StatTest do
         at from: 2
       end
     end
+
+    slide "big" do
+      stat 1_234_567 do
+        label "visitors"
+        count true
+        at from: 2
+      end
+
+      stat 12_345.67 do
+        label "hours"
+        count true
+        at from: 2
+      end
+    end
   end
 
   @numbers "#slide-2 .stat-number"
+  @big "#slide-3 .stat-number"
 
-  defp number_js(index), do: ~s|document.querySelectorAll("#{@numbers}")[#{index}]|
+  defp number_js(selector, index),
+    do: ~s|document.querySelectorAll("#{selector}")[#{index}]|
 
   defp number(text) do
     {value, ""} = text |> String.replace(",", "") |> Float.parse()
@@ -39,17 +56,17 @@ defmodule Expresso.E2E.StatTest do
   end
 
   # The presenter writes the number of a paused count at the next frame.
-  defp paused_count(page, index, last) do
+  defp paused_count(page, selector, index, last) do
     wait_for(page, """
     (() => {
-      const value = Number(#{number_js(index)}.textContent.replaceAll(",", ""));
+      const value = Number(#{number_js(selector, index)}.textContent.replaceAll(",", ""));
       return value > 0 && value < #{last};
     })()
     """)
 
     js(page, """
-    [#{number_js(index)}.textContent,
-     getComputedStyle(#{number_js(index)}).getPropertyValue("--chart-n")]
+    [#{number_js(selector, index)}.textContent,
+     getComputedStyle(#{number_js(selector, index)}).getPropertyValue("--chart-n")]
     """)
   end
 
@@ -65,6 +82,18 @@ defmodule Expresso.E2E.StatTest do
     wait_for_texts(page, @numbers, ["1,250", "4.2"])
 
     assert animations(page, @numbers) == 0
+  end
+
+  # The browser keeps six significant digits in the text of `--chart-n`.
+  test "with reduced motion, a number with more than six digits shows each digit", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(Deck, tmp_dir) <> "#3")
+    wait_for_texts(page, @big, ["0", "0.00"])
+
+    press(page, "j")
+    wait_for_texts(page, @big, ["1,234,567", "12,345.67"])
   end
 
   describe "with motion" do
@@ -90,7 +119,7 @@ defmodule Expresso.E2E.StatTest do
       # A count lasts three times the duration of a change: 30 s.
       press(page, "j")
       pause_animations(page, "#slide-2", 9000)
-      [orders, property] = paused_count(page, 0, 1250)
+      [orders, property] = paused_count(page, @numbers, 0, 1250)
       assert number(orders) == round(number(property))
 
       finish_animations(page, "#slide-2")
@@ -98,11 +127,25 @@ defmodule Expresso.E2E.StatTest do
 
       press(page, "j")
       pause_animations(page, "#slide-2", 9000)
-      [revenue, property] = paused_count(page, 1, 4.2)
+      [revenue, property] = paused_count(page, @numbers, 1, 4.2)
       assert number(revenue) == Float.round(number(property), 1)
 
       finish_animations(page, "#slide-2")
       wait_for_texts(page, @numbers, ["1,250", "4.2"])
+    end
+
+    test "a number with more than six digits counts, and its count ends on each digit", %{
+      slow: page,
+      url: url
+    } do
+      page = page |> open(url <> "#3") |> slow_motion(10)
+
+      press(page, "j")
+      pause_animations(page, "#slide-3", 9000)
+      paused_count(page, @big, 0, 1_234_567)
+
+      finish_animations(page, "#slide-3")
+      wait_for_texts(page, @big, ["1,234,567", "12,345.67"])
     end
   end
 end

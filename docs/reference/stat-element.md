@@ -45,6 +45,8 @@ With `count true`, the number counts from `from` to the value:
 - The count lasts three times the time of the animations of the element, which the `speed`
   option of the deck, the slide or the stat gives.
 - The number keeps its decimals and its commas during the count.
+- At the end of the count, the number shows each digit of the value, as a stat without
+  `count` shows it.
 - A reader who asks for reduced motion, the handout view and paper see the value at once.
 
 ![Two stats count when the slide shows, and a third stat counts at step 2](https://raw.githubusercontent.com/rellen/expresso/media/stat.gif)

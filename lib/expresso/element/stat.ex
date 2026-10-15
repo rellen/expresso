@@ -10,7 +10,9 @@ defmodule Expresso.Element.Stat do
 
   The count reads the registered property `--chart-n`, as the numbers of a
   chart with frames do, and `assets/src/chart.ts` writes its value as the text
-  of the number at each frame of the browser. A screen reader reads the value
+  of the number at each frame of the browser. At the end of the count, the
+  script writes a text from the attribute `data-texts`, so the number shows
+  each digit of the value. A screen reader reads the value
   from a text that the eye does not see, so it never reads a number in the
   middle of the count.
   """
@@ -73,6 +75,13 @@ defmodule Expresso.Element.Stat do
     Enum.join([sign <> whole | fraction], ".")
   end
 
+  # The texts of the number at rest, as JSON: `from` and the value. The script
+  # writes one of them when the count ends, because Chromium keeps only six
+  # significant digits in the text of `--chart-n`.
+  defp texts(values, decimals, group) do
+    values |> Enum.map(&format(&1, decimals, group)) |> Enum.uniq() |> JSON.encode!()
+  end
+
   defp group(digits) do
     digits
     |> String.reverse()
@@ -101,6 +110,7 @@ defmodule Expresso.Element.Stat do
       suffix: stat.suffix,
       label: stat.label,
       count: stat.count,
+      texts: if(stat.count, do: texts([stat.from, stat.value], decimals, stat.group)),
       style: "--stat-from: #{stat.from}; --stat-to: #{stat.value};",
       decimals: decimals,
       group: stat.group,
@@ -127,7 +137,8 @@ defmodule Expresso.Element.Stat do
             span class: if(@count, do: "stat-number stat-count", else: "stat-number"),
                  style: @style,
                  data_decimals: @decimals,
-                 data_group: to_string(@group) do
+                 data_group: to_string(@group),
+                 data_texts: @texts do
               @number
             end
 
