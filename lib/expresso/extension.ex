@@ -527,14 +527,31 @@ defmodule Expresso.Extension do
     name: :table,
     target: Expresso.Element.Table,
     entities: [elements: [@row], on: [@on]],
+    transform: {Expresso.Element.Table, :check, []},
     schema:
       @overlay_schema ++
         @class_schema ++
         [
+          caption: [
+            type: :string,
+            doc:
+              "The name of the table, as text. It shows above the table, and a screen reader reads it when it moves into the table. See docs/reference/table-element.md."
+          ],
+          caption_hidden: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Hide the caption from the eye and not from a screen reader. The table needs the caption option."
+          ],
           header: [
             type: :boolean,
             default: false,
             doc: "Make the first row the header of the table."
+          ],
+          row_header: [
+            type: :boolean,
+            default: false,
+            doc: "Make the first cell of each row the header of its row."
           ],
           reveal: [
             type: :boolean,

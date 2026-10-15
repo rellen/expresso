@@ -88,6 +88,7 @@ part of the deck before the current step, from 0 to 100, as the width of the bar
 | `video`, `audio`, `embed` | The `title` option as the name of the element. A video with the `captions` option has a `track` of captions. |
 | `callout` | A `note`, with the header as text. |
 | `math` | MathML, which a screen reader reads. |
+| `table` | The `caption` option as the name of the table. Each header cell is a `th` with a `scope`: `col` in the `header` row, and `row` for the first cell of a row with `row_header`. |
 | An element of a later step | Nothing. The style sheet hides it with `visibility: hidden` until its step. |
 
 ## The language

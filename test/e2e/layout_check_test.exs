@@ -126,6 +126,48 @@ defmodule Expresso.E2E.LayoutCheckTest do
     assert stat =~ ~r/^Slide 1, step 1: the stat “.*cups” goes \d+ px past the right edge$/
   end
 
+  # A table with a caption, and a table with a long caption that only a screen
+  # reader reads. The check measures a table by its box, and a text box by
+  # each text in it, so the second table is in a text box.
+  defmodule CaptionDeck do
+    use Expresso
+
+    slide "captions" do
+      table do
+        caption "Orders each year"
+        header true
+        row ["Drink", "Orders"]
+        row ["Coffee", "120"]
+      end
+
+      text_box do
+        table do
+          caption "The orders of each drink in each month of the year, in cups"
+          caption_hidden true
+          row ["Tea", "40"]
+        end
+      end
+    end
+  end
+
+  test "?check skips a hidden caption, and a caption shows above its table", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(CaptionDeck, tmp_dir) <> "?check")
+
+    assert report(page)["problems"] == []
+
+    hidden = ~s|document.querySelector("#slide-1 .table-caption-hidden").getBoundingClientRect()|
+    assert js(page, "#{hidden}.width") <= 1
+    assert js(page, "#{hidden}.height") <= 1
+
+    shown = ~s|document.querySelector("#slide-1 .table-caption").getBoundingClientRect()|
+    head = ~s|document.querySelector("#slide-1 thead").getBoundingClientRect()|
+    assert js(page, "#{shown}.height") > 1
+    assert js(page, "#{shown}.bottom") <= js(page, "#{head}.top")
+  end
+
   test "?check reports no problem for a code with wrap, and a broken line is indented", %{
     page: page,
     tmp_dir: tmp_dir

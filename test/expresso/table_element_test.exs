@@ -42,6 +42,23 @@ defmodule Expresso.Element.TableTest do
         end
       end
     end
+
+    slide "names" do
+      table do
+        caption "Orders each year"
+        header true
+        row_header true
+        row [" ", "2024", "2025"]
+        row ["Coffee", "120", "180"]
+        row ["", "40", "60"]
+      end
+
+      table do
+        caption "A hidden name"
+        caption_hidden true
+        row ["a", "1"]
+      end
+    end
   end
 
   defp slide(name) do
@@ -58,6 +75,27 @@ defmodule Expresso.Element.TableTest do
       assert [%Row{cells: ["a", "b"]}, %Row{cells: ["c", "d"]}] = table.elements
       assert table.header == true
       assert table.reveal == false
+      assert table.caption == nil
+      assert table.caption_hidden == false
+      assert table.row_header == false
+    end
+
+    test "takes a caption, a hidden caption and a row header" do
+      table =
+        Builder.table(
+          elements: [Builder.row(["a", "b"])],
+          caption: "Names",
+          caption_hidden: true,
+          row_header: true
+        )
+
+      assert %Table{caption: "Names", caption_hidden: true, row_header: true} = table
+    end
+
+    test "gives an error for caption_hidden without caption" do
+      assert_raise ArgumentError,
+                   "table: the caption_hidden option of a table needs the caption option",
+                   fn -> Builder.table(elements: [Builder.row(["a"])], caption_hidden: true) end
     end
   end
 
@@ -86,6 +124,35 @@ defmodule Expresso.Element.TableTest do
 
       assert Enum.map(table.elements, & &1.steps) == [[1, 2], [2]]
     end
+
+    test "holds the caption and the row header options" do
+      [table, hidden] = slide("names").elements
+
+      assert %Table{caption: "Orders each year", caption_hidden: false, row_header: true} =
+               table
+
+      assert %Table{caption: "A hidden name", caption_hidden: true, row_header: false} = hidden
+    end
+
+    test "reports caption_hidden without caption" do
+      source = """
+      defmodule Expresso.Element.TableTest.HiddenNothing do
+        use Expresso
+
+        slide do
+          table do
+            caption_hidden true
+            row ["a"]
+          end
+        end
+      end
+      """
+
+      error = assert_raise Spark.Error.DslError, fn -> Code.compile_string(source) end
+
+      assert Exception.message(error) =~
+               "the caption_hidden option of a table needs the caption option"
+    end
   end
 
   describe "render/1" do
@@ -99,6 +166,11 @@ defmodule Expresso.Element.TableTest do
       assert document |> Floki.find("#slide-1 thead th") |> Enum.map(&Floki.text/1) == [
                "Name",
                "Value"
+             ]
+
+      assert document |> Floki.find("#slide-1 thead th") |> Floki.attribute("scope") == [
+               "col",
+               "col"
              ]
     end
 
@@ -126,6 +198,57 @@ defmodule Expresso.Element.TableTest do
       rows = Floki.find(document, "#slide-2 tr.row")
 
       assert Floki.attribute(rows, "data-on") == ["1 2 3", "2 3"]
+    end
+
+    test "writes no caption and no row header without their options", %{document: document} do
+      assert [] = Floki.find(document, "#slide-1 caption")
+      assert [] = Floki.find(document, "#slide-1 tbody th")
+    end
+
+    test "writes the caption as the first child of the table", %{document: document} do
+      [{"table", _attributes, [first | _others]} | _hidden] =
+        Floki.find(document, "#slide-4 table.table")
+
+      assert {"caption", [{"class", "table-caption"}], ["Orders each year"]} = first
+    end
+
+    test "writes a hidden caption with the class table-caption-hidden", %{document: document} do
+      [caption] = Floki.find(document, "#slide-4 caption.table-caption-hidden")
+
+      assert Floki.attribute(caption, "class") == ["table-caption table-caption-hidden"]
+      assert Floki.text(caption) == "A hidden name"
+    end
+
+    test "writes the first cell of each body row as the header of its row", %{
+      document: document
+    } do
+      [names, hidden] = Floki.find(document, "#slide-4 table.table")
+
+      assert names |> Floki.find("tbody th[scope=row]") |> Enum.map(&Floki.text/1) == ["Coffee"]
+      # The first cell of the last row has no text, so it is a td cell.
+      assert names |> Floki.find("tbody td") |> Enum.map(&Floki.text/1) ==
+               ["120", "180", "", "40", "60"]
+
+      assert [] = Floki.find(hidden, "th")
+    end
+
+    test "writes a cell with no text as a td cell", %{document: document} do
+      [names, _hidden] = Floki.find(document, "#slide-4 table.table")
+
+      assert [{"td", [], _blank}] = Floki.find(names, "thead tr > td")
+      assert names |> Floki.find("thead th") |> Enum.map(&Floki.text/1) == ["2024", "2025"]
+    end
+
+    test "writes the caption as text and not as HTML" do
+      html =
+        [Builder.row(["a"])]
+        |> then(&Builder.table(elements: &1, caption: "Tea & <b>coffee</b>"))
+        |> Expresso.Element.assigns()
+        |> Table.render()
+        |> Phoenix.HTML.safe_to_string()
+
+      assert html =~
+               "<caption class=\"table-caption\">Tea &amp; &lt;b&gt;coffee&lt;/b&gt;</caption>"
     end
   end
 end

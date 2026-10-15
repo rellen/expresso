@@ -1014,6 +1014,13 @@ then puts it into a `thead` element with `th` cells. The `reveal` option shows t
 one after the other, and the header row shows with the table. `docs/overlays.md` gives
 the rules.
 
+The renderer gives each header cell a `scope` for a screen reader. A cell of the header
+row gets `scope="col"`. With the `row_header` option, the first cell of each other row is
+a `th` element with `scope="row"`. A cell with no text stays a `td` element, because an
+empty `th` element has no name. The `caption` option writes a `caption` element as the
+first child of the table. `Expresso.Element.Table.check/1` refuses `caption_hidden`
+without `caption`.
+
 ### The quotation
 
 A `quotation` takes its text as its first argument, and the `by` option gives the name of
