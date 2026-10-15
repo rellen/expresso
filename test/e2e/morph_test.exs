@@ -4,7 +4,9 @@ defmodule Expresso.E2E.MorphTest do
   alias PlaywrightEx.{Browser, BrowserContext}
 
   # Slides 1 and 2 share a heading, a stat and a key. Slide 3 asks for the keys
-  # only, and slide 4 asks for no morph. Slides 5 and 6 hold two codes.
+  # only, and slide 4 asks for no morph. Slides 5 and 6 hold two codes. Slides
+  # 7 and 8 hold two videos with the same poster, and slides 8 and 9 hold the
+  # same video with two posters.
   defmodule Deck do
     use Expresso
 
@@ -64,6 +66,27 @@ defmodule Expresso.E2E.MorphTest do
     slide "sixth" do
       code "elixir" do
         text "x = 1 + 2"
+      end
+    end
+
+    slide "seventh" do
+      video "examples/animations/clip.webm" do
+        title "A clip"
+        poster "examples/animations/clip.png"
+      end
+    end
+
+    slide "eighth" do
+      video "examples/line4/run.webm" do
+        title "A run"
+        poster "examples/animations/clip.png"
+      end
+    end
+
+    slide "ninth" do
+      video "examples/line4/run.webm" do
+        title "A run"
+        poster "examples/animations/demo.png"
       end
     end
   end
@@ -178,6 +201,17 @@ defmodule Expresso.E2E.MorphTest do
 
     # The code element, then each token of x = 1 that x = 1 + 2 also has.
     assert length(groups(page)) > 2
+  end
+
+  test "two videos morph when they show the same file, and not when they share the poster", %{
+    moving: page
+  } do
+    page |> navigate("#7.1") |> press("j") |> started()
+    assert groups(page) == []
+    settle(page)
+
+    page |> press("j") |> started()
+    assert length(groups(page)) == 1
   end
 
   test "a reader who asks for reduced motion gets no morph", %{page: page, tmp_dir: tmp_dir} do

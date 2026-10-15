@@ -1,4 +1,5 @@
-// The types and the decoders of the values that Elixir writes for the script.
+// The types and the decoders of the values that Elixir writes for the script,
+// and the constants of the script.
 //
 // `Expresso.Test.SchemaWriter` writes this file from the forms of
 // `Expresso.Presenter.Schema`. Do not change it by hand. After a change of a
@@ -340,3 +341,43 @@ export const decodeMessage: Decoder<Message> = /* @__PURE__ */ openObject({
   scheme: decodeScheme,
   time: /* @__PURE__ */ number(),
 });
+
+// The content that the auto morph compares for two elements of one kind.
+// `Expresso.Element` tells what each one is.
+export type MorphContent = "text" | "source" | "file" | "drawing" | "language" | "label";
+export const MORPH_CONTENTS: readonly MorphContent[] = ["text", "source", "file", "drawing", "language", "label"];
+export const decodeMorphContent: Decoder<MorphContent> = /* @__PURE__ */ oneOf(MORPH_CONTENTS);
+
+// A kind of element: the class of its root tag, its name, and the content that
+// the auto morph compares, or null for a kind that the morph does not use.
+export type ElementKind = readonly [string, string, MorphContent | null];
+export const decodeElementKind: Decoder<ElementKind> = /* @__PURE__ */ tuple(/* @__PURE__ */ string(), /* @__PURE__ */ string(), /* @__PURE__ */ nullable(decodeMorphContent));
+
+// Each kind of element that the script finds by the class of its root tag, in
+// the order of the search. `Expresso.Element.kinds/0` tells how the script uses
+// them.
+export const ELEMENT_KINDS: readonly ElementKind[] = [
+  ["slide-heading-container","heading","text"],
+  ["text-box","text-box",null],
+  ["text-area","text-area","text"],
+  ["image","image","source"],
+  ["list","list","text"],
+  ["table","table","text"],
+  ["quotation","quotation","text"],
+  ["code","code","language"],
+  ["math","math","text"],
+  ["diagram","diagram","text"],
+  ["video","video","file"],
+  ["embed","embed","source"],
+  ["audio","audio","file"],
+  ["qr-code","qr-code","drawing"],
+  ["shape","shape","text"],
+  ["chart","chart","text"],
+  ["callout","callout","text"],
+  ["toc","toc","text"],
+  ["stat","stat","label"],
+  ["icon","icon","drawing"],
+  ["columns","columns",null],
+  ["column","column",null],
+  ["footnote","footnote",null],
+];

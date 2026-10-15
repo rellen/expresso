@@ -20,6 +20,10 @@ defmodule Expresso.Presenter.Schema do
 
   `types/0` returns the forms in order. A form can name an earlier form only.
   `t:type/0` describes the terms of a form.
+
+  `constants/0` returns the constants of the script, such as the kinds of
+  element. `Expresso.Test.SchemaWriter` writes each constant into
+  `assets/src/schema.ts` too, so the script and Elixir use the same values.
   """
 
   @typedoc """
@@ -223,7 +227,32 @@ defmodule Expresso.Presenter.Schema do
         step: {:integer, nil},
         fields: {:partial, for({field, kind} <- @fields, do: {field, kind(kind)})},
         scheme: {:ref, :scheme},
-        time: {:number, nil, nil}}}
+        time: {:number, nil, nil}}},
+      {:morph_content,
+       "The content that the auto morph compares for two elements of one kind. `Expresso.Element` tells what each one is.",
+       strings(Expresso.Element.morph_contents())},
+      {:element_kind,
+       "A kind of element: the class of its root tag, its name, and the content that the auto morph compares, or null for a kind that the morph does not use.",
+       {:tuple, [:string, :string, {:nullable, {:ref, :morph_content}}]}}
+    ]
+  end
+
+  @doc """
+  Return each constant of the script, with its name, the text that tells
+  what it is, its form and its value
+
+  A constant comes from Elixir and goes into the script when esbuild makes
+  the bundle, so the document does not hold it.
+  """
+  @spec constants() :: [{atom(), String.t(), type(), term()}]
+  def constants do
+    [
+      {:element_kinds,
+       "Each kind of element that the script finds by the class of its root tag, in the order of the search. `Expresso.Element.kinds/0` tells how the script uses them.",
+       {:list, {:ref, :element_kind}},
+       for {_module, class, kind, content} <- Expresso.Element.kinds() do
+         [class, kind, content && Atom.to_string(content)]
+       end}
     ]
   end
 

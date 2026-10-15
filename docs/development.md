@@ -572,7 +572,7 @@ file. To take a later version:
 - `assets/src/program.ts` — reads the program of the presenter that the renderer writes.
   It examines no value.
 - `assets/src/schema.ts` — the type and the decoder of each value that Elixir writes for
-  the script. `Expresso.Test.SchemaWriter` writes it. Do not change it by hand. "The schema
+  the script, and the constants of the script, such as `ELEMENT_KINDS`. `Expresso.Test.SchemaWriter` writes it. Do not change it by hand. "The schema
   of the presenter" below tells how to write it again.
 - `assets/src/decode.ts` — the functions that make the decoders of `schema.ts`.
 - `assets/src/interpreter.ts` — runs the program for each key, click and swipe.
@@ -711,7 +711,9 @@ message between the two windows. It is the one source of these forms:
 - `Expresso.Presenter.Verifier` reads the fields of the state, the built-in functions and
   the kind of each value from it.
 - `Expresso.Test.SchemaWriter` writes `assets/src/schema.ts`. That file holds a
-  TypeScript type, a decoder, and for a form of strings a constant, for each form. The
+  TypeScript type, a decoder, and for a form of strings a constant, for each form. After
+  the forms, it holds each constant of `Expresso.Presenter.Schema.constants/0`, such as
+  `ELEMENT_KINDS`. The
   modules of the script import their types from it, and `tsc` makes sure that each decoder
   agrees with its type.
 - `Expresso.Presenter.Schema.Check` examines a decoded JSON value with the same forms. The
@@ -720,7 +722,8 @@ message between the two windows. It is the one source of these forms:
   each program and each list of the steps agrees with its form.
 
 The test `assets/src/schema.ts agrees with the forms of the schema` fails when the file
-does not agree with the schema. After a change to a form, do these steps:
+does not agree with the schema. After a change to a form or to a constant, such as a new
+row of `Expresso.Element.kinds/0`, do these steps:
 
 1. Write the file again:
 

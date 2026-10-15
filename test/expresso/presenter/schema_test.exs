@@ -81,6 +81,12 @@ defmodule Expresso.Presenter.SchemaTest do
     end
   end
 
+  test "each constant agrees with its form" do
+    for {name, _doc, type, value} <- Schema.constants() do
+      assert Check.check(value, type) == :ok, "#{name} does not agree with its form"
+    end
+  end
+
   test "each form names only the forms before it" do
     Enum.reduce(Schema.types(), MapSet.new(), fn {name, _doc, form}, known ->
       for ref <- refs(form), do: assert(ref in known, "#{name} names #{ref} before its form")

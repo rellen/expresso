@@ -80,7 +80,10 @@ test("first keeps only the elements of a view that no step gave", () => {
 
 test("describe names the element of a slide, and keeps another selector", () => {
   const area = {
-    classList: { contains: () => false, 0: "text-area" },
+    classList: {
+      contains: (name: string) => name === "text-area",
+      0: "text-area",
+    },
     tagName: "DIV",
     textContent: "  Grey   on grey  ",
     querySelector: () => null,

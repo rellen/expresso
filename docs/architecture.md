@@ -883,6 +883,26 @@ so each rule of the theme still selects the element. The option is not part of t
 attributes, because the root tag already has a `class` attribute, and HTML takes only the
 first of two.
 
+### The kinds of element in the script
+
+`Expresso.Element.kinds/0` holds one table of the kinds of element. Each row gives the
+module, the class of the root tag, the name of the kind, and the content that the auto
+morph compares. `Expresso.Test.SchemaWriter` writes the table into `assets/src/schema.ts`
+as `ELEMENT_KINDS`.
+These are the reasons for this design:
+
+- **One table for two scripts.** `morph.ts` and `layout.ts` each had a list of classes,
+  and the two lists did not agree. The morph found a video as an embed, so it compared the
+  poster. The layout check did not measure a stat, a callout, a table of contents or a
+  sound.
+- **The order of the table is the order of the search.** The root tag of a video has the
+  class `embed` too, so the video comes before the embed.
+- **A test makes the table complete.** `Expresso.ElementTest` fails for an element module
+  without a row. It also renders one element of each kind, and it finds the kind of the
+  root tag as the script does.
+- **A list item, a row and a spacer have no row.** The first two are parts of an element,
+  and a spacer shows nothing.
+
 ### The walks over the tree of elements
 
 A container, such as a text box, a column or a list, holds its children under the key
@@ -1915,7 +1935,8 @@ The TypeScript part is under `assets/src/`. It has these modules:
 - `interpreter.ts` runs the program. It applies one event to the state, and it does not
   touch the document.
 - `schema.ts` declares the type and the decoder of each value that Elixir writes for the
-  script, the state among them. `decode.ts` makes its decoders.
+  script, the state among them. It also holds the constants of the script, such as
+  `ELEMENT_KINDS`. `decode.ts` makes its decoders.
 - `state.ts` makes and changes the state: the index of the current step, the view, the
   black screen, the digits of a slide number, `undim`, and the fields of the list of keys,
   the progress bar, the overview and the menu. It also holds the messages between the
@@ -2006,6 +2027,10 @@ writes that file from the schema, so the types of the script and the forms of El
 cannot differ. The script decodes only the message from the other window, because that
 value comes from outside the document. `docs/development.md` tells how to write the file
 again.
+
+The schema also gives the constants of the script. `ELEMENT_KINDS` holds the kinds of
+element from `Expresso.Element.kinds/0`, and the morph and the layout check read it. See
+"The kinds of element in the script".
 
 ### The projections
 
@@ -2254,9 +2279,10 @@ The renderer writes three values:
 1. It pairs each key that occurs one time on each slide.
 2. With the mode `auto`, it pairs each signature that occurs one time on each slide. A
    signature is the kind of an element and its content, such as the label of a stat.
-   `KINDS` gives the kinds by class, and the heading of a slide is the kind `heading`. It
-   skips an element inside an element with a partner, because the element moves with its
-   parent.
+   `ELEMENT_KINDS` of `schema.ts` gives the kinds by class, and the heading of a slide is
+   the kind `heading`. A video and a sound compare the number of their file, because their
+   `video` and `audio` tags get a source only when they play. It skips an element inside
+   an element with a partner, because the element moves with its parent.
 3. For each pair of codes, it pairs the tokens of the two codes by their longest common
    subsequence. A token is a span of the highlight without a span inside it. A code with
    more than `MAX_TOKENS` tokens gets no token pairs, because each pair is a group of the
@@ -2508,6 +2534,9 @@ gives what it finds. These are the reasons for its design:
   check mode".
 - **It measures the window, and not the slide.** Content past the edge of the window can
   make the slide larger too. The window is the part that the audience sees.
+- **It measures each kind of element.** The check measures each kind of
+  `ELEMENT_KINDS`, the table that the morph reads too. Before, each script had its own
+  list, and the list of the check had no stat, callout, table of contents or sound.
 - **It measures the text, and not the box.** A text box is as wide as the slide. When it
   moves, its box goes past an edge, and its text can stay in the window. The check
   therefore measures the text and the content of each element, such as an `img` or a
