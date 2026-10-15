@@ -176,21 +176,26 @@ mix test --only e2e
 browser. `playwright_ex` is the Elixir client, and it starts the driver of
 `node_modules/playwright`, which `package.json` pins. `Expresso.E2E` in `test/support/`
 is the case template. It starts one browser for each module and a new context for each
-test, and it gives the helpers, such as `press/2`, `position/1` and `pdf_pages/1`.
+test, and it gives the helpers, such as `press/2`, `position/1`, `pause_animations/3` and
+`pdf_pages/1`.
 
-A key press returns before the presenter applies the step. The presenter applies the
-step inside `document.startViewTransition`, and the browser runs that update later. On a
-slow computer, such as a run of `mix check` that builds the release at the same time, the
-update can come more than a second later. Therefore a test waits for a condition, and not
-for a time:
+With motion, a key press can return before the presenter shows the change. The presenter
+changes the slide inside `document.startViewTransition`, and the browser runs that update
+later. On a slow computer, the update can come more than a second later. An example is a
+run of `mix check` that builds the release at the same time. The browser can also stop for
+some seconds while a change runs. Therefore a test with motion waits for a condition, and
+not for a time:
 
-- Wait for the step with `wait_for/2`, such as the position of the slide or the text of an
-  element.
-- To read the middle of an animation, wait until the element has the animation, then pause
-  it and set its `currentTime`. `test/e2e/stat_test.exs` pauses the count of a stat at half
-  its time, and the presenter then writes the middle value.
-- Do not read a value after `Process.sleep/1`. A test that did so in
-  `test/e2e/stat_test.exs` read the value of the HTML when the step came late.
+- Wait for the slide with `wait_for_position/2`. Wait for a text with `wait_for_texts/3` or
+  `wait_for/2`, because the presenter writes the number of a count at the next frame.
+- To read a change before its end, give each change a long duration with `slow_motion/2`.
+  Then pause the change at a known time with `pause_animations/3`, read the page, and move
+  the change to its end with `finish_animations/2`.
+- Pause a change at a time that is not its middle. At the middle, a symmetric easing, such
+  as `ease-in-out`, gives the same value as `linear`. The test then cannot find an easing
+  that is not correct.
+- Do not read a value after `Process.sleep/1`. The stat count test, the sunburst growth test
+  and the line segment test did so, and they failed on a slow computer.
 
 The variable `EXPRESSO_CHROMIUM` gives the path of a Chromium executable. A remote session
 has no browser at the path of Playwright, so the hook sets the variable to the Chromium
