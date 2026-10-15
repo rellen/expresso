@@ -4,7 +4,8 @@ defmodule Expresso.E2E.ChartTest do
   alias PlaywrightEx.{Browser, BrowserContext}
 
   # A bar chart with three frames and the count option, a line chart with two
-  # frames, and a bar chart with the effect grow.
+  # frames, a bar chart with the effect grow, and a bar chart that counts
+  # numbers with more than six digits.
   defmodule Deck do
     use Expresso
 
@@ -54,6 +55,22 @@ defmodule Expresso.E2E.ChartTest do
         series "Orders", [10]
       end
     end
+
+    slide "big" do
+      chart :bar do
+        title "Visitors"
+        categories ["Web"]
+        count true
+
+        frame "2024" do
+          series "Visitors", [1_234_567]
+        end
+
+        frame "2025" do
+          series "Visitors", [7_654_321]
+        end
+      end
+    end
   end
 
   # The value of a property on the first element of a selector in a slide.
@@ -96,6 +113,20 @@ defmodule Expresso.E2E.ChartTest do
     keys(page, ["k", "k"])
     wait_for(page, ~s|document.querySelector("#slide-1 .chart-count").textContent === "10"|)
     assert property(page, 1, "path.chart-bar", "--chart-v") == first
+  end
+
+  # The browser keeps six significant digits in the text of `--chart-n`.
+  test "a number with more than six digits shows each digit at each frame", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(Deck, tmp_dir) <> "#4")
+
+    press(page, "j")
+    wait_for(page, ~s|document.querySelector("#slide-4 .chart-count").textContent === "7654321"|)
+
+    press(page, "k")
+    wait_for(page, ~s|document.querySelector("#slide-4 .chart-count").textContent === "1234567"|)
   end
 
   test "a bar with the effect grow is at the base line until its step", %{

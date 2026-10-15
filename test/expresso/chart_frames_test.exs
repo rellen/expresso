@@ -285,6 +285,8 @@ defmodule Expresso.ChartFramesTest do
 
       assert Floki.text(count) == "10"
       assert Floki.attribute(count, "data-decimals") == ["1"]
+      # The texts at rest: 0 before the effect grow, and the value of each frame.
+      assert Floki.attribute(count, "data-texts") == [~s(["0","10","12.5"])]
       assert figure |> Floki.find("svg .chart-value.chart-fade") == []
     end
 

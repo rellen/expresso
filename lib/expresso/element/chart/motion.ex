@@ -20,7 +20,9 @@ defmodule Expresso.Element.Chart.Motion do
   frame, and the channel `--k<n>` of frame `n` is 1 for the copy of the frame
   that shows. The copies fade. With the `count` option, the text has one copy
   instead, and the presenter script writes the number from the registered
-  property `--chart-n` at each frame of the animation.
+  property `--chart-n` at each frame of the animation. At the end of the
+  animation, the script writes a label from the attribute `data-texts`, so
+  the number shows each digit of the value.
 
   The effect `:grow` multiplies each place by `--chart-shown`, which the theme
   sets from `--shown` on a chart or a series with that effect. A bar then
@@ -318,6 +320,7 @@ defmodule Expresso.Element.Chart.Motion do
 
             tspan class: "chart-count",
                   data_decimals: decimals(@numbers),
+                  data_texts: texts(@numbers),
                   style: style([{"--chart-n", @number}]) do
               Plot.label(List.first(@numbers))
             end
@@ -337,6 +340,14 @@ defmodule Expresso.Element.Chart.Motion do
           end
       end
     end
+  end
+
+  # The texts of the number at rest, as JSON: the number of each frame, and 0
+  # before the growth of the effect `grow`. The script writes one of them when
+  # the count ends, because Chromium keeps only six significant digits in the
+  # text of `--chart-n`.
+  defp texts(numbers) do
+    [0 | numbers] |> Enum.map(&Plot.label/1) |> Enum.uniq() |> JSON.encode!()
   end
 
   defp decimals(numbers) do
