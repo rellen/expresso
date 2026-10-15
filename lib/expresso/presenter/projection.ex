@@ -27,6 +27,8 @@ defmodule Expresso.Presenter.Projection do
   element into its container, so the cursor of the menu stays in view.
   """
 
+  alias Expresso.Presenter.Schema.Record
+
   defmodule Attribute do
     @moduledoc "The target of the `attribute` entity of the presenter DSL"
 
@@ -105,19 +107,21 @@ defmodule Expresso.Presenter.Projection do
   def json(projections) do
     %{
       "attributes" =>
-        Enum.map(projections.attributes, &[Atom.to_string(&1.field), &1.name, &1.flag]),
-      "properties" => Enum.map(projections.properties, &[&1.name, Atom.to_string(&1.entry)]),
+        Enum.map(projections.attributes, fn attribute ->
+          Record.write(:written_attribute, %{attribute | field: Atom.to_string(attribute.field)})
+        end),
+      "properties" =>
+        Enum.map(projections.properties, fn property ->
+          Record.write(:written_property, %{property | entry: Atom.to_string(property.entry)})
+        end),
       "marks" =>
         Enum.map(projections.marks, fn mark ->
-          [
-            mark.attribute,
-            mark.selector,
-            Atom.to_string(mark.key),
+          values =
             Enum.map(mark.values, fn {text, field, offset} ->
               [text, Atom.to_string(field), offset]
-            end),
-            mark.scroll
-          ]
+            end)
+
+          Record.write(:written_mark, %{mark | key: Atom.to_string(mark.key), values: values})
         end)
     }
   end

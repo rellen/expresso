@@ -22,6 +22,7 @@ defmodule Expresso.Steps do
 
   alias Expresso.Deck
   alias Expresso.Overlay.Render
+  alias Expresso.Presenter.Schema.Record
 
   @typedoc "One step of a deck"
   @type entry :: %{
@@ -136,7 +137,7 @@ defmodule Expresso.Steps do
     # of Burrito makes them in a different order. A map with string keys keeps
     # them in alphabetical order.
     %{
-      "steps" => Enum.map(entries(deck), &[&1.slide, &1.step, &1.fraction, &1.done, &1.position]),
+      "steps" => Enum.map(entries(deck), &Record.write(:written_entry, &1)),
       "slides" =>
         Enum.map(slides(deck), fn slide ->
           %{"first" => slide.first, "steps" => slide.steps, "transition" => slide.transition}

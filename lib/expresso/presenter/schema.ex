@@ -42,6 +42,11 @@ defmodule Expresso.Presenter.Schema do
     * `{:nullable, type}` - a value of the type, or `null`.
     * `{:list, type}` - an array of values of the type.
     * `{:tuple, types}` - an array with one value of each type, in order.
+    * `{:record, fields}` - an array with one value of each field, in order.
+      The script reads it as an object with these keys, and
+      `Expresso.Presenter.Schema.Record.write/2` writes it. Only a form with
+      a name that starts with `written_` holds a record, or a union of records
+      with the same keys.
     * `{:object, fields}` - an object with exactly these keys.
     * `{:open_object, fields}` - an object with these keys. It can have other
       keys, and the decoder does not return them.
@@ -63,6 +68,7 @@ defmodule Expresso.Presenter.Schema do
           | {:object, [{atom(), type()}]}
           | {:open_object, [{atom(), type()}]}
           | {:partial, [{atom(), type()}]}
+          | {:record, [{atom(), type()}]}
           | {:union, [type()]}
           | {:ref, atom()}
 
@@ -166,27 +172,32 @@ defmodule Expresso.Presenter.Schema do
         keys: pairs(:string),
         click: pairs({:ref, :region}),
         swipe: pairs({:ref, :direction})}},
+      {:written_attribute,
+       "A projection to an attribute of the body, as the renderer writes it: the field, the name of the attribute, and true when the attribute is present only while the field is true.",
+       {:union,
+        [
+          {:record, [field: {:ref, :boolean_field}, name: attribute(), flag: {:literal, true}]},
+          {:record, [field: {:ref, :field}, name: attribute(), flag: {:literal, false}]}
+        ]}},
+      {:written_property,
+       "A projection to a custom property of the body, as the renderer writes it: the name of the property, and the value of the current entry that it holds.",
+       {:record, [name: {:string, "^--"}, entry: {:enum, ["fraction", "done"]}]}},
+      {:written_mark,
+       "A projection that marks elements, as the renderer writes it: the attribute, the selector of the elements, the key that each element compares, the value of each mark, and true when the first marked element scrolls into view.",
+       {:record,
+        [
+          attribute: attribute(),
+          selector: :string,
+          key: {:enum, ["slide", "index"]},
+          values: {:list, {:tuple, [:string, {:ref, :number_field}, {:integer, nil}]}},
+          scroll: :boolean
+        ]}},
       {:written_projections,
        "The projections as the renderer writes them. `Expresso.Presenter.Projection` tells what each one does.",
        {:object,
-        attributes:
-          {:list,
-           {:union,
-            [
-              {:tuple, [{:ref, :boolean_field}, attribute(), {:literal, true}]},
-              {:tuple, [{:ref, :field}, attribute(), {:literal, false}]}
-            ]}},
-        properties: {:list, {:tuple, [{:string, "^--"}, {:enum, ["fraction", "done"]}]}},
-        marks:
-          {:list,
-           {:tuple,
-            [
-              attribute(),
-              :string,
-              {:enum, ["slide", "index"]},
-              {:list, {:tuple, [:string, {:ref, :number_field}, {:integer, nil}]}},
-              :boolean
-            ]}}}},
+        attributes: {:list, {:ref, :written_attribute}},
+        properties: {:list, {:ref, :written_property}},
+        marks: {:list, {:ref, :written_mark}}}},
       {:written_program, "The program of the presenter for one deck, as the renderer writes it.",
        {:object,
         state: {:ref, :state},
@@ -202,7 +213,14 @@ defmodule Expresso.Presenter.Schema do
        {:object, first: {:integer, 0}, steps: {:integer, 1}, transition: {:ref, :kind}}},
       {:written_entry,
        "One step of the deck as the renderer writes it: the slide, the step, the fraction, the done part and the position.",
-       {:tuple, [{:integer, 1}, {:integer, 1}, {:number, 0, 1}, {:number, 0, 1}, :string]}},
+       {:record,
+        [
+          slide: {:integer, 1},
+          step: {:integer, 1},
+          fraction: {:number, 0, 1},
+          done: {:number, 0, 1},
+          position: :string
+        ]}},
       {:written_deck, "The steps and the slides of a deck, as the renderer writes them.",
        {:object,
         steps: {:list, {:ref, :written_entry}},
