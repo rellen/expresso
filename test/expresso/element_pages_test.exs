@@ -17,6 +17,16 @@ defmodule Expresso.ElementPagesTest do
         do: code
   end
 
+  # Remove the modules that a test compiled. `mix test --repeat-until-failure`
+  # runs the suite again in the same VM, and a second compile of a loaded
+  # module writes a warning.
+  defp remove(compiled) do
+    for {module, _bytecode} <- compiled do
+      :code.purge(module)
+      :code.delete(module)
+    end
+  end
+
   # The files that the code blocks read, in the root of the deck.
   defp files(root) do
     File.cp!("examples/logo.png", Path.join(root, "logo.png"))
@@ -53,7 +63,8 @@ defmodule Expresso.ElementPagesTest do
         end
         """
 
-        warnings = capture_io(:stderr, fn -> Code.compile_string(code, path) end)
+        {compiled, warnings} = with_io(:stderr, fn -> Code.compile_string(code, path) end)
+        on_exit(fn -> remove(compiled) end)
         assert warnings == "", "#{path}, block #{index + 1}:\n#{warnings}"
 
         assert {:ok, deck} = Expresso.to_deck(module)
@@ -91,7 +102,8 @@ defmodule Expresso.ElementPagesTest do
     end
     """
 
-    Code.compile_string(code)
+    compiled = Code.compile_string(code)
+    on_exit(fn -> remove(compiled) end)
     assert {:ok, deck} = Expresso.to_deck(Expresso.ElementPagesTest.Nests)
     html = deck |> Expresso.Deck.render() |> Floki.parse_document!()
 
