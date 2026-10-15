@@ -9,6 +9,9 @@ defmodule Expresso.Test.SchemaWriter do
     * a decoder from the functions of `assets/src/decode.ts`, such as
       `decodeWrittenProgram`.
 
+  After the forms, the file holds each constant of `Schema.constants/0`, such
+  as `ELEMENT_KINDS`, with its type.
+
   The test `Expresso.Presenter.SchemaTest` fails when the file does not agree
   with `typescript/0`. This command writes the file again:
 
@@ -31,13 +34,15 @@ defmodule Expresso.Test.SchemaWriter do
   @spec typescript() :: String.t()
   def typescript do
     forms = Schema.types()
+    constants = Schema.constants()
 
-    Enum.join([header() | Enum.map(forms, &form/1)], "\n")
+    Enum.join([header() | Enum.map(forms, &form/1)] ++ Enum.map(constants, &value/1), "\n")
   end
 
   defp header do
     """
-    // The types and the decoders of the values that Elixir writes for the script.
+    // The types and the decoders of the values that Elixir writes for the script,
+    // and the constants of the script.
     //
     // `Expresso.Test.SchemaWriter` writes this file from the forms of
     // `Expresso.Presenter.Schema`. Do not change it by hand. After a change of a
@@ -92,6 +97,19 @@ defmodule Expresso.Test.SchemaWriter do
     export const #{decoder(name)}: Decoder<#{type_name(name)}> = #{decode(type, 0)};
     """
   end
+
+  defp value({name, doc, type, value}) do
+    """
+    #{comment(doc)}
+    export const #{String.upcase(Atom.to_string(name))}: #{ts(type, 0)} = #{json(value)};
+    """
+  end
+
+  # A list puts each item on its own line.
+  defp json(list) when is_list(list),
+    do: "[\n" <> Enum.map_join(list, &("  " <> JSON.encode!(&1) <> ",\n")) <> "]"
+
+  defp json(value), do: JSON.encode!(value)
 
   # The TypeScript type of a form. An object puts each field on its own line,
   # one level deeper than `depth`.

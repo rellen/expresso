@@ -24,6 +24,7 @@
 // document.
 
 import { visible } from "./morph.ts";
+import { ELEMENT_KINDS } from "./schema.ts";
 
 // A rectangle in the coordinates of the window.
 export type Box = Readonly<{
@@ -157,10 +158,10 @@ export function sentence(problem: Problem): string {
   return `${where}: the ${problem.element} goes ${problem.amount} px past the ${problem.edge} edge`;
 }
 
-// The elements of a slide. A part of a diagram is not one of them, because a
-// part can move past the box of its diagram.
-const ELEMENTS =
-  ".slide-heading-container, .text-box, .text-area, .image, .list, .table, .quotation, .code, .math, .diagram, .embed, .columns, .column, .shape";
+// The elements of a slide: each kind of `Expresso.Element.kinds/0`. A part of
+// a diagram is not one of them, because a part can move past the box of its
+// diagram.
+const ELEMENTS = ELEMENT_KINDS.map(([name]) => `.${name}`).join(", ");
 
 // The content of an element: the tags that show their box. The content can
 // be wider than the box of its element, so the check also measures each one.
@@ -172,15 +173,17 @@ const CONTENT =
 
 const MEASURED = `${ELEMENTS}, ${CONTENT}`;
 
-// The kind of an element for the report, from its first class.
+// The kind of an element for the report, such as `text area`. An element
+// outside each kind gives its first class or its tag name.
 function kind(element: Element): string {
-  if (element.classList.contains("slide-heading-container")) {
-    return "heading";
-  }
-  return (element.classList[0] ?? element.tagName.toLowerCase()).replace(
-    "-",
-    " ",
+  const found = ELEMENT_KINDS.find(([name]) =>
+    element.classList.contains(name),
   );
+  return (
+    found?.[1] ??
+    element.classList[0] ??
+    element.tagName.toLowerCase()
+  ).replace("-", " ");
 }
 
 // The name of an element for the report. The content of an element takes the

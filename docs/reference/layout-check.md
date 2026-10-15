@@ -27,8 +27,10 @@ check does not change the report. Reload the page for a new check.
 The check measures these elements, and the content of each:
 
 - the heading of the slide,
-- a text box, a text area, an image, a list, a table, a quotation, a code element, a
-  formula, a diagram, an embed, a `columns` element, a `column` and a shape,
+- each element of a slide: a text box, a text area, an image, a list, a table, a
+  quotation, a code element, a formula, a diagram, a video, an embed, a sound, a QR code,
+  a shape, a chart, a callout, a table of contents, a stat, an icon, a `columns` element,
+  a `column` and a footnote,
 - the content of an element: a `math` element, an `img` element, an `svg` element, a
   `pre` element, an `iframe` element and a `table` element.
 

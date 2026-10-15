@@ -19,33 +19,21 @@
 // The slide with the higher number gives the mode, as it gives the kind of a
 // transition: `auto`, `named` (keys only) or `off`.
 
+import { ELEMENT_KINDS } from "./schema.ts";
+import type { MorphContent } from "./schema.ts";
+
 export type Mode = "auto" | "named" | "off";
 
 // A pair of elements, with the name of their view transition.
 export type Pair = Readonly<{ name: string; from: Element; to: Element }>;
 
-// The kinds of element, by class, in the order of their check.
-const KINDS: readonly [string, string][] = [
-  ["slide-heading-container", "heading"],
-  ["text-area", "text-area"],
-  ["image", "image"],
-  ["list", "list"],
-  ["table", "table"],
-  ["quotation", "quotation"],
-  ["code", "code"],
-  ["math", "math"],
-  ["diagram", "diagram"],
-  ["embed", "embed"],
-  ["video", "video"],
-  ["audio", "audio"],
-  ["qr-code", "qr-code"],
-  ["shape", "shape"],
-  ["chart", "chart"],
-  ["callout", "callout"],
-  ["toc", "toc"],
-  ["stat", "stat"],
-  ["icon", "icon"],
-];
+// A kind of element that the morph uses: its class, its name and the content
+// that the auto morph compares.
+type Kind = readonly [string, string, MorphContent];
+
+// The kinds of element that the morph uses, in the order of their check.
+// `Expresso.Element.kinds/0` gives them.
+const KINDS = ELEMENT_KINDS.filter((kind): kind is Kind => kind[2] !== null);
 
 const SELECTOR = [
   ...KINDS.map(([name]) => `.${name}`),
@@ -56,49 +44,49 @@ const SELECTOR = [
 // element, because each pair is a view transition of its own.
 export const MAX_TOKENS = 400;
 
+function find(element: Element): Kind | null {
+  return KINDS.find(([name]) => element.classList.contains(name)) ?? null;
+}
+
 // The kind of an element, or null for an element that the morph does not use.
 export function kindOf(element: Element): string | null {
-  for (const [name, kind] of KINDS) {
-    if (element.classList.contains(name)) {
-      return kind;
-    }
-  }
-  return null;
+  return find(element)?.[1] ?? null;
 }
 
 function text(element: Element | null): string {
   return (element?.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
-// The content of an element for the auto morph. An image, a video, a sound and
-// a page compare their source, an icon and a QR code their drawing, a code
-// element its language, and a stat its label. Each other kind compares its
-// text.
-export function content(element: Element, kind: string): string {
-  switch (kind) {
-    case "image":
-    case "video":
-    case "audio":
-    case "embed": {
-      const source = element.querySelector("img, video, audio, iframe, source");
+// The content of an element for the auto morph. An image and a page compare
+// their source, a video and a sound the number of their file, an icon and a
+// QR code their drawing, a code element its language, and a stat its label.
+// Each other kind compares its text.
+export function content(element: Element, compared: MorphContent): string {
+  switch (compared) {
+    case "source":
       return (
-        source?.getAttribute("src") ??
-        source?.getAttribute("data-src") ??
+        element.querySelector("img, iframe")?.getAttribute("src") ??
+        text(element)
+      );
+    case "file": {
+      const media = element.querySelector("[data-video], [data-audio]");
+      return (
+        media?.getAttribute("data-video") ??
+        media?.getAttribute("data-audio") ??
         text(element)
       );
     }
-    case "icon":
-    case "qr-code":
+    case "drawing":
       return element.querySelector("svg")?.innerHTML ?? "";
-    case "code":
+    case "language":
       return (
         element.getAttribute("data-language") ??
         element.querySelector("code")?.className ??
         ""
       );
-    case "stat":
+    case "label":
       return text(element.querySelector(".stat-label"));
-    default:
+    case "text":
       return text(element);
   }
 }
@@ -201,9 +189,9 @@ export function pairs(from: Element, to: Element, mode: Mode): Pair[] {
 
   if (mode === "auto") {
     const signature = (element: Element): string | null => {
-      const kind = kindOf(element);
+      const kind = find(element);
       return key(element) === null && kind !== null
-        ? `${kind}\u0000${content(element, kind)}`
+        ? `${kind[1]}\u0000${content(element, kind[2])}`
         : null;
     };
     const signed = [group(before, signature), group(after, signature)] as const;

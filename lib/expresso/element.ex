@@ -25,6 +25,73 @@ defmodule Expresso.Element do
   """
   @callback render(assigns :: map()) :: Phoenix.HTML.safe()
 
+  @typedoc """
+  The content that the auto morph compares for two elements of one kind
+
+    * `:text` - the text of the element.
+    * `:source` - the address of its image or of its page.
+    * `:file` - the number of its file, which `Expresso.Media.number/3` gives.
+    * `:drawing` - its SVG.
+    * `:language` - the language of its code.
+    * `:label` - the text of its label.
+  """
+  @type morph_content :: :text | :source | :file | :drawing | :language | :label
+
+  @morph_contents [:text, :source, :file, :drawing, :language, :label]
+
+  @typedoc """
+  A kind of element: its module, the class of its root tag, its name, and the
+  content that the auto morph compares, or `nil` for a kind that the morph
+  does not use. The heading of a slide comes from the template, so it has no
+  module.
+  """
+  @type kind :: {module() | nil, String.t(), String.t(), morph_content() | nil}
+
+  # A video has the class `embed` too, so it comes before the embed.
+  @kinds [
+    {nil, "slide-heading-container", "heading", :text},
+    {Expresso.Element.TextBox, "text-box", "text-box", nil},
+    {Expresso.Element.TextArea, "text-area", "text-area", :text},
+    {Expresso.Element.Image, "image", "image", :source},
+    {Expresso.Element.List, "list", "list", :text},
+    {Expresso.Element.Table, "table", "table", :text},
+    {Expresso.Element.Quotation, "quotation", "quotation", :text},
+    {Expresso.Element.Code, "code", "code", :language},
+    {Expresso.Element.Math, "math", "math", :text},
+    {Expresso.Element.Diagram, "diagram", "diagram", :text},
+    {Expresso.Element.Video, "video", "video", :file},
+    {Expresso.Element.Embed, "embed", "embed", :source},
+    {Expresso.Element.Audio, "audio", "audio", :file},
+    {Expresso.Element.QrCode, "qr-code", "qr-code", :drawing},
+    {Expresso.Element.Shape, "shape", "shape", :text},
+    {Expresso.Element.Chart, "chart", "chart", :text},
+    {Expresso.Element.Callout, "callout", "callout", :text},
+    {Expresso.Element.Toc, "toc", "toc", :text},
+    {Expresso.Element.Stat, "stat", "stat", :label},
+    {Expresso.Element.Icon, "icon", "icon", :drawing},
+    {Expresso.Element.Columns, "columns", "columns", nil},
+    {Expresso.Element.Column, "column", "column", nil},
+    {Expresso.Element.Footnote, "footnote", "footnote", nil}
+  ]
+
+  @doc """
+  Return each kind of element that the presenter script finds by the class
+  of its root tag
+
+  The script finds the kind of an element from the first kind in the list
+  whose class the element has. The morph uses the kinds with a content, and
+  the layout check measures each kind. `Expresso.Presenter.Schema` writes the
+  list into `assets/src/schema.ts`. The list has no item of a list, no row of
+  a table and no spacer, because each is a part of an element or shows
+  nothing.
+  """
+  @spec kinds() :: [kind()]
+  def kinds, do: @kinds
+
+  @doc "Return each content that the auto morph can compare"
+  @spec morph_contents() :: [morph_content()]
+  def morph_contents, do: @morph_contents
+
   defmacro __using__(_opts) do
     quote do
       import Temple

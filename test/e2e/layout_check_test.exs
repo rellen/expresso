@@ -105,6 +105,27 @@ defmodule Expresso.E2E.LayoutCheckTest do
     end
   end
 
+  # A stat that the style sheet of the deck moves past the right edge.
+  defmodule StatDeck do
+    use Expresso
+
+    css ".far { translate: 80vw 0; }"
+
+    slide "stat" do
+      stat 42 do
+        label "cups"
+        class "far"
+      end
+    end
+  end
+
+  test "?check reports a stat past an edge", %{page: page, tmp_dir: tmp_dir} do
+    result = page |> open(render(StatDeck, tmp_dir) <> "?check") |> report()
+
+    assert [["#1.1", stat]] = result["problems"]
+    assert stat =~ ~r/^Slide 1, step 1: the stat “.*cups” goes \d+ px past the right edge$/
+  end
+
   test "?check reports no problem for a code with wrap, and a broken line is indented", %{
     page: page,
     tmp_dir: tmp_dir
