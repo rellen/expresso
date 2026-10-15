@@ -841,6 +841,11 @@ animations to the time of each frame. The clock of the page is fixed, and a move
 clock sets it to a later time. The frames therefore do not depend on the speed or the time
 of the computer, and two runs write the same files. A still is the last frame, as a PNG.
 
+Chromium can refuse a screenshot with the message `Unable to capture screenshot`. This
+occurred one time in the job `gifs` of pull request #268. The recorder then waits for two
+animation frames and takes the screenshot one more time. A second refusal or a different
+error stops the task.
+
 `Expresso.Gif` encodes the frames with a NIF in Zig, `Expresso.Gif.Nif`, and it needs no
 program such as ffmpeg. These are the steps:
 
