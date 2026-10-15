@@ -7,9 +7,9 @@
 //
 // - they have the same `morph` key, which the renderer writes as
 //   `data-morph-key`, whatever their kinds; or
-// - with the morph `auto`, they have the same kind and the same content, and
-//   no other element of either slide has that kind and that content. The
-//   heading of a slide is an element of the kind `heading`.
+// - with the morph `auto`, they have the same signature, and no other element
+//   of either slide has that signature. `Expresso.Morph` writes the signature
+//   of the kind and the content of an element as `data-morph-signature`.
 //
 // An element inside an element that already has a partner gets no partner of
 // its own, because it moves with its parent. Two code elements that are the
@@ -19,76 +19,19 @@
 // The slide with the higher number gives the mode, as it gives the kind of a
 // transition: `auto`, `named` (keys only) or `off`.
 
-import { ELEMENT_KINDS } from "./schema.ts";
-import type { MorphContent } from "./schema.ts";
-
 export type Mode = "auto" | "named" | "off";
 
 // A pair of elements, with the name of their view transition.
 export type Pair = Readonly<{ name: string; from: Element; to: Element }>;
 
-// A kind of element that the morph uses: its class, its name and the content
-// that the auto morph compares.
-type Kind = readonly [string, string, MorphContent];
-
-// The kinds of element that the morph uses, in the order of their check.
-// `Expresso.Element.kinds/0` gives them.
-const KINDS = ELEMENT_KINDS.filter((kind): kind is Kind => kind[2] !== null);
-
-const SELECTOR = [
-  ...KINDS.map(([name]) => `.${name}`),
-  "[data-morph-key]",
-].join(", ");
+const SELECTOR = "[data-morph-signature], [data-morph-key]";
 
 // The most tokens of a code that the morph pairs. A longer code moves as one
 // element, because each pair is a view transition of its own.
 export const MAX_TOKENS = 400;
 
-function find(element: Element): Kind | null {
-  return KINDS.find(([name]) => element.classList.contains(name)) ?? null;
-}
-
-// The kind of an element, or null for an element that the morph does not use.
-export function kindOf(element: Element): string | null {
-  return find(element)?.[1] ?? null;
-}
-
 function text(element: Element | null): string {
   return (element?.textContent ?? "").replace(/\s+/g, " ").trim();
-}
-
-// The content of an element for the auto morph. An image and a page compare
-// their source, a video and a sound the number of their file, an icon and a
-// QR code their drawing, a code element its language, and a stat its label.
-// Each other kind compares its text.
-export function content(element: Element, compared: MorphContent): string {
-  switch (compared) {
-    case "source":
-      return (
-        element.querySelector("img, iframe")?.getAttribute("src") ??
-        text(element)
-      );
-    case "file": {
-      const media = element.querySelector("[data-video], [data-audio]");
-      return (
-        media?.getAttribute("data-video") ??
-        media?.getAttribute("data-audio") ??
-        text(element)
-      );
-    }
-    case "drawing":
-      return element.querySelector("svg")?.innerHTML ?? "";
-    case "language":
-      return (
-        element.getAttribute("data-language") ??
-        element.querySelector("code")?.className ??
-        ""
-      );
-    case "label":
-      return text(element.querySelector(".stat-label"));
-    case "text":
-      return text(element);
-  }
 }
 
 // The elements of a slide that the morph can use, in document order. The
@@ -188,12 +131,10 @@ export function pairs(from: Element, to: Element, mode: Mode): Pair[] {
   }
 
   if (mode === "auto") {
-    const signature = (element: Element): string | null => {
-      const kind = find(element);
-      return key(element) === null && kind !== null
-        ? `${kind[1]}\u0000${content(element, kind[2])}`
+    const signature = (element: Element): string | null =>
+      key(element) === null
+        ? element.getAttribute("data-morph-signature")
         : null;
-    };
     const signed = [group(before, signature), group(after, signature)] as const;
     for (const element of before) {
       const name = signature(element);
@@ -212,7 +153,7 @@ export function pairs(from: Element, to: Element, mode: Mode): Pair[] {
 
   // The loop adds the tokens to `found`, so it reads a copy of the elements.
   for (const [old, current] of found.slice()) {
-    if (kindOf(old) === "code" && kindOf(current) === "code") {
+    if (old.classList.contains("code") && current.classList.contains("code")) {
       const first = tokens(old);
       const second = tokens(current);
       if (first.length <= MAX_TOKENS && second.length <= MAX_TOKENS) {

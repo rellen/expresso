@@ -651,7 +651,6 @@ defmodule Expresso.Element.Code do
               if(@wrap, do: "code code-wrap", else: "code"),
               assigns[:class]
             ),
-          data_language: @lang,
           rest!: @overlay do
         pre do
           code class: "highlight",

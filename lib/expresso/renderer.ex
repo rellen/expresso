@@ -564,7 +564,8 @@ defmodule Expresso.Renderer do
           |> Expresso.Element.Video.number()
           |> Expresso.Element.Audio.number()
           |> Expresso.Overlay.Render.identify()
-          |> Expresso.Goto.resolve())
+          |> Expresso.Goto.resolve()
+          |> Expresso.Morph.sign())
       )
 
     assigns = Map.put(assigns, :program, Program.compile(Definition.presenter(), assigns.deck))

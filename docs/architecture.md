@@ -866,7 +866,8 @@ defstruct [:class, :src, :alt, :width, :goto, __spark_metadata__: nil] ++
             Expresso.Overlay.fields()
 ```
 
-The overlay fields are `at`, `steps`, `el`, `effect`, `speed`, `morph`, `easing` and `on`.
+The overlay fields are `at`, `steps`, `el`, `effect`, `speed`, `morph`, `easing`,
+`signature` and `on`.
 The overlay code reads each field by name with `Map.get/2`, so a struct without a field
 fails only at run time. Therefore one list gives the fields, and 29 structs take them from
 it: the 27 targets of the element entities, and `Expresso.Element.Lines` and
@@ -887,14 +888,14 @@ first of two.
 
 `Expresso.Element.kinds/0` holds one table of the kinds of element. Each row gives the
 module, the class of the root tag, the name of the kind, and the content that the auto
-morph compares. `Expresso.Test.SchemaWriter` writes the table into `assets/src/schema.ts`
-as `ELEMENT_KINDS`.
+morph compares. `Expresso.Test.SchemaWriter` writes the class and the name of each kind
+into `assets/src/schema.ts` as `ELEMENT_KINDS`, and `Expresso.Morph` uses the content.
 These are the reasons for this design:
 
-- **One table for two scripts.** `morph.ts` and `layout.ts` each had a list of classes,
-  and the two lists did not agree. The morph found a video as an embed, so it compared the
-  poster. The layout check did not measure a stat, a callout, a table of contents or a
-  sound.
+- **One table for the morph and the layout check.** `morph.ts` and `layout.ts` each had
+  a list of classes, and the two lists did not agree. The morph found a video as an
+  embed, so it compared the poster. The layout check did not measure a stat, a callout, a
+  table of contents or a sound.
 - **The order of the table is the order of the search.** The root tag of a video has the
   class `embed` too, so the video comes before the embed.
 - **A test makes the table complete.** `Expresso.ElementTest` fails for an element module
@@ -2033,8 +2034,8 @@ value comes from outside the document. `docs/development.md` tells how to write 
 again.
 
 The schema also gives the constants of the script. `ELEMENT_KINDS` holds the kinds of
-element from `Expresso.Element.kinds/0`, and the morph and the layout check read it. See
-"The kinds of element in the script".
+element from `Expresso.Element.kinds/0`, and the layout check reads it. See "The kinds of
+element in the script".
 
 ### The projections
 
@@ -2276,17 +2277,16 @@ The renderer writes three values:
   its metadata.
 - `data-morph-key` on an element with the `morph` option, through
   `Expresso.Overlay.Render.attributes/1`.
-- `data-language` on a code element, so the morph can compare two codes.
+- `data-morph-signature` on each element of a kind that the auto morph uses, and on the
+  heading container of the default slide template. `Expresso.Morph.sign/1` computes it
+  before the render. See "The signature of the morph".
 
 `pairs` in `morph.ts` finds the partners of two slides:
 
 1. It pairs each key that occurs one time on each slide.
-2. With the mode `auto`, it pairs each signature that occurs one time on each slide. A
-   signature is the kind of an element and its content, such as the label of a stat.
-   `ELEMENT_KINDS` of `schema.ts` gives the kinds by class, and the heading of a slide is
-   the kind `heading`. A video and a sound compare the number of their file, because their
-   `video` and `audio` tags get a source only when they play. It skips an element inside
-   an element with a partner, because the element moves with its parent.
+2. With the mode `auto`, it pairs each signature that occurs one time on each slide. It
+   skips an element inside an element with a partner, because the element moves with its
+   parent.
 3. For each pair of codes, it pairs the tokens of the two codes by their longest common
    subsequence. A token is a span of the highlight without a span inside it. A code with
    more than `MAX_TOKENS` tokens gets no token pairs, because each pair is a group of the
@@ -2313,6 +2313,28 @@ The style sheet gives each `::view-transition-group` of a morph the duration and
 of the transition. The old and the new image of a group have `object-fit: contain` and the
 full height of the group, so an element that changes its aspect ratio does not show two
 images of different sizes.
+
+### The signature of the morph
+
+`Expresso.Morph.sign/1` gives a signature to each element of a kind with a morph content:
+a hash of the name of its kind and of its content. `Expresso.Morph` tells the content of
+each kind. These are the reasons for this design:
+
+- **Elixir knows each content.** Before, the script read the content from the page. A
+  page got its address only when its slide showed, so an embed could miss its partner.
+  Elixir knows the file of each element and the text of each render.
+- **A hash, and not the content.** The signature is a short text on each copy of a slide.
+  An image as a data URI or a long text would make each copy larger.
+- **The text comes from a render.** The text of a list, a chart or a callout comes from
+  many fields. `sign/1` renders the element one time and reads its text, so the text
+  agrees with the page. A file, a language and a label come from the struct, and need no
+  render.
+- **The browser still chooses the pairs.** A jump, such as `Home` or a link of the `goto`
+  option, can go between any two slides. Thus the renderer cannot compute the pairs of
+  each change.
+- **The template writes the signature of the heading.** The default slide template puts
+  it on the heading container. A custom template that writes no signature gets no morph
+  of its heading.
 
 ### The accessibility
 

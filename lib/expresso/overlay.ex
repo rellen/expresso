@@ -37,6 +37,7 @@ defmodule Expresso.Overlay do
     the DSL.
   - `steps` holds the step numbers that the transformer resolves from `at`.
   - `el` holds the identity that `Expresso.Overlay.Render.identify/1` writes.
+  - `signature` holds the signature that `Expresso.Morph.sign/1` writes.
   - `on` holds the `on` entities. Its default is an empty list.
 
   The overlay code reads each field by name. A new overlay option needs its
@@ -45,7 +46,7 @@ defmodule Expresso.Overlay do
   struct agree on the options and on the fields.
   """
   @spec fields() :: [atom() | {:on, []}]
-  def fields, do: [:at, :steps, :el, :effect, :speed, :morph, :easing, on: []]
+  def fields, do: [:at, :steps, :el, :effect, :speed, :morph, :easing, :signature, on: []]
 
   @forms """
   an integer, a range, :next, or a list of those and of from: items, \

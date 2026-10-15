@@ -96,9 +96,11 @@ defmodule Expresso.Overlay.Render do
   `data-effect="fly-up"`. An element with an identity gets `data-el`. An
   element with either also gets `data-speed` and `data-easing` for a value
   that is not `nil`, such as `data-speed="slow"`, `data-speed="450"` and
-  `data-easing="ease-out"`. The function gives an empty list for an element
-  without steps and without an identity, and the render function of the
-  element puts the list into its root tag.
+  `data-easing="ease-out"`. An element with the `morph` option gets
+  `data-morph-key`, and an element with a signature from
+  `Expresso.Morph.sign/1` gets `data-morph-signature`. The function returns
+  an empty list for an element without each of these values, and the render
+  function of the element puts the list into its root tag.
   """
   @spec attributes(struct()) :: [{String.t(), String.t()}]
   def attributes(element) do
@@ -115,10 +117,10 @@ defmodule Expresso.Overlay.Render do
       end
 
     morph =
-      case Map.get(element, :morph) do
-        nil -> []
-        key -> [{"data-morph-key", key}]
-      end
+      for {name, field} <- [{"data-morph-key", :morph}, {"data-morph-signature", :signature}],
+          value = Map.get(element, field),
+          value != nil,
+          do: {name, value}
 
     case on ++ el do
       [] -> morph

@@ -18,7 +18,8 @@ defmodule Expresso.Builtins.Templates.Slides.Default do
     temple do
       div class: "slide-body" do
         if heading = Map.get(@metadata, :heading) do
-          div class: "slide-heading-container" do
+          div class: "slide-heading-container",
+              data_morph_signature: Expresso.Morph.signature("heading", heading) do
             h1 do
               heading
             end

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { common, content, kindOf, modeOf } from "../src/morph.ts";
+import { common, modeOf, pairs } from "../src/morph.ts";
 
 // An element of the fake document: its classes and its attributes.
 function element(
@@ -32,38 +32,35 @@ test("common pairs the longest common subsequence of two lists, in order", () =>
   assert.deepEqual(common(["a", "b"], ["b", "a"]).length, 1);
 });
 
-test("kindOf reads the kind of an element from its class, and the heading from its container", () => {
-  assert.equal(kindOf(element(["slide-heading-container"])), "heading");
-  assert.equal(kindOf(element(["stat", "dense"])), "stat");
-  assert.equal(kindOf(element(["code"])), "code");
-  assert.equal(kindOf(element(["spacer"])), null);
-});
-
-test("a video is a video and not an embed, and the morph does not use a footnote", () => {
-  assert.equal(kindOf(element(["embed", "video"])), "video");
-  assert.equal(kindOf(element(["embed"])), "embed");
-  assert.equal(kindOf(element(["footnote"])), null);
-});
-
-test("a video and a sound compare the number of their file, and not the poster", () => {
-  const video = (poster: string, file: string): Element =>
-    ({
-      querySelector: (selector: string) =>
-        selector === "[data-video], [data-audio]"
-          ? element(["embed-frame"], { "data-video": file })
-          : element([], { src: poster }),
-    }) as unknown as Element;
-
-  assert.equal(content(video("clip.png", "0"), "file"), "0");
-  assert.notEqual(
-    content(video("clip.png", "0"), "file"),
-    content(video("clip.png", "1"), "file"),
-  );
-
-  const sound = {
-    querySelector: () => element([], { "data-audio": "2" }),
+// An element with a signature, and a slide of the fake document with its
+// elements that the morph can use.
+function signed(signature: string): Element {
+  return {
+    classList: { contains: () => false },
+    getAttribute: (name: string) =>
+      name === "data-morph-signature" ? signature : null,
+    contains: () => false,
   } as unknown as Element;
-  assert.equal(content(sound, "file"), "2");
+}
+
+function slide(...elements: Element[]): Element {
+  return { querySelectorAll: () => elements } as unknown as Element;
+}
+
+test("the auto morph pairs a signature that occurs one time on each slide", () => {
+  const [stat, first, second] = [signed("s"), signed("t"), signed("t")];
+  const [partner, other] = [signed("s"), signed("t")];
+
+  const found = pairs(
+    slide(stat, first, second),
+    slide(partner, other),
+    "auto",
+  );
+  assert.deepEqual(
+    found.map((pair) => [pair.from, pair.to, pair.name]),
+    [[stat, partner, "expresso-morph-1"]],
+  );
+  assert.deepEqual(pairs(slide(stat), slide(partner), "named"), []);
 });
 
 test("the slide with the higher number gives the mode, in the two directions", () => {
