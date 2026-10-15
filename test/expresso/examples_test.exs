@@ -1,6 +1,7 @@
 defmodule Expresso.ExamplesTest do
   use ExUnit.Case, async: true
 
+  alias Expresso.Test.DeckFiles
   alias Mix.Tasks.Expresso.Gifs
 
   # The pages that show the examples of the guides and their GIFs.
@@ -22,8 +23,7 @@ defmodule Expresso.ExamplesTest do
 
   test "each example deck gives a deck" do
     for deck <- Gifs.examples() |> Enum.map(& &1.deck) |> Enum.uniq() do
-      {value, _bindings} = Code.eval_file(deck)
-      assert {:ok, %Expresso.Deck{}} = Expresso.to_deck(value), deck
+      assert {:ok, %Expresso.Deck{}} = deck |> DeckFiles.eval() |> Expresso.to_deck(), deck
     end
   end
 
@@ -78,8 +78,7 @@ defmodule Expresso.ExamplesTest do
   end
 
   test "the talk about Line 4 renders each of its slides" do
-    {value, _bindings} = Code.eval_file("examples/line4/line4.exs")
-    assert {:ok, deck} = Expresso.to_deck(value)
+    assert {:ok, deck} = "examples/line4/line4.exs" |> DeckFiles.eval() |> Expresso.to_deck()
 
     document = deck |> Expresso.Deck.render() |> Floki.parse_document!()
 
@@ -90,8 +89,7 @@ defmodule Expresso.ExamplesTest do
   # The copy differs from its source in iso-factories only in the path of the
   # page, and the code slides find their lines in that page by text.
   test "the talk about Line 4 shows the code of its copy of the page" do
-    {value, _bindings} = Code.eval_file("examples/line4/line4.exs")
-    assert {:ok, deck} = Expresso.to_deck(value)
+    assert {:ok, deck} = "examples/line4/line4.exs" |> DeckFiles.eval() |> Expresso.to_deck()
 
     [code] =
       for slide <- deck.slides,
