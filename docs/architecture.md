@@ -2033,6 +2033,12 @@ cannot differ. The script decodes only the message from the other window, becaus
 value comes from outside the document. `docs/development.md` tells how to write the file
 again.
 
+A short array of the JSON, such as an entry of the list of the steps, has a record form.
+The form names the value at each place. `Expresso.Presenter.Schema.Record.write/2` writes
+the values in that order, and a generated converter of `schema.ts` reads them in the same
+order. Thus the order has one owner. Before, the renderer and the script each had a copy
+of the order, and nothing compared the two copies.
+
 The schema also gives the constants of the script. `ELEMENT_KINDS` holds the kinds of
 element from `Expresso.Element.kinds/0`, and the layout check reads it. See "The kinds of
 element in the script".

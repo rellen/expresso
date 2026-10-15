@@ -96,6 +96,9 @@ defmodule Expresso.Presenter.Schema.Check do
     end
   end
 
+  defp valid?(value, {:record, fields}, path),
+    do: valid?(value, {:tuple, Enum.map(fields, fn {_key, type} -> type end)}, path)
+
   defp valid?(value, {:union, types}, path), do: Enum.any?(types, &(one(value, &1, path) == :ok))
   defp valid?(value, {:ref, name}, path), do: valid?(value, Map.fetch!(@forms, name), path)
   defp valid?(_value, _type, _path), do: false

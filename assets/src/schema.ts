@@ -206,17 +206,71 @@ export const decodeWrittenMode: Decoder<WrittenMode> = /* @__PURE__ */ object({
   swipe: /* @__PURE__ */ list(/* @__PURE__ */ tuple(/* @__PURE__ */ list(decodeDirection), decodeCommands)),
 });
 
+// A projection to an attribute of the body, as the renderer writes it: the
+// field, the name of the attribute, and true when the attribute is present only
+// while the field is true.
+export type WrittenAttribute =
+  | readonly [BooleanField, string, true]
+  | readonly [Field, string, false];
+export const decodeWrittenAttribute: Decoder<WrittenAttribute> = /* @__PURE__ */ union(
+  "written_attribute",
+  /* @__PURE__ */ tuple(decodeBooleanField, /* @__PURE__ */ string(/^data-/), /* @__PURE__ */ literal(true)),
+  /* @__PURE__ */ tuple(decodeField, /* @__PURE__ */ string(/^data-/), /* @__PURE__ */ literal(false)),
+);
+export type Attribute = Readonly<{
+  field: BooleanField | Field;
+  name: string;
+  flag: true | false;
+}>;
+export function fromWrittenAttribute([field, name, flag]: WrittenAttribute): Attribute {
+  return { field, name, flag };
+}
+
+// A projection to a custom property of the body, as the renderer writes it: the
+// name of the property, and the value of the current entry that it holds.
+export type WrittenProperty = readonly [string, "fraction" | "done"];
+export const decodeWrittenProperty: Decoder<WrittenProperty> = /* @__PURE__ */ tuple(/* @__PURE__ */ string(/^--/), /* @__PURE__ */ oneOf(["fraction", "done"]));
+export type Property = Readonly<{
+  name: string;
+  entry: "fraction" | "done";
+}>;
+export function fromWrittenProperty([name, entry]: WrittenProperty): Property {
+  return { name, entry };
+}
+export function toWrittenProperty({ name, entry }: Property): WrittenProperty {
+  return [name, entry];
+}
+
+// A projection that marks elements, as the renderer writes it: the attribute,
+// the selector of the elements, the key that each element compares, the value
+// of each mark, and true when the first marked element scrolls into view.
+export type WrittenMark = readonly [string, string, "slide" | "index", readonly (readonly [string, NumberField, number])[], boolean];
+export const decodeWrittenMark: Decoder<WrittenMark> = /* @__PURE__ */ tuple(/* @__PURE__ */ string(/^data-/), /* @__PURE__ */ string(), /* @__PURE__ */ oneOf(["slide", "index"]), /* @__PURE__ */ list(/* @__PURE__ */ tuple(/* @__PURE__ */ string(), decodeNumberField, /* @__PURE__ */ integer())), boolean);
+export type Mark = Readonly<{
+  attribute: string;
+  selector: string;
+  key: "slide" | "index";
+  values: readonly (readonly [string, NumberField, number])[];
+  scroll: boolean;
+}>;
+export function fromWrittenMark([attribute, selector, key, values, scroll]: WrittenMark): Mark {
+  return { attribute, selector, key, values, scroll };
+}
+export function toWrittenMark({ attribute, selector, key, values, scroll }: Mark): WrittenMark {
+  return [attribute, selector, key, values, scroll];
+}
+
 // The projections as the renderer writes them. `Expresso.Presenter.Projection`
 // tells what each one does.
 export type WrittenProjections = Readonly<{
-  attributes: readonly (readonly [BooleanField, string, true] | readonly [Field, string, false])[];
-  properties: readonly (readonly [string, "fraction" | "done"])[];
-  marks: readonly (readonly [string, string, "slide" | "index", readonly (readonly [string, NumberField, number])[], boolean])[];
+  attributes: readonly WrittenAttribute[];
+  properties: readonly WrittenProperty[];
+  marks: readonly WrittenMark[];
 }>;
 export const decodeWrittenProjections: Decoder<WrittenProjections> = /* @__PURE__ */ object({
-  attributes: /* @__PURE__ */ list(/* @__PURE__ */ union("readonly [BooleanField, string, true] | readonly [Field, string, false]", /* @__PURE__ */ tuple(decodeBooleanField, /* @__PURE__ */ string(/^data-/), /* @__PURE__ */ literal(true)), /* @__PURE__ */ tuple(decodeField, /* @__PURE__ */ string(/^data-/), /* @__PURE__ */ literal(false)))),
-  properties: /* @__PURE__ */ list(/* @__PURE__ */ tuple(/* @__PURE__ */ string(/^--/), /* @__PURE__ */ oneOf(["fraction", "done"]))),
-  marks: /* @__PURE__ */ list(/* @__PURE__ */ tuple(/* @__PURE__ */ string(/^data-/), /* @__PURE__ */ string(), /* @__PURE__ */ oneOf(["slide", "index"]), /* @__PURE__ */ list(/* @__PURE__ */ tuple(/* @__PURE__ */ string(), decodeNumberField, /* @__PURE__ */ integer())), boolean)),
+  attributes: /* @__PURE__ */ list(decodeWrittenAttribute),
+  properties: /* @__PURE__ */ list(decodeWrittenProperty),
+  marks: /* @__PURE__ */ list(decodeWrittenMark),
 });
 
 // The program of the presenter for one deck, as the renderer writes it.
@@ -257,6 +311,19 @@ export const decodeSlide: Decoder<Slide> = /* @__PURE__ */ object({
 // fraction, the done part and the position.
 export type WrittenEntry = readonly [number, number, number, number, string];
 export const decodeWrittenEntry: Decoder<WrittenEntry> = /* @__PURE__ */ tuple(/* @__PURE__ */ integer(1), /* @__PURE__ */ integer(1), /* @__PURE__ */ number(0, 1), /* @__PURE__ */ number(0, 1), /* @__PURE__ */ string());
+export type Entry = Readonly<{
+  slide: number;
+  step: number;
+  fraction: number;
+  done: number;
+  position: string;
+}>;
+export function fromWrittenEntry([slide, step, fraction, done, position]: WrittenEntry): Entry {
+  return { slide, step, fraction, done, position };
+}
+export function toWrittenEntry({ slide, step, fraction, done, position }: Entry): WrittenEntry {
+  return [slide, step, fraction, done, position];
+}
 
 // The steps and the slides of a deck, as the renderer writes them.
 export type WrittenDeck = Readonly<{

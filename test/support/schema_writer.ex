@@ -9,6 +9,12 @@ defmodule Expresso.Test.SchemaWriter do
     * a decoder from the functions of `assets/src/decode.ts`, such as
       `decodeWrittenProgram`.
 
+  A form of a record, such as `written_entry`, also gets the type of the
+  object without the prefix `Written`, such as `Entry`, and a converter from
+  the array to the object, such as `fromWrittenEntry`. A form of one record
+  also gets a converter back to the array, such as `toWrittenEntry`, for the
+  tests of the script.
+
   After the forms, the file holds each constant of `Schema.constants/0`, such
   as `ELEMENT_KINDS`, with its type.
 
@@ -36,8 +42,62 @@ defmodule Expresso.Test.SchemaWriter do
     forms = Schema.types()
     constants = Schema.constants()
 
-    Enum.join([header() | Enum.map(forms, &form/1)] ++ Enum.map(constants, &value/1), "\n")
+    Enum.join(
+      [header() | Enum.map(forms, &(form(&1) <> converter(&1)))] ++ Enum.map(constants, &value/1),
+      "\n"
+    )
   end
+
+  # The object type and the converter of a form of a record, or nothing for a
+  # different form.
+  defp converter({name, _doc, type}) do
+    case records(type) do
+      [] ->
+        ""
+
+      [first | _others] = records ->
+        keys = Keyword.keys(first)
+        "written_" <> object = Atom.to_string(name)
+
+        fields =
+          Enum.map(keys, fn key ->
+            types = records |> Enum.map(&ts(Keyword.fetch!(&1, key), 1)) |> Enum.uniq()
+            {key, Enum.join(types, " | ")}
+          end)
+
+        """
+        export type #{Macro.camelize(object)} = Readonly<{
+        #{Enum.map_join(fields, "\n", fn {key, type} -> "  #{key}: #{type};" end)}
+        }>;
+        export function from#{type_name(name)}([#{Enum.join(keys, ", ")}]: #{type_name(name)}): #{Macro.camelize(object)} {
+          return { #{Enum.join(keys, ", ")} };
+        }
+        """ <> back(name, object, keys, records)
+    end
+  end
+
+  # The converter from the object to the array. A union of records has none,
+  # because the array of a union needs the type of one record.
+  defp back(name, object, keys, [_record]) do
+    """
+    export function to#{type_name(name)}({ #{Enum.join(keys, ", ")} }: #{Macro.camelize(object)}): #{type_name(name)} {
+      return [#{Enum.join(keys, ", ")}];
+    }
+    """
+  end
+
+  defp back(_name, _object, _keys, _records), do: ""
+
+  # The fields of each record of a form: one record, or each record of a union.
+  defp records({:record, fields}), do: [fields]
+
+  defp records({:union, types}) do
+    if Enum.all?(types, &match?({:record, _fields}, &1)),
+      do: Enum.map(types, fn {:record, fields} -> fields end),
+      else: []
+  end
+
+  defp records(_type), do: []
 
   defp header do
     """
@@ -123,6 +183,7 @@ defmodule Expresso.Test.SchemaWriter do
   defp ts({:nullable, type}, depth), do: ts(type, depth) <> " | null"
   defp ts({:list, type}, depth), do: "readonly " <> element(ts(type, depth)) <> "[]"
   defp ts({:tuple, types}, depth), do: "readonly [#{Enum.map_join(types, ", ", &ts(&1, depth))}]"
+  defp ts({:record, fields}, depth), do: ts({:tuple, Keyword.values(fields)}, depth)
   defp ts({:object, fields}, depth), do: shape(fields, "", depth)
   defp ts({:open_object, fields}, depth), do: shape(fields, "", depth)
   defp ts({:partial, fields}, depth), do: shape(fields, "?", depth)
@@ -163,6 +224,8 @@ defmodule Expresso.Test.SchemaWriter do
 
   defp decode({:tuple, types}, depth),
     do: call("tuple", Enum.map_join(types, ", ", &decode(&1, depth)))
+
+  defp decode({:record, fields}, depth), do: decode({:tuple, Keyword.values(fields)}, depth)
 
   defp decode({:object, fields}, depth), do: call("object", fields(fields, depth))
   defp decode({:open_object, fields}, depth), do: call("openObject", fields(fields, depth))

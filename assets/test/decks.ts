@@ -4,6 +4,7 @@
 // deck with no renderer.
 
 import { indexOf } from "../src/deck.ts";
+import { toWrittenEntry } from "../src/schema.ts";
 import type { Deck, Entry, Kind } from "../src/deck.ts";
 import type { State, View } from "../src/state.ts";
 import { load } from "./fixtures.ts";
@@ -53,13 +54,7 @@ export function deckOf(counts: readonly number[], options: Options = {}): Deck {
 // The JSON text that the renderer writes for a deck.
 export function json(deck: Deck): string {
   return JSON.stringify({
-    steps: deck.steps.map((entry) => [
-      entry.slide,
-      entry.step,
-      entry.fraction,
-      entry.done,
-      entry.position,
-    ]),
+    steps: deck.steps.map(toWrittenEntry),
     slides: deck.slides,
     duration_ms: deck.duration,
   });

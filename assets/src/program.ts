@@ -12,10 +12,17 @@
 //
 // `Expresso.Presenter.Definition` tells what each mode and each command does.
 
+import {
+  fromWrittenAttribute,
+  fromWrittenMark,
+  fromWrittenProperty,
+} from "./schema.ts";
 import type {
+  Attribute,
   Command,
   Commands,
-  Field,
+  Mark,
+  Property,
   WrittenMode,
   WrittenProgram,
 } from "./schema.ts";
@@ -46,16 +53,9 @@ export type Mode = Readonly<{
 // property of the `body`. A mark writes an attribute on each element of a
 // selector whose `data-slide` or `data-index` agrees with a field plus an
 // offset. With `scroll`, `dom.ts` scrolls the first marked element into the
-// view of its container.
-export type Attribute = Readonly<{ field: Field; name: string; flag: boolean }>;
-export type Property = Readonly<{ name: string; entry: "fraction" | "done" }>;
-export type Mark = Readonly<{
-  attribute: string;
-  selector: string;
-  key: "slide" | "index";
-  values: readonly (readonly [string, Field, number])[];
-  scroll: boolean;
-}>;
+// view of its container. `schema.ts` declares `Attribute`, `Property` and
+// `Mark`, and their forms give the order of their values.
+export type { Attribute, Mark, Property } from "./schema.ts";
 export type Projections = Readonly<{
   attributes: readonly Attribute[];
   properties: readonly Property[];
@@ -105,21 +105,9 @@ export function fromWritten({
       swipe: map(mode.swipe),
     })),
     project: {
-      attributes: project.attributes.map(([field, name, flag]) => ({
-        field,
-        name,
-        flag,
-      })),
-      properties: project.properties.map(([name, entry]) => ({ name, entry })),
-      marks: project.marks.map(
-        ([attribute, selector, key, values, scroll]) => ({
-          attribute,
-          selector,
-          key,
-          values,
-          scroll,
-        }),
-      ),
+      attributes: project.attributes.map(fromWrittenAttribute),
+      properties: project.properties.map(fromWrittenProperty),
+      marks: project.marks.map(fromWrittenMark),
     },
   };
 }

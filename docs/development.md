@@ -714,9 +714,12 @@ message between the two windows. It is the one source of these forms:
 - `Expresso.Test.SchemaWriter` writes `assets/src/schema.ts`. That file holds a
   TypeScript type, a decoder, and for a form of strings a constant, for each form. After
   the forms, it holds each constant of `Expresso.Presenter.Schema.constants/0`, such as
-  `ELEMENT_KINDS`. The
-  modules of the script import their types from it, and `tsc` makes sure that each decoder
-  agrees with its type.
+  `ELEMENT_KINDS`. The modules of the script import their types from it, and `tsc` makes
+  sure that each decoder agrees with its type.
+- A record form, such as `written_entry`, names the value at each place of an array.
+  `Expresso.Presenter.Schema.Record.write/2` writes the array in that order, and the
+  converter of `schema.ts`, such as `fromWrittenEntry`, reads it in the same order. The
+  tests of the script write an array with the converter back, such as `toWrittenEntry`.
 - `Expresso.Presenter.Schema.Check` examines a decoded JSON value with the same forms. The
   verifier uses it for the values of a definition. The property tests of
   `test/expresso/presenter/schema_test.exs` make random decks, and they make sure that

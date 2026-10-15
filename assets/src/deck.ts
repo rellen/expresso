@@ -10,19 +10,16 @@
 // script trusts the list, as it trusts the program. `assets/test/validate.ts`
 // examines each list of the tests.
 
-import type { Slide, WrittenDeck } from "./schema.ts";
+import { fromWrittenEntry } from "./schema.ts";
+import type { Entry, Slide, WrittenDeck } from "./schema.ts";
 
-// One step of the deck. `fraction` is the part of the deck before the step,
-// from 0 to 1, and the progress bar shows it. `done` is the part of the steps
-// before the step, and it is less than 1. `position` is the text of the
-// speaker view, such as `Slide 4 of 13, step 2 of 3`.
-export type Entry = Readonly<{
-  slide: number;
-  step: number;
-  fraction: number;
-  done: number;
-  position: string;
-}>;
+// `Entry` is one step of the deck. `fraction` is the part of the deck before
+// the step, from 0 to 1, and the progress bar shows it. `done` is the part of
+// the steps before the step, and it is less than 1. `position` is the text of
+// the speaker view, such as `Slide 4 of 13, step 2 of 3`. `schema.ts` declares
+// it, and the form `written_entry` of `Expresso.Presenter.Schema` gives the
+// order of its values in the list.
+export type { Entry } from "./schema.ts";
 
 // `Slide` is one slide of the deck: `first` is the index of its step 1 in
 // `steps`, and `transition` is the kind of the transition into the slide.
@@ -40,13 +37,7 @@ export type Deck = Readonly<{
 // list that `decodeWrittenDeck` returns.
 export function fromWritten({ steps, slides, duration_ms }: WrittenDeck): Deck {
   return {
-    steps: steps.map(([slide, step, fraction, done, position]) => ({
-      slide,
-      step,
-      fraction,
-      done,
-      position,
-    })),
+    steps: steps.map(fromWrittenEntry),
     slides,
     duration: duration_ms,
   };

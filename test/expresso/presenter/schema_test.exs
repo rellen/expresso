@@ -9,6 +9,7 @@ defmodule Expresso.Presenter.SchemaTest do
 
   doctest Expresso.Presenter.Schema
   doctest Expresso.Presenter.Schema.Check
+  doctest Expresso.Presenter.Schema.Record
 
   # `Expresso.Test.SchemaWriter` tells how to write the file again.
   test "assets/src/schema.ts agrees with the forms of the schema" do
@@ -105,6 +106,24 @@ defmodule Expresso.Presenter.SchemaTest do
 
     assert MapSet.new(Enum.flat_map(found, &elem(&1, 1))) ==
              MapSet.new(Floki.find(html, "[data-commands]"))
+  end
+
+  # The fields of each record of a form: one record, or each record of a union.
+  defp records({:record, fields}), do: [fields]
+  defp records({:union, types}), do: for({:record, fields} <- types, do: fields)
+  defp records(_form), do: []
+
+  test "a record form has a name with written_, and the records of a union have the same keys" do
+    forms = for {name, _doc, form} <- Schema.types(), records(form) != [], do: {name, form}
+    assert length(forms) == 4
+
+    for {name, form} <- forms do
+      assert name |> Atom.to_string() |> String.starts_with?("written_")
+      assert form |> records() |> Enum.map(&Keyword.keys/1) |> Enum.uniq() |> length() == 1
+    end
+
+    assert Enum.sort(Expresso.Presenter.Schema.Record.names()) ==
+             forms |> Enum.map(&elem(&1, 0)) |> Enum.sort()
   end
 
   test "each form names only the forms before it" do
