@@ -87,6 +87,26 @@ defmodule Expresso.Presenter.SchemaTest do
     end
   end
 
+  test "the selectors of the command holders find each element with commands, and no other" do
+    deck =
+      Builder.deck([
+        Builder.slide("one",
+          section: "One",
+          elements: [Builder.text_area(text: "Next", goto: [slide: 2]), Builder.toc()]
+        ),
+        Builder.slide("two")
+      ])
+
+    html = deck |> Expresso.Deck.render() |> Floki.parse_document!()
+    [holders] = for {:command_holders, _doc, _form, value} <- Schema.constants(), do: value
+    found = for {kind, selector} <- holders, do: {kind, Floki.find(html, selector)}
+
+    for {kind, elements} <- found, do: assert(elements != [], "no #{kind} in the deck")
+
+    assert MapSet.new(Enum.flat_map(found, &elem(&1, 1))) ==
+             MapSet.new(Floki.find(html, "[data-commands]"))
+  end
+
   test "each form names only the forms before it" do
     Enum.reduce(Schema.types(), MapSet.new(), fn {name, _doc, form}, known ->
       for ref <- refs(form), do: assert(ref in known, "#{name} names #{ref} before its form")

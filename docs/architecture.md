@@ -2016,10 +2016,14 @@ examines no value. These parts find a defect of the program:
 - `validate` in `assets/test/validate.ts` decodes each program of the fixture file with
   the decoders of `assets/src/schema.ts`. It runs only in the tests, and the bundle does
   not hold it.
-- The interpreter throws for a command that it does not know.
+- The interpreter throws for a command that it does not know, and `call` in `main.ts`
+  throws for a built-in function that it does not know. The type check of each `switch`
+  finds a missing branch.
 - The click handler reads commands only from a link of the `goto` option, from a page of
-  the overview and from a row of the menu. Thus the script does not run an attribute
-  `data-commands` from the HTML of a deck.
+  the overview and from a row of the menu. `COMMAND_HOLDERS` of `schema.ts` gives their
+  selectors, and a test makes sure that they find each element with commands that the
+  renderer writes. Thus the script does not run an attribute `data-commands` from the HTML
+  of a deck.
 
 `Expresso.Presenter.Schema` describes each value that Elixir writes for the script, and
 `assets/src/schema.ts` holds the TypeScript type and the decoder of each value. A test
@@ -2325,8 +2329,10 @@ test `test/e2e/accessibility_test.exs` runs axe-core on each view. These are the
   ARIA practices. A `section` with a name is a `region` landmark, and the deck then has a
   landmark for each slide and each page. The role `group` keeps one landmark.
 - **A polite live region.** The role `status` does not stop the text that a screen reader
-  reads. `announce` in `dom.ts` writes the name of the slide at a change of the slide, and
-  the step only at a move inside a slide, so a fast series of steps gives short texts.
+  reads. At a change of the slide, `announce` in `dom.ts` writes the label that the
+  renderer writes on the page of the step, so the script does not make the text again. At
+  a move inside a slide, it writes the step only, so a fast series of steps gives short
+  texts.
 - **The ARIA state of the menu comes from `dom.ts`, and not from the projections.** A
   projection writes only `data-` attributes, and `Expresso.Presenter.Verifier` keeps this
   rule. `menu` in `dom.ts` copies `data-cursor` and `data-current` into `aria-selected`,

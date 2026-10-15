@@ -140,17 +140,6 @@ defmodule Expresso.Presenter.Interpreter do
   end
 
   @doc """
-  Return the state at the next step, or nil at the last step of the deck
-
-  The speaker view shows this step as the next step.
-  """
-  @spec upcoming(Program.t(), state()) :: state() | nil
-  def upcoming(program, state) do
-    after_step = step(program, state, 1)
-    if after_step != state, do: after_step
-  end
-
-  @doc """
   Return the transition between two states, or nil
 
   Only a move to a different slide in the present view has a transition. In

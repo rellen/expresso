@@ -113,6 +113,7 @@ import {
 } from "./dom.ts";
 import { fromAddress, next } from "./scheme.ts";
 import { restore as restoreAssets } from "./assets.ts";
+import { COMMAND_HOLDERS } from "./schema.ts";
 
 // Each view gets its copy of the large files before the first render.
 restoreAssets(document);
@@ -380,6 +381,15 @@ function call(builtin: Builtin): void {
     case "switch_scheme":
       switchScheme();
       break;
+    default: {
+      // The type check finds each built-in function that has no branch. The
+      // program comes from the renderer with no examination, so a function
+      // that the script does not know stops the script at once.
+      const unknown: never = builtin;
+      throw new Error(
+        `An unknown built-in function: ${JSON.stringify(unknown)}`,
+      );
+    }
   }
 }
 
@@ -431,10 +441,8 @@ keys?.addEventListener("input", (event: globalThis.Event) => {
 });
 
 // The three kinds of element that hold commands: a link of the `goto` option,
-// a page of the overview and a row of the menu.
-const LINK = "a.goto[data-commands]";
-const PAGE = ".handout-page[data-commands]";
-const ROW = "#menu :is(.menu-slide, .menu-step)[data-commands]";
+// a page of the overview and a row of the menu. `schema.ts` gives them.
+const { link: LINK, page: PAGE, row: ROW } = COMMAND_HOLDERS;
 
 // The elements that use a click themselves.
 const INTERACTIVE =

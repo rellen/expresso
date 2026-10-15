@@ -381,3 +381,12 @@ export const ELEMENT_KINDS: readonly ElementKind[] = [
   ["column","column",null],
   ["footnote","footnote",null],
 ];
+
+// The selectors of the three kinds of element that hold the commands of a
+// click: a link of the `goto` option, a page of the overview and a row of the
+// menu. The script reads commands only from these elements.
+export const COMMAND_HOLDERS: Readonly<{
+  link: string;
+  page: string;
+  row: string;
+}> = {"link":"a.goto[data-commands]","page":".handout-page[data-commands]","row":"#menu .menu-slide[data-commands], #menu .menu-step[data-commands]"};

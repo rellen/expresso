@@ -22,7 +22,8 @@ defmodule Expresso.Presenter.Schema do
   `t:type/0` describes the terms of a form.
 
   `constants/0` returns the constants of the script, such as the kinds of
-  element. `Expresso.Test.SchemaWriter` writes each constant into
+  element and the selectors of the elements that hold commands.
+  `Expresso.Test.SchemaWriter` writes each constant into
   `assets/src/schema.ts` too, so the script and Elixir use the same values.
   """
 
@@ -252,7 +253,15 @@ defmodule Expresso.Presenter.Schema do
        {:list, {:ref, :element_kind}},
        for {_module, class, kind, content} <- Expresso.Element.kinds() do
          [class, kind, content && Atom.to_string(content)]
-       end}
+       end},
+      {:command_holders,
+       "The selectors of the three kinds of element that hold the commands of a click: a link of the `goto` option, a page of the overview and a row of the menu. The script reads commands only from these elements.",
+       {:object, link: :string, page: :string, row: :string},
+       %{
+         "link" => "a.goto[data-commands]",
+         "page" => ".handout-page[data-commands]",
+         "row" => "#menu .menu-slide[data-commands], #menu .menu-step[data-commands]"
+       }}
     ]
   end
 

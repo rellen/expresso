@@ -239,8 +239,9 @@ function menu(open: boolean): void {
 }
 
 // Tell a screen reader the position after a move. A move to a different slide
-// gives the name of the slide, such as "Slide 3 of 12, step 1 of 2:
-// Supervisors". A move inside a slide gives the step, such as "Step 2 of 2".
+// gives the label that the renderer writes on the page of the step, such as
+// "Slide 3 of 12, step 1 of 2: Supervisors". A move inside a slide gives the
+// step, such as "Step 2 of 2".
 export function announce(
   state: State,
   deck: Deck,
@@ -251,20 +252,15 @@ export function announce(
   if (region === null || entry === undefined) {
     return;
   }
-  const section = document.getElementById(`slide-${entry.slide}`);
-  const max = Number(section?.dataset.maxStep ?? 1);
-  const step = max > 1 ? `step ${entry.step} of ${max}` : "";
-  if (!slideChanged) {
-    region.textContent = max > 1 ? `Step ${entry.step} of ${max}` : "";
+  if (slideChanged) {
+    const page = pages().find(
+      (each) => Number(each.dataset.index) === state.index,
+    );
+    region.textContent = page?.getAttribute("aria-label") ?? "";
     return;
   }
-  const [position = "", ...name] = (
-    section?.getAttribute("aria-label") ?? ""
-  ).split(": ");
-  region.textContent =
-    position +
-    (step === "" ? "" : `, ${step}`) +
-    (name.length === 0 ? "" : `: ${name.join(": ")}`);
+  const max = deck.slides[entry.slide - 1]?.steps ?? 1;
+  region.textContent = max > 1 ? `Step ${entry.step} of ${max}` : "";
 }
 
 // The notes of the page of the current step go into the element

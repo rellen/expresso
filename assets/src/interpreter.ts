@@ -283,13 +283,6 @@ export function follow(
   return position(program, state, data.slide, data.step, fields, deck);
 }
 
-// The state at the next step, or null at the last step of the deck. The
-// speaker view shows this step as the next step.
-export function upcoming(state: State, deck: Deck): State | null {
-  const after = goto(state, state.index + 1, deck);
-  return after === state ? null : after;
-}
-
 // A move to a slide with a higher number goes forward. `slide` and `zoom` use
 // the direction, and `fade` does not.
 export type Transition = Readonly<{

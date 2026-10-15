@@ -8,7 +8,6 @@ import {
   run,
   toHash,
   transition,
-  upcoming,
 } from "../src/interpreter.ts";
 import type { Event, Result } from "../src/interpreter.ts";
 import type { Deck } from "../src/deck.ts";
@@ -118,14 +117,6 @@ test("toHash returns the slide and the step, and #1.1 for a deck with no slide",
 
   const empty = load("");
   assert.equal(toHash(empty.program.state, empty.deck), "#1.1");
-});
-
-test("upcoming returns the next step, and null at the last step", () => {
-  const { deck, program } = load("1,2");
-  const first = program.state;
-
-  assert.equal(upcoming(first, deck)?.index, 1);
-  assert.equal(upcoming({ ...first, index: 2 }, deck), null);
 });
 
 test("helpMode returns the mode under the list of keys", () => {
