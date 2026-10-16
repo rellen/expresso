@@ -1,6 +1,8 @@
 defmodule Expresso.Presenter.DocumentTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Presenter.{Definition, Help, Program}
 
@@ -14,20 +16,21 @@ defmodule Expresso.Presenter.DocumentTest do
     end)
     |> Builder.deck(name: "deck")
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
+    |> LazyHTML.from_document()
   end
 
   defp box(text), do: Builder.text_box(elements: [Builder.text_area(text: text)])
 
   describe "the program" do
     test "is a JSON script element between the list of the steps and the bundle" do
-      ids = document() |> Floki.find("body > script") |> Enum.map(&Floki.attribute(&1, "id"))
+      ids =
+        document() |> LazyHTML.query("body > script") |> Enum.map(&LazyHTML.attribute(&1, "id"))
 
       assert ids == [["expresso-deck"], ["expresso-program"], []]
     end
 
     test "holds the program of the deck" do
-      text = document() |> Floki.find("script#expresso-program") |> Floki.text(js: true)
+      text = document() |> LazyHTML.query("script#expresso-program") |> LazyHTML.text()
       deck = Builder.deck(for(steps <- [1, 3, 2], do: Builder.slide("slide", steps: steps)))
 
       assert text == Program.json(Program.compile(Definition.presenter(), deck))
@@ -36,36 +39,38 @@ defmodule Expresso.Presenter.DocumentTest do
 
   describe "the menu" do
     test "holds a row for each slide and a row for each step, with the index and the commands of the step" do
-      menu = document() |> Floki.find("nav#menu")
+      menu = document() |> LazyHTML.query("nav#menu")
 
-      assert menu |> Floki.find(".menu-slide") |> length() == 3
+      assert count(menu, ".menu-slide") == 3
 
-      steps = Floki.find(menu, ".menu-step")
+      steps = LazyHTML.query(menu, ".menu-step")
 
-      assert Enum.map(steps, &Floki.attribute(&1, "data-index")) ==
+      assert Enum.map(steps, &LazyHTML.attribute(&1, "data-index")) ==
                Enum.map(0..5, &[to_string(&1)])
 
       for {step, index} <- Enum.with_index(steps) do
-        assert Floki.attribute(step, "data-commands") == [
+        assert LazyHTML.attribute(step, "data-commands") == [
                  index |> Program.menu() |> Program.json_commands()
                ]
       end
 
       firsts =
-        menu |> Floki.find(".menu-slide") |> Enum.flat_map(&Floki.attribute(&1, "data-commands"))
+        menu
+        |> LazyHTML.query(".menu-slide")
+        |> Enum.flat_map(&LazyHTML.attribute(&1, "data-commands"))
 
       assert firsts == Enum.map([0, 1, 4], &(&1 |> Program.menu() |> Program.json_commands()))
     end
 
     test "a row of a slide holds a copy of its last step, and its name" do
-      menu = document() |> Floki.find("nav#menu")
+      menu = document() |> LazyHTML.query("nav#menu")
 
       assert menu
-             |> Floki.find("section.menu-thumb")
-             |> Enum.flat_map(&Floki.attribute(&1, "data-step")) ==
+             |> LazyHTML.query("section.menu-thumb")
+             |> Enum.flat_map(&LazyHTML.attribute(&1, "data-step")) ==
                ["1", "3", "2"]
 
-      assert menu |> Floki.find(".menu-name") |> Enum.map(&Floki.text/1) ==
+      assert texts(menu, ".menu-name") ==
                ["slide 1", "slide 2", "slide 3"]
     end
 
@@ -77,53 +82,59 @@ defmodule Expresso.Presenter.DocumentTest do
           Builder.slide("three", steps: 2, labels: [nil, "Second"])
         ])
 
-      menu = deck |> Expresso.Deck.render() |> Floki.parse_document!() |> Floki.find("nav#menu")
+      menu =
+        deck |> Expresso.Deck.render() |> LazyHTML.from_document() |> LazyHTML.query("nav#menu")
 
-      assert menu |> Floki.find(".menu-name") |> Enum.map(&Floki.text/1) ==
+      assert texts(menu, ".menu-name") ==
                ["The start", "two", "three"]
 
-      assert menu |> Floki.find(".menu-label") |> Enum.map(&Floki.text/1) ==
+      assert texts(menu, ".menu-label") ==
                ["", "Named", "", "Second"]
 
       assert menu
-             |> Floki.find(".menu-step[data-single]")
-             |> Enum.flat_map(&Floki.attribute(&1, "data-index")) ==
+             |> LazyHTML.query(".menu-step[data-single]")
+             |> Enum.flat_map(&LazyHTML.attribute(&1, "data-index")) ==
                ["0"]
     end
   end
 
   describe "the list of keys" do
     test "is a dialog with a search field and a closed section for each mode" do
-      [dialog] = Floki.find(document(), "dialog#help")
+      [dialog] = document() |> LazyHTML.query("dialog#help") |> Enum.to_list()
 
-      assert Floki.attribute(dialog, "open") == []
-      assert Floki.attribute(dialog, "closedby") == ["any"]
-      assert [_field] = Floki.find(dialog, "input#help-filter[type=text][autofocus]")
+      assert LazyHTML.attribute(dialog, "open") == []
+      assert LazyHTML.attribute(dialog, "closedby") == ["any"]
 
-      sections = Floki.find(dialog, "details[data-mode]")
+      assert [_field] =
+               LazyHTML.query(dialog, "input#help-filter[type=text][autofocus]") |> Enum.to_list()
 
-      assert Enum.map(sections, &Floki.attribute(&1, "data-mode")) ==
+      sections = LazyHTML.query(dialog, "details[data-mode]")
+
+      assert Enum.map(sections, &LazyHTML.attribute(&1, "data-mode")) ==
                [["overview"], ["menu"], ["present"], ["speaker"], ["handout"]]
 
-      assert Enum.all?(sections, &(Floki.attribute(&1, "open") == []))
+      assert Enum.all?(sections, &(LazyHTML.attribute(&1, "open") == []))
     end
 
     test "holds the rows of Help.groups/1, with a heading for each group and the words of each row" do
-      sections = Floki.find(document(), "details[data-mode]")
+      sections = LazyHTML.query(document(), "details[data-mode]")
+      modes = Help.groups(Definition.presenter())
 
-      for {section, {mode, groups}} <- Enum.zip(sections, Help.groups(Definition.presenter())) do
-        assert section |> Floki.find("summary .help-mode") |> Floki.text() == Help.title(mode)
+      # The loop compares nothing when the document has no section.
+      assert Enum.count(sections) == length(modes)
+
+      for {section, {mode, groups}} <- Enum.zip(sections, modes) do
+        assert texts(section, "summary .help-mode") == [Help.title(mode)]
 
         headings = for {heading, _rows} <- groups, heading, do: heading
-        assert section |> Floki.find(".help-group") |> Enum.map(&Floki.text/1) == headings
+        assert texts(section, ".help-group") == headings
 
         rows = Enum.flat_map(groups, fn {_heading, rows} -> rows end)
 
         found =
-          for row <- Floki.find(section, "li") do
-            {Floki.attribute(row, "data-words"),
-             Floki.find(row, "kbd") |> Enum.map(&Floki.text/1),
-             row |> Floki.find(".help-action") |> Floki.text()}
+          for row <- LazyHTML.query(section, "li") do
+            {LazyHTML.attribute(row, "data-words"), texts(row, "kbd"),
+             row |> LazyHTML.query(".help-action") |> LazyHTML.text()}
           end
 
         # A row with a label shows the label and no key.
@@ -148,8 +159,9 @@ defmodule Expresso.Presenter.DocumentTest do
   describe "the parts that do not change" do
     test "each page holds the index of its step, and the page of the last step of a slide is a thumbnail" do
       pages =
-        for page <- Floki.find(document(), ".handout-page") do
-          {Floki.attribute(page, "data-index"), Floki.attribute(page, "data-thumbnail") != []}
+        for page <- LazyHTML.query(document(), ".handout-page") do
+          {LazyHTML.attribute(page, "data-index"),
+           LazyHTML.attribute(page, "data-thumbnail") != []}
         end
 
       assert pages == [
@@ -163,33 +175,35 @@ defmodule Expresso.Presenter.DocumentTest do
     end
 
     test "the body holds the columns of the overview and the zoom of each page" do
-      [style] = document() |> Floki.find("body") |> Floki.attribute("style")
+      [style] = document() |> LazyHTML.query("body") |> LazyHTML.attribute("style")
 
       # Three slides give two columns, and (98 - 1) / 200 is 0.485.
       assert style =~ "--overview-columns: 2;"
       assert style =~ "--overview-zoom: 0.485;"
 
-      [style] = document([1, 1, 1, 1, 1, 1, 1]) |> Floki.find("body") |> Floki.attribute("style")
+      [style] =
+        document([1, 1, 1, 1, 1, 1, 1]) |> LazyHTML.query("body") |> LazyHTML.attribute("style")
+
       assert style =~ "--overview-columns: 3;"
       assert style =~ "--overview-zoom: 0.32;"
     end
 
     test "the handout view holds the four empty elements of the speaker view" do
-      elements = Floki.find(document(), ".handout > div")
+      elements = LazyHTML.query(document(), ".handout > div")
 
-      assert Enum.map(elements, &Floki.attribute(&1, "id")) ==
+      assert Enum.map(elements, &LazyHTML.attribute(&1, "id")) ==
                [["speaker-notes"], ["speaker-position"], ["speaker-timer"], ["speaker-left"]]
 
-      assert Enum.all?(elements, &(Floki.text(&1) == ""))
+      assert Enum.all?(elements, &(LazyHTML.text(&1) == ""))
     end
   end
 
   describe "the pages of the handout" do
     test "only the page of the last step of each slide holds the commands of a click in the overview" do
       pages =
-        for page <- Floki.find(document(), ".handout-page") do
-          {Floki.attribute(page, "data-slide"), Floki.attribute(page, "data-step"),
-           Floki.attribute(page, "data-commands")}
+        for page <- LazyHTML.query(document(), ".handout-page") do
+          {LazyHTML.attribute(page, "data-slide"), LazyHTML.attribute(page, "data-step"),
+           LazyHTML.attribute(page, "data-commands")}
         end
 
       commands = &[Program.json_commands(Program.element(&1))]
