@@ -116,7 +116,8 @@ defmodule Expresso.Element.Shape do
   The key `overlay` holds the attributes of the overlay contract, and, for a
   rectangle and an ellipse, the `style` attribute of the box. The key `marker`
   holds a new id for the head of an arrow. Each copy of a slide renders the
-  shape again, so each copy gets its own id, as the copies of a diagram do.
+  shape again, so each copy gets its own id from `Expresso.Copies.next/0`, as
+  the copies of a diagram do.
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
@@ -135,7 +136,7 @@ defmodule Expresso.Element.Shape do
       to: shape.to,
       text: shape.text,
       fill: shape.fill,
-      marker: "shape-arrow-#{System.unique_integer([:positive])}",
+      marker: "shape-arrow-#{Expresso.Copies.next()}",
       overlay: Expresso.Overlay.Render.attributes(shape) ++ box
     }
   end

@@ -1218,9 +1218,13 @@ the option takes the width that the file gives.
 The document holds one copy of the file for the present view and one for each page of the
 handout view. A browser resolves a reference such as `url(#fill)` to the first element of
 the document with that `id`. A gradient in a hidden view then does not paint. Therefore
-the render function gives each copy its own ids. It puts a number after each `id`, and it
-puts the same number into each `url(#id)` and each `href="#id"` of the copy. The number
-comes from `System.unique_integer/1`, so two renders of one deck give different numbers.
+the render function gives each copy its own ids. It puts the number of the copy after each
+`id`, and it puts the same number into each `url(#id)` and each `href="#id"` of the copy.
+`Expresso.Copies.next/0` gives the number. `Expresso.Renderer.render/1` makes each
+document in `Expresso.Copies.number/1`, which counts from 1. Thus two renders of one deck
+give the same document, also in two different VMs. The release tests compare the document
+of the binary with the document of `Expresso.main/2`, so the numbers must not depend on
+the VM.
 
 The document passes Floki, and Floki writes each name of an SVG in lowercase, such as
 `viewbox`. A browser reads the lowercase names inside an `svg` element as the names of
@@ -1380,7 +1384,7 @@ in its place, as a footnote does. The renderer collects the shapes of a slide wi
   head of an arrow keeps its shape.
 - **The head of an arrow has a new id in each copy.** A browser draws a `marker` from the
   first element with its id, and a marker in a hidden view does not paint. Each render of
-  an arrow therefore gets an id from `System.unique_integer/1`, as each copy of a diagram
+  an arrow therefore gets an id from `Expresso.Copies.next/0`, as each copy of a diagram
   gets new ids.
 - **The color is `--color`.** A shape draws with `currentColor`, and its `--color` is
   `--shape-color`. The rules of the overlays mix `--color` with the dimmed color, so
