@@ -52,9 +52,10 @@ defmodule Expresso.ClassOptionTest do
   end
 
   defp document,
-    do: ClassDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+    do: ClassDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
 
-  defp classes(selector), do: document() |> Floki.find(selector) |> Floki.attribute("class")
+  defp classes(selector),
+    do: document() |> LazyHTML.query(selector) |> LazyHTML.attribute("class")
 
   test "a slide gets its classes in the present view and on each page of the handout view" do
     assert classes(".screen section.slide") == ["slide dense wide", "slide"]
@@ -98,12 +99,12 @@ defmodule Expresso.ClassOptionTest do
       ]
       |> Builder.deck()
       |> Expresso.Deck.render()
-      |> Floki.parse_document!()
+      |> LazyHTML.from_document()
 
-    assert document |> Floki.find(".screen section.slide") |> Floki.attribute("class") ==
+    assert document |> LazyHTML.query(".screen section.slide") |> LazyHTML.attribute("class") ==
              ["slide dense"]
 
-    assert document |> Floki.find(".screen .text-area") |> Floki.attribute("class") ==
+    assert document |> LazyHTML.query(".screen .text-area") |> LazyHTML.attribute("class") ==
              ["text-area x y"]
   end
 

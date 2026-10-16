@@ -1,6 +1,8 @@
 defmodule Expresso.MorphTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
 
   doctest Expresso.Morph
@@ -9,13 +11,13 @@ defmodule Expresso.MorphTest do
     slides
     |> Builder.deck(Keyword.merge([name: "morph"], opts))
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
+    |> LazyHTML.from_document()
   end
 
   defp modes(document) do
     document
-    |> Floki.find(".screen section.slide")
-    |> Enum.flat_map(&Floki.attribute(&1, "data-morph"))
+    |> LazyHTML.query(".screen section.slide")
+    |> Enum.flat_map(&LazyHTML.attribute(&1, "data-morph"))
   end
 
   test "each slide has the morph of the deck, :auto by default, and a slide replaces it" do
@@ -39,8 +41,8 @@ defmodule Expresso.MorphTest do
 
     keys =
       document
-      |> Floki.find(".screen [data-morph-key]")
-      |> Enum.flat_map(&Floki.attribute(&1, "data-morph-key"))
+      |> LazyHTML.query(".screen [data-morph-key]")
+      |> Enum.flat_map(&LazyHTML.attribute(&1, "data-morph-key"))
 
     assert keys == ["brand", "count"]
   end
@@ -71,9 +73,9 @@ defmodule Expresso.MorphTest do
     end
 
     assert {:ok, deck} = Expresso.to_deck(Deck)
-    document = deck |> Expresso.Deck.render() |> Floki.parse_document!()
+    document = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
     assert modes(document) == ["named", "auto"]
-    assert length(Floki.find(document, ~s(.screen [data-morph-key="brand"]))) == 2
+    assert count(document, ~s(.screen [data-morph-key="brand"])) == 2
   end
 
   @poster "examples/animations/clip.png"
@@ -83,8 +85,8 @@ defmodule Expresso.MorphTest do
   defp signatures(slides, class) do
     slides
     |> document()
-    |> Floki.find(".screen .#{class}")
-    |> Enum.map(&(&1 |> Floki.attribute("data-morph-signature") |> List.first()))
+    |> LazyHTML.query(".screen .#{class}")
+    |> Enum.map(&(&1 |> LazyHTML.attribute("data-morph-signature") |> List.first()))
   end
 
   # A slide for each element.

@@ -124,7 +124,7 @@ defmodule Expresso.ElementTest do
     # The first kind whose class the tag has, as `assets/src/morph.ts` and
     # `assets/src/layout.ts` find it.
     defp kind_of(tag) do
-      classes = tag |> Floki.attribute("class") |> Enum.flat_map(&String.split/1)
+      classes = tag |> LazyHTML.attribute("class") |> Enum.flat_map(&String.split/1)
 
       Enum.find(Expresso.Element.kinds(), fn {_module, class, _kind, _content} ->
         class in classes
@@ -135,8 +135,8 @@ defmodule Expresso.ElementTest do
       [Builder.slide("one", heading: "Kinds", section: "Kinds", elements: [element])]
       |> Builder.deck(name: "kinds")
       |> Expresso.Deck.render()
-      |> Floki.parse_document!()
-      |> Floki.find(".screen")
+      |> LazyHTML.from_document()
+      |> LazyHTML.query(".screen")
     end
 
     test "the script finds the kind of each element from the class of its root tag" do
@@ -144,12 +144,15 @@ defmodule Expresso.ElementTest do
       assert length(samples) == length(Expresso.Element.kinds()) - 1
 
       for {element, module} <- samples do
-        [root] = element |> present() |> Floki.find(".sample")
+        [root] = element |> present() |> LazyHTML.query(".sample") |> Enum.to_list()
         assert {^module, _class, _kind, _content} = kind_of(root)
       end
 
       [container] =
-        Builder.text_area(text: "a") |> present() |> Floki.find(".slide-heading-container")
+        Builder.text_area(text: "a")
+        |> present()
+        |> LazyHTML.query(".slide-heading-container")
+        |> Enum.to_list()
 
       assert {nil, _class, "heading", :text} = kind_of(container)
     end
