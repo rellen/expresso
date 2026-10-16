@@ -1,6 +1,8 @@
 defmodule Expresso.Element.AudioTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Audio
   alias Expresso.Presenter.Schema.Check
@@ -34,17 +36,20 @@ defmodule Expresso.Element.AudioTest do
   end
 
   defp document,
-    do: AudioDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+    do: AudioDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
 
   defp json(document),
-    do: document |> Floki.find("script#expresso-audios") |> Floki.text(js: true) |> JSON.decode!()
+    do: document |> LazyHTML.query("script#expresso-audios") |> LazyHTML.text() |> JSON.decode!()
 
   test "writes no source on a sound, and each sound names its file" do
-    sounds = Floki.find(document(), "audio")
+    document = document()
+    sounds = count(document, "audio")
 
-    assert sounds != []
-    assert Enum.flat_map(sounds, &Floki.attribute(&1, "src")) == []
-    assert sounds |> Enum.flat_map(&Floki.attribute(&1, "data-audio")) |> Enum.uniq() == ["0"]
+    assert sounds > 0
+    assert count(document, "audio:not([src])") == sounds
+
+    assert document |> LazyHTML.query("audio") |> LazyHTML.attribute("data-audio") |> Enum.uniq() ==
+             ["0"]
   end
 
   test "writes each file one time, as a data URI that the schema takes" do
@@ -57,26 +62,26 @@ defmodule Expresso.Element.AudioTest do
   end
 
   test "a sound without options has no controls, no loop and no tab stop, and a caption with its title" do
-    [first | _copies] = Floki.find(document(), "#slide-1 figure.audio")
-    [sound] = Floki.find(first, "audio")
+    [first | _copies] = document() |> LazyHTML.query("#slide-1 figure.audio") |> Enum.to_list()
+    [sound] = first |> LazyHTML.query("audio") |> Enum.to_list()
 
-    assert Floki.attribute(sound, "aria-label") == ["A chime"]
-    assert Floki.attribute(sound, "preload") == ["none"]
-    assert Floki.attribute(sound, "controls") == []
-    assert Floki.attribute(sound, "loop") == []
-    assert Floki.attribute(sound, "muted") == []
-    assert Floki.attribute(sound, "tabindex") == ["-1"]
-    assert first |> Floki.find("figcaption") |> Floki.text() == "♪ A chime"
+    assert LazyHTML.attribute(sound, "aria-label") == ["A chime"]
+    assert LazyHTML.attribute(sound, "preload") == ["none"]
+    assert LazyHTML.attribute(sound, "controls") == []
+    assert LazyHTML.attribute(sound, "loop") == []
+    assert LazyHTML.attribute(sound, "muted") == []
+    assert LazyHTML.attribute(sound, "tabindex") == ["-1"]
+    assert texts(first, "figcaption") == ["♪ A chime"]
   end
 
   test "gives the controls, the loop and the overlay to a sound with those options" do
-    [figure | _copies] = Floki.find(document(), "#slide-2 figure.audio")
-    [sound] = Floki.find(figure, "audio")
+    [figure | _copies] = document() |> LazyHTML.query("#slide-2 figure.audio") |> Enum.to_list()
+    [sound] = figure |> LazyHTML.query("audio") |> Enum.to_list()
 
-    assert Floki.attribute(sound, "controls") == ["controls"]
-    assert Floki.attribute(sound, "loop") == ["loop"]
-    assert Floki.attribute(sound, "tabindex") == []
-    assert Floki.attribute(figure, "data-on") == ["2"]
+    assert LazyHTML.attribute(sound, "controls") == ["controls"]
+    assert LazyHTML.attribute(sound, "loop") == ["loop"]
+    assert LazyHTML.attribute(sound, "tabindex") == []
+    assert LazyHTML.attribute(figure, "data-on") == ["2"]
   end
 
   test "a deck with no sound has no list of sounds" do
@@ -84,10 +89,9 @@ defmodule Expresso.Element.AudioTest do
 
     assert Audio.json(deck) == nil
 
-    assert deck
-           |> Expresso.Deck.render()
-           |> Floki.parse_document!()
-           |> Floki.find("#expresso-audios") == []
+    document = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
+
+    assert count(document, "body:not(:has(#expresso-audios))") == 1
   end
 
   test "the compiler refuses a file that is not a sound of the list, and an address" do

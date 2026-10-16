@@ -1,6 +1,8 @@
 defmodule Expresso.Element.EmbedTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Embed
   alias Expresso.Presenter.Schema.Check
@@ -32,26 +34,25 @@ defmodule Expresso.Element.EmbedTest do
   end
 
   defp deck, do: Expresso.parse(EmbedDeck)
-  defp document, do: deck() |> Expresso.Deck.render() |> Floki.parse_document!()
+  defp document, do: deck() |> Expresso.Deck.render() |> LazyHTML.from_document()
 
   describe "the document" do
     test "writes no source on a frame, and each frame names its embed" do
-      frames = Floki.find(document(), "iframe.embed-frame")
+      document = document()
+      frames = count(document, "iframe.embed-frame")
 
-      assert Enum.all?(
-               frames,
-               &(Floki.attribute(&1, "src") == [] and Floki.attribute(&1, "srcdoc") == [])
-             )
+      assert frames > 0
+      assert count(document, "iframe.embed-frame:not([src]):not([srcdoc])") == frames
 
-      assert document()
-             |> Floki.find(".screen iframe")
-             |> Enum.map(&Floki.attribute(&1, "data-embed")) ==
+      assert document
+             |> LazyHTML.query(".screen iframe")
+             |> Enum.map(&LazyHTML.attribute(&1, "data-embed")) ==
                [["0"], ["1"]]
     end
 
     test "writes the source of each embed one time, in the order of the numbers" do
-      [block] = Floki.find(document(), "script#expresso-embeds")
-      text = Floki.text(block, js: true)
+      [block] = document() |> LazyHTML.query("script#expresso-embeds") |> Enum.to_list()
+      text = LazyHTML.text(block)
 
       refute text =~ "<"
       assert [local, address] = JSON.decode!(text)
@@ -62,40 +63,43 @@ defmodule Expresso.Element.EmbedTest do
     end
 
     test "gives a local page scripts only, and a page of the network its own origin" do
-      [local, address] = Floki.find(document(), ".screen iframe")
+      [local, address] = document() |> LazyHTML.query(".screen iframe") |> Enum.to_list()
 
-      assert Floki.attribute(local, "sandbox") == ["allow-scripts"]
-      assert Floki.attribute(address, "sandbox") == ["allow-scripts allow-same-origin"]
-      assert Floki.attribute(local, "referrerpolicy") == ["no-referrer"]
+      assert LazyHTML.attribute(local, "sandbox") == ["allow-scripts"]
+      assert LazyHTML.attribute(address, "sandbox") == ["allow-scripts allow-same-origin"]
+      assert LazyHTML.attribute(local, "referrerpolicy") == ["no-referrer"]
     end
 
     test "keeps the key Tab out of a frame that is not interactive" do
-      [local, address] = Floki.find(document(), ".screen iframe")
+      [local, address] = document() |> LazyHTML.query(".screen iframe") |> Enum.to_list()
 
-      assert Floki.attribute(local, "tabindex") == ["-1"]
-      assert Floki.attribute(local, "data-interactive") == []
-      assert Floki.attribute(address, "tabindex") == []
-      assert Floki.attribute(address, "data-interactive") != []
+      assert LazyHTML.attribute(local, "tabindex") == ["-1"]
+      assert LazyHTML.attribute(local, "data-interactive") == []
+      assert LazyHTML.attribute(address, "tabindex") == []
+      assert LazyHTML.attribute(address, "data-interactive") != []
     end
 
     test "writes the title on the frame and on the fallback, and a placeholder without a fallback" do
-      [local, address] = Floki.find(document(), ".screen .embed")
+      [local, address] = document() |> LazyHTML.query(".screen .embed") |> Enum.to_list()
 
-      assert local |> Floki.find("img.embed-fallback") |> Floki.attribute("alt") == [
+      assert local |> LazyHTML.query("img.embed-fallback") |> LazyHTML.attribute("alt") == [
                "A page that counts"
              ]
 
-      assert local |> Floki.find("iframe") |> Floki.attribute("title") == ["A page that counts"]
-      assert address |> Floki.find(".embed-placeholder") |> Floki.text() =~ "An example page"
+      assert local |> LazyHTML.query("iframe") |> LazyHTML.attribute("title") == [
+               "A page that counts"
+             ]
 
-      assert address |> Floki.find(".embed-address") |> Floki.text() ==
-               "https://example.com/a?b=c&d=e"
+      assert address |> LazyHTML.query(".embed-placeholder") |> LazyHTML.text() =~
+               "An example page"
+
+      assert texts(address, ".embed-address") == ["https://example.com/a?b=c&d=e"]
     end
 
     test "writes the width as a viewport unit, and the ratio" do
-      [local, _address] = Floki.find(document(), ".screen .embed")
+      [local, _address] = document() |> LazyHTML.query(".screen .embed") |> Enum.to_list()
 
-      assert Floki.attribute(local, "style") == ["--embed-width: 60vw; --embed-aspect: 4/3"]
+      assert LazyHTML.attribute(local, "style") == ["--embed-width: 60vw; --embed-aspect: 4/3"]
     end
 
     test "a deck with no embed gets no block of sources" do
@@ -104,7 +108,8 @@ defmodule Expresso.Element.EmbedTest do
         |> Builder.deck()
         |> Expresso.Deck.render()
 
-      assert html |> Floki.parse_document!() |> Floki.find("script#expresso-embeds") == []
+      assert html |> LazyHTML.from_document() |> count("body:not(:has(script#expresso-embeds))") ==
+               1
     end
 
     test "raises for a local page that it cannot read" do
