@@ -141,8 +141,9 @@ defmodule Expresso.Presenter.Default do
     key "b", set(:blank, true), "Black screen. The next key shows the slide again.",
       group: @screen
 
-    key "d", toggle(:undim), "Code in full color until the next step, in the two windows",
-      group: @screen
+    key "d",
+        toggle(:undim),
+        "Code and charts in full color until the next step, in the two windows", group: @screen
 
     key "t", builtin(:switch_scheme), "Light or dark variant of the theme, in the two windows",
       group: @screen
@@ -206,8 +207,9 @@ defmodule Expresso.Presenter.Default do
     key "b", set(:blank, true), "Black screen. The next key shows the slide again.",
       group: @screen
 
-    key "d", toggle(:undim), "Code in full color until the next step, in the two windows",
-      group: @screen
+    key "d",
+        toggle(:undim),
+        "Code and charts in full color until the next step, in the two windows", group: @screen
 
     key "t", builtin(:switch_scheme), "Light or dark variant of the theme, in the two windows",
       group: @screen

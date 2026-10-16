@@ -674,6 +674,8 @@ rule of the theme. The filter multiplies the two values, so the fade of `at` wor
 before. The state `dim` changes the colors of the text, and not the filter:
 `docs/dim-state.md` gives the design. An image, an SVG file and an embed still dim with
 `filter: opacity(...)` and `--dim-opacity`, because the theme does not know their colors.
+A series of a chart fades its marks to `--chart-dim-opacity`, and its texts take the
+dimmed color of the text. `docs/reference/chart-element.md` gives the rules.
 
 The `@property` at-rule became available in all major browsers in July 2024. Chrome 85,
 Safari 16.4 and Firefox 128 support it. The floor of this design is that date, and not

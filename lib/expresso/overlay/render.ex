@@ -84,8 +84,11 @@ defmodule Expresso.Overlay.Render do
 
   # An element with an `on` entity has an identity. A chart whose marks move
   # also has one, because the rules of its frames and the clips of its bars
-  # name it.
-  defp identity?(%Chart{} = chart), do: on(chart) != [] or Chart.moves?(chart)
+  # name it. So does a chart with the `highlight` option, because the rules of
+  # its groups name it.
+  defp identity?(%Chart{} = chart),
+    do: on(chart) != [] or Chart.moves?(chart) or chart.focus != []
+
   defp identity?(element), do: on(element) != []
 
   @doc """
@@ -161,9 +164,10 @@ defmodule Expresso.Overlay.Render do
     properties of the entity on the element, at each step of the entity. A
     `dim` value also sets `--dimmed`, which the theme reads for the dimmed
     colors.
-  - The rules of the frames of each chart, from
-    `Expresso.Element.Chart.rules/1`. Each rule sets the custom properties
-    of a frame at the steps of that frame.
+  - The rules of the frames and of the `highlight` option of each chart, from
+    `Expresso.Element.Chart.rules/1`. Each rule of a frame sets the custom
+    properties of the frame at its steps, and each rule of a group dims the
+    other series at the step of the group.
   - One rule for each speed in milliseconds of the deck, such as
     `[data-speed="450"] { --speed: 450ms; }`. The theme gives the presets.
 

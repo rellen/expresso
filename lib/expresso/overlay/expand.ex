@@ -11,7 +11,7 @@ defmodule Expresso.Overlay.Expand do
   `docs/overlays.md` gives the rules.
   """
 
-  alias Expresso.Element.{Code, On, Pause}
+  alias Expresso.Element.{Chart, Code, On, Pause}
   alias Expresso.Overlay
   alias Expresso.Slide
   alias Shoddy.Result
@@ -170,6 +170,8 @@ defmodule Expresso.Overlay.Expand do
 
     counter = counter + lead(element)
 
+    {focus, counter} = Enum.map_reduce(focus(element), counter, &resolve_element/2)
+
     children = reveal(element)
 
     {children, counter, local} =
@@ -182,7 +184,7 @@ defmodule Expresso.Overlay.Expand do
         {children, after_children, nil}
       end
 
-    element = put(element, at, on, children)
+    element = element |> put(at, on, children) |> put_focus(focus)
 
     cond do
       frames(element) == [] ->
@@ -220,8 +222,18 @@ defmodule Expresso.Overlay.Expand do
 
   defp frames(element), do: Map.get(element, :timeline) || []
 
+  # The groups of the highlight option of a chart. Each group takes one step
+  # from the counter, after the steps of the at option, of the on entities and
+  # of the whole_first option of the chart, and before the series.
+  defp focus(element), do: Map.get(element, :focus) || []
+
+  defp put_focus(element, focus) do
+    if Map.has_key?(element, :focus), do: %{element | focus: focus}, else: element
+  end
+
   # The steps that an element takes before its children, as a pause does.
   defp lead(%Code{} = code), do: Code.lead(code)
+  defp lead(%Chart{} = chart), do: Chart.lead(chart)
   defp lead(_element), do: 0
 
   # The implicit specification of the reveal option. It goes on each child of
@@ -271,7 +283,8 @@ defmodule Expresso.Overlay.Expand do
     at = List.wrap(at(element))
     on = Enum.map(on(element), & &1.at)
     timeline = for %{at: %Overlay{} = at} <- frames(element), do: at
-    at ++ on ++ timeline ++ Enum.flat_map(children(element), &specs/1)
+    focus = for %{at: %Overlay{} = at} <- focus(element), do: at
+    at ++ on ++ timeline ++ focus ++ Enum.flat_map(children(element), &specs/1)
   end
 
   # The expansion into step numbers
@@ -287,9 +300,10 @@ defmodule Expresso.Overlay.Expand do
   defp expand_element(element, max) do
     with {:ok, steps} <- expand_spec(at(element), max),
          {:ok, on} <- expand_on(on(element), max),
+         {:ok, focus} <- expand(focus(element), max),
          {:ok, children} <- expand(children(element), max),
          {:ok, element} <- expand_frames(element, max) do
-      element = put(element, at(element), on, dim(element, children))
+      element = element |> put(at(element), on, dim(element, children)) |> put_focus(focus)
       {:ok, %{element | steps: steps}}
     end
   end

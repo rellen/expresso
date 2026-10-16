@@ -221,12 +221,14 @@ The bar is a shadow at the left of the line. It takes no space, so the text does
 
 ### The key d
 
-The key `d` turns off the dimming of each code element in the present view, until the next
-change of the step. It works in the present view and in the speaker view, and the two
-windows show the same result.
+The key `d` turns off the dimming of each code element and of each series of a chart in
+the present view, until the next change of the step. It works in the present view and in
+the speaker view, and the two windows show the same result.
 
 - The lines that dim show in full color. The bar stays on the group in focus.
 - A line that `reveal` hides stays hidden.
+- A series of a chart that `highlight` or `dim true` dims shows in full color. See
+  [a dimmed series](chart-element.md#a-dimmed-series).
 - Each other element, such as a list with `dim true`, keeps its dimming.
 - The handout view and paper keep the dimming of each step.
 

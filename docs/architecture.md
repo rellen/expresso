@@ -722,6 +722,11 @@ An image, an SVG file and an embed have colors that the palette does not know.
 They dim with one opacity, `--dim-opacity`: the strongest opacity that keeps each role of
 text at 3:1 and at Lc 30.
 
+A series of a chart dims in a different way. Its marks fade to `--chart-dim-opacity`, 0.3
+by default, and its texts take the dimmed color of the text. A colored bar at
+`--dim-opacity` looked almost the same as a bar in full color, and the texts keep the
+minimums of a dimmed text. "The chart" tells how the series gets the state.
+
 ### The style of a slide
 
 The renderer writes an inline `style` attribute on each `section` of the present view.
@@ -1438,6 +1443,15 @@ to the items of a list. These are the reasons for this design:
 - **Numbers with a period as the decimal mark.** A cell such as `"1,250"` is a number,
   because a spreadsheet writes the groups of digits so. A comma as the decimal mark, such as
   `12,5`, is an error and not a number, because `1,250` then has two meanings.
+- **The groups of `highlight` are not series.** A group of the option takes a step, as a
+  group of lines of a code element does. The groups go into the `focus` field of the
+  chart, and not into its series, because the order of the series gives their colors and
+  the order of the groups gives their steps. `Expresso.Overlay.Expand` gives each group
+  one step from the counter after the `whole_first` step, and `Expresso.Overlay.Check`
+  reports a group at a step at which the chart does not show. `Chart.rules/1` writes one
+  rule for each group. The rule sets `--chart-dim: 1` on each series with a
+  `data-series` number that is not in the group. The state `dim` sets `--dim: 1`, and a
+  series reads it into `--chart-dim`, so `dim true` and `highlight` dim in the same way.
 
 ### The kinds of a chart
 
@@ -2124,7 +2138,8 @@ The tables do not give these rules:
 - A second `s` shows the window of the speaker view again, and it opens no second window.
 - `d` toggles the field `undim`. The projection of the attribute `data-undim` writes it on
   the `body`, and the attribute is present only while the field is true. While the attribute is present, a rule of the style sheet
-  sets `--dim` and `--dimmed` to 0 on each element of a code element in the present view.
+  sets `--dim` and `--dimmed` to 0 on each element of a code element in the present view,
+  and `--chart-dim` to 0 on each series of a chart.
   The rules of a step select the slide by its id, so this rule needs `!important`. The
   option `reset [:undim]` sets `undim` to `false` at each change of the step, so the next
   step dims the code again. The presenter does not have to press `d` again after an
