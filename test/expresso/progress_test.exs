@@ -27,11 +27,11 @@ defmodule Expresso.ProgressTest do
   end
 
   defp document(deck) do
-    deck |> Expresso.Deck.render() |> Floki.parse_document!()
+    deck |> Expresso.Deck.render() |> LazyHTML.from_document()
   end
 
   defp progress(deck) do
-    deck |> document() |> Floki.find("body") |> Floki.attribute("data-progress")
+    deck |> document() |> LazyHTML.query("body") |> LazyHTML.attribute("data-progress")
   end
 
   test "a deck from the DSL shows the progress bar without the option" do
@@ -85,10 +85,10 @@ defmodule Expresso.ProgressTest do
   end
 
   test "the document holds one progress bar, and the style sheet gives it the width of --fraction" do
-    bars = ShownDeck |> Expresso.parse() |> document() |> Floki.find("#progress")
+    bars = ShownDeck |> Expresso.parse() |> document() |> LazyHTML.query("#progress")
 
-    assert length(bars) == 1
-    assert Floki.attribute(bars, "style") == []
+    assert Enum.count(bars) == 1
+    assert LazyHTML.attribute(bars, "style") == []
     assert Expresso.Theme.uses?(:fraction)
   end
 

@@ -1,6 +1,8 @@
 defmodule Expresso.NotesTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   defmodule NotesDeck do
     use Expresso
 
@@ -39,7 +41,7 @@ defmodule Expresso.NotesTest do
   end
 
   defp document(deck) do
-    deck |> Expresso.Deck.render() |> Floki.parse_document!()
+    deck |> Expresso.Deck.render() |> LazyHTML.from_document()
   end
 
   test "the slide entity puts the notes option into the metadata" do
@@ -53,22 +55,22 @@ defmodule Expresso.NotesTest do
   test "the handout view shows the notes under each page of the slide" do
     document = NotesDeck |> Expresso.parse() |> document()
 
-    pages = Floki.find(document, ".handout-page[data-slide='1']")
-    assert length(pages) == 2
+    pages = LazyHTML.query(document, ".handout-page[data-slide='1']")
+    assert Enum.count(pages) == 2
 
     for page <- pages do
-      assert [aside] = Floki.find([page], ":root > aside.notes")
-      assert Floki.text(aside) == "Say hello.\nThen <b>pause</b>."
-      assert [] = Floki.find([aside], "b")
+      assert [aside] = page |> LazyHTML.query(".handout-page > aside.notes") |> Enum.to_list()
+      assert LazyHTML.text(aside) == "Say hello.\nThen <b>pause</b>."
+      assert aside |> LazyHTML.filter(":not(:has(b))") |> Enum.count() == 1
     end
 
-    assert [] = Floki.find(document, ".handout-page[data-slide='2'] aside.notes")
+    assert count(document, ".handout-page[data-slide='2']:not(:has(aside.notes))") == 1
   end
 
   test "the present view does not show the notes" do
     document = NotesDeck |> Expresso.parse() |> document()
 
-    assert [] = Floki.find(document, ".screen aside.notes")
+    assert count(document, ".screen:not(:has(aside.notes))") == 1
   end
 
   test "a slide from the builder takes the notes option" do
@@ -79,12 +81,11 @@ defmodule Expresso.NotesTest do
         Expresso.Builder.slide("one", notes: "From the builder", elements: [box])
       ])
 
-    assert deck |> document() |> Floki.find(".handout-page aside.notes") |> Floki.text() ==
-             "From the builder"
+    assert deck |> document() |> texts(".handout-page aside.notes") == ["From the builder"]
   end
 
   defp print_notes(document) do
-    document |> Floki.find("body") |> Floki.attribute("data-print-notes")
+    document |> LazyHTML.query("body") |> LazyHTML.attribute("data-print-notes")
   end
 
   test "a deck prints the notes without the print_notes option" do
@@ -99,8 +100,7 @@ defmodule Expresso.NotesTest do
     assert deck.metadata.print_notes == false
     assert print_notes(document) == ["false"]
 
-    assert document |> Floki.find(".handout-page aside.notes") |> Floki.text() ==
-             "Only for the speaker."
+    assert texts(document, ".handout-page aside.notes") == ["Only for the speaker."]
   end
 
   test "a deck struct takes print_notes from its metadata" do
