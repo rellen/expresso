@@ -1,6 +1,8 @@
 defmodule Expresso.ShapeElementTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Shape
 
@@ -10,7 +12,7 @@ defmodule Expresso.ShapeElementTest do
     [Builder.slide("s", elements: elements)]
     |> Builder.deck(name: "shapes")
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
+    |> LazyHTML.from_document()
   end
 
   defp box(kind, opts \\ []),
@@ -24,27 +26,30 @@ defmodule Expresso.ShapeElementTest do
         Builder.shape(:arrow, from: ["5%", "50%"], to: ["40%", "60%"])
       ])
 
-    [layer] = Floki.find(html, ".screen section.slide > .shapes")
+    [layer] = LazyHTML.query(html, ".screen section.slide > .shapes") |> Enum.to_list()
 
-    assert layer |> Floki.children() |> Enum.map(&elem(&1, 0)) == ["div", "svg"]
-    assert Floki.find(html, ".screen .text-box .shape") == []
-    assert html |> Floki.find(".handout-page > .shapes") |> length() == 1
-    assert html |> Floki.find(".menu-thumb > .shapes") |> length() == 1
+    assert layer |> LazyHTML.child_nodes() |> LazyHTML.to_tree() |> Enum.map(&elem(&1, 0)) ==
+             ["div", "svg"]
+
+    assert count(html, ".screen .text-box:not(:has(.shape))") == 1
+    assert count(html, ".handout-page > .shapes") == 1
+    assert count(html, ".menu-thumb > .shapes") == 1
   end
 
   test "a rectangle and an ellipse are a box at their place, with a text and a fill" do
     [rect, ellipse] =
       [box(:rect, text: "A note", fill: true), box(:ellipse)]
       |> document()
-      |> Floki.find(".screen .shape")
+      |> LazyHTML.query(".screen .shape")
+      |> Enum.to_list()
 
-    assert Floki.attribute(rect, "class") == ["shape shape-rect"]
-    assert Floki.attribute(rect, "style") == ["left: 10%; top: 20%; width: 30%; height: 15%"]
-    assert Floki.attribute(rect, "data-fill") == ["data-fill"]
-    assert Floki.text(rect) == "A note"
+    assert LazyHTML.attribute(rect, "class") == ["shape shape-rect"]
+    assert LazyHTML.attribute(rect, "style") == ["left: 10%; top: 20%; width: 30%; height: 15%"]
+    assert LazyHTML.attribute(rect, "data-fill") == ["data-fill"]
+    assert LazyHTML.text(rect) == "A note"
 
-    assert Floki.attribute(ellipse, "class") == ["shape shape-ellipse"]
-    assert Floki.attribute(ellipse, "data-fill") == []
+    assert LazyHTML.attribute(ellipse, "class") == ["shape shape-ellipse"]
+    assert LazyHTML.attribute(ellipse, "data-fill") == []
   end
 
   test "a line goes from point to point, and an arrow has a head with an id of its own in each copy" do
@@ -54,28 +59,32 @@ defmodule Expresso.ShapeElementTest do
         Builder.shape(:arrow, from: ["5%", "50%"], to: ["40%", "60%"])
       ])
 
-    [line, arrow] = Floki.find(html, ".screen svg.shape")
+    [line, arrow] = LazyHTML.query(html, ".screen svg.shape") |> Enum.to_list()
 
-    assert [{"line", attributes, []}] = Floki.find(line, "line")
+    assert [{"line", attributes, []}] = line |> LazyHTML.query("line") |> LazyHTML.to_tree()
 
     assert Map.new(attributes) |> Map.take(~w(x1 y1 x2 y2)) ==
              %{"x1" => "5%", "y1" => "50%", "x2" => "40%", "y2" => "60%"}
 
-    assert Floki.find(line, "marker") == []
+    assert line |> LazyHTML.filter(":not(:has(marker))") |> Enum.count() == 1
 
-    [id] = arrow |> Floki.find("marker") |> Floki.attribute("id")
-    assert Floki.find(arrow, "line") |> Floki.attribute("marker-end") == ["url(##{id})"]
+    [id] = arrow |> LazyHTML.query("marker") |> LazyHTML.attribute("id")
+    assert LazyHTML.query(arrow, "line") |> LazyHTML.attribute("marker-end") == ["url(##{id})"]
 
-    ids = html |> Floki.find("svg.shape-line marker") |> Enum.flat_map(&Floki.attribute(&1, "id"))
-    assert length(ids) == length(Enum.uniq(ids))
+    ids = html |> LazyHTML.query("svg.shape-line marker") |> LazyHTML.attribute("id")
+    assert length(ids) > 1
+    assert Enum.uniq(ids) == ids
   end
 
   test "a shape takes the overlay options" do
     [rect] =
-      [box(:rect, at: [from: 2], class: "note")] |> document() |> Floki.find(".screen .shape")
+      [box(:rect, at: [from: 2], class: "note")]
+      |> document()
+      |> LazyHTML.query(".screen .shape")
+      |> Enum.to_list()
 
-    assert Floki.attribute(rect, "data-on") == ["2"]
-    assert Floki.attribute(rect, "class") == ["shape shape-rect note"]
+    assert LazyHTML.attribute(rect, "data-on") == ["2"]
+    assert LazyHTML.attribute(rect, "class") == ["shape shape-rect note"]
   end
 
   test "the compiler refuses a shape without the options of its kind" do
