@@ -1,6 +1,8 @@
 defmodule Expresso.Element.VideoTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Video
   alias Expresso.Presenter.Schema.Check
@@ -34,18 +36,23 @@ defmodule Expresso.Element.VideoTest do
   end
 
   defp deck, do: Expresso.parse(VideoDeck)
-  defp document, do: deck() |> Expresso.Deck.render() |> Floki.parse_document!()
+  defp document, do: deck() |> Expresso.Deck.render() |> LazyHTML.from_document()
 
   defp json(document),
-    do: document |> Floki.find("script#expresso-videos") |> Floki.text(js: true) |> JSON.decode!()
+    do: document |> LazyHTML.query("script#expresso-videos") |> LazyHTML.text() |> JSON.decode!()
 
   describe "the document" do
     test "writes no source on a video, and each video names its file" do
-      videos = Floki.find(document(), "video.video-frame")
+      document = document()
+      videos = count(document, "video.video-frame")
 
-      assert videos != []
-      assert Enum.flat_map(videos, &Floki.attribute(&1, "src")) == []
-      assert videos |> Enum.flat_map(&Floki.attribute(&1, "data-video")) |> Enum.uniq() == ["0"]
+      assert videos > 0
+      assert count(document, "video.video-frame:not([src])") == videos
+
+      assert document
+             |> LazyHTML.query("video.video-frame")
+             |> LazyHTML.attribute("data-video")
+             |> Enum.uniq() == ["0"]
     end
 
     test "writes each file one time, as a data URI that the schema takes" do
@@ -58,33 +65,34 @@ defmodule Expresso.Element.VideoTest do
     end
 
     test "writes a muted video with no sound, and the poster under it with the title" do
-      [first | _copies] = Floki.find(document(), ".video")
-      [video] = Floki.find(first, "video")
+      [first | _copies] = document() |> LazyHTML.query(".video") |> Enum.to_list()
+      [video] = first |> LazyHTML.query("video") |> Enum.to_list()
 
-      assert Floki.attribute(video, "muted") == ["muted"]
-      assert Floki.attribute(video, "playsinline") == ["playsinline"]
-      assert Floki.attribute(video, "loop") == ["loop"]
-      assert Floki.attribute(video, "aria-label") == ["A clip"]
-      assert Floki.attribute(video, "tabindex") == ["-1"]
+      assert LazyHTML.attribute(video, "muted") == ["muted"]
+      assert LazyHTML.attribute(video, "playsinline") == ["playsinline"]
+      assert LazyHTML.attribute(video, "loop") == ["loop"]
+      assert LazyHTML.attribute(video, "aria-label") == ["A clip"]
+      assert LazyHTML.attribute(video, "tabindex") == ["-1"]
 
-      assert [poster] = Floki.find(first, "img.embed-fallback")
-      assert Floki.attribute(poster, "alt") == ["A clip"]
-      assert ["data:image/png;base64," <> _data] = Floki.attribute(poster, "src")
-      assert Floki.attribute(first, "style") == ["--embed-width: 60vw; --embed-aspect: 4/3"]
+      assert [poster] = first |> LazyHTML.query("img.embed-fallback") |> Enum.to_list()
+      assert LazyHTML.attribute(poster, "alt") == ["A clip"]
+      assert ["data:image/png;base64," <> _data] = LazyHTML.attribute(poster, "src")
+      assert LazyHTML.attribute(first, "style") == ["--embed-width: 60vw; --embed-aspect: 4/3"]
     end
 
     test "gives the controls and no loop to a video with those options" do
-      [video | _copies] = Floki.find(document(), "#slide-2 video")
+      [video | _copies] = document() |> LazyHTML.query("#slide-2 video") |> Enum.to_list()
 
-      assert Floki.attribute(video, "controls") == ["controls"]
-      assert Floki.attribute(video, "loop") == []
-      assert Floki.attribute(video, "tabindex") == []
+      assert LazyHTML.attribute(video, "controls") == ["controls"]
+      assert LazyHTML.attribute(video, "loop") == []
+      assert LazyHTML.attribute(video, "tabindex") == []
     end
 
     test "a deck with no video gets no list of videos" do
       html = [Builder.slide("one")] |> Builder.deck() |> Expresso.Deck.render()
 
-      assert html |> Floki.parse_document!() |> Floki.find("script#expresso-videos") == []
+      assert html |> LazyHTML.from_document() |> count("body:not(:has(script#expresso-videos))") ==
+               1
     end
 
     test "raises for a file that it cannot read" do
@@ -121,7 +129,7 @@ defmodule Expresso.Element.VideoTest do
   end
 
   test "the root option of the deck gives the directory of the file and of the poster" do
-    document = RootDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+    document = RootDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
 
     assert [_uri] = json(document)
   end

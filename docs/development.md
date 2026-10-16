@@ -198,6 +198,10 @@ LazyHTML is different from Floki in these points:
   the node, but the same LazyHTML query finds no node, and it gives no error. Write the
   full selector from the document, such as `#slide-1 .math > div`.
 - A selector that LazyHTML does not know, such as `:scope`, raises an error.
+- The result of a query is a struct and not a list. Thus `nodes != []` is always true,
+  and `nodes == []` is always false. Use `Enum.count/1` or `count/2`.
+- `LazyHTML.text/1` returns the text of a `script` element. Floki needs the option
+  `js: true` for it.
 - In an `svg` element, a name is the name of the browser, such as `viewBox` and
   `linearGradient`. A query finds a name in each case, and `LazyHTML.to_html/1` writes the
   name of the browser.
@@ -220,6 +224,8 @@ LazyHTML. Use one library in one file. This table gives the replacement of each 
 | `[a, b] = Floki.find(html, selector)` | `[a, b] = html \|> LazyHTML.query(selector) \|> Enum.to_list()` |
 | `Floki.find(node, ":root > tag")` | The full selector from the document, with `> tag` |
 | `Floki.raw_html(nodes)` | `LazyHTML.to_html(nodes)` |
+| `Floki.text(script, js: true)` | `LazyHTML.text(script)` |
+| `assert nodes != []` | `assert count(html, selector) > 0` |
 | A match on `{tag, attributes, children}` | A match on the result of `LazyHTML.to_tree/1` |
 
 `lib/` keeps Floki. `Expresso.Deck.render/1`, `Expresso.Morph` and `Expresso.Check.Document`
