@@ -1,6 +1,8 @@
 defmodule Expresso.ChartHierarchyTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Chart.{Csv, Hierarchy}
 
@@ -22,8 +24,9 @@ defmodule Expresso.ChartHierarchyTest do
     [Builder.slide("s", elements: [chart])]
     |> Builder.deck(name: "parts")
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
-    |> Floki.find(".screen figure.chart")
+    |> LazyHTML.from_document()
+    |> LazyHTML.query(".screen figure.chart")
+    |> Enum.to_list()
   end
 
   describe "the tree" do
@@ -85,9 +88,9 @@ defmodule Expresso.ChartHierarchyTest do
         )
 
       [figure] = figure(chart)
-      svg = Floki.find(figure, "figure.chart > svg")
-      assert svg |> Floki.find(".chart-head") |> Enum.map(&Floki.text/1) == ["I/O"]
-      assert svg |> Floki.find("rect.chart-tile") |> length() == 3
+      svg = LazyHTML.query(figure, "figure.chart > svg")
+      assert texts(svg, ".chart-head") == ["I/O"]
+      assert count(svg, "rect.chart-tile") == 3
     end
 
     test "a category can be a list of its levels" do
@@ -98,9 +101,9 @@ defmodule Expresso.ChartHierarchyTest do
         )
 
       [figure] = figure(chart)
-      assert figure |> Floki.find("figure.chart > svg circle.chart-depth-2") |> length() == 2
+      assert count(figure, "figure.chart > svg circle.chart-depth-2") == 2
 
-      rows = figure |> Floki.find("table.chart-table tbody th") |> Enum.map(&Floki.text/1)
+      rows = texts(figure, "table.chart-table tbody th")
       assert rows == ["I/O / Disks", "I/O / Network", "CPU"]
     end
 
@@ -136,14 +139,14 @@ defmodule Expresso.ChartHierarchyTest do
 
       chart = Builder.chart(:treemap, title: "Hours", src: path, levels: ["Division", "Team"])
       [figure] = figure(chart)
-      svg = Floki.find(figure, "figure.chart > svg")
+      svg = LazyHTML.query(figure, "figure.chart > svg")
 
-      assert svg |> Floki.find(".chart-head") |> Enum.map(&Floki.text/1) == [
+      assert texts(svg, ".chart-head") == [
                "Production",
                "R&D/Ops"
              ]
 
-      assert svg |> Floki.find(".chart-part") |> Enum.map(&Floki.text/1) == [
+      assert texts(svg, ".chart-part") == [
                "Press",
                "Paint",
                "Lab",
@@ -225,37 +228,37 @@ defmodule Expresso.ChartHierarchyTest do
     test "a treemap draws a box for each group and each part, and a label for each" do
       [figure] = figure(chart(:treemap))
 
-      assert Floki.attribute(figure, "class") == ["chart chart-treemap"]
-      svg = Floki.find(figure, "figure.chart > svg")
-      assert svg |> Floki.find("rect.chart-group") |> length() == 2
-      assert svg |> Floki.find("rect.chart-tile") |> length() == 4
+      assert LazyHTML.attribute(figure, "class") == ["chart chart-treemap"]
+      svg = LazyHTML.query(figure, "figure.chart > svg")
+      assert count(svg, "rect.chart-group") == 2
+      assert count(svg, "rect.chart-tile") == 4
 
-      assert svg |> Floki.find(".chart-head") |> Enum.map(&Floki.text/1) == [
+      assert texts(svg, ".chart-head") == [
                "Production",
                "Support"
              ]
 
-      assert svg |> Floki.find(".chart-part") |> Enum.map(&Floki.text/1) == [
+      assert texts(svg, ".chart-part") == [
                "Press",
                "Paint",
                "Office",
                "Stops"
              ]
 
-      assert svg |> Floki.find(".chart-part-value") |> Enum.map(&Floki.text/1) == [
+      assert texts(svg, ".chart-part-value") == [
                "60",
                "40",
                "30",
                "20"
              ]
 
-      assert svg |> Floki.find("g.chart-c1 rect") |> length() == 3
+      assert count(svg, "g.chart-c1 rect") == 3
     end
 
     test "each box of a treemap reads its place and its size from its channels" do
       [figure] = figure(chart(:treemap))
-      [press | _] = Floki.find(figure, "figure.chart > svg rect.chart-tile")
-      [style] = Floki.attribute(press, "style")
+      [press | _] = LazyHTML.query(figure, "figure.chart > svg rect.chart-tile") |> Enum.to_list()
+      [style] = LazyHTML.attribute(press, "style")
 
       assert style =~ ~r/--chart-u: [\d.]+; --chart-v: [\d.]+;/
       assert style =~ ~r/--chart-w: calc\(0 \+ \([\d.]+ - 0\) \* var\(--chart-shown, 1\)\);/
@@ -263,13 +266,13 @@ defmodule Expresso.ChartHierarchyTest do
 
     test "a sunburst draws a ring for each level, and a legend of the groups in percent" do
       [figure] = figure(chart(:sunburst))
-      svg = Floki.find(figure, "figure.chart > svg")
+      svg = LazyHTML.query(figure, "figure.chart > svg")
 
-      assert svg |> Floki.find("circle.chart-ring.chart-depth-1") |> length() == 3
-      assert svg |> Floki.find("circle.chart-ring.chart-depth-2") |> length() == 3
-      assert svg |> Floki.find("line.chart-gap") |> length() == 6
+      assert count(svg, "circle.chart-ring.chart-depth-1") == 3
+      assert count(svg, "circle.chart-ring.chart-depth-2") == 3
+      assert count(svg, "line.chart-gap") == 6
 
-      assert svg |> Floki.find(".chart-name") |> Enum.map(&Floki.text/1) ==
+      assert texts(svg, ".chart-name") ==
                ["Production 66.7%", "Office 20%", "Support 13.3%"]
     end
 
@@ -285,8 +288,8 @@ defmodule Expresso.ChartHierarchyTest do
         |> Expresso.Deck.render()
 
       assert html =~ ~r/section\[data-step="2"\] \[data-el="s1-e1"\] \{[^}]*--rw2: [\d.]+;/
-      document = Floki.parse_document!(html)
-      assert document |> Floki.find(".screen .chart-frames figure.chart-copy") |> length() == 2
+      document = LazyHTML.from_document(html)
+      assert count(document, ".screen .chart-frames figure.chart-copy") == 2
     end
 
     @tag :tmp_dir
@@ -299,7 +302,7 @@ defmodule Expresso.ChartHierarchyTest do
       )
 
       [figure] = figure(Builder.chart(:treemap, title: "Hours", src: path))
-      assert figure |> Floki.find("figure.chart > svg rect.chart-tile") |> length() == 3
+      assert count(figure, "figure.chart > svg rect.chart-tile") == 3
     end
   end
 end

@@ -1,6 +1,8 @@
 defmodule Expresso.ChartParallelSetsTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Chart.ParallelSets
 
@@ -30,8 +32,9 @@ defmodule Expresso.ChartParallelSetsTest do
       [Builder.slide("s", elements: [chart])]
       |> Builder.deck(name: "sets")
       |> Expresso.Deck.render()
-      |> Floki.parse_document!()
-      |> Floki.find(".screen figure.chart")
+      |> LazyHTML.from_document()
+      |> LazyHTML.query(".screen figure.chart")
+      |> Enum.to_list()
 
     figure
   end
@@ -71,24 +74,24 @@ defmodule Expresso.ChartParallelSetsTest do
                chart.timeline
 
       figure = figure(chart)
-      assert figure |> Floki.find("figure.chart > svg g.chart-layer") |> length() == 2
+      assert count(figure, "figure.chart > svg g.chart-layer") == 2
     end
   end
 
   describe "the drawing" do
     test "each path is one ribbon, in the color of its first node" do
       figure = figure(chart())
-      ribbons = Floki.find(figure, "figure.chart > svg path.chart-link")
+      ribbons = LazyHTML.query(figure, "figure.chart > svg path.chart-link")
 
-      assert length(ribbons) == 3
+      assert Enum.count(ribbons) == 3
 
       # A ribbon of three columns has one shape for each of its two links.
       for ribbon <- ribbons do
-        [d] = Floki.attribute(ribbon, "d")
+        [d] = LazyHTML.attribute(ribbon, "d")
         assert d |> String.split("M") |> length() == 3
       end
 
-      classes = Enum.map(ribbons, &(&1 |> Floki.attribute("class") |> hd()))
+      classes = Enum.map(ribbons, &(&1 |> LazyHTML.attribute("class") |> hd()))
       assert Enum.at(classes, 0) == Enum.at(classes, 1)
       refute Enum.at(classes, 0) == Enum.at(classes, 2)
     end
@@ -96,18 +99,20 @@ defmodule Expresso.ChartParallelSetsTest do
     test "only the nodes of the first column have colors" do
       figure = figure(chart())
 
-      assert Floki.attribute(figure, "class") == ["chart chart-parallel-sets"]
-      rects = Floki.find(figure, "figure.chart > svg rect.chart-node")
+      assert LazyHTML.attribute(figure, "class") == ["chart chart-parallel-sets"]
+      rects = LazyHTML.query(figure, "figure.chart > svg rect.chart-node")
 
-      assert length(rects) == 5
-      assert figure |> Floki.find("rect.chart-node-plain") |> length() == 3
-      assert figure |> Floki.find("rect.chart-c1") |> length() == 1
-      assert figure |> Floki.find("rect.chart-c2") |> length() == 1
+      assert Enum.count(rects) == 5
+      assert count(figure, "rect.chart-node-plain") == 3
+      assert count(figure, "rect.chart-c1") == 1
+      assert count(figure, "rect.chart-c2") == 1
     end
 
     test "a ribbon keeps its place through a node" do
       figure = figure(chart())
-      [d | _] = figure |> Floki.find("path.chart-link") |> hd() |> Floki.attribute("d")
+
+      [d | _] =
+        figure |> LazyHTML.query("path.chart-link") |> Enum.at(0) |> LazyHTML.attribute("d")
 
       # The first link ends at the node of the second column where the
       # second link starts.
@@ -127,27 +132,30 @@ defmodule Expresso.ChartParallelSetsTest do
 
     test "the nodes and their labels show with the chart, and the ribbons with their series" do
       figure = figure(chart(reveal: true))
-      series = Floki.find(figure, "figure.chart > svg > g.chart-series")
+      series = LazyHTML.query(figure, "figure.chart > svg > g.chart-series")
 
-      assert Enum.map(series, &Floki.attribute(&1, "data-on")) == [["1 2"], ["2"]]
-      assert [nodes] = Floki.find(figure, "figure.chart > svg > g.chart-nodes")
-      assert Floki.attribute(nodes, "data-on") == []
+      assert Enum.map(series, &LazyHTML.attribute(&1, "data-on")) == [["1 2"], ["2"]]
+
+      assert [nodes] =
+               LazyHTML.query(figure, "figure.chart > svg > g.chart-nodes") |> Enum.to_list()
+
+      assert LazyHTML.attribute(nodes, "data-on") == []
     end
 
     test "the levels give the titles of the columns and the headers of the table" do
       figure = figure(chart(levels: ["Class", "Age", "Survived"]))
 
-      assert figure |> Floki.find("text.chart-column") |> Enum.map(&Floki.text/1) ==
+      assert texts(figure, "text.chart-column") ==
                ["Class", "Age", "Survived"]
 
-      assert figure |> Floki.find("thead th") |> Enum.map(&Floki.text/1) ==
+      assert texts(figure, "thead th") ==
                ["Class", "Age", "Survived", "Value"]
 
       assert figure
-             |> Floki.find("tbody tr")
-             |> hd()
-             |> Floki.find("th, td")
-             |> Enum.map(&Floki.text/1) ==
+             |> LazyHTML.query("tbody tr")
+             |> Enum.at(0)
+             |> LazyHTML.query("th, td")
+             |> Enum.map(&LazyHTML.text/1) ==
                ["First", "Adult", "Yes", "7"]
     end
   end

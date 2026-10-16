@@ -1,6 +1,8 @@
 defmodule Expresso.ChartSankeyTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Chart.Sankey
 
@@ -30,7 +32,13 @@ defmodule Expresso.ChartSankeyTest do
   end
 
   defp figure(chart) do
-    [figure] = chart |> render() |> Floki.parse_document!() |> Floki.find(".screen figure.chart")
+    [figure] =
+      chart
+      |> render()
+      |> LazyHTML.from_document()
+      |> LazyHTML.query(".screen figure.chart")
+      |> Enum.to_list()
+
     figure
   end
 
@@ -87,7 +95,12 @@ defmodule Expresso.ChartSankeyTest do
       )
 
       chart = Builder.chart(:sankey, title: "Energy", src: edges, levels: ["from", "to"])
-      table = figure(chart) |> Floki.find("table.chart-table tbody tr") |> Enum.map(&Floki.text/1)
+
+      table =
+        figure(chart)
+        |> LazyHTML.query("table.chart-table tbody tr")
+        |> Enum.map(&LazyHTML.text/1)
+
       assert table == ["CoalElectricity125", "GasElectricity95"]
 
       records = Path.join(tmp_dir, "records.csv")
@@ -106,7 +119,10 @@ defmodule Expresso.ChartSankeyTest do
           levels: ["class", "sex", "survived"]
         )
 
-      rows = figure(chart) |> Floki.find("table.chart-table tbody tr") |> Enum.map(&Floki.text/1)
+      rows =
+        figure(chart)
+        |> LazyHTML.query("table.chart-table tbody tr")
+        |> Enum.map(&LazyHTML.text/1)
 
       assert rows == [
                "FirstFemale141",
@@ -179,12 +195,12 @@ defmodule Expresso.ChartSankeyTest do
 
   describe "the drawing" do
     test "a sankey draws a node for each node, a ribbon for each link and a label for each node" do
-      svg = chart() |> figure() |> Floki.find("figure.chart > svg")
+      svg = chart() |> figure() |> LazyHTML.query("figure.chart > svg")
 
-      assert svg |> Floki.find("path.chart-link") |> length() == 6
-      assert svg |> Floki.find("rect.chart-node") |> length() == 6
+      assert count(svg, "path.chart-link") == 6
+      assert count(svg, "rect.chart-node") == 6
 
-      assert svg |> Floki.find("text.chart-node-label") |> Enum.map(&Floki.text/1) == [
+      assert texts(svg, "text.chart-node-label") == [
                "Coal 120",
                "Electricity 215",
                "Gas 135",
@@ -193,22 +209,22 @@ defmodule Expresso.ChartSankeyTest do
                "Industry 125"
              ]
 
-      [path | _] = svg |> Floki.find("path.chart-link") |> Floki.attribute("d")
+      [path | _] = svg |> LazyHTML.query("path.chart-link") |> LazyHTML.attribute("d")
       assert path =~ ~r/^M[\d.]+,[\d.]+ C[\d.]+,[\d.]+ [\d.]+,[\d.]+ [\d.]+,[\d.]+ L.* Z$/
     end
 
     test "each label is at the right of its node, and the last column keeps room for its labels" do
-      svg = chart() |> figure() |> Floki.find("figure.chart > svg")
-      labels = Floki.find(svg, "text.chart-node-label")
+      svg = chart() |> figure() |> LazyHTML.query("figure.chart > svg")
+      labels = LazyHTML.query(svg, "text.chart-node-label")
 
-      assert labels |> Enum.map(&hd(Floki.attribute(&1, "text-anchor"))) |> Enum.uniq() == [
+      assert labels |> Enum.map(&hd(LazyHTML.attribute(&1, "text-anchor"))) |> Enum.uniq() == [
                "start"
              ]
 
       # "Industry 125" is the widest label of the last column: 12 characters.
       [right] =
-        for label <- labels, Floki.text(label) == "Industry 125" do
-          {x, ""} = label |> Floki.attribute("x") |> hd() |> Float.parse()
+        for label <- labels, LazyHTML.text(label) == "Industry 125" do
+          {x, ""} = label |> LazyHTML.attribute("x") |> hd() |> Float.parse()
           x + 12 * 10
         end
 
@@ -216,19 +232,19 @@ defmodule Expresso.ChartSankeyTest do
     end
 
     test "values false shows the names of the nodes only" do
-      labels = chart(values: false) |> figure() |> Floki.find("text.chart-node-label")
-      assert hd(Enum.map(labels, &Floki.text/1)) == "Coal"
+      labels = chart(values: false) |> figure() |> LazyHTML.query("text.chart-node-label")
+      assert hd(Enum.map(labels, &LazyHTML.text/1)) == "Coal"
     end
 
     test "the table holds a row for each link" do
       figure = chart(value_label: "TWh") |> figure()
 
-      assert figure |> Floki.find("table.chart-table caption") |> Floki.text() == "Energy (TWh)"
+      assert texts(figure, "table.chart-table caption") == ["Energy (TWh)"]
 
-      assert figure |> Floki.find("table.chart-table thead th") |> Enum.map(&Floki.text/1) ==
+      assert texts(figure, "table.chart-table thead th") ==
                ["From", "To", "TWh"]
 
-      assert figure |> Floki.find("table.chart-table tbody tr") |> length() == 6
+      assert count(figure, "table.chart-table tbody tr") == 6
     end
   end
 
@@ -269,22 +285,22 @@ defmodule Expresso.ChartSankeyTest do
 
     test "a sankey with frames draws a layer for each frame, and the layers fade at their steps" do
       html = render(frames())
-      figure = html |> Floki.parse_document!() |> Floki.find(".screen figure.chart")
-      layers = Floki.find(figure, "figure.chart > svg > g.chart-layer")
+      figure = html |> LazyHTML.from_document() |> LazyHTML.query(".screen figure.chart")
+      layers = LazyHTML.query(figure, "figure.chart > svg > g.chart-layer")
 
-      assert Enum.map(layers, &Floki.attribute(&1, "style")) == [
+      assert Enum.map(layers, &LazyHTML.attribute(&1, "style")) == [
                ["opacity: var(--k1, 1);"],
                ["opacity: var(--k2, 0);"]
              ]
 
       # Solar has no flow in 2015, so the first layer has no node for it.
-      [first, second] = layers
-      assert first |> Floki.find("rect.chart-node") |> length() == 3
-      assert second |> Floki.find("rect.chart-node") |> length() == 4
-      assert Floki.text(Floki.find(figure, "text.chart-frame")) =~ "2015"
+      [first, second] = Enum.to_list(layers)
+      assert count(first, "rect.chart-node") == 3
+      assert count(second, "rect.chart-node") == 4
+      assert LazyHTML.text(LazyHTML.query(figure, "text.chart-frame")) =~ "2015"
       assert html =~ ~r/section\[data-step="2"\] \[data-el="s1-e1"\] \{[^}]*--k2: 1;/
 
-      headers = figure |> Floki.find("table.chart-table thead th") |> Enum.map(&Floki.text/1)
+      headers = texts(figure, "table.chart-table thead th")
       assert headers == ["From", "To", "2015", "2025"]
     end
 
@@ -327,9 +343,9 @@ defmodule Expresso.ChartSankeyTest do
         Builder.chart(:sankey, title: "Energy", src: path, levels: ["from", "to"], frames: "year")
 
       figure = figure(chart)
-      assert figure |> Floki.find("g.chart-layer") |> length() == 2
+      assert count(figure, "g.chart-layer") == 2
 
-      assert figure |> Floki.find("table.chart-table tbody tr") |> Enum.map(&Floki.text/1) ==
+      assert texts(figure, "table.chart-table tbody tr") ==
                ["CoalElectricity18040", "ElectricityHomes18040"]
     end
 
@@ -358,15 +374,15 @@ defmodule Expresso.ChartSankeyTest do
   describe "the node entity" do
     defp rect_of(figure, label) do
       figure
-      |> Floki.find("figure.chart > svg rect.chart-node")
-      |> Enum.zip(Floki.find(figure, "figure.chart > svg text.chart-node-label"))
+      |> LazyHTML.query("figure.chart > svg rect.chart-node")
+      |> Enum.zip(LazyHTML.query(figure, "figure.chart > svg text.chart-node-label"))
       |> Enum.find_value(fn {rect, text} ->
-        String.starts_with?(Floki.text(text), label) && rect
+        String.starts_with?(LazyHTML.text(text), label) && rect
       end)
     end
 
     defp number(element, attribute) do
-      {number, ""} = element |> Floki.attribute(attribute) |> hd() |> Float.parse()
+      {number, ""} = element |> LazyHTML.attribute(attribute) |> hd() |> Float.parse()
       number
     end
 
@@ -381,14 +397,14 @@ defmodule Expresso.ChartSankeyTest do
         )
         |> figure()
 
-      labels = figure |> Floki.find("text.chart-node-label") |> Enum.map(&Floki.text/1)
+      labels = texts(figure, "text.chart-node-label")
       assert "District heat 40" in labels
 
-      assert figure |> Floki.find("rect.chart-node.warm") |> length() == 1
+      assert count(figure, "rect.chart-node.warm") == 1
       assert number(rect_of(figure, "Industry"), "x") > number(rect_of(figure, "Homes"), "x")
       assert number(rect_of(figure, "Gas"), "y") < number(rect_of(figure, "Coal"), "y")
 
-      rows = figure |> Floki.find("table.chart-table tbody tr") |> Enum.map(&Floki.text/1)
+      rows = texts(figure, "table.chart-table tbody tr")
       assert "GasDistrict heat40" in rows
     end
 
@@ -434,8 +450,8 @@ defmodule Expresso.ChartSankeyTest do
 
     defp backs(figure) do
       figure
-      |> Floki.find("figure.chart > svg path.chart-back")
-      |> Enum.map(&(&1 |> Floki.attribute("d") |> hd()))
+      |> LazyHTML.query("figure.chart > svg path.chart-back")
+      |> Enum.map(&(&1 |> LazyHTML.attribute("d") |> hd()))
     end
 
     test "a link that closes a loop is a back link, and the columns come from the other links" do
@@ -453,10 +469,10 @@ defmodule Expresso.ChartSankeyTest do
              }
 
       assert length(backs(figure)) == 2
-      assert figure |> Floki.find("path.chart-link") |> length() == 8
+      assert count(figure, "path.chart-link") == 8
 
-      for back <- Floki.find(figure, "path.chart-back") do
-        [width] = Floki.attribute(back, "stroke-width")
+      for back <- LazyHTML.query(figure, "path.chart-back") do
+        [width] = LazyHTML.attribute(back, "stroke-width")
         assert {_number, ""} = Float.parse(width)
       end
     end
@@ -466,10 +482,10 @@ defmodule Expresso.ChartSankeyTest do
 
       bottoms =
         figure
-        |> Floki.find("rect.chart-node")
+        |> LazyHTML.query("rect.chart-node")
         |> Enum.map(fn rect ->
-          {y, ""} = rect |> Floki.attribute("y") |> hd() |> Float.parse()
-          {height, ""} = rect |> Floki.attribute("height") |> hd() |> Float.parse()
+          {y, ""} = rect |> LazyHTML.attribute("y") |> hd() |> Float.parse()
+          {height, ""} = rect |> LazyHTML.attribute("height") |> hd() |> Float.parse()
           y + height
         end)
 
@@ -491,13 +507,17 @@ defmodule Expresso.ChartSankeyTest do
     end
 
     test "the back links draw first, under the other links of their series" do
-      [series] = figure(loop()) |> Floki.find("figure.chart > svg > g.chart-series")
+      [series] =
+        figure(loop()) |> LazyHTML.query("figure.chart > svg > g.chart-series") |> Enum.to_list()
 
       classes =
-        series |> Floki.find("path") |> Enum.map(&(&1 |> Floki.attribute("class") |> hd()))
+        series |> LazyHTML.query("path") |> Enum.map(&(&1 |> LazyHTML.attribute("class") |> hd()))
 
-      assert classes |> Enum.take(2) |> Enum.all?(&(&1 =~ "chart-back"))
-      refute classes |> Enum.drop(2) |> Enum.any?(&(&1 =~ "chart-back"))
+      assert [back, back_too | others] = classes
+      assert back =~ "chart-back"
+      assert back_too =~ "chart-back"
+      assert others != []
+      refute Enum.any?(others, &(&1 =~ "chart-back"))
     end
 
     test "a column of a node entity that puts a target before its source makes a back link" do
@@ -535,10 +555,10 @@ defmodule Expresso.ChartSankeyTest do
         )
         |> figure()
 
-      labels = figure |> Floki.find("text.chart-node-label") |> Enum.map(&Floki.text/1)
+      labels = texts(figure, "text.chart-node-label")
 
       assert "Cancelled 150" in labels
-      assert length(labels) == 7
+      assert Enum.count(labels) == 7
     end
 
     test "a short node hides its label when it would cover another label" do
@@ -553,7 +573,7 @@ defmodule Expresso.ChartSankeyTest do
         )
         |> figure()
 
-      labels = figure |> Floki.find("text.chart-node-label") |> Enum.map(&Floki.text/1)
+      labels = texts(figure, "text.chart-node-label")
 
       assert "C 2" in labels
       refute "D 2" in labels
@@ -568,20 +588,22 @@ defmodule Expresso.ChartSankeyTest do
                chart.elements
 
       figure = chart |> figure()
-      [first, second] = Floki.find(figure, "figure.chart > svg > g.chart-series")
 
-      assert Floki.attribute(first, "data-on") == ["1 2"]
-      assert Floki.attribute(second, "data-on") == ["2"]
-      assert first |> Floki.find("path.chart-link") |> length() == 3
-      assert second |> Floki.find("path.chart-link") |> length() == 3
+      [first, second] =
+        LazyHTML.query(figure, "figure.chart > svg > g.chart-series") |> Enum.to_list()
+
+      assert LazyHTML.attribute(first, "data-on") == ["1 2"]
+      assert LazyHTML.attribute(second, "data-on") == ["2"]
+      assert count(first, "path.chart-link") == 3
+      assert count(second, "path.chart-link") == 3
 
       # The nodes of the first column, and the nodes that a link of the first
       # column reaches, show at the first step.
-      assert first |> Floki.find("rect.chart-node") |> length() == 4
-      assert second |> Floki.find("rect.chart-node") |> length() == 2
+      assert count(first, "rect.chart-node") == 4
+      assert count(second, "rect.chart-node") == 2
 
-      labels = Floki.find(figure, "figure.chart > svg > g.chart-labels")
-      assert Enum.map(labels, &Floki.attribute(&1, "data-on")) == [["1 2"], ["2"]]
+      labels = LazyHTML.query(figure, "figure.chart > svg > g.chart-labels")
+      assert Enum.map(labels, &LazyHTML.attribute(&1, "data-on")) == [["1 2"], ["2"]]
     end
   end
 
@@ -617,12 +639,12 @@ defmodule Expresso.ChartSankeyTest do
 
     test "the nodes of one name have one color and one place in each column" do
       figure = alluvial() |> figure()
-      rects = Floki.find(figure, "figure.chart > svg rect.chart-node")
+      rects = LazyHTML.query(figure, "figure.chart > svg rect.chart-node")
 
       labels =
         figure
-        |> Floki.find("figure.chart > svg text.chart-node-label")
-        |> Enum.map(&Floki.text/1)
+        |> LazyHTML.query("figure.chart > svg text.chart-node-label")
+        |> Enum.map(&LazyHTML.text/1)
 
       assert labels == ["Car 8", "Car 7", "Home 5", "Bike 3", "Bike 3", "Bike 2", "Car 2"]
 
@@ -630,7 +652,7 @@ defmodule Expresso.ChartSankeyTest do
         rects
         |> Enum.zip(labels)
         |> Map.new(fn {rect, label} ->
-          [class] = Floki.attribute(rect, "class")
+          [class] = LazyHTML.attribute(rect, "class")
           {label, class}
         end)
 
@@ -642,7 +664,7 @@ defmodule Expresso.ChartSankeyTest do
       # The names keep the order of the data in each column: Car, Home, Bike.
       ys =
         for {rect, label} <- Enum.zip(rects, labels), into: %{} do
-          {label, rect |> Floki.attribute("y") |> hd() |> Float.parse() |> elem(0)}
+          {label, rect |> LazyHTML.attribute("y") |> hd() |> Float.parse() |> elem(0)}
         end
 
       assert ys["Car 2"] < ys["Home 5"]
@@ -653,20 +675,20 @@ defmodule Expresso.ChartSankeyTest do
     test "the levels give a title to each column, and the table names the column" do
       figure = alluvial(levels: ["2020", "2023", "2026"]) |> figure()
 
-      assert figure |> Floki.find("text.chart-column") |> Enum.map(&Floki.text/1) ==
+      assert texts(figure, "text.chart-column") ==
                ["2020", "2023", "2026"]
 
       rows =
         figure
-        |> Floki.find("table.chart-table tbody tr")
-        |> Enum.map(fn row -> row |> Floki.find("th, td") |> Enum.map(&Floki.text/1) end)
+        |> LazyHTML.query("table.chart-table tbody tr")
+        |> Enum.map(fn row -> texts(row, "th, td") end)
 
       assert ["Car (2020)", "Car (2023)", "5"] in rows
       assert ["Car (2023)", "Home (2026)", "5"] in rows
 
       untitled = alluvial() |> figure()
-      assert Floki.find(untitled, "text.chart-column") == []
-      assert Floki.text(Floki.find(untitled, "tbody tr th")) =~ "Car (Column 1)"
+      assert untitled |> LazyHTML.filter(":not(:has(text.chart-column))") |> Enum.count() == 1
+      assert LazyHTML.text(LazyHTML.query(untitled, "tbody tr th")) =~ "Car (Column 1)"
     end
 
     test "a flow is a path of two columns, and a node entity applies to each column" do
@@ -683,9 +705,9 @@ defmodule Expresso.ChartSankeyTest do
 
       figure = figure(chart)
 
-      assert figure |> Floki.find("rect.chart-node.red") |> length() == 2
+      assert count(figure, "rect.chart-node.red") == 2
 
-      assert figure |> Floki.find("text.chart-node-label") |> Enum.map(&Floki.text/1) ==
+      assert texts(figure, "text.chart-node-label") ==
                ["Red party 50", "Red party 40", "Blue 40", "Blue 30"]
     end
 
@@ -698,10 +720,10 @@ defmodule Expresso.ChartSankeyTest do
         Builder.chart(:alluvial, title: "Commute", src: path, levels: ["start", "end"])
         |> figure()
 
-      assert figure |> Floki.find("text.chart-column") |> Enum.map(&Floki.text/1) ==
+      assert texts(figure, "text.chart-column") ==
                ["start", "end"]
 
-      assert figure |> Floki.find("rect.chart-node") |> length() == 3
+      assert count(figure, "rect.chart-node") == 3
     end
 
     test "the frames share the nodes of each column" do
@@ -720,8 +742,8 @@ defmodule Expresso.ChartSankeyTest do
                chart.timeline
 
       figure = figure(chart)
-      assert figure |> Floki.find("figure.chart > svg g.chart-layer") |> length() == 2
-      assert figure |> Floki.find("figure.chart > svg text.chart-column") |> length() == 3
+      assert count(figure, "figure.chart > svg g.chart-layer") == 2
+      assert count(figure, "figure.chart > svg text.chart-column") == 3
     end
 
     test "reveal shows one column of links at each step" do
