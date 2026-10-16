@@ -159,6 +159,50 @@ The dependency is present in `dev` and in `test`. `mix format` runs in `dev`, an
 `deps/stream_data/.formatter.exs` through `import_deps`. Therefore the formatter writes no
 parentheses after `check all`.
 
+### The HTML in a unit test
+
+A new unit test that reads the HTML of a deck uses LazyHTML. `lazy_html` is a dependency
+for the `test` environment only. `test/expresso/table_element_test.exs` is an example.
+
+The first compile of `lazy_html` downloads its NIF from GitHub. `elixir_make` keeps the
+file in `~/.cache/elixir_make`, so a later compile needs no network. The NIF needs only
+`libc`, `libstdc++` and `libgcc_s`, and the BEAM loads these libraries too.
+
+LazyHTML parses the HTML with Lexbor, as a browser does. It also takes each CSS selector of
+a browser, such as `:has()` and `:is()`. Floki does not know these selectors, and it
+ignores them with no error. Thus a Floki query with `:has()` can find the wrong nodes, and
+the test can pass.
+
+Write a test with LazyHTML as follows:
+
+1. Parse a document with `LazyHTML.from_document/1`, or the HTML of one element with
+   `LazyHTML.from_fragment/1`.
+2. Find the nodes with `LazyHTML.query/2`.
+3. Read the result with `Enum.count/1`, `LazyHTML.attribute/2`, or
+   `Enum.map(&LazyHTML.text/1)` for the text of each node.
+
+To assert that an element has no part, find the element with `:not(:has(...))`, and
+assert that the query finds one node. A query that must find no node also finds no node
+when its selector has an error, so that assertion passes for the wrong reason.
+
+The other tests use Floki. When you change one of these files, you can move it to
+LazyHTML. Use one library in one file. This table gives the replacement of each call:
+
+| Floki | LazyHTML |
+| --- | --- |
+| `Floki.parse_document!(html)` | `LazyHTML.from_document(html)` |
+| `Floki.parse_fragment!(html)` | `LazyHTML.from_fragment(html)` |
+| `Floki.find(html, selector)` | `LazyHTML.query(html, selector)` |
+| `Floki.attribute(nodes, name)` | `LazyHTML.attribute(nodes, name)` |
+| `Floki.text(nodes)` | `LazyHTML.text(nodes)` |
+| `assert [_] = Floki.find(html, selector)` | `assert html \|> LazyHTML.query(selector) \|> Enum.count() == 1` |
+| A match on `{tag, attributes, children}` | A match on the result of `LazyHTML.to_tree/1` |
+
+`lib/` keeps Floki. `Expresso.Deck.render/1`, `Expresso.Morph` and `Expresso.Check.Document`
+use it at run time, and a release with LazyHTML needs its NIF for each target of Burrito.
+`Expresso.Deck.render/1` passes the document through Floki, and Floki drops a text node
+that is only white space. Thus that node is not in the document that a test parses.
+
 ### The browser tests
 
 The tests of `test/e2e/` render a deck to an HTML file, open the file in Chromium, and
