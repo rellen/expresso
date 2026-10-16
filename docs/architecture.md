@@ -1456,7 +1456,8 @@ to the items of a list. These are the reasons for this design:
   steps: a mark of a category in focus cannot stay in full color inside a dimmed series.
   A mark of a treemap or a sunburst holds the keys of its part, of the groups above it and
   of the parts under it, so one rule keeps a part, its groups and its own parts in full
-  color.
+  color. In the same way, a link of a chart of flows holds the keys of its two nodes, so
+  one rule keeps a node and its links in full color.
   The state `dim` sets `--dim: 1`, and a series reads it into `--chart-dim`, so
   `dim true` and `highlight` dim in the same way.
 
@@ -2144,9 +2145,10 @@ The tables do not give these rules:
 - The key after `b` closes the black screen, and it does nothing more.
 - A second `s` shows the window of the speaker view again, and it opens no second window.
 - `d` toggles the field `undim`. The projection of the attribute `data-undim` writes it on
-  the `body`, and the attribute is present only while the field is true. While the attribute is present, a rule of the style sheet
-  sets `--dim` and `--dimmed` to 0 on each element of a code element in the present view,
-  and `--chart-dim` to 0 on each series of a chart.
+  the `body`, and the attribute is present only while the field is true. While the
+  attribute is present, a rule of the style sheet sets `--dim` and `--dimmed` to 0 on each
+  element of a code element in the present view. It also sets `--chart-dim` to 0 on each
+  series of a chart and on each mark with a `data-keys` attribute.
   The rules of a step select the slide by its id, so this rule needs `!important`. The
   option `reset [:undim]` sets `undim` to `false` at each change of the step, so the next
   step dims the code again. The presenter does not have to press `d` again after an

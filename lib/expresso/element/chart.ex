@@ -49,7 +49,18 @@ defmodule Expresso.Element.Chart do
 
   import Expresso.Element.Chart.Kinds
 
-  alias Expresso.Element.Chart.{Chord, Csv, Hierarchy, Motion, ParallelSets, Plot, Sankey, Table}
+  alias Expresso.Element.Chart.{
+    Chord,
+    Csv,
+    Hierarchy,
+    Layers,
+    Motion,
+    ParallelSets,
+    Plot,
+    Sankey,
+    Table
+  }
+
   alias Expresso.Element.{Flow, Focus, Frame, Series}
   alias Shoddy.Result
 
@@ -383,13 +394,6 @@ defmodule Expresso.Element.Chart do
     end
   end
 
-  defp focus_options(%__MODULE__{kind: kind})
-       when not is_axis(kind) and kind != :pie and not is_part(kind),
-       do:
-         {:error,
-          "a #{kind} chart takes no highlight option. " <>
-            "A bar chart, a line chart, a pie, a treemap and a sunburst take it."}
-
   defp focus_options(%__MODULE__{highlight: []}),
     do: {:error, "the highlight option needs one group or more"}
 
@@ -440,7 +444,8 @@ defmodule Expresso.Element.Chart do
 
   # A name of the highlight option: a series, as its color number, or a
   # category, as the key of each category with that name. A category of a
-  # treemap or a sunburst is a part or a group, with its path.
+  # treemap or a sunburst is a part or a group, with its path. A category of
+  # a chart of flows is a node.
   defp focus_part(%__MODULE__{elements: elements} = chart, name) do
     series = for {%Series{name: ^name}, index} <- Enum.with_index(elements, 1), do: index
     keys = category_keys(chart, name)
@@ -453,9 +458,11 @@ defmodule Expresso.Element.Chart do
         {:ok, {:keys, keys}}
 
       {[_ | _], [_ | _]} ->
+        {noun, _nouns, _names} = category_names(chart)
+
         {:error,
-         "the highlight option names #{inspect(name)}, and the chart has a series and a category " <>
-           "with that name. Give the series or the category a different name."}
+         "the highlight option names #{inspect(name)}, and the chart has a series and a #{noun} " <>
+           "with that name. Give the series or the #{noun} a different name."}
 
       {[], []} ->
         {noun, nouns, names} = category_names(chart)
@@ -474,6 +481,14 @@ defmodule Expresso.Element.Chart do
     for {^path, id} <- Hierarchy.paths(chart.categories, separator), do: "p#{id}"
   end
 
+  defp category_keys(%__MODULE__{kind: kind, categories: categories}, name)
+       when is_flow(kind) do
+    case Layers.node_keys(categories) do
+      %{^name => key} -> [key]
+      _other -> []
+    end
+  end
+
   defp category_keys(%__MODULE__{categories: categories}, name),
     do: for({^name, index} <- Enum.with_index(categories, 1), do: "c#{index}")
 
@@ -485,6 +500,9 @@ defmodule Expresso.Element.Chart do
     names = Enum.map(paths, fn {path, _id} -> Enum.join(path, separator) end)
     {"part or group", "parts and the groups", names}
   end
+
+  defp category_names(%__MODULE__{kind: kind, categories: categories}) when is_flow(kind),
+    do: {"node", "nodes", Layers.node_names(categories)}
 
   defp category_names(%__MODULE__{categories: categories}),
     do: {"category", "categories", categories}

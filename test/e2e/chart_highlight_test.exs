@@ -63,6 +63,37 @@ defmodule Expresso.E2E.ChartHighlightTest do
     end
   end
 
+  # The node "Coal" is in focus at step 1, and the node "Homes" at step 2.
+  defmodule SankeyDeck do
+    use Expresso
+
+    slide "energy" do
+      chart :sankey do
+        title "Energy"
+        highlight ["Coal", "Homes"]
+        flow "Coal", "Power", 3
+        flow "Gas", "Power", 2
+        flow "Power", "Homes", 4
+      end
+    end
+  end
+
+  # The node "C" is in focus at step 1. The arcs of a chord chart are outside
+  # its series.
+  defmodule ChordDeck do
+    use Expresso
+
+    slide "trade" do
+      chart :chord do
+        title "Trade"
+        highlight ["C"]
+        flow "A", "B", 3
+        flow "B", "A", 1
+        flow "B", "C", 2
+      end
+    end
+  end
+
   # The fill opacity of the first bar of each series of a chart in a scope, in
   # the order of the series.
   defp opacities(page, scope) do
@@ -157,6 +188,65 @@ defmodule Expresso.E2E.ChartHighlightTest do
     press(page, "j")
     assert position(page) == "1.2"
     assert boxes(page) == ["1", "0.3", "1", "0.3", "0.3", "0.3"]
+  end
+
+  # The fill opacity of each link and of each node of the present view, in
+  # the order of the document, and the color of each label of a node: `:full`
+  # for `--text` and `:dim` for `--text-dim`.
+  defp flow_marks(page) do
+    page
+    |> js("""
+    (() => {
+      const probe = (role) => {
+        const span = document.createElement("span");
+        span.style.color = `var(${role})`;
+        document.body.append(span);
+        const color = getComputedStyle(span).color;
+        span.remove();
+        return color;
+      };
+      const marks = (name, property) =>
+        Array.from(document.querySelectorAll(`.screen .chart .${name}`))
+          .map((mark) => getComputedStyle(mark)[property]);
+      return [marks("chart-link", "fillOpacity"), marks("chart-node", "fillOpacity"),
+        marks("chart-node-label", "fill"), probe("--text"), probe("--text-dim")];
+    })()
+    """)
+    |> then(fn [links, nodes, labels, text, dim] ->
+      colors = %{rgb(text) => :full, rgb(dim) => :dim}
+      {links, nodes, Enum.map(labels, &Map.get(colors, rgb(&1), &1))}
+    end)
+  end
+
+  test "a node in focus keeps its links and its label in full, and each other node dims", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(SankeyDeck, tmp_dir))
+
+    # The links Coal to Power, Gas to Power and Power to Homes, and the nodes
+    # Coal, Power, Gas and Homes.
+    assert flow_marks(page) ==
+             {["1", "0.3", "0.3"], ["1", "0.3", "0.3", "0.3"], [:full, :dim, :dim, :dim]}
+
+    press(page, "j")
+    assert position(page) == "1.2"
+
+    assert flow_marks(page) ==
+             {["0.3", "0.3", "1"], ["0.3", "0.3", "0.3", "1"], [:dim, :dim, :dim, :full]}
+  end
+
+  test "the arcs of a chord chart dim with a group of nodes, and d shows them in full", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(ChordDeck, tmp_dir))
+
+    # The chords A to B, B to A and B to C, and the arcs A, B and C.
+    assert flow_marks(page) == {["0.3", "0.3", "1"], ["0.3", "0.3", "1"], [:dim, :dim, :full]}
+
+    press(page, "d")
+    assert flow_marks(page) == {["1", "1", "1"], ["1", "1", "1"], [:full, :full, :full]}
   end
 
   test "the series in focus shows in full, and each other series dims", %{

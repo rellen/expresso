@@ -25,14 +25,23 @@ defmodule Expresso.Element.Chart.Layers do
   for each layout
 
   `drawing` takes the assigns of one layout: the keys of the layout, the key
-  `numbered` from `numbered/2` and the key `values`. A chart with one layout
-  writes its drawing with no layer around it.
+  `numbered` from `numbered/2`, the key `values`, and the key `node_keys`
+  from `node_keys/1` for a chart with a group of nodes. A chart with one
+  layout writes its drawing with no layer around it.
   """
   @spec render(map(), [map()], (map() -> Phoenix.HTML.safe())) :: Phoenix.HTML.safe()
   def render(assigns, layouts, drawing) do
+    keys = if assigns[:keys], do: node_keys(assigns.categories)
+
     layers =
       for {layout, k} <- Enum.with_index(layouts, 1),
-          do: {k, Map.merge(layout, %{numbered: numbered(assigns, k), values: assigns.values})}
+          do:
+            {k,
+             Map.merge(layout, %{
+               numbered: numbered(assigns, k),
+               values: assigns.values,
+               node_keys: keys
+             })}
 
     assigns =
       Map.merge(assigns, %{
@@ -98,6 +107,58 @@ defmodule Expresso.Element.Chart.Layers do
         value > 0,
         do: %{from: from, to: to, value: value, series: number}
   end
+
+  @doc """
+  Return the name of each node, in the order of the categories
+
+  A category is a pair of nodes or the path of a parallel sets chart. A
+  node of an alluvial chart or of a parallel sets chart is the tuple of its
+  column and its name, and the nodes with the same name in different
+  columns give one name.
+
+      iex> Expresso.Element.Chart.Layers.node_names([[{0, "A"}, {1, "B"}], [{0, "B"}, {1, "C"}]])
+      ["A", "B", "C"]
+  """
+  @spec node_names([[Sankey.key()]]) :: [String.t()]
+  def node_names(categories),
+    do: categories |> List.flatten() |> Enum.map(&Sankey.name/1) |> Enum.uniq()
+
+  @doc """
+  Return the key of each node, as a map from its name
+
+  The `highlight` option of a chart of flows names nodes. Each mark of a
+  node, and each link that touches the node, holds the key of the node in
+  its `data-keys` attribute.
+
+      iex> Expresso.Element.Chart.Layers.node_keys([["A", "B"], ["B", "C"]])
+      %{"A" => "n1", "B" => "n2", "C" => "n3"}
+  """
+  @spec node_keys([[Sankey.key()]]) :: %{String.t() => String.t()}
+  def node_keys(categories) do
+    categories
+    |> node_names()
+    |> Enum.with_index(1)
+    |> Map.new(fn {name, index} -> {name, "n#{index}"} end)
+  end
+
+  @doc """
+  Return the `data-keys` attribute of a mark that touches the nodes
+
+  A node takes its own key. A link takes the keys of its two nodes, and a
+  ribbon of a parallel sets chart takes the keys of each node of its path.
+  A chart without a group of nodes gives no attribute.
+
+      iex> keys = %{"A" => "n1", "B" => "n2"}
+      iex> Expresso.Element.Chart.Layers.key(%{node_keys: keys}, [{0, "A"}, {1, "B"}, {2, "A"}])
+      "n1 n2"
+      iex> Expresso.Element.Chart.Layers.key(%{node_keys: nil}, ["A"])
+      nil
+  """
+  @spec key(map(), [Sankey.key()]) :: String.t() | nil
+  def key(%{node_keys: nil}, _nodes), do: nil
+
+  def key(%{node_keys: keys}, nodes),
+    do: nodes |> Enum.map(&keys[Sankey.name(&1)]) |> Enum.uniq() |> Enum.join(" ")
 
   @doc """
   Return the color of the node at a position from 0, from 1 to 8
