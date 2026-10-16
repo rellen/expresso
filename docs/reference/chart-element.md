@@ -33,7 +33,7 @@ end
 | `values` | `true` or `false` | Show the value of each bar. The default is `true`. |
 | `reveal` | `true` or `false` | Show each series at its own step. A chart of flows has its own steps, which [reveal](#reveal) gives. The default is `false`. A pie takes no `reveal`. |
 | `dim` | `true` or `false` | Dim each series when a later series shows. The default is `false`. See [a dimmed series](#a-dimmed-series). |
-| `highlight` | A list of groups, such as `["Returns", ["Orders", "Repairs"]]` | Each series shows at each step. Each group is in focus at its own step, and the other series dim. A bar chart and a line chart take it. See [the highlight option](#the-highlight-option). |
+| `highlight` | A list of groups, such as `["Returns", ["Orders", "Repairs"], "2024"]` | Each series shows at each step. Each group of series or of categories is in focus at its own step, and the rest of the chart dims. A bar chart, a line chart and a pie take it. See [the highlight option](#the-highlight-option). |
 | `whole_first` | `true` or `false` | With `highlight`, the whole chart shows in full color for one step before the first group. The default is `false`. |
 | `separator` | A string | The text between two levels of a category of a treemap or a sunburst. The default is `"/"`. |
 | `levels` | A list of strings | The headings of the CSV columns that hold the levels of a treemap or a sunburst, from the top level down. For a chart of flows, the headings of the CSV columns that hold the nodes of each path. Requires `src`, but an alluvial chart or a parallel sets chart can take `levels` without `src` to give the title of each column. |
@@ -63,15 +63,15 @@ A series also takes the overlay options, so a series can show at its own step wi
 
 ## The highlight option
 
-The `highlight` option puts one group of series in focus at each step. Each series shows
-at each step:
+The `highlight` option puts one group of series or of categories in focus at each step.
+Each series shows at each step:
 
 ```elixir
 slide "repairs" do
   chart :bar do
     title "Orders, returns and repairs"
     categories ["2023", "2024", "2025"]
-    highlight ["Returns", ["Orders", "Repairs"]]
+    highlight ["Returns", ["Orders", "Repairs"], "2024"]
     series "Orders", [180, 240, 310]
     series "Returns", [22, 19, 25]
     series "Repairs", [60, 75, 90]
@@ -79,31 +79,47 @@ slide "repairs" do
 end
 ```
 
-| Step | The series of the group | Each other series |
+| Step | The group | The rest of the chart |
 | --- | --- | --- |
 | The step of the group | Full color | Dimmed. See [a dimmed series](#a-dimmed-series). |
 | A step of no group | Full color | Full color |
 
-A group is the name of a series, or a list of names. The groups take their steps from the
-counter of the slide, one step each, as the items of a list with `reveal true` do. The
-first group is thus in focus at the first step of the slide. `whole_first true` gives the
-chart one step with no group in focus before the first group, as a `pause()` in front of
-the chart does. See [the overlay options](overlay-options.md).
+A group is the name of a series or of a category, or a list of names. The names of one
+group are all series or all categories. The groups take their steps from the counter of
+the slide, one step each, as the items of a list with `reveal true` do. The first group is
+thus in focus at the first step of the slide. `whole_first true` gives the chart one step
+with no group in focus before the first group, as a `pause()` in front of the chart does.
+See [the overlay options](overlay-options.md).
 
-A bar chart and a line chart take the option. A chart with `src` takes the names of the
-series of its file. The key `d` shows each series in full color until the next step, as
-it does for code. See [the key d](code-element.md#the-key-d).
+A group of categories keeps these marks in full color, and each other mark of a category
+dims:
+
+| Kind | The marks of a category | Each step of a group of categories also dims |
+| --- | --- | --- |
+| `:bar` | Its bars, their values and its label under the axis | – |
+| `:line` | The dot of each line at the category and its label under the axis. The last category also keeps the label at the end of each line. | Each line |
+| `:pie` | Its slice and its part of the legend | – |
+
+The legend of a bar chart or a line chart names the series, so it stays in full color at
+the step of a group of categories.
+
+A bar chart, a line chart and a pie take the option. A chart with `src` takes the names of
+the series and of the categories of its file. The key `d` shows each series and each
+category in full color until the next step, as it does for code. See
+[the key d](code-element.md#the-key-d).
 
 ## A dimmed series
 
 A series dims at a step of `highlight` at which it is not in focus, and at a step at which
-`dim true` dims it:
+`dim true` dims it. A mark of a category dims in the same way at the step of a group of
+other categories:
 
 - Each mark of the series, such as a bar, a line, a dot and its color in the legend, fades
   to the opacity `--chart-dim-opacity`. The default is 0.3.
 - Each text of the series, such as a value and its name in the legend, takes the dimmed
-  color of the text, `--text-dim`. The text thus stays at the contrast of a dimmed text.
-  See [the dim_contrast option](dim-contrast-option.md).
+  color of the text, `--text-dim`. The label of a category under the axis takes
+  `--muted-dim`. The text thus stays at the contrast of a dimmed text. See
+  [the dim_contrast option](dim-contrast-option.md).
 
 A deck can set `--chart-dim-opacity` in [the css option](css-option.md), such as `0.5`
 for a lighter dim. The handout view and paper show the dimming of each step.
@@ -504,9 +520,10 @@ The compiler gives an error for these:
 - a `node` in a chart that is not a chart of flows;
 - two `node` entities for one node, and a `node` with a name that no flow has;
 - a `node` with `column` in a chart of flows that is not a sankey;
-- `highlight` on a chart that is not a bar chart or a line chart, with `reveal`, with
-  `dim`, with frames, or with a series that has an overlay option;
-- an empty `highlight`, an empty group, and a name that is not the name of a series;
+- `highlight` on a chart that is not a bar chart, a line chart or a pie, with `reveal`,
+  with `dim`, with frames, or with a series that has an overlay option;
+- an empty `highlight`, an empty group, a name that is not the name of a series or of a
+  category, a name of a series and of a category, and a group of series and categories;
 - `whole_first` without `highlight`;
 - a group of `highlight` at a step at which the chart does not show.
 
@@ -563,8 +580,10 @@ The marks of a chart with frames or with the effect `:grow` have the class `char
 grid of the frames is a `div` with the class `chart-frames`, and each small chart is a
 `figure` with the class `chart-copy`.
 
-Each series of a chart with `highlight` has `data-series` with its number, from 1. The
-generated style block dims a series by that number.
+Each series of a chart with `highlight` has `data-series` with its number, from 1. With a
+group of categories, each mark of a category has `data-keys` with its key, such as `c2`
+for the second category, and a line has an empty `data-keys`. The generated style block
+dims a series by its number and a mark by its key.
 
 A box of a treemap is a `rect` with the class `chart-tile` for a part or `chart-group` for a
 group. An arc of a sunburst is a `circle` with the class `chart-ring` and `chart-depth-1`,

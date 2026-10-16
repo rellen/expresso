@@ -151,6 +151,98 @@ defmodule Expresso.ChartHighlightTest do
     end
   end
 
+  describe "the categories" do
+    # The value of `data-keys` of each mark with the attribute in the present
+    # view, with the classes of the mark.
+    defp keyed(html) do
+      html
+      |> LazyHTML.query(".screen [data-keys]")
+      |> Enum.map(&{hd(LazyHTML.attribute(&1, "class")), hd(LazyHTML.attribute(&1, "data-keys"))})
+    end
+
+    test "a group of categories dims each mark of the other categories, and a series step can follow" do
+      html = [bars(highlight: ["2024", "Returns"])] |> slide() |> document()
+      [el] = html |> LazyHTML.query(".screen figure.chart") |> LazyHTML.attribute("data-el")
+
+      assert keyed(html) == [
+               {"chart-category", "c1"},
+               {"chart-category", "c2"},
+               {"chart-bar", "c1"},
+               {"chart-value", "c1"},
+               {"chart-bar", "c2"},
+               {"chart-value", "c2"},
+               {"chart-bar", "c1"},
+               {"chart-value", "c1"},
+               {"chart-bar", "c2"},
+               {"chart-value", "c2"}
+             ]
+
+      assert count(html, ".screen .chart-swatch:not([data-keys])") == 2
+
+      assert rules(html) == [
+               ~s|section[data-step="1"] [data-el="#{el}"] [data-keys]:not([data-keys~="c2"]) { --chart-dim: 1; }|,
+               ~s|section[data-step="2"] [data-el="#{el}"] [data-series]:not([data-series="2"]) { --chart-dim: 1; }|
+             ]
+    end
+
+    test "a line dims at each step of a group of categories, and a dot and the end keep their category" do
+      html =
+        [
+          Builder.chart(:line,
+            title: "Visitors",
+            categories: ["Jan", "Feb"],
+            highlight: ["Jan"],
+            elements: [Builder.series("Web", [4, 5])]
+          )
+        ]
+        |> slide()
+        |> document()
+
+      assert {"chart-line", ""} in keyed(html)
+      assert {"chart-dot", "c1"} in keyed(html)
+      assert {"chart-dot", "c2"} in keyed(html)
+      assert {"chart-end", "c2"} in keyed(html)
+    end
+
+    test "a pie takes the option, and its slice and its part of the legend have the key" do
+      html =
+        [
+          Builder.chart(:pie,
+            title: "Hours",
+            categories: ["Press", "Paint"],
+            highlight: ["Paint", "Press"],
+            elements: [Builder.series("Hours", [3, 1])]
+          )
+        ]
+        |> slide()
+        |> document()
+
+      assert keyed(html) == [
+               {"chart-slice chart-c1", "c1"},
+               {"chart-slice chart-c2", "c2"},
+               {"chart-swatch chart-c1", "c1"},
+               {"chart-name", "c1"},
+               {"chart-swatch chart-c2", "c2"},
+               {"chart-name", "c2"}
+             ]
+
+      assert [first, second] = rules(html)
+      assert first =~ ~s|[data-keys]:not([data-keys~="c2"])|
+      assert second =~ ~s|[data-keys]:not([data-keys~="c1"])|
+    end
+
+    test "the marks of a chart with the effect grow have the keys" do
+      html =
+        [bars(highlight: ["2023"], effect: :grow, at: [from: 1])]
+        |> slide()
+        |> document()
+
+      assert count(html, ~s|.screen path.chart-bar.chart-mark[data-keys="c1"]|) == 2
+      assert count(html, ~s|.screen g.chart-mark[data-keys="c1"] > text.chart-value|) == 2
+      assert count(html, ~s|.screen text.chart-category.chart-mark[data-keys="c1"]|) == 1
+    end
+  end
+
   describe "the errors" do
     test "the compiler refuses an option that the highlight option does not take with it" do
       for {opts, message} <- [
@@ -166,18 +258,33 @@ defmodule Expresso.ChartHighlightTest do
       end
     end
 
-    test "the compiler refuses a name that is not a series, and gives the names of the series" do
+    test "the compiler refuses a name that is not a series or a category, and gives the names" do
       assert_raise ArgumentError,
-                   ~r/the highlight option names "Sales", and the chart has no series with that name. The series are "Orders", "Returns"\./,
+                   ~r/the highlight option names "Sales", and the chart has no series and no category with that name. The series are "Orders", "Returns". The categories are "2023", "2024"\./,
                    fn -> bars(highlight: [["Orders", "Sales"]]) end
     end
 
-    test "the compiler refuses a pie, a series with an overlay option, and frames" do
-      assert_raise ArgumentError, ~r/a pie chart takes no highlight option/, fn ->
-        Builder.chart(:pie,
+    test "the compiler refuses a name of a series and a category, and a group of both" do
+      assert_raise ArgumentError, ~r/the chart has a series and a category with that name/, fn ->
+        Builder.chart(:bar,
+          title: "Orders",
+          categories: ["Orders", "2024"],
+          highlight: ["Orders"],
+          elements: [Builder.series("Orders", [1, 2])]
+        )
+      end
+
+      assert_raise ArgumentError,
+                   ~r/a group of the highlight option names series or categories, and not both/,
+                   fn -> bars(highlight: [["Orders", "2024"]]) end
+    end
+
+    test "the compiler refuses a treemap, a series with an overlay option, and frames" do
+      assert_raise ArgumentError, ~r/a treemap chart takes no highlight option/, fn ->
+        Builder.chart(:treemap,
           title: "Hours",
           categories: ["Press", "Paint"],
-          highlight: ["Hours"],
+          highlight: ["Press"],
           elements: [Builder.series("Hours", [3, 1])]
         )
       end
