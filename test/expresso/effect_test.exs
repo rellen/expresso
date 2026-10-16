@@ -54,10 +54,10 @@ defmodule Expresso.EffectTest do
     end
   end
 
-  defp document, do: EffectDeck |> Expresso.parse() |> Deck.render() |> Floki.parse_document!()
+  defp document, do: EffectDeck |> Expresso.parse() |> Deck.render() |> LazyHTML.from_document()
 
   defp effects(document, selector) do
-    document |> Floki.find(selector) |> Floki.attribute("data-effect")
+    document |> LazyHTML.query(selector) |> LazyHTML.attribute("data-effect")
   end
 
   describe "the DSL" do
@@ -178,21 +178,24 @@ defmodule Expresso.EffectTest do
       %Expresso.Element.Diagram{src: "test/fixtures/flow.svg", elements: [part]}
       |> Expresso.Element.Diagram.get_assigns()
       |> Map.fetch!(:svg)
-      |> Floki.parse_fragment!()
+      |> LazyHTML.from_fragment()
     end
 
     test "goes into a wrapper for an effect that moves or grows it" do
       [wrapper] =
-        svg(%Part{id: "output", steps: [2], effect: :grow}) |> Floki.find("g.diagram-part")
+        svg(%Part{id: "output", steps: [2], effect: :grow})
+        |> LazyHTML.query("g.diagram-part")
+        |> Enum.to_list()
 
-      assert Floki.attribute([wrapper], "data-effect") == ["grow"]
+      assert LazyHTML.attribute(wrapper, "data-effect") == ["grow"]
     end
 
     test "keeps no wrapper for a fade, a wipe or a blur" do
       for effect <- [:fade, :wipe, :blur] do
-        assert svg(%Part{id: "output", steps: [2], effect: effect})
-               |> Floki.find("g.diagram-part") ==
-                 []
+        svg = svg(%Part{id: "output", steps: [2], effect: effect})
+
+        assert svg |> LazyHTML.filter("svg:not(:has(g.diagram-part))") |> Enum.count() == 1,
+               inspect(effect)
       end
     end
   end

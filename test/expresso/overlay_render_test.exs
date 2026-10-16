@@ -1,6 +1,8 @@
 defmodule Expresso.Overlay.RenderTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Deck
   alias Expresso.Element.{On, Pause, TextArea, TextBox}
   alias Expresso.Overlay.Render
@@ -200,72 +202,70 @@ defmodule Expresso.Overlay.RenderTest do
   describe "the document" do
     setup do
       html = RenderDeck |> Expresso.parse() |> Expresso.Deck.render()
-      {:ok, html: html, document: Floki.parse_document!(html)}
+      {:ok, html: html, document: LazyHTML.from_document(html)}
     end
 
     test "writes data-step 1 and data-max-step on each section", %{document: document} do
-      [first, second] = Floki.find(document, "section.slide")
+      [first, second] = LazyHTML.query(document, "section.slide") |> Enum.to_list()
 
-      assert Floki.attribute(first, "data-step") == ["1"]
-      assert Floki.attribute(first, "data-max-step") == ["3"]
-      assert Floki.attribute(second, "data-step") == ["1"]
-      assert Floki.attribute(second, "data-max-step") == ["1"]
+      assert LazyHTML.attribute(first, "data-step") == ["1"]
+      assert LazyHTML.attribute(first, "data-max-step") == ["3"]
+      assert LazyHTML.attribute(second, "data-step") == ["1"]
+      assert LazyHTML.attribute(second, "data-max-step") == ["1"]
     end
 
     test "writes data-on and data-el on the root tag of an element", %{document: document} do
-      [first, second] = Floki.find(document, "#slide-1 .text-box")
+      [first, second] = LazyHTML.query(document, "#slide-1 .text-box") |> Enum.to_list()
 
-      assert Floki.attribute(first, "data-on") == ["1 2 3"]
-      assert Floki.attribute(first, "data-el") == ["s1-e1"]
-      assert Floki.attribute(second, "data-on") == ["2 3"]
-      assert Floki.attribute(second, "data-el") == ["s1-e3"]
+      assert LazyHTML.attribute(first, "data-on") == ["1 2 3"]
+      assert LazyHTML.attribute(first, "data-el") == ["s1-e1"]
+      assert LazyHTML.attribute(second, "data-on") == ["2 3"]
+      assert LazyHTML.attribute(second, "data-el") == ["s1-e3"]
     end
 
     test "writes the attributes on a nested text area", %{document: document} do
-      [_, area] = Floki.find(document, "#slide-1 .text-area")
+      [_, area] = LazyHTML.query(document, "#slide-1 .text-area") |> Enum.to_list()
 
-      assert Floki.attribute(area, "data-on") == ["3"]
-      assert Floki.attribute(area, "data-el") == ["s1-e4"]
+      assert LazyHTML.attribute(area, "data-on") == ["3"]
+      assert LazyHTML.attribute(area, "data-el") == ["s1-e4"]
     end
 
     test "writes no attribute on an element without an overlay", %{document: document} do
-      [box] = Floki.find(document, "#slide-2 .text-box")
+      [box] = LazyHTML.query(document, "#slide-2 .text-box") |> Enum.to_list()
 
-      assert Floki.attribute(box, "data-on") == []
-      assert Floki.attribute(box, "data-el") == []
+      assert LazyHTML.attribute(box, "data-on") == []
+      assert LazyHTML.attribute(box, "data-el") == []
     end
 
     test "writes data-view present on the body", %{document: document} do
-      assert document |> Floki.find("body") |> Floki.attribute("data-view") == ["present"]
+      assert document |> LazyHTML.query("body") |> LazyHTML.attribute("data-view") == ["present"]
     end
 
     test "writes one handout page for each step of each slide, in order", %{document: document} do
-      pages = Floki.find(document, ".handout .handout-page")
+      pages = LazyHTML.query(document, ".handout .handout-page")
 
       assert pages
              |> Enum.map(fn page ->
-               {Floki.attribute([page], "data-slide"), Floki.attribute([page], "data-step")}
+               {LazyHTML.attribute(page, "data-slide"), LazyHTML.attribute(page, "data-step")}
              end) == [{["1"], ["1"]}, {["1"], ["2"]}, {["1"], ["3"]}, {["2"], ["1"]}]
     end
 
     test "gives a handout page no identifier and not the class of a slide", %{document: document} do
-      pages = Floki.find(document, ".handout-page")
-
-      assert Floki.attribute(pages, "id") == []
-      assert Floki.find(document, "section.slide") |> length() == 2
+      assert count(document, ".handout-page:not([id])") == 4
+      assert count(document, "section.slide") == 2
     end
 
     test "writes the same elements in a handout page", %{document: document} do
-      [page | _] = Floki.find(document, ".handout .handout-page")
-      boxes = Floki.find([page], ".text-box")
+      [page | _] = LazyHTML.query(document, ".handout .handout-page") |> Enum.to_list()
+      boxes = LazyHTML.query(page, ".text-box")
 
-      assert Floki.attribute(boxes, "data-on") == ["1 2 3", "2 3"]
-      assert Floki.attribute(boxes, "data-el") == ["s1-e1", "s1-e3"]
+      assert LazyHTML.attribute(boxes, "data-on") == ["1 2 3", "2 3"]
+      assert LazyHTML.attribute(boxes, "data-el") == ["s1-e1", "s1-e3"]
     end
 
     test "writes the generated rules into a fourth style element", %{document: document} do
       [_fonts, _theme, _highlight, generated] =
-        document |> Floki.find("head style") |> Enum.map(&Floki.text/1)
+        texts(document, "head style")
 
       assert generated =~ "@property --alert"
       assert generated =~ ~s(section[data-step="3"] [data-on~="3"])
@@ -278,12 +278,12 @@ defmodule Expresso.Overlay.RenderTest do
   describe "the dim option" do
     setup do
       html = DimDeck |> Expresso.parse() |> Expresso.Deck.render()
-      {:ok, document: Floki.parse_document!(html)}
+      {:ok, document: LazyHTML.from_document(html)}
     end
 
     test "writes the state dim for each earlier item and group", %{document: document} do
       [_fonts, _theme, _highlight, generated] =
-        document |> Floki.find("head style") |> Enum.map(&Floki.text/1)
+        texts(document, "head style")
 
       assert generated =~ "@property --dim"
 
@@ -296,10 +296,10 @@ defmodule Expresso.Overlay.RenderTest do
     end
 
     test "writes data-el on the lines of a group that dims", %{document: document} do
-      lines = Floki.find(document, "#slide-1 .code .line")
+      lines = LazyHTML.query(document, "#slide-1 .code .line")
 
-      assert Floki.attribute(lines, "data-el") == ["s1-e5"]
-      assert Floki.attribute(lines, "data-on") == ["3 4", "4"]
+      assert LazyHTML.attribute(lines, "data-el") == ["s1-e5"]
+      assert LazyHTML.attribute(lines, "data-on") == ["3 4", "4"]
     end
   end
 end

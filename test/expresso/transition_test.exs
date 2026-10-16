@@ -1,6 +1,7 @@
 defmodule Expresso.TransitionTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
   import Spark.Test, only: [dsl_errors: 1]
 
   # The deck slides, slide two zooms, and slide three has no transition.
@@ -69,9 +70,10 @@ defmodule Expresso.TransitionTest do
   end
 
   test "no element of the document gets a transition attribute" do
-    document = MixedDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+    document = MixedDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
 
-    assert document |> Floki.find("[data-transition]") == []
+    assert count(document, "html:not(:has([data-transition]))") == 1
+    assert count(document, "section.slide") == 3
   end
 
   # Slide two wipes down with a transition of the CSS of the deck.
