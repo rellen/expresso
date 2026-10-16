@@ -1,6 +1,8 @@
 defmodule Expresso.FootnoteElementTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Footnote
 
@@ -10,7 +12,7 @@ defmodule Expresso.FootnoteElementTest do
     slides
     |> Builder.deck(name: "footnotes")
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
+    |> LazyHTML.from_document()
   end
 
   defp claim(text), do: Builder.text_box(elements: [Builder.text_area(text: text)])
@@ -28,22 +30,22 @@ defmodule Expresso.FootnoteElementTest do
         )
       ])
 
-    [slide] = Floki.find(html, ".screen section.slide")
+    [slide] = LazyHTML.query(html, ".screen section.slide") |> Enum.to_list()
 
-    assert slide |> Floki.find("ol.footnotes li.footnote") |> Enum.map(&Floki.text/1) ==
+    assert texts(slide, "ol.footnotes li.footnote") ==
              ["The first source.", "The second source."]
 
-    assert slide |> Floki.find("ol.footnotes em") |> Floki.text() == "first"
-    assert Floki.find(slide, ".text-box li.footnote") == []
-    assert slide |> Floki.find(".text-box") |> length() == 2
-    assert html |> Floki.find(".handout-page ol.footnotes") |> length() == 1
+    assert texts(slide, "ol.footnotes em") == ["first"]
+    assert count(slide, ".text-box:not(:has(li.footnote))") == 2
+    assert count(slide, ".text-box") == 2
+    assert count(html, ".handout-page ol.footnotes") == 1
   end
 
   test "a slide with no footnote has no list" do
     html = document([Builder.slide("s", elements: [claim("No source.")])])
 
-    assert Floki.find(html, "ol.footnotes") == []
-    assert Floki.find(html, ".sources") == []
+    assert count(html, "body:not(:has(ol.footnotes))") == 1
+    assert count(html, "body:not(:has(.sources))") == 1
   end
 
   test "a footnote takes the overlay options, and auto_reveal gives it no step of its own" do
@@ -60,14 +62,15 @@ defmodule Expresso.FootnoteElementTest do
         )
       ])
 
-    [always, later] = Floki.find(html, ".screen li.footnote")
+    [always, later] = LazyHTML.query(html, ".screen li.footnote") |> Enum.to_list()
 
-    assert Floki.attribute(always, "data-on") == []
-    assert Floki.attribute(later, "data-on") == ["2"]
+    assert LazyHTML.attribute(always, "data-on") == []
+    assert LazyHTML.attribute(later, "data-on") == ["2"]
 
-    assert html |> Floki.find(".screen section.slide") |> Floki.attribute("data-max-step") == [
-             "2"
-           ]
+    assert html |> LazyHTML.query(".screen section.slide") |> LazyHTML.attribute("data-max-step") ==
+             [
+               "2"
+             ]
   end
 
   test "the handout view ends with a page of the sources of each slide" do
@@ -78,16 +81,17 @@ defmodule Expresso.FootnoteElementTest do
         Builder.slide("third", elements: [Builder.footnote("Docs"), Builder.footnote("Talk")])
       ])
 
-    assert [sources] = Floki.find(html, ".handout > section.sources")
-    assert sources |> Floki.find("h2") |> Floki.text() == "Sources"
-    assert sources |> Floki.find("h3") |> Enum.map(&Floki.text/1) == ["1. Processes", "3. third"]
+    assert [sources] = LazyHTML.query(html, ".handout > section.sources") |> Enum.to_list()
+    assert texts(sources, "h2") == ["Sources"]
+    assert texts(sources, "h3") == ["1. Processes", "3. third"]
 
-    assert sources |> Floki.find("ol") |> Enum.map(&(Floki.find(&1, "li") |> length())) ==
-             [1, 2]
+    assert sources |> LazyHTML.query("ol") |> Enum.map(&count(&1, "li")) == [1, 2]
 
     # The page comes after the last page of the slides and before the
     # elements of the speaker view.
-    children = html |> Floki.find(".handout > *") |> Enum.map(&elem(&1, 0))
+    children =
+      html |> LazyHTML.query(".handout > *") |> LazyHTML.to_tree() |> Enum.map(&elem(&1, 0))
+
     assert Enum.take(children, -5) == ["section", "div", "div", "div", "div"]
   end
 end
