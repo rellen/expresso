@@ -657,9 +657,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 /*
  * A mark of a category gets `--chart-dim` from a group of the `highlight`
  * option, and not from its series. It therefore has its own transition of
- * the property, and the list keeps the transitions of a mark that moves.
+ * the property, and the list keeps the transitions of a mark that moves. A
+ * label of a treemap or a sunburst has its own list, with the delay of its
+ * growth.
  */
-.chart [data-keys] {
+.chart [data-keys]:not(.chart-label) {
   transition:
     --chart-u var(--dur) var(--ease),
     --chart-v var(--dur) var(--ease),
@@ -684,7 +686,8 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
     --chart-u var(--dur) var(--ease),
     --chart-v var(--dur) var(--ease),
     --chart-h var(--dur) var(--ease),
-    --chart-w var(--dur) var(--ease) var(--dur);
+    --chart-w var(--dur) var(--ease) var(--dur),
+    --chart-dim var(--dur) var(--ease);
 }
 .chart-mark {
   transform: translate(calc(var(--chart-u) * 1px), calc(var(--chart-v) * 1px));

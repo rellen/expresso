@@ -243,6 +243,85 @@ defmodule Expresso.ChartHighlightTest do
     end
   end
 
+  describe "the parts of a treemap and of a sunburst" do
+    @categories ["Production/Press", "Production/Paint", "Office/IT", "Logistics"]
+
+    defp parts(kind, highlight, opts \\ []) do
+      [
+        Builder.chart(
+          kind,
+          [
+            title: "Hours",
+            categories: @categories,
+            highlight: highlight,
+            elements: [Builder.series("Hours", [40, 25, 15, 30])]
+          ] ++ opts
+        )
+      ]
+      |> slide()
+      |> document()
+    end
+
+    test "a mark of a part holds the keys of the part, of its groups and of its parts" do
+      html = parts(:treemap, ["Production", "Office/IT"])
+
+      assert keyed(html) == [
+               {"chart-group", "p1 p2 p3"},
+               {"chart-tile", "p1 p2"},
+               {"chart-tile", "p1 p3"},
+               {"chart-mark chart-label", "p1 p2 p3"},
+               {"chart-mark chart-label", "p1 p2"},
+               {"chart-mark chart-label", "p1 p3"},
+               {"chart-tile", "p6"},
+               {"chart-mark chart-label", "p6"},
+               {"chart-group", "p4 p5"},
+               {"chart-tile", "p4 p5"},
+               {"chart-mark chart-label", "p4 p5"},
+               {"chart-mark chart-label", "p4 p5"}
+             ]
+
+      assert [first, second] = rules(html)
+      assert first =~ ~s|[data-keys]:not([data-keys~="p1"])|
+      assert second =~ ~s|[data-keys]:not([data-keys~="p5"])|
+    end
+
+    test "a sunburst gives the keys to its rings, its labels and the parts of its legend" do
+      html = parts(:sunburst, ["Production/Paint"])
+
+      assert {"chart-ring chart-c1 chart-depth-2", "p1 p3"} in keyed(html)
+      assert {"chart-mark chart-label", "p1 p3"} in keyed(html)
+      assert {"chart-swatch chart-c1", "p1 p2 p3"} in keyed(html)
+      assert {"chart-name", "p1 p2 p3"} in keyed(html)
+      assert {"chart-name", "p6"} in keyed(html)
+      assert [rule] = rules(html)
+      assert rule =~ ~s|[data-keys]:not([data-keys~="p3"])|
+    end
+
+    test "a name takes the separator of the chart, and a category can be a list of levels" do
+      html =
+        [
+          Builder.chart(:treemap,
+            title: "Hours",
+            categories: [["I/O", "Disks"], ["I/O", "Network"], ["CPU"]],
+            separator: " > ",
+            highlight: ["I/O > Disks"],
+            elements: [Builder.series("Hours", [3, 2, 4])]
+          )
+        ]
+        |> slide()
+        |> document()
+
+      assert [rule] = rules(html)
+      assert rule =~ ~s|[data-keys]:not([data-keys~="p2"])|
+    end
+
+    test "the compiler gives the parts and the groups for a name that is not one of them" do
+      assert_raise ArgumentError,
+                   ~r/the chart has no series and no part or group with that name. The series are "Hours". The parts and the groups are "Production", "Production\/Press", "Production\/Paint", "Office", "Office\/IT", "Logistics"\./,
+                   fn -> parts(:treemap, ["Press"]) end
+    end
+  end
+
   describe "the errors" do
     test "the compiler refuses an option that the highlight option does not take with it" do
       for {opts, message} <- [
@@ -279,13 +358,13 @@ defmodule Expresso.ChartHighlightTest do
                    fn -> bars(highlight: [["Orders", "2024"]]) end
     end
 
-    test "the compiler refuses a treemap, a series with an overlay option, and frames" do
-      assert_raise ArgumentError, ~r/a treemap chart takes no highlight option/, fn ->
-        Builder.chart(:treemap,
-          title: "Hours",
-          categories: ["Press", "Paint"],
-          highlight: ["Press"],
-          elements: [Builder.series("Hours", [3, 1])]
+    test "the compiler refuses a sankey, a series with an overlay option, and frames" do
+      assert_raise ArgumentError, ~r/a sankey chart takes no highlight option/, fn ->
+        Builder.chart(:sankey,
+          title: "Flows",
+          categories: [["Coal", "Power"]],
+          highlight: ["Coal"],
+          elements: [Builder.series("Flow", [3])]
         )
       end
 
