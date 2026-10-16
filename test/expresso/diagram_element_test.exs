@@ -1,6 +1,8 @@
 defmodule Expresso.Element.DiagramTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.{Diagram, Part}
 
@@ -59,58 +61,63 @@ defmodule Expresso.Element.DiagramTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: DiagramDeck |> document() |> Floki.parse_document!()}
+      {:ok, document: DiagramDeck |> document() |> LazyHTML.from_document()}
     end
 
     test "writes the SVG as an element of the document", %{document: document} do
-      assert [svg] = Floki.find(document, "#slide-1 .diagram > svg")
-      assert Floki.attribute([svg], "viewbox") == ["0 0 300 100"]
-      assert [_] = Floki.find([svg], "defs lineargradient")
+      assert [svg] = LazyHTML.query(document, "#slide-1 .diagram > svg") |> Enum.to_list()
+      assert LazyHTML.attribute(svg, "viewbox") == ["0 0 300 100"]
+      assert count(svg, "defs lineargradient") == 1
     end
 
     test "writes the overlay attributes of each part on its element", %{document: document} do
       assert document
-             |> Floki.find("#slide-1 .diagram g[id^='arrow-']")
-             |> Floki.attribute("data-on") ==
+             |> LazyHTML.query("#slide-1 .diagram g[id^='arrow-']")
+             |> LazyHTML.attribute("data-on") ==
                ["2"]
 
-      [output] = Floki.find(document, "#slide-1 .diagram rect[id^='output-']")
-      assert Floki.attribute([output], "data-on") == []
-      assert Floki.attribute([output], "data-el") == []
+      [output] =
+        LazyHTML.query(document, "#slide-1 .diagram rect[id^='output-']") |> Enum.to_list()
 
-      assert document
-             |> Floki.find("#slide-1 .diagram rect[id^='input-']")
-             |> Floki.attribute("data-on") ==
-               []
+      assert LazyHTML.attribute(output, "data-on") == []
+      assert LazyHTML.attribute(output, "data-el") == []
+
+      assert count(document, "#slide-1 .diagram rect[id^='input-']:not([data-on])") == 1
     end
 
     test "puts a part with an on entity into a wrapper with the attributes", %{
       document: document
     } do
-      [wrapper] = Floki.find(document, "#slide-1 .diagram svg > g.diagram-part")
+      [wrapper] =
+        LazyHTML.query(document, "#slide-1 .diagram svg > g.diagram-part") |> Enum.to_list()
 
-      assert Floki.attribute([wrapper], "data-on") == ["3"]
-      assert Floki.attribute([wrapper], "data-el") == ["s1-e3"]
-      assert [{"rect", _attrs, _children}] = Floki.children(wrapper)
-      assert [_] = Floki.find([wrapper], "rect[id^='output-']")
+      assert LazyHTML.attribute(wrapper, "data-on") == ["3"]
+      assert LazyHTML.attribute(wrapper, "data-el") == ["s1-e3"]
+
+      assert [{"rect", _attrs, _children}] =
+               wrapper |> LazyHTML.child_nodes() |> LazyHTML.to_tree()
+
+      assert count(wrapper, "rect[id^='output-']") == 1
     end
 
     test "writes the overlay attributes of the diagram on the root tag", %{document: document} do
-      assert document |> Floki.find("#slide-2 .diagram") |> Floki.attribute("data-on") == ["1"]
+      assert document |> LazyHTML.query("#slide-2 .diagram") |> LazyHTML.attribute("data-on") == [
+               "1"
+             ]
     end
 
     test "gives each copy of the file its own ids, and keeps its references", %{
       document: document
     } do
-      copies = Floki.find(document, ".diagram")
-      assert length(copies) > 1
+      copies = LazyHTML.query(document, ".diagram")
+      assert Enum.count(copies) > 1
 
       ids =
         for copy <- copies do
-          [id] = copy |> Floki.find("lineargradient") |> Floki.attribute("id")
+          [id] = copy |> LazyHTML.query("lineargradient") |> LazyHTML.attribute("id")
           assert id =~ ~r/^fill-\d+$/
 
-          assert copy |> Floki.find("rect[id^='input-']") |> Floki.attribute("fill") == [
+          assert copy |> LazyHTML.query("rect[id^='input-']") |> LazyHTML.attribute("fill") == [
                    "url(##{id})"
                  ]
 
@@ -123,10 +130,10 @@ defmodule Expresso.Element.DiagramTest do
     test "writes the width option as a custom property, with a percentage in vw", %{
       document: document
     } do
-      assert document |> Floki.find("#slide-2 .diagram") |> Floki.attribute("style") ==
+      assert document |> LazyHTML.query("#slide-2 .diagram") |> LazyHTML.attribute("style") ==
                ["--diagram-width: 60vw"]
 
-      assert document |> Floki.find("#slide-1 .diagram") |> Floki.attribute("style") == []
+      assert count(document, "#slide-1 .diagram:not([style])") == 1
     end
 
     @tag :tmp_dir
@@ -148,17 +155,17 @@ defmodule Expresso.Element.DiagramTest do
       ]
 
       svg =
-        Diagram.get_assigns(%Diagram{src: src, elements: parts}).svg |> Floki.parse_fragment!()
+        Diagram.get_assigns(%Diagram{src: src, elements: parts}).svg |> LazyHTML.from_fragment()
 
-      [wrapper] = Floki.find(svg, "g.diagram-part")
-      assert Floki.attribute([wrapper], "transform") == []
-      assert Floki.attribute([wrapper], "data-el") == ["s1-e2"]
-      assert [turned] = Floki.find([wrapper], "g[id^='turned-']")
-      assert Floki.attribute([turned], "transform") == ["rotate(30)"]
+      [wrapper] = LazyHTML.query(svg, "g.diagram-part") |> Enum.to_list()
+      assert LazyHTML.attribute(wrapper, "transform") == []
+      assert LazyHTML.attribute(wrapper, "data-el") == ["s1-e2"]
+      assert [turned] = LazyHTML.query(wrapper, "g[id^='turned-']") |> Enum.to_list()
+      assert LazyHTML.attribute(turned, "transform") == ["rotate(30)"]
 
-      [word] = Floki.find(svg, "text > tspan[id^='word-']")
-      assert Floki.attribute([word], "data-el") == ["s1-e3"]
-      assert Floki.attribute([word], "data-on") == ["1"]
+      [word] = LazyHTML.query(svg, "text > tspan[id^='word-']") |> Enum.to_list()
+      assert LazyHTML.attribute(word, "data-el") == ["s1-e3"]
+      assert LazyHTML.attribute(word, "data-on") == ["1"]
     end
 
     test "raises for an id that the file does not hold" do
