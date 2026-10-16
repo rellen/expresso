@@ -1,6 +1,8 @@
 defmodule Expresso.ChartElementTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Chart
   alias Expresso.Element.Chart.Plot
@@ -12,7 +14,7 @@ defmodule Expresso.ChartElementTest do
     [Builder.slide("s", [elements: [chart]] ++ opts)]
     |> Builder.deck(name: "charts")
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
+    |> LazyHTML.from_document()
   end
 
   defp bars(opts \\ []) do
@@ -26,36 +28,36 @@ defmodule Expresso.ChartElementTest do
     )
   end
 
-  defp screen(html), do: Floki.find(html, ".screen figure.chart")
+  defp screen(html), do: html |> LazyHTML.query(".screen figure.chart") |> Enum.to_list()
 
   test "a bar chart draws a bar and a value for each value, a legend and a table" do
     [figure] = bars() |> document() |> screen()
 
-    assert Floki.attribute(figure, "class") == ["chart chart-bar"]
-    assert figure |> Floki.find("svg") |> Floki.attribute("aria-label") == ["Orders"]
-    assert figure |> Floki.find("svg") |> Floki.attribute("viewbox") == ["0 0 800 450"]
+    assert LazyHTML.attribute(figure, "class") == ["chart chart-bar"]
+    assert figure |> LazyHTML.query("svg") |> LazyHTML.attribute("aria-label") == ["Orders"]
+    assert figure |> LazyHTML.query("svg") |> LazyHTML.attribute("viewBox") == ["0 0 800 450"]
 
-    [orders, returns] = Floki.find(figure, "g.chart-series")
-    assert Floki.attribute(orders, "class") == ["chart-series chart-c1"]
-    assert Floki.attribute(returns, "class") == ["chart-series chart-c2"]
-    assert orders |> Floki.find("path.chart-bar") |> length() == 2
-    assert orders |> Floki.find("text.chart-value") |> Enum.map(&Floki.text/1) == ["120", "180"]
-    assert orders |> Floki.find(".chart-name") |> Floki.text() == "Orders"
+    [orders, returns] = LazyHTML.query(figure, "g.chart-series") |> Enum.to_list()
+    assert LazyHTML.attribute(orders, "class") == ["chart-series chart-c1"]
+    assert LazyHTML.attribute(returns, "class") == ["chart-series chart-c2"]
+    assert count(orders, "path.chart-bar") == 2
+    assert texts(orders, "text.chart-value") == ["120", "180"]
+    assert texts(orders, ".chart-name") == ["Orders"]
 
-    assert figure |> Floki.find(".chart-category") |> Enum.map(&Floki.text/1) == ["2023", "2024"]
-    assert figure |> Floki.find(".chart-tick") |> Enum.map(&Floki.text/1) == ~w(0 50 100 150 200)
+    assert texts(figure, ".chart-category") == ["2023", "2024"]
+    assert texts(figure, ".chart-tick") == ~w(0 50 100 150 200)
 
-    rows = for row <- Floki.find(figure, "table.chart-table tbody tr"), do: Floki.text(row)
+    rows = for row <- LazyHTML.query(figure, "table.chart-table tbody tr"), do: LazyHTML.text(row)
     assert rows == ["202312014", "202418022"]
-    assert figure |> Floki.find("table.chart-table caption") |> Floki.text() == "Orders"
+    assert texts(figure, "table.chart-table caption") == ["Orders"]
   end
 
   test "the corner of the table is a cell, so each header of the table has a name" do
     [figure] = bars() |> document() |> screen()
 
-    heads = figure |> Floki.find("table.chart-table thead th") |> Enum.map(&Floki.text/1)
+    heads = texts(figure, "table.chart-table thead th")
     assert heads == ["Orders", "Returns"]
-    assert figure |> Floki.find("table.chart-table thead td") |> length() == 1
+    assert count(figure, "table.chart-table thead td") == 1
   end
 
   test "values false hides the values of the bars, and one series has no legend" do
@@ -69,21 +71,23 @@ defmodule Expresso.ChartElementTest do
       |> document()
       |> screen()
 
-    assert Floki.find(figure, ".chart-value") == []
-    assert Floki.find(figure, ".chart-name") == []
+    assert figure |> LazyHTML.filter(":not(:has(.chart-value))") |> Enum.count() == 1
+    assert figure |> LazyHTML.filter(":not(:has(.chart-name))") |> Enum.count() == 1
   end
 
   test "reveal gives each series its own step, and dim dims the earlier series" do
     html = document(bars(reveal: true, dim: true))
-    [orders, returns] = html |> screen() |> Floki.find("g.chart-series")
 
-    assert Floki.attribute(orders, "data-on") == ["1 2"]
-    assert Floki.attribute(orders, "data-el") != []
-    assert Floki.attribute(returns, "data-on") == ["2"]
+    [orders, returns] =
+      html |> LazyHTML.query(".screen figure.chart g.chart-series") |> Enum.to_list()
 
-    assert html |> Floki.find(".screen section.slide") |> Floki.attribute("data-max-step") == [
-             "2"
-           ]
+    assert LazyHTML.attribute(orders, "data-on") == ["1 2"]
+    assert LazyHTML.attribute(orders, "data-el") != []
+    assert LazyHTML.attribute(returns, "data-on") == ["2"]
+
+    assert html
+           |> LazyHTML.query(".screen section.slide")
+           |> LazyHTML.attribute("data-max-step") == ["2"]
   end
 
   test "a line chart draws a line, a dot for each value and the name and the last value at the end" do
@@ -96,10 +100,12 @@ defmodule Expresso.ChartElementTest do
       |> document()
       |> screen()
 
-    assert [points] = figure |> Floki.find("polyline.chart-line") |> Floki.attribute("points")
+    assert [points] =
+             figure |> LazyHTML.query("polyline.chart-line") |> LazyHTML.attribute("points")
+
     assert points |> String.split(" ") |> length() == 3
-    assert figure |> Floki.find("circle.chart-dot") |> length() == 3
-    assert figure |> Floki.find(".chart-end") |> Floki.text() == "Web 7"
+    assert count(figure, "circle.chart-dot") == 3
+    assert texts(figure, ".chart-end") == ["Web 7"]
   end
 
   test "a pie draws a slice and a part in percent for each category" do
@@ -113,11 +119,11 @@ defmodule Expresso.ChartElementTest do
       |> screen()
 
     assert figure
-           |> Floki.find("path.chart-slice")
-           |> Enum.flat_map(&Floki.attribute(&1, "class")) ==
+           |> LazyHTML.query("path.chart-slice")
+           |> Enum.flat_map(&LazyHTML.attribute(&1, "class")) ==
              ["chart-slice chart-c1", "chart-slice chart-c2"]
 
-    assert figure |> Floki.find(".chart-name") |> Enum.map(&Floki.text/1) ==
+    assert texts(figure, ".chart-name") ==
              ["Press 75%", "Paint 25%"]
   end
 

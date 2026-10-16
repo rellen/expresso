@@ -202,6 +202,9 @@ LazyHTML is different from Floki in these points:
   and `nodes == []` is always false. Use `Enum.count/1` or `count/2`.
 - `LazyHTML.text/1` returns the text of a `script` element. Floki needs the option
   `js: true` for it.
+- A query on a node returns only nodes inside that node. But its selector can name an
+  ancestor outside the node, so `.screen figure.chart svg` finds the `svg` of a figure in
+  each case. In Floki, the selector sees only the node and the nodes inside it.
 - In an `svg` element, a name is the name of the browser, such as `viewBox` and
   `linearGradient`. A query finds a name in each case, and `LazyHTML.to_html/1` writes the
   name of the browser.
