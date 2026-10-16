@@ -1,6 +1,8 @@
 defmodule Expresso.ChartChordTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Chart.Chord
 
@@ -26,30 +28,31 @@ defmodule Expresso.ChartChordTest do
       [Builder.slide("s", elements: [chart])]
       |> Builder.deck(name: "chord")
       |> Expresso.Deck.render()
-      |> Floki.parse_document!()
-      |> Floki.find(".screen figure.chart")
+      |> LazyHTML.from_document()
+      |> LazyHTML.query(".screen figure.chart")
+      |> Enum.to_list()
 
     figure
   end
 
   defp labels(figure),
-    do: figure |> Floki.find("text.chart-node-label") |> Enum.map(&Floki.text/1)
+    do: texts(figure, "text.chart-node-label")
 
   describe "the drawing" do
     test "each node is an arc, and each flow is a chord in the color of its source" do
       figure = figure(chart())
 
-      assert Floki.attribute(figure, "class") == ["chart chart-chord"]
-      assert figure |> Floki.find("g.chart-nodes path.chart-node") |> length() == 3
-      assert figure |> Floki.find("path.chart-chord") |> length() == 4
+      assert LazyHTML.attribute(figure, "class") == ["chart chart-chord"]
+      assert count(figure, "g.chart-nodes path.chart-node") == 3
+      assert count(figure, "path.chart-chord") == 4
 
       # A flows out 5 and in 2, B out 2 and in 7, and C out 3 and in 1.
       assert labels(figure) == ["A 7", "B 9", "C 4"]
 
       colors =
         figure
-        |> Floki.find("path.chart-chord")
-        |> Enum.map(&(&1 |> Floki.attribute("class") |> hd()))
+        |> LazyHTML.query("path.chart-chord")
+        |> Enum.map(&(&1 |> LazyHTML.attribute("class") |> hd()))
 
       assert Enum.at(colors, 0) == Enum.at(colors, 2)
       refute Enum.at(colors, 0) == Enum.at(colors, 1)
@@ -57,7 +60,11 @@ defmodule Expresso.ChartChordTest do
 
     test "a chord follows the inner edge at its two ends and passes the center" do
       [d | _] =
-        chart() |> figure() |> Floki.find("path.chart-chord") |> hd() |> Floki.attribute("d")
+        chart()
+        |> figure()
+        |> LazyHTML.query("path.chart-chord")
+        |> Enum.at(0)
+        |> LazyHTML.attribute("d")
 
       assert [_, _] = Regex.scan(~r/Q400,225 /, d)
       assert [_, _] = Regex.scan(~r/ A\d/, d)
@@ -67,8 +74,8 @@ defmodule Expresso.ChartChordTest do
       rows =
         chart()
         |> figure()
-        |> Floki.find("table.chart-table tbody tr")
-        |> Enum.map(fn row -> row |> Floki.find("th, td") |> Enum.map(&Floki.text/1) end)
+        |> LazyHTML.query("table.chart-table tbody tr")
+        |> Enum.map(fn row -> texts(row, "th, td") end)
 
       assert rows == [["A", "B", "4"], ["B", "A", "2"], ["A", "C", "1"], ["C", "B", "3"]]
     end
@@ -86,7 +93,7 @@ defmodule Expresso.ChartChordTest do
         |> figure()
 
       assert labels(figure) == ["Sea 2", "A 4", "B 6"]
-      assert figure |> Floki.find("path.chart-node.far") |> length() == 1
+      assert count(figure, "path.chart-node.far") == 1
     end
   end
 
@@ -101,11 +108,14 @@ defmodule Expresso.ChartChordTest do
              ] = chart.elements
 
       figure = figure(chart)
-      series = Floki.find(figure, "figure.chart > svg > g.chart-series")
+      series = LazyHTML.query(figure, "figure.chart > svg > g.chart-series")
 
-      assert Enum.map(series, &Floki.attribute(&1, "data-on")) == [["1 2 3"], ["2 3"], ["3"]]
-      assert [nodes] = Floki.find(figure, "figure.chart > svg > g.chart-nodes")
-      assert Floki.attribute(nodes, "data-on") == []
+      assert Enum.map(series, &LazyHTML.attribute(&1, "data-on")) == [["1 2 3"], ["2 3"], ["3"]]
+
+      assert [nodes] =
+               LazyHTML.query(figure, "figure.chart > svg > g.chart-nodes") |> Enum.to_list()
+
+      assert LazyHTML.attribute(nodes, "data-on") == []
     end
 
     test "frames share one scale, so a smaller frame leaves a gap in the ring" do
@@ -123,7 +133,7 @@ defmodule Expresso.ChartChordTest do
 
       assert length(first.arcs) == 2
       refute ends.(first) == ends.(second)
-      assert figure(chart) |> Floki.find("g.chart-layer") |> length() == 2
+      assert figure(chart) |> LazyHTML.query("g.chart-layer") |> Enum.count() == 2
     end
   end
 
