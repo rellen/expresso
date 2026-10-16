@@ -293,9 +293,9 @@ defmodule Expresso.CssTest do
     defp styles(deck) do
       deck
       |> Expresso.Deck.render()
-      |> Floki.parse_document!()
-      |> Floki.find("head style")
-      |> Enum.map(&Floki.text/1)
+      |> LazyHTML.from_document()
+      |> LazyHTML.query("head style")
+      |> Enum.map(&LazyHTML.text/1)
     end
 
     test "puts the CSS of the deck last, after the generated rules, and escapes it" do

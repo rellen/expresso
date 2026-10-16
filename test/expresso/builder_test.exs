@@ -4,6 +4,7 @@ defmodule Expresso.BuilderTest do
 
   import ExUnit.CaptureIO
   import Expresso.Test.DeckTree, only: [entity: 1, entity: 2, entity: 3, entity: 4]
+  import Expresso.Test.HTML
 
   alias Expresso.Builder
   alias Expresso.Test.DeckTree
@@ -226,11 +227,11 @@ defmodule Expresso.BuilderTest do
     end
 
     test "makes a deck with no slide, and its document has no section and no page" do
-      document = [] |> Builder.deck(name: "d") |> html() |> Floki.parse_document!()
+      document = [] |> Builder.deck(name: "d") |> html() |> LazyHTML.from_document()
 
-      assert Floki.find(document, "section.slide") == []
-      assert Floki.find(document, ".handout-page") == []
-      assert document |> Floki.find("title") |> Floki.text() == "d"
+      assert count(document, "body:not(:has(section.slide))") == 1
+      assert count(document, "body:not(:has(.handout-page))") == 1
+      assert texts(document, "title") == ["d"]
     end
 
     test "numbers each slide from 1, and keeps the options of a slide in its metadata" do

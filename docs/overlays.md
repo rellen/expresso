@@ -919,8 +919,9 @@ are in `test/expresso/overlay_*_test.exs`. The tests of the presenter are in
   element. An open range expands to the maximum step number of the slide. The transformer
   removes each `pause` entity.
 - Verifier tests. Each condition in the section "The verifier" gives an error.
-- Render tests. Floki is a dependency of this project. A test parses the HTML and asserts
-  the value of `data-step`, `data-max-step`, `data-on` and `data-el`.
+- Render tests. A test parses the HTML with LazyHTML, a dependency of the `test`
+  environment, and asserts the value of `data-step`, `data-max-step`, `data-on` and
+  `data-el`.
 - A CSS test. A test asserts that the generated style block contains one rule for each step
   number of the deck.
 

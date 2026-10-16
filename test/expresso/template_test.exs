@@ -37,7 +37,7 @@ defmodule Expresso.TemplateTest do
     end
   end
 
-  defp render(deck), do: deck |> Expresso.Deck.render() |> Floki.parse_document!()
+  defp render(deck), do: deck |> Expresso.Deck.render() |> LazyHTML.from_document()
 
   # The warnings of the compiler for a source, and the source compiled.
   defp warnings(source) do
@@ -55,7 +55,7 @@ defmodule Expresso.TemplateTest do
     document =
       render(Builder.deck([Builder.slide("first")], name: "the deck", template: ComponentDeck))
 
-    assert document |> Floki.find(".screen .component-label") |> Floki.text() =~ "the deck"
+    assert document |> LazyHTML.query(".screen .component-label") |> LazyHTML.text() =~ "the deck"
   end
 
   test "a slide template without render/1 gets a warning from the compiler" do

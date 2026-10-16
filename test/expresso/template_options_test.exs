@@ -18,9 +18,9 @@ defmodule Expresso.TemplateOptionsTest do
   defp texts(deck, selector) do
     deck
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
-    |> Floki.find(".screen #{selector}")
-    |> Enum.map(&Floki.text/1)
+    |> LazyHTML.from_document()
+    |> LazyHTML.query(".screen #{selector}")
+    |> Enum.map(&LazyHTML.text/1)
   end
 
   test "the meta option goes into the metadata under :meta" do

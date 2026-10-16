@@ -1,6 +1,8 @@
 defmodule Expresso.ExamplesTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Test.DeckFiles
   alias Mix.Tasks.Expresso.Gifs
 
@@ -80,10 +82,10 @@ defmodule Expresso.ExamplesTest do
   test "the talk about Line 4 renders each of its slides" do
     assert {:ok, deck} = "examples/line4/line4.exs" |> DeckFiles.eval() |> Expresso.to_deck()
 
-    document = deck |> Expresso.Deck.render() |> Floki.parse_document!()
+    document = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
 
-    assert document |> Floki.find("section.slide") |> length() == length(deck.slides)
-    assert document |> Floki.find(".screen .diagram") |> length() == 6
+    assert count(document, "section.slide") == length(deck.slides)
+    assert count(document, ".screen .diagram") == 6
   end
 
   # The copy differs from its source in iso-factories only in the path of the
