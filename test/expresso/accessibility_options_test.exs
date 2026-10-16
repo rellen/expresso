@@ -1,6 +1,8 @@
 defmodule Expresso.AccessibilityOptionsTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
 
   doctest Expresso.Deck, only: [lang: 1]
@@ -10,13 +12,15 @@ defmodule Expresso.AccessibilityOptionsTest do
     [Builder.slide("s", elements: elements)]
     |> Builder.deck(Keyword.merge([name: "options"], opts))
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
+    |> LazyHTML.from_document()
   end
 
   describe "the lang option" do
     test "gives the lang attribute of the html element, and the default is en" do
-      assert [] |> document() |> Floki.attribute("html", "lang") == ["en"]
-      assert [] |> document(lang: "pt-BR") |> Floki.attribute("html", "lang") == ["pt-BR"]
+      assert [] |> document() |> LazyHTML.query("html") |> LazyHTML.attribute("lang") == ["en"]
+
+      assert [] |> document(lang: "pt-BR") |> LazyHTML.query("html") |> LazyHTML.attribute("lang") ==
+               ["pt-BR"]
     end
 
     test "the compiler refuses a value that is not a language tag" do
@@ -46,20 +50,22 @@ defmodule Expresso.AccessibilityOptionsTest do
       [diagram] =
         [Builder.diagram("test/fixtures/flow.svg", alt: "A request and its answer")]
         |> document()
-        |> Floki.find(".screen .diagram")
+        |> LazyHTML.query(".screen .diagram")
+        |> Enum.to_list()
 
-      assert Floki.attribute(diagram, "role") == ["img"]
-      assert Floki.attribute(diagram, "aria-label") == ["A request and its answer"]
+      assert LazyHTML.attribute(diagram, "role") == ["img"]
+      assert LazyHTML.attribute(diagram, "aria-label") == ["A request and its answer"]
     end
 
     test "without it, the diagram has no role and no name" do
       [diagram] =
         [Builder.diagram("test/fixtures/flow.svg")]
         |> document()
-        |> Floki.find(".screen .diagram")
+        |> LazyHTML.query(".screen .diagram")
+        |> Enum.to_list()
 
-      assert Floki.attribute(diagram, "role") == []
-      assert Floki.attribute(diagram, "aria-label") == []
+      assert LazyHTML.attribute(diagram, "role") == []
+      assert LazyHTML.attribute(diagram, "aria-label") == []
     end
   end
 
@@ -75,19 +81,20 @@ defmodule Expresso.AccessibilityOptionsTest do
       [track] =
         [video(captions: "test/fixtures/captions.vtt")]
         |> document()
-        |> Floki.find(".screen video > track")
+        |> LazyHTML.query(".screen video > track")
+        |> Enum.to_list()
 
-      assert Floki.attribute(track, "kind") == ["captions"]
-      assert Floki.attribute(track, "label") == ["Captions"]
-      assert Floki.attribute(track, "default") != []
+      assert LazyHTML.attribute(track, "kind") == ["captions"]
+      assert LazyHTML.attribute(track, "label") == ["Captions"]
+      assert LazyHTML.attribute(track, "default") != []
 
-      [src] = Floki.attribute(track, "src")
+      [src] = LazyHTML.attribute(track, "src")
       assert "data:text/vtt;base64," <> encoded = src
       assert Base.decode64!(encoded) == File.read!("test/fixtures/captions.vtt")
     end
 
     test "a video without the option has no track" do
-      assert [video([])] |> document() |> Floki.find("video > track") == []
+      assert [video([])] |> document() |> count(".screen video:not(:has(track))") == 1
     end
 
     test "the compiler refuses a file that is not a .vtt file" do

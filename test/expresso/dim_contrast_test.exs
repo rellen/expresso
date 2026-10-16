@@ -12,9 +12,9 @@ defmodule Expresso.DimContrastTest do
       [Builder.slide("s", elements: [])]
       |> Builder.deck(Keyword.merge([name: "dim"], opts))
       |> Expresso.Deck.render()
-      |> Floki.parse_document!()
-      |> Floki.find("style")
-      |> Enum.map_join("\n", &Floki.text(&1, js: true, style: true))
+      |> LazyHTML.from_document()
+      |> LazyHTML.query("style")
+      |> Enum.map_join("\n", &LazyHTML.text/1)
 
     [_, rule] = Regex.run(~r/:root \{ (--background[^}]*) \}/, style)
 
