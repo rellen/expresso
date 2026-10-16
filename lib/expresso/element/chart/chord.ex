@@ -254,7 +254,9 @@ defmodule Expresso.Element.Chart.Chord do
       for {series, number} <- @numbered do
         g class: Expresso.Element.classes("chart-series", series.class), rest!: series.overlay do
           for chord <- @chords, chord.series == number do
-            path class: "chart-link chart-chord chart-c#{chord.color}", d: chord.d
+            path class: "chart-link chart-chord chart-c#{chord.color}",
+                 d: chord.d,
+                 data_keys: Layers.key(assigns, [chord.from, chord.to])
           end
         end
       end
@@ -262,11 +264,13 @@ defmodule Expresso.Element.Chart.Chord do
       g class: "chart-nodes" do
         for arc <- @arcs do
           path class: Expresso.Element.classes("chart-node chart-c#{arc.color}", arc.class),
-               d: arc.d
+               d: arc.d,
+               data_keys: Layers.key(assigns, [arc.name])
         end
 
         for arc <- @arcs, arc.labeled do
           text class: "chart-node-label",
+               data_keys: Layers.key(assigns, [arc.name]),
                x: Plot.f(arc.label_x),
                y: Plot.f(arc.label_y),
                text_anchor: arc.anchor do

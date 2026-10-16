@@ -431,7 +431,7 @@ defmodule Expresso.Extension do
           highlight: [
             type: {:list, {:or, [:string, {:list, :string}]}},
             doc:
-              "Groups of series or of categories, one group in focus at each step, such as [\"Returns\", [\"Orders\", \"Returns\"], \"2024\"]. Each item is the name of a series or of a category, or a list of names. Each series shows at each step, and the rest of the chart dims. A category of a treemap or a sunburst is a part or a group, such as \"Production/Press\" or \"Production\". A bar chart, a line chart, a pie, a treemap and a sunburst take it. See docs/reference/chart-element.md."
+              "Groups of series or of categories, one group in focus at each step, such as [\"Returns\", [\"Orders\", \"Returns\"], \"2024\"]. Each item is the name of a series or of a category, or a list of names. Each series shows at each step, and the rest of the chart dims. A category of a treemap or a sunburst is a part or a group, such as \"Production/Press\" or \"Production\". A chart of flows takes the names of nodes in place of categories. See docs/reference/chart-element.md."
           ],
           whole_first: [
             type: :boolean,

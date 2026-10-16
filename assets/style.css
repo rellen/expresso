@@ -553,9 +553,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
  *   under the axis moves to `--muted-dim`.
  *
  * A series does not take the filter of the state `dim`, so it does not also
- * fade as a graphic. The labels of a chart of flows have the steps of their
- * series, and they dim with it. The property has a transition, so the marks
- * and the texts change with the time and the easing of the series.
+ * fade as a graphic. The labels of a sankey and of an alluvial chart have
+ * the steps of their series, and they dim with it. The nodes of a parallel
+ * sets chart and of a chord chart are outside the series, and they dim only
+ * with a group of nodes. The property has a transition, so the marks and the
+ * texts change with the time and the easing of the series.
  */
 @property --chart-dim {
   syntax: "<number>";
@@ -575,7 +577,9 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   filter: blur(calc((1 - var(--shown)) * var(--enter-blur)))
     opacity(var(--opacity));
 }
-.chart .chart-series :is(path, rect, circle, line, polyline) {
+.chart
+  :is(.chart-series, .chart-nodes)
+  :is(path, rect, circle, line, polyline) {
   fill-opacity: calc(
     1 - var(--chart-dim) * (1 - var(--chart-dim-opacity, 0.3))
   );

@@ -322,6 +322,115 @@ defmodule Expresso.ChartHighlightTest do
     end
   end
 
+  describe "the nodes of a chart of flows" do
+    defp flows(kind, categories, highlight, series \\ "Flow") do
+      [
+        Builder.chart(kind,
+          title: "Flows",
+          categories: categories,
+          highlight: highlight,
+          elements: [Builder.series(series, [3, 2, 4])]
+        )
+      ]
+      |> slide()
+      |> document()
+    end
+
+    test "a node of a sankey gives its key to its label and to each link that touches it" do
+      html = flows(:sankey, [["Coal", "Power"], ["Gas", "Power"], ["Power", "Homes"]], ["Power"])
+
+      assert keyed(html) == [
+               {"chart-link chart-c1", "n1 n2"},
+               {"chart-link chart-c3", "n3 n2"},
+               {"chart-link chart-c2", "n2 n4"},
+               {"chart-node chart-c1", "n1"},
+               {"chart-node chart-c2", "n2"},
+               {"chart-node chart-c3", "n3"},
+               {"chart-node chart-c4", "n4"},
+               {"chart-node-label", "n1"},
+               {"chart-node-label", "n2"},
+               {"chart-node-label", "n3"},
+               {"chart-node-label", "n4"}
+             ]
+
+      assert [rule] = rules(html)
+      assert rule =~ ~s|[data-keys]:not([data-keys~="n2"])|
+    end
+
+    test "a name of an alluvial chart gives one key to the node with that name in each column" do
+      html = flows(:alluvial, ["Coal/Coal", "Coal/Gas", "Gas/Gas"], ["Coal"])
+
+      assert keyed(html) == [
+               {"chart-link chart-c1", "n1"},
+               {"chart-link chart-c1", "n1 n2"},
+               {"chart-link chart-c2", "n2"},
+               {"chart-node chart-c1", "n1"},
+               {"chart-node chart-c1", "n1"},
+               {"chart-node chart-c2", "n2"},
+               {"chart-node chart-c2", "n2"},
+               {"chart-node-label", "n1"},
+               {"chart-node-label", "n1"},
+               {"chart-node-label", "n2"},
+               {"chart-node-label", "n2"}
+             ]
+
+      assert [rule] = rules(html)
+      assert rule =~ ~s|[data-keys]:not([data-keys~="n1"])|
+    end
+
+    test "a ribbon of a parallel sets chart holds the key of each node of its path" do
+      html = flows(:parallel_sets, ["Day/Win", "Day/Lose", "Night/Win"], ["Win"])
+
+      assert keyed(html) == [
+               {"chart-link chart-c1", "n1 n2"},
+               {"chart-link chart-c1", "n1 n3"},
+               {"chart-link chart-c2", "n4 n2"},
+               {"chart-node chart-c1", "n1"},
+               {"chart-node chart-node-plain", "n2"},
+               {"chart-node chart-node-plain", "n3"},
+               {"chart-node chart-c2", "n4"},
+               {"chart-node-label", "n1"},
+               {"chart-node-label", "n2"},
+               {"chart-node-label", "n3"},
+               {"chart-node-label", "n4"}
+             ]
+
+      assert [rule] = rules(html)
+      assert rule =~ ~s|[data-keys]:not([data-keys~="n2"])|
+    end
+
+    test "a chord chart gives the keys to its chords, its arcs and their labels" do
+      html = flows(:chord, [["A", "B"], ["B", "A"], ["B", "C"]], ["C"])
+
+      assert keyed(html) == [
+               {"chart-link chart-chord chart-c1", "n1 n2"},
+               {"chart-link chart-chord chart-c2", "n2 n1"},
+               {"chart-link chart-chord chart-c2", "n2 n3"},
+               {"chart-node chart-c1", "n1"},
+               {"chart-node chart-c2", "n2"},
+               {"chart-node chart-c3", "n3"},
+               {"chart-node-label", "n1"},
+               {"chart-node-label", "n2"},
+               {"chart-node-label", "n3"}
+             ]
+
+      assert [rule] = rules(html)
+      assert rule =~ ~s|[data-keys]:not([data-keys~="n3"])|
+    end
+
+    test "the compiler gives the nodes for a name that is not a node, and refuses a series with the name of a node" do
+      categories = [["Coal", "Power"], ["Gas", "Power"], ["Power", "Homes"]]
+
+      assert_raise ArgumentError,
+                   ~r/the chart has no series and no node with that name. The series are "Flow". The nodes are "Coal", "Power", "Gas", "Homes"\./,
+                   fn -> flows(:sankey, categories, ["Oil"]) end
+
+      assert_raise ArgumentError,
+                   ~r/the chart has a series and a node with that name. Give the series or the node a different name\./,
+                   fn -> flows(:sankey, categories, ["Power"], "Power") end
+    end
+  end
+
   describe "the errors" do
     test "the compiler refuses an option that the highlight option does not take with it" do
       for {opts, message} <- [
@@ -358,16 +467,7 @@ defmodule Expresso.ChartHighlightTest do
                    fn -> bars(highlight: [["Orders", "2024"]]) end
     end
 
-    test "the compiler refuses a sankey, a series with an overlay option, and frames" do
-      assert_raise ArgumentError, ~r/a sankey chart takes no highlight option/, fn ->
-        Builder.chart(:sankey,
-          title: "Flows",
-          categories: [["Coal", "Power"]],
-          highlight: ["Coal"],
-          elements: [Builder.series("Flow", [3])]
-        )
-      end
-
+    test "the compiler refuses a series with an overlay option, and frames" do
       assert_raise ArgumentError, ~r/a series of the chart takes no at option/, fn ->
         Builder.chart(:bar,
           title: "Orders",

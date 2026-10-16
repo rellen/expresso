@@ -17,7 +17,8 @@ defmodule Expresso.Element.Focus do
   - The `keys` field holds the key of each category of the group, such as
     `"c2"` for the second category, or `"p3"` for the part or the group with
     the id 3 in a treemap or a sunburst. Each mark of a category has its key
-    in its `data-keys` attribute.
+    in its `data-keys` attribute. A chart of flows takes nodes in place of
+    categories, such as `"n2"` for the second node.
   """
 
   @typedoc "The struct of a group of the highlight option"

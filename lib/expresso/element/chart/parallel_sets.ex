@@ -210,7 +210,9 @@ defmodule Expresso.Element.Chart.ParallelSets do
       for {series, number} <- @numbered do
         g class: Expresso.Element.classes("chart-series", series.class), rest!: series.overlay do
           for ribbon <- @ribbons, ribbon.series == number do
-            path class: "chart-link chart-c#{ribbon.color}", d: ribbon.d
+            path class: "chart-link chart-c#{ribbon.color}",
+                 d: ribbon.d,
+                 data_keys: Layers.key(assigns, ribbon.path)
           end
         end
       end
@@ -221,11 +223,13 @@ defmodule Expresso.Element.Chart.ParallelSets do
                x: Plot.f(node.x),
                y: Plot.f(node.y),
                width: @node_width,
-               height: Plot.f(max(node.height, 1))
+               height: Plot.f(max(node.height, 1)),
+               data_keys: Layers.key(assigns, [node.name])
         end
 
         for node <- @nodes, node.labeled do
-          text [class: "chart-node-label"] ++ Sankey.label_place(node) do
+          text [class: "chart-node-label", data_keys: Layers.key(assigns, [node.name])] ++
+                 Sankey.label_place(node) do
             Sankey.label_text(node, @values)
           end
         end

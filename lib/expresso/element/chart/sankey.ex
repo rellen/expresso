@@ -721,7 +721,10 @@ defmodule Expresso.Element.Chart.Sankey do
       for {series, number} <- @numbered do
         g class: Expresso.Element.classes("chart-series", series.class), rest!: series.overlay do
           for link <- @links, link.series == number do
-            path class: link_class(link), d: link.path, stroke_width: link.stroke
+            path class: link_class(link),
+                 d: link.path,
+                 stroke_width: link.stroke,
+                 data_keys: Layers.key(assigns, [link.from, link.to])
           end
 
           for node <- @nodes, node.series == number do
@@ -729,7 +732,8 @@ defmodule Expresso.Element.Chart.Sankey do
                  x: Plot.f(node.x),
                  y: Plot.f(node.y),
                  width: @node_width,
-                 height: Plot.f(max(node.height, 1))
+                 height: Plot.f(max(node.height, 1)),
+                 data_keys: Layers.key(assigns, [node.name])
           end
         end
       end
@@ -737,7 +741,8 @@ defmodule Expresso.Element.Chart.Sankey do
       for {series, number} <- @numbered do
         g class: "chart-labels", rest!: Layers.no_morph(series.overlay) do
           for node <- @nodes, node.series == number, node.labeled do
-            text [class: "chart-node-label"] ++ label_place(node) do
+            text [class: "chart-node-label", data_keys: Layers.key(assigns, [node.name])] ++
+                   label_place(node) do
               label_text(node, @values)
             end
           end

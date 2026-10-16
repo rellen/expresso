@@ -33,7 +33,7 @@ end
 | `values` | `true` or `false` | Show the value of each bar. The default is `true`. |
 | `reveal` | `true` or `false` | Show each series at its own step. A chart of flows has its own steps, which [reveal](#reveal) gives. The default is `false`. A pie takes no `reveal`. |
 | `dim` | `true` or `false` | Dim each series when a later series shows. The default is `false`. See [a dimmed series](#a-dimmed-series). |
-| `highlight` | A list of groups, such as `["Returns", ["Orders", "Repairs"], "2024"]` | Each series shows at each step. Each group of series or of categories is in focus at its own step, and the rest of the chart dims. A bar chart, a line chart, a pie, a treemap and a sunburst take it. See [the highlight option](#the-highlight-option). |
+| `highlight` | A list of groups, such as `["Returns", ["Orders", "Repairs"], "2024"]` | Each series shows at each step. Each group of series or of categories is in focus at its own step, and the rest of the chart dims. A chart of flows takes the names of nodes in place of categories. Each kind of chart takes it. See [the highlight option](#the-highlight-option). |
 | `whole_first` | `true` or `false` | With `highlight`, the whole chart shows in full color for one step before the first group. The default is `false`. |
 | `separator` | A string | The text between two levels of a category of a treemap or a sunburst. The default is `"/"`. |
 | `levels` | A list of strings | The headings of the CSV columns that hold the levels of a treemap or a sunburst, from the top level down. For a chart of flows, the headings of the CSV columns that hold the nodes of each path. Requires `src`, but an alluvial chart or a parallel sets chart can take `levels` without `src` to give the title of each column. |
@@ -101,19 +101,26 @@ dims:
 | `:pie` | Its slice and its part of the legend | – |
 | `:treemap` | The box and the label of the part, of each group above it and of each part under it | – |
 | `:sunburst` | The arc and the label of the part, of each group above it and of each part under it, and the part of the legend of its group of the top level | – |
+| `:sankey`, `:alluvial` | The node, its label, and each link into the node or out of it | – |
+| `:parallel_sets` | The node, its label, and each ribbon through the node | – |
+| `:chord` | The arc of the node, its label, and each chord to the node or from it | – |
 
 A category of a treemap or a sunburst is a part or a group. Give its levels with the
 `separator` of the chart, such as `"Production/Press"` for the part "Press" of the group
 "Production", or `"Production"` for the whole group. A group in focus thus keeps each of
 its parts in full color, and a part in focus keeps the groups around it.
 
+A chart of flows takes the names of nodes in place of categories. Give the name of a node
+as its flows give it, and not its `label`. A name in an alluvial chart or in a parallel
+sets chart puts the node with that name in each column in focus. A node in focus keeps
+its links in full color, and the nodes at the other end of the links dim.
+
 The legend of a bar chart or a line chart names the series, so it stays in full color at
 the step of a group of categories.
 
-A bar chart, a line chart, a pie, a treemap and a sunburst take the option. A chart with
-`src` takes the names of the series and of the categories of its file. The key `d` shows each series and each
-category in full color until the next step, as it does for code. See
-[the key d](code-element.md#the-key-d).
+Each kind of chart takes the option. A chart with `src` takes the names of the series and
+of the categories of its file. The key `d` shows each series and each category in full
+color until the next step, as it does for code. See [the key d](code-element.md#the-key-d).
 
 ## A dimmed series
 
@@ -527,11 +534,12 @@ The compiler gives an error for these:
 - a `node` in a chart that is not a chart of flows;
 - two `node` entities for one node, and a `node` with a name that no flow has;
 - a `node` with `column` in a chart of flows that is not a sankey;
-- `highlight` on a chart of flows, with `reveal`, with `dim`, with frames, or with a
-  series that has an overlay option;
+- `highlight` with `reveal`, with `dim`, with frames, or with a series that has an overlay
+  option;
 - an empty `highlight`, an empty group, a name that is not the name of a series or of a
   category, a name of a series and of a category, and a group of series and categories;
-  for a treemap or a sunburst, the message gives each part and each group;
+  for a treemap or a sunburst, the message gives each part and each group, and for a
+  chart of flows, each node;
 - `whole_first` without `highlight`;
 - a group of `highlight` at a step at which the chart does not show.
 
@@ -592,8 +600,10 @@ Each series of a chart with `highlight` has `data-series` with its number, from 
 group of categories, each mark of a category has `data-keys` with its key, such as `c2`
 for the second category, and a line has an empty `data-keys`. A mark of a treemap or a
 sunburst has the key of its part, of each group above it and of each part under it, such
-as `p1 p3`. The generated style block
-dims a series by its number and a mark by its key.
+as `p1 p3`. A node of a chart of flows and its label have the key of the node, such as
+`n2`. A link or a chord has the keys of its two nodes, and a ribbon of a parallel sets
+chart has the key of each node of its path. The generated style block dims a series by its
+number and a mark by its key.
 
 A box of a treemap is a `rect` with the class `chart-tile` for a part or `chart-group` for a
 group. An arc of a sunburst is a `circle` with the class `chart-ring` and `chart-depth-1`,
