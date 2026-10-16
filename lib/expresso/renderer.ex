@@ -545,13 +545,19 @@ defmodule Expresso.Renderer do
   `Expresso.Element.Code.spotlight/1` first. It gives each element its identity
   with `Expresso.Overlay.Render.identify/1` next. Then `Expresso.Goto.resolve/1` writes the commands of each link, and
   it raises for a link to a slide or a step that the deck does not have.
+
+  The function makes the document in `Expresso.Copies.number/1`. Thus the
+  copies of a diagram and of an arrow get the same ids in each render of a
+  deck.
   """
   @spec render(map() | keyword()) :: Phoenix.HTML.safe()
+  def render(assigns), do: Expresso.Copies.number(fn -> document(assigns) end)
+
   # Sobelow reports `XSS.HTML` for the attribute of the `html` element. The
   # value of that attribute is the text "en" in this module, and no input of a
   # user reaches it.
   # sobelow_skip ["XSS.Raw", "XSS.HTML"]
-  def render(assigns) do
+  defp document(assigns) do
     assigns =
       assigns
       |> Map.new()

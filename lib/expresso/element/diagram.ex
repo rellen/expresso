@@ -36,8 +36,9 @@ defmodule Expresso.Element.Diagram do
   to the first element of the document with that `id`. That element can be in
   a view that the browser does not show, and a gradient or a filter in a
   hidden view does not paint. Therefore the render function gives each copy
-  its own ids: it puts a number after each `id` of the file, and it puts the
-  same number into each `url(#id)` and each `href="#id"` of the copy.
+  its own ids: it puts the number of the copy after each `id` of the file, and
+  it puts the same number into each `url(#id)` and each `href="#id"` of the
+  copy. `Expresso.Copies` gives the number.
 
   `Expresso.Deck.render/1` writes the document with Floki, which writes each
   name of the SVG in lowercase. A browser reads `viewbox` as `viewBox` and
@@ -200,10 +201,11 @@ defmodule Expresso.Element.Diagram do
 
   defp mark(node, _id, _attributes, _parent), do: node
 
-  # Each copy of the file gets its own ids. The number is unique in the VM,
-  # and the ids of each `part` stay in place, because the parts come before.
+  # Each copy of the file gets its own ids, with the number of the copy from
+  # `Expresso.Copies.next/0`. The ids of each `part` stay in place, because the
+  # parts come before.
   defp number_ids(html, tree) do
-    number = System.unique_integer([:positive, :monotonic])
+    number = Expresso.Copies.next()
 
     tree
     |> Floki.find("[id]")
