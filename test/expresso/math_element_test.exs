@@ -1,6 +1,8 @@
 defmodule Expresso.Element.MathTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Math
 
@@ -44,23 +46,23 @@ defmodule Expresso.Element.MathTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: MathDeck |> document() |> Floki.parse_document!()}
+      {:ok, document: MathDeck |> document() |> LazyHTML.from_document()}
     end
 
     test "writes the MathML in one block element inside the root tag", %{document: document} do
-      [math] = Floki.find(document, "#slide-1 .math")
+      assert count(document, "#slide-1 .math") == 1
 
       assert [{"div", [], [{"math", [{"display", "block"}], _}]}] =
-               Floki.find([math], ":root > div")
+               document |> LazyHTML.query("#slide-1 .math > div") |> LazyHTML.to_tree()
 
-      assert math |> Floki.find("mfrac mi") |> Enum.map(&Floki.text/1) == ["a", "b"]
+      assert texts(document, "#slide-1 .math mfrac mi") == ["a", "b"]
     end
 
     test "writes the overlay attributes on the root tag", %{document: document} do
-      [_, second] = Floki.find(document, "#slide-2 .math")
+      [_, second] = document |> LazyHTML.query("#slide-2 .math") |> Enum.to_list()
 
-      assert Floki.attribute([second], "data-on") == ["2 3"]
-      assert Floki.attribute([second], "data-el") == ["s2-e3"]
+      assert LazyHTML.attribute(second, "data-on") == ["2 3"]
+      assert LazyHTML.attribute(second, "data-el") == ["s2-e3"]
     end
   end
 end

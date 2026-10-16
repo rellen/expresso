@@ -1,6 +1,7 @@
 defmodule Expresso.Element.ListTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
   import Spark.Test, only: [dsl_errors: 1]
 
   alias Expresso.Builder
@@ -178,40 +179,43 @@ defmodule Expresso.Element.ListTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: ListDeck |> document() |> Floki.parse_document!()}
+      {:ok, document: ListDeck |> document() |> LazyHTML.from_document()}
     end
 
     test "writes a ul element with one li for each item", %{document: document} do
-      [list] = Floki.find(document, "#slide-1 .slide-main > ul.list")
-
-      assert [_, _] = Floki.find([list], ":root > li.item")
+      assert count(document, "#slide-1 .slide-main > ul.list") == 1
+      assert count(document, "#slide-1 .slide-main > ul.list > li.item") == 2
     end
 
     test "writes an ordered list as an ol element", %{document: document} do
-      assert [_] = Floki.find(document, "#slide-1 li.item > ol.list")
-      assert [_] = Floki.find(document, "#slide-1 ol.list li.item ul.list li.item")
+      assert count(document, "#slide-1 li.item > ol.list") == 1
+      assert count(document, "#slide-1 ol.list li.item ul.list li.item") == 1
     end
 
     test "writes the text of an item in one block element, with raw HTML", %{document: document} do
-      [item] = Floki.find(document, "#slide-1 ol.list > li.item:first-child")
+      item = "#slide-1 ol.list > li.item:first-child"
 
-      assert [{"div", [], _}] = Floki.find([item], ":root > div")
-      assert item |> Floki.find("b") |> Floki.text() == "one"
+      assert count(document, item) == 1
+      assert [{"div", [], _}] = document |> LazyHTML.query("#{item} > div") |> LazyHTML.to_tree()
+      assert texts(document, "#{item} b") == ["one"]
     end
 
     test "writes the overlay attributes on the list and on each item", %{document: document} do
-      [list] = Floki.find(document, "#slide-2 ul.list")
+      assert count(document, "#slide-2 ul.list") == 1
+      assert count(document, "#slide-2 ul.list:not([data-on])") == 1
 
-      assert Floki.attribute([list], "data-on") == []
-
-      assert [list] |> Floki.find("li.item") |> Floki.attribute("data-on") == [
+      assert document
+             |> LazyHTML.query("#slide-2 ul.list li.item")
+             |> LazyHTML.attribute("data-on") == [
                "1 2 3 4",
                "2 3 4",
                "3 4"
              ]
 
-      [two] = Floki.find(document, "#slide-4 li.item:last-child")
-      assert Floki.attribute([two], "data-el") == ["s4-e3"]
+      assert document
+             |> LazyHTML.query("#slide-4 li.item:last-child")
+             |> LazyHTML.attribute("data-el") ==
+               ["s4-e3"]
     end
   end
 end

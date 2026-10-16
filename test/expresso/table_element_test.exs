@@ -1,6 +1,8 @@
 defmodule Expresso.Element.TableTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.{Row, Table}
 
@@ -154,12 +156,6 @@ defmodule Expresso.Element.TableTest do
                "the caption_hidden option of a table needs the caption option"
     end
   end
-
-  # The number of the nodes that a selector finds.
-  defp count(html, selector), do: html |> LazyHTML.query(selector) |> Enum.count()
-
-  # The text of each node that a selector finds.
-  defp texts(html, selector), do: html |> LazyHTML.query(selector) |> Enum.map(&LazyHTML.text/1)
 
   # LazyHTML parses the document as a browser does, and it takes each CSS
   # selector of a browser. A test that asserts that a table has no part finds

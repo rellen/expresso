@@ -1,6 +1,8 @@
 defmodule Expresso.Element.QuotationTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Quotation
 
@@ -57,32 +59,35 @@ defmodule Expresso.Element.QuotationTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: QuotationDeck |> document() |> Floki.parse_document!()}
+      {:ok, document: QuotationDeck |> document() |> LazyHTML.from_document()}
     end
 
     test "writes a figure with a blockquote, and the text in one block element", %{
       document: document
     } do
-      [figure] = Floki.find(document, "#slide-1 figure.quotation")
+      assert count(document, "#slide-1 figure.quotation") == 1
 
-      assert [{"div", [], _}] = Floki.find([figure], "blockquote > div")
-      assert figure |> Floki.find("blockquote b") |> Floki.text() == "more"
+      assert [{"div", [], _}] =
+               document
+               |> LazyHTML.query("#slide-1 figure.quotation blockquote > div")
+               |> LazyHTML.to_tree()
+
+      assert texts(document, "#slide-1 figure.quotation blockquote b") == ["more"]
     end
 
     test "writes the source in a figcaption element", %{document: document} do
-      assert document |> Floki.find("#slide-1 figcaption") |> Floki.text() ==
-               "Ludwig Mies van der Rohe"
+      assert texts(document, "#slide-1 figcaption") == ["Ludwig Mies van der Rohe"]
     end
 
     test "writes no figcaption without the by option", %{document: document} do
-      assert [] = Floki.find(document, "#slide-2 figcaption")
+      assert count(document, "#slide-2 figure.quotation:not(:has(figcaption))") == 2
     end
 
     test "writes the overlay attributes on the figure", %{document: document} do
-      [_, second] = Floki.find(document, "#slide-2 figure.quotation")
+      [_, second] = document |> LazyHTML.query("#slide-2 figure.quotation") |> Enum.to_list()
 
-      assert Floki.attribute([second], "data-on") == ["2 3"]
-      assert Floki.attribute([second], "data-el") == ["s2-e3"]
+      assert LazyHTML.attribute(second, "data-on") == ["2 3"]
+      assert LazyHTML.attribute(second, "data-el") == ["s2-e3"]
     end
   end
 end
