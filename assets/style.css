@@ -516,7 +516,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .chart-value,
 .chart-end,
 .chart-name {
-  fill: var(--text);
+  fill: color-mix(
+    in srgb,
+    var(--text-dim) calc(var(--chart-dim) * 100%),
+    var(--text)
+  );
 }
 .chart-value {
   font-size: 18px;
@@ -524,6 +528,50 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .chart-series {
   transform-box: fill-box;
   transform-origin: center;
+}
+/*
+ * A series of a chart dims at a step of the `highlight` option at which it is
+ * not in focus, and at a step at which it has the state `dim`, such as with
+ * `dim true`. The generated style block sets `--chart-dim: 1` for `highlight`.
+ * The state `dim` sets `--dim: 1`, and a series reads it into `--chart-dim`.
+ * The property inherits, so each mark and each text of the series reads it:
+ *
+ * - A mark, such as a bar, a line, a dot, a link or the swatch of the legend,
+ *   fades to the opacity `--chart-dim-opacity`. The default is 0.3, and the
+ *   css option of a deck can change it.
+ * - A text, such as a value or the name of the series, moves to `--text-dim`,
+ *   so it stays at the minimums of a dimmed text.
+ *
+ * A series does not take the filter of the state `dim`, so it does not also
+ * fade as a graphic. The labels of a chart of flows have the steps of their
+ * series, and they dim with it. The property has a transition, so the marks
+ * and the texts change with the time and the easing of the series.
+ */
+@property --chart-dim {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+.chart :is(.chart-series, .chart-labels) {
+  transition:
+    opacity var(--dur) var(--ease),
+    transform var(--dur) var(--ease),
+    outline-width var(--dur) var(--ease),
+    filter var(--dur) var(--ease),
+    --chart-dim var(--dur) var(--ease);
+}
+.chart :is(.chart-series, .chart-labels)[data-el] {
+  --chart-dim: var(--dim, 0);
+  filter: blur(calc((1 - var(--shown)) * var(--enter-blur)))
+    opacity(var(--opacity));
+}
+.chart .chart-series :is(path, rect, circle, line, polyline) {
+  fill-opacity: calc(
+    1 - var(--chart-dim) * (1 - var(--chart-dim-opacity, 0.3))
+  );
+  stroke-opacity: calc(
+    1 - var(--chart-dim) * (1 - var(--chart-dim-opacity, 0.3))
+  );
 }
 .chart-table {
   position: absolute;
@@ -681,7 +729,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .chart-part,
 .chart-part-value,
 .chart-head {
-  fill: var(--text);
+  fill: color-mix(
+    in srgb,
+    var(--text-dim) calc(var(--chart-dim) * 100%),
+    var(--text)
+  );
 }
 .chart-part {
   font-size: 18px;
@@ -715,7 +767,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   fill: color-mix(in oklab, var(--series) 35%, var(--background));
 }
 .chart-node-label {
-  fill: var(--text);
+  fill: color-mix(
+    in srgb,
+    var(--text-dim) calc(var(--chart-dim) * 100%),
+    var(--text)
+  );
   font-size: 18px;
   paint-order: stroke;
   stroke: var(--background);
@@ -1330,16 +1386,23 @@ body[data-view="handout"] .chart-frames {
     calc(var(--highlight, 0) * -0.4rem) 0 0 var(--accent);
 }
 /*
- * The key `d` turns off the dimming of code until the next change of the step,
- * so the presenter can show a dimmed line when the audience asks about it. The
- * presenter writes `data-undim` on the `body`. Only the present view changes:
- * the handout view and paper keep the dimming of each step. A rule of a step
- * selects the slide with its id, so the rule needs `!important`. The bar of
- * `highlight` and the lines that `reveal` hides stay as they are.
+ * The key `d` turns off the dimming of code and of the series of a chart until
+ * the next change of the step, so the presenter can show a dimmed line or
+ * series when the audience asks about it. The presenter writes
+ * `data-undim` on the `body`. Only the present view changes: the handout view
+ * and paper keep the dimming of each step. A rule of a step selects the slide
+ * with its id, so the rule needs `!important`. The bar of `highlight` and the
+ * lines that `reveal` hides stay as they are.
  */
 body[data-view="present"][data-undim] .screen .code [data-el] {
   --dim: 0 !important;
   --dimmed: 0 !important;
+}
+body[data-view="present"][data-undim]
+  .screen
+  .chart
+  :is(.chart-series, .chart-labels) {
+  --chart-dim: 0 !important;
 }
 /*
  * The number of a line, from the option `line_numbers`. The renderer sets

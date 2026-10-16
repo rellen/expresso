@@ -21,7 +21,11 @@ defmodule Expresso.Element.Chart do
   reader.
 
   A series is a child of the chart, so `reveal true` shows each series at its
-  own step, and `dim true` dims each series when a later series shows.
+  own step, and `dim true` dims each series when a later series shows. The
+  `highlight` option shows each series at each step, and it puts one group of
+  series in focus at each step: the other series dim. `check/1` makes an
+  `Expresso.Element.Focus` for each group, and `rules/1` writes the rules
+  that dim the series.
 
   A `frame` entity holds the series at one point in time, and each frame
   after the first takes one step. A chart with frames, or with the effect
@@ -46,7 +50,8 @@ defmodule Expresso.Element.Chart do
   import Expresso.Element.Chart.Kinds
 
   alias Expresso.Element.Chart.{Chord, Csv, Hierarchy, Motion, ParallelSets, Plot, Sankey, Table}
-  alias Expresso.Element.{Flow, Frame, Series}
+  alias Expresso.Element.{Flow, Focus, Frame, Series}
+  alias Shoddy.Result
 
   @typedoc "The struct of a chart"
   @type t :: %__MODULE__{}
@@ -70,10 +75,12 @@ defmodule Expresso.Element.Chart do
               :frames,
               :levels,
               :delimiter,
+              :highlight,
               separator: "/",
               values: true,
               reveal: false,
               dim: false,
+              whole_first: false,
               frame_label: :top_right,
               sort: false,
               count: false,
@@ -81,6 +88,7 @@ defmodule Expresso.Element.Chart do
               elements: [],
               timeline: [],
               flows: [],
+              focus: [],
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 
@@ -264,7 +272,8 @@ defmodule Expresso.Element.Chart do
          :ok <- categories(chart),
          :ok <- series(chart),
          {:ok, chart} <- single(chart),
-         do: later_frames(chart)
+         {:ok, chart} <- later_frames(chart),
+         do: focus(chart)
   end
 
   # A chart with frames shows the series of its first frame, so `reveal`,
@@ -356,6 +365,90 @@ defmodule Expresso.Element.Chart do
   # so a later frame of such a chart needs no check of its own.
   defp frame_single(%__MODULE__{kind: kind}) when is_flow(kind), do: :ok
   defp frame_single(chart), do: with({:ok, _chart} <- single(chart), do: :ok)
+
+  # The groups of the highlight option. Each item of the option is the name of
+  # a series or a list of names, and it becomes one group with the
+  # specification `:next`. The transformer then gives each group one step from
+  # the counter of the slide, as it gives a step to a group of lines of a code
+  # element.
+  defp focus(%__MODULE__{highlight: nil, whole_first: true}),
+    do: {:error, "the whole_first option of a chart needs the highlight option"}
+
+  defp focus(%__MODULE__{highlight: nil} = chart), do: {:ok, chart}
+
+  defp focus(%__MODULE__{highlight: highlight} = chart) do
+    with :ok <- focus_options(chart),
+         {:ok, groups} <- Result.collect(Enum.map(highlight, &focus_group(chart, &1))) do
+      {:ok, %__MODULE__{chart | focus: groups}}
+    end
+  end
+
+  defp focus_options(%__MODULE__{kind: kind}) when not is_axis(kind),
+    do:
+      {:error,
+       "the highlight option puts series in focus, so a #{kind} chart takes no highlight option. " <>
+         "A bar chart and a line chart take it."}
+
+  defp focus_options(%__MODULE__{highlight: []}),
+    do: {:error, "the highlight option needs one group or more"}
+
+  defp focus_options(%__MODULE__{reveal: true}),
+    do: {:error, "a chart takes the reveal option or the highlight option, and not both"}
+
+  defp focus_options(%__MODULE__{dim: true}),
+    do:
+      {:error,
+       "the highlight option dims the other series itself, so the chart takes no dim option"}
+
+  defp focus_options(%__MODULE__{} = chart) when chart.timeline != [] or chart.frames != nil,
+    do:
+      {:error,
+       "each frame of a chart takes a step, so a chart with frames takes no highlight option"}
+
+  defp focus_options(%__MODULE__{elements: elements}) do
+    if Enum.any?(elements, &(&1.at != nil or &1.on != [])),
+      do:
+        {:error,
+         "the highlight option shows each series at each step, " <>
+           "so a series of the chart takes no at option and no on entity"},
+      else: :ok
+  end
+
+  defp focus_group(_chart, []),
+    do: {:error, "a group of the highlight option needs one name or more"}
+
+  defp focus_group(%__MODULE__{elements: elements}, item) do
+    names = Enum.map(elements, & &1.name)
+    {:ok, next} = Expresso.Overlay.new(:next)
+
+    item
+    |> List.wrap()
+    |> Enum.map(fn name ->
+      case Enum.find_index(names, &(&1 == name)) do
+        nil ->
+          {:error,
+           "the highlight option names #{inspect(name)}, and the chart has no series with that name. " <>
+             "The series are #{Enum.map_join(names, ", ", &inspect/1)}."}
+
+        index ->
+          {:ok, index + 1}
+      end
+    end)
+    |> Result.collect()
+    |> Result.map_ok(&%Focus{at: next, series: &1})
+  end
+
+  @doc """
+  Return the number of steps that a chart takes before the groups of its
+  `highlight` option
+
+  The `whole_first` option gives the chart one step with no group in focus,
+  as a `pause` in front of the chart does. `Expresso.Overlay.Expand` reads
+  this number.
+  """
+  @spec lead(t()) :: 0 | 1
+  def lead(%__MODULE__{whole_first: true}), do: 1
+  def lead(%__MODULE__{}), do: 0
 
   defp categories(%__MODULE__{kind: kind, categories: [_ | _] = categories}) do
     cond do
@@ -642,7 +735,9 @@ defmodule Expresso.Element.Chart do
 
   The key `overlay` holds the attributes of the overlay contract, and the
   `style` attribute of the `width` option. The key `series` holds each series
-  with its color number and its overlay attributes.
+  with its color number and its overlay attributes. A series of a chart with
+  the `highlight` option also gets `data-series` with its color number, and
+  the rules of `rules/1` select it by that number.
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
@@ -656,7 +751,7 @@ defmodule Expresso.Element.Chart do
           values: series.values,
           color: color,
           class: series.class,
-          overlay: Expresso.Overlay.Render.attributes(series)
+          overlay: Expresso.Overlay.Render.attributes(series) ++ series_key(chart, color)
         }
       end)
 
@@ -687,6 +782,9 @@ defmodule Expresso.Element.Chart do
     }
   end
 
+  defp series_key(%__MODULE__{focus: []}, _color), do: []
+  defp series_key(%__MODULE__{}, color), do: [{"data-series", Integer.to_string(color)}]
+
   # The values of each frame, as a list of the values of each series. A chart
   # without frames has one frame.
   defp frame_values(%__MODULE__{timeline: [_ | _] = timeline}) do
@@ -711,18 +809,37 @@ defmodule Expresso.Element.Chart do
     do: effect == :grow or Enum.any?(elements, &(&1.effect == :grow))
 
   @doc """
-  Return the CSS rules of the frames of a chart
+  Return the CSS rules of the frames and of the `highlight` option of a chart
 
   `Expresso.Overlay.Render.style/1` calls this function for each chart, after
-  `Expresso.Overlay.Render.identify/1`. A chart without frames has no rules.
+  `Expresso.Overlay.Render.identify/1`. A chart without frames and without
+  the `highlight` option has no rules.
+
+  A group of the `highlight` option gives one rule at its step. The rule sets
+  `--chart-dim: 1` on each series that is not in the group, and the theme
+  dims a series with that property.
   """
   @spec rules(t()) :: [String.t()]
-  def rules(%__MODULE__{timeline: [_, _ | _] = timeline, el: el} = chart) when is_binary(el) do
+  def rules(%__MODULE__{} = chart), do: frame_rules(chart) ++ focus_rules(chart)
+
+  defp frame_rules(%__MODULE__{timeline: [_, _ | _] = timeline, el: el} = chart)
+       when is_binary(el) do
     assigns = chart |> get_assigns() |> layout()
     Motion.rules(assigns, el, timeline |> tl() |> Enum.map(&(&1.steps || [])))
   end
 
-  def rules(%__MODULE__{}), do: []
+  defp frame_rules(%__MODULE__{}), do: []
+
+  defp focus_rules(%__MODULE__{focus: focus, el: el}) when is_binary(el) do
+    for %Focus{steps: steps, series: series} <- focus, step <- steps || [] do
+      others = Enum.map_join(series, &":not([data-series=\"#{&1}\"])")
+
+      "section[data-step=\"#{step}\"] [data-el=\"#{el}\"] [data-series]#{others} " <>
+        "{ --chart-dim: 1; }"
+    end
+  end
+
+  defp focus_rules(%__MODULE__{}), do: []
 
   @doc """
   Make the HTML of a chart: a `figure` with the SVG and a table of the values

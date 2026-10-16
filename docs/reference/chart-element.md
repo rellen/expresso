@@ -32,7 +32,9 @@ end
 | `delimiter` | One character, such as `";"` | The character between two cells of the `src` file. The default is a tab for a file that ends in `.tsv`, and a comma for each other file. Requires `src`. |
 | `values` | `true` or `false` | Show the value of each bar. The default is `true`. |
 | `reveal` | `true` or `false` | Show each series at its own step. A chart of flows has its own steps, which [reveal](#reveal) gives. The default is `false`. A pie takes no `reveal`. |
-| `dim` | `true` or `false` | Dim each series when a later series shows. The default is `false`. |
+| `dim` | `true` or `false` | Dim each series when a later series shows. The default is `false`. See [a dimmed series](#a-dimmed-series). |
+| `highlight` | A list of groups, such as `["Returns", ["Orders", "Repairs"]]` | Each series shows at each step. Each group is in focus at its own step, and the other series dim. A bar chart and a line chart take it. See [the highlight option](#the-highlight-option). |
+| `whole_first` | `true` or `false` | With `highlight`, the whole chart shows in full color for one step before the first group. The default is `false`. |
 | `separator` | A string | The text between two levels of a category of a treemap or a sunburst. The default is `"/"`. |
 | `levels` | A list of strings | The headings of the CSV columns that hold the levels of a treemap or a sunburst, from the top level down. For a chart of flows, the headings of the CSV columns that hold the nodes of each path. Requires `src`, but an alluvial chart or a parallel sets chart can take `levels` without `src` to give the title of each column. |
 | `frames` | A string | The heading of the column of the CSV file that names the frame of each row. Requires `src`. |
@@ -58,6 +60,53 @@ The chart also takes the overlay options, such as `at`, `effect` and the `on` en
 
 A series also takes the overlay options, so a series can show at its own step without
 `reveal`.
+
+## The highlight option
+
+The `highlight` option puts one group of series in focus at each step. Each series shows
+at each step:
+
+```elixir
+slide "repairs" do
+  chart :bar do
+    title "Orders, returns and repairs"
+    categories ["2023", "2024", "2025"]
+    highlight ["Returns", ["Orders", "Repairs"]]
+    series "Orders", [180, 240, 310]
+    series "Returns", [22, 19, 25]
+    series "Repairs", [60, 75, 90]
+  end
+end
+```
+
+| Step | The series of the group | Each other series |
+| --- | --- | --- |
+| The step of the group | Full color | Dimmed. See [a dimmed series](#a-dimmed-series). |
+| A step of no group | Full color | Full color |
+
+A group is the name of a series, or a list of names. The groups take their steps from the
+counter of the slide, one step each, as the items of a list with `reveal true` do. The
+first group is thus in focus at the first step of the slide. `whole_first true` gives the
+chart one step with no group in focus before the first group, as a `pause()` in front of
+the chart does. See [the overlay options](overlay-options.md).
+
+A bar chart and a line chart take the option. A chart with `src` takes the names of the
+series of its file. The key `d` shows each series in full color until the next step, as
+it does for code. See [the key d](code-element.md#the-key-d).
+
+## A dimmed series
+
+A series dims at a step of `highlight` at which it is not in focus, and at a step at which
+`dim true` dims it:
+
+- Each mark of the series, such as a bar, a line, a dot and its color in the legend, fades
+  to the opacity `--chart-dim-opacity`. The default is 0.3.
+- Each text of the series, such as a value and its name in the legend, takes the dimmed
+  color of the text, `--text-dim`. The text thus stays at the contrast of a dimmed text.
+  See [the dim_contrast option](dim-contrast-option.md).
+
+A deck can set `--chart-dim-opacity` in [the css option](css-option.md), such as `0.5`
+for a lighter dim. The handout view and paper show the dimming of each step.
 
 ## The names of the axes
 
@@ -454,7 +503,12 @@ The compiler gives an error for these:
   first category;
 - a `node` in a chart that is not a chart of flows;
 - two `node` entities for one node, and a `node` with a name that no flow has;
-- a `node` with `column` in a chart of flows that is not a sankey.
+- a `node` with `column` in a chart of flows that is not a sankey;
+- `highlight` on a chart that is not a bar chart or a line chart, with `reveal`, with
+  `dim`, with frames, or with a series that has an overlay option;
+- an empty `highlight`, an empty group, and a name that is not the name of a series;
+- `whole_first` without `highlight`;
+- a group of `highlight` at a step at which the chart does not show.
 
 The compiler gives an error for a file that it cannot read, for a quote with no closing
 quote, for text after a closing quote, and for a row with a cell that is not a number. The
@@ -470,10 +524,10 @@ each pair of neighbors apart. A chart has at most 8 series, so put the smallest 
 series "Other".
 
 The text of a chart has the colors of text, and only a mark has the color of its series. A
-deck can set `--chart-1` to `--chart-8`, `--chart-width` and `--chart-height`, the largest
-height, in [the css option](css-option.md). The default height is `72vh`. A chart also takes
-at most the height that is left in the slide, under the heading, the name of the deck and
-the other elements. Thus a chart fits in a small window.
+deck can set `--chart-1` to `--chart-8`, `--chart-width`, `--chart-height`, the largest
+height, and `--chart-dim-opacity` in [the css option](css-option.md). The default height
+is `72vh`. A chart also takes at most the height that is left in the slide, under the
+heading, the name of the deck and the other elements. Thus a chart fits in a small window.
 
 ## The HTML
 
@@ -502,11 +556,15 @@ A chart of flows writes these elements:
 | An arc of a chord chart, in the group `chart-nodes` | `path` | `chart-node` and `chart-c1` to `chart-c8` |
 | A chord | `path` | `chart-link` and `chart-chord` |
 
-A chart with frames or with the effect `:grow` has a `data-el` attribute. Its marks have the
-class `chart-mark`, `chart-segment`, `chart-arc` or `chart-gap`, and the label of the frame
-has the class `chart-frame`. A number with `count true` is a `tspan` with the class
-`chart-count`. The grid of the frames is a `div` with the class `chart-frames`, and each small
-chart is a `figure` with the class `chart-copy`.
+A chart with frames, with the effect `:grow` or with `highlight` has a `data-el` attribute.
+The marks of a chart with frames or with the effect `:grow` have the class `chart-mark`,
+`chart-segment`, `chart-arc` or `chart-gap`, and the label of the frame has the class
+`chart-frame`. A number with `count true` is a `tspan` with the class `chart-count`. The
+grid of the frames is a `div` with the class `chart-frames`, and each small chart is a
+`figure` with the class `chart-copy`.
+
+Each series of a chart with `highlight` has `data-series` with its number, from 1. The
+generated style block dims a series by that number.
 
 A box of a treemap is a `rect` with the class `chart-tile` for a part or `chart-group` for a
 group. An arc of a sunburst is a `circle` with the class `chart-ring` and `chart-depth-1`,

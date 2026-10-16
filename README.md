@@ -240,7 +240,7 @@ The present view knows these keys. `?` or `/` shows the same list in the browser
 | `o` | Overview of the slides. Only this window shows it. |
 | `m` | Menu of the slides and their steps. Only this window shows it. |
 | `b` | Black screen. The next key shows the slide again. |
-| `d` | Code in full color until the next step, in the two windows |
+| `d` | Code and charts in full color until the next step, in the two windows |
 | `t` | Light or dark variant of the theme, in the two windows |
 | `g` | Progress bar on or off |
 | `f` | Full screen on or off |
@@ -400,7 +400,7 @@ The speaker view knows these keys:
 | `o` | Overview of the slides. Only this window shows it. |
 | `m` | Menu of the slides and their steps. Only this window shows it. |
 | `b` | Black screen. The next key shows the slide again. |
-| `d` | Code in full color until the next step, in the two windows |
+| `d` | Code and charts in full color until the next step, in the two windows |
 | `t` | Light or dark variant of the theme, in the two windows |
 | `f` | Full screen on or off |
 | `r` | Set the timer to 0:00 |

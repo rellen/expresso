@@ -428,6 +428,17 @@ defmodule Expresso.Extension do
             default: false,
             doc: "Dim each series when a later series shows."
           ],
+          highlight: [
+            type: {:list, {:or, [:string, {:list, :string}]}},
+            doc:
+              "Groups of series, one group in focus at each step, such as [\"Returns\", [\"Orders\", \"Returns\"]]. Each item is the name of a series or a list of names. Each series shows at each step, and the series that are not in focus dim. A bar chart and a line chart take it. See docs/reference/chart-element.md."
+          ],
+          whole_first: [
+            type: :boolean,
+            default: false,
+            doc:
+              "With highlight, show the whole chart in full color for one step before the first group comes into focus. The default is false."
+          ],
           separator: [
             type: :string,
             default: "/",

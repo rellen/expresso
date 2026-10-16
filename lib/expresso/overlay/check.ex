@@ -9,7 +9,7 @@ defmodule Expresso.Overlay.Check do
   `docs/overlays.md` gives the conditions.
   """
 
-  alias Expresso.Element.{On, Part, Pause}
+  alias Expresso.Element.{Focus, On, Part, Pause}
   alias Expresso.Slide
   alias Shoddy.Result
 
@@ -24,6 +24,8 @@ defmodule Expresso.Overlay.Check do
   - An `on` entity with `move_to` is not in a part of a diagram, or it also
     sets `x` or `y`.
   - A child element has a step at which its parent does not show.
+  - A group of the `highlight` option of a chart has a step at which the chart
+    does not show.
 
   An element without an `at` option shows at each step of its parent, and the
   function accepts each step for it. The transformer reports a step that is
@@ -54,6 +56,7 @@ defmodule Expresso.Overlay.Check do
     with :ok <- check_positive(steps, name(element)),
          :ok <- check_inside(steps, parent, "the #{name(element)}"),
          :ok <- check_on(Map.get(element, :on) || [], element),
+         :ok <- check_all(Map.get(element, :focus) || [], element, true),
          do: check_all(Expresso.Element.Tree.children(element), element, true)
   end
 
@@ -104,6 +107,8 @@ defmodule Expresso.Overlay.Check do
       nil -> :ok
     end
   end
+
+  defp name(%Focus{}), do: "group of the highlight option"
 
   defp name(%module{}) do
     module |> Module.split() |> List.last() |> Macro.underscore()
