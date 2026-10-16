@@ -1,6 +1,8 @@
 defmodule Expresso.SlideNumbersTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   # Three slides. Slide 2 has two steps, so the handout view has two pages for
   # it.
   defmodule NumberedDeck do
@@ -49,26 +51,26 @@ defmodule Expresso.SlideNumbersTest do
   end
 
   defp document(deck) do
-    deck |> Expresso.Deck.render() |> Floki.parse_document!()
+    deck |> Expresso.Deck.render() |> LazyHTML.from_document()
   end
 
   # The text of the number in each slide of the present view, or nil for a
   # slide with no number.
   defp present(document) do
-    for slide <- Floki.find(document, "section.slide") do
-      case Floki.find(slide, ".slide-number") do
+    for slide <- LazyHTML.query(document, "section.slide") do
+      case texts(slide, ".slide-number") do
         [] -> nil
-        found -> Floki.text(found)
+        [number] -> number
       end
     end
   end
 
   # The text of the number in each page of the handout view, or nil.
   defp handout(document) do
-    for page <- Floki.find(document, ".handout-page") do
-      case Floki.find(page, ".slide-number") do
+    for page <- LazyHTML.query(document, ".handout-page") do
+      case texts(page, ".slide-number") do
         [] -> nil
-        found -> Floki.text(found)
+        [number] -> number
       end
     end
   end
@@ -77,7 +79,7 @@ defmodule Expresso.SlideNumbersTest do
     deck = Expresso.parse(PlainDeck)
 
     assert deck.metadata.slide_numbers == false
-    assert deck |> document() |> Floki.find(".slide-number") == []
+    assert deck |> document() |> count("body:not(:has(.slide-number))") == 1
   end
 
   test "slide_numbers true shows the number and the total, and slide 1 shows no number" do
@@ -94,10 +96,11 @@ defmodule Expresso.SlideNumbersTest do
       NumberedDeck
       |> Expresso.parse()
       |> document()
-      |> Floki.find("#slide-2 > div:last-child")
+      |> LazyHTML.query("#slide-2 > div:last-child")
+      |> Enum.to_list()
 
-    assert Floki.find(row, ".footer") != []
-    assert row |> Floki.find(".slide-number") |> Floki.text() == "2 / 3"
+    assert count(row, ".footer") == 1
+    assert texts(row, ".slide-number") == ["2 / 3"]
   end
 
   test "a deck takes slide_numbers from its metadata" do
@@ -111,7 +114,7 @@ defmodule Expresso.SlideNumbersTest do
   end
 
   test "the default footer has no text" do
-    assert NumberedDeck |> Expresso.parse() |> document() |> Floki.find(".footer") |> Floki.text() ==
-             ""
+    footers = NumberedDeck |> Expresso.parse() |> document() |> texts(".footer")
+    assert Enum.uniq(footers) == [""]
   end
 end

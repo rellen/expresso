@@ -1,6 +1,7 @@
 defmodule Expresso.GotoTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
   import Spark.Test, only: [dsl_errors: 1]
 
   alias Expresso.Element.TextArea
@@ -48,9 +49,10 @@ defmodule Expresso.GotoTest do
   end
 
   defp document,
-    do: LinkDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+    do: LinkDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
 
-  defp links(selector), do: Floki.find(document(), ".screen " <> selector)
+  defp links(selector),
+    do: document() |> LazyHTML.query(".screen " <> selector) |> Enum.to_list()
 
   describe "new/1" do
     test "takes a slide, and a step with the default 1" do
@@ -80,38 +82,38 @@ defmodule Expresso.GotoTest do
     test "puts the text of a text area into a link with the address and the commands of its step" do
       [link] = links(".text-area a.goto")
 
-      assert Floki.attribute(link, "href") == ["#3.1"]
-      assert Floki.attribute(link, "data-commands") == [~s([["goto",3]])]
-      assert Floki.text(link) =~ "The summary"
+      assert LazyHTML.attribute(link, "href") == ["#3.1"]
+      assert LazyHTML.attribute(link, "data-commands") == [~s([["goto",3]])]
+      assert LazyHTML.text(link) =~ "The summary"
     end
 
     test "puts an image into a link, and the alt text names the link" do
       [link] = links(".image a.goto")
 
-      assert Floki.attribute(link, "href") == ["#2.2"]
-      assert Floki.attribute(link, "data-commands") == [~s([["goto",2]])]
-      assert link |> Floki.find("img") |> Floki.attribute("alt") == ["A red dot"]
+      assert LazyHTML.attribute(link, "href") == ["#2.2"]
+      assert LazyHTML.attribute(link, "data-commands") == [~s([["goto",2]])]
+      assert link |> LazyHTML.query("img") |> LazyHTML.attribute("alt") == ["A red dot"]
     end
 
     test "puts the text of an item into a link, and the nested list stays outside the link" do
       [link, _by_name] = links(".item a.goto")
 
-      assert Floki.attribute(link, "href") == ["#2.1"]
-      assert Floki.text(link) =~ "Details"
-      refute Floki.text(link) =~ "Inside"
-      assert links(".item .item") |> Floki.text() =~ "Inside"
+      assert LazyHTML.attribute(link, "href") == ["#2.1"]
+      assert LazyHTML.text(link) =~ "Details"
+      refute LazyHTML.text(link) =~ "Inside"
+      assert links(".item .item") |> Enum.map_join(&LazyHTML.text/1) =~ "Inside"
     end
 
     test "gives a link by name the address and the commands of the slide with that name" do
       [_details, link] = links(".item a.goto")
 
-      assert Floki.attribute(link, "href") == ["#3.1"]
-      assert Floki.attribute(link, "data-commands") == [~s([["goto",3]])]
+      assert LazyHTML.attribute(link, "href") == ["#3.1"]
+      assert LazyHTML.attribute(link, "data-commands") == [~s([["goto",3]])]
     end
 
     test "gives no link to an element without the option" do
       assert length(links("a.goto")) == 4
-      assert length(Floki.find(document(), ".handout a.goto")) == 4
+      assert count(document(), ".handout a.goto") == 4
     end
   end
 
@@ -235,9 +237,13 @@ defmodule Expresso.GotoTest do
         ])
 
       [link] =
-        deck |> Expresso.Deck.render() |> Floki.parse_document!() |> Floki.find(".screen a.goto")
+        deck
+        |> Expresso.Deck.render()
+        |> LazyHTML.from_document()
+        |> LazyHTML.query(".screen a.goto")
+        |> Enum.to_list()
 
-      assert Floki.attribute(link, "href") == ["#2.1"]
+      assert LazyHTML.attribute(link, "href") == ["#2.1"]
 
       assert_raise Spark.Error.DslError, ~r/no slide has that name/, fn ->
         deck([slide("one", elements: [text_area(text: "Next", goto: [slide: "three"])])])

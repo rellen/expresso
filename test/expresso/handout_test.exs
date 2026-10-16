@@ -58,12 +58,12 @@ defmodule Expresso.HandoutTest do
   defp pages(deck) do
     deck
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
-    |> Floki.find(".handout-page")
+    |> LazyHTML.from_document()
+    |> LazyHTML.query(".handout-page")
     |> Enum.map(fn page ->
-      [slide] = Floki.attribute([page], "data-slide")
-      [step] = Floki.attribute([page], "data-step")
-      shown = Floki.attribute([page], "data-omit") == []
+      [slide] = LazyHTML.attribute(page, "data-slide")
+      [step] = LazyHTML.attribute(page, "data-step")
+      shown = LazyHTML.attribute(page, "data-omit") == []
       {slide <> "." <> step, shown}
     end)
   end
