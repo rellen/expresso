@@ -161,7 +161,7 @@ parentheses after `check all`.
 
 ### The HTML in a unit test
 
-A new unit test that reads the HTML of a deck uses LazyHTML. `lazy_html` is a dependency
+Each unit test that reads the HTML of a deck uses LazyHTML. `lazy_html` is a dependency
 for the `test` environment only. The tests of the table, the list, the image and the other
 content elements are examples, such as `test/expresso/table_element_test.exs`.
 
@@ -199,7 +199,17 @@ LazyHTML is different from Floki in these points:
   full selector from the document, such as `#slide-1 .math > div`.
 - A selector that LazyHTML does not know, such as `:scope`, raises an error.
 - The result of a query is a struct and not a list. Thus `nodes != []` is always true,
-  and `nodes == []` is always false. Use `Enum.count/1` or `count/2`.
+  `nodes == []` is always false, and a `case` clause `[] ->` never matches. Use
+  `Enum.count/1` or `count/2`, or match the list that `texts/2` returns.
+- A `for` comprehension that matches a tuple, such as
+  `for {"span", _attributes, children} <- nodes`, skips each node of a LazyHTML result.
+  The loop then checks nothing, and the test passes. Give the loop
+  `LazyHTML.to_tree(nodes)`.
+- Two queries return two different structs for the same node. Thus `==` and `MapSet`
+  cannot find the same node in two results. Compare `LazyHTML.to_html/1` of the nodes.
+- `LazyHTML.text/1` joins the text nodes with no separator. Floki takes the option
+  `sep: " "`. To read each text node, use `LazyHTML.to_tree/1`, as the helper `words/1`
+  of `test/expresso/accessibility_test.exs` does.
 - `LazyHTML.text/1` returns the text of a `script` element. Floki needs the option
   `js: true` for it.
 - A query on a node returns only nodes inside that node. But its selector can name an
@@ -213,8 +223,8 @@ LazyHTML is different from Floki in these points:
   `figure |> LazyHTML.filter(":not(:has(figcaption))")` asserts that one figure has no
   caption.
 
-The other tests use Floki. When you change one of these files, you can move it to
-LazyHTML. Use one library in one file. This table gives the replacement of each call:
+Until October 2026, the unit tests used Floki. This table gives the replacement of each
+Floki call:
 
 | Floki | LazyHTML |
 | --- | --- |
@@ -222,6 +232,8 @@ LazyHTML. Use one library in one file. This table gives the replacement of each 
 | `Floki.parse_fragment!(html)` | `LazyHTML.from_fragment(html)` |
 | `Floki.find(html, selector)` | `LazyHTML.query(html, selector)` |
 | `Floki.attribute(nodes, name)` | `LazyHTML.attribute(nodes, name)` |
+| `Floki.attribute(html, selector, name)` | `html \|> LazyHTML.query(selector) \|> LazyHTML.attribute(name)` |
+| `Floki.children(node)` | `node \|> LazyHTML.child_nodes() \|> LazyHTML.to_tree()` |
 | `Floki.text(nodes)` | `LazyHTML.text(nodes)` |
 | `assert [_] = Floki.find(html, selector)` | `assert count(html, selector) == 1` |
 | `[a, b] = Floki.find(html, selector)` | `[a, b] = html \|> LazyHTML.query(selector) \|> Enum.to_list()` |
@@ -231,10 +243,15 @@ LazyHTML. Use one library in one file. This table gives the replacement of each 
 | `assert nodes != []` | `assert count(html, selector) > 0` |
 | A match on `{tag, attributes, children}` | A match on the result of `LazyHTML.to_tree/1` |
 
-`lib/` keeps Floki. `Expresso.Deck.render/1`, `Expresso.Morph` and `Expresso.Check.Document`
-use it at run time, and a release with LazyHTML needs its NIF for each target of Burrito.
-`Expresso.Deck.render/1` passes the document through Floki, and Floki drops a text node
-that is only white space. Thus that node is not in the document that a test parses.
+`lib/` keeps Floki. `Expresso.Deck.render/1`, `Expresso.Highlight`, `Expresso.Morph`,
+`Expresso.Element.Diagram` and `Expresso.Check.Document` use it at run time. A release with
+LazyHTML needs its NIF for each target of Burrito. `Expresso.Deck.render/1` passes the
+document through Floki, and Floki drops a text node that is only white space. Thus that
+node is not in the document that a test parses.
+
+`Expresso.Element.Diagram.Geometry.distance/3` takes a Floki tree. Thus
+`test/expresso/move_to_test.exs` parses its SVG file with Floki, and no other test calls
+Floki.
 
 ### The browser tests
 

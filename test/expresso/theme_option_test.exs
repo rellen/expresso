@@ -13,9 +13,13 @@ defmodule Expresso.ThemeOptionTest do
 
   defp head_theme(deck) do
     [_fonts, theme | _rest] =
-      deck |> Expresso.Deck.render() |> Floki.parse_document!() |> Floki.find("head style")
+      deck
+      |> Expresso.Deck.render()
+      |> LazyHTML.from_document()
+      |> LazyHTML.query("head style")
+      |> Enum.to_list()
 
-    Floki.text(theme)
+    LazyHTML.text(theme)
   end
 
   defp property(role), do: "--" <> (role |> Atom.to_string() |> String.replace("_", "-"))

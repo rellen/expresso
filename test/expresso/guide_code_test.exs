@@ -1,6 +1,8 @@
 defmodule Expresso.GuideCodeTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Test.DeckFiles
 
   # The Elixir code blocks of a page, in order.
@@ -31,13 +33,13 @@ defmodule Expresso.GuideCodeTest do
 
   test "the code blocks of the template option make a deck with the templates" do
     deck = "docs/reference/template-option.md" |> blocks() |> Enum.join("\n") |> deck()
-    document = deck |> Expresso.Deck.render() |> Floki.parse_document!()
+    document = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
 
-    assert document |> Floki.find(".screen .my-header") |> Enum.map(&Floki.text/1) ==
+    assert texts(document, ".screen .my-header") ==
              ["Part 1", "my deck"]
 
-    assert document |> Floki.find(".screen .my-slide h2") |> Floki.text() == "Hello"
-    assert length(Floki.find(document, ".screen .my-slide")) == 1
+    assert texts(document, ".screen .my-slide h2") == ["Hello"]
+    assert count(document, ".screen .my-slide") == 1
   end
 
   test "the code block of the theme option makes a deck with the colors of Dracula" do

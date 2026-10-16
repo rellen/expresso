@@ -98,14 +98,16 @@ defmodule Expresso.Presenter.SchemaTest do
         Builder.slide("two")
       ])
 
-    html = deck |> Expresso.Deck.render() |> Floki.parse_document!()
+    html = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
     [holders] = for {:command_holders, _doc, _form, value} <- Schema.constants(), do: value
-    found = for {kind, selector} <- holders, do: {kind, Floki.find(html, selector)}
+    found = for {kind, selector} <- holders, do: {kind, LazyHTML.query(html, selector)}
 
-    for {kind, elements} <- found, do: assert(elements != [], "no #{kind} in the deck")
+    for {kind, elements} <- found, do: refute(Enum.empty?(elements), "no #{kind} in the deck")
 
-    assert MapSet.new(Enum.flat_map(found, &elem(&1, 1))) ==
-             MapSet.new(Floki.find(html, "[data-commands]"))
+    # Two queries return two different structs for the same node, so the test
+    # compares the HTML of the nodes.
+    assert found |> Enum.flat_map(&elem(&1, 1)) |> MapSet.new(&LazyHTML.to_html/1) ==
+             html |> LazyHTML.query("[data-commands]") |> MapSet.new(&LazyHTML.to_html/1)
   end
 
   # The fields of each record of a form: one record, or each record of a union.

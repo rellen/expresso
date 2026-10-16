@@ -121,7 +121,7 @@ defmodule Expresso.DevDependencyTest do
     refute output =~ "error"
 
     html = File.read!(Path.join(project, "talk/deck.html"))
-    text = html |> Floki.parse_document!() |> Floki.find(".screen .code") |> Floki.text()
+    text = html |> LazyHTML.from_document() |> LazyHTML.query(".screen .code") |> LazyHTML.text()
 
     assert text =~ "def start, do: :ok"
   end

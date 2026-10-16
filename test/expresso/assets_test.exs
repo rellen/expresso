@@ -44,13 +44,13 @@ defmodule Expresso.AssetsTest do
 
     assert length(String.split(html, data)) == 2
 
-    document = Floki.parse_document!(html)
-    copies = Floki.find(document, "img[data-asset-src]")
+    document = LazyHTML.from_document(html)
+    copies = LazyHTML.query(document, "img[data-asset-src]")
 
-    images = Floki.find(document, "img")
+    images = LazyHTML.query(document, "img")
 
-    assert length(images) > 1
-    assert length(copies) == length(images) - 1
-    assert Enum.all?(copies, &(Floki.attribute(&1, "alt") == ["A test pattern"]))
+    assert Enum.count(images) > 1
+    assert Enum.count(copies) == Enum.count(images) - 1
+    assert Enum.all?(copies, &(LazyHTML.attribute(&1, "alt") == ["A test pattern"]))
   end
 end

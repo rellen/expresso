@@ -3,6 +3,8 @@ defmodule Expresso.ElementPagesTest do
   # same time could put its warnings into it.
   use ExUnit.Case, async: false
 
+  import Expresso.Test.HTML
+
   import ExUnit.CaptureIO
 
   # The reference pages of the elements whose code blocks are slides. The code
@@ -105,8 +107,8 @@ defmodule Expresso.ElementPagesTest do
     compiled = Code.compile_string(code)
     on_exit(fn -> remove(compiled) end)
     assert {:ok, deck} = Expresso.to_deck(Expresso.ElementPagesTest.Nests)
-    html = deck |> Expresso.Deck.render() |> Floki.parse_document!()
+    html = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
 
-    assert html |> Floki.find(".screen ul ul ul ul") |> length() == 1
+    assert count(html, ".screen ul ul ul ul") == 1
   end
 end
