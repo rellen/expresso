@@ -2,6 +2,8 @@ defmodule Expresso.StepsTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
+  import Expresso.Test.HTML
+
   alias Expresso.{Deck, Slide}
   alias Expresso.Steps
   alias Expresso.Test.Steps, as: Document
@@ -147,19 +149,21 @@ defmodule Expresso.StepsTest do
   describe "the document" do
     test "holds the list in a JSON script element in front of the presenter script" do
       html = Deck.render(deck(@three))
-      [first, _program, bundle] = html |> Floki.parse_document!() |> Floki.find("body > script")
 
-      assert Floki.attribute(first, "id") == ["expresso-deck"]
-      assert Floki.attribute(first, "type") == ["application/json"]
-      assert Floki.attribute(bundle, "id") == []
+      [first, _program, bundle] =
+        html |> LazyHTML.from_document() |> LazyHTML.query("body > script") |> Enum.to_list()
+
+      assert LazyHTML.attribute(first, "id") == ["expresso-deck"]
+      assert LazyHTML.attribute(first, "type") == ["application/json"]
+      assert LazyHTML.attribute(bundle, "id") == []
       assert length(Document.read(deck(@three))["steps"]) == 6
     end
 
     test "gives no data-duration and no data-transition, because the list holds them" do
-      document = deck([1, 2], %{duration: 5}) |> Deck.render() |> Floki.parse_document!()
+      document = deck([1, 2], %{duration: 5}) |> Deck.render() |> LazyHTML.from_document()
 
-      assert Floki.find(document, "[data-duration]") == []
-      assert Floki.find(document, "section[data-transition]") == []
+      assert count(document, "html:not(:has([data-duration]))") == 1
+      assert count(document, "section.slide:not([data-transition])") == 2
     end
   end
 

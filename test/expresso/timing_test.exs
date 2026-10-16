@@ -1,6 +1,8 @@
 defmodule Expresso.TimingTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Deck
   alias Expresso.Element.TextBox
   alias Expresso.Overlay.Render
@@ -43,11 +45,11 @@ defmodule Expresso.TimingTest do
   end
 
   defp document do
-    TimingDeck |> Expresso.parse() |> Deck.render() |> Floki.parse_document!()
+    TimingDeck |> Expresso.parse() |> Deck.render() |> LazyHTML.from_document()
   end
 
   defp attribute(document, selector, name) do
-    document |> Floki.find(selector) |> Floki.attribute(name)
+    document |> LazyHTML.query(selector) |> LazyHTML.attribute(name)
   end
 
   describe "the DSL" do
@@ -68,12 +70,12 @@ defmodule Expresso.TimingTest do
       assert attribute(document, "#slide-1 .text-box", "data-speed") == ["fast", "450"]
       assert attribute(document, "#slide-1 .text-box", "data-easing") == ["spring", "linear"]
       assert attribute(document, "#slide-2 .text-box", "data-speed") == ["slow"]
-      assert attribute(document, "#slide-2 .text-box", "data-easing") == []
+      assert count(document, "#slide-2 .text-box:not([data-easing])") == 1
     end
 
     test "writes a rule for a speed in milliseconds, and none for a preset" do
       [_fonts, _theme, _highlight, generated] =
-        document() |> Floki.find("head style") |> Enum.map(&Floki.text/1)
+        texts(document(), "head style")
 
       assert generated =~ ~s([data-speed="450"] { --speed: 450ms; })
       refute generated =~ ~s([data-speed="slow"])

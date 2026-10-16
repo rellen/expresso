@@ -12,9 +12,9 @@ defmodule Expresso.Test.Steps do
   def read(deck) do
     deck
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
-    |> Floki.find("script#expresso-deck")
-    |> Floki.text(js: true)
+    |> LazyHTML.from_document()
+    |> LazyHTML.query("script#expresso-deck")
+    |> LazyHTML.text()
     |> JSON.decode!()
   end
 end
