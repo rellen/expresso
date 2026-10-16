@@ -1449,9 +1449,13 @@ to the items of a list. These are the reasons for this design:
   the order of the groups gives their steps. `Expresso.Overlay.Expand` gives each group
   one step from the counter after the `whole_first` step, and `Expresso.Overlay.Check`
   reports a group at a step at which the chart does not show. `Chart.rules/1` writes one
-  rule for each group. The rule sets `--chart-dim: 1` on each series with a
-  `data-series` number that is not in the group. The state `dim` sets `--dim: 1`, and a
-  series reads it into `--chart-dim`, so `dim true` and `highlight` dim in the same way.
+  rule for each group. The rule of a group of series sets `--chart-dim: 1` on each series
+  with a `data-series` number that is not in the group. The rule of a group of categories
+  sets it on each mark with a `data-keys` attribute that does not hold a key of the
+  group. The property inherits, so a group mixes series and categories only in different
+  steps: a mark of a category in focus cannot stay in full color inside a dimmed series.
+  The state `dim` sets `--dim: 1`, and a series reads it into `--chart-dim`, so
+  `dim true` and `highlight` dim in the same way.
 
 ### The kinds of a chart
 

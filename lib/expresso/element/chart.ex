@@ -23,9 +23,9 @@ defmodule Expresso.Element.Chart do
   A series is a child of the chart, so `reveal true` shows each series at its
   own step, and `dim true` dims each series when a later series shows. The
   `highlight` option shows each series at each step, and it puts one group of
-  series in focus at each step: the other series dim. `check/1` makes an
-  `Expresso.Element.Focus` for each group, and `rules/1` writes the rules
-  that dim the series.
+  series or of categories in focus at each step: the rest of the chart dims.
+  `check/1` makes an `Expresso.Element.Focus` for each group, and `rules/1`
+  writes the rules that dim the series and the marks.
 
   A `frame` entity holds the series at one point in time, and each frame
   after the first takes one step. A chart with frames, or with the effect
@@ -367,10 +367,10 @@ defmodule Expresso.Element.Chart do
   defp frame_single(chart), do: with({:ok, _chart} <- single(chart), do: :ok)
 
   # The groups of the highlight option. Each item of the option is the name of
-  # a series or a list of names, and it becomes one group with the
-  # specification `:next`. The transformer then gives each group one step from
-  # the counter of the slide, as it gives a step to a group of lines of a code
-  # element.
+  # a series or of a category, or a list of names, and it becomes one group
+  # with the specification `:next`. The transformer then gives each group one
+  # step from the counter of the slide, as it gives a step to a group of lines
+  # of a code element.
   defp focus(%__MODULE__{highlight: nil, whole_first: true}),
     do: {:error, "the whole_first option of a chart needs the highlight option"}
 
@@ -383,11 +383,10 @@ defmodule Expresso.Element.Chart do
     end
   end
 
-  defp focus_options(%__MODULE__{kind: kind}) when not is_axis(kind),
+  defp focus_options(%__MODULE__{kind: kind}) when not is_axis(kind) and kind != :pie,
     do:
       {:error,
-       "the highlight option puts series in focus, so a #{kind} chart takes no highlight option. " <>
-         "A bar chart and a line chart take it."}
+       "a #{kind} chart takes no highlight option. A bar chart, a line chart and a pie take it."}
 
   defp focus_options(%__MODULE__{highlight: []}),
     do: {:error, "the highlight option needs one group or more"}
@@ -417,25 +416,50 @@ defmodule Expresso.Element.Chart do
   defp focus_group(_chart, []),
     do: {:error, "a group of the highlight option needs one name or more"}
 
-  defp focus_group(%__MODULE__{elements: elements}, item) do
-    names = Enum.map(elements, & &1.name)
+  defp focus_group(%__MODULE__{} = chart, item) do
     {:ok, next} = Expresso.Overlay.new(:next)
 
-    item
-    |> List.wrap()
-    |> Enum.map(fn name ->
-      case Enum.find_index(names, &(&1 == name)) do
-        nil ->
-          {:error,
-           "the highlight option names #{inspect(name)}, and the chart has no series with that name. " <>
-             "The series are #{Enum.map_join(names, ", ", &inspect/1)}."}
+    with {:ok, parts} <-
+           item |> List.wrap() |> Enum.map(&focus_part(chart, &1)) |> Result.collect() do
+      case Enum.split_with(parts, &match?({:series, _number}, &1)) do
+        {series, []} ->
+          {:ok, %Focus{at: next, series: Enum.map(series, &elem(&1, 1))}}
 
-        index ->
-          {:ok, index + 1}
+        {[], keys} ->
+          {:ok, %Focus{at: next, keys: Enum.flat_map(keys, &elem(&1, 1))}}
+
+        _mixed ->
+          {:error,
+           "a group of the highlight option names series or categories, and not both: " <>
+             inspect(item)}
       end
-    end)
-    |> Result.collect()
-    |> Result.map_ok(&%Focus{at: next, series: &1})
+    end
+  end
+
+  # A name of the highlight option: a series, as its color number, or a
+  # category, as the key of each category with that name.
+  defp focus_part(%__MODULE__{elements: elements, categories: categories}, name) do
+    series = for {%Series{name: ^name}, index} <- Enum.with_index(elements, 1), do: index
+    keys = for {^name, index} <- Enum.with_index(categories, 1), do: "c#{index}"
+
+    case {series, keys} do
+      {[number | _], []} ->
+        {:ok, {:series, number}}
+
+      {[], [_ | _]} ->
+        {:ok, {:keys, keys}}
+
+      {[_ | _], [_ | _]} ->
+        {:error,
+         "the highlight option names #{inspect(name)}, and the chart has a series and a category " <>
+           "with that name. Give the series or the category a different name."}
+
+      {[], []} ->
+        {:error,
+         "the highlight option names #{inspect(name)}, and the chart has no series and no category " <>
+           "with that name. The series are #{Enum.map_join(elements, ", ", &inspect(&1.name))}. " <>
+           "The categories are #{Enum.map_join(categories, ", ", &inspect/1)}."}
+    end
   end
 
   @doc """
@@ -737,7 +761,9 @@ defmodule Expresso.Element.Chart do
   `style` attribute of the `width` option. The key `series` holds each series
   with its color number and its overlay attributes. A series of a chart with
   the `highlight` option also gets `data-series` with its color number, and
-  the rules of `rules/1` select it by that number.
+  the rules of `rules/1` select it by that number. The key `keys` is true
+  for a chart with a group of categories, and `key/2` then gives each mark
+  of a category its `data-keys` attribute.
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
@@ -778,9 +804,29 @@ defmodule Expresso.Element.Chart do
       levels: chart.levels,
       thumbnail: chart.thumbnail,
       node_settings: Map.new(chart.flows, &{&1.name, &1}),
+      keys: Enum.any?(chart.focus, &(&1.keys != [])),
       overlay: Expresso.Overlay.Render.attributes(chart) ++ width
     }
   end
+
+  @doc """
+  Return the `data-keys` attribute of a mark of a category
+
+  `index` is the index of the category, from 0. A mark that dims at each step
+  of a group of categories, such as a line, takes `nil`, and it gets an empty
+  attribute. A chart without a group of categories gives no attribute.
+
+      iex> Expresso.Element.Chart.key(%{keys: true}, 1)
+      "c2"
+      iex> Expresso.Element.Chart.key(%{keys: true}, nil)
+      ""
+      iex> Expresso.Element.Chart.key(%{keys: false}, 1)
+      nil
+  """
+  @spec key(map(), non_neg_integer() | nil) :: String.t() | nil
+  def key(%{keys: true}, nil), do: ""
+  def key(%{keys: true}, index), do: "c#{index + 1}"
+  def key(_assigns, _index), do: nil
 
   defp series_key(%__MODULE__{focus: []}, _color), do: []
   defp series_key(%__MODULE__{}, color), do: [{"data-series", Integer.to_string(color)}]
@@ -816,8 +862,9 @@ defmodule Expresso.Element.Chart do
   the `highlight` option has no rules.
 
   A group of the `highlight` option gives one rule at its step. The rule sets
-  `--chart-dim: 1` on each series that is not in the group, and the theme
-  dims a series with that property.
+  `--chart-dim: 1` on each series that is not in the group, or on each mark
+  with a `data-keys` attribute that does not hold a key of the group. The
+  theme dims a series or a mark with that property.
   """
   @spec rules(t()) :: [String.t()]
   def rules(%__MODULE__{} = chart), do: frame_rules(chart) ++ focus_rules(chart)
@@ -831,15 +878,20 @@ defmodule Expresso.Element.Chart do
   defp frame_rules(%__MODULE__{}), do: []
 
   defp focus_rules(%__MODULE__{focus: focus, el: el}) when is_binary(el) do
-    for %Focus{steps: steps, series: series} <- focus, step <- steps || [] do
-      others = Enum.map_join(series, &":not([data-series=\"#{&1}\"])")
-
-      "section[data-step=\"#{step}\"] [data-el=\"#{el}\"] [data-series]#{others} " <>
+    for %Focus{steps: steps} = group <- focus, step <- steps || [] do
+      "section[data-step=\"#{step}\"] [data-el=\"#{el}\"] #{others(group)} " <>
         "{ --chart-dim: 1; }"
     end
   end
 
   defp focus_rules(%__MODULE__{}), do: []
+
+  # The selector of the parts that are not in a group.
+  defp others(%Focus{keys: [], series: series}),
+    do: "[data-series]" <> Enum.map_join(series, &":not([data-series=\"#{&1}\"])")
+
+  defp others(%Focus{keys: keys}),
+    do: "[data-keys]" <> Enum.map_join(keys, &":not([data-keys~=\"#{&1}\"])")
 
   @doc """
   Make the HTML of a chart: a `figure` with the SVG and a table of the values
@@ -1017,7 +1069,8 @@ defmodule Expresso.Element.Chart do
             text x: Plot.f(@category_x.(index)),
                  y: @box.bottom + 28,
                  text_anchor: "middle",
-                 class: "chart-category" do
+                 class: "chart-category",
+                 data_keys: key(assigns, index) do
               category
             end
           end
@@ -1112,13 +1165,16 @@ defmodule Expresso.Element.Chart do
     assigns = Map.merge(assigns, %{x: x, bar_width: width, label_y: label_y})
 
     temple do
-      path class: "chart-bar", d: Plot.bar(@x, @bar_width, @y.(0), @y.(@value))
+      path class: "chart-bar",
+           d: Plot.bar(@x, @bar_width, @y.(0), @y.(@value)),
+           data_keys: key(assigns, @index)
 
       if @values do
         text x: Plot.f(@x + @bar_width / 2),
              y: Plot.f(@label_y),
              text_anchor: "middle",
-             class: "chart-value" do
+             class: "chart-value",
+             data_keys: key(assigns, @index) do
           Plot.label(@value)
         end
       end
@@ -1140,6 +1196,7 @@ defmodule Expresso.Element.Chart do
           c(&legend_item/1, legend: @legend, series: series)
 
           polyline class: "chart-line",
+                   data_keys: key(assigns, nil),
                    points:
                      series.values
                      |> Enum.with_index()
@@ -1151,12 +1208,14 @@ defmodule Expresso.Element.Chart do
             circle class: "chart-dot",
                    cx: Plot.f(category_x(assigns, index)),
                    cy: Plot.f(@y.(value)),
-                   r: 5
+                   r: 5,
+                   data_keys: key(assigns, index)
           end
 
           text x: Plot.f(category_x(assigns, length(@categories) - 1) + 14),
                y: Plot.f(end_y + 5),
-               class: "chart-end" do
+               class: "chart-end",
+               data_keys: key(assigns, length(@categories) - 1) do
             "#{series.name} #{Plot.label(List.last(series.values))}"
           end
         end
@@ -1240,7 +1299,8 @@ defmodule Expresso.Element.Chart do
       g class: Expresso.Element.classes("chart-series", @series.class), rest!: @series.overlay do
         for {{from, to}, index} <- Enum.with_index(@turns), to > from do
           path class: "chart-slice chart-c#{index + 1}",
-               d: Plot.slice(@cx, @cy, @radius, from, to)
+               d: Plot.slice(@cx, @cy, @radius, from, to),
+               data_keys: key(assigns, index)
         end
 
         for {{category, value}, index} <-
@@ -1250,9 +1310,13 @@ defmodule Expresso.Element.Chart do
                y: Plot.f(@top + index * 36 + 4),
                width: 16,
                height: 16,
-               rx: 3
+               rx: 3,
+               data_keys: key(assigns, index)
 
-          text x: @cx + @radius + 88, y: Plot.f(@top + index * 36 + 18), class: "chart-name" do
+          text x: @cx + @radius + 88,
+               y: Plot.f(@top + index * 36 + 18),
+               class: "chart-name",
+               data_keys: key(assigns, index) do
             "#{category} #{Plot.label(Float.round(value / @total * 100, 1))}%"
           end
         end

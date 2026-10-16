@@ -431,7 +431,7 @@ defmodule Expresso.Extension do
           highlight: [
             type: {:list, {:or, [:string, {:list, :string}]}},
             doc:
-              "Groups of series, one group in focus at each step, such as [\"Returns\", [\"Orders\", \"Returns\"]]. Each item is the name of a series or a list of names. Each series shows at each step, and the series that are not in focus dim. A bar chart and a line chart take it. See docs/reference/chart-element.md."
+              "Groups of series or of categories, one group in focus at each step, such as [\"Returns\", [\"Orders\", \"Returns\"], \"2024\"]. Each item is the name of a series or of a category, or a list of names. Each series shows at each step, and the rest of the chart dims. A bar chart, a line chart and a pie take it. See docs/reference/chart-element.md."
           ],
           whole_first: [
             type: :boolean,

@@ -513,6 +513,13 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .chart-axis-title {
   fill: var(--muted);
 }
+.chart-category {
+  fill: color-mix(
+    in srgb,
+    var(--muted-dim) calc(var(--chart-dim) * 100%),
+    var(--muted)
+  );
+}
 .chart-value,
 .chart-end,
 .chart-name {
@@ -534,13 +541,16 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
  * not in focus, and at a step at which it has the state `dim`, such as with
  * `dim true`. The generated style block sets `--chart-dim: 1` for `highlight`.
  * The state `dim` sets `--dim: 1`, and a series reads it into `--chart-dim`.
- * The property inherits, so each mark and each text of the series reads it:
+ * A group of categories sets `--chart-dim: 1` on each mark with a `data-keys`
+ * attribute that does not hold a key of the group. The property inherits, so
+ * each mark and each text of the series reads it:
  *
  * - A mark, such as a bar, a line, a dot, a link or the swatch of the legend,
  *   fades to the opacity `--chart-dim-opacity`. The default is 0.3, and the
  *   css option of a deck can change it.
  * - A text, such as a value or the name of the series, moves to `--text-dim`,
- *   so it stays at the minimums of a dimmed text.
+ *   so it stays at the minimums of a dimmed text. The label of a category
+ *   under the axis moves to `--muted-dim`.
  *
  * A series does not take the filter of the state `dim`, so it does not also
  * fade as a graphic. The labels of a chart of flows have the steps of their
@@ -643,6 +653,20 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
     --chart-w var(--dur) var(--ease),
     --chart-h var(--dur) var(--ease),
     --chart-n var(--dur) var(--ease);
+}
+/*
+ * A mark of a category gets `--chart-dim` from a group of the `highlight`
+ * option, and not from its series. It therefore has its own transition of
+ * the property, and the list keeps the transitions of a mark that moves.
+ */
+.chart [data-keys] {
+  transition:
+    --chart-u var(--dur) var(--ease),
+    --chart-v var(--dur) var(--ease),
+    --chart-w var(--dur) var(--ease),
+    --chart-h var(--dur) var(--ease),
+    --chart-n var(--dur) var(--ease),
+    --chart-dim var(--dur) var(--ease);
 }
 /*
  * A label of a treemap or a sunburst. `--chart-h` is 1 in a frame in which
@@ -1401,7 +1425,7 @@ body[data-view="present"][data-undim] .screen .code [data-el] {
 body[data-view="present"][data-undim]
   .screen
   .chart
-  :is(.chart-series, .chart-labels) {
+  :is(.chart-series, .chart-labels, [data-keys]) {
   --chart-dim: 0 !important;
 }
 /*

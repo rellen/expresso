@@ -33,6 +33,21 @@ defmodule Expresso.E2E.ChartHighlightTest do
     end
   end
 
+  # The category "2024" is in focus at step 1.
+  defmodule CategoryDeck do
+    use Expresso
+
+    slide "orders" do
+      chart :bar do
+        title "Orders and returns"
+        categories ["2023", "2024"]
+        highlight ["2024"]
+        series "Orders", [180, 240]
+        series "Returns", [22, 19]
+      end
+    end
+  end
+
   # The fill opacity of the first bar of each series of a chart in a scope, in
   # the order of the series.
   defp opacities(page, scope) do
@@ -66,6 +81,43 @@ defmodule Expresso.E2E.ChartHighlightTest do
     })()
     """)
     |> then(fn [values, text, dim] -> {Enum.map(values, &rgb/1), rgb(text), rgb(dim)} end)
+  end
+
+  # The fill opacity of each bar of the present view, in the order of the
+  # document, and the fill of each label of a category with the computed
+  # colors of `--muted` and `--muted-dim`.
+  defp category_marks(page) do
+    js(page, """
+    (() => {
+      const probe = (role) => {
+        const span = document.createElement("span");
+        span.style.color = `var(${role})`;
+        document.body.append(span);
+        const color = getComputedStyle(span).color;
+        span.remove();
+        return color;
+      };
+      const bars = Array.from(document.querySelectorAll(".screen .chart .chart-bar"))
+        .map((bar) => getComputedStyle(bar).fillOpacity);
+      const labels = Array.from(document.querySelectorAll(".screen .chart .chart-category"))
+        .map((label) => getComputedStyle(label).fill);
+      return [bars, labels, probe("--muted"), probe("--muted-dim")];
+    })()
+    """)
+  end
+
+  test "a category in focus shows its bars and its label in full, and each other category dims",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(CategoryDeck, tmp_dir))
+
+    assert [bars, labels, muted, muted_dim] = category_marks(page)
+    assert bars == ["0.3", "1", "0.3", "1"]
+    assert rgb(muted) != rgb(muted_dim)
+    assert Enum.map(labels, &rgb/1) == [rgb(muted_dim), rgb(muted)]
+
+    press(page, "d")
+    assert [["1", "1", "1", "1"], labels, muted, _muted_dim] = category_marks(page)
+    assert Enum.map(labels, &rgb/1) == [rgb(muted), rgb(muted)]
   end
 
   test "the series in focus shows in full, and each other series dims", %{

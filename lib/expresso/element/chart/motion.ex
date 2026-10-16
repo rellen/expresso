@@ -38,6 +38,7 @@ defmodule Expresso.Element.Chart.Motion do
 
   import Expresso.Element.Chart.Kinds
 
+  alias Expresso.Element.Chart
   alias Expresso.Element.Chart.{Hierarchy, Plot}
 
   # The length of the shape of a bar, in the units of the SVG. A clip at the
@@ -310,12 +311,12 @@ defmodule Expresso.Element.Chart.Motion do
     temple do
       cond do
         Enum.uniq(@texts) |> length() == 1 ->
-          text x: @x, y: @y, text_anchor: @anchor, class: @class do
+          text x: @x, y: @y, text_anchor: @anchor, class: @class, data_keys: @keys do
             List.first(@texts)
           end
 
         @count ->
-          text x: @x, y: @y, text_anchor: @anchor, class: @class do
+          text x: @x, y: @y, text_anchor: @anchor, class: @class, data_keys: @keys do
             @prefix
 
             tspan class: "chart-count",
@@ -334,6 +335,7 @@ defmodule Expresso.Element.Chart.Motion do
                  y: @y,
                  text_anchor: @anchor,
                  class: "#{@class} chart-fade",
+                 data_keys: @keys,
                  style: "opacity: var(--k#{k}, #{if k == 1, do: 1, else: 0});" do
               copy
             end
@@ -354,7 +356,8 @@ defmodule Expresso.Element.Chart.Motion do
   Make the assigns of `changing/1`
 
   `texts` holds the text of each frame, `numbers` the number of each frame for
-  the `count` option, and `name` the channel of the number.
+  the `count` option, and `name` the channel of the number. The option `keys`
+  gives the `data-keys` attribute of each text, from `Expresso.Element.Chart.key/2`.
   """
   @spec text_assigns([String.t()], [number()], String.t(), keyword()) :: map()
   def text_assigns(texts, numbers, name, opts) do
@@ -368,7 +371,8 @@ defmodule Expresso.Element.Chart.Motion do
         anchor: "middle",
         prefix: "",
         suffix: "",
-        count: false
+        count: false,
+        keys: nil
       },
       Map.new(opts)
     )
@@ -428,7 +432,8 @@ defmodule Expresso.Element.Chart.Motion do
                y: @box.bottom + 28,
                text_anchor: "middle",
                class: "chart-category chart-mark",
-               style: style([{"--chart-u", ref("x#{i}", scene.xs[i])}, {"--chart-v", 0}]) do
+               style: style([{"--chart-u", ref("x#{i}", scene.xs[i])}, {"--chart-v", 0}]),
+               data_keys: Chart.key(assigns, i) do
             category
           end
         end
@@ -449,7 +454,8 @@ defmodule Expresso.Element.Chart.Motion do
           for mark <- @marks do
             path class: "chart-bar chart-mark",
                  d: shape(mark.dx, mark.width, direction),
-                 style: bar_style(scene, mark, "b", mark.tops, scene.base)
+                 style: bar_style(scene, mark, "b", mark.tops, scene.base),
+                 data_keys: Chart.key(assigns, mark.category)
           end
         end
       end
@@ -465,7 +471,9 @@ defmodule Expresso.Element.Chart.Motion do
 
     temple do
       for mark <- @marks do
-        g class: "chart-mark", style: bar_style(scene, mark, "t", mark.labels, scene.base - 8) do
+        g class: "chart-mark",
+          style: bar_style(scene, mark, "t", mark.labels, scene.base - 8),
+          data_keys: Chart.key(assigns, mark.category) do
           c(&changing/1,
             rest!:
               text_assigns(
@@ -526,6 +534,7 @@ defmodule Expresso.Element.Chart.Motion do
           g class: "chart-trace" do
             for {{from, to}, i} <- Enum.with_index(Enum.zip(mark.points, tl(mark.points))) do
               line class: "chart-line chart-segment",
+                   data_keys: Chart.key(assigns, nil),
                    x1: 0,
                    y1: 0,
                    x2: 1,
@@ -544,6 +553,7 @@ defmodule Expresso.Element.Chart.Motion do
                      cx: 0,
                      cy: 0,
                      r: 5,
+                     data_keys: Chart.key(assigns, i),
                      style:
                        style([
                          {"--chart-u", Plot.f(point.x)},
@@ -552,6 +562,7 @@ defmodule Expresso.Element.Chart.Motion do
             end
 
             g class: "chart-mark",
+              data_keys: Chart.key(assigns, length(mark.points) - 1),
               style:
                 style([
                   {"--chart-u", Plot.f(scene.end_x)},
@@ -601,6 +612,7 @@ defmodule Expresso.Element.Chart.Motion do
       g class: Expresso.Element.classes("chart-series", @item.class), rest!: @item.overlay do
         for mark <- scene.marks do
           circle class: "chart-arc chart-c#{mark.category + 1}",
+                 data_keys: Chart.key(assigns, mark.category),
                  cx: @cx,
                  cy: @cy,
                  r: div(@radius_value, 2),
@@ -632,7 +644,8 @@ defmodule Expresso.Element.Chart.Motion do
                y: Plot.f(@top + i * 36 + 4),
                width: 16,
                height: 16,
-               rx: 3
+               rx: 3,
+               data_keys: Chart.key(assigns, i)
 
           c(&changing/1,
             rest!:
@@ -646,7 +659,8 @@ defmodule Expresso.Element.Chart.Motion do
                 class: "chart-name",
                 prefix: "#{category} ",
                 suffix: "%",
-                count: @count
+                count: @count,
+                keys: Chart.key(assigns, i)
               )
           )
         end
