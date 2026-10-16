@@ -155,88 +155,86 @@ defmodule Expresso.Element.TableTest do
     end
   end
 
+  # The number of the nodes that a selector finds.
+  defp count(html, selector), do: html |> LazyHTML.query(selector) |> Enum.count()
+
+  # The text of each node that a selector finds.
+  defp texts(html, selector), do: html |> LazyHTML.query(selector) |> Enum.map(&LazyHTML.text/1)
+
+  # LazyHTML parses the document as a browser does, and it takes each CSS
+  # selector of a browser. A test that asserts that a table has no part finds
+  # the table with `:not(:has(...))`. Thus a wrong selector finds no table, and
+  # the test fails.
   describe "render/1" do
     setup do
-      {:ok, document: TableDeck |> document() |> Floki.parse_document!()}
+      {:ok, document: TableDeck |> document() |> LazyHTML.from_document()}
     end
 
     test "writes the header row in a thead element with th cells", %{document: document} do
-      assert [_] = Floki.find(document, "#slide-1 table.table > thead > tr.row")
+      assert count(document, "#slide-1 table.table > thead > tr.row") == 1
+      assert texts(document, "#slide-1 thead th") == ["Name", "Value"]
 
-      assert document |> Floki.find("#slide-1 thead th") |> Enum.map(&Floki.text/1) == [
-               "Name",
-               "Value"
-             ]
-
-      assert document |> Floki.find("#slide-1 thead th") |> Floki.attribute("scope") == [
-               "col",
-               "col"
-             ]
+      assert document |> LazyHTML.query("#slide-1 thead th") |> LazyHTML.attribute("scope") ==
+               ["col", "col"]
     end
 
     test "writes the other rows in a tbody element with td cells", %{document: document} do
-      assert [_, _] = Floki.find(document, "#slide-1 table.table > tbody > tr.row")
-
-      assert document |> Floki.find("#slide-1 tbody td") |> Enum.map(&Floki.text/1) == [
-               "one",
-               "1",
-               "two",
-               "2"
-             ]
+      assert count(document, "#slide-1 table.table > tbody > tr.row") == 2
+      assert texts(document, "#slide-1 tbody td") == ["one", "1", "two", "2"]
     end
 
     test "writes a cell with raw HTML", %{document: document} do
-      assert [_] = Floki.find(document, "#slide-1 tbody td > b")
+      assert count(document, "#slide-1 tbody td > b") == 1
     end
 
     test "writes no thead without the header option", %{document: document} do
-      assert [] = Floki.find(document, "#slide-3 thead")
-      assert [_, _] = Floki.find(document, "#slide-3 tbody tr.row")
+      assert count(document, "#slide-3 table.table:not(:has(thead))") == 1
+      assert count(document, "#slide-3 tbody tr.row") == 2
     end
 
     test "writes the overlay attributes on each row", %{document: document} do
-      rows = Floki.find(document, "#slide-2 tr.row")
+      rows = LazyHTML.query(document, "#slide-2 tr.row")
 
-      assert Floki.attribute(rows, "data-on") == ["1 2 3", "2 3"]
+      assert LazyHTML.attribute(rows, "data-on") == ["1 2 3", "2 3"]
     end
 
     test "writes no caption and no row header without their options", %{document: document} do
-      assert [] = Floki.find(document, "#slide-1 caption")
-      assert [] = Floki.find(document, "#slide-1 tbody th")
+      assert count(document, "#slide-1 table.table:not(:has(caption, tbody th))") == 1
     end
 
     test "writes the caption as the first child of the table", %{document: document} do
-      [{"table", _attributes, [first | _others]} | _hidden] =
-        Floki.find(document, "#slide-4 table.table")
+      captions = LazyHTML.query(document, "#slide-4 table.table > caption:first-child")
 
-      assert {"caption", [{"class", "table-caption"}], ["Orders each year"]} = first
+      assert Enum.map(captions, &LazyHTML.text/1) == ["Orders each year", "A hidden name"]
     end
 
     test "writes a hidden caption with the class table-caption-hidden", %{document: document} do
-      [caption] = Floki.find(document, "#slide-4 caption.table-caption-hidden")
+      assert document |> LazyHTML.query("#slide-4 caption") |> LazyHTML.attribute("class") == [
+               "table-caption",
+               "table-caption table-caption-hidden"
+             ]
 
-      assert Floki.attribute(caption, "class") == ["table-caption table-caption-hidden"]
-      assert Floki.text(caption) == "A hidden name"
+      assert texts(document, "#slide-4 caption.table-caption-hidden") == ["A hidden name"]
     end
 
     test "writes the first cell of each body row as the header of its row", %{
       document: document
     } do
-      [names, hidden] = Floki.find(document, "#slide-4 table.table")
+      [names, hidden] = document |> LazyHTML.query("#slide-4 table.table") |> Enum.to_list()
 
-      assert names |> Floki.find("tbody th[scope=row]") |> Enum.map(&Floki.text/1) == ["Coffee"]
+      assert texts(names, "tbody th[scope=row]") == ["Coffee"]
       # The first cell of the last row has no text, so it is a td cell.
-      assert names |> Floki.find("tbody td") |> Enum.map(&Floki.text/1) ==
-               ["120", "180", "", "40", "60"]
-
-      assert [] = Floki.find(hidden, "th")
+      assert texts(names, "tbody td") == ["120", "180", "", "40", "60"]
+      assert count(hidden, "th") == 0
     end
 
     test "writes a cell with no text as a td cell", %{document: document} do
-      [names, _hidden] = Floki.find(document, "#slide-4 table.table")
+      [names, _hidden] = document |> LazyHTML.query("#slide-4 table.table") |> Enum.to_list()
 
-      assert [{"td", [], _blank}] = Floki.find(names, "thead tr > td")
-      assert names |> Floki.find("thead th") |> Enum.map(&Floki.text/1) == ["2024", "2025"]
+      # `Expresso.Deck.render/1` passes the document through Floki, and Floki
+      # drops a text node that is only white space. Thus the cell " " is empty.
+      assert names |> LazyHTML.query("thead tr > td") |> LazyHTML.to_tree() == [{"td", [], []}]
+      assert texts(names, "thead th") == ["2024", "2025"]
     end
 
     test "writes the caption as text and not as HTML" do

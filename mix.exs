@@ -215,6 +215,12 @@ defmodule Expresso.MixProject do
       # therefore the dependency is present in `dev` too.
       {:stream_data, "~> 1.2", only: [:dev, :test], runtime: false},
 
+      # the queries of the HTML in the unit tests. Lexbor parses the HTML as a
+      # browser does, and it takes each CSS selector of a browser. Floki stays
+      # for `lib/` and for the tests that use it. See "The HTML in a unit test"
+      # in docs/development.md.
+      {:lazy_html, "~> 0.1.13", only: :test},
+
       # the browser tests of `mix test --only e2e`, the recorder of the GIFs in
       # `tools/` and `--check=browser`. The client drives the Playwright driver
       # of `package.json`. It is optional, so a project that uses Expresso adds
