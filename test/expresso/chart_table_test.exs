@@ -1,6 +1,8 @@
 defmodule Expresso.ChartTableTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Chart
   alias Expresso.Element.Chart.{Layers, ParallelSets, Sankey, Table}
@@ -51,26 +53,29 @@ defmodule Expresso.ChartTableTest do
       document =
         %{caption: "Orders (units)", headers: ["Year", "Orders"], rows: [["2024", "180"]]}
         |> html()
-        |> Floki.parse_fragment!()
+        |> LazyHTML.from_fragment()
 
-      assert document |> Floki.find("table.chart-table caption") |> Floki.text() ==
-               "Orders (units)"
+      assert texts(document, "table.chart-table caption") == ["Orders (units)"]
 
-      assert document |> Floki.find("thead th[scope=col]") |> Enum.map(&Floki.text/1) ==
+      assert texts(document, "thead th[scope=col]") ==
                ["Year", "Orders"]
 
-      assert document |> Floki.find("tbody th[scope=row]") |> Floki.text() == "2024"
-      assert document |> Floki.find("tbody td") |> Floki.text() == "180"
+      assert texts(document, "tbody th[scope=row]") == ["2024"]
+      assert texts(document, "tbody td") == ["180"]
     end
 
     test "writes a corner without a name as a cell, and not as a header" do
       document =
         %{caption: "Orders", headers: [nil, "Orders"], rows: [["2024", "180"]]}
         |> html()
-        |> Floki.parse_fragment!()
+        |> LazyHTML.from_fragment()
 
+      # The render is not the document, so the white space between the tags is
+      # still there.
       assert [{"tr", [], [{"td", [], []}, {"th", [{"scope", "col"}], ["Orders"]}]}] =
-               Floki.find(document, "thead tr")
+               document
+               |> LazyHTML.query("thead tr")
+               |> LazyHTML.to_tree(skip_whitespace_nodes: true)
     end
   end
 end

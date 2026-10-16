@@ -1,6 +1,8 @@
 defmodule Expresso.ChartFramesTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Chart
   alias Expresso.Element.Chart.Csv
@@ -34,10 +36,10 @@ defmodule Expresso.ChartFramesTest do
     Enum.find(elements, &match?(%Chart{}, &1))
   end
 
-  defp document(deck), do: deck |> Expresso.Deck.render() |> Floki.parse_document!()
+  defp document(deck), do: deck |> Expresso.Deck.render() |> LazyHTML.from_document()
 
   defp style(html) do
-    html |> Floki.find("style") |> Enum.map_join("\n", &Floki.text(&1, js: true))
+    html |> LazyHTML.query("style") |> Enum.map_join("\n", &LazyHTML.text/1)
   end
 
   describe "the steps" do
@@ -211,8 +213,8 @@ defmodule Expresso.ChartFramesTest do
   describe "the render" do
     test "a chart with frames has an identity, and the style block sets each frame at its step" do
       html = document(deck([race()]))
-      [figure] = Floki.find(html, ".screen figure.chart")
-      [el] = Floki.attribute(figure, "data-el")
+      [figure] = LazyHTML.query(html, ".screen figure.chart") |> Enum.to_list()
+      [el] = LazyHTML.attribute(figure, "data-el")
       css = style(html)
 
       assert css =~ ~s(section[data-step="2"] [data-el="#{el}"] {)
@@ -233,36 +235,55 @@ defmodule Expresso.ChartFramesTest do
 
     test "each mark reads its channel with the value of the first frame as its fallback" do
       [figure] =
-        race() |> List.wrap() |> deck() |> document() |> Floki.find(".screen figure.chart")
+        race()
+        |> List.wrap()
+        |> deck()
+        |> document()
+        |> LazyHTML.query(".screen figure.chart")
+        |> Enum.to_list()
 
-      [north | _] = Floki.find(figure, "svg > g.chart-series path.chart-bar")
-      [style] = Floki.attribute(north, "style")
+      [north | _] =
+        LazyHTML.query(figure, "svg > g.chart-series path.chart-bar") |> Enum.to_list()
+
+      [style] = LazyHTML.attribute(north, "style")
 
       assert style =~
                ~r/--chart-v: calc\([\d.]+ \+ \(var\(--b1-0, [\d.]+\) - [\d.]+\) \* var\(--chart-shown, 1\)\);/
 
-      labels = figure |> Floki.find("svg > text.chart-frame") |> Enum.map(&Floki.text/1)
+      labels = texts(figure, "svg > text.chart-frame")
       assert labels == ["2023", "2024", "2025"]
     end
 
     test "paper and the handout view get a small chart of each frame with its label" do
       [figure] =
-        race() |> List.wrap() |> deck() |> document() |> Floki.find(".screen figure.chart")
+        race()
+        |> List.wrap()
+        |> deck()
+        |> document()
+        |> LazyHTML.query(".screen figure.chart")
+        |> Enum.to_list()
 
-      copies = Floki.find(figure, ".chart-frames figure.chart-copy")
+      copies = LazyHTML.query(figure, ".chart-frames figure.chart-copy")
 
-      assert Enum.map(copies, &(&1 |> Floki.find("figcaption") |> Floki.text())) ==
+      assert Enum.map(copies, &(&1 |> LazyHTML.query("figcaption") |> LazyHTML.text())) ==
                ~w(2023 2024 2025)
 
-      assert copies |> hd() |> Floki.find("path.chart-bar") |> length() == 2
-      assert copies |> hd() |> Floki.find(".chart-mark") == []
+      first = Enum.at(copies, 0)
+
+      assert count(first, "path.chart-bar") == 2
+      assert first |> LazyHTML.filter(":not(:has(.chart-mark))") |> Enum.count() == 1
     end
 
     test "the table has a column for each frame" do
       [figure] =
-        race() |> List.wrap() |> deck() |> document() |> Floki.find(".screen figure.chart")
+        race()
+        |> List.wrap()
+        |> deck()
+        |> document()
+        |> LazyHTML.query(".screen figure.chart")
+        |> Enum.to_list()
 
-      heads = figure |> Floki.find("table.chart-table thead th") |> Enum.map(&Floki.text/1)
+      heads = texts(figure, "table.chart-table thead th")
       assert heads == ["2023", "2024", "2025"]
     end
 
@@ -279,15 +300,20 @@ defmodule Expresso.ChartFramesTest do
         )
 
       [figure] =
-        chart |> List.wrap() |> deck() |> document() |> Floki.find(".screen figure.chart")
+        chart
+        |> List.wrap()
+        |> deck()
+        |> document()
+        |> LazyHTML.query(".screen figure.chart")
+        |> Enum.to_list()
 
-      [count] = Floki.find(figure, "svg tspan.chart-count")
+      [count] = LazyHTML.query(figure, "svg tspan.chart-count") |> Enum.to_list()
 
-      assert Floki.text(count) == "10"
-      assert Floki.attribute(count, "data-decimals") == ["1"]
+      assert LazyHTML.text(count) == "10"
+      assert LazyHTML.attribute(count, "data-decimals") == ["1"]
       # The texts at rest: 0 before the effect grow, and the value of each frame.
-      assert Floki.attribute(count, "data-texts") == [~s(["0","10","12.5"])]
-      assert figure |> Floki.find("svg .chart-value.chart-fade") == []
+      assert LazyHTML.attribute(count, "data-texts") == [~s(["0","10","12.5"])]
+      assert figure |> LazyHTML.filter(":not(:has(.chart-value.chart-fade))") |> Enum.count() == 1
     end
 
     test "with sort, the categories move to the order of their totals" do
@@ -330,12 +356,12 @@ defmodule Expresso.ChartFramesTest do
         )
 
       html = document(deck([pie, line]))
-      [pie, line] = Floki.find(html, ".screen figure.chart")
+      [pie, line] = LazyHTML.query(html, ".screen figure.chart") |> Enum.to_list()
 
-      assert pie |> Floki.find("svg circle.chart-arc") |> length() == 2
-      assert pie |> Floki.find("svg line.chart-gap") |> length() == 2
-      assert line |> Floki.find("svg line.chart-segment") |> length() == 2
-      assert line |> Floki.find("figure.chart > svg circle.chart-dot") |> length() == 3
+      assert count(pie, "svg circle.chart-arc") == 2
+      assert count(pie, "svg line.chart-gap") == 2
+      assert count(line, "svg line.chart-segment") == 2
+      assert count(line, "figure.chart > svg circle.chart-dot") == 3
     end
 
     test "the effect grow draws the marks that move, and a chart without it keeps its paths" do
@@ -355,12 +381,17 @@ defmodule Expresso.ChartFramesTest do
           elements: [Builder.series("Orders", [10])]
         )
 
-      [grown, plain] = Floki.find(document(deck([grown, plain])), ".screen figure.chart")
+      [grown, plain] =
+        [grown, plain]
+        |> deck()
+        |> document()
+        |> LazyHTML.query(".screen figure.chart")
+        |> Enum.to_list()
 
-      assert Floki.attribute(grown, "data-effect") == ["grow"]
-      assert grown |> Floki.find("path.chart-bar.chart-mark") |> length() == 1
-      assert plain |> Floki.find(".chart-mark") == []
-      assert Floki.attribute(plain, "data-el") == []
+      assert LazyHTML.attribute(grown, "data-effect") == ["grow"]
+      assert count(grown, "path.chart-bar.chart-mark") == 1
+      assert plain |> LazyHTML.filter(":not(:has(.chart-mark))") |> Enum.count() == 1
+      assert plain |> LazyHTML.filter(":not([data-el])") |> Enum.count() == 1
     end
   end
 end
