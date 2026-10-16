@@ -15,8 +15,9 @@ defmodule Expresso.Element.Focus do
     from 1. The color number is also the value of the `data-series`
     attribute of the series.
   - The `keys` field holds the key of each category of the group, such as
-    `"c2"` for the second category. Each mark of a category has its key in
-    its `data-keys` attribute.
+    `"c2"` for the second category, or `"p3"` for the part or the group with
+    the id 3 in a treemap or a sunburst. Each mark of a category has its key
+    in its `data-keys` attribute.
   """
 
   @typedoc "The struct of a group of the highlight option"

@@ -48,6 +48,21 @@ defmodule Expresso.E2E.ChartHighlightTest do
     end
   end
 
+  # The group "Production" is in focus at step 1, and its part "Paint" at
+  # step 2.
+  defmodule TreemapDeck do
+    use Expresso
+
+    slide "hours" do
+      chart :treemap do
+        title "Hours"
+        categories ["Production/Press", "Production/Paint", "Office/IT", "Logistics"]
+        highlight ["Production", "Production/Paint"]
+        series "Hours", [40, 25, 15, 30]
+      end
+    end
+  end
+
   # The fill opacity of the first bar of each series of a chart in a scope, in
   # the order of the series.
   defp opacities(page, scope) do
@@ -118,6 +133,30 @@ defmodule Expresso.E2E.ChartHighlightTest do
     press(page, "d")
     assert [["1", "1", "1", "1"], labels, muted, _muted_dim] = category_marks(page)
     assert Enum.map(labels, &rgb/1) == [rgb(muted), rgb(muted)]
+  end
+
+  # The fill opacity of each box of the treemap of the present view, a group
+  # before its parts.
+  defp boxes(page) do
+    js(page, """
+    Array.from(document.querySelectorAll(".screen .chart :is(.chart-tile, .chart-group)"))
+      .map((box) => getComputedStyle(box).fillOpacity)
+    """)
+  end
+
+  test "a group in focus keeps its parts in full, and a part in focus keeps its group", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(TreemapDeck, tmp_dir))
+
+    # The boxes in the order of the document: Production, Press, Paint,
+    # Logistics, Office, IT.
+    assert boxes(page) == ["1", "1", "1", "0.3", "0.3", "0.3"]
+
+    press(page, "j")
+    assert position(page) == "1.2"
+    assert boxes(page) == ["1", "0.3", "1", "0.3", "0.3", "0.3"]
   end
 
   test "the series in focus shows in full, and each other series dims", %{

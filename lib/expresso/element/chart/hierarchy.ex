@@ -172,6 +172,52 @@ defmodule Expresso.Element.Chart.Hierarchy do
   end
 
   @doc """
+  Return the path of each part and of each group, with its id
+
+  The path holds the names of the levels from the top level down, so
+  `["Production", "Press"]` is the part "Press" of the group "Production".
+  The `highlight` option of a chart names a part or a group with its path.
+
+      iex> Expresso.Element.Chart.Hierarchy.paths(["A/x", "A/y", "B"], "/")
+      [{["A"], 1}, {["A", "x"], 2}, {["A", "y"], 3}, {["B"], 4}]
+  """
+  @spec paths([String.t() | [String.t()]], String.t()) :: [{[String.t()], pos_integer()}]
+  def paths(categories, separator), do: categories |> tree(separator) |> walk([])
+
+  defp walk(parts, above) do
+    Enum.flat_map(parts, fn part ->
+      path = above ++ [part.name]
+      [{path, part.id} | walk(part.children, path)]
+    end)
+  end
+
+  @doc """
+  Return the keys of the marks of each part, as a map from the id of a part
+
+  The marks of a part hold the key of the part, of each group above it and of
+  each part under it, such as `"p1 p2"`. A group of the `highlight` option
+  with a part therefore keeps the part, the groups around it and its own
+  parts in full color.
+
+      iex> ["A/x", "A/y", "B"] |> Expresso.Element.Chart.Hierarchy.tree("/") |> Expresso.Element.Chart.Hierarchy.keys()
+      %{1 => "p1 p2 p3", 2 => "p1 p2", 3 => "p1 p3", 4 => "p4"}
+  """
+  @spec keys([part()]) :: %{pos_integer() => String.t()}
+  def keys(parts), do: parts |> lineage([]) |> Map.new()
+
+  defp lineage(parts, above) do
+    Enum.flat_map(parts, fn part ->
+      ids = above ++ [part.id] ++ Enum.map(flatten(part.children), & &1.id)
+      [{part.id, Enum.map_join(ids, " ", &"p#{&1}")} | lineage(part.children, above ++ [part.id])]
+    end)
+  end
+
+  # The `data-keys` attribute of the marks of a part, in a chart with a group
+  # of parts.
+  defp key(%{keys: true, scene: %{keys: keys}}, part), do: Map.fetch!(keys, part.id)
+  defp key(_assigns, _part), do: nil
+
+  @doc """
   Return each part of the tree, a parent before its parts
   """
   @spec flatten([part()]) :: [part()]
@@ -226,7 +272,14 @@ defmodule Expresso.Element.Chart.Hierarchy do
         ]
       end) ++ Motion.flags(assigns.frames)
 
-    %{parts: parts, all: all, places: places, values: values, channels: channels}
+    %{
+      parts: parts,
+      all: all,
+      places: places,
+      values: values,
+      channels: channels,
+      keys: keys(parts)
+    }
   end
 
   defp scene(:sunburst, assigns, parts, values) do
@@ -249,7 +302,15 @@ defmodule Expresso.Element.Chart.Hierarchy do
         ]
       end) ++ Motion.flags(assigns.frames)
 
-    %{parts: parts, all: all, places: places, ring: ring, values: values, channels: channels}
+    %{
+      parts: parts,
+      all: all,
+      places: places,
+      ring: ring,
+      values: values,
+      channels: channels,
+      keys: keys(parts)
+    }
   end
 
   defp share(part, values),
@@ -423,7 +484,8 @@ defmodule Expresso.Element.Chart.Hierarchy do
                    y: 0,
                    width: 1,
                    height: 1,
-                   style: box_style(part, scene)
+                   style: box_style(part, scene),
+                   data_keys: key(assigns, part)
             end
 
             for part <- flatten([root]) do
@@ -475,7 +537,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
     assigns = Map.merge(assigns, %{label_style: style, numbers: numbers})
 
     temple do
-      g class: "chart-mark chart-label", style: @label_style do
+      g class: "chart-mark chart-label", style: @label_style, data_keys: key(assigns, @part) do
         if @part.children == [] do
           text x: 6, y: 20, class: "chart-part" do
             @part.name
@@ -526,6 +588,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
       g class: Expresso.Element.classes("chart-series", @item.class), rest!: @item.overlay do
         for part <- scene.all do
           circle class: "chart-ring chart-c#{part.color} chart-depth-#{min(part.depth, 3)}",
+                 data_keys: key(assigns, part),
                  cx: @cx,
                  cy: @cy,
                  r: Plot.f(middle(part, scene.ring)),
@@ -558,6 +621,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
 
         for part <- scene.all do
           g class: "chart-mark chart-label",
+            data_keys: key(assigns, part),
             style:
               Motion.style([
                 {"--chart-u", Motion.ref("su#{part.id}", places(scene, part, :x))},
@@ -576,7 +640,8 @@ defmodule Expresso.Element.Chart.Hierarchy do
                y: Plot.f(@top + i * 36 + 4),
                width: 16,
                height: 16,
-               rx: 3
+               rx: 3,
+               data_keys: key(assigns, root)
 
           c(&Motion.changing/1,
             rest!:
@@ -590,7 +655,8 @@ defmodule Expresso.Element.Chart.Hierarchy do
                 class: "chart-name",
                 prefix: "#{root.name} ",
                 suffix: "%",
-                count: @count
+                count: @count,
+                keys: key(assigns, root)
               )
           )
         end

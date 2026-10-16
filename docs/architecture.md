@@ -1454,6 +1454,9 @@ to the items of a list. These are the reasons for this design:
   sets it on each mark with a `data-keys` attribute that does not hold a key of the
   group. The property inherits, so a group mixes series and categories only in different
   steps: a mark of a category in focus cannot stay in full color inside a dimmed series.
+  A mark of a treemap or a sunburst holds the keys of its part, of the groups above it and
+  of the parts under it, so one rule keeps a part, its groups and its own parts in full
+  color.
   The state `dim` sets `--dim: 1`, and a series reads it into `--chart-dim`, so
   `dim true` and `highlight` dim in the same way.
 
