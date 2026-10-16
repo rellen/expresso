@@ -1,6 +1,8 @@
 defmodule ExpressoTest do
   use ExUnit.Case
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
 
   doctest Expresso
@@ -159,26 +161,26 @@ defmodule ExpressoTest do
     setup do
       html = DslDeck |> Expresso.parse() |> Expresso.Deck.render()
 
-      {:ok, html: html, document: Floki.parse_document!(html)}
+      {:ok, html: html, document: LazyHTML.from_document(html)}
     end
 
     test "writes the name of the deck into the title", %{document: document} do
-      assert document |> Floki.find("title") |> Floki.text() |> String.trim() == "dsl deck"
+      assert document |> LazyHTML.query("title") |> LazyHTML.text() |> String.trim() == "dsl deck"
     end
 
     test "writes one section for each slide", %{document: document} do
-      assert document |> Floki.find("section.slide") |> length() == 2
+      assert count(document, "section.slide") == 2
     end
 
     test "shows the first slide only", %{document: document} do
-      [first, second] = Floki.find(document, "section.slide")
+      [first, second] = LazyHTML.query(document, "section.slide") |> Enum.to_list()
 
-      assert Floki.attribute(first, "style") |> to_string() =~ "display: flex"
-      assert Floki.attribute(second, "style") |> to_string() =~ "display: none"
+      assert LazyHTML.attribute(first, "style") |> to_string() =~ "display: flex"
+      assert LazyHTML.attribute(second, "style") |> to_string() =~ "display: none"
     end
 
     test "writes the text of each slide", %{html: html} do
-      text = html |> Floki.parse_document!() |> Floki.find(".text-area") |> Floki.text()
+      text = html |> LazyHTML.from_document() |> LazyHTML.query(".text-area") |> LazyHTML.text()
 
       assert text =~ "first slide"
       assert text =~ "second slide"
@@ -186,34 +188,32 @@ defmodule ExpressoTest do
 
     test "declares the language of the document" do
       document =
-        MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+        MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
 
-      assert document |> Floki.find("html") |> Floki.attribute("lang") == ["en"]
+      assert document |> LazyHTML.query("html") |> LazyHTML.attribute("lang") == ["en"]
     end
 
     test "declares the encoding in front of each other element of the head" do
       document =
-        MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+        MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
 
-      [head] = Floki.find(document, "head")
-      [first | _] = head |> Floki.children() |> Enum.filter(&is_tuple/1)
-
-      assert {"meta", [{"charset", "utf-8"}], _} = first
+      # `:first-child` counts the elements only, and not the text.
+      assert [{"meta", [{"charset", "utf-8"}], _}] =
+               document |> LazyHTML.query("head > :first-child") |> LazyHTML.to_tree()
     end
 
     test "puts the text of a text area in one block element" do
       document =
-        MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+        MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
 
-      [area] = Floki.find(document, ".screen .text-area")
-      children = area |> Floki.children() |> Enum.filter(&is_tuple/1)
+      assert [{"div", [], _}] =
+               document |> LazyHTML.query(".screen .text-area > *") |> LazyHTML.to_tree()
 
-      assert [{"div", [], _}] = children
-      assert children |> Floki.find("b") |> Floki.text() == "raw HTML"
+      assert texts(document, ".screen .text-area > div b") == ["raw HTML"]
 
       # The document holds no space in front of the period. A line break between
       # two elements becomes a space, so the renderer writes no line break.
-      assert Floki.text(area) == "Text accepts raw HTML."
+      assert texts(document, ".screen .text-area") == ["Text accepts raw HTML."]
     end
 
     test "writes the script of the presenter with a closing tag on its own line" do
@@ -225,7 +225,7 @@ defmodule ExpressoTest do
     end
 
     test "writes no heading for a slide without the heading option", %{document: document} do
-      assert Floki.find(document, ".slide-heading-container") == []
+      assert count(document, "body:not(:has(.slide-heading-container))") == 1
     end
 
     test "writes the heading of a slide with the heading option" do
@@ -233,9 +233,9 @@ defmodule ExpressoTest do
         NamedSlideDeck
         |> Expresso.parse()
         |> Expresso.Deck.render()
-        |> Floki.parse_document!()
-        |> Floki.find(".screen .slide-heading-container h1")
-        |> Floki.text()
+        |> LazyHTML.from_document()
+        |> LazyHTML.query(".screen .slide-heading-container h1")
+        |> LazyHTML.text()
 
       assert String.trim(heading) == "An intro"
     end
@@ -256,11 +256,13 @@ defmodule ExpressoTest do
 
     test "gets the title Slides, and writes no header" do
       document =
-        NoNameDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+        NoNameDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
 
-      assert document |> Floki.find("title") |> Floki.text() == "Slides"
-      assert Floki.find(document, ".screen span.header") == []
-      assert document |> Floki.find(".screen .text-area") |> Floki.text() =~ "a deck with no name"
+      assert texts(document, "title") == ["Slides"]
+      assert count(document, "body:not(:has(.screen span.header))") == 1
+
+      assert document |> LazyHTML.query(".screen .text-area") |> LazyHTML.text() =~
+               "a deck with no name"
     end
 
     test "works through the builder" do
@@ -268,10 +270,10 @@ defmodule ExpressoTest do
         [Builder.slide("first", elements: [box("text")])]
         |> Builder.deck()
         |> Expresso.Deck.render()
-        |> Floki.parse_document!()
+        |> LazyHTML.from_document()
 
-      assert document |> Floki.find("title") |> Floki.text() == "Slides"
-      assert Floki.find(document, ".screen span.header") == []
+      assert texts(document, "title") == ["Slides"]
+      assert count(document, "body:not(:has(.screen span.header))") == 1
     end
   end
 
@@ -313,9 +315,9 @@ defmodule ExpressoTest do
         [Builder.slide("first", template: CustomSlideTemplate)]
         |> Builder.deck(name: "custom deck")
         |> Expresso.Deck.render()
-        |> Floki.parse_document!()
+        |> LazyHTML.from_document()
 
-      assert document |> Floki.find(".custom-slide") |> Floki.text() =~ "custom template"
+      assert document |> LazyHTML.query(".custom-slide") |> LazyHTML.text() =~ "custom template"
     end
 
     test "accepts a module as the template of a deck" do
@@ -323,10 +325,10 @@ defmodule ExpressoTest do
         [Builder.slide("first")]
         |> Builder.deck(name: "custom deck", template: CustomDeckTemplate)
         |> Expresso.Deck.render()
-        |> Floki.parse_document!()
+        |> LazyHTML.from_document()
 
-      assert document |> Floki.find(".custom-header") |> Floki.text() =~ "custom header"
-      assert document |> Floki.find(".custom-footer") |> Floki.text() =~ "custom footer"
+      assert document |> LazyHTML.query(".custom-header") |> LazyHTML.text() =~ "custom header"
+      assert document |> LazyHTML.query(".custom-footer") |> LazyHTML.text() =~ "custom footer"
     end
 
     test "uses the built-in deck template when the metadata gives none" do
@@ -334,10 +336,10 @@ defmodule ExpressoTest do
         [Builder.slide("first")]
         |> Builder.deck(name: "plain deck")
         |> Expresso.Deck.render()
-        |> Floki.parse_document!()
+        |> LazyHTML.from_document()
 
       # The header holds the name of the deck and no other text.
-      assert document |> Floki.find(".screen span.header") |> Floki.text() == "plain deck"
+      assert texts(document, ".screen span.header") == ["plain deck"]
     end
   end
 
@@ -385,12 +387,12 @@ defmodule ExpressoTest do
 
   describe "the presenter script" do
     test "the document holds the bundle as one classic script" do
-      document = DslDeck |> Expresso.parse() |> Expresso.Deck.render() |> Floki.parse_document!()
+      document = DslDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
 
       # The other two `script` elements hold the list of the steps and the program
       # of the presenter as JSON, and a browser does not run them.
       [script] =
-        document |> Floki.find("script:not([type])") |> Enum.map(&Floki.text(&1, js: true))
+        document |> LazyHTML.query("script:not([type])") |> Enum.map(&LazyHTML.text/1)
 
       assert script =~ "keydown"
       refute script =~ "import "
@@ -405,9 +407,10 @@ defmodule ExpressoTest do
         [Builder.slide("first", heading: "A heading", elements: [box("some text")])]
         |> Builder.deck(name: "builder deck")
         |> Expresso.Deck.render()
-        |> Floki.parse_document!()
+        |> LazyHTML.from_document()
 
-      heading = document |> Floki.find(".screen .slide-heading-container h1") |> Floki.text()
+      heading =
+        document |> LazyHTML.query(".screen .slide-heading-container h1") |> LazyHTML.text()
 
       assert String.trim(heading) == "A heading"
     end
