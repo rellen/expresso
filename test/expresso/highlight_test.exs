@@ -45,7 +45,7 @@ defmodule Expresso.HighlightTest do
   defp texts(text, language) do
     text
     |> Expresso.Highlight.lines(language)
-    |> Enum.map(fn html -> html |> Floki.parse_fragment!() |> Floki.text() end)
+    |> Enum.map(fn html -> html |> LazyHTML.from_fragment() |> LazyHTML.text() end)
   end
 
   defp line do

@@ -1,6 +1,8 @@
 defmodule Expresso.Element.CodeTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   import ExUnit.CaptureIO
 
   alias Expresso.Builder
@@ -179,15 +181,15 @@ defmodule Expresso.Element.CodeTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: CodeDeck |> document() |> Floki.parse_document!()}
+      {:ok, document: CodeDeck |> document() |> LazyHTML.from_document()}
     end
 
     test "writes a pre element with one span for each line", %{document: document} do
-      lines = Floki.find(document, "#slide-1 .code pre code.highlight > span.line")
+      lines = LazyHTML.query(document, "#slide-1 .code pre code.highlight > span.line")
 
-      assert length(lines) == 3
+      assert Enum.count(lines) == 3
 
-      assert lines |> Enum.map(&Floki.text/1) == [
+      assert lines |> Enum.map(&LazyHTML.text/1) == [
                "defmodule Hello do\n",
                "  def world, do: \"world <b>\"\n",
                "end\n"
@@ -195,16 +197,16 @@ defmodule Expresso.Element.CodeTest do
     end
 
     test "highlights the tokens of the language, and escapes the text", %{document: document} do
-      [first | _] = Floki.find(document, "#slide-1 .code span.line")
+      [first | _] = LazyHTML.query(document, "#slide-1 .code span.line") |> Enum.to_list()
 
-      assert first |> Floki.find("span.kd") |> Floki.text() == "defmodule "
-      assert [] = Floki.find(document, "#slide-1 .code b")
+      assert texts(first, "span.kd") == ["defmodule "]
+      assert count(document, "#slide-1 .code:not(:has(b))") == 1
     end
 
     test "writes the overlay attributes of the group on each line", %{document: document} do
-      lines = Floki.find(document, "#slide-2 .code span.line")
+      lines = LazyHTML.query(document, "#slide-2 .code span.line")
 
-      assert Enum.map(lines, &Floki.attribute([&1], "data-on")) == [
+      assert Enum.map(lines, &LazyHTML.attribute(&1, "data-on")) == [
                ["1 2 3"],
                ["2 3"],
                ["2 3"],
@@ -213,12 +215,13 @@ defmodule Expresso.Element.CodeTest do
     end
 
     test "escapes a line without a language, and puts it in one span", %{document: document} do
-      [plain, _json] = Floki.find(document, "#slide-3 .code")
-      lines = Floki.find([plain], "span.line")
+      [plain, _json] = LazyHTML.query(document, "#slide-3 .code") |> Enum.to_list()
+      lines = LazyHTML.query(plain, "span.line")
 
-      assert Enum.map(lines, &Floki.text/1) == ["a < b\n", "\u200B\n", "  c\n"]
+      assert Enum.map(lines, &LazyHTML.text/1) == ["a < b\n", "\u200B\n", "  c\n"]
 
-      for {"span", _attributes, children} <- lines do
+      # The loop matches tuples, so it reads the tree of the lines.
+      for {"span", _attributes, children} <- LazyHTML.to_tree(lines) do
         assert [{"span", [], [_text]}] = children
       end
     end
@@ -232,7 +235,7 @@ defmodule Expresso.Element.CodeTest do
     end
 
     test "writes the rules of the token classes into the document", %{document: document} do
-      styles = document |> Floki.find("head style") |> Enum.map(&Floki.text/1)
+      styles = texts(document, "head style")
 
       assert Enum.any?(styles, &(&1 =~ ".highlight .kd"))
     end
@@ -266,9 +269,9 @@ defmodule Expresso.Element.CodeTest do
         |> Builder.deck()
         |> Expresso.Deck.render()
 
-      lines = html |> Floki.parse_document!() |> Floki.find(".screen span.line")
+      lines = html |> LazyHTML.from_document() |> LazyHTML.query(".screen span.line")
 
-      assert Enum.map(lines, &Floki.attribute(&1, "data-on")) == [[], ["1"], []]
+      assert Enum.map(lines, &LazyHTML.attribute(&1, "data-on")) == [[], ["1"], []]
     end
 
     test "records the file for the watch mode" do
@@ -456,29 +459,30 @@ defmodule Expresso.Element.CodeTest do
       [Builder.slide("one", elements: [code])]
       |> Builder.deck()
       |> Expresso.Deck.render()
-      |> Floki.parse_document!()
-      |> Floki.find(".screen .code")
+      |> LazyHTML.from_document()
+      |> LazyHTML.query(".screen .code")
+      |> Enum.to_list()
     end
 
     test "writes the number of each line from the first line of the range" do
       [code] = numbered(src: "test/fixtures/code.js", lines: 8..11, line_numbers: true)
-      numbers = Floki.find(code, "span.line > span.line-number")
+      numbers = LazyHTML.query(code, "span.line > span.line-number")
 
-      assert Enum.map(numbers, &Floki.text/1) == ["8", "9", "10", "11"]
-      assert Enum.all?(numbers, &(Floki.attribute(&1, "aria-hidden") == ["true"]))
+      assert Enum.map(numbers, &LazyHTML.text/1) == ["8", "9", "10", "11"]
+      assert Enum.all?(numbers, &(LazyHTML.attribute(&1, "aria-hidden") == ["true"]))
 
-      assert code |> Floki.find("code") |> Floki.attribute("style") == [
+      assert code |> LazyHTML.query("code") |> LazyHTML.attribute("style") == [
                "--line-number-width: 2ch; --has-numbers: 1"
              ]
     end
 
     test "numbers a text from 1, and writes no number without the option" do
       [code] = numbered(text: "a\nb", line_numbers: true)
-      assert code |> Floki.find(".line-number") |> Enum.map(&Floki.text/1) == ["1", "2"]
+      assert texts(code, ".line-number") == ["1", "2"]
 
       [plain] = numbered(text: "a\nb")
-      assert Floki.find(plain, ".line-number") == []
-      assert plain |> Floki.find("code") |> Floki.attribute("style") == []
+      assert plain |> LazyHTML.filter(":not(:has(.line-number))") |> Enum.count() == 1
+      assert count(plain, "code:not([style])") == 1
     end
 
     test "puts the text of a line after its number, with no language and with no lexer" do
@@ -486,12 +490,12 @@ defmodule Expresso.Element.CodeTest do
         {[code], _warning} =
           with_io(:stderr, fn -> numbered(lang, text: "a = 1\n\nb", line_numbers: true) end)
 
-        lines = Floki.find(code, "span.line")
+        lines = LazyHTML.query(code, "span.line")
 
-        assert Enum.map(lines, &Floki.text/1) == ["1a = 1\n", "2\u200B\n", "3b\n"],
+        assert Enum.map(lines, &LazyHTML.text/1) == ["1a = 1\n", "2\u200B\n", "3b\n"],
                inspect(lang)
 
-        for {"span", _attributes, children} <- lines do
+        for {"span", _attributes, children} <- LazyHTML.to_tree(lines) do
           assert [{"span", [{"class", "line-number"} | _], _number}, {"span", [], [_text]}] =
                    children
         end
