@@ -2,6 +2,8 @@ defmodule Expresso.Element.ImageTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Image
   alias Expresso.Overlay
@@ -80,32 +82,33 @@ defmodule Expresso.Element.ImageTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: ImageDeck |> document() |> Floki.parse_document!()}
+      {:ok, document: ImageDeck |> document() |> LazyHTML.from_document()}
     end
 
     test "writes an img element with the bytes of the file", %{document: document} do
-      [img] = Floki.find(document, "#slide-1 .image img")
-      ["data:image/png;base64," <> encoded] = Floki.attribute([img], "src")
+      ["data:image/png;base64," <> encoded] =
+        document |> LazyHTML.query("#slide-1 .image img") |> LazyHTML.attribute("src")
 
       assert Base.decode64!(encoded) == File.read!(@png)
     end
 
     test "writes the alt option", %{document: document} do
-      assert document |> Floki.find("#slide-1 .image img") |> Floki.attribute("alt") ==
+      assert document |> LazyHTML.query("#slide-1 .image img") |> LazyHTML.attribute("alt") ==
                ["a red dot"]
     end
 
     test "writes an empty alt attribute for an image with no alt option", %{document: document} do
-      assert document |> Floki.find("#slide-3 .image img") |> Floki.attribute("alt") == ["", ""]
+      assert document |> LazyHTML.query("#slide-3 .image img") |> LazyHTML.attribute("alt") ==
+               ["", ""]
     end
 
     test "writes the width option as a custom property on the root tag", %{document: document} do
-      assert document |> Floki.find("#slide-2 .image") |> Floki.attribute("style") ==
+      assert document |> LazyHTML.query("#slide-2 .image") |> LazyHTML.attribute("style") ==
                ["--image-width: 60vw"]
     end
 
     test "writes no style attribute for an image with no width option", %{document: document} do
-      assert document |> Floki.find("#slide-1 .image") |> Floki.attribute("style") == []
+      assert count(document, "#slide-1 .image:not([style])") == 1
     end
 
     test "writes a percentage width as a viewport unit" do
@@ -157,10 +160,10 @@ defmodule Expresso.Element.ImageTest do
     end
 
     test "writes the overlay attributes on the root tag", %{document: document} do
-      [_, nested] = Floki.find(document, "#slide-3 .image")
+      [_, nested] = document |> LazyHTML.query("#slide-3 .image") |> Enum.to_list()
 
-      assert Floki.attribute([nested], "data-on") == ["2"]
-      assert Floki.attribute([nested], "data-el") == ["s3-e3"]
+      assert LazyHTML.attribute(nested, "data-on") == ["2"]
+      assert LazyHTML.attribute(nested, "data-el") == ["s3-e3"]
     end
 
     test "raises for a file that it cannot read" do

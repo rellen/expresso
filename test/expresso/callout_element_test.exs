@@ -1,6 +1,8 @@
 defmodule Expresso.CalloutElementTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Callout
 
@@ -10,28 +12,34 @@ defmodule Expresso.CalloutElementTest do
     [Builder.slide("s", Keyword.merge([elements: List.wrap(elements)], opts))]
     |> Builder.deck(name: "callouts")
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
+    |> LazyHTML.from_document()
   end
 
   defp text(text), do: Builder.text_area(text: text)
 
   test "a callout is a note with the class of its kind, a header and a body" do
     document = render(Builder.callout(:warning, elements: [text("Back up the data first.")]))
-    [callout] = Floki.find(document, ".screen .callout")
+    [callout] = document |> LazyHTML.query(".screen .callout") |> Enum.to_list()
 
-    assert Floki.attribute(callout, "class") == ["callout callout-warning"]
-    assert Floki.attribute(callout, "role") == ["note"]
-    assert callout |> Floki.find(".callout-title") |> Floki.text() == "Warning"
-    assert callout |> Floki.find(".callout-body .text-area") |> Floki.text() =~ "Back up"
+    assert LazyHTML.attribute(callout, "class") == ["callout callout-warning"]
+    assert LazyHTML.attribute(callout, "role") == ["note"]
+    assert texts(callout, ".callout-title") == ["Warning"]
+    assert callout |> LazyHTML.query(".callout-body .text-area") |> LazyHTML.text() =~ "Back up"
   end
 
   test "each kind has its own icon, hidden from a screen reader" do
     icons =
       for kind <- Callout.kinds() do
-        [svg] = kind |> Builder.callout() |> render() |> Floki.find(".screen .callout-icon")
-        assert Floki.attribute(svg, "aria-hidden") == ["true"]
-        assert Floki.attribute(svg, "viewbox") == ["0 0 24 24"]
-        svg |> Floki.find("path") |> Floki.attribute("d")
+        [svg] =
+          kind
+          |> Builder.callout()
+          |> render()
+          |> LazyHTML.query(".screen .callout-icon")
+          |> Enum.to_list()
+
+        assert LazyHTML.attribute(svg, "aria-hidden") == ["true"]
+        assert LazyHTML.attribute(svg, "viewBox") == ["0 0 24 24"]
+        svg |> LazyHTML.query("path") |> LazyHTML.attribute("d")
       end
 
     assert length(Enum.uniq(icons)) == length(Callout.kinds())
@@ -39,17 +47,17 @@ defmodule Expresso.CalloutElementTest do
 
   test "the title option replaces the name of the kind, and title false removes the header" do
     titled = render(Builder.callout(:definition, title: "Release", elements: [text("x")]))
-    assert titled |> Floki.find(".screen .callout-title") |> Floki.text() == "Release"
+    assert texts(titled, ".screen .callout-title") == ["Release"]
 
     bare = render(Builder.callout(:tip, title: false, elements: [text("x")]))
-    assert Floki.find(bare, ".screen .callout-title") == []
-    assert Floki.find(bare, ".screen .callout-body .text-area") != []
+    assert count(bare, ".screen .callout:not(:has(.callout-title))") == 1
+    assert count(bare, ".screen .callout-body .text-area") == 1
   end
 
   test "the title is text, and not HTML" do
     document = render(Builder.callout(:note, title: "<b>Bold</b>"))
-    assert document |> Floki.find(".screen .callout-title") |> Floki.text() == "<b>Bold</b>"
-    assert Floki.find(document, ".screen .callout-title b") == []
+    assert texts(document, ".screen .callout-title") == ["<b>Bold</b>"]
+    assert count(document, ".screen .callout-title:not(:has(b))") == 1
   end
 
   test "the compiler refuses an unknown kind and a title that is not a string or false" do
@@ -85,8 +93,8 @@ defmodule Expresso.CalloutElementTest do
       )
 
     document = render([boxed, columns])
-    assert length(Floki.find(document, ".screen .text-box .callout-note")) == 1
-    assert length(Floki.find(document, ".screen .column .callout-caution")) == 1
+    assert count(document, ".screen .text-box .callout-note") == 1
+    assert count(document, ".screen .column .callout-caution") == 1
   end
 
   test "the DSL writes a callout with its options in the block" do

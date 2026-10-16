@@ -162,7 +162,8 @@ parentheses after `check all`.
 ### The HTML in a unit test
 
 A new unit test that reads the HTML of a deck uses LazyHTML. `lazy_html` is a dependency
-for the `test` environment only. `test/expresso/table_element_test.exs` is an example.
+for the `test` environment only. The tests of the table, the list, the image and the other
+content elements are examples, such as `test/expresso/table_element_test.exs`.
 
 The first compile of `lazy_html` downloads its NIF from GitHub. `elixir_make` keeps the
 file in `~/.cache/elixir_make`, so a later compile needs no network. The NIF needs only
@@ -181,9 +182,29 @@ Write a test with LazyHTML as follows:
 3. Read the result with `Enum.count/1`, `LazyHTML.attribute/2`, or
    `Enum.map(&LazyHTML.text/1)` for the text of each node.
 
+`import Expresso.Test.HTML` gives two short forms: `count(html, selector)` and
+`texts(html, selector)`.
+
 To assert that an element has no part, find the element with `:not(:has(...))`, and
 assert that the query finds one node. A query that must find no node also finds no node
 when its selector has an error, so that assertion passes for the wrong reason.
+`:not(:has(...))` catches an error in the selector of the element. An error in the
+selector inside `:has()` still finds no part, so put there a selector that a different
+test finds.
+
+LazyHTML is different from Floki in these points:
+
+- `:root` is the root of the document. `Floki.find(node, ":root > div")` finds a child of
+  the node, but the same LazyHTML query finds no node, and it gives no error. Write the
+  full selector from the document, such as `#slide-1 .math > div`.
+- A selector that LazyHTML does not know, such as `:scope`, raises an error.
+- In an `svg` element, a name is the name of the browser, such as `viewBox` and
+  `linearGradient`. A query finds a name in each case, and `LazyHTML.to_html/1` writes the
+  name of the browser.
+- `LazyHTML.query/2` examines the nodes inside the nodes that it gets, and
+  `LazyHTML.filter/2` examines the nodes that it gets. Thus
+  `figure |> LazyHTML.filter(":not(:has(figcaption))")` asserts that one figure has no
+  caption.
 
 The other tests use Floki. When you change one of these files, you can move it to
 LazyHTML. Use one library in one file. This table gives the replacement of each call:
@@ -195,7 +216,10 @@ LazyHTML. Use one library in one file. This table gives the replacement of each 
 | `Floki.find(html, selector)` | `LazyHTML.query(html, selector)` |
 | `Floki.attribute(nodes, name)` | `LazyHTML.attribute(nodes, name)` |
 | `Floki.text(nodes)` | `LazyHTML.text(nodes)` |
-| `assert [_] = Floki.find(html, selector)` | `assert html \|> LazyHTML.query(selector) \|> Enum.count() == 1` |
+| `assert [_] = Floki.find(html, selector)` | `assert count(html, selector) == 1` |
+| `[a, b] = Floki.find(html, selector)` | `[a, b] = html \|> LazyHTML.query(selector) \|> Enum.to_list()` |
+| `Floki.find(node, ":root > tag")` | The full selector from the document, with `> tag` |
+| `Floki.raw_html(nodes)` | `LazyHTML.to_html(nodes)` |
 | A match on `{tag, attributes, children}` | A match on the result of `LazyHTML.to_tree/1` |
 
 `lib/` keeps Floki. `Expresso.Deck.render/1`, `Expresso.Morph` and `Expresso.Check.Document`

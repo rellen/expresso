@@ -12,8 +12,9 @@ defmodule Expresso.QrCodeElementTest do
     [Builder.slide("s", elements: [element])]
     |> Builder.deck(name: "qr")
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
-    |> Floki.find(".screen .qr-code")
+    |> LazyHTML.from_document()
+    |> LazyHTML.query(".screen .qr-code")
+    |> Enum.to_list()
   end
 
   # The dark modules of a path, as {x, y} pairs.
@@ -28,13 +29,16 @@ defmodule Expresso.QrCodeElementTest do
     [figure] = render(Builder.qr_code(@address))
     {path, side} = QrCode.path(@address, :m)
 
-    assert [svg] = Floki.find(figure, "svg")
-    assert Floki.attribute(svg, "viewbox") == ["0 0 #{side} #{side}"]
-    assert Floki.attribute(svg, "role") == ["img"]
-    assert Floki.attribute(svg, "aria-label") == [@address]
-    assert figure |> Floki.find("rect.qr-background") |> Floki.attribute("width") == ["#{side}"]
-    assert figure |> Floki.find("path.qr-modules") |> Floki.attribute("d") == [path]
-    assert Floki.find(figure, "figcaption") == []
+    assert [svg] = figure |> LazyHTML.query("svg") |> Enum.to_list()
+    assert LazyHTML.attribute(svg, "viewBox") == ["0 0 #{side} #{side}"]
+    assert LazyHTML.attribute(svg, "role") == ["img"]
+    assert LazyHTML.attribute(svg, "aria-label") == [@address]
+
+    assert figure |> LazyHTML.query("rect.qr-background") |> LazyHTML.attribute("width") ==
+             ["#{side}"]
+
+    assert figure |> LazyHTML.query("path.qr-modules") |> LazyHTML.attribute("d") == [path]
+    assert figure |> LazyHTML.filter(":not(:has(figcaption))") |> Enum.count() == 1
   end
 
   test "the path holds the modules of the matrix of EQRCode, inside a quiet zone of four modules" do
@@ -58,16 +62,16 @@ defmodule Expresso.QrCodeElementTest do
   test "the label goes under the code, and the title replaces the text for a screen reader" do
     [figure] = render(Builder.qr_code(@address, label: "The slides", title: "The address"))
 
-    assert figure |> Floki.find("figcaption") |> Floki.text() == "The slides"
-    assert figure |> Floki.find("svg") |> Floki.attribute("aria-label") == ["The address"]
+    assert figure |> LazyHTML.query("figcaption") |> LazyHTML.text() == "The slides"
+    assert figure |> LazyHTML.query("svg") |> LazyHTML.attribute("aria-label") == ["The address"]
   end
 
   test "the size goes into --qr-size, and a percentage becomes a part of the width of the slide" do
     [figure] = render(Builder.qr_code(@address, size: "30%"))
-    assert Floki.attribute(figure, "style") == ["--qr-size: 30vw"]
+    assert LazyHTML.attribute(figure, "style") == ["--qr-size: 30vw"]
 
     [figure] = render(Builder.qr_code(@address, size: "300px"))
-    assert Floki.attribute(figure, "style") == ["--qr-size: 300px"]
+    assert LazyHTML.attribute(figure, "style") == ["--qr-size: 300px"]
   end
 
   test "a higher level makes a code with more modules" do
@@ -86,7 +90,7 @@ defmodule Expresso.QrCodeElementTest do
   test "the overlay options apply to the code" do
     [figure] = render(Builder.qr_code(@address, at: [from: 2], class: "big"))
 
-    assert Floki.attribute(figure, "class") == ["qr-code big"]
-    assert Floki.attribute(figure, "data-on") == ["2"]
+    assert LazyHTML.attribute(figure, "class") == ["qr-code big"]
+    assert LazyHTML.attribute(figure, "data-on") == ["2"]
   end
 end

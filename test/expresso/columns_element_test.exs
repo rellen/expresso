@@ -1,6 +1,8 @@
 defmodule Expresso.Element.ColumnsTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.{Column, Columns, Image, TextBox}
 
@@ -85,23 +87,23 @@ defmodule Expresso.Element.ColumnsTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: ColumnsDeck |> document() |> Floki.parse_document!()}
+      {:ok, document: ColumnsDeck |> document() |> LazyHTML.from_document()}
     end
 
     test "writes a div with one div for each column", %{document: document} do
-      [columns] = Floki.find(document, "#slide-1 .slide-main > .columns")
-
-      assert [_, _] = Floki.find([columns], ":root > .column")
-      assert document |> Floki.find("#slide-1 .column .text-area") |> Floki.text() == "Left"
+      assert count(document, "#slide-1 .slide-main > .columns") == 1
+      assert count(document, "#slide-1 .slide-main > .columns > .column") == 2
+      assert texts(document, "#slide-1 .column .text-area") == ["Left"]
     end
 
     test "writes the width option as custom properties on the column", %{document: document} do
-      assert document |> Floki.find("#slide-1 .column") |> Floki.attribute("style") ==
+      assert document |> LazyHTML.query("#slide-1 .column") |> LazyHTML.attribute("style") ==
                ["--column-width: 30%; --column-grow: 0"]
     end
 
     test "writes the overlay attributes on a column", %{document: document} do
-      assert document |> Floki.find("#slide-1 .column") |> Floki.attribute("data-on") == ["1"]
+      assert document |> LazyHTML.query("#slide-1 .column") |> LazyHTML.attribute("data-on") ==
+               ["1"]
     end
   end
 end

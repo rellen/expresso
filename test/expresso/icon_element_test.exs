@@ -1,6 +1,8 @@
 defmodule Expresso.IconElementTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Icon, as: IconElement
 
@@ -11,7 +13,7 @@ defmodule Expresso.IconElementTest do
     slides
     |> Builder.deck(Keyword.merge([name: "icons"], opts))
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
+    |> LazyHTML.from_document()
   end
 
   defp slide(elements), do: [Builder.slide("s", elements: elements)]
@@ -20,22 +22,28 @@ defmodule Expresso.IconElementTest do
     document =
       document(slide([Builder.icon("rocket", label: "Launch", size: "5rem", color: :accent)]))
 
-    [figure] = Floki.find(document, ".screen figure.icon")
+    [figure] = document |> LazyHTML.query(".screen figure.icon") |> Enum.to_list()
 
-    assert Floki.attribute(figure, "class") == ["icon icon-accent"]
-    assert Floki.attribute(figure, "style") == ["--icon-size: 5rem;"]
-    assert [svg] = Floki.find(figure, "svg.icon-svg")
-    assert Floki.attribute(svg, "aria-hidden") == ["true"]
-    assert Floki.attribute(svg, "stroke") == ["currentColor"]
-    assert length(Floki.find(svg, "path")) == 4
-    assert figure |> Floki.find("figcaption.icon-label") |> Floki.text() == "Launch"
+    assert LazyHTML.attribute(figure, "class") == ["icon icon-accent"]
+    assert LazyHTML.attribute(figure, "style") == ["--icon-size: 5rem;"]
+    assert [svg] = figure |> LazyHTML.query("svg.icon-svg") |> Enum.to_list()
+    assert LazyHTML.attribute(svg, "aria-hidden") == ["true"]
+    assert LazyHTML.attribute(svg, "stroke") == ["currentColor"]
+    assert count(svg, "path") == 4
+    assert texts(figure, "figcaption.icon-label") == ["Launch"]
   end
 
   test "an icon without a label has no caption, and the default size and color" do
-    [figure] = document(slide([Builder.icon("check")])) |> Floki.find(".screen figure.icon")
-    assert Floki.attribute(figure, "class") == ["icon icon-text"]
-    assert Floki.attribute(figure, "style") == ["--icon-size: 3em;"]
-    assert Floki.find(figure, "figcaption") == []
+    [figure] =
+      [Builder.icon("check")]
+      |> slide()
+      |> document()
+      |> LazyHTML.query(".screen figure.icon")
+      |> Enum.to_list()
+
+    assert LazyHTML.attribute(figure, "class") == ["icon icon-text"]
+    assert LazyHTML.attribute(figure, "style") == ["--icon-size: 3em;"]
+    assert figure |> LazyHTML.filter(":not(:has(figcaption))") |> Enum.count() == 1
   end
 
   test ":icon:name: in a text area and in an item becomes an inline icon" do
@@ -44,9 +52,9 @@ defmodule Expresso.IconElementTest do
 
     document = document(slide([Builder.text_area(text: "A :icon:check: and :icon:check:"), list]))
 
-    assert length(Floki.find(document, ".screen .text-area svg.icon-inline")) == 2
-    assert length(Floki.find(document, ".screen .item svg.icon-inline")) == 1
-    refute Floki.raw_html(document) =~ ":icon:"
+    assert count(document, ".screen .text-area svg.icon-inline") == 2
+    assert count(document, ".screen .item svg.icon-inline") == 1
+    refute LazyHTML.to_html(document) =~ ":icon:"
   end
 
   @tag :tmp_dir
@@ -60,11 +68,11 @@ defmodule Expresso.IconElementTest do
         icons: [rocket: "badge.svg", badge: "badge.svg"]
       )
 
-    [element, inline] = Floki.find(document, ".screen svg")
-    assert Floki.attribute(element, "class") == ["icon-svg"]
-    assert Floki.attribute(inline, "class") == ["icon-inline"]
+    [element, inline] = document |> LazyHTML.query(".screen svg") |> Enum.to_list()
+    assert LazyHTML.attribute(element, "class") == ["icon-svg"]
+    assert LazyHTML.attribute(inline, "class") == ["icon-inline"]
 
-    html = Floki.raw_html(element)
+    html = LazyHTML.to_html(element)
     assert html =~ ~s(fill="currentColor")
     assert html =~ ~s(stroke="none")
     assert html =~ "stroke: currentColor"
@@ -127,11 +135,12 @@ defmodule Expresso.IconElementTest do
     end
 
     assert {:ok, deck} = Expresso.to_deck(Deck)
-    document = deck |> Expresso.Deck.render() |> Floki.parse_document!()
+    document = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
 
-    assert document |> Floki.find(".screen .column figure.icon") |> Floki.attribute("data-on") ==
-             ["2"]
+    assert document
+           |> LazyHTML.query(".screen .column figure.icon")
+           |> LazyHTML.attribute("data-on") == ["2"]
 
-    assert length(Floki.find(document, ".screen .callout figure.icon svg")) == 1
+    assert count(document, ".screen .callout figure.icon svg") == 1
   end
 end

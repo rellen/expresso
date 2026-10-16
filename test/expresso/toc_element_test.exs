@@ -1,6 +1,8 @@
 defmodule Expresso.TocElementTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.{Toc, TocEntry}
 
@@ -24,13 +26,13 @@ defmodule Expresso.TocElementTest do
   defp render(deck) do
     deck
     |> Expresso.Deck.render()
-    |> Floki.parse_document!()
+    |> LazyHTML.from_document()
   end
 
   defp entries(document, slide) do
-    for li <- Floki.find(document, "#slide-#{slide} .toc-entry") do
-      {Floki.text(li), li |> Floki.attribute("class") |> hd(),
-       li |> Floki.attribute("aria-current") |> List.first()}
+    for li <- LazyHTML.query(document, "#slide-#{slide} .toc-entry") do
+      {LazyHTML.text(li), li |> LazyHTML.attribute("class") |> hd(),
+       li |> LazyHTML.attribute("aria-current") |> List.first()}
     end
   end
 
@@ -42,12 +44,12 @@ defmodule Expresso.TocElementTest do
              toc.elements
 
     document = render(deck)
-    links = Floki.find(document, "#slide-1 .toc a.goto")
+    links = LazyHTML.query(document, "#slide-1 .toc a.goto")
 
-    assert Floki.attribute(links, "href") == ["#2.1", "#3.1", "#5.1"]
-    assert Enum.all?(Floki.attribute(links, "data-commands"), &(&1 =~ "goto"))
+    assert LazyHTML.attribute(links, "href") == ["#2.1", "#3.1", "#5.1"]
+    assert Enum.all?(LazyHTML.attribute(links, "data-commands"), &(&1 =~ "goto"))
 
-    assert document |> Floki.find("#slide-1 nav.toc") |> Floki.attribute("aria-label") == [
+    assert document |> LazyHTML.query("#slide-1 nav.toc") |> LazyHTML.attribute("aria-label") == [
              "Contents"
            ]
   end
@@ -79,7 +81,7 @@ defmodule Expresso.TocElementTest do
       class = progress |> Atom.to_string() |> String.replace("_", "-")
       document = render(deck(3, Builder.toc(progress: progress)))
 
-      assert document |> Floki.find("#slide-3 nav.toc") |> Floki.attribute("class") == [
+      assert document |> LazyHTML.query("#slide-3 nav.toc") |> LazyHTML.attribute("class") == [
                "toc toc-#{class}"
              ]
     end
@@ -131,8 +133,8 @@ defmodule Expresso.TocElementTest do
     end
 
     document = Deck |> Expresso.to_deck() |> elem(1) |> render()
-    assert document |> Floki.find("#slide-1 .text-box .toc-entry") |> Floki.text() == "One"
-    assert document |> Floki.find("#slide-1 .column .toc-entry") |> Floki.text() == "One"
+    assert texts(document, "#slide-1 .text-box .toc-entry") == ["One"]
+    assert texts(document, "#slide-1 .column .toc-entry") == ["One"]
   end
 
   test "each slide gets the title of its section in its metadata" do
@@ -160,7 +162,7 @@ defmodule Expresso.TocElementTest do
       )
 
     document = render(deck)
-    assert document |> Floki.find("#slide-1 .toc-link") |> Floki.text() == "<b>A</b>"
-    assert Floki.find(document, "#slide-1 .toc-link b") == []
+    assert texts(document, "#slide-1 .toc-link") == ["<b>A</b>"]
+    assert count(document, "#slide-1 .toc-link:not(:has(b))") == 1
   end
 end

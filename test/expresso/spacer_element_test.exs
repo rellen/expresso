@@ -43,9 +43,13 @@ defmodule Expresso.Element.SpacerTest do
   end
 
   test "render/1 writes an empty div with the overlay attributes" do
-    document = SpacerDeck |> document() |> Floki.parse_document!()
+    document = SpacerDeck |> document() |> LazyHTML.from_document()
 
-    assert [{"div", [{"class", "spacer"}], []}] = Floki.find(document, "#slide-1 .spacer")
-    assert document |> Floki.find("#slide-2 .spacer") |> Floki.attribute("data-on") == ["2"]
+    assert document |> LazyHTML.query("#slide-1 .spacer") |> LazyHTML.to_tree() == [
+             {"div", [{"class", "spacer"}], []}
+           ]
+
+    assert document |> LazyHTML.query("#slide-2 .spacer") |> LazyHTML.attribute("data-on") ==
+             ["2"]
   end
 end
