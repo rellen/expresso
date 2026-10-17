@@ -1,6 +1,8 @@
 defmodule Expresso.QrCodeElementTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.QrCode
 
@@ -8,14 +10,8 @@ defmodule Expresso.QrCodeElementTest do
 
   @address "https://rellen.github.io/expresso/"
 
-  defp render(element) do
-    [Builder.slide("s", elements: [element])]
-    |> Builder.deck(name: "qr")
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
-    |> LazyHTML.query(".screen .qr-code")
-    |> Enum.to_list()
-  end
+  defp render(element),
+    do: element |> one_slide() |> document() |> screen(".qr-code") |> Enum.to_list()
 
   # The dark modules of a path, as {x, y} pairs.
   defp modules(path) do

@@ -40,10 +40,6 @@ defmodule Expresso.NotesTest do
     end
   end
 
-  defp document(deck) do
-    deck |> Expresso.Deck.render() |> LazyHTML.from_document()
-  end
-
   test "the slide entity puts the notes option into the metadata" do
     [with_notes, without] = Expresso.parse(NotesDeck).slides
 
@@ -53,7 +49,7 @@ defmodule Expresso.NotesTest do
   end
 
   test "the handout view shows the notes under each page of the slide" do
-    document = NotesDeck |> Expresso.parse() |> document()
+    document = document(NotesDeck)
 
     pages = LazyHTML.query(document, ".handout-page[data-slide='1']")
     assert Enum.count(pages) == 2
@@ -68,7 +64,7 @@ defmodule Expresso.NotesTest do
   end
 
   test "the present view does not show the notes" do
-    document = NotesDeck |> Expresso.parse() |> document()
+    document = document(NotesDeck)
 
     assert count(document, ".screen:not(:has(aside.notes))") == 1
   end
@@ -90,7 +86,7 @@ defmodule Expresso.NotesTest do
 
   test "a deck prints the notes without the print_notes option" do
     assert Expresso.parse(NotesDeck).metadata.print_notes == true
-    assert NotesDeck |> Expresso.parse() |> document() |> print_notes() == ["true"]
+    assert NotesDeck |> document() |> print_notes() == ["true"]
   end
 
   test "print_notes false marks the body, and the notes stay for the speaker view" do

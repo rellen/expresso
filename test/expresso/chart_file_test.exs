@@ -1,6 +1,8 @@
 defmodule Expresso.ChartFileTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Chart.Csv
 
@@ -11,7 +13,7 @@ defmodule Expresso.ChartFileTest do
     chart = Builder.chart(:bar, Keyword.merge([title: "Orders", src: path], opts))
 
     [%{elements: [chart]}] =
-      Builder.deck([Builder.slide("s", elements: [chart])], name: "d").slides
+      one_slide(chart).slides
 
     {chart.categories, Enum.map(chart.elements, & &1.values)}
   end
@@ -119,7 +121,7 @@ defmodule Expresso.ChartFileTest do
         )
 
       [%{elements: [chart]}] =
-        Builder.deck([Builder.slide("s", elements: [chart])], name: "d").slides
+        one_slide(chart).slides
 
       assert chart.categories == [["Office"]]
       assert Enum.map(chart.timeline, &hd(&1.elements).values) == [[15], [30]]

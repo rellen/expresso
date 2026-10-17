@@ -34,7 +34,7 @@ defmodule Expresso.Element.EmbedTest do
   end
 
   defp deck, do: Expresso.parse(EmbedDeck)
-  defp document, do: deck() |> Expresso.Deck.render() |> LazyHTML.from_document()
+  defp document, do: deck() |> document()
 
   describe "the document" do
     test "writes no source on a frame, and each frame names its embed" do
@@ -45,7 +45,7 @@ defmodule Expresso.Element.EmbedTest do
       assert count(document, "iframe.embed-frame:not([src]):not([srcdoc])") == frames
 
       assert document
-             |> LazyHTML.query(".screen iframe")
+             |> screen("iframe")
              |> Enum.map(&LazyHTML.attribute(&1, "data-embed")) ==
                [["0"], ["1"]]
     end
@@ -63,7 +63,7 @@ defmodule Expresso.Element.EmbedTest do
     end
 
     test "gives a local page scripts only, and a page of the network its own origin" do
-      [local, address] = document() |> LazyHTML.query(".screen iframe") |> Enum.to_list()
+      [local, address] = document() |> screen("iframe") |> Enum.to_list()
 
       assert LazyHTML.attribute(local, "sandbox") == ["allow-scripts"]
       assert LazyHTML.attribute(address, "sandbox") == ["allow-scripts allow-same-origin"]
@@ -71,7 +71,7 @@ defmodule Expresso.Element.EmbedTest do
     end
 
     test "keeps the key Tab out of a frame that is not interactive" do
-      [local, address] = document() |> LazyHTML.query(".screen iframe") |> Enum.to_list()
+      [local, address] = document() |> screen("iframe") |> Enum.to_list()
 
       assert LazyHTML.attribute(local, "tabindex") == ["-1"]
       assert LazyHTML.attribute(local, "data-interactive") == []
@@ -80,7 +80,7 @@ defmodule Expresso.Element.EmbedTest do
     end
 
     test "writes the title on the frame and on the fallback, and a placeholder without a fallback" do
-      [local, address] = document() |> LazyHTML.query(".screen .embed") |> Enum.to_list()
+      [local, address] = document() |> screen(".embed") |> Enum.to_list()
 
       assert local |> LazyHTML.query("img.embed-fallback") |> LazyHTML.attribute("alt") == [
                "A page that counts"
@@ -97,7 +97,7 @@ defmodule Expresso.Element.EmbedTest do
     end
 
     test "writes the width as a viewport unit, and the ratio" do
-      [local, _address] = document() |> LazyHTML.query(".screen .embed") |> Enum.to_list()
+      [local, _address] = document() |> screen(".embed") |> Enum.to_list()
 
       assert LazyHTML.attribute(local, "style") == ["--embed-width: 60vw; --embed-aspect: 4/3"]
     end

@@ -188,14 +188,14 @@ defmodule ExpressoTest do
 
     test "declares the language of the document" do
       document =
-        MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
+        document(MarkupDeck)
 
       assert document |> LazyHTML.query("html") |> LazyHTML.attribute("lang") == ["en"]
     end
 
     test "declares the encoding in front of each other element of the head" do
       document =
-        MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
+        document(MarkupDeck)
 
       # `:first-child` counts the elements only, and not the text.
       assert [{"meta", [{"charset", "utf-8"}], _}] =
@@ -204,10 +204,10 @@ defmodule ExpressoTest do
 
     test "puts the text of a text area in one block element" do
       document =
-        MarkupDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
+        document(MarkupDeck)
 
       assert [{"div", [], _}] =
-               document |> LazyHTML.query(".screen .text-area > *") |> LazyHTML.to_tree()
+               document |> screen(".text-area > *") |> LazyHTML.to_tree()
 
       assert texts(document, ".screen .text-area > div b") == ["raw HTML"]
 
@@ -231,10 +231,8 @@ defmodule ExpressoTest do
     test "writes the heading of a slide with the heading option" do
       heading =
         NamedSlideDeck
-        |> Expresso.parse()
-        |> Expresso.Deck.render()
-        |> LazyHTML.from_document()
-        |> LazyHTML.query(".screen .slide-heading-container h1")
+        |> document()
+        |> screen(".slide-heading-container h1")
         |> LazyHTML.text()
 
       assert String.trim(heading) == "An intro"
@@ -256,12 +254,12 @@ defmodule ExpressoTest do
 
     test "gets the title Slides, and writes no header" do
       document =
-        NoNameDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
+        document(NoNameDeck)
 
       assert texts(document, "title") == ["Slides"]
       assert count(document, "body:not(:has(.screen span.header))") == 1
 
-      assert document |> LazyHTML.query(".screen .text-area") |> LazyHTML.text() =~
+      assert document |> screen(".text-area") |> LazyHTML.text() =~
                "a deck with no name"
     end
 
@@ -269,8 +267,7 @@ defmodule ExpressoTest do
       document =
         [Builder.slide("first", elements: [box("text")])]
         |> Builder.deck()
-        |> Expresso.Deck.render()
-        |> LazyHTML.from_document()
+        |> document()
 
       assert texts(document, "title") == ["Slides"]
       assert count(document, "body:not(:has(.screen span.header))") == 1
@@ -314,8 +311,7 @@ defmodule ExpressoTest do
       document =
         [Builder.slide("first", template: CustomSlideTemplate)]
         |> Builder.deck(name: "custom deck")
-        |> Expresso.Deck.render()
-        |> LazyHTML.from_document()
+        |> document()
 
       assert document |> LazyHTML.query(".custom-slide") |> LazyHTML.text() =~ "custom template"
     end
@@ -324,8 +320,7 @@ defmodule ExpressoTest do
       document =
         [Builder.slide("first")]
         |> Builder.deck(name: "custom deck", template: CustomDeckTemplate)
-        |> Expresso.Deck.render()
-        |> LazyHTML.from_document()
+        |> document()
 
       assert document |> LazyHTML.query(".custom-header") |> LazyHTML.text() =~ "custom header"
       assert document |> LazyHTML.query(".custom-footer") |> LazyHTML.text() =~ "custom footer"
@@ -335,8 +330,7 @@ defmodule ExpressoTest do
       document =
         [Builder.slide("first")]
         |> Builder.deck(name: "plain deck")
-        |> Expresso.Deck.render()
-        |> LazyHTML.from_document()
+        |> document()
 
       # The header holds the name of the deck and no other text.
       assert texts(document, ".screen span.header") == ["plain deck"]
@@ -387,7 +381,7 @@ defmodule ExpressoTest do
 
   describe "the presenter script" do
     test "the document holds the bundle as one classic script" do
-      document = DslDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
+      document = document(DslDeck)
 
       # The other two `script` elements hold the list of the steps and the program
       # of the presenter as JSON, and a browser does not run them.
@@ -406,11 +400,10 @@ defmodule ExpressoTest do
       document =
         [Builder.slide("first", heading: "A heading", elements: [box("some text")])]
         |> Builder.deck(name: "builder deck")
-        |> Expresso.Deck.render()
-        |> LazyHTML.from_document()
+        |> document()
 
       heading =
-        document |> LazyHTML.query(".screen .slide-heading-container h1") |> LazyHTML.text()
+        document |> screen(".slide-heading-container h1") |> LazyHTML.text()
 
       assert String.trim(heading) == "A heading"
     end

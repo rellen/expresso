@@ -62,8 +62,6 @@ defmodule Expresso.Element.CodeTest do
     Enum.find(Expresso.parse(CodeDeck).slides, &(&1.name == name))
   end
 
-  defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
-
   # The code element of a deck of one slide. `Expresso.PathTransformer` reads
   # the file of `src` when the deck runs its transformers.
   defp built(code) do
@@ -181,7 +179,7 @@ defmodule Expresso.Element.CodeTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: CodeDeck |> document() |> LazyHTML.from_document()}
+      {:ok, document: document(CodeDeck)}
     end
 
     test "writes a pre element with one span for each line", %{document: document} do
@@ -227,7 +225,7 @@ defmodule Expresso.Element.CodeTest do
     end
 
     test "keeps the white space of each line through the document" do
-      html = document(CodeDeck)
+      html = CodeDeck |> Expresso.parse() |> Expresso.Deck.render()
 
       assert html =~ ~s(<span class="kd">defmodule </span>)
       assert html =~ "  c\n</span>"
@@ -269,7 +267,7 @@ defmodule Expresso.Element.CodeTest do
         |> Builder.deck()
         |> Expresso.Deck.render()
 
-      lines = html |> LazyHTML.from_document() |> LazyHTML.query(".screen span.line")
+      lines = html |> LazyHTML.from_document() |> screen("span.line")
 
       assert Enum.map(lines, &LazyHTML.attribute(&1, "data-on")) == [[], ["1"], []]
     end
@@ -458,9 +456,8 @@ defmodule Expresso.Element.CodeTest do
 
       [Builder.slide("one", elements: [code])]
       |> Builder.deck()
-      |> Expresso.Deck.render()
-      |> LazyHTML.from_document()
-      |> LazyHTML.query(".screen .code")
+      |> document()
+      |> screen(".code")
       |> Enum.to_list()
     end
 

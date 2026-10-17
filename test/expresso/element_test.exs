@@ -1,6 +1,8 @@
 defmodule Expresso.ElementTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
 
   # The element modules of the application: each module under
@@ -134,8 +136,7 @@ defmodule Expresso.ElementTest do
     defp present(element) do
       [Builder.slide("one", heading: "Kinds", section: "Kinds", elements: [element])]
       |> Builder.deck(name: "kinds")
-      |> Expresso.Deck.render()
-      |> LazyHTML.from_document()
+      |> document()
       |> LazyHTML.query(".screen")
     end
 

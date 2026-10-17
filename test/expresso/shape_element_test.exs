@@ -8,25 +8,20 @@ defmodule Expresso.ShapeElementTest do
 
   doctest Shape
 
-  defp document(elements) do
-    [Builder.slide("s", elements: elements)]
-    |> Builder.deck(name: "shapes")
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
-  end
+  defp render_elements(elements), do: elements |> one_slide() |> document()
 
   defp box(kind, opts \\ []),
     do: Builder.shape(kind, [x: "10%", y: "20%", width: "30%", height: "15%"] ++ opts)
 
   test "the shapes of a slide go into one layer over the slide, and not in their place" do
     html =
-      document([
+      render_elements([
         Builder.text_box(elements: [Builder.text_area(text: "Text")]),
         box(:rect),
         Builder.shape(:arrow, from: ["5%", "50%"], to: ["40%", "60%"])
       ])
 
-    [layer] = LazyHTML.query(html, ".screen section.slide > .shapes") |> Enum.to_list()
+    [layer] = screen(html, "section.slide > .shapes") |> Enum.to_list()
 
     assert layer |> LazyHTML.child_nodes() |> LazyHTML.to_tree() |> Enum.map(&elem(&1, 0)) ==
              ["div", "svg"]
@@ -39,8 +34,8 @@ defmodule Expresso.ShapeElementTest do
   test "a rectangle and an ellipse are a box at their place, with a text and a fill" do
     [rect, ellipse] =
       [box(:rect, text: "A note", fill: true), box(:ellipse)]
-      |> document()
-      |> LazyHTML.query(".screen .shape")
+      |> render_elements()
+      |> screen(".shape")
       |> Enum.to_list()
 
     assert LazyHTML.attribute(rect, "class") == ["shape shape-rect"]
@@ -54,12 +49,12 @@ defmodule Expresso.ShapeElementTest do
 
   test "a line goes from point to point, and an arrow has a head with an id of its own in each copy" do
     html =
-      document([
+      render_elements([
         Builder.shape(:line, from: ["5%", "50%"], to: ["40%", "60%"]),
         Builder.shape(:arrow, from: ["5%", "50%"], to: ["40%", "60%"])
       ])
 
-    [line, arrow] = LazyHTML.query(html, ".screen svg.shape") |> Enum.to_list()
+    [line, arrow] = screen(html, "svg.shape") |> Enum.to_list()
 
     assert [{"line", attributes, []}] = line |> LazyHTML.query("line") |> LazyHTML.to_tree()
 
@@ -79,8 +74,8 @@ defmodule Expresso.ShapeElementTest do
   test "a shape takes the overlay options" do
     [rect] =
       [box(:rect, at: [from: 2], class: "note")]
-      |> document()
-      |> LazyHTML.query(".screen .shape")
+      |> render_elements()
+      |> screen(".shape")
       |> Enum.to_list()
 
     assert LazyHTML.attribute(rect, "data-on") == ["2"]

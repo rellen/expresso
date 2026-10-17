@@ -9,20 +9,21 @@ defmodule Expresso.IconElementTest do
   doctest Expresso.Icon
   doctest IconElement
 
-  defp document(slides, opts \\ []) do
+  defp render_slides(slides, opts \\ []) do
     slides
     |> Builder.deck(Keyword.merge([name: "icons"], opts))
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
+    |> document()
   end
 
   defp slide(elements), do: [Builder.slide("s", elements: elements)]
 
   test "an icon is a figure with the SVG of a Lucide icon, its size, its color and its label" do
     document =
-      document(slide([Builder.icon("rocket", label: "Launch", size: "5rem", color: :accent)]))
+      render_slides(
+        slide([Builder.icon("rocket", label: "Launch", size: "5rem", color: :accent)])
+      )
 
-    [figure] = document |> LazyHTML.query(".screen figure.icon") |> Enum.to_list()
+    [figure] = document |> screen("figure.icon") |> Enum.to_list()
 
     assert LazyHTML.attribute(figure, "class") == ["icon icon-accent"]
     assert LazyHTML.attribute(figure, "style") == ["--icon-size: 5rem;"]
@@ -37,8 +38,8 @@ defmodule Expresso.IconElementTest do
     [figure] =
       [Builder.icon("check")]
       |> slide()
-      |> document()
-      |> LazyHTML.query(".screen figure.icon")
+      |> render_slides()
+      |> screen("figure.icon")
       |> Enum.to_list()
 
     assert LazyHTML.attribute(figure, "class") == ["icon icon-text"]
@@ -50,7 +51,8 @@ defmodule Expresso.IconElementTest do
     list =
       Builder.list(elements: [Builder.item("Ship :icon:rocket:")])
 
-    document = document(slide([Builder.text_area(text: "A :icon:check: and :icon:check:"), list]))
+    document =
+      render_slides(slide([Builder.text_area(text: "A :icon:check: and :icon:check:"), list]))
 
     assert count(document, ".screen .text-area svg.icon-inline") == 2
     assert count(document, ".screen .item svg.icon-inline") == 1
@@ -63,12 +65,12 @@ defmodule Expresso.IconElementTest do
     File.cp!("test/fixtures/badge.svg", Path.join(tmp_dir, "badge.svg"))
 
     document =
-      document(slide([Builder.icon("rocket"), Builder.text_area(text: ":icon:badge:")]),
+      render_slides(slide([Builder.icon("rocket"), Builder.text_area(text: ":icon:badge:")]),
         root: tmp_dir,
         icons: [rocket: "badge.svg", badge: "badge.svg"]
       )
 
-    [element, inline] = document |> LazyHTML.query(".screen svg") |> Enum.to_list()
+    [element, inline] = document |> screen("svg") |> Enum.to_list()
     assert LazyHTML.attribute(element, "class") == ["icon-svg"]
     assert LazyHTML.attribute(inline, "class") == ["icon-inline"]
 
@@ -85,11 +87,11 @@ defmodule Expresso.IconElementTest do
     assert_raise Spark.Error.DslError,
                  ~r/no icon has the name "rokcet". Names that are near: rocket/,
                  fn ->
-                   document(slide([Builder.icon("rokcet")]))
+                   render_slides(slide([Builder.icon("rokcet")]))
                  end
 
     assert_raise Spark.Error.DslError, ~r/no icon has the name "nope"/, fn ->
-      document(slide([Builder.text_area(text: "x :icon:nope:")]))
+      render_slides(slide([Builder.text_area(text: "x :icon:nope:")]))
     end
   end
 
@@ -100,13 +102,13 @@ defmodule Expresso.IconElementTest do
     assert_raise Spark.Error.DslError,
                  ~r/the icon "logo" of the icons option: .* cannot be read/,
                  fn ->
-                   document(slide([]), root: tmp_dir, icons: [logo: "missing.svg"])
+                   render_slides(slide([]), root: tmp_dir, icons: [logo: "missing.svg"])
                  end
 
     File.write!(Path.join(tmp_dir, "text.svg"), "no svg here")
 
     assert_raise Spark.Error.DslError, ~r/has no svg element/, fn ->
-      document(slide([]), root: tmp_dir, icons: [logo: "text.svg"])
+      render_slides(slide([]), root: tmp_dir, icons: [logo: "text.svg"])
     end
   end
 
@@ -135,10 +137,10 @@ defmodule Expresso.IconElementTest do
     end
 
     assert {:ok, deck} = Expresso.to_deck(Deck)
-    document = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
+    document = document(deck)
 
     assert document
-           |> LazyHTML.query(".screen .column figure.icon")
+           |> screen(".column figure.icon")
            |> LazyHTML.attribute("data-on") == ["2"]
 
     assert count(document, ".screen .callout figure.icon svg") == 1

@@ -5,11 +5,10 @@ defmodule Expresso.HiddenHeadingTest do
 
   alias Expresso.Builder
 
-  defp document(slides, opts \\ []) do
+  defp render_slides(slides, opts \\ []) do
     slides
     |> Builder.deck(opts)
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
+    |> document()
   end
 
   defp hidden(document) do
@@ -30,13 +29,13 @@ defmodule Expresso.HiddenHeadingTest do
   end
 
   test "a slide with a heading gets no hidden heading" do
-    document = document([Builder.slide("start", heading: "Supervisors")])
+    document = render_slides([Builder.slide("start", heading: "Supervisors")])
     assert count(document, ".screen section.slide:not(:has(.slide-hidden-heading))") == 1
   end
 
   test "a slide with no heading gets a hidden h1 with its name, or its number" do
     document =
-      document([
+      render_slides([
         Builder.slide("the picture", elements: [Builder.image("test/fixtures/dot.png")]),
         Builder.slide(elements: [Builder.image("test/fixtures/dot.png")])
       ])
@@ -46,7 +45,7 @@ defmodule Expresso.HiddenHeadingTest do
   end
 
   test "a slide template with no h1 gets a hidden h1 with the heading" do
-    document = document([Builder.slide("part", heading: "The line", template: PartTemplate)])
+    document = render_slides([Builder.slide("part", heading: "The line", template: PartTemplate)])
 
     assert hidden(document) == ["The line"]
     assert texts(document, ".screen h2") == ["The line"]
@@ -59,14 +58,14 @@ defmodule Expresso.HiddenHeadingTest do
         elements: [Builder.image("test/fixtures/dot.png")]
       )
 
-    document = document([slide])
+    document = render_slides([slide])
     assert count(document, ".screen section.slide:not(:has(.slide-hidden-heading))") == 1
   end
 
   test "each page of the handout view gets the hidden heading too" do
     pages =
       [Builder.slide("photo", elements: [Builder.image("test/fixtures/dot.png")])]
-      |> document()
+      |> render_slides()
       |> count(".handout-page .slide-hidden-heading")
 
     assert pages == 1
@@ -75,7 +74,7 @@ defmodule Expresso.HiddenHeadingTest do
   test "the title of a deck with no name is the first heading of the deck" do
     title =
       [Builder.slide("a"), Builder.slide("b", heading: "Supervisors")]
-      |> document()
+      |> render_slides()
       |> texts("title")
 
     assert title == ["Supervisors"]

@@ -8,18 +8,13 @@ defmodule Expresso.CalloutElementTest do
 
   doctest Callout
 
-  defp render(elements, opts \\ []) do
-    [Builder.slide("s", Keyword.merge([elements: List.wrap(elements)], opts))]
-    |> Builder.deck(name: "callouts")
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
-  end
+  defp render(elements, opts \\ []), do: elements |> one_slide(opts) |> document()
 
   defp text(text), do: Builder.text_area(text: text)
 
   test "a callout is a note with the class of its kind, a header and a body" do
     document = render(Builder.callout(:warning, elements: [text("Back up the data first.")]))
-    [callout] = document |> LazyHTML.query(".screen .callout") |> Enum.to_list()
+    [callout] = document |> screen(".callout") |> Enum.to_list()
 
     assert LazyHTML.attribute(callout, "class") == ["callout callout-warning"]
     assert LazyHTML.attribute(callout, "role") == ["note"]
@@ -34,7 +29,7 @@ defmodule Expresso.CalloutElementTest do
           kind
           |> Builder.callout()
           |> render()
-          |> LazyHTML.query(".screen .callout-icon")
+          |> screen(".callout-icon")
           |> Enum.to_list()
 
         assert LazyHTML.attribute(svg, "aria-hidden") == ["true"]
@@ -75,7 +70,7 @@ defmodule Expresso.CalloutElementTest do
         elements: [text("first"), Builder.text_area(text: "second", at: [from: 3])]
       )
 
-    deck = Builder.deck([Builder.slide("s", elements: [callout])], name: "d")
+    deck = one_slide(callout)
     [%{elements: [callout]} = slide] = deck.slides
 
     assert slide.metadata.max_step == 3

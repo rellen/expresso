@@ -91,8 +91,6 @@ defmodule Expresso.Element.ListTest do
     Enum.find(Expresso.parse(ListDeck).slides, &(&1.name == name))
   end
 
-  defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
-
   describe "Expresso.Builder.list/1" do
     test "makes a list from items" do
       list = Builder.list(elements: [Builder.item("a"), Builder.item("b")], ordered: true)
@@ -179,7 +177,7 @@ defmodule Expresso.Element.ListTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: ListDeck |> document() |> LazyHTML.from_document()}
+      {:ok, document: document(ListDeck)}
     end
 
     test "writes a ul element with one li for each item", %{document: document} do

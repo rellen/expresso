@@ -1,5 +1,7 @@
 defmodule Expresso.EffectTest do
   use ExUnit.Case, async: true
+
+  import Expresso.Test.HTML
   use ExUnitProperties
 
   import Spark.Test, only: [dsl_errors: 1]
@@ -54,7 +56,7 @@ defmodule Expresso.EffectTest do
     end
   end
 
-  defp document, do: EffectDeck |> Expresso.parse() |> Deck.render() |> LazyHTML.from_document()
+  defp document, do: document(EffectDeck)
 
   defp effects(document, selector) do
     document |> LazyHTML.query(selector) |> LazyHTML.attribute("data-effect")

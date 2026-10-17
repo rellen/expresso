@@ -48,8 +48,6 @@ defmodule Expresso.Element.ColumnsTest do
     Enum.find(Expresso.parse(ColumnsDeck).slides, &(&1.name == name))
   end
 
-  defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
-
   describe "Expresso.Builder.columns/1" do
     test "makes columns from columns, with an optional width" do
       box = Builder.text_box(elements: [Builder.text_area(text: "a")])
@@ -87,7 +85,7 @@ defmodule Expresso.Element.ColumnsTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: ColumnsDeck |> document() |> LazyHTML.from_document()}
+      {:ok, document: document(ColumnsDeck)}
     end
 
     test "writes a div with one div for each column", %{document: document} do

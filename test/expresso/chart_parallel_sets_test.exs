@@ -27,17 +27,7 @@ defmodule Expresso.ChartParallelSetsTest do
     )
   end
 
-  defp figure(chart) do
-    [figure] =
-      [Builder.slide("s", elements: [chart])]
-      |> Builder.deck(name: "sets")
-      |> Expresso.Deck.render()
-      |> LazyHTML.from_document()
-      |> LazyHTML.query(".screen figure.chart")
-      |> Enum.to_list()
-
-    figure
-  end
+  defp figure(chart), do: chart |> one_slide() |> document() |> screen("figure.chart") |> only!()
 
   describe "the data" do
     test "each category is a path with one node for each column, and the same paths add" do

@@ -33,7 +33,7 @@ defmodule Expresso.GuideCodeTest do
 
   test "the code blocks of the template option make a deck with the templates" do
     deck = "docs/reference/template-option.md" |> blocks() |> Enum.join("\n") |> deck()
-    document = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
+    document = document(deck)
 
     assert texts(document, ".screen .my-header") ==
              ["Part 1", "my deck"]

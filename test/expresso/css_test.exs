@@ -1,5 +1,7 @@
 defmodule Expresso.CssTest do
   use ExUnit.Case, async: true
+
+  import Expresso.Test.HTML
   use ExUnitProperties
 
   import Spark.Test, only: [dsl_errors: 1, dsl_warnings: 1, refute_dsl_warnings: 1]
@@ -292,8 +294,7 @@ defmodule Expresso.CssTest do
   describe "the document" do
     defp styles(deck) do
       deck
-      |> Expresso.Deck.render()
-      |> LazyHTML.from_document()
+      |> document()
       |> LazyHTML.query("head style")
       |> Enum.map(&LazyHTML.text/1)
     end

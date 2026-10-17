@@ -8,18 +8,18 @@ defmodule Expresso.AccessibilityOptionsTest do
   doctest Expresso.Deck, only: [lang: 1]
   doctest Expresso.Element.Video, only: [captions: 1]
 
-  defp document(elements, opts \\ []) do
-    [Builder.slide("s", elements: elements)]
-    |> Builder.deck(Keyword.merge([name: "options"], opts))
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
-  end
+  defp render_elements(elements, opts \\ []), do: elements |> one_slide([], opts) |> document()
 
   describe "the lang option" do
     test "gives the lang attribute of the html element, and the default is en" do
-      assert [] |> document() |> LazyHTML.query("html") |> LazyHTML.attribute("lang") == ["en"]
+      assert [] |> render_elements() |> LazyHTML.query("html") |> LazyHTML.attribute("lang") == [
+               "en"
+             ]
 
-      assert [] |> document(lang: "pt-BR") |> LazyHTML.query("html") |> LazyHTML.attribute("lang") ==
+      assert []
+             |> render_elements(lang: "pt-BR")
+             |> LazyHTML.query("html")
+             |> LazyHTML.attribute("lang") ==
                ["pt-BR"]
     end
 
@@ -49,8 +49,8 @@ defmodule Expresso.AccessibilityOptionsTest do
     test "gives the diagram the role img and a name" do
       [diagram] =
         [Builder.diagram("test/fixtures/flow.svg", alt: "A request and its answer")]
-        |> document()
-        |> LazyHTML.query(".screen .diagram")
+        |> render_elements()
+        |> screen(".diagram")
         |> Enum.to_list()
 
       assert LazyHTML.attribute(diagram, "role") == ["img"]
@@ -60,8 +60,8 @@ defmodule Expresso.AccessibilityOptionsTest do
     test "without it, the diagram has no role and no name" do
       [diagram] =
         [Builder.diagram("test/fixtures/flow.svg")]
-        |> document()
-        |> LazyHTML.query(".screen .diagram")
+        |> render_elements()
+        |> screen(".diagram")
         |> Enum.to_list()
 
       assert LazyHTML.attribute(diagram, "role") == []
@@ -80,8 +80,8 @@ defmodule Expresso.AccessibilityOptionsTest do
     test "writes a track of captions with the file as a data URI" do
       [track] =
         [video(captions: "test/fixtures/captions.vtt")]
-        |> document()
-        |> LazyHTML.query(".screen video > track")
+        |> render_elements()
+        |> screen("video > track")
         |> Enum.to_list()
 
       assert LazyHTML.attribute(track, "kind") == ["captions"]
@@ -94,7 +94,7 @@ defmodule Expresso.AccessibilityOptionsTest do
     end
 
     test "a video without the option has no track" do
-      assert [video([])] |> document() |> count(".screen video:not(:has(track))") == 1
+      assert [video([])] |> render_elements() |> count(".screen video:not(:has(track))") == 1
     end
 
     test "the compiler refuses a file that is not a .vtt file" do
@@ -103,7 +103,7 @@ defmodule Expresso.AccessibilityOptionsTest do
 
     test "the renderer raises for a captions file that it cannot read" do
       assert_raise ArgumentError, ~r/cannot read the captions "test\/fixtures\/none.vtt"/, fn ->
-        document([video(captions: "test/fixtures/none.vtt")])
+        render_elements([video(captions: "test/fixtures/none.vtt")])
       end
     end
   end

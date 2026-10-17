@@ -16,8 +16,7 @@ defmodule Expresso.AccessibilityTest do
       )
     ]
     |> Builder.deck(name: "a11y")
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
+    |> document()
   end
 
   # The words of the text nodes of a node, with one space between two words.

@@ -41,8 +41,6 @@ defmodule Expresso.Element.ImageTest do
     end
   end
 
-  defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
-
   describe "Expresso.Builder.image/2" do
     test "makes an image with a path" do
       assert %Image{src: @png, alt: nil, width: nil} = Builder.image(@png)
@@ -82,7 +80,7 @@ defmodule Expresso.Element.ImageTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: ImageDeck |> document() |> LazyHTML.from_document()}
+      {:ok, document: document(ImageDeck)}
     end
 
     test "writes an img element with the bytes of the file", %{document: document} do

@@ -30,8 +30,6 @@ defmodule Expresso.Element.MathTest do
     end
   end
 
-  defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
-
   test "Expresso.Builder.math/1 makes a math element" do
     assert %Math{text: @formula} = Builder.math(@formula)
   end
@@ -46,7 +44,7 @@ defmodule Expresso.Element.MathTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: MathDeck |> document() |> LazyHTML.from_document()}
+      {:ok, document: document(MathDeck)}
     end
 
     test "writes the MathML in one block element inside the root tag", %{document: document} do

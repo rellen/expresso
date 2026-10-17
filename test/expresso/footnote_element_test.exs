@@ -8,18 +8,17 @@ defmodule Expresso.FootnoteElementTest do
 
   doctest Footnote
 
-  defp document(slides) do
+  defp render_slides(slides) do
     slides
     |> Builder.deck(name: "footnotes")
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
+    |> document()
   end
 
   defp claim(text), do: Builder.text_box(elements: [Builder.text_area(text: text)])
 
   test "the footnotes of a slide go into one numbered list under the slide template, and not in their place" do
     html =
-      document([
+      render_slides([
         Builder.slide("s",
           elements: [
             claim("A claim.<sup>1</sup>"),
@@ -30,7 +29,7 @@ defmodule Expresso.FootnoteElementTest do
         )
       ])
 
-    [slide] = LazyHTML.query(html, ".screen section.slide") |> Enum.to_list()
+    [slide] = screen(html, "section.slide") |> Enum.to_list()
 
     assert texts(slide, "ol.footnotes li.footnote") ==
              ["The first source.", "The second source."]
@@ -42,7 +41,7 @@ defmodule Expresso.FootnoteElementTest do
   end
 
   test "a slide with no footnote has no list" do
-    html = document([Builder.slide("s", elements: [claim("No source.")])])
+    html = render_slides([Builder.slide("s", elements: [claim("No source.")])])
 
     assert count(html, "body:not(:has(ol.footnotes))") == 1
     assert count(html, "body:not(:has(.sources))") == 1
@@ -50,7 +49,7 @@ defmodule Expresso.FootnoteElementTest do
 
   test "a footnote takes the overlay options, and auto_reveal gives it no step of its own" do
     html =
-      document([
+      render_slides([
         Builder.slide("s",
           auto_reveal: true,
           elements: [
@@ -62,12 +61,12 @@ defmodule Expresso.FootnoteElementTest do
         )
       ])
 
-    [always, later] = LazyHTML.query(html, ".screen li.footnote") |> Enum.to_list()
+    [always, later] = screen(html, "li.footnote") |> Enum.to_list()
 
     assert LazyHTML.attribute(always, "data-on") == []
     assert LazyHTML.attribute(later, "data-on") == ["2"]
 
-    assert html |> LazyHTML.query(".screen section.slide") |> LazyHTML.attribute("data-max-step") ==
+    assert html |> screen("section.slide") |> LazyHTML.attribute("data-max-step") ==
              [
                "2"
              ]
@@ -75,7 +74,7 @@ defmodule Expresso.FootnoteElementTest do
 
   test "the handout view ends with a page of the sources of each slide" do
     html =
-      document([
+      render_slides([
         Builder.slide("first", heading: "Processes", elements: [Builder.footnote("Book")]),
         Builder.slide("second", elements: [claim("No source")]),
         Builder.slide("third", elements: [Builder.footnote("Docs"), Builder.footnote("Talk")])

@@ -49,7 +49,7 @@ defmodule Expresso.GotoTest do
   end
 
   defp document,
-    do: LinkDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
+    do: document(LinkDeck)
 
   defp links(selector),
     do: document() |> LazyHTML.query(".screen " <> selector) |> Enum.to_list()
@@ -238,9 +238,8 @@ defmodule Expresso.GotoTest do
 
       [link] =
         deck
-        |> Expresso.Deck.render()
-        |> LazyHTML.from_document()
-        |> LazyHTML.query(".screen a.goto")
+        |> document()
+        |> screen("a.goto")
         |> Enum.to_list()
 
       assert LazyHTML.attribute(link, "href") == ["#2.1"]

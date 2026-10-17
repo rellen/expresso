@@ -182,8 +182,29 @@ Write a test with LazyHTML as follows:
 3. Read the result with `Enum.count/1`, `LazyHTML.attribute/2`, or
    `Enum.map(&LazyHTML.text/1)` for the text of each node.
 
-`import Expresso.Test.HTML` gives two short forms: `count(html, selector)` and
-`texts(html, selector)`.
+`import Expresso.Test.HTML` gives short forms for these steps:
+
+| Function | Returns |
+| --- | --- |
+| `one_slide(elements, slide_opts \\ [], deck_opts \\ [])` | A deck with one slide, `"s"`, that holds the elements |
+| `document(deck)` | The parsed document of a deck, or of the deck of a DSL module |
+| `screen(html, selector)` | The nodes of the selector inside `.screen`, the present view |
+| `only!(nodes)` | The one node of a query. The test fails for a different number. |
+| `count(html, selector)` | The number of the nodes of the selector |
+| `texts(html, selector)` | The text of each node of the selector |
+
+A test of one element thus reads as follows:
+
+```elixir
+figure = chart |> one_slide() |> document() |> screen("figure.chart") |> only!()
+```
+
+The document writes each slide into the present view, into the handout view and into the
+thumbnails of the menu. A query without `.screen` therefore finds each node more than one
+time. A test module that imports
+`Expresso.Test.HTML` cannot define a private function with the same name and arity, such
+as `document/1`. Give a private helper a different name, or a different arity, such as
+`document/0` for the deck of the module.
 
 To assert that an element has no part, find the element with `:not(:has(...))`, and
 assert that the query finds one node. A query that must find no node also finds no node

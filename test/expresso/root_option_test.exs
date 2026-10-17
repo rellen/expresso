@@ -68,10 +68,10 @@ defmodule Expresso.RootOptionTest do
     assert {:ok, html} = Expresso.render_file(Path.join(talk, "deck.exs"))
     document = LazyHTML.from_document(html)
 
-    assert document |> LazyHTML.query(".screen .code") |> LazyHTML.text() =~ "def start, do: :ok"
+    assert document |> screen(".code") |> LazyHTML.text() =~ "def start, do: :ok"
     assert html =~ ~s|h1 { background: url("#{data_uri(Path.join(talk, "styles/mark.png"))}"); }|
 
-    assert document |> LazyHTML.query(".screen .image img") |> LazyHTML.attribute("src") == [
+    assert document |> screen(".image img") |> LazyHTML.attribute("src") == [
              data_uri(Path.join(talk, "dot.png"))
            ]
 
