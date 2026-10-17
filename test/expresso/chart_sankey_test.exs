@@ -25,22 +25,9 @@ defmodule Expresso.ChartSankeyTest do
     Builder.chart(:sankey, Keyword.merge([title: "Energy", flows: flows ++ nodes], opts))
   end
 
-  defp render(chart) do
-    [Builder.slide("s", elements: [chart])]
-    |> Builder.deck(name: "flows")
-    |> Expresso.Deck.render()
-  end
+  defp render(chart), do: chart |> one_slide() |> Expresso.Deck.render()
 
-  defp figure(chart) do
-    [figure] =
-      chart
-      |> render()
-      |> LazyHTML.from_document()
-      |> LazyHTML.query(".screen figure.chart")
-      |> Enum.to_list()
-
-    figure
-  end
+  defp figure(chart), do: chart |> one_slide() |> document() |> screen("figure.chart") |> only!()
 
   describe "the data" do
     test "a flow is a category of two nodes with its value" do
@@ -285,7 +272,7 @@ defmodule Expresso.ChartSankeyTest do
 
     test "a sankey with frames draws a layer for each frame, and the layers fade at their steps" do
       html = render(frames())
-      figure = html |> LazyHTML.from_document() |> LazyHTML.query(".screen figure.chart")
+      figure = html |> LazyHTML.from_document() |> screen("figure.chart")
       layers = LazyHTML.query(figure, "figure.chart > svg > g.chart-layer")
 
       assert Enum.map(layers, &LazyHTML.attribute(&1, "style")) == [

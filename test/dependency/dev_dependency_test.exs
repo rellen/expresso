@@ -1,6 +1,8 @@
 defmodule Expresso.DevDependencyTest do
   use ExUnit.Case, async: false
 
+  import Expresso.Test.HTML
+
   # A project of a user that takes Expresso as a dev dependency, as
   # `docs/how-to/render-a-deck-in-your-project.md` tells. The test makes the
   # project, fetches the dependencies, and runs `mix expresso` there. It needs
@@ -121,7 +123,7 @@ defmodule Expresso.DevDependencyTest do
     refute output =~ "error"
 
     html = File.read!(Path.join(project, "talk/deck.html"))
-    text = html |> LazyHTML.from_document() |> LazyHTML.query(".screen .code") |> LazyHTML.text()
+    text = html |> LazyHTML.from_document() |> screen(".code") |> LazyHTML.text()
 
     assert text =~ "def start, do: :ok"
   end

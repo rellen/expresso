@@ -5,6 +5,8 @@ defmodule Expresso.ThemeOptionTest do
   # Therefore this module runs alone, after the async modules.
   use ExUnit.Case, async: false
 
+  import Expresso.Test.HTML
+
   import ExUnit.CaptureIO
 
   alias Expresso.Builder
@@ -14,8 +16,7 @@ defmodule Expresso.ThemeOptionTest do
   defp head_theme(deck) do
     [_fonts, theme | _rest] =
       deck
-      |> Expresso.Deck.render()
-      |> LazyHTML.from_document()
+      |> document()
       |> LazyHTML.query("head style")
       |> Enum.to_list()
 

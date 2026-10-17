@@ -1,6 +1,8 @@
 defmodule Expresso.ClassOptionTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
 
   doctest Expresso.Element
@@ -52,7 +54,7 @@ defmodule Expresso.ClassOptionTest do
   end
 
   defp document,
-    do: ClassDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
+    do: document(ClassDeck)
 
   defp classes(selector),
     do: document() |> LazyHTML.query(selector) |> LazyHTML.attribute("class")
@@ -98,13 +100,12 @@ defmodule Expresso.ClassOptionTest do
         )
       ]
       |> Builder.deck()
-      |> Expresso.Deck.render()
-      |> LazyHTML.from_document()
+      |> document()
 
-    assert document |> LazyHTML.query(".screen section.slide") |> LazyHTML.attribute("class") ==
+    assert document |> screen("section.slide") |> LazyHTML.attribute("class") ==
              ["slide dense"]
 
-    assert document |> LazyHTML.query(".screen .text-area") |> LazyHTML.attribute("class") ==
+    assert document |> screen(".text-area") |> LazyHTML.attribute("class") ==
              ["text-area x y"]
   end
 

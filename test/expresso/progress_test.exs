@@ -1,6 +1,8 @@
 defmodule Expresso.ProgressTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   defmodule ShownDeck do
     use Expresso
 
@@ -24,10 +26,6 @@ defmodule Expresso.ProgressTest do
         text_area(text: "One")
       end
     end
-  end
-
-  defp document(deck) do
-    deck |> Expresso.Deck.render() |> LazyHTML.from_document()
   end
 
   defp progress(deck) do
@@ -85,7 +83,7 @@ defmodule Expresso.ProgressTest do
   end
 
   test "the document holds one progress bar, and the style sheet gives it the width of --fraction" do
-    bars = ShownDeck |> Expresso.parse() |> document() |> LazyHTML.query("#progress")
+    bars = ShownDeck |> document() |> LazyHTML.query("#progress")
 
     assert Enum.count(bars) == 1
     assert LazyHTML.attribute(bars, "style") == []

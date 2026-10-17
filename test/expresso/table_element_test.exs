@@ -67,8 +67,6 @@ defmodule Expresso.Element.TableTest do
     Enum.find(Expresso.parse(TableDeck).slides, &(&1.name == name))
   end
 
-  defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
-
   describe "Expresso.Builder.table/1" do
     test "makes a table from rows" do
       rows = [Builder.row(["a", "b"]), Builder.row(["c", "d"])]
@@ -163,7 +161,7 @@ defmodule Expresso.Element.TableTest do
   # the test fails.
   describe "render/1" do
     setup do
-      {:ok, document: TableDeck |> document() |> LazyHTML.from_document()}
+      {:ok, document: document(TableDeck)}
     end
 
     test "writes the header row in a thead element with th cells", %{document: document} do

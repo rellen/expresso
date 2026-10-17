@@ -3,7 +3,6 @@ defmodule Expresso.TimingTest do
 
   import Expresso.Test.HTML
 
-  alias Expresso.Deck
   alias Expresso.Element.TextBox
   alias Expresso.Overlay.Render
 
@@ -45,7 +44,7 @@ defmodule Expresso.TimingTest do
   end
 
   defp document do
-    TimingDeck |> Expresso.parse() |> Deck.render() |> LazyHTML.from_document()
+    document(TimingDeck)
   end
 
   defp attribute(document, selector, name) do

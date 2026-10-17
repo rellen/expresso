@@ -36,7 +36,7 @@ defmodule Expresso.Element.AudioTest do
   end
 
   defp document,
-    do: AudioDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
+    do: document(AudioDeck)
 
   defp json(document),
     do: document |> LazyHTML.query("script#expresso-audios") |> LazyHTML.text() |> JSON.decode!()
@@ -89,7 +89,7 @@ defmodule Expresso.Element.AudioTest do
 
     assert Audio.json(deck) == nil
 
-    document = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
+    document = document(deck)
 
     assert count(document, "body:not(:has(#expresso-audios))") == 1
   end
@@ -104,7 +104,7 @@ defmodule Expresso.Element.AudioTest do
 
   test "the render names the sound of a file that it cannot read" do
     deck =
-      Builder.deck([Builder.slide("s", elements: [Builder.audio("missing.ogg", title: "x")])])
+      one_slide(Builder.audio("missing.ogg", title: "x"))
 
     assert_raise ArgumentError, ~r/cannot read the sound "missing.ogg"/, fn ->
       Expresso.Deck.render(deck)

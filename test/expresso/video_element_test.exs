@@ -36,7 +36,7 @@ defmodule Expresso.Element.VideoTest do
   end
 
   defp deck, do: Expresso.parse(VideoDeck)
-  defp document, do: deck() |> Expresso.Deck.render() |> LazyHTML.from_document()
+  defp document, do: deck() |> document()
 
   defp json(document),
     do: document |> LazyHTML.query("script#expresso-videos") |> LazyHTML.text() |> JSON.decode!()
@@ -129,7 +129,7 @@ defmodule Expresso.Element.VideoTest do
   end
 
   test "the root option of the deck gives the directory of the file and of the poster" do
-    document = RootDeck |> Expresso.parse() |> Expresso.Deck.render() |> LazyHTML.from_document()
+    document = document(RootDeck)
 
     assert [_uri] = json(document)
   end

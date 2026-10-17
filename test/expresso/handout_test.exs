@@ -1,5 +1,7 @@
 defmodule Expresso.HandoutTest do
   use ExUnit.Case, async: true
+
+  import Expresso.Test.HTML
   use ExUnitProperties
 
   alias Expresso.Handout
@@ -57,8 +59,7 @@ defmodule Expresso.HandoutTest do
 
   defp pages(deck) do
     deck
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
+    |> document()
     |> LazyHTML.query(".handout-page")
     |> Enum.map(fn page ->
       [slide] = LazyHTML.attribute(page, "data-slide")

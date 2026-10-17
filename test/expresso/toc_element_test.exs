@@ -23,12 +23,6 @@ defmodule Expresso.TocElementTest do
     |> Builder.deck(name: "sections")
   end
 
-  defp render(deck) do
-    deck
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
-  end
-
   defp entries(document, slide) do
     for li <- LazyHTML.query(document, "#slide-#{slide} .toc-entry") do
       {LazyHTML.text(li), li |> LazyHTML.attribute("class") |> hd(),
@@ -43,7 +37,7 @@ defmodule Expresso.TocElementTest do
     assert [%TocEntry{text: "Why"}, %TocEntry{text: "How"}, %TocEntry{text: "End"}] =
              toc.elements
 
-    document = render(deck)
+    document = document(deck)
     links = LazyHTML.query(document, "#slide-1 .toc a.goto")
 
     assert LazyHTML.attribute(links, "href") == ["#2.1", "#3.1", "#5.1"]
@@ -55,7 +49,7 @@ defmodule Expresso.TocElementTest do
   end
 
   test "a toc before the first section marks no entry" do
-    document = render(deck(1, Builder.toc()))
+    document = document(deck(1, Builder.toc()))
 
     assert entries(document, 1) == [
              {"Why", "toc-entry toc-none", nil},
@@ -66,7 +60,7 @@ defmodule Expresso.TocElementTest do
 
   test "the section of the slide of a toc is the current entry, also on a later slide of the section" do
     for slide <- [3, 4] do
-      document = render(deck(slide, Builder.toc()))
+      document = document(deck(slide, Builder.toc()))
 
       assert entries(document, slide) == [
                {"Why", "toc-entry toc-earlier", nil},
@@ -79,7 +73,7 @@ defmodule Expresso.TocElementTest do
   test "the progress option gives the toc a class" do
     for progress <- Toc.progress_values() do
       class = progress |> Atom.to_string() |> String.replace("_", "-")
-      document = render(deck(3, Builder.toc(progress: progress)))
+      document = document(deck(3, Builder.toc(progress: progress)))
 
       assert document |> LazyHTML.query("#slide-3 nav.toc") |> LazyHTML.attribute("class") == [
                "toc toc-#{class}"
@@ -132,7 +126,7 @@ defmodule Expresso.TocElementTest do
       end
     end
 
-    document = Deck |> Expresso.to_deck() |> elem(1) |> render()
+    document = Deck |> Expresso.to_deck() |> elem(1) |> document()
     assert texts(document, "#slide-1 .text-box .toc-entry") == ["One"]
     assert texts(document, "#slide-1 .column .toc-entry") == ["One"]
   end
@@ -161,7 +155,7 @@ defmodule Expresso.TocElementTest do
         name: "x"
       )
 
-    document = render(deck)
+    document = document(deck)
     assert texts(document, "#slide-1 .toc-link") == ["<b>A</b>"]
     assert count(document, "#slide-1 .toc-link:not(:has(b))") == 1
   end

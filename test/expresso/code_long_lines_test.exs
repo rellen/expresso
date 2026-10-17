@@ -5,14 +5,9 @@ defmodule Expresso.CodeLongLinesTest do
 
   alias Expresso.{Builder, Highlight}
 
-  defp code(opts) do
-    [Builder.slide("s", elements: [Builder.code("js", opts)])]
-    |> Builder.deck(name: "code")
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
-    |> LazyHTML.query(".screen .code")
-    |> Enum.to_list()
-  end
+  defp code(opts),
+    do:
+      "js" |> Builder.code(opts) |> one_slide() |> document() |> screen(".code") |> Enum.to_list()
 
   describe "trailing_comments false" do
     test "removes a comment at the end of a line of code, and the space before it" do

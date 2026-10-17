@@ -30,8 +30,6 @@ defmodule Expresso.Element.QuotationTest do
     end
   end
 
-  defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
-
   describe "Expresso.Builder.quotation/2" do
     test "makes a quotation with text and a source" do
       assert %Quotation{text: "a", by: nil} = Builder.quotation("a")
@@ -59,7 +57,7 @@ defmodule Expresso.Element.QuotationTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: QuotationDeck |> document() |> LazyHTML.from_document()}
+      {:ok, document: document(QuotationDeck)}
     end
 
     test "writes a figure with a blockquote, and the text in one block element", %{

@@ -1,6 +1,8 @@
 defmodule Expresso.TemplateTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
 
   doctest Expresso.Template
@@ -37,8 +39,6 @@ defmodule Expresso.TemplateTest do
     end
   end
 
-  defp render(deck), do: deck |> Expresso.Deck.render() |> LazyHTML.from_document()
-
   # The warnings of the compiler for a source, and the source compiled.
   defp warnings(source) do
     {modules, diagnostics} = Code.with_diagnostics(fn -> Code.compile_string(source) end)
@@ -53,9 +53,9 @@ defmodule Expresso.TemplateTest do
 
   test "a deck template can write its header with a component" do
     document =
-      render(Builder.deck([Builder.slide("first")], name: "the deck", template: ComponentDeck))
+      document(Builder.deck([Builder.slide("first")], name: "the deck", template: ComponentDeck))
 
-    assert document |> LazyHTML.query(".screen .component-label") |> LazyHTML.text() =~ "the deck"
+    assert document |> screen(".component-label") |> LazyHTML.text() =~ "the deck"
   end
 
   test "a slide template without render/1 gets a warning from the compiler" do
@@ -119,7 +119,7 @@ defmodule Expresso.TemplateTest do
       assert_raise ArgumentError,
                    "the slide template Enum has no render/1. " <>
                      "See docs/reference/template-option.md.",
-                   fn -> render(deck) end
+                   fn -> document(deck) end
     end
 
     test "a deck template that is not loaded gives the reason at render" do
@@ -128,7 +128,7 @@ defmodule Expresso.TemplateTest do
       assert_raise ArgumentError,
                    ~r/the deck template Expresso.TemplateTest.Missing is not loaded/,
                    fn ->
-                     render(deck)
+                     document(deck)
                    end
     end
 
@@ -136,7 +136,7 @@ defmodule Expresso.TemplateTest do
       deck = Builder.deck([Builder.slide("first")])
       deck = %{deck | metadata: Map.put(deck.metadata, :template, {:builtins, :fancy})}
 
-      assert_raise ArgumentError, ~r/not a built-in deck template/, fn -> render(deck) end
+      assert_raise ArgumentError, ~r/not a built-in deck template/, fn -> document(deck) end
     end
   end
 end

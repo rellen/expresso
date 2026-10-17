@@ -50,10 +50,6 @@ defmodule Expresso.SlideNumbersTest do
     end
   end
 
-  defp document(deck) do
-    deck |> Expresso.Deck.render() |> LazyHTML.from_document()
-  end
-
   # The text of the number in each slide of the present view, or nil for a
   # slide with no number.
   defp present(document) do
@@ -94,7 +90,6 @@ defmodule Expresso.SlideNumbersTest do
   test "the number is in the row of the footer, after the footer of the template" do
     [row] =
       NumberedDeck
-      |> Expresso.parse()
       |> document()
       |> LazyHTML.query("#slide-2 > div:last-child")
       |> Enum.to_list()
@@ -114,7 +109,7 @@ defmodule Expresso.SlideNumbersTest do
   end
 
   test "the default footer has no text" do
-    footers = NumberedDeck |> Expresso.parse() |> document() |> texts(".footer")
+    footers = NumberedDeck |> document() |> texts(".footer")
     assert Enum.uniq(footers) == [""]
   end
 end

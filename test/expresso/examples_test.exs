@@ -82,7 +82,7 @@ defmodule Expresso.ExamplesTest do
   test "the talk about Line 4 renders each of its slides" do
     assert {:ok, deck} = "examples/line4/line4.exs" |> DeckFiles.eval() |> Expresso.to_deck()
 
-    document = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
+    document = document(deck)
 
     assert count(document, "section.slide") == length(deck.slides)
     assert count(document, ".screen .diagram") == 6

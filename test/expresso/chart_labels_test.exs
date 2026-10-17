@@ -8,13 +8,7 @@ defmodule Expresso.ChartLabelsTest do
 
   doctest Csv, only: [heading: 4]
 
-  defp figure(chart) do
-    [Builder.slide("s", elements: [chart])]
-    |> Builder.deck(name: "charts")
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
-    |> LazyHTML.query(".screen figure.chart")
-  end
+  defp figure(chart), do: chart |> one_slide() |> document() |> screen("figure.chart")
 
   defp bars(opts) do
     Builder.chart(

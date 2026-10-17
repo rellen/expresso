@@ -1,5 +1,7 @@
 defmodule Expresso.Presenter.SchemaTest do
   use ExUnit.Case, async: true
+
+  import Expresso.Test.HTML
   use ExUnitProperties
 
   alias Expresso.Builder
@@ -98,7 +100,7 @@ defmodule Expresso.Presenter.SchemaTest do
         Builder.slide("two")
       ])
 
-    html = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
+    html = document(deck)
     [holders] = for {:command_holders, _doc, _form, value} <- Schema.constants(), do: value
     found = for {kind, selector} <- holders, do: {kind, LazyHTML.query(html, selector)}
 

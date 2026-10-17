@@ -107,7 +107,7 @@ defmodule Expresso.ElementPagesTest do
     compiled = Code.compile_string(code)
     on_exit(fn -> remove(compiled) end)
     assert {:ok, deck} = Expresso.to_deck(Expresso.ElementPagesTest.Nests)
-    html = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
+    html = document(deck)
 
     assert count(html, ".screen ul ul ul ul") == 1
   end

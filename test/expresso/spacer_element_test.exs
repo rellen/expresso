@@ -1,6 +1,8 @@
 defmodule Expresso.Element.SpacerTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
   alias Expresso.Element.Spacer
 
@@ -29,8 +31,6 @@ defmodule Expresso.Element.SpacerTest do
     end
   end
 
-  defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
-
   test "Expresso.Builder.spacer/0 makes a spacer" do
     assert %Spacer{} = Builder.spacer()
   end
@@ -43,7 +43,7 @@ defmodule Expresso.Element.SpacerTest do
   end
 
   test "render/1 writes an empty div with the overlay attributes" do
-    document = SpacerDeck |> document() |> LazyHTML.from_document()
+    document = document(SpacerDeck)
 
     assert document |> LazyHTML.query("#slide-1 .spacer") |> LazyHTML.to_tree() == [
              {"div", [{"class", "spacer"}], []}

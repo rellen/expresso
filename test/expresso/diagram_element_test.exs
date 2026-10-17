@@ -34,8 +34,6 @@ defmodule Expresso.Element.DiagramTest do
     end
   end
 
-  defp document(deck), do: deck |> Expresso.parse() |> Expresso.Deck.render()
-
   test "Expresso.Builder.diagram/2 makes a diagram with parts and a width" do
     assert %Diagram{src: @svg, elements: [], width: nil} = Builder.diagram(@svg)
 
@@ -61,7 +59,7 @@ defmodule Expresso.Element.DiagramTest do
 
   describe "render/1" do
     setup do
-      {:ok, document: DiagramDeck |> document() |> LazyHTML.from_document()}
+      {:ok, document: document(DiagramDeck)}
     end
 
     test "writes the SVG as an element of the document", %{document: document} do

@@ -1,6 +1,8 @@
 defmodule Expresso.DimContrastTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.{Builder, Color, Palette}
 
   doctest Expresso.Deck, only: [dim_contrast: 1]
@@ -9,10 +11,9 @@ defmodule Expresso.DimContrastTest do
   # The custom properties of the first `:root` rule of the theme of a document.
   defp properties(opts) do
     style =
-      [Builder.slide("s", elements: [])]
-      |> Builder.deck(Keyword.merge([name: "dim"], opts))
-      |> Expresso.Deck.render()
-      |> LazyHTML.from_document()
+      []
+      |> one_slide([], opts)
+      |> document()
       |> LazyHTML.query("style")
       |> Enum.map_join("\n", &LazyHTML.text/1)
 
@@ -57,9 +58,8 @@ defmodule Expresso.DimContrastTest do
 
   test "each variant of a theme with two variants dims to the minimum" do
     style =
-      [Builder.slide("s", elements: [])]
-      |> Builder.deck(
-        name: "dim",
+      []
+      |> one_slide([],
         theme: [light: :solarized_light, dark: :solarized_dark],
         dim_contrast: 4.5
       )

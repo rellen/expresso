@@ -10,13 +10,6 @@ defmodule Expresso.ChartElementTest do
   doctest Chart
   doctest Plot
 
-  defp document(chart, opts \\ []) do
-    [Builder.slide("s", [elements: [chart]] ++ opts)]
-    |> Builder.deck(name: "charts")
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
-  end
-
   defp bars(opts \\ []) do
     Builder.chart(
       :bar,
@@ -28,10 +21,11 @@ defmodule Expresso.ChartElementTest do
     )
   end
 
-  defp screen(html), do: html |> LazyHTML.query(".screen figure.chart") |> Enum.to_list()
+  defp figures(chart),
+    do: chart |> one_slide() |> document() |> screen("figure.chart") |> Enum.to_list()
 
   test "a bar chart draws a bar and a value for each value, a legend and a table" do
-    [figure] = bars() |> document() |> screen()
+    [figure] = figures(bars())
 
     assert LazyHTML.attribute(figure, "class") == ["chart chart-bar"]
     assert figure |> LazyHTML.query("svg") |> LazyHTML.attribute("aria-label") == ["Orders"]
@@ -53,7 +47,7 @@ defmodule Expresso.ChartElementTest do
   end
 
   test "the corner of the table is a cell, so each header of the table has a name" do
-    [figure] = bars() |> document() |> screen()
+    [figure] = figures(bars())
 
     heads = texts(figure, "table.chart-table thead th")
     assert heads == ["Orders", "Returns"]
@@ -68,25 +62,24 @@ defmodule Expresso.ChartElementTest do
         values: false,
         elements: [Builder.series("Orders", [120])]
       )
-      |> document()
-      |> screen()
+      |> figures()
 
     assert figure |> LazyHTML.filter(":not(:has(.chart-value))") |> Enum.count() == 1
     assert figure |> LazyHTML.filter(":not(:has(.chart-name))") |> Enum.count() == 1
   end
 
   test "reveal gives each series its own step, and dim dims the earlier series" do
-    html = document(bars(reveal: true, dim: true))
+    html = bars(reveal: true, dim: true) |> one_slide() |> document()
 
     [orders, returns] =
-      html |> LazyHTML.query(".screen figure.chart g.chart-series") |> Enum.to_list()
+      html |> screen("figure.chart g.chart-series") |> Enum.to_list()
 
     assert LazyHTML.attribute(orders, "data-on") == ["1 2"]
     assert LazyHTML.attribute(orders, "data-el") != []
     assert LazyHTML.attribute(returns, "data-on") == ["2"]
 
     assert html
-           |> LazyHTML.query(".screen section.slide")
+           |> screen("section.slide")
            |> LazyHTML.attribute("data-max-step") == ["2"]
   end
 
@@ -97,8 +90,7 @@ defmodule Expresso.ChartElementTest do
         categories: ["Jan", "Feb", "Mar"],
         elements: [Builder.series("Web", [4, 5, 7])]
       )
-      |> document()
-      |> screen()
+      |> figures()
 
     assert [points] =
              figure |> LazyHTML.query("polyline.chart-line") |> LazyHTML.attribute("points")
@@ -115,8 +107,7 @@ defmodule Expresso.ChartElementTest do
         categories: ["Press", "Paint"],
         elements: [Builder.series("Hours", [3, 1])]
       )
-      |> document()
-      |> screen()
+      |> figures()
 
     assert figure
            |> LazyHTML.query("path.chart-slice")

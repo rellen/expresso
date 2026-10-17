@@ -7,7 +7,7 @@ defmodule Expresso.Presenter.DocumentTest do
   alias Expresso.Presenter.{Definition, Help, Program}
 
   # A deck with three slides. Slide 2 has three steps.
-  defp document(counts \\ [1, 3, 2]) do
+  defp with_steps(counts \\ [1, 3, 2]) do
     counts
     |> Enum.with_index(1)
     |> Enum.map(fn {steps, number} ->
@@ -15,8 +15,7 @@ defmodule Expresso.Presenter.DocumentTest do
       Builder.slide("slide #{number}", steps: steps, elements: elements)
     end)
     |> Builder.deck(name: "deck")
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
+    |> document()
   end
 
   defp box(text), do: Builder.text_box(elements: [Builder.text_area(text: text)])
@@ -24,13 +23,13 @@ defmodule Expresso.Presenter.DocumentTest do
   describe "the program" do
     test "is a JSON script element between the list of the steps and the bundle" do
       ids =
-        document() |> LazyHTML.query("body > script") |> Enum.map(&LazyHTML.attribute(&1, "id"))
+        with_steps() |> LazyHTML.query("body > script") |> Enum.map(&LazyHTML.attribute(&1, "id"))
 
       assert ids == [["expresso-deck"], ["expresso-program"], []]
     end
 
     test "holds the program of the deck" do
-      text = document() |> LazyHTML.query("script#expresso-program") |> LazyHTML.text()
+      text = with_steps() |> LazyHTML.query("script#expresso-program") |> LazyHTML.text()
       deck = Builder.deck(for(steps <- [1, 3, 2], do: Builder.slide("slide", steps: steps)))
 
       assert text == Program.json(Program.compile(Definition.presenter(), deck))
@@ -39,7 +38,7 @@ defmodule Expresso.Presenter.DocumentTest do
 
   describe "the menu" do
     test "holds a row for each slide and a row for each step, with the index and the commands of the step" do
-      menu = document() |> LazyHTML.query("nav#menu")
+      menu = with_steps() |> LazyHTML.query("nav#menu")
 
       assert count(menu, ".menu-slide") == 3
 
@@ -63,7 +62,7 @@ defmodule Expresso.Presenter.DocumentTest do
     end
 
     test "a row of a slide holds a copy of its last step, and its name" do
-      menu = document() |> LazyHTML.query("nav#menu")
+      menu = with_steps() |> LazyHTML.query("nav#menu")
 
       assert menu
              |> LazyHTML.query("section.menu-thumb")
@@ -83,7 +82,7 @@ defmodule Expresso.Presenter.DocumentTest do
         ])
 
       menu =
-        deck |> Expresso.Deck.render() |> LazyHTML.from_document() |> LazyHTML.query("nav#menu")
+        deck |> document() |> LazyHTML.query("nav#menu")
 
       assert texts(menu, ".menu-name") ==
                ["The start", "two", "three"]
@@ -100,7 +99,7 @@ defmodule Expresso.Presenter.DocumentTest do
 
   describe "the list of keys" do
     test "is a dialog with a search field and a closed section for each mode" do
-      [dialog] = document() |> LazyHTML.query("dialog#help") |> Enum.to_list()
+      [dialog] = with_steps() |> LazyHTML.query("dialog#help") |> Enum.to_list()
 
       assert LazyHTML.attribute(dialog, "open") == []
       assert LazyHTML.attribute(dialog, "closedby") == ["any"]
@@ -117,7 +116,7 @@ defmodule Expresso.Presenter.DocumentTest do
     end
 
     test "holds the rows of Help.groups/1, with a heading for each group and the words of each row" do
-      sections = LazyHTML.query(document(), "details[data-mode]")
+      sections = LazyHTML.query(with_steps(), "details[data-mode]")
       modes = Help.groups(Definition.presenter())
 
       # The loop compares nothing when the document has no section.
@@ -159,7 +158,7 @@ defmodule Expresso.Presenter.DocumentTest do
   describe "the parts that do not change" do
     test "each page holds the index of its step, and the page of the last step of a slide is a thumbnail" do
       pages =
-        for page <- LazyHTML.query(document(), ".handout-page") do
+        for page <- LazyHTML.query(with_steps(), ".handout-page") do
           {LazyHTML.attribute(page, "data-index"),
            LazyHTML.attribute(page, "data-thumbnail") != []}
         end
@@ -175,21 +174,21 @@ defmodule Expresso.Presenter.DocumentTest do
     end
 
     test "the body holds the columns of the overview and the zoom of each page" do
-      [style] = document() |> LazyHTML.query("body") |> LazyHTML.attribute("style")
+      [style] = with_steps() |> LazyHTML.query("body") |> LazyHTML.attribute("style")
 
       # Three slides give two columns, and (98 - 1) / 200 is 0.485.
       assert style =~ "--overview-columns: 2;"
       assert style =~ "--overview-zoom: 0.485;"
 
       [style] =
-        document([1, 1, 1, 1, 1, 1, 1]) |> LazyHTML.query("body") |> LazyHTML.attribute("style")
+        with_steps([1, 1, 1, 1, 1, 1, 1]) |> LazyHTML.query("body") |> LazyHTML.attribute("style")
 
       assert style =~ "--overview-columns: 3;"
       assert style =~ "--overview-zoom: 0.32;"
     end
 
     test "the handout view holds the four empty elements of the speaker view" do
-      elements = LazyHTML.query(document(), ".handout > div")
+      elements = LazyHTML.query(with_steps(), ".handout > div")
 
       assert Enum.map(elements, &LazyHTML.attribute(&1, "id")) ==
                [["speaker-notes"], ["speaker-position"], ["speaker-timer"], ["speaker-left"]]
@@ -201,7 +200,7 @@ defmodule Expresso.Presenter.DocumentTest do
   describe "the pages of the handout" do
     test "only the page of the last step of each slide holds the commands of a click in the overview" do
       pages =
-        for page <- LazyHTML.query(document(), ".handout-page") do
+        for page <- LazyHTML.query(with_steps(), ".handout-page") do
           {LazyHTML.attribute(page, "data-slide"), LazyHTML.attribute(page, "data-step"),
            LazyHTML.attribute(page, "data-commands")}
         end

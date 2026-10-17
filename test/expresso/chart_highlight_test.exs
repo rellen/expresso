@@ -34,14 +34,10 @@ defmodule Expresso.ChartHighlightTest do
     )
   end
 
-  defp slide(elements), do: [Builder.slide("s", elements: elements)] |> Builder.deck(name: "c")
-
   defp chart(deck) do
     [slide] = deck.slides
     Enum.find(slide.elements, &match?(%Chart{}, &1))
   end
-
-  defp document(deck), do: deck |> Expresso.Deck.render() |> LazyHTML.from_document()
 
   # The rules of the groups in the generated style block.
   defp rules(document) do
@@ -66,7 +62,7 @@ defmodule Expresso.ChartHighlightTest do
 
     test "each group takes one step after a pause, and a later element takes the next step" do
       deck =
-        slide([
+        one_slide([
           Builder.pause(),
           bars(highlight: ["Orders", "Returns"]),
           Builder.text_box(at: :next, elements: [Builder.text_area(text: "After")])
@@ -82,9 +78,9 @@ defmodule Expresso.ChartHighlightTest do
 
   describe "the document" do
     test "each series names its color number, and each group dims the other series at its step" do
-      html = [bars(highlight: ["Returns", ["Orders", "Returns"]])] |> slide() |> document()
+      html = [bars(highlight: ["Returns", ["Orders", "Returns"]])] |> one_slide() |> document()
 
-      [figure] = html |> LazyHTML.query(".screen figure.chart") |> Enum.to_list()
+      [figure] = html |> screen("figure.chart") |> Enum.to_list()
       [el] = LazyHTML.attribute(figure, "data-el")
 
       assert figure |> LazyHTML.query("g.chart-series") |> LazyHTML.attribute("data-series") ==
@@ -97,7 +93,7 @@ defmodule Expresso.ChartHighlightTest do
     end
 
     test "a chart without the option has no data-series and no rule of a group" do
-      html = [bars()] |> slide() |> document()
+      html = [bars()] |> one_slide() |> document()
 
       assert count(html, ".screen figure.chart:not(:has([data-series]))") == 1
       assert count(html, ".screen figure.chart:not([data-el])") == 1
@@ -114,11 +110,11 @@ defmodule Expresso.ChartHighlightTest do
             elements: [Builder.series("Web", [4, 5]), Builder.series("Shop", [1, 2])]
           )
         ]
-        |> slide()
+        |> one_slide()
         |> document()
 
       assert html
-             |> LazyHTML.query(".screen g.chart-series:has(polyline.chart-line)")
+             |> screen("g.chart-series:has(polyline.chart-line)")
              |> LazyHTML.attribute("data-series") == ["1", "2"]
 
       assert [rule] = rules(html)
@@ -128,13 +124,13 @@ defmodule Expresso.ChartHighlightTest do
     test "the series of a chart with the effect grow keep their numbers" do
       html =
         [bars(highlight: ["Orders"], effect: :grow, at: [from: 1])]
-        |> slide()
+        |> one_slide()
         |> document()
 
       assert count(html, ".screen figure.chart path.chart-bar.chart-mark") == 4
 
       assert html
-             |> LazyHTML.query(".screen figure.chart g.chart-series")
+             |> screen("figure.chart g.chart-series")
              |> LazyHTML.attribute("data-series") == ["1", "2"]
 
       assert [_rule] = rules(html)
@@ -145,7 +141,7 @@ defmodule Expresso.ChartHighlightTest do
       src = Path.join(tmp_dir, "data.csv")
       File.write!(src, "Month,Web,Shop\nJan,4,1\nFeb,5,2\n")
 
-      deck = slide([Builder.chart(:line, title: "Visitors", src: src, highlight: ["Shop"])])
+      deck = one_slide([Builder.chart(:line, title: "Visitors", src: src, highlight: ["Shop"])])
 
       assert [%Focus{series: [2], steps: [1]}] = chart(deck).focus
     end
@@ -156,13 +152,13 @@ defmodule Expresso.ChartHighlightTest do
     # view, with the classes of the mark.
     defp keyed(html) do
       html
-      |> LazyHTML.query(".screen [data-keys]")
+      |> screen("[data-keys]")
       |> Enum.map(&{hd(LazyHTML.attribute(&1, "class")), hd(LazyHTML.attribute(&1, "data-keys"))})
     end
 
     test "a group of categories dims each mark of the other categories, and a series step can follow" do
-      html = [bars(highlight: ["2024", "Returns"])] |> slide() |> document()
-      [el] = html |> LazyHTML.query(".screen figure.chart") |> LazyHTML.attribute("data-el")
+      html = [bars(highlight: ["2024", "Returns"])] |> one_slide() |> document()
+      [el] = html |> screen("figure.chart") |> LazyHTML.attribute("data-el")
 
       assert keyed(html) == [
                {"chart-category", "c1"},
@@ -195,7 +191,7 @@ defmodule Expresso.ChartHighlightTest do
             elements: [Builder.series("Web", [4, 5])]
           )
         ]
-        |> slide()
+        |> one_slide()
         |> document()
 
       assert {"chart-line", ""} in keyed(html)
@@ -214,7 +210,7 @@ defmodule Expresso.ChartHighlightTest do
             elements: [Builder.series("Hours", [3, 1])]
           )
         ]
-        |> slide()
+        |> one_slide()
         |> document()
 
       assert keyed(html) == [
@@ -234,7 +230,7 @@ defmodule Expresso.ChartHighlightTest do
     test "the marks of a chart with the effect grow have the keys" do
       html =
         [bars(highlight: ["2023"], effect: :grow, at: [from: 1])]
-        |> slide()
+        |> one_slide()
         |> document()
 
       assert count(html, ~s|.screen path.chart-bar.chart-mark[data-keys="c1"]|) == 2
@@ -258,7 +254,7 @@ defmodule Expresso.ChartHighlightTest do
           ] ++ opts
         )
       ]
-      |> slide()
+      |> one_slide()
       |> document()
     end
 
@@ -308,7 +304,7 @@ defmodule Expresso.ChartHighlightTest do
             elements: [Builder.series("Hours", [3, 2, 4])]
           )
         ]
-        |> slide()
+        |> one_slide()
         |> document()
 
       assert [rule] = rules(html)
@@ -332,7 +328,7 @@ defmodule Expresso.ChartHighlightTest do
           elements: [Builder.series(series, [3, 2, 4])]
         )
       ]
-      |> slide()
+      |> one_slide()
       |> document()
     end
 
@@ -493,7 +489,7 @@ defmodule Expresso.ChartHighlightTest do
     test "the verifier refuses a group at a step at which the chart does not show" do
       assert_raise Spark.Error.DslError,
                    ~r/the group of the highlight option has the step 1, and the chart does not show at that step/,
-                   fn -> slide([bars(at: 2, highlight: ["Orders", "Returns"])]) end
+                   fn -> one_slide([bars(at: 2, highlight: ["Orders", "Returns"])]) end
     end
   end
 end

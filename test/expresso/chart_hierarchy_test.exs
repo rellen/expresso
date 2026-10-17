@@ -20,14 +20,8 @@ defmodule Expresso.ChartHierarchyTest do
     Builder.chart(kind, Keyword.merge(defaults, opts))
   end
 
-  defp figure(chart) do
-    [Builder.slide("s", elements: [chart])]
-    |> Builder.deck(name: "parts")
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
-    |> LazyHTML.query(".screen figure.chart")
-    |> Enum.to_list()
-  end
+  defp figure(chart),
+    do: chart |> one_slide() |> document() |> screen("figure.chart") |> Enum.to_list()
 
   describe "the tree" do
     test "a slash in a category names a part of a group, in the order of the first category" do
@@ -175,7 +169,7 @@ defmodule Expresso.ChartHierarchyTest do
         )
 
       [%{elements: [chart]}] =
-        Builder.deck([Builder.slide("s", elements: [chart])], name: "p").slides
+        one_slide(chart).slides
 
       assert chart.categories == [["Production", "Press"], ["Office"]]
       assert Enum.map(chart.timeline, &hd(&1.elements).values) == [[62, 15], [40, 30]]
@@ -283,8 +277,8 @@ defmodule Expresso.ChartHierarchyTest do
       ]
 
       html =
-        [Builder.slide("s", elements: [chart(:treemap, elements: [], timeline: timeline)])]
-        |> Builder.deck(name: "parts")
+        chart(:treemap, elements: [], timeline: timeline)
+        |> one_slide()
         |> Expresso.Deck.render()
 
       assert html =~ ~r/section\[data-step="2"\] \[data-el="s1-e1"\] \{[^}]*--rw2: [\d.]+;/

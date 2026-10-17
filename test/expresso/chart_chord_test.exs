@@ -23,17 +23,7 @@ defmodule Expresso.ChartChordTest do
     )
   end
 
-  defp figure(chart) do
-    [figure] =
-      [Builder.slide("s", elements: [chart])]
-      |> Builder.deck(name: "chord")
-      |> Expresso.Deck.render()
-      |> LazyHTML.from_document()
-      |> LazyHTML.query(".screen figure.chart")
-      |> Enum.to_list()
-
-    figure
-  end
+  defp figure(chart), do: chart |> one_slide() |> document() |> screen("figure.chart") |> only!()
 
   defp labels(figure),
     do: texts(figure, "text.chart-node-label")

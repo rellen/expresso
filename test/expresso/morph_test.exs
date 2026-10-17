@@ -7,29 +7,28 @@ defmodule Expresso.MorphTest do
 
   doctest Expresso.Morph
 
-  defp document(slides, opts \\ []) do
+  defp render_slides(slides, opts \\ []) do
     slides
     |> Builder.deck(Keyword.merge([name: "morph"], opts))
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
+    |> document()
   end
 
   defp modes(document) do
     document
-    |> LazyHTML.query(".screen section.slide")
+    |> screen("section.slide")
     |> Enum.flat_map(&LazyHTML.attribute(&1, "data-morph"))
   end
 
   test "each slide has the morph of the deck, :auto by default, and a slide replaces it" do
     slides = [Builder.slide("a"), Builder.slide("b", morph: :off), Builder.slide("c")]
 
-    assert modes(document(slides)) == ["auto", "off", "auto"]
-    assert modes(document(slides, morph: :named)) == ["named", "off", "named"]
+    assert modes(render_slides(slides)) == ["auto", "off", "auto"]
+    assert modes(render_slides(slides, morph: :named)) == ["named", "off", "named"]
   end
 
   test "the morph option of an element gives its key, on each kind" do
     document =
-      document([
+      render_slides([
         Builder.slide("a",
           elements: [
             Builder.text_area(text: "Expresso", morph: "brand"),
@@ -41,7 +40,7 @@ defmodule Expresso.MorphTest do
 
     keys =
       document
-      |> LazyHTML.query(".screen [data-morph-key]")
+      |> screen("[data-morph-key]")
       |> Enum.flat_map(&LazyHTML.attribute(&1, "data-morph-key"))
 
     assert keys == ["brand", "count"]
@@ -73,7 +72,7 @@ defmodule Expresso.MorphTest do
     end
 
     assert {:ok, deck} = Expresso.to_deck(Deck)
-    document = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
+    document = document(deck)
     assert modes(document) == ["named", "auto"]
     assert count(document, ~s(.screen [data-morph-key="brand"])) == 2
   end
@@ -84,8 +83,8 @@ defmodule Expresso.MorphTest do
   # view.
   defp signatures(slides, class) do
     slides
-    |> document()
-    |> LazyHTML.query(".screen .#{class}")
+    |> render_slides()
+    |> screen(".#{class}")
     |> Enum.map(&(&1 |> LazyHTML.attribute("data-morph-signature") |> List.first()))
   end
 

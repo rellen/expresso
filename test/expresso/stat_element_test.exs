@@ -8,14 +8,8 @@ defmodule Expresso.StatElementTest do
 
   doctest Stat
 
-  defp render(stat) do
-    [Builder.slide("s", elements: [stat])]
-    |> Builder.deck(name: "stats")
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
-    |> LazyHTML.query(".screen figure.stat")
-    |> Enum.to_list()
-  end
+  defp render(stat),
+    do: stat |> one_slide() |> document() |> screen("figure.stat") |> Enum.to_list()
 
   # The texts of the number of the one figure.
   defp numbers(stat) do
@@ -108,7 +102,7 @@ defmodule Expresso.StatElementTest do
     end
 
     assert {:ok, deck} = Expresso.to_deck(Deck)
-    document = deck |> Expresso.Deck.render() |> LazyHTML.from_document()
+    document = document(deck)
     assert texts(document, ".screen .column .stat .stat-label") == ["orders"]
     assert texts(document, ".screen .callout .stat-number") == ["3"]
   end

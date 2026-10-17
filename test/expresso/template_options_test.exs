@@ -1,6 +1,8 @@
 defmodule Expresso.TemplateOptionsTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTML
+
   alias Expresso.Builder
 
   defmodule SectionTemplate do
@@ -15,13 +17,9 @@ defmodule Expresso.TemplateOptionsTest do
     end
   end
 
-  defp texts(deck, selector) do
-    deck
-    |> Expresso.Deck.render()
-    |> LazyHTML.from_document()
-    |> LazyHTML.query(".screen #{selector}")
-    |> Enum.map(&LazyHTML.text/1)
-  end
+  # The text of each node that a selector finds in the present view.
+  defp screen_texts(deck, selector),
+    do: deck |> document() |> screen(selector) |> Enum.map(&LazyHTML.text/1)
 
   test "the meta option goes into the metadata under :meta" do
     [first, second] =
@@ -53,15 +51,15 @@ defmodule Expresso.TemplateOptionsTest do
         slide_template: SectionTemplate
       )
 
-    assert texts(deck, ".section-slide") == ["Part 1"]
-    assert texts(deck, "h1:not(.slide-hidden-heading)") == ["Built in"]
+    assert screen_texts(deck, ".section-slide") == ["Part 1"]
+    assert screen_texts(deck, "h1:not(.slide-hidden-heading)") == ["Built in"]
   end
 
   test "a deck without slide_template uses the built-in slide template" do
     deck = Builder.deck([Builder.slide("one", heading: "Default")])
 
     refute Map.has_key?(deck.metadata, :slide_template)
-    assert texts(deck, "h1") == ["Default"]
+    assert screen_texts(deck, "h1") == ["Default"]
   end
 
   test "the DSL takes slide_template and meta" do
@@ -78,6 +76,6 @@ defmodule Expresso.TemplateOptionsTest do
       end
       """)
 
-    assert module |> Expresso.parse() |> texts(".section-slide") == ["Part 2"]
+    assert module |> Expresso.parse() |> screen_texts(".section-slide") == ["Part 2"]
   end
 end
