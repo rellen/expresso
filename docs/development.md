@@ -190,6 +190,7 @@ Write a test with LazyHTML as follows:
 | `document(deck)` | The parsed document of a deck, or of the deck of a DSL module |
 | `screen(html, selector)` | The nodes of the selector inside `.screen`, the present view |
 | `only!(nodes)` | The one node of a query. The test fails for a different number. |
+| `script_json(html, name)` | The data of the block `script#expresso-<name>`, such as `"videos"` |
 | `count(html, selector)` | The number of the nodes of the selector |
 | `texts(html, selector)` | The text of each node of the selector |
 
@@ -205,6 +206,19 @@ time. A test module that imports
 `Expresso.Test.HTML` cannot define a private function with the same name and arity, such
 as `document/1`. Give a private helper a different name, or a different arity, such as
 `document/0` for the deck of the module.
+
+Three other modules of `test/support/` hold the helpers that more than one test file
+needs:
+
+| Module | Functions |
+| --- | --- |
+| `Expresso.Test.Decks` | `find_slide(deck, name)` finds a slide of a deck or of a DSL module. `box(text)` makes a text box with one text area. |
+| `Expresso.Test.Warnings` | `texts(warnings)` gives the text of each warning of a check, such as `Expresso.Overlay.Size.slide/1`. |
+| `Expresso.Test.HTTP` | `get(url)` gets a page with `:httpc`. `raw_get(port, path, headers)` sends the request on a TCP socket. |
+
+The names of `Expresso.Test.Decks` are not names of the DSL. An import puts its functions
+into each deck module inside the test module too, and a name such as `slide/2` would
+conflict with the entity `slide` of the DSL.
 
 To assert that an element has no part, find the element with `:not(:has(...))`, and
 assert that the query finds one node. A query that must find no node also finds no node

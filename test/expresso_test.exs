@@ -2,12 +2,11 @@ defmodule ExpressoTest do
   use ExUnit.Case
 
   import Expresso.Test.HTML
+  import Expresso.Test.Decks
 
   alias Expresso.Builder
 
   doctest Expresso
-
-  defp box(text), do: Builder.text_box(elements: [Builder.text_area(text: text)])
 
   defmodule DslDeck do
     use Expresso

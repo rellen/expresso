@@ -38,9 +38,6 @@ defmodule Expresso.Element.AudioTest do
   defp document,
     do: document(AudioDeck)
 
-  defp json(document),
-    do: document |> LazyHTML.query("script#expresso-audios") |> LazyHTML.text() |> JSON.decode!()
-
   test "writes no source on a sound, and each sound names its file" do
     document = document()
     sounds = count(document, "audio")
@@ -53,7 +50,7 @@ defmodule Expresso.Element.AudioTest do
   end
 
   test "writes each file one time, as a data URI that the schema takes" do
-    list = json(document())
+    list = script_json(document(), "audios")
 
     assert [uri] = list
     assert "data:audio/wav;base64," <> data = uri

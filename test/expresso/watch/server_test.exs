@@ -1,19 +1,14 @@
 defmodule Expresso.Watch.ServerTest do
   use ExUnit.Case, async: true
 
+  import Expresso.Test.HTTP
+
   alias Expresso.Watch.Server
 
   setup do
     {:ok, server} = Server.start(0)
     on_exit(fn -> Server.stop(server) end)
     %{server: server}
-  end
-
-  defp get(url) do
-    {:ok, {{_version, status, _reason}, _headers, body}} =
-      :httpc.request(:get, {String.to_charlist(url), []}, [], body_format: :binary)
-
-    {status, body}
   end
 
   test "serves a short text and the version 0 before the first document", %{server: server} do

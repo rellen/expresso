@@ -4,13 +4,11 @@ defmodule Expresso.Overlay.PropertiesTest do
   alias Expresso.Element.{On, Pause, TextArea, TextBox}
   alias Expresso.Overlay.Properties
   alias Expresso.Slide
+  alias Expresso.Test.Warnings
 
   defp warnings(elements, name \\ "s") do
-    %Slide{name: name, elements: elements} |> Properties.slide() |> Enum.map(&message/1)
+    %Slide{name: name, elements: elements} |> Properties.slide() |> Warnings.texts()
   end
-
-  defp message({text, _anno}), do: text
-  defp message(text), do: text
 
   test "gives no warning for a property of the theme" do
     on = [%On{state: :alert}, %On{set: [x: "1px", y: "2px"]}]

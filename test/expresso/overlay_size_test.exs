@@ -3,13 +3,11 @@ defmodule Expresso.Overlay.SizeTest do
 
   alias Expresso.Overlay.Size
   alias Expresso.Slide
+  alias Expresso.Test.Warnings
 
   defp warnings(fields) do
-    %Slide{} |> struct!(fields) |> Size.slide() |> Enum.map(&message/1)
+    %Slide{} |> struct!(fields) |> Size.slide() |> Warnings.texts()
   end
-
-  defp message({text, _anno}), do: text
-  defp message(text), do: text
 
   test "gives no warning for a slide of few steps" do
     assert warnings(name: "s", metadata: %{max_step: Size.maximum()}) == []

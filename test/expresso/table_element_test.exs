@@ -2,6 +2,7 @@ defmodule Expresso.Element.TableTest do
   use ExUnit.Case, async: true
 
   import Expresso.Test.HTML
+  import Expresso.Test.Decks
 
   alias Expresso.Builder
   alias Expresso.Element.{Row, Table}
@@ -63,10 +64,6 @@ defmodule Expresso.Element.TableTest do
     end
   end
 
-  defp slide(name) do
-    Enum.find(Expresso.parse(TableDeck).slides, &(&1.name == name))
-  end
-
   describe "Expresso.Builder.table/1" do
     test "makes a table from rows" do
       rows = [Builder.row(["a", "b"]), Builder.row(["c", "d"])]
@@ -101,7 +98,7 @@ defmodule Expresso.Element.TableTest do
 
   describe "the DSL entity" do
     test "holds rows, and a row holds its cells" do
-      [table] = slide("plain").elements
+      [table] = find_slide(TableDeck, "plain").elements
 
       assert %Table{header: true, reveal: false} = table
 
@@ -113,20 +110,20 @@ defmodule Expresso.Element.TableTest do
     end
 
     test "reveals one row at each step, and the header shows with the table" do
-      [table, box] = slide("reveal").elements
+      [table, box] = find_slide(TableDeck, "reveal").elements
 
       assert Enum.map(table.elements, & &1.steps) == [nil, [1, 2, 3], [2, 3]]
       assert box.steps == [3]
     end
 
     test "reveals each row without the header option" do
-      [%{elements: [table]}] = slide("no header").elements
+      [%{elements: [table]}] = find_slide(TableDeck, "no header").elements
 
       assert Enum.map(table.elements, & &1.steps) == [[1, 2], [2]]
     end
 
     test "holds the caption and the row header options" do
-      [table, hidden] = slide("names").elements
+      [table, hidden] = find_slide(TableDeck, "names").elements
 
       assert %Table{caption: "Orders each year", caption_hidden: false, row_header: true} =
                table

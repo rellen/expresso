@@ -3,6 +3,8 @@ defmodule Expresso.WatchTest do
   # a failed render can make the compiler write to the global standard error.
   use ExUnit.Case, async: false
 
+  import Expresso.Test.HTTP
+
   alias Expresso.Watch
 
   @moduletag :tmp_dir
@@ -53,13 +55,6 @@ defmodule Expresso.WatchTest do
     %File.Stat{mtime: mtime} = File.stat!(path, time: :posix)
     File.write!(path, contents)
     File.touch!(path, mtime + 1)
-  end
-
-  defp get(url) do
-    {:ok, {{_version, status, _reason}, _headers, body}} =
-      :httpc.request(:get, {String.to_charlist(url), []}, [], body_format: :binary)
-
-    {status, body}
   end
 
   describe "run/3" do

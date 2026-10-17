@@ -6,6 +6,7 @@ defmodule Expresso.BinaryTest do
   use ExUnit.Case, async: true
 
   import ExUnit.CaptureIO
+  import Expresso.Test.HTTP
 
   @moduletag :release
   @moduletag :tmp_dir
@@ -288,8 +289,8 @@ defmodule Expresso.BinaryTest do
     output = read_until(binary, "Rendered", "")
     assert output =~ "Serving examples/dsl_deck.exs at http://127.0.0.1:#{port}/"
 
-    assert get(port, "/") =~ ~r{\AHTTP/1\.[01] 200 .*<!DOCTYPE html>.*const version = "1"}s
-    assert get(port, "/version") =~ ~r{\r\n\r\n1\z}
+    assert raw_get(port, "/") =~ ~r{\AHTTP/1\.[01] 200 .*<!DOCTYPE html>.*const version = "1"}s
+    assert raw_get(port, "/version") =~ ~r{\r\n\r\n1\z}
 
     {:os_pid, pid} = Port.info(binary, :os_pid)
     System.cmd("kill", ["-TERM", Integer.to_string(pid)])
@@ -299,21 +300,6 @@ defmodule Expresso.BinaryTest do
 
   # A request with HTTP/1.0, so the server closes the connection after the
   # answer.
-  defp get(port, path) do
-    {:ok, socket} = :gen_tcp.connect({127, 0, 0, 1}, port, [:binary, active: false])
-    :ok = :gen_tcp.send(socket, "GET #{path} HTTP/1.0\r\nHost: 127.0.0.1\r\n\r\n")
-    answer = receive_all(socket, "")
-    :gen_tcp.close(socket)
-    answer
-  end
-
-  defp receive_all(socket, answer) do
-    case :gen_tcp.recv(socket, 0, 10_000) do
-      {:ok, data} -> receive_all(socket, answer <> data)
-      {:error, :closed} -> answer
-    end
-  end
-
   defp read_until(binary, text, output) do
     if output =~ text do
       output
