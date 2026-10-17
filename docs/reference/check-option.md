@@ -149,6 +149,8 @@ takes no other argument. It runs these commands, in sequence:
 
 1. `npm install --prefix <directory> playwright axe-core`, with the directory of
    `EXPRESSO_TOOLS`. `Expresso.Check.Tools.packages/0` gives the version of each package.
+   The version comes from `package.json` of Expresso, so it is the version that the tests
+   of Expresso use.
 2. `node <directory>/node_modules/playwright/cli.js install chromium`, which puts the
    Chromium and the headless shell into the cache of Playwright.
 

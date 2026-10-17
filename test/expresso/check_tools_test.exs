@@ -5,17 +5,20 @@ defmodule Expresso.CheckToolsTest do
 
   alias Expresso.Check.Tools
 
-  doctest Tools
-
   @moduletag :tmp_dir
 
-  test "the versions of the packages agree with package.json" do
+  # `Tools` reads the versions from `package.json` when it compiles. An exact
+  # version installs the same package as the tests of Expresso use, and a
+  # range such as `^1.63.0` does not.
+  test "each package has the exact version of package.json" do
     versions = "package.json" |> File.read!() |> JSON.decode!() |> Map.fetch!("devDependencies")
 
     assert Tools.packages() == [
              "playwright@#{versions["playwright"]}",
              "axe-core@#{versions["axe-core"]}"
            ]
+
+    for package <- Tools.packages(), do: assert(package =~ ~r/@\d+\.\d+\.\d+$/, package)
   end
 
   test "the directory is EXPRESSO_TOOLS, or a directory of the cache of the user", %{

@@ -13,10 +13,16 @@ defmodule Expresso.Check.Tools do
   `playwright_ex` in the deps of the project. The binary holds it.
   """
 
-  # The versions of the npm packages. They agree with the versions in
-  # `package.json`, and a test makes sure of it.
-  @playwright "1.63.0"
-  @axe "4.14.0"
+  # The versions of the npm packages come from the `devDependencies` of
+  # `package.json`, which the tests of Expresso use. Dependabot changes that
+  # file, so a new version also goes to `install/2` with no change here. A
+  # dependency on Expresso from a path or from git holds the file. A package
+  # for Hex must put the file in its `files`.
+  @package_json Path.expand("../../../package.json", __DIR__)
+  @external_resource @package_json
+  @versions @package_json |> File.read!() |> JSON.decode!() |> Map.fetch!("devDependencies")
+  @playwright Map.fetch!(@versions, "playwright")
+  @axe Map.fetch!(@versions, "axe-core")
 
   @doc """
   Return the directory of the tools
@@ -36,8 +42,8 @@ defmodule Expresso.Check.Tools do
   @doc """
   Return the npm packages that `install/2` installs, with their versions
 
-      iex> Expresso.Check.Tools.packages()
-      ["playwright@1.63.0", "axe-core@4.14.0"]
+  Each version is the version of the package in `package.json`, so the list
+  has the form `["playwright@<version>", "axe-core@<version>"]`.
   """
   @spec packages() :: [String.t()]
   def packages, do: ["playwright@#{@playwright}", "axe-core@#{@axe}"]
