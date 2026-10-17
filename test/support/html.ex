@@ -64,6 +64,14 @@ defmodule Expresso.Test.HTML do
   end
 
   @doc """
+  Return the data of a block `script#expresso-<name>`, such as the list of
+  the videos for `"videos"`
+  """
+  @spec script_json(LazyHTML.t(), String.t()) :: term()
+  def script_json(html, name),
+    do: html |> LazyHTML.query("script#expresso-#{name}") |> LazyHTML.text() |> JSON.decode!()
+
+  @doc """
   Return the number of the nodes that a selector finds
   """
   @spec count(LazyHTML.t(), String.t()) :: non_neg_integer()

@@ -2,6 +2,7 @@ defmodule Expresso.Element.ListTest do
   use ExUnit.Case, async: true
 
   import Expresso.Test.HTML
+  import Expresso.Test.Decks
   import Spark.Test, only: [dsl_errors: 1]
 
   alias Expresso.Builder
@@ -87,10 +88,6 @@ defmodule Expresso.Element.ListTest do
     end
   end
 
-  defp slide(name) do
-    Enum.find(Expresso.parse(ListDeck).slides, &(&1.name == name))
-  end
-
   describe "Expresso.Builder.list/1" do
     test "makes a list from items" do
       list = Builder.list(elements: [Builder.item("a"), Builder.item("b")], ordered: true)
@@ -103,7 +100,7 @@ defmodule Expresso.Element.ListTest do
 
   describe "the DSL entity" do
     test "holds items, and an item holds text and one nested list" do
-      [list] = slide("plain").elements
+      [list] = find_slide(ListDeck, "plain").elements
 
       assert [%Item{text: "First", elements: []}, %Item{text: "Second"} = second] = list.elements
       assert [%Expresso.Element.List{ordered: true} = nested] = second.elements
@@ -112,28 +109,28 @@ defmodule Expresso.Element.ListTest do
     end
 
     test "shows each item at each step without the reveal option" do
-      [list] = slide("plain").elements
+      [list] = find_slide(ListDeck, "plain").elements
 
       assert list.steps == nil
       assert Enum.map(list.elements, & &1.steps) == [nil, nil]
     end
 
     test "reveals one item at each step with the reveal option" do
-      [list, box] = slide("reveal").elements
+      [list, box] = find_slide(ListDeck, "reveal").elements
 
       assert list.reveal == true
       assert Enum.map(list.elements, & &1.steps) == [[1, 2, 3, 4], [2, 3, 4], [3, 4]]
       assert box.steps == [4]
-      assert slide("reveal").metadata.max_step == 4
+      assert find_slide(ListDeck, "reveal").metadata.max_step == 4
     end
 
     test "starts the items at the first step of a list with an absolute at option" do
-      [list, box] = slide("reveal at").elements
+      [list, box] = find_slide(ListDeck, "reveal at").elements
 
       assert list.steps == [3, 4]
       assert Enum.map(list.elements, & &1.steps) == [[3, 4], [4]]
       assert box.steps == [1]
-      assert slide("reveal at").metadata.max_step == 4
+      assert find_slide(ListDeck, "reveal at").metadata.max_step == 4
     end
 
     test "reports an item outside a list with a closed at option" do
@@ -158,7 +155,7 @@ defmodule Expresso.Element.ListTest do
     end
 
     test "keeps the at option and the on entity of an item" do
-      [list] = slide("reveal and at").elements
+      [list] = find_slide(ListDeck, "reveal and at").elements
       [one, two] = list.elements
 
       assert one.steps == [1, 2]
@@ -167,7 +164,7 @@ defmodule Expresso.Element.ListTest do
     end
 
     test "continues the counter of auto_reveal" do
-      [list, box] = slide("auto").elements
+      [list, box] = find_slide(ListDeck, "auto").elements
 
       assert list.steps == [1, 2, 3, 4]
       assert Enum.map(list.elements, & &1.steps) == [[2, 3, 4], [3, 4]]

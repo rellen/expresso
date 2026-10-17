@@ -4,6 +4,7 @@ defmodule Expresso.Element.CodeTest do
   import Expresso.Test.HTML
 
   import ExUnit.CaptureIO
+  import Expresso.Test.Decks
 
   alias Expresso.Builder
   alias Expresso.Element.{Code, Lines}
@@ -56,10 +57,6 @@ defmodule Expresso.Element.CodeTest do
         text "1"
       end
     end
-  end
-
-  defp slide(name) do
-    Enum.find(Expresso.parse(CodeDeck).slides, &(&1.name == name))
   end
 
   # The code element of a deck of one slide. `Expresso.PathTransformer` reads
@@ -117,13 +114,13 @@ defmodule Expresso.Element.CodeTest do
 
   describe "the DSL entity" do
     test "takes the language as its first argument and the text option" do
-      [code] = slide("elixir").elements
+      [code] = find_slide(CodeDeck, "elixir").elements
 
       assert %Code{lang: "elixir", text: "defmodule Hello do\n" <> _, elements: []} = code
     end
 
     test "makes one group for each item of the reveal option, one step each" do
-      [code, box] = slide("reveal").elements
+      [code, box] = find_slide(CodeDeck, "reveal").elements
 
       assert code.steps == nil
       assert Enum.map(code.elements, & &1.numbers) == [[1], [2, 3]]
@@ -132,7 +129,7 @@ defmodule Expresso.Element.CodeTest do
     end
 
     test "takes no language, and goes inside a text box" do
-      [%{elements: [code]}, other] = slide("plain").elements
+      [%{elements: [code]}, other] = find_slide(CodeDeck, "plain").elements
 
       assert %Code{lang: nil, text: "a < b\n\n  c"} = code
       assert other.steps == [2]

@@ -38,9 +38,6 @@ defmodule Expresso.Element.VideoTest do
   defp deck, do: Expresso.parse(VideoDeck)
   defp document, do: deck() |> document()
 
-  defp json(document),
-    do: document |> LazyHTML.query("script#expresso-videos") |> LazyHTML.text() |> JSON.decode!()
-
   describe "the document" do
     test "writes no source on a video, and each video names its file" do
       document = document()
@@ -56,7 +53,7 @@ defmodule Expresso.Element.VideoTest do
     end
 
     test "writes each file one time, as a data URI that the schema takes" do
-      list = json(document())
+      list = script_json(document(), "videos")
 
       assert [uri] = list
       assert "data:video/webm;base64," <> data = uri
@@ -131,7 +128,7 @@ defmodule Expresso.Element.VideoTest do
   test "the root option of the deck gives the directory of the file and of the poster" do
     document = document(RootDeck)
 
-    assert [_uri] = json(document)
+    assert [_uri] = script_json(document, "videos")
   end
 
   describe "number/1" do

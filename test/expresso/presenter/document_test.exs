@@ -2,6 +2,7 @@ defmodule Expresso.Presenter.DocumentTest do
   use ExUnit.Case, async: true
 
   import Expresso.Test.HTML
+  import Expresso.Test.Decks
 
   alias Expresso.Builder
   alias Expresso.Presenter.{Definition, Help, Program}
@@ -17,8 +18,6 @@ defmodule Expresso.Presenter.DocumentTest do
     |> Builder.deck(name: "deck")
     |> document()
   end
-
-  defp box(text), do: Builder.text_box(elements: [Builder.text_area(text: text)])
 
   describe "the program" do
     test "is a JSON script element between the list of the steps and the bundle" do

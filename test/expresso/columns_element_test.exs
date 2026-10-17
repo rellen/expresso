@@ -2,6 +2,7 @@ defmodule Expresso.Element.ColumnsTest do
   use ExUnit.Case, async: true
 
   import Expresso.Test.HTML
+  import Expresso.Test.Decks
 
   alias Expresso.Builder
   alias Expresso.Element.{Column, Columns, Image, TextBox}
@@ -44,10 +45,6 @@ defmodule Expresso.Element.ColumnsTest do
     end
   end
 
-  defp slide(name) do
-    Enum.find(Expresso.parse(ColumnsDeck).slides, &(&1.name == name))
-  end
-
   describe "Expresso.Builder.columns/1" do
     test "makes columns from columns, with an optional width" do
       box = Builder.text_box(elements: [Builder.text_area(text: "a")])
@@ -63,7 +60,7 @@ defmodule Expresso.Element.ColumnsTest do
 
   describe "the DSL entity" do
     test "holds columns, and a column holds the elements of a text box" do
-      [columns] = slide("two").elements
+      [columns] = find_slide(ColumnsDeck, "two").elements
 
       assert %Columns{steps: nil} = columns
       assert [%Column{width: "30%"} = left, %Column{width: nil} = right] = columns.elements
@@ -72,14 +69,15 @@ defmodule Expresso.Element.ColumnsTest do
     end
 
     test "gives a column the overlays" do
-      [columns] = slide("two").elements
+      [columns] = find_slide(ColumnsDeck, "two").elements
       [_left, right] = columns.elements
 
       assert right.steps == [1]
     end
 
     test "goes inside a text box" do
-      [%TextBox{elements: [%Columns{elements: [_, _]}]}] = slide("in a box").elements
+      [%TextBox{elements: [%Columns{elements: [_, _]}]}] =
+        find_slide(ColumnsDeck, "in a box").elements
     end
   end
 
