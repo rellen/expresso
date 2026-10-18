@@ -211,5 +211,25 @@ defmodule Expresso.SvgCopyTest do
       assert [_one, _two] = signatures
       assert Enum.uniq(signatures) |> length() == 1
     end
+
+    @tag :tmp_dir
+    test "with a style in a text area keeps one signature for the morph", %{tmp_dir: tmp_dir} do
+      File.cp!(Path.join(@fixtures, "red.svg"), Path.join(tmp_dir, "red.svg"))
+
+      document =
+        for(
+          name <- ["one", "two"],
+          do: Builder.slide(name, elements: [Builder.text_area(text: "A :icon:red:")])
+        )
+        |> Builder.deck(name: "icons", root: tmp_dir, icons: [red: "red.svg"])
+        |> document()
+
+      signatures =
+        document
+        |> LazyHTML.query(".screen [data-morph-signature]")
+        |> Enum.flat_map(&LazyHTML.attribute(&1, "data-morph-signature"))
+
+      assert [one, one] = signatures
+    end
   end
 end

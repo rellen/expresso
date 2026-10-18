@@ -258,5 +258,16 @@ defmodule Expresso.CheckTest do
       assert %{notes: [note]} = Document.size(html)
       assert note =~ "The largest files: image/jpeg 6 KB, image/png 3 KB."
     end
+
+    test "the size note names a file in an href or an xlink:href of an SVG" do
+      data = String.duplicate("A", 4096)
+
+      html =
+        ~s(<image href="data:image/png;base64,#{data}"/>) <>
+          ~s(<image xlink:href="data:image/webp;base64,#{data}#{data}"/>)
+
+      assert %{notes: [note]} = Document.size(html)
+      assert note =~ "The largest files: image/webp 6 KB, image/png 3 KB."
+    end
   end
 end

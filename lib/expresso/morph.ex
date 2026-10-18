@@ -13,7 +13,8 @@ defmodule Expresso.Morph do
   `Expresso.Element.kinds/0` gives the content of each kind:
 
     * `:text` - the text of the rendered element, with one space for each
-      run of white space.
+      run of white space. The text of a `<style>` in an inline icon is not
+      part of it, because the render gives each copy its own style rules.
     * `:source` - the `src` option of an image or of an embed.
     * `:file` - the file of a video or of a sound.
     * `:drawing` - the SVG of the element before the render gives it the
@@ -67,7 +68,8 @@ defmodule Expresso.Morph do
   def signature(kind, content),
     do: {kind, content} |> :erlang.phash2(@range) |> Integer.to_string(36)
 
-  defp content(element, :text), do: element |> html() |> Floki.text() |> words()
+  defp content(element, :text),
+    do: element |> html() |> Floki.text(style: false) |> words()
 
   # An icon gets its signature from the SVG before the render, because the
   # render gives each copy its own ids.
