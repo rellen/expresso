@@ -247,6 +247,9 @@ defmodule Expresso.Presenter.Schema do
         fields: {:partial, for({field, kind} <- @fields, do: {field, kind(kind)})},
         scheme: {:ref, :scheme},
         time: {:number, nil, nil}}},
+      {:request,
+       "The message that the speaker view sends to the present view after its load. The present view answers with a message of its full state.",
+       {:open_object, expresso: {:literal, "request"}}},
       {:element_kind, "A kind of element: the class of its root tag, and its name.",
        {:tuple, [:string, :string]}}
     ]

@@ -409,6 +409,15 @@ export const decodeMessage: Decoder<Message> = /* @__PURE__ */ openObject({
   time: /* @__PURE__ */ number(),
 });
 
+// The message that the speaker view sends to the present view after its load.
+// The present view answers with a message of its full state.
+export type Request = Readonly<{
+  expresso: "request";
+}>;
+export const decodeRequest: Decoder<Request> = /* @__PURE__ */ openObject({
+  expresso: /* @__PURE__ */ literal("request"),
+});
+
 // A kind of element: the class of its root tag, and its name.
 export type ElementKind = readonly [string, string];
 export const decodeElementKind: Decoder<ElementKind> = /* @__PURE__ */ tuple(/* @__PURE__ */ string(), /* @__PURE__ */ string());

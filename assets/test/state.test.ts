@@ -8,8 +8,12 @@ import assert from "node:assert/strict";
 import {
   accepts,
   current,
+  DRIFT,
   isMessage,
+  isRequest,
+  limit,
   message,
+  request,
   side,
   stamp,
   swipe,
@@ -74,6 +78,21 @@ test("isMessage accepts only a message of the presenter", () => {
   for (const data of others) {
     assert.equal(isMessage(data), false, JSON.stringify(data));
   }
+});
+
+test("isRequest accepts only a request of the speaker view", () => {
+  assert.equal(isRequest(request()), true);
+  assert.equal(isRequest({ expresso: "request", other: 1 }), true);
+  const good = message(program, at(three, 1, 1), three, 1, null);
+  for (const data of [null, "request", {}, { expresso: "other" }, good]) {
+    assert.equal(isRequest(data), false, JSON.stringify(data));
+  }
+});
+
+test("limit keeps a time near the clock, and limits a time far after it", () => {
+  assert.equal(limit(500, 1000), 500);
+  assert.equal(limit(1000 + DRIFT, 1000), 1000 + DRIFT);
+  assert.equal(limit(1e15, 1000), 1000 + DRIFT);
 });
 
 test("stamp returns the clock, or one more than the last time", () => {

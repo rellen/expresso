@@ -48,11 +48,15 @@ function datasetKey(name: string): string {
 export type FakeBody = FakeElement;
 export const fakeBody = (): FakeBody => element("", "");
 
-// A fake window of the other side. It keeps each message that it gets.
+// A fake window of the other side. It keeps each message that it gets, and it
+// counts the calls of `focus`. `opener` is the window that opened it.
 export type FakeWindow = {
   closed: boolean;
   received: unknown[];
+  focused: number;
+  opener: unknown;
   postMessage: (data: unknown, origin: string) => void;
+  focus: () => void;
 };
 
 type Key = {
@@ -158,12 +162,17 @@ export type FakePage = {
   keys: () => { names: string; text: string }[];
 };
 
-export function fakeWindow(): FakeWindow {
+export function fakeWindow(opener: unknown = null): FakeWindow {
   const window: FakeWindow = {
     closed: false,
     received: [],
+    focused: 0,
+    opener,
     postMessage: (data) => {
       window.received.push(data);
+    },
+    focus: () => {
+      window.focused++;
     },
   };
   return window;
@@ -517,7 +526,7 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     }),
     opener: options.opener ?? null,
     open: (url: string, name: string) => {
-      const window = fakeWindow();
+      const window = fakeWindow(global.window);
       page.opened.push({ url, name, window });
       return window;
     },

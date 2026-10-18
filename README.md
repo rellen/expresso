@@ -267,7 +267,8 @@ groups. The keys of each other view are in a closed section below them.
 
 1. Type a key or a word into the search field, such as `d` or `dark`.
 2. Read the rows that agree with the text. The list opens each section that has a row.
-3. Press `Esc` to close the list. A click outside the list also closes it.
+3. Press `Tab` to move to a closed section, and press `Enter` or the space bar to open it.
+4. Press `Esc` to close the list. A click outside the list also closes it.
 
 The next open of the list shows each row again.
 
@@ -412,8 +413,9 @@ The speaker view knows these keys:
 
 ![The speaker view: the current step, the next step, the notes, the position, the timer and the time left](https://raw.githubusercontent.com/rellen/expresso/media/present-speaker.png)
 
-The timer starts at the first change of the step. If the browser blocks the second window,
-let the document open windows.
+The timer starts at the first change of the step after the speaker view opens. A second `s`
+shows the open speaker view again, and its timer continues. If the browser blocks the
+second window, let the document open windows.
 
 ### The time of the talk
 
