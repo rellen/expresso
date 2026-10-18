@@ -72,6 +72,21 @@ defmodule Expresso.MoveToTest do
     test "reads numbers with no space between them" do
       assert Path.points("M.5-.5L1e1,2") == [{0.5, -0.5}, {10.0, 2.0}]
     end
+
+    test "reads the flags of an arc with no separator, as SVGO writes them" do
+      assert Path.points("M0 0a5 5 0 0110 0h10") == Path.points("M0 0a5 5 0 0 1 10 0h10")
+      assert Path.points("M0 0A5 5 0 1,0 10 0") == [{0.0, 0.0}, {10.0, 0.0}]
+      assert Path.points("M0 0a5 5 0 01.5.5") == [{0.0, 0.0}, {0.5, 0.5}]
+
+      assert Path.points("M0 0a5 5 0 0110 0 5 5 0 1120 0") == [
+               {0.0, 0.0},
+               {10.0, 0.0},
+               {30.0, 0.0}
+             ]
+
+      tree = "test/fixtures/copies/arcs.svg" |> File.read!() |> Floki.parse_fragment!()
+      assert Geometry.distance(tree, "a", "b") == {:ok, {100.0, 0.0}}
+    end
   end
 
   describe "the render" do

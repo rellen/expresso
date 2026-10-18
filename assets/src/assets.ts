@@ -4,11 +4,13 @@
 // holds more than one time. The first element with the value has
 // `data-asset-N`, with the name of the attribute that holds it, such as
 // `data-asset-0="src"`. Each other element has `data-asset-src="0"` or
-// `data-asset-poster="0"` in place of the value. `restore` copies the value
-// into each of these elements when the document loads.
+// `data-asset-href="0"` in place of the value. An `xlink:href` of an SVG
+// also gets `data-asset-href`, and SVG 2 reads `href` in its place.
+// `restore` copies the value into each of these elements when the document
+// loads.
 
 // The attributes that `Expresso.Assets` can replace.
-const NAMES = ["src", "poster"] as const;
+const NAMES = ["src", "href"] as const;
 
 // A part of the DOM that `restore` reads and writes. The document is one, and
 // a test gives a fake.

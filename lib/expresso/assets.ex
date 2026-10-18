@@ -2,19 +2,23 @@ defmodule Expresso.Assets do
   @moduledoc """
   Keeps one copy of each large file that the document holds more than one time
 
-  A deck is one file, so an image, a poster or a track goes into the document
-  as a data URI. Each view of the slide holds its own copy: the present view,
-  each page of the handout view and the picture in the menu. An image of 250 KB
-  in a slide of two steps was then in the document six times.
+  A deck is one file, so an image or a track goes into the document as a data
+  URI. An SVG file of a diagram or of an icon can also hold an image as a data
+  URI in an `href` or an `xlink:href` attribute. Each view of the slide holds
+  its own copy: the present view, each page of the handout view and the
+  picture in the menu. An image of 250 KB in a slide of two steps was then in
+  the document six times.
 
-  `dedupe/1` runs on the HTML of the document. For each value of a `src` or a
-  `poster` attribute that is a data URI of `#{1024}` characters or more, and
-  that occurs more than one time:
+  `dedupe/1` runs on the HTML of the document. For each value of a `src`, an
+  `href` or an `xlink:href` attribute that is a data URI of `#{1024}`
+  characters or more, and that occurs more than one time:
 
     * the first element keeps the attribute, and gets `data-asset-N` with the
       name of that attribute, such as `data-asset-0="src"`;
     * each other element loses the attribute, and gets `data-asset-src="0"` or
-      `data-asset-poster="0"` in its place.
+      `data-asset-href="0"` in its place. An `xlink:href` gets
+      `data-asset-href`, because SVG 2 reads `href` in place of `xlink:href`,
+      and a selector cannot hold the `:` of the name.
 
   The presenter script copies the value back into each element when the
   document loads. `assets/src/assets.ts` gives the rules.
@@ -23,10 +27,10 @@ defmodule Expresso.Assets do
   # A data URI under this length costs less than the attribute that replaces it.
   @minimum 1024
 
-  @attribute ~r/ (src|poster)="(data:[^"]{#{@minimum},})"/
+  @attribute ~r/ (src|href|xlink:href)="(data:[^"]{#{@minimum},})"/
 
   # The same attribute as a whole part of the split text.
-  @whole ~r/\A (src|poster)="(data:[^"]{#{@minimum},})"\z/
+  @whole ~r/\A (src|href|xlink:href)="(data:[^"]{#{@minimum},})"\z/
 
   @doc """
   Replace each copy of a large data URI after its first with a reference to the first
@@ -69,11 +73,14 @@ defmodule Expresso.Assets do
         {part, ids}
 
       Map.has_key?(ids, uri) ->
-        {~s( data-asset-#{name}="#{Map.fetch!(ids, uri)}"), ids}
+        {~s( data-asset-#{reference_name(name)}="#{Map.fetch!(ids, uri)}"), ids}
 
       true ->
         id = map_size(ids)
         {~s( data-asset-#{id}="#{name}") <> part, Map.put(ids, uri, id)}
     end
   end
+
+  defp reference_name("xlink:href"), do: "href"
+  defp reference_name(name), do: name
 end

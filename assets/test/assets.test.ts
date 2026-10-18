@@ -39,17 +39,17 @@ test("restore copies the value of the first element into each reference", () => 
     "data-asset-0": "src",
     src: "data:image/png;base64,AAAA",
   });
-  const video = element({
-    "data-asset-1": "poster",
-    poster: "data:image/png;base64,BBBB",
+  const image = element({
+    "data-asset-1": "xlink:href",
+    "xlink:href": "data:image/png;base64,BBBB",
   });
   const copy = element({ "data-asset-src": "0" });
-  const poster = element({ "data-asset-poster": "1" });
+  const href = element({ "data-asset-href": "1" });
 
-  restore(root([first, video, copy, poster]));
+  restore(root([first, image, copy, href]));
 
   assert.equal(copy.attributes["src"], "data:image/png;base64,AAAA");
-  assert.equal(poster.attributes["poster"], "data:image/png;base64,BBBB");
+  assert.equal(href.attributes["href"], "data:image/png;base64,BBBB");
 });
 
 test("a reference with no first element stays as it is", () => {

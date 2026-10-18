@@ -984,8 +984,9 @@ Each view of a slide holds its own copy of the slide: the present view, each pag
 handout view and the picture in the menu. An image of 250 KB on a slide of two steps was
 then in the document six times, and the images of the Line 4 talk made 2 MB of its 3.9 MB.
 `Expresso.Deck.render/1` therefore runs `Expresso.Assets.dedupe/1` on the HTML. The first
-element with a large data URI in `src` or `poster` keeps it, and each later element refers
-to it with `data-asset-src` or `data-asset-poster`. `assets.ts` copies the value back
+element with a large data URI in `src`, `href` or `xlink:href` keeps it, and each later
+element refers to it with `data-asset-src` or `data-asset-href`. An SVG file of a diagram
+or of an icon can hold an image in an `href`. `assets.ts` copies the value back
 before the first render of the script. The work is on the text of the HTML, after the
 render, so each element and each template gets it with no change. A video does not need
 it, because `Expresso.Media` already writes each file one time.
@@ -1244,9 +1245,18 @@ the option takes the width that the file gives.
 The document holds one copy of the file for the present view and one for each page of the
 handout view. A browser resolves a reference such as `url(#fill)` to the first element of
 the document with that `id`. A gradient in a hidden view then does not paint. Therefore
-the render function gives each copy its own ids. It puts the number of the copy after each
-`id`, and it puts the same number into each `url(#id)` and each `href="#id"` of the copy.
-`Expresso.Copies.next/0` gives the number. `Expresso.Renderer.render/1` makes each
+the render function gives each copy its own ids. `Expresso.SvgCopy.number/2` puts the
+number of the copy after each `id`, and it puts the same number into each `url(#id)`, each
+`href="#id"` and each `#id` selector of the copy. It makes a map from each old id to its
+new id, and it changes the text in one pass. Thus the ids `g1` and `g1-2` of one file
+do not become the same id. `Expresso.Copies.next/0` gives the number.
+
+A `<style>` element in an inline SVG applies to the whole document. Therefore
+`Expresso.SvgCopy` gives the root `svg` of a copy the attribute `data-svg-copy` with the
+number. The subject of each selector of the `<style>` gets
+`:where([data-svg-copy="N"], [data-svg-copy="N"] *)`. The `:where` adds no specificity.
+A rule inside `@scope` was not a solution: it adds `:scope` and a descendant combinator
+before a selector, so `#my-svg .node` cannot match a root with the id `my-svg`. `Expresso.Renderer.render/1` makes each
 document in `Expresso.Copies.number/1`, which counts from 1. Thus two renders of one deck
 give the same document, also in two different VMs. The release tests compare the document
 of the binary with the document of `Expresso.main/2`, so the numbers must not depend on
@@ -1800,6 +1810,11 @@ the elements at compile time. These are the reasons for this design:
 - **A marker in the text.** The text of a text area is HTML, so the transformer replaces
   `:icon:name:` with the SVG. The marker has no meaning in HTML, so it cannot change a text
   that has no icon.
+- **The ids of each copy at render time.** An icon file can hold a `clipPath`, a `mask` or
+  a `<style>` element. The document holds each slide more than one time, so the render
+  function of an icon, of a text area and of an item gives each SVG its own ids with
+  `Expresso.SvgCopy`, as for a diagram. `Expresso.Morph` makes the signature of an icon
+  from the SVG before this change, so two copies of one icon get the same signature.
 
 ## The DSL
 

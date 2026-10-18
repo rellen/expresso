@@ -20,13 +20,20 @@ defmodule Expresso.Element.TextArea do
 
   The key `overlay` holds the attributes of the overlay contract, from
   `Expresso.Overlay.Render.attributes/1`. The key `goto` holds the link of the
-  `goto` option, or `nil`.
+  `goto` option, or `nil`. The key `text` holds the text with the ids and the
+  style rules of this copy in each inline SVG, from
+  `Expresso.SvgCopy.copy_each/1`.
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
   def get_assigns(text_area) do
     %__MODULE__{text: text, goto: goto} = text_area
-    %{text: text, goto: goto, overlay: Expresso.Overlay.Render.attributes(text_area)}
+
+    %{
+      text: Expresso.SvgCopy.copy_each(text),
+      goto: goto,
+      overlay: Expresso.Overlay.Render.attributes(text_area)
+    }
   end
 
   @doc """

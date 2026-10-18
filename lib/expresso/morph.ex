@@ -16,7 +16,8 @@ defmodule Expresso.Morph do
       run of white space.
     * `:source` - the `src` option of an image or of an embed.
     * `:file` - the file of a video or of a sound.
-    * `:drawing` - the SVG of the rendered element.
+    * `:drawing` - the SVG of the element before the render gives it the
+      ids of its copy, or the SVG of the rendered element.
     * `:language` - the language of a code element.
     * `:label` - the label of a stat.
 
@@ -68,8 +69,15 @@ defmodule Expresso.Morph do
 
   defp content(element, :text), do: element |> html() |> Floki.text() |> words()
 
+  # An icon gets its signature from the SVG before the render, because the
+  # render gives each copy its own ids.
   defp content(element, :drawing) do
-    case element |> html() |> Floki.find("svg") do
+    svg =
+      if is_binary(Map.get(element, :svg)),
+        do: Floki.parse_fragment!(element.svg),
+        else: html(element)
+
+    case Floki.find(svg, "svg") do
       [{"svg", _attributes, children} | _others] -> Floki.raw_html(children)
       [] -> ""
     end

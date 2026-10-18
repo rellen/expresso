@@ -42,13 +42,14 @@ defmodule Expresso.Element.Icon do
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from
-  `Expresso.Overlay.Render.attributes/1`.
+  `Expresso.Overlay.Render.attributes/1`. The key `svg` holds the SVG with
+  the ids and the style rules of this copy, from `Expresso.SvgCopy.copy/1`.
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
   def get_assigns(%__MODULE__{} = icon) do
     %{
-      svg: icon.svg,
+      svg: Expresso.SvgCopy.copy(icon.svg),
       label: icon.label,
       color: icon.color |> Atom.to_string() |> String.replace("_", "-"),
       size: icon.size,
