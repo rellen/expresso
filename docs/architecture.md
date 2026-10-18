@@ -763,6 +763,13 @@ An image, an SVG file, an embed and a video have colors that the palette does no
 They dim with one opacity, `--dim-opacity`: the strongest opacity that keeps each role of
 text at 3:1 and at Lc 30.
 
+At a higher `dim_contrast`, a role near the ratio can need the opacity 1.0, and then
+`--dim-opacity` is 1.0 too. Each light built-in theme has this result at 4.5. A graphic
+then does not dim. `Expresso.ThemeVerifier.dim_messages/2` gives a warning for each such
+variant, and `--check` gives it as a note. Issue #335 recorded the case. A separate
+opacity for graphics changes the design of `docs/dim-state.md`, so it needs its own
+decision.
+
 A series of a chart dims in a different way. Its marks fade to `--chart-dim-opacity`, 0.3
 by default, and its texts take the dimmed color of the text. A colored bar at
 `--dim-opacity` looked almost the same as a bar in full color, and the texts keep the

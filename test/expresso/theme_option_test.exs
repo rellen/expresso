@@ -147,6 +147,41 @@ defmodule Expresso.ThemeOptionTest do
     assert output =~ "No lightness of the color of base05 passes"
   end
 
+  test "a theme that does not dim at the dim_contrast of the deck compiles with a warning" do
+    output =
+      capture_io(:stderr, fn ->
+        Code.compile_quoted(
+          quote do
+            defmodule Expresso.ThemeOptionTest.Strict do
+              use Expresso
+
+              theme(:github)
+              dim_contrast(4.5)
+
+              slide "one" do
+              end
+            end
+          end
+        )
+      end)
+
+    assert output =~ "at a dim contrast of 4.5:1, the theme gives --dim-opacity 1.0"
+
+    builder =
+      capture_io(:stderr, fn ->
+        Builder.deck([Builder.slide("one")], theme: :solarized_light, dim_contrast: 4.5)
+      end)
+
+    assert builder =~ "no role of text dims"
+
+    quiet =
+      capture_io(:stderr, fn ->
+        Builder.deck([Builder.slide("one")], dim_contrast: 4.5, theme: :dracula)
+      end)
+
+    refute quiet =~ "dim-opacity"
+  end
+
   test "a name that is not a built-in theme stops the compile" do
     assert_raise Spark.Error.DslError, ~r/is not a built-in theme/, fn ->
       Code.compile_quoted(

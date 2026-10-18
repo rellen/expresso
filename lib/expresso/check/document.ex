@@ -9,6 +9,7 @@ defmodule Expresso.Check.Document do
   | Check | Kind | Finds |
   | --- | --- | --- |
   | `theme/1` | problem | Each role of a theme of 16 colors under its minimum of contrast |
+  | `theme/1` | note | Each variant of the theme that does not dim at the `dim_contrast` option |
   | `size/1` | note | The size of the document, and its largest files |
   | `slides/1` | note | An image with no `alt` text, a diagram with no `alt` text, a slide with only a hidden heading, and a slide with no `h1` |
   """
@@ -27,18 +28,23 @@ defmodule Expresso.Check.Document do
   @doc """
   Return a problem for each role of the theme of the deck under its minimum of contrast
 
-  The problems are the warnings of `Expresso.ThemeVerifier`. A built-in theme
-  has no problem.
+  The problems are the warnings of `Expresso.ThemeVerifier.messages/1`. A
+  built-in theme has no problem. The notes are the warnings of
+  `Expresso.ThemeVerifier.dim_messages/2`: a deck that does not dim can be
+  correct, so they do not change the exit status.
   """
   @spec theme(Expresso.Deck.t()) :: result()
   def theme(deck) do
-    problems =
-      deck.metadata
-      |> Map.get(:theme, :default)
-      |> Expresso.ThemeVerifier.messages()
+    metadata = deck.metadata || %{}
+    theme = Map.get(metadata, :theme, :default)
+    problems = theme |> Expresso.ThemeVerifier.messages() |> Enum.map(&("Theme: " <> &1))
+
+    notes =
+      theme
+      |> Expresso.ThemeVerifier.dim_messages(metadata[:dim_contrast])
       |> Enum.map(&("Theme: " <> &1))
 
-    %{problems: problems, notes: []}
+    %{problems: problems, notes: notes}
   end
 
   @doc """

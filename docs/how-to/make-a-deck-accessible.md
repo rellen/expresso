@@ -191,6 +191,10 @@ Each dimmed line now keeps 4.5:1, the minimum of WCAG for normal text. The lines
 and the bar of `highlight` still shows the focus. See
 [the dim_contrast option](../reference/dim-contrast-option.md).
 
+A light built-in theme does not dim at 4.5, and the compiler gives a warning. For a light
+theme, give `dim_contrast 4`, or give a theme with more contrast. See
+[A theme that does not dim](../reference/dim-contrast-option.md#a-theme-that-does-not-dim).
+
 ## Make sure of the result
 
 1. Open the deck in a browser with a screen reader, such as VoiceOver on macOS or NVDA on

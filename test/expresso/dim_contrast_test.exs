@@ -7,6 +7,7 @@ defmodule Expresso.DimContrastTest do
 
   doctest Expresso.Deck, only: [dim_contrast: 1]
   doctest Expresso.Palette, only: [with_dim_contrast: 2]
+  doctest Expresso.ThemeVerifier
 
   # The custom properties of the first `:root` rule of the theme of a document.
   defp properties(opts) do
@@ -34,8 +35,10 @@ defmodule Expresso.DimContrastTest do
     end
   end
 
+  # Each light built-in theme has a role near 4.5:1, so it does not dim at 4.5
+  # and it gives a warning. The tests at 4.5 use a dark theme, or a lower ratio.
   test "with 4.5, each dimmed role of text keeps 4.5:1 on its background" do
-    for {role, contrast} <- dimmed_contrasts(properties(dim_contrast: 4.5)) do
+    for {role, contrast} <- dimmed_contrasts(properties(theme: :dracula, dim_contrast: 4.5)) do
       assert contrast >= 4.5, "#{role} has #{contrast}:1"
     end
   end
@@ -61,11 +64,63 @@ defmodule Expresso.DimContrastTest do
       []
       |> one_slide([],
         theme: [light: :solarized_light, dark: :solarized_dark],
-        dim_contrast: 4.5
+        dim_contrast: 4
       )
       |> Expresso.Deck.render()
 
     assert [_, _ | _] = Regex.scan(~r/--text-dim: (#[0-9a-f]{6})/, style)
+  end
+
+  describe "a theme that does not dim at the minimum" do
+    alias Expresso.ThemeVerifier
+
+    test "gives a warning that names --dim-opacity and each role that does not dim" do
+      assert [message] = ThemeVerifier.dim_messages(:default, 4.5)
+
+      assert message =~ "at a dim contrast of 4.5:1, the theme gives --dim-opacity 1.0"
+      assert message =~ "a dimmed image, SVG file, embed and video do not dim"
+      assert message =~ "the roles warning, success, code_number, code_string do not dim"
+    end
+
+    test "the reference gives the warning for the default theme" do
+      [example] =
+        Regex.run(~r/```text\n(.*)\n```/, File.read!("docs/reference/dim-contrast-option.md"),
+          capture: :all_but_first
+        )
+
+      assert ThemeVerifier.dim_messages(:default, 4.5) == [example]
+    end
+
+    test "says that no role of text dims when each role keeps its color" do
+      assert [message] = ThemeVerifier.dim_messages(:solarized_light, 4.5)
+      assert message =~ "no role of text dims"
+    end
+
+    test "gives a warning for each light built-in theme, because each has --dim-opacity 1.0 at 4.5" do
+      for name <- [
+            :default,
+            :github,
+            :one_light,
+            :rose_pine_dawn,
+            :solarized_light,
+            :tokyo_night_light
+          ] do
+        assert [_] = ThemeVerifier.dim_messages(name, 4.5), "#{name} has no warning"
+        assert Palette.with_dim_contrast(Palette.Builtin.fetch!(name), 4.5).dim_opacity == 1.0
+      end
+    end
+
+    test "gives no warning for a theme that dims" do
+      assert ThemeVerifier.dim_messages(:dracula, 4.5) == []
+
+      for name <- Palette.Builtin.names(),
+          do: assert(ThemeVerifier.dim_messages(name, nil) == [], "#{name} has a warning at 3")
+    end
+
+    test "names the variant of a theme with two variants" do
+      assert [message] = ThemeVerifier.dim_messages([light: :github, dark: :dracula], 4.5)
+      assert message =~ "the light theme gives --dim-opacity 1.0"
+    end
   end
 
   test "the compiler refuses a value outside 3 to 7" do
@@ -80,6 +135,7 @@ defmodule Expresso.DimContrastTest do
     defmodule StrictDeck do
       use Expresso
 
+      theme :dracula
       dim_contrast 4.5
 
       slide "start" do
