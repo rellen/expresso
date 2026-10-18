@@ -517,9 +517,13 @@ html               lang "en", and data-variants for a theme with two variants
                      type "application/json", from Expresso.Steps
       script         the program of the presenter as JSON, id "expresso-program",
                      type "application/json", from Expresso.Presenter.Program
-      script         the sources of the embeds, the videos and the sounds as JSON,
-                     ids "expresso-embeds", "expresso-videos" and
-                     "expresso-audios", when the deck has such an element
+      script         the sources of the embeds as JSON, id "expresso-embeds",
+                     when the deck has an embed
+      script         the commands of the links as JSON, id "expresso-links",
+                     from Expresso.Goto, when the deck has a link
+      script         the sources of the videos and the sounds as JSON, ids
+                     "expresso-videos" and "expresso-audios", when the deck has
+                     such an element
       script         priv/static/presenter.js, the presenter bundle
 ```
 
@@ -2148,12 +2152,17 @@ examines no value. These parts find a defect of the program:
 - The click handler reads commands only from a link of the `goto` option, from a page of
   the overview and from a row of the menu. `COMMAND_HOLDERS` of `schema.ts` gives their
   selectors, and a test makes sure that they find each element with commands that the
-  renderer writes. The selectors examine only the tag, the class, the id `menu` and the
-  attribute. Thus the script also runs `data-commands` from an element of the HTML of a
-  deck with the same names, such as `<a class="goto" data-commands="...">` in a text area.
-  These names are reserved, and `docs/reference/text-area-element.md` tells the user. The
-  HTML of a text area goes into the document with no escape and can hold a `script`
-  element. Thus the selectors do not limit what a deck can do.
+  renderer writes. A link holds only its number in `data-link`, and the script reads its
+  commands from the element `expresso-links`. Thus the HTML of a deck cannot give a link
+  commands that the compiler did not make. It can only refer to the number of a link of
+  the deck. A page and a row hold their commands in `data-commands`.
+- The selectors examine only the tag, the class, the id `menu` and the attribute. Thus the
+  script also reads an element of the HTML of a deck with the same names, such as
+  `<div class="handout-page" data-commands="...">` in a text area. These names are
+  reserved, and `docs/reference/text-area-element.md` tells the user. The HTML of a text
+  area goes into the document with no escape and can hold a `script` element. Thus the
+  selectors do not limit what a deck can do. They keep a typing error in the HTML of a
+  deck from running commands.
 
 `Expresso.Presenter.Schema` describes each value that Elixir writes for the script, and
 `assets/src/schema.ts` holds the TypeScript type and the decoder of each value. A test
@@ -2317,8 +2326,16 @@ or by name. The verifier refuses a name that no slide has or that two slides hav
 
 The render function of the element puts its content into an `a` element with the class
 `goto`. The `href` attribute holds the fragment of the step, such as `#5.2`.
-`Expresso.Goto.resolve/1` writes the commands of the link into `data-commands`, such as
-`[["goto",7]]`. The number is the index of the step in the list of the steps.
+`Expresso.Goto.resolve/1` gives each link its number in the deck, in document order, from
+0, and its commands, such as `[["goto",7]]`. The number 7 is the index of the step in the
+list of the steps. The link holds its number in `data-link`, and each copy of the link
+holds the same number. `Expresso.Goto.json/1` writes the commands of each link one time
+into the element `expresso-links`, in the order of the numbers. The form `written_links`
+of `Expresso.Presenter.Schema` describes that list.
+
+A link holds no commands itself, for two reasons. Raw HTML in a text area cannot give a
+link new commands, so a typing error cannot run a command that the compiler did not make.
+Also, the compiler makes and checks each command of a link, as it does for the program.
 
 A click on an element with commands runs the commands only in a mode with the option
 `element`. The interpreter puts the `each` commands of the mode in front of them:

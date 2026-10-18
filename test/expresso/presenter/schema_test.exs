@@ -106,10 +106,39 @@ defmodule Expresso.Presenter.SchemaTest do
 
     for {kind, elements} <- found, do: refute(Enum.empty?(elements), "no #{kind} in the deck")
 
-    # Two queries return two different structs for the same node, so the test
-    # compares the HTML of the nodes.
+    # A link holds the number of its commands, and a page and a row hold
+    # their commands. Two queries return two different structs for the same
+    # node, so the test compares the HTML of the nodes.
     assert found |> Enum.flat_map(&elem(&1, 1)) |> MapSet.new(&LazyHTML.to_html/1) ==
-             html |> LazyHTML.query("[data-commands]") |> MapSet.new(&LazyHTML.to_html/1)
+             html
+             |> LazyHTML.query("[data-commands], [data-link]")
+             |> MapSet.new(&LazyHTML.to_html/1)
+
+    assert html |> LazyHTML.query("a.goto[data-commands]") |> Enum.empty?()
+  end
+
+  test "the links of a deck agree with the form of the written links" do
+    # Slide 2 has two steps, so step 2 of slide 2 has the index 2 and step 1
+    # of slide 3 has the index 3.
+    deck =
+      Builder.deck([
+        Builder.slide("one",
+          elements: [
+            Builder.text_area(text: "Two", goto: [slide: 2, step: 2]),
+            Builder.text_area(text: "Three", goto: [slide: "three"])
+          ]
+        ),
+        Builder.slide("two",
+          elements: [Builder.text_area(text: "A"), Builder.text_area(text: "B", at: 2)]
+        ),
+        Builder.slide("three")
+      ])
+
+    links =
+      deck |> document() |> LazyHTML.query("#expresso-links") |> LazyHTML.text() |> JSON.decode!()
+
+    assert links == [[["goto", 2]], [["goto", 3]]]
+    assert Check.check(links, :written_links) == :ok
   end
 
   # The fields of each record of a form: one record, or each record of a union.

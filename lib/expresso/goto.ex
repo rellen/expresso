@@ -9,14 +9,22 @@ defmodule Expresso.Goto do
   into a link:
 
   ```html
-  <a class="goto" href="#5.2" data-commands='[["goto",7]]'>
+  <a class="goto" href="#5.2" data-link="0">
   ```
 
-  The number 7 is the index of step 2 of slide 5 in the list of the steps. A
-  click on the link in the present view runs the commands of the link with the
-  program of the presenter, so the presenter goes to that step. The link is an
-  HTML link, so the keyboard and a screen reader can use it. In the handout view
-  and in the speaker view, the script does not run the commands.
+  `data-link` holds the number of the link in the deck. The renderer writes
+  the commands of each link one time into the element `expresso-links`, in
+  the order of these numbers, such as `[[["goto",7]]]`. The number 7 is the
+  index of step 2 of slide 5 in the list of the steps. A click on the link in
+  the present view runs the commands of the link with the program of the
+  presenter, so the presenter goes to that step. The link is an HTML link, so
+  the keyboard and a screen reader can use it. In the handout view and in the
+  speaker view, the script does not run the commands.
+
+  The link holds no commands itself. Thus raw HTML in a text area can refer to
+  the commands of a link of the deck, but it cannot give new commands. The
+  compiler makes each command, and `Expresso.Presenter.Schema` gives the
+  form of the list.
 
   A name must belong to one slide of the deck. A link by name stays correct
   when a slide comes in front of its target, and a link by number does not.
@@ -37,18 +45,20 @@ defmodule Expresso.Goto do
   @typedoc """
   A link
 
-  `commands` holds the JSON of the commands. `resolve/1` writes it, and it is
-  `nil` before. `resolve/1` also replaces a name in `slide` with the number of
-  the slide.
+  `index` holds the number of the link in the deck, from 0, and `commands`
+  holds its commands. `resolve/1` writes the two fields, and they are `nil`
+  before. `resolve/1` also replaces a name in `slide` with the number of the
+  slide.
   """
   @type t :: %__MODULE__{
           slide: pos_integer() | String.t(),
           step: pos_integer(),
-          commands: String.t() | nil
+          index: non_neg_integer() | nil,
+          commands: [Expresso.Presenter.Definition.command()] | nil
         }
 
   @enforce_keys [:slide]
-  defstruct [:slide, :commands, step: 1]
+  defstruct [:slide, :index, :commands, step: 1]
 
   @doc """
   Make a link from the value of the `goto` option
@@ -134,9 +144,10 @@ defmodule Expresso.Goto do
   defp inspect_slide(name), do: inspect(name)
 
   @doc """
-  Write the commands of each link of a deck
+  Give each link of a deck its number and its commands
 
-  The commands go to the index of the step in the list of the steps.
+  The number is the position of the link in the deck, in document order, from
+  0. The commands go to the index of the step in the list of the steps.
   `Expresso.Renderer` calls this function before it renders the deck. The
   function raises an `ArgumentError` for a link to a slide or a step that the
   deck does not have.
@@ -144,9 +155,39 @@ defmodule Expresso.Goto do
   @spec resolve(Deck.t()) :: Deck.t()
   def resolve(%Deck{slides: slides} = deck) do
     firsts = deck |> Steps.slides() |> Enum.map(& &1.first)
-    link = &commands(&1, firsts, targets(slides))
+    link = &commands(&1, &2, firsts, targets(slides))
 
-    Tree.map_deck(deck, &resolve_one(&1, link))
+    {deck, _count} = Tree.map_reduce_deck(deck, 0, &resolve_one(&1, &2, link))
+    deck
+  end
+
+  @doc """
+  Write the commands of the links of a deck as JSON, or return `nil`
+
+  The value is a list with the commands of each link, in the order of their
+  numbers, such as `[[["goto",7]]]`. `resolve/1` must give the numbers first.
+  The renderer writes the value into the element `expresso-links`, so the
+  function escapes each `<`. A deck with no link gets `nil`, and the document
+  then holds no such element.
+  """
+  @spec json(Deck.t()) :: String.t() | nil
+  def json(%Deck{slides: slides}) do
+    links =
+      for slide <- slides,
+          %{goto: %__MODULE__{index: index, commands: commands}} <-
+            Tree.descendants(slide.elements),
+          do: {index, commands}
+
+    case links do
+      [] ->
+        nil
+
+      links ->
+        links
+        |> Enum.sort()
+        |> Enum.map(fn {_index, commands} -> Program.commands_value(commands) end)
+        |> Expresso.Json.for_script()
+    end
   end
 
   @doc """
@@ -157,7 +198,7 @@ defmodule Expresso.Goto do
   @spec targets([Expresso.Slide.t()]) :: [{String.t() | nil, pos_integer()}]
   def targets(slides), do: Enum.map(slides, &{&1.name, Render.max_step(&1)})
 
-  defp commands(goto, firsts, slides) do
+  defp commands(goto, number_of_link, firsts, slides) do
     case check(goto, slides) do
       {:ok, number} ->
         index = Enum.at(firsts, number - 1) + goto.step - 1
@@ -165,7 +206,8 @@ defmodule Expresso.Goto do
         %__MODULE__{
           goto
           | slide: number,
-            commands: index |> Program.link() |> Program.json_commands()
+            index: number_of_link,
+            commands: Program.link(index)
         }
 
       {:error, message} ->
@@ -173,9 +215,10 @@ defmodule Expresso.Goto do
     end
   end
 
-  # An element with the commands of its link.
-  defp resolve_one(%{goto: goto} = element, link) when goto != nil,
-    do: %{element | goto: link.(goto)}
+  # An element with the number and the commands of its link, and the number
+  # of the next link.
+  defp resolve_one(%{goto: goto} = element, count, link) when goto != nil,
+    do: {%{element | goto: link.(goto, count)}, count + 1}
 
-  defp resolve_one(element, _link), do: element
+  defp resolve_one(element, count, _link), do: {element, count}
 end

@@ -23,6 +23,7 @@ import type {
   Commands,
   Mark,
   Property,
+  WrittenLinks,
   WrittenMode,
   WrittenProgram,
 } from "./schema.ts";
@@ -120,5 +121,11 @@ export function parse(source: string): Program {
 // Read the JSON text of the commands of an element, such as a page of the
 // overview. The renderer writes them in the attribute `data-commands`.
 export function commands(source: string): Commands {
+  return JSON.parse(source);
+}
+
+// Read the JSON text of the commands of the links of the `goto` option. The
+// renderer writes them into the element `expresso-links`.
+export function links(source: string): WrittenLinks {
   return JSON.parse(source);
 }

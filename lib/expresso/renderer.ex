@@ -543,8 +543,8 @@ defmodule Expresso.Renderer do
   this function, and it writes the tree and adds the doctype. The function
   dims the lines of each code element with the `highlight` option with
   `Expresso.Element.Code.spotlight/1` first. It gives each element its identity
-  with `Expresso.Overlay.Render.identify/1` next. Then `Expresso.Goto.resolve/1` writes the commands of each link, and
-  it raises for a link to a slide or a step that the deck does not have.
+  with `Expresso.Overlay.Render.identify/1` next. Then `Expresso.Goto.resolve/1` gives each link its number and its
+  commands, and it raises for a link to a slide or a step that the deck does not have.
 
   The function makes the document in `Expresso.Copies.number/1`. Thus the
   copies of a diagram and of an arrow get the same ids in each render of a
@@ -726,6 +726,11 @@ defmodule Expresso.Renderer do
             id: "expresso-embeds",
             json: Expresso.Element.Embed.json(@deck)
           )
+
+          # The commands of the links of the `goto` option. A link holds only
+          # its number in `data-link`, so the HTML of a deck cannot give a
+          # link new commands. A deck with no link has no such element.
+          c(&json_script/1, id: "expresso-links", json: Expresso.Goto.json(@deck))
 
           c(&json_script/1, id: "expresso-videos", json: Expresso.Element.Video.json(@deck))
           c(&json_script/1, id: "expresso-audios", json: Expresso.Element.Audio.json(@deck))

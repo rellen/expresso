@@ -8,6 +8,7 @@
 
 import assert from "node:assert/strict";
 import type { Kind } from "../src/deck.ts";
+import { COMMAND_HOLDERS } from "../src/schema.ts";
 import { key, raw, texts } from "./fixtures.ts";
 
 export type FakeElement = {
@@ -23,6 +24,8 @@ export type FakeElement = {
   };
   textContent: string;
   hidden: boolean;
+  // A fake element matches no selector. The fake link of a click has its own.
+  matches: (selector: string) => boolean;
   children: FakeElement[];
   appendChild: (child: FakeElement) => void;
   replaceChildren: () => void;
@@ -81,8 +84,8 @@ type Click = {
   // The page of the handout view under the click, as for a click on a slide
   // of the overview.
   on?: FakeElement;
-  // The link of the `goto` option under the click. It holds its commands in
-  // `data-commands`.
+  // The link of the `goto` option under the click. It holds the number of its
+  // commands in `data-link`.
   link?: FakeElement;
   // An element of the HTML of a deck with `data-commands`, which the renderer
   // did not write. Only the selector `[data-commands]` finds it.
@@ -114,6 +117,10 @@ type Options = {
   variants?: boolean;
   // True for a screen that asks for a dark scheme.
   dark?: boolean;
+  // The commands of each link of the `goto` option, in the order of the
+  // numbers of the links. The renderer writes them into the element
+  // `expresso-links`. A page without links has no such element.
+  links?: unknown[][];
 };
 
 export type FakePage = {
@@ -196,6 +203,7 @@ export function element(
     },
     textContent: "",
     hidden: false,
+    matches: () => false,
     children: [],
     appendChild: (child) => {
       self.children.push(child);
@@ -240,6 +248,8 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     options.duration === undefined ? null : options.duration * 60_000;
   const list = element("expresso-deck");
   list.textContent = JSON.stringify(steps);
+  const links = element("expresso-links");
+  links.textContent = JSON.stringify(options.links ?? []);
   const program = element("expresso-program");
   // The renderer writes the `progress` of the deck into the first state of the
   // program.
@@ -342,6 +352,7 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   const announce = element("announce");
   const all = () => [
     list,
+    ...(options.links === undefined ? [] : [links]),
     program,
     help,
     ...slides,
@@ -457,7 +468,7 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
               ? null
               : {
                   ...event.link,
-                  matches: (each: string) => each === "a.goto[data-commands]",
+                  matches: (each: string) => each === COMMAND_HOLDERS.link,
                 };
           // The selector of the two kinds of element that hold commands.
           if (selector.includes(".handout-page[data-commands]")) {

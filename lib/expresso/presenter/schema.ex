@@ -2,11 +2,12 @@ defmodule Expresso.Presenter.Schema do
   @moduledoc """
   Describes each value that Elixir writes for the script of the presenter
 
-  The renderer writes six values for the script:
+  The renderer writes seven values for the script:
 
     * the program that `Expresso.Presenter.Program` makes;
     * the list of the steps that `Expresso.Steps` makes;
-    * the commands of an element;
+    * the commands of a page of the overview and of a row of the menu;
+    * the commands of the links that `Expresso.Goto` makes;
     * the sources of the embeds that `Expresso.Element.Embed` makes;
     * the sources of the videos that `Expresso.Element.Video` makes;
     * the sources of the sounds that `Expresso.Element.Audio` makes.
@@ -235,6 +236,9 @@ defmodule Expresso.Presenter.Schema do
       {:written_embeds,
        "The source of each embed of a deck, in the order of the numbers of the elements, as the renderer writes it.",
        {:list, {:object, kind: {:enum, ["src", "srcdoc"]}, value: :string}}},
+      {:written_links,
+       "The commands of each link of the `goto` option of a deck, in the order of the numbers of the links, as the renderer writes it.",
+       {:list, {:ref, :commands}}},
       {:written_videos,
        "The data URI of each video of a deck, in the order of the numbers of the elements, as the renderer writes it.",
        {:list, {:string, "^data:video/(webm|mp4);base64,"}}},
@@ -276,10 +280,10 @@ defmodule Expresso.Presenter.Schema do
        {:list, {:ref, :element_kind}},
        for({_module, class, kind, _content} <- Expresso.Element.kinds(), do: [class, kind])},
       {:command_holders,
-       "The selectors of the three kinds of element that hold the commands of a click: a link of the `goto` option, a page of the overview and a row of the menu. The script reads commands only from these elements.",
+       "The selectors of the three kinds of element that hold the commands of a click: a link of the `goto` option, a page of the overview and a row of the menu. A link holds the number of its commands in the element `expresso-links`, and a page and a row hold their commands in `data-commands`. The script reads commands only from these elements.",
        {:object, link: :string, page: :string, row: :string},
        %{
-         "link" => "a.goto[data-commands]",
+         "link" => "a.goto[data-link]",
          "page" => ".handout-page[data-commands]",
          "row" => "#menu .menu-slide[data-commands], #menu .menu-step[data-commands]"
        }}

@@ -88,7 +88,7 @@ defmodule Expresso.Element.Image do
     temple do
       div class: Expresso.Element.classes("image", assigns[:class]), rest!: @overlay do
         if @goto do
-          a class: "goto", href: Expresso.Goto.href(@goto), data_commands: @goto.commands do
+          a class: "goto", href: Expresso.Goto.href(@goto), data_link: @goto.index do
             img src: @src, alt: @alt
           end
         else

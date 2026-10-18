@@ -53,7 +53,7 @@ defmodule Expresso.Element.TextArea do
     temple do
       div class: Expresso.Element.classes("text-area", assigns[:class]), rest!: @overlay do
         if @goto do
-          a class: "goto", href: Expresso.Goto.href(@goto), data_commands: @goto.commands do
+          a class: "goto", href: Expresso.Goto.href(@goto), data_link: @goto.index do
             div do
               Phoenix.HTML.raw(@text)
             end
