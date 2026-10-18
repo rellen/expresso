@@ -262,7 +262,9 @@ These are the reasons for its design:
   check needs no client of the DevTools protocol, and the binary can run it too.
 - **A small page measures the window.** A headless Chrome keeps a part of its window for
   itself, and the part changes with the version. The first run opens a page that writes its
-  size, and the second run makes the window larger by the difference.
+  size, and the second run makes the window larger by the difference. A Chrome window is
+  not narrower than 500 px, so the check compares the size of the page with `--size`. When
+  the two sizes are different, the check stops with an error.
 - **The browser level presses real keys.** The other levels show each step and each view
   with `apply`, so they do not test the program of the keys, the focus or the errors of the
   script. The session finds each key in the program of the presenter, and it presses the key
