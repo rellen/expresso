@@ -68,6 +68,8 @@ that occurs two times on one slide gives no partner.
 
 - Only a change between two neighbor slides in the present view has a morph. A change of
   the step has none. A jump, such as `Home`, morphs the two slides of the jump.
+- A change from or to a black screen, the overview, the menu or the list of keys has no
+  morph, because these views cover the slide.
 - The slide with the higher number gives the mode in the two directions, as it gives
   [the transition](transition-option.md).
 - When a slide change has partners, the rest of the two slides fades, whatever the
