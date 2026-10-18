@@ -66,7 +66,7 @@ step specification.
 | Option | Effect |
 | --- | --- |
 | `state: :alert` | The theme draws an outline around the element. |
-| `state: :dim` | Each color of text in the element changes to the dimmed color of its role. An image, an SVG file and an embed show at the dim opacity of the theme. |
+| `state: :dim` | Each color of text in the element changes to the dimmed color of its role. An image, an SVG file, an embed and a video show at the dim opacity of the theme. |
 | `set: [x: "-300px", y: "0px"]` | The element moves by that distance. |
 | `set: [scale: 1.5]` | The element changes its size by that factor. |
 | `set: [rotate: "-8deg"]` | The element turns by that angle. |

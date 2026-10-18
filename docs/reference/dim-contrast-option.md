@@ -32,7 +32,7 @@ The minimum of APCA for dimmed text stays at Lc 30 at each value.
 
 The option changes each dimmed color of [the theme](theme-option.md), such as
 `--text-dim` and `--code-comment-dim`, and the opacity `--dim-opacity` of a dimmed image,
-SVG file and embed. Each variant of a theme with two variants, and the colors of paper,
+SVG file, embed and video. Each variant of a theme with two variants, and the colors of paper,
 follow the option.
 
 A higher ratio dims less. A role of text near 4.5:1, such as the numbers of the default

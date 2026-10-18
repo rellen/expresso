@@ -1654,11 +1654,17 @@ body[data-view="present"][data-undim]
     --highlight var(--dur) var(--ease);
 }
 /*
- * A graphic has colors that the palette does not know: an image, an SVG file
- * and an embed. A graphic inside a dimmed element dims with the
+ * A graphic has colors that the palette does not know: an image, an SVG file,
+ * an embed and a video. A graphic inside a dimmed element dims with the
  * opacity `--dim-opacity` of the theme, the strongest opacity that keeps each
- * role of text at 3:1 and at Lc 30. The rule applies only on a slide and on a
- * page of the handout view, so the presenter keeps its own icons.
+ * role of text at 3:1 and at Lc 30. The rule applies only on a slide, on a
+ * page of the handout view and on a copy of a slide in the menu, so the
+ * presenter keeps its own icons.
+ *
+ * An icon, the icon of a callout and a line of a shape draw with
+ * `currentColor`, and they dim with the color of their role. Therefore the
+ * rule does not apply to them. The rule has no specificity, so the filter of
+ * an element with an `on` entity replaces it on the root of an element.
  */
 :where(.slide, .handout-page, .menu-thumb)
   :where(
