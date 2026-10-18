@@ -2585,10 +2585,12 @@ speaker view also does not change the variant of the present view.
 A window sends only the changes of its own keys and of its own address, and each message
 holds the time of the change. A window takes an incoming time only up to `DRIFT`, one
 second after its clock. `limit` in `state.ts` applies this rule. Without it, one message
-with a very large time made the window refuse each later message of the other window. A change of another part of the state, such as the overview or
-the list of keys, sends no message. For this reason, the overview shows only in the window
-that opens it. A window does not send a position from the other window back, and it ignores
-a message that is older than its own state.
+with a very large time made the window refuse each later message of the other window.
+
+A change of another part of the state, such as the overview or the list of keys, sends no
+message. For this reason, the overview shows only in the window that opens it. A window
+does not send a position from the other window back, and it ignores a message that is
+older than its own state.
 
 At the same time, the speaker view takes the state of the present view, so the two windows
 always end at the same state. Both windows read the same clock, so the time orders the
