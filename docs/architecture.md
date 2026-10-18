@@ -2121,8 +2121,12 @@ examines no value. These parts find a defect of the program:
 - The click handler reads commands only from a link of the `goto` option, from a page of
   the overview and from a row of the menu. `COMMAND_HOLDERS` of `schema.ts` gives their
   selectors, and a test makes sure that they find each element with commands that the
-  renderer writes. Thus the script does not run an attribute `data-commands` from the HTML
-  of a deck.
+  renderer writes. The selectors examine only the tag, the class, the id `menu` and the
+  attribute. Thus the script also runs `data-commands` from an element of the HTML of a
+  deck with the same names, such as `<a class="goto" data-commands="...">` in a text area.
+  These names are reserved, and `docs/reference/text-area-element.md` tells the user. The
+  HTML of a text area goes into the document with no escape and can hold a `script`
+  element. Thus the selectors do not limit what a deck can do.
 
 `Expresso.Presenter.Schema` describes each value that Elixir writes for the script, and
 `assets/src/schema.ts` holds the TypeScript type and the decoder of each value. A test
