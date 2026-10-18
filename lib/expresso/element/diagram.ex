@@ -31,14 +31,16 @@ defmodule Expresso.Element.Diagram do
   without the option takes the width that the file gives.
 
   The file goes into the document as it is, with one change. The document
-  holds one copy of the file for the present view and one for each page of
-  the handout view, and a browser resolves a reference such as `url(#fill)`
-  to the first element of the document with that `id`. That element can be in
-  a view that the browser does not show, and a gradient or a filter in a
-  hidden view does not paint. Therefore the render function gives each copy
-  its own ids: it puts the number of the copy after each `id` of the file, and
-  it puts the same number into each `url(#id)` and each `href="#id"` of the
-  copy. `Expresso.Copies` gives the number.
+  holds one copy of the file for the present view, one for each page of the
+  handout view and one in the menu. A browser resolves a reference such as
+  `url(#fill)` to the first element of the document with that `id`, and a
+  `<style>` element applies to the whole document. Therefore
+  `Expresso.SvgCopy.number/2` gives each copy its own ids, its own references
+  and its own style rules. `Expresso.Copies` gives the number.
+
+  A part with a `class` in a `text` element keeps its class next to the
+  class `diagram-part`. The render function finds a part by its `id`
+  attribute, so an id such as `step.1` or `a:b` works.
 
   `Expresso.Deck.render/1` writes the document with Floki, which writes each
   name of the SVG in lowercase. A browser reads `viewbox` as `viewBox` and
@@ -153,15 +155,24 @@ defmodule Expresso.Element.Diagram do
 
     parts
     |> Enum.reduce(tree, fn %Expresso.Element.Part{id: id} = part, tree ->
-      if Floki.find(tree, "##{id}") == [] do
+      if not has_id?(tree, id) do
         raise ArgumentError, "the diagram \"#{src}\" has no element with the id \"#{id}\""
       end
 
       mark(tree, id, part_attributes(part), nil)
     end)
     |> Floki.raw_html()
-    |> number_ids(tree)
+    |> Expresso.SvgCopy.number(Expresso.Copies.next())
   end
+
+  # Compare the attribute `id` exactly. A CSS selector such as `#step.1`
+  # reads the id `step` and the class `1`.
+  defp has_id?(nodes, id) when is_list(nodes), do: Enum.any?(nodes, &has_id?(&1, id))
+
+  defp has_id?({_tag, attrs, children}, id),
+    do: List.keyfind(attrs, "id", 0) == {"id", id} or has_id?(children, id)
+
+  defp has_id?(_node, _id), do: false
 
   # The overlay attributes of a part. A part with an `on` entity, or with an
   # effect that moves or grows it, goes into a wrapper with the class
@@ -192,7 +203,7 @@ defmodule Expresso.Element.Diagram do
         {"g", wrapper, [{tag, attrs, children}]}
 
       {{"id", ^id}, {_kind, overlay}} ->
-        {tag, overlay ++ attrs, children}
+        {tag, merge(overlay, attrs), children}
 
       _other ->
         {tag, attrs, children}
@@ -201,21 +212,21 @@ defmodule Expresso.Element.Diagram do
 
   defp mark(node, _id, _attributes, _parent), do: node
 
-  # Each copy of the file gets its own ids, with the number of the copy from
-  # `Expresso.Copies.next/0`. The ids of each `part` stay in place, because the
-  # parts come before.
-  defp number_ids(html, tree) do
-    number = Expresso.Copies.next()
+  # Put the overlay attributes on an element. An HTML parser keeps the first
+  # of two attributes with the same name, so a `class` and a `style` of the
+  # element join the attribute of the overlay.
+  defp merge(overlay, attrs) do
+    {overlay, attrs} =
+      Enum.map_reduce(overlay, attrs, fn {name, value}, attrs ->
+        case List.keytake(attrs, name, 0) do
+          {{"class", own}, attrs} -> {{"class", "#{value} #{own}"}, attrs}
+          {{"style", own}, attrs} -> {{"style", "#{own}; #{value}"}, attrs}
+          {_own, attrs} -> {{name, value}, attrs}
+          nil -> {{name, value}, attrs}
+        end
+      end)
 
-    tree
-    |> Floki.find("[id]")
-    |> Floki.attribute("id")
-    |> Enum.reduce(html, fn id, html ->
-      html
-      |> String.replace(~s(id="#{id}"), ~s(id="#{id}-#{number}"))
-      |> String.replace("url(##{id})", "url(##{id}-#{number})")
-      |> String.replace(~s(href="##{id}"), ~s(href="##{id}-#{number}"))
-    end)
+    overlay ++ attrs
   end
 
   defp read(src), do: Expresso.DeckFile.read!(src, "diagram")

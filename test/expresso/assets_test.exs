@@ -9,14 +9,20 @@ defmodule Expresso.AssetsTest do
 
   defp uri(char), do: "data:image/png;base64," <> String.duplicate(char, 1100)
 
-  test "a poster and a src keep their own names" do
+  test "a src, an href and an xlink:href keep their own names" do
     html =
-      ~s(<video poster="#{uri("A")}" src="#{uri("B")}"></video>) <>
-        ~s(<video poster="#{uri("A")}" src="#{uri("B")}"></video>)
+      ~s(<img src="#{uri("B")}"><image href="#{uri("A")}"/><image xlink:href="#{uri("C")}"/>)
 
-    assert Assets.dedupe(html) ==
-             ~s(<video data-asset-0="poster" poster="#{uri("A")}" data-asset-1="src" src="#{uri("B")}"></video>) <>
-               ~s(<video data-asset-poster="0" data-asset-src="1"></video>)
+    assert Assets.dedupe(html <> html) ==
+             ~s(<img data-asset-0="src" src="#{uri("B")}">) <>
+               ~s(<image data-asset-1="href" href="#{uri("A")}"/>) <>
+               ~s(<image data-asset-2="xlink:href" xlink:href="#{uri("C")}"/>) <>
+               ~s(<img data-asset-src="0"><image data-asset-href="1"/><image data-asset-href="2"/>)
+  end
+
+  test "a poster attribute stays as it is, because no element writes one" do
+    html = ~s(<video poster="#{uri("A")}"></video>)
+    assert Assets.dedupe(html <> html) == html <> html
   end
 
   test "a data URI that occurs one time, and a short one, stay" do

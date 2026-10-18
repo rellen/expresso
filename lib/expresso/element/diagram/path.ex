@@ -29,16 +29,44 @@ defmodule Expresso.Element.Diagram.Path do
 
       iex> Expresso.Element.Diagram.Path.points("M 10 10 h 20 v 5 l -5 5 z")
       [{10.0, 10.0}, {30.0, 10.0}, {30.0, 15.0}, {25.0, 20.0}]
+      iex> Expresso.Element.Diagram.Path.points("M0 0a5 5 0 0110 0h10")
+      [{0.0, 0.0}, {10.0, 0.0}, {20.0, 0.0}]
   """
   @spec points(String.t()) :: [{float(), float()}]
   def points(d) do
     ~r/([MmLlHhVvCcSsQqTtAaZz])([^MmLlHhVvCcSsQqTtAaZz]*)/
     |> Regex.scan(d)
     |> Enum.reduce({[], {0.0, 0.0}, {0.0, 0.0}}, fn [_all, command, args], state ->
-      run(command, Geometry.numbers(args), state)
+      run(command, values(command, args), state)
     end)
     |> elem(0)
     |> Enum.reverse()
+  end
+
+  # The values of a command. The large-arc flag and the sweep flag of an arc
+  # are one character each, `0` or `1`, and need no separator: SVGO writes
+  # "a5 5 0 0110 0" for "a5 5 0 0 1 10 0".
+  defp values(command, args) when command in ["A", "a"], do: arc_values(args, 0, [])
+  defp values(_command, args), do: Geometry.numbers(args)
+
+  @separator ~r/\A[\s,]+/
+  @value ~r/\A[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?/
+
+  defp arc_values(text, index, values) do
+    text = Regex.replace(@separator, text, "")
+    flag? = rem(index, 7) in [3, 4]
+
+    case {flag?, text, Regex.run(@value, text)} do
+      {true, <<flag, rest::binary>>, _value} when flag in [?0, ?1] ->
+        arc_values(rest, index + 1, [(flag - ?0) * 1.0 | values])
+
+      {_flag?, _text, [value]} ->
+        rest = binary_part(text, byte_size(value), byte_size(text) - byte_size(value))
+        arc_values(rest, index + 1, Geometry.numbers(value) ++ values)
+
+      {_flag?, _text, nil} ->
+        Enum.reverse(values)
+    end
   end
 
   # The state: the points so far, the current point, and the start of the

@@ -58,6 +58,13 @@ Each view gets its own copy of the file, with its own `id` values. A gradient or
 thus works in each view. An `id` in the document is therefore not the same as the `id` in
 the file. Write a rule of the css option with a class of the file, and not with an `id`.
 
+A `<style>` element of the file applies only to its copy. Two files with the same class
+names, such as two exports of Adobe Illustrator with `.st0`, thus keep their own colors.
+An `#id` selector in the `<style>` element gets the `id` of the copy, so a file from
+mermaid-cli keeps its colors. The rules of `@keyframes` and `@font-face` stay as they are.
+
+The `id` of a part can hold a point, a colon or a space, such as `step.1`.
+
 ## A part that moves
 
 A part with an `on` entity, or with an effect that moves it, goes into a `g` element with

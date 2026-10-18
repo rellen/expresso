@@ -72,6 +72,9 @@ icons logo: "assets/logo.svg", espresso: "icons/espresso.svg"
 - Each color of a `fill` or a `stroke`, in an attribute or in a `style`, becomes
   `currentColor`, so the icon takes the color of the `color` option or of the text. The
   values `none` and `currentColor` stay.
+- Each copy of the icon in the document gets its own `id` values, and each `url(#id)` and
+  `href="#id"` of the copy changes with them. A `clipPath`, a `mask` or a `filter` thus
+  works in each view. A `<style>` element of the file applies only to its copy.
 - Give the file a `viewBox`, so the icon keeps its shape at each size.
 - The watch mode renders the deck again after a change to the file.
 

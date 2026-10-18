@@ -24,7 +24,9 @@ defmodule Expresso.Element.Item do
 
   The key `overlay` holds the attributes of the overlay contract, from
   `Expresso.Overlay.Render.attributes/1`. The key `goto` holds the link of the
-  `goto` option, or `nil`.
+  `goto` option, or `nil`. The key `text` holds the text with the ids and the
+  style rules of this copy in each inline SVG, from
+  `Expresso.SvgCopy.copy_each/1`.
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
@@ -32,7 +34,7 @@ defmodule Expresso.Element.Item do
     %__MODULE__{text: text, elements: elements, goto: goto} = item
 
     %{
-      text: text,
+      text: Expresso.SvgCopy.copy_each(text),
       goto: goto,
       elements: elements,
       overlay: Expresso.Overlay.Render.attributes(item)
