@@ -483,6 +483,8 @@ These rules apply to each file:
 - A number can have a comma between each group of three digits, such as `1,250` or
   `12,500.5`. A CSV file holds such a number in quotes. A period is the decimal mark.
 - The message of an error names the first line of the row.
+- The file must be UTF-8. A byte order mark at the start of the file, as the format "CSV
+  UTF-8" of a spreadsheet writes it, does not count.
 
 The categories of a treemap and of a sunburst hold the separator in the same column, such as
 `Production/Press,62`. A file needs no other change.
@@ -560,9 +562,9 @@ The compiler gives an error for these:
 - `whole_first` without `highlight`;
 - a group of `highlight` at a step at which the chart does not show.
 
-The compiler gives an error for a file that it cannot read, for a quote with no closing
-quote, for text after a closing quote, and for a row with a cell that is not a number. The
-message names the line. `Expresso.Builder.deck/2` raises a `Spark.Error.DslError` with the
+The compiler gives an error for a file that it cannot read or that is not UTF-8, for a
+quote with no closing quote, for text after a closing quote, and for a row with a cell that
+is not a number. The message names the file, and the line of a row. `Expresso.Builder.deck/2` raises a `Spark.Error.DslError` with the
 same message.
 
 ## The colors

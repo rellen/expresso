@@ -80,6 +80,8 @@ The element reads the file of `src` when the deck compiles, after the deck gives
 
 - `mix expresso` reads the file each time that it renders the deck.
 - The watch mode renders the deck again after a change to the file.
+- The file must be UTF-8. The compiler gives an error that names a file with a different
+  encoding, such as Latin-1.
 
 ### Lines from a text
 

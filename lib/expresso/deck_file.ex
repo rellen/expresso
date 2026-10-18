@@ -4,8 +4,10 @@ defmodule Expresso.DeckFile do
 
   A deck can name an image, a diagram, a code file, a page, a style sheet and
   a file of a `url()` of the style sheet. The module of each reads the file
-  with `read/1` or `read!/2`. An element gives the message of `read_error/3`
-  for a file that it cannot read.
+  with `read/1` or `read!/2`. A module that puts the file into the document
+  as text reads it with `read_text/1` or `read_text!/2`, which also make sure
+  that the file is UTF-8. An element gives the message of `read_error/3` for a
+  file that it cannot read.
 
   `Expresso.Watch` renders a deck inside `track/1`. That function returns each
   path that `read/1` read during the render, so the watch mode knows which
@@ -17,6 +19,9 @@ defmodule Expresso.DeckFile do
   """
 
   @key {__MODULE__, :paths}
+
+  @typedoc "The reason that a file of a deck cannot be read"
+  @type reason :: File.posix() | :not_utf8
 
   @doc """
   Read a file that a deck names
@@ -51,6 +56,34 @@ defmodule Expresso.DeckFile do
   end
 
   @doc """
+  Read a text file that a deck names, and make sure that it is UTF-8
+
+  The document is UTF-8, and the lexers read only UTF-8. The function returns
+  `{:error, :not_utf8}` for a file that has a different encoding, such as
+  Latin-1. A different error is the error of `read/1`.
+  """
+  @spec read_text(Path.t()) :: {:ok, String.t()} | {:error, reason()}
+  def read_text(path) do
+    with {:ok, bytes} <- read(path) do
+      if String.valid?(bytes), do: {:ok, bytes}, else: {:error, :not_utf8}
+    end
+  end
+
+  @doc """
+  Read a text file that a deck names, and raise for a file that it cannot read
+
+  The function is `read!/2` for a file that must be UTF-8, as `read_text/1`
+  tells.
+  """
+  @spec read_text!(Path.t(), String.t()) :: String.t()
+  def read_text!(path, noun) do
+    case read_text(path) do
+      {:ok, text} -> text
+      {:error, reason} -> raise ArgumentError, read_error(path, noun, reason)
+    end
+  end
+
+  @doc """
   Return the message for a file of a deck that cannot be read
 
   Each element that reads a file gives this message: the noun, the path, the
@@ -59,8 +92,19 @@ defmodule Expresso.DeckFile do
       iex> Expresso.DeckFile.read_error("a.svg", "diagram", :enoent)
       ~s(cannot read the diagram "a.svg": no such file or directory. A path is relative to ) <>
         "the working directory of the command, or to the root option of the deck."
+
+  For `:not_utf8`, the message tells the user to save the file as UTF-8.
+
+      iex> Expresso.DeckFile.read_error("legacy.toml", "code file", :not_utf8)
+      ~s(cannot read the code file "legacy.toml": the file is not UTF-8 text. ) <>
+        "Save the file with the UTF-8 encoding."
   """
-  @spec read_error(Path.t(), String.t(), File.posix()) :: String.t()
+  @spec read_error(Path.t(), String.t(), reason()) :: String.t()
+  def read_error(path, noun, :not_utf8) do
+    "cannot read the #{noun} \"#{path}\": the file is not UTF-8 text. " <>
+      "Save the file with the UTF-8 encoding."
+  end
+
   def read_error(path, noun, reason) do
     "cannot read the #{noun} \"#{path}\": #{:file.format_error(reason)}. " <>
       "A path is relative to the working directory of the command, or to the root option " <>

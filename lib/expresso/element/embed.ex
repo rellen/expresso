@@ -133,7 +133,7 @@ defmodule Expresso.Element.Embed do
     if address?(src) do
       %{kind: "src", value: src}
     else
-      %{kind: "srcdoc", value: Expresso.DeckFile.read!(src, "page")}
+      %{kind: "srcdoc", value: Expresso.DeckFile.read_text!(src, "page")}
     end
   end
 

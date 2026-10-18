@@ -158,7 +158,7 @@ defmodule Expresso.Element.Code do
   end
 
   defp read(src) do
-    case Expresso.DeckFile.read(src) do
+    case Expresso.DeckFile.read_text(src) do
       {:ok, bytes} -> {:ok, bytes}
       {:error, reason} -> {:error, Expresso.DeckFile.read_error(src, "code file", reason)}
     end
