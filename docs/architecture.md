@@ -1911,11 +1911,11 @@ The extension imports nothing, and it lists seven transformers and four verifier
 - `Expresso.TransitionVerifier` gives an error for a transition without a rule in the theme
   or in the CSS of the deck. See "The transitions".
 
-The four checks are a transformer and not verifiers, for the reason that "The definitions
-of the elements" gives. Spark reports the error of a verifier as a warning. The module then
-compiles, and `mix expresso` renders the deck as if the check gave no error.
+The four checks run in a transformer and not as verifiers, for the reason that "The
+definitions of the elements" gives. Spark reports the error of a verifier as a warning. The
+module then compiles, and `mix expresso` renders the deck as if the check gave no error.
 When more than one check gives an error, the transformer raises one error with each
-message. A check gives errors or warnings, and not both, so each kind of warning has its
+message. A verifier gives errors or warnings, and not both, so each kind of warning has its
 own verifier.
 
 `Expresso.Dsl` holds the plain functions that the transformers and the verifiers share:
