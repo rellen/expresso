@@ -201,7 +201,7 @@ These rules apply to the frames:
 
 At a change of the frame, a bar moves to its new value, a line moves each point, and a slice
 of a pie changes its angle. A number fades to its new value, or counts to it with `count true`.
-A count stops on each digit of the value of its frame, such as `1.34`.
+A count stops on the exact value of each frame, such as `1.34`.
 The marks move with the `speed` and the `easing` of the chart. See
 [the overlay options](overlay-options.md).
 
@@ -224,7 +224,8 @@ properties. Chrome 85, Safari 16.4 and Firefox 128 support them. An earlier brow
 first frame. The numbers with `count true` need the script of the presenter.
 
 A label of a value or of the axis has each digit of its number and no exponent, such as
-`0.00025`. The axis of very small values, such as `0.0000001`, has round ticks, and each tick has a label in the same form.
+`0.00025`. The axis of very small values, such as `0.0000001`, has round ticks, and each
+tick has a label in the same form.
 
 ## The kinds
 
