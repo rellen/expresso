@@ -1,7 +1,7 @@
 defmodule Expresso.Overlay.CheckTest do
   use ExUnit.Case, async: true
 
-  alias Expresso.Element.{On, Pause, TextArea, TextBox}
+  alias Expresso.Element.{Chart, Frame, Item, On, Pause, TextArea, TextBox}
   alias Expresso.Overlay.Check
   alias Expresso.Slide
 
@@ -56,5 +56,39 @@ defmodule Expresso.Overlay.CheckTest do
     assert check([box]) ==
              {:error,
               "the on entity has the step 1, and the text_area does not show at that step"}
+  end
+
+  test "reports a descendant outside its nearest ancestor with steps" do
+    column = %Expresso.Element.Column{elements: [%TextArea{steps: [3]}]}
+    columns = %Expresso.Element.Columns{steps: [2], elements: [column]}
+
+    assert check([columns]) ==
+             {:error, "the text_area has the step 3, and the columns does not show at that step"}
+  end
+
+  test "reports an on entity outside the nearest ancestor with steps" do
+    box = %TextBox{steps: [2], elements: [%TextArea{on: [%On{steps: [3]}]}]}
+
+    assert check([box]) ==
+             {:error, "the on entity has the step 3, and the text_box does not show at that step"}
+  end
+
+  test "accepts a descendant inside its nearest ancestor with steps" do
+    box = %TextBox{
+      steps: [3, 4],
+      elements: [%Expresso.Element.List{elements: [%Item{steps: [3, 4]}]}]
+    }
+
+    assert check([box]) == :ok
+  end
+
+  test "reports a frame of a chart that starts outside the chart" do
+    frames = [%Frame{}, %Frame{steps: [3]}, %Frame{steps: [4, 5]}]
+
+    assert check([%Chart{steps: [2, 3], timeline: frames}]) ==
+             {:error,
+              "a frame of the chart has the step 4, and the chart does not show at that step"}
+
+    assert check([%Chart{steps: [2, 3, 4], timeline: frames}]) == :ok
   end
 end

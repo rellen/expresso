@@ -186,8 +186,11 @@ These rules apply to the frames:
   frame shows to the last step of the slide.
 - When the chart takes no step of its own, the first frame takes one, so the second frame
   does not show at the first step of the chart.
-- The frames of a chart with an absolute step, such as `at 3`, start at that step, and the
-  counter of the slide does not change.
+- The frames of a chart with an absolute step, such as `at from: 3`, start at that step, and
+  the counter of the slide does not change.
+- Each frame starts at a step of the chart. A closed specification, such as `at 3` or
+  `at :next`, shows the chart at one step only, so the verifier refuses the second frame.
+  Write `at from: 3` or `at from: :next`.
 - Each frame holds the series of the first frame, with the same names in the same order.
 - Only the series of the first frame take the overlay options and the `class` option. The
   `reveal` and `dim` options of the chart apply to them.

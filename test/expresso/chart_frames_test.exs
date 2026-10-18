@@ -68,8 +68,23 @@ defmodule Expresso.ChartFramesTest do
     end
 
     test "the frames of a chart with an absolute step start at that step" do
-      chart = chart(one_slide([race(at: 3)]))
+      chart = chart(one_slide([race(at: [from: 3])]))
+      assert chart.steps == [3, 4, 5]
       assert Enum.map(chart.timeline, & &1.steps) == [nil, [4], [5]]
+    end
+
+    test "the verifier refuses a frame at a step at which the chart does not show" do
+      for at <- [3, :next, 2..3] do
+        assert_raise Spark.Error.DslError,
+                     ~r/a frame of the chart has the step \d, and the chart does not show at that step/,
+                     fn -> one_slide([race(at: at)]) end
+      end
+    end
+
+    test "the last frame can show after the last step of the chart" do
+      chart = chart(one_slide([race(at: 2..4)], steps: 5))
+      assert chart.steps == [2, 3, 4]
+      assert Enum.map(chart.timeline, & &1.steps) == [nil, [3], [4, 5]]
     end
 
     test "a chart with at from: :next shows its first frame at its own step" do

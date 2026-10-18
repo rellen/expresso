@@ -1038,6 +1038,8 @@ source goes into a `figcaption` element. The entity is not named `quote`, becaus
 A `spacer` has no content. The theme gives it `flex-grow: 1`, so it takes the free space
 of its container and pushes the elements after it to the end. Two spacers around an
 element put the element in the middle. Write `spacer()` with parentheses, as for `pause`.
+The `auto_reveal` option of the slide skips a spacer, as it skips a footnote. A spacer
+with a step of its own gives a step at which the presenter sees no change.
 
 ### The code
 
