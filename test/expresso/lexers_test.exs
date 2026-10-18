@@ -130,6 +130,72 @@ defmodule Expresso.LexersTest do
     assert {:keyword_constant, "true"} in tokens
   end
 
+  test "TOML: an indented array is not a table header" do
+    tokens = tokens(Lexers.Toml, "matrix = [\n  [1, 2],\n  [3, 4],\n]\n[table]\n")
+
+    refute Enum.any?(tokens, &match?({:keyword_namespace, "[1" <> _rest}, &1))
+    refute Enum.any?(tokens, &match?({:keyword_namespace, "[3" <> _rest}, &1))
+    assert {:keyword_namespace, "[table]"} in tokens
+  end
+
+  test "TOML: a date takes a space only before a time" do
+    tokens = tokens(Lexers.Toml, "date = 1979-05-27 # birthday\nwhen = 1979-05-27 07:32:00\n")
+
+    assert {:literal_date, "1979-05-27"} in tokens
+    assert {:comment_single, "# birthday"} in tokens
+    assert {:literal_date, "1979-05-27 07:32:00"} in tokens
+  end
+
+  test "YAML: a # in a value is not a comment" do
+    tokens = tokens(Lexers.Yaml, "title: C# basics\nurl: https://example.com/#install\n")
+
+    refute Enum.any?(tokens, &match?({:comment_single, _value}, &1))
+
+    assert ["title: C# basics", "url: https://example.com/#install"] ==
+             "title: C# basics\nurl: https://example.com/#install"
+             |> Expresso.Highlight.lines("yaml", trailing_comments: false)
+             |> Enum.map(&(&1 |> LazyHTML.from_fragment() |> LazyHTML.text() |> String.trim()))
+  end
+
+  test "YAML: a # at the start of a line or after white space is a comment" do
+    tokens = tokens(Lexers.Yaml, "# head\na: 1 # one\n  # indented\n")
+
+    assert {:comment_single, "# head"} in tokens
+    assert {:comment_single, "# one"} in tokens
+    assert {:comment_single, "# indented"} in tokens
+  end
+
+  test "YAML: the lines of a block scalar are plain text" do
+    text = "run: | # a script\n  echo \"hi\" # not a comment\n\n  key: value\nnext: 1\n"
+    tokens = tokens(Lexers.Yaml, text)
+
+    assert {:comment_single, "# a script"} in tokens
+    assert {:text, ~s(echo "hi" # not a comment)} in tokens
+    assert {:text, "key: value"} in tokens
+    assert {:name_tag, "next"} in tokens
+    refute {:name_tag, "key"} in tokens
+    assert joined(Lexers.Yaml, text) == text
+
+    assert ["run: |", ~s(  echo "hi" # not a comment), "", "  key: value", "next: 1"] ==
+             text
+             |> String.trim_trailing()
+             |> Expresso.Highlight.lines("yaml", trailing_comments: false)
+             |> Enum.map(
+               &(&1
+                 |> LazyHTML.from_fragment()
+                 |> LazyHTML.text()
+                 |> String.trim_trailing())
+             )
+             |> Enum.map(&String.trim_leading(&1, "\u200B"))
+  end
+
+  test "YAML: a block scalar in a list ends at a line with less indentation" do
+    tokens = tokens(Lexers.Yaml, "steps:\n  - run: >-\n      a: b\n  - name: c\n")
+
+    assert {:text, "a: b"} in tokens
+    assert Enum.any?(tokens, &(match?({:name_tag, _key}, &1) and elem(&1, 1) =~ "name"))
+  end
+
   test "KDL: a node name, a property, a type annotation, a constant and a slashdash" do
     tokens = tokens(Lexers.Kdl, "package {\n  (date)made \"2024\" draft=#false\n  /- old 1\n}\n")
 
@@ -344,6 +410,18 @@ defmodule Expresso.LexersTest do
     assert {:number, "12pt"} in tokens
     assert {:name_function, "#figure"} in tokens
     assert {:comment_single, "// c"} in tokens
+  end
+
+  test "Typst: a URL in markup is not a comment" do
+    tokens = tokens(Lexers.Typst, "See https://typst.app/docs for more. // note\n")
+
+    assert {:string_other, "https://typst.app/docs"} in tokens
+    assert {:comment_single, "// note"} in tokens
+
+    assert ["See https://typst.app/docs for more."] ==
+             "See https://typst.app/docs for more."
+             |> Expresso.Highlight.lines("typst", trailing_comments: false)
+             |> Enum.map(&(&1 |> LazyHTML.from_fragment() |> LazyHTML.text() |> String.trim()))
   end
 
   test "Expresso.Highlight colors each new language" do
