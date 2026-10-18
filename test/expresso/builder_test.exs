@@ -112,11 +112,30 @@ defmodule Expresso.BuilderTest do
 
     case index do
       nil -> assert left == right
-      index -> assert String.slice(left, index - 80, 400) == String.slice(right, index - 80, 400)
+      index -> assert slice(left, index) == slice(right, index)
     end
   end
 
+  # The text near an index. A negative start counts from the end of the
+  # string, so the start is never less than 0.
+  defp slice(text, index), do: String.slice(text, max(index - 80, 0), 400)
+
   describe "a deck from the DSL and from the functions" do
+    test "same/2 finds a difference in the first 80 characters" do
+      for {left, right} <- [{"<html lang=\"en\">", "<html lang=\"de\">"}, {"ab", "xb"}] do
+        assert_raise ExUnit.AssertionError, fn -> same(left, right) end
+      end
+
+      for option <- [[name: "other"], [name: "parity", lang: "de"]] do
+        assert_raise ExUnit.AssertionError, fn ->
+          same(
+            html(DeckTree.builder([name: "parity"], [])),
+            html(DeckTree.builder(option, []))
+          )
+        end
+      end
+    end
+
     test "gives the same HTML for each entity and many options" do
       same(
         html(DeckTree.dsl(module(), @options, @slides)),
