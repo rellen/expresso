@@ -40,6 +40,7 @@ For the steps and the installation of the tools, see
 | --- | --- | --- |
 | The render | Error | A deck file that does not compile, or does not return a deck |
 | The theme | Problem | Each role of a theme of 16 colors under its minimum of contrast. The text is the warning of the compiler. See [The theme option](theme-option.md). |
+| The dimming | Note | Each variant of the theme that does not dim at the `dim_contrast` option. The text is the warning of the compiler. See [The dim_contrast option](dim-contrast-option.md#a-theme-that-does-not-dim). |
 | The size | Note | The size of the document, and the type and the size of its three largest files. A file is a data URI in an attribute, such as `src`, or in a `url()` of the style sheet, such as a font of the theme. |
 | An image | Note | An image with no `alt` option. A screen reader skips it. |
 | A diagram | Note | A diagram with no `alt` option. A screen reader reads the text of its SVG. |

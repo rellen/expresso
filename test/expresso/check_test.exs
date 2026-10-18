@@ -86,6 +86,28 @@ defmodule Expresso.CheckTest do
       assert output =~ ~r/\n\d+ problems\.\n\z/
     end
 
+    test "a theme that does not dim at the dim_contrast is a note, with the exit status 0", %{
+      tmp_dir: dir
+    } do
+      input =
+        deck_file(dir, "strict.exs", """
+        B.deck([B.slide("one", heading: "Strict", elements: [])],
+          name: "Strict",
+          theme: :solarized_light,
+          dim_contrast: 4.5
+        )
+        """)
+
+      {status, output, _error} = run(%{input: input, level: :basic})
+
+      assert status == 0
+
+      assert output =~
+               "\n  - Theme: at a dim contrast of 4.5:1, the theme gives --dim-opacity 1.0"
+
+      assert String.ends_with?(output, "\nNo problems.\n")
+    end
+
     test "notes an image and a diagram with no alt text, and a slide with no visible heading", %{
       tmp_dir: dir
     } do

@@ -15,6 +15,9 @@ defmodule Expresso.ThemeVerifier do
   adjustment of `adjust: true`, and the warning of a variant names it. An
   adjustment that changes a color by more than the limit of a built-in theme
   gives a warning too.
+
+  The verifier also gives a warning for each variant that does not dim at the
+  `dim_contrast` option of the deck. `dim_messages/2` gives the rules.
   """
 
   use Spark.Dsl.Verifier
@@ -28,7 +31,9 @@ defmodule Expresso.ThemeVerifier do
   @impl Verifier
   @spec verify(map()) :: :ok | {:warn, [String.t()]}
   def verify(dsl_state) do
-    warnings = dsl_state |> Verifier.get_option([:deck], :theme, :default) |> messages()
+    theme = Verifier.get_option(dsl_state, [:deck], :theme, :default)
+    ratio = Verifier.get_option(dsl_state, [:deck], :dim_contrast)
+    warnings = messages(theme) ++ dim_messages(theme, ratio)
     if warnings == [], do: :ok, else: {:warn, warnings}
   end
 
@@ -48,6 +53,51 @@ defmodule Expresso.ThemeVerifier do
         warning <- warnings(palette, subject(name), adjust?(theme)),
         do: warning
   end
+
+  @doc """
+  Return the warning of each variant of a theme that does not dim at a minimum contrast ratio
+
+  `ratio` is the `dim_contrast` option of the deck, or `nil` for the default
+  of 3:1. A variant does not dim when its dim opacity is 1.0: then no opacity
+  under 1.0 keeps each role of text at `ratio` on its background. A dimmed
+  image, SVG file, embed and video then do not dim, because the style sheet
+  dims them with `--dim-opacity`. The warning also names each role of text
+  that keeps its color in the state `dim`.
+
+  A variant that fails a minimum of `messages/1` gets no warning here,
+  because its warnings of contrast tell the cause.
+
+      iex> Expresso.ThemeVerifier.dim_messages(:default, nil)
+      []
+      iex> [message] = Expresso.ThemeVerifier.dim_messages(:solarized_light, 4.5)
+      iex> message =~ "no role of text dims"
+      true
+  """
+  @spec dim_messages(term(), number() | nil) :: [String.t()]
+  def dim_messages(theme, ratio) do
+    for {name, palette} <- Palette.variants(theme),
+        Palette.problems(palette) == [],
+        dimmed = Palette.with_dim_contrast(palette, ratio),
+        dimmed.dim_opacity == 1.0,
+        do: dim_warning(dimmed, subject(name))
+  end
+
+  defp dim_warning(%Palette{dimmed: dimmed, dim_ratio: ratio}, subject) do
+    roles = for {role, {_slot, on}} <- Palette.roles(), on != nil, do: role
+    full = Enum.filter(roles, fn role -> elem(dimmed[role], 0) == 1.0 end)
+
+    text =
+      if length(full) == length(roles),
+        do: "no role of text dims",
+        else: "the roles #{Enum.join(full, ", ")} do not dim"
+
+    "at a dim contrast of #{ratio_text(ratio)}:1, #{subject} gives --dim-opacity 1.0, so a " <>
+      "dimmed image, SVG file, embed and video do not dim, and #{text}. Give a lower " <>
+      "dim_contrast or a theme with more contrast. See docs/reference/dim-contrast-option.md"
+  end
+
+  defp ratio_text(ratio) when ratio == trunc(ratio), do: Integer.to_string(trunc(ratio))
+  defp ratio_text(ratio), do: Float.to_string(ratio)
 
   # A built-in theme meets each minimum, so the verifier checks a map only.
   defp map?(theme, _name) when is_map(theme), do: true
