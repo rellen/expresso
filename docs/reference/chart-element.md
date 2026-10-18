@@ -435,11 +435,20 @@ frame does not show in that frame. The chart has one layer for each frame, and t
 not move. At each step, the opacity of the previous layer decreases to 0, and the opacity of
 the next layer increases to 1. The table has a column for each frame.
 
+On paper and in the handout view, the small chart of a frame draws the layout of that frame
+from the layout of all the frames. Thus a node has the same color, the same scale and the
+same column in the small chart and in the present view.
+
+A flow with the value 0 does not show, and the checks of the chart do not count it. Thus a
+`node` entity for a node with no other flow gives an error. The `levels` option of an
+alluvial chart gives a title for each column that holds a link with a value more than 0.
+
 ### Reveal
 
 With `reveal true`, a sankey or an alluvial chart has one series for each source column of
-the links. The links of a column show at their own step. A node shows with the first link
-that touches it. `dim true` dims the links of a column when a later column shows.
+the links. The links of a column show at their own step. The `column` of a `node` entity
+sets the column of its node, as in the drawing. A node shows with the first link that
+touches it. `dim true` dims the links of a column when a later column shows.
 
 With `reveal true`, a parallel sets chart has one series for each node of the first column.
 The nodes and their labels show with the chart. Then the ribbons of each node of the first

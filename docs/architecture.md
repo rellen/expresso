@@ -1708,7 +1708,10 @@ browser runs no script for a mark. These are the reasons for this design:
   holds a small chart of each frame without motion. On paper and in the handout view, the
   small charts show in a grid, and the chart that moves does not show. The overview and the
   menu show the frame of the `thumbnail` option, because they show the last step of the
-  slide.
+  slide. A small chart of flows gets each frame under the key `layout_frames`, and it draws
+  the layout of its own frame. Thus it has the columns, the colors and the scale of the
+  present view. A small chart has no morph key, because the morph between two slides pairs
+  a key only when it occurs one time.
 
 ### The callout
 

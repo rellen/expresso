@@ -240,13 +240,15 @@ defmodule Expresso.Element.Chart.Chord do
   frames has one layer for each frame, as a sankey has.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
-  def render(%{frames: frames} = assigns) do
+  def render(assigns) do
+    frames = Layers.frames(assigns)
+
     layouts =
       frames
       |> Enum.map(&Layers.links(assigns.categories, &1.values))
       |> layout(assigns.box.top, assigns.node_settings)
 
-    Layers.render(assigns, layouts, &drawing/1)
+    Layers.render(assigns, Layers.drawn(assigns, layouts), &drawing/1)
   end
 
   defp drawing(assigns) do

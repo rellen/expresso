@@ -68,6 +68,35 @@ defmodule Expresso.Element.Chart.Layers do
   end
 
   @doc """
+  Return the frames that the layout takes
+
+  A copy of a chart with frames, for paper and for the handout view, holds
+  one frame under the key `frames`, and each frame of the chart under the
+  key `layout_frames`. The layout of each frame together gives the columns,
+  the colors and the scale of the present view.
+
+      iex> Expresso.Element.Chart.Layers.frames(%{frames: [:one], layout_frames: [:one, :two]})
+      [:one, :two]
+      iex> Expresso.Element.Chart.Layers.frames(%{frames: [:one]})
+      [:one]
+  """
+  @spec frames(map()) :: [map()]
+  def frames(assigns), do: Map.get(assigns, :layout_frames, assigns.frames)
+
+  @doc """
+  Return the layouts to draw: each layout, or the layout of the frame
+  `layer` for a copy
+
+      iex> Expresso.Element.Chart.Layers.drawn(%{layer: 2}, [:one, :two])
+      [:two]
+      iex> Expresso.Element.Chart.Layers.drawn(%{}, [:one, :two])
+      [:one, :two]
+  """
+  @spec drawn(map(), [map()]) :: [map()]
+  def drawn(%{layer: layer}, layouts), do: [Enum.at(layouts, layer - 1)]
+  def drawn(_assigns, layouts), do: layouts
+
+  @doc """
   Return each series with its number from 1, for the layer `k`
 
   A layer after the first has no morph key, so the morph between two slides

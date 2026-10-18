@@ -62,6 +62,7 @@ defmodule Expresso.Element.Chart do
   }
 
   alias Expresso.Element.{Flow, Focus, Frame, Series}
+  alias Expresso.Placement
   alias Shoddy.Result
 
   @typedoc "The struct of a chart"
@@ -129,7 +130,12 @@ defmodule Expresso.Element.Chart do
        do: {:error, "a flow is a link of a sankey, so a #{kind} chart takes no flow"}
 
   defp flows(%__MODULE__{timeline: [%Frame{flows: [_ | _]} | _] = timeline} = chart) do
+    placed = timeline |> Enum.map(&Placement.element/1) |> Enum.find(:ok, &(&1 != :ok))
+
     cond do
+      placed != :ok ->
+        placed
+
       chart.categories != nil or chart.src != nil ->
         {:error, "a sankey with flows in its frames takes no categories and no src option"}
 
@@ -642,7 +648,7 @@ defmodule Expresso.Element.Chart do
          frames =
            Enum.map(
              series,
-             &Sankey.links(chart.categories, &1.values, chart.separator, alluvial)
+             &flowing(Sankey.links(chart.categories, &1.values, chart.separator, alluvial))
            ),
          :ok <- nodes_check(chart, List.flatten(frames)),
          :ok <- titles_check(chart, List.flatten(frames)) do
@@ -674,7 +680,7 @@ defmodule Expresso.Element.Chart do
     alluvial = kind == :alluvial
 
     with :ok <- Sankey.check(chart.categories, series.values, chart.separator, alluvial),
-         links = Sankey.links(chart.categories, series.values, chart.separator, alluvial),
+         links = flowing(Sankey.links(chart.categories, series.values, chart.separator, alluvial)),
          :ok <- nodes_check(chart, links),
          :ok <- titles_check(chart, links) do
       categories = Enum.map(links, &[&1.from, &1.to])
@@ -682,7 +688,7 @@ defmodule Expresso.Element.Chart do
 
       elements =
         if chart.reveal,
-          do: stages(links, series, kind),
+          do: stages(links, series, chart),
           else: [%Series{series | values: values}]
 
       {:ok, %__MODULE__{chart | categories: categories, elements: elements}}
@@ -693,6 +699,10 @@ defmodule Expresso.Element.Chart do
     do: {:error, "a sankey has one series"}
 
   defp single(%__MODULE__{kind: kind} = chart) when is_axis(kind), do: {:ok, chart}
+
+  # The links with a value more than zero. The layout draws no link with the
+  # value zero, so the checks of the nodes and of the titles do not count it.
+  defp flowing(links), do: Enum.filter(links, &(&1.value > 0))
 
   # The node entities of a sankey: one for each node at most, and each for a
   # node of the flows.
@@ -777,20 +787,19 @@ defmodule Expresso.Element.Chart do
   # The series of a chord chart with reveal: one series for each source. Each
   # series holds the values of the links from its source, and zero for each
   # other link.
-  defp stages(links, %Series{} = series, :chord) do
+  defp stages(links, %Series{} = series, %__MODULE__{kind: :chord}) do
     for source <- links |> Enum.map(& &1.from) |> Enum.uniq() do
       values = Enum.map(links, &if(&1.from == source, do: &1.value, else: 0))
       %Series{name: source, values: values, class: series.class}
     end
   end
 
-  defp stages(links, series, _kind), do: stages(links, series)
-
   # The series of a sankey with reveal: one series for each source column.
   # Each series holds the values of the links that start in its column, and
-  # zero for each other link.
-  defp stages(links, %Series{} = series) do
-    columns = Sankey.columns(links)
+  # zero for each other link. The columns come from the links and from the
+  # `column` of each node entity, as in the layout.
+  defp stages(links, %Series{} = series, chart) do
+    columns = Sankey.columns(links, Sankey.pinned(Map.new(chart.flows, &{&1.name, &1})))
     stages = links |> Enum.map(&columns[&1.from]) |> Enum.uniq() |> Enum.sort()
 
     for {stage, index} <- Enum.with_index(stages, 1) do
@@ -959,10 +968,10 @@ defmodule Expresso.Element.Chart do
 
         if length(@frames) > 1 do
           div class: "chart-frames", aria_hidden: "true" do
-            for frame <- @frames do
+            for {frame, layer} <- Enum.with_index(@frames, 1) do
               figure class: "chart-copy" do
                 svg viewBox: @view_box do
-                  c(&plot/1, rest!: copy(assigns, frame))
+                  c(&plot/1, rest!: copy(assigns, frame, layer))
                 end
 
                 figcaption do
@@ -982,13 +991,19 @@ defmodule Expresso.Element.Chart do
   defp kind_class(kind), do: "chart-" <> String.replace(Atom.to_string(kind), "_", "-")
 
   # A chart of one frame that does not move, for paper and for the handout
-  # view. It has the axis of the chart with each frame.
-  defp copy(assigns, frame) do
+  # view. It has the axis of the chart with each frame. A chart of flows
+  # makes the layout of each frame from the key `layout_frames`, and it draws
+  # the layout of the frame `layer`, so the copy has the columns, the colors
+  # and the scale of the present view. A copy has no morph key, because the
+  # morph between two slides pairs a key only when it occurs one time.
+  defp copy(assigns, frame, layer) do
     series =
       for {series, values} <- Enum.zip(assigns.series, frame.values),
-          do: %{series | values: values}
+          do: %{series | values: values, overlay: Layers.no_morph(series.overlay)}
 
-    %{assigns | series: series, moves: false, frames: [frame]}
+    assigns
+    |> Map.merge(%{series: series, moves: false, frames: [frame]})
+    |> Map.merge(%{layout_frames: assigns.frames, layer: layer})
   end
 
   # The caption, the headers and the rows of the table of a chart, for a
