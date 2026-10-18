@@ -174,6 +174,7 @@ help text, so the two commands take the same arguments. `run/3` reads the argume
 | `--help` or `-h`, in any position | Writes the help text. | 0 |
 | `--version`, in any position | Writes the version from `mix.exs`. | 0 |
 | An unknown option, or a third path | Writes `Unknown option:` or `Unexpected argument:`, and the usage text, to the standard error. | 1 |
+| An output path that names the input file, in each mode | Writes `The output file is the input file`, and the usage text, to the standard error. The deck does not change. | 1 |
 | No input path | Writes the usage text to the standard error. | 1 |
 | `<input> [output]` | Calls `Expresso.main/2`. | 0, or 1 for an error |
 | `<input> [output] --watch` | Calls `Expresso.Watch.run/3`. See "The watch mode". | 1, after an error |
@@ -236,7 +237,7 @@ check in this sequence:
    the document.
 3. Run the checks of `Expresso.Check.Document` on the deck and on its HTML.
 4. For `--check=layout` and `--check=a11y`, run `Expresso.Check.Browser.run/4`. It writes a copy of the
-   document into a temporary directory, with axe-core before the end of the `body` for
+   document into a private directory from `Expresso.PrivateDir`, with axe-core before the end of the `body` for
    `--check=a11y`. A headless Chrome opens the copy with `?check` or `?check=a11y`, and
    it writes the document after the check with `--dump-dom`.
 5. Read the element `check-result` of that document, and write the report.
@@ -396,8 +397,8 @@ only when the `Host` header is `127.0.0.1` or `localhost`, and it answers each o
 request with the status 403. The port is not part of the check, because a tunnel can use a
 different port.
 
-The server serves a private directory in the temporary directory of the system, and that
-directory holds two files:
+The server serves a private directory from `Expresso.PrivateDir`, and that directory holds
+two files:
 
 - `index.html` is the last good document, with the reload script in front of the last
   `</body>`.
@@ -412,9 +413,27 @@ view opens the same address, so it gets the script and reloads too. `window.open
 after a reload, and the present view finds the speaker view again from its next message.
 See "The messages between the windows".
 
-Ctrl-C halts the VM at once, so the private directory stays in the temporary directory of
-the system. It holds one document, and the system removes it with its other temporary
-files.
+`/` with a query, such as `/?speaker=` or `/?scheme=dark`, also gets `index.html`.
+`mod_alias` of OTP looks for the directory index with the query still in the path, so it
+does not add `index.html`, and `mod_get` then refuses the directory with the status 403. A
+`re_write` rule of `mod_alias` therefore changes `/?` to `index.html?`.
+
+### The private directory
+
+The watch mode and the browser levels of `--check` write a copy of the deck into a
+directory from `Expresso.PrivateDir`. Many computers have one `/tmp` for all the users, so
+each directory obeys these rules:
+
+- The name is `expresso-<kind>-<random>`, and `<random>` has 26 random characters.
+- `File.mkdir/1` makes the directory. A directory or a symbolic link that is already there
+  is an error, and the function then tries a different name.
+- The mode of the directory is 0700, so no other user can read or write its files.
+
+Ctrl-C and SIGTERM halt the VM before an `after` block can run. Thus each directory also
+gets a small `sh` process that ignores the signals of the terminal and reads its standard
+input. When the VM halts or the owner process stops, the operating system closes that
+pipe. The `sh` process then removes the directory. `Expresso.PrivateDir.close/1` removes
+the directory at once, and `Expresso.Watch.Server.stop/1` calls it.
 
 ## The document
 

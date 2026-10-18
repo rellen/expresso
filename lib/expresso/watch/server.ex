@@ -7,8 +7,8 @@ defmodule Expresso.Watch.Server do
   deck. `Expresso.Watch.Host` also refuses a request for a different host
   name, so a web page cannot read the deck with DNS rebinding.
 
-  The server serves a private directory in the temporary directory of the
-  system, and that directory holds two files:
+  The server serves a private directory from `Expresso.PrivateDir`, and that
+  directory holds two files:
 
     * `index.html` - the last good document, with a small reload script at the
       end of the `body`.
@@ -23,19 +23,29 @@ defmodule Expresso.Watch.Server do
   goes to a temporary file, and a rename then replaces the old file. The
   server thus never sends a part of a file.
 
+  The address `/` with a query, such as `/?speaker=` or `/?scheme=dark`, also
+  gets `index.html`. The speaker view and the variants of a theme thus work in
+  the watch mode.
+
+  The directory goes away when the process that started the server stops,
+  and when the VM stops. `Expresso.PrivateDir` tells how.
+
   This module owns the server and the script, so the two always change
   together. The file `version` and the script are internal: a later version
   can push the reload over a WebSocket, and the user sees no difference. The
   section "The watch mode" of `docs/architecture.md` gives the details.
   """
 
-  @enforce_keys [:pid, :directory, :port]
-  defstruct [:pid, :directory, :port, version: 0]
+  alias Expresso.PrivateDir
+
+  @enforce_keys [:pid, :directory, :private_dir, :port]
+  defstruct [:pid, :directory, :private_dir, :port, version: 0]
 
   @typedoc "A running server"
   @type t :: %__MODULE__{
           pid: pid(),
           directory: Path.t(),
+          private_dir: PrivateDir.t(),
           port: :inet.port_number(),
           version: non_neg_integer()
         }
@@ -54,8 +64,16 @@ defmodule Expresso.Watch.Server do
   @spec start(:inet.port_number()) :: {:ok, t()} | {:error, String.t()}
   def start(port) do
     {:ok, _started} = Application.ensure_all_started(:inets)
-    directory = directory()
-    server = %__MODULE__{pid: self(), directory: directory, port: port}
+    private_dir = PrivateDir.open!("watch")
+    directory = private_dir.path
+
+    server = %__MODULE__{
+      pid: self(),
+      directory: directory,
+      private_dir: private_dir,
+      port: port
+    }
+
     write(server, "version", "0")
     write(server, "index.html", page(waiting(), 0))
 
@@ -64,7 +82,7 @@ defmodule Expresso.Watch.Server do
         {:ok, %{server | pid: pid, port: Keyword.fetch!(:httpd.info(pid), :port)}}
 
       {:error, reason} ->
-        remove(directory)
+        PrivateDir.close(private_dir)
         {:error, start_error(reason, port)}
     end
   end
@@ -92,14 +110,16 @@ defmodule Expresso.Watch.Server do
   @spec stop(t()) :: :ok
   def stop(server) do
     :inets.stop(:httpd, server.pid)
-    remove(server.directory)
-    :ok
+    PrivateDir.close(server.private_dir)
   end
 
   # The modules run in this order:
   #
   #   * `Expresso.Watch.Host` refuses a request for a different host name.
-  #   * `mod_alias` gives the directory index.
+  #   * `mod_alias` gives the directory index. Its `re_write` gives
+  #     `index.html` for `/` with a query: `mod_alias` looks for the index
+  #     with the query still in the path, and `mod_get` then refuses the
+  #     directory with the status 403.
   #   * `mod_get` sends a file.
   #   * `mod_head` answers a HEAD request.
   defp config(directory, port) do
@@ -110,6 +130,7 @@ defmodule Expresso.Watch.Server do
       server_root: String.to_charlist(directory),
       document_root: String.to_charlist(directory),
       directory_index: [~c"index.html"],
+      re_write: {~c"^/\\?", String.to_charlist(replacement(directory) <> "/index.html?")},
       modules: [Expresso.Watch.Host, :mod_alias, :mod_get, :mod_head],
       mime_types: [{~c"html", ~c"text/html; charset=utf-8"}],
       default_type: ~c"text/plain"
@@ -130,20 +151,8 @@ defmodule Expresso.Watch.Server do
   defp in_use?(reason) when is_list(reason), do: Enum.any?(reason, &in_use?/1)
   defp in_use?(_reason), do: false
 
-  # The name of the directory comes from this module, with a unique number.
-  # sobelow_skip ["Traversal.FileModule"]
-  defp directory do
-    path = Path.join(System.tmp_dir!(), "expresso-watch-#{System.unique_integer([:positive])}")
-    File.mkdir_p!(path)
-    path
-  end
-
-  # The directory is the private directory of `directory/0`.
-  # sobelow_skip ["Traversal.FileModule"]
-  defp remove(directory) do
-    File.rm_rf(directory)
-    :ok
-  end
+  # `re:replace/4` reads `\` and `&` in a replacement as special characters.
+  defp replacement(directory), do: String.replace(directory, ["\\", "&"], &("\\" <> &1))
 
   # The directory belongs to this server, and the names are fixed.
   # sobelow_skip ["Traversal.FileModule"]

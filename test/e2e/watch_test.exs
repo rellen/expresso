@@ -60,4 +60,29 @@ defmodule Expresso.E2E.WatchTest do
     assert position(page) == "2.1"
     assert js(page, "location.hash") == "#2.1"
   end
+
+  # `s` opens the address with `?speaker=`. The watch server serves
+  # `index.html` for it, so the speaker view shows the deck and reloads too.
+  test "s opens the speaker view, and the speaker view reloads after a change", %{
+    page: page,
+    context: context,
+    input: input,
+    url: url
+  } do
+    audience = open(page, url)
+    speaker = popup(context, fn -> press(audience, "s") end)
+
+    assert js(speaker, "location.search") =~ "speaker"
+    assert js(speaker, "document.body.dataset.view") == "speaker"
+    assert js(speaker, "document.body.innerText.includes('the first slide')")
+
+    %File.Stat{mtime: mtime} = File.stat!(input, time: :posix)
+    File.write!(input, script("the new text"))
+    File.touch!(input, mtime + 1)
+    assert_receive {Expresso.Watch, {:rendered, 2}}, 10_000
+
+    speaker
+    |> wait_for("document.body.dataset.view === 'speaker'")
+    |> wait_for("document.body.innerText.includes('the new text')")
+  end
 end

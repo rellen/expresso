@@ -182,8 +182,9 @@ The check finds each tool before it renders the deck. A missing tool gives an er
 tells how to install it.
 
 The browser runs with `--no-sandbox`, as the browser of Playwright does. It opens only the
-copy of the document, in a temporary directory with its own profile. The check removes the
-directory after the run.
+copy of the document, in a temporary directory with its own profile. The directory has a
+random name, and the other users of the computer cannot read it. The check removes the
+directory after the run, and also when you stop the check with Ctrl-C.
 
 ## The report
 

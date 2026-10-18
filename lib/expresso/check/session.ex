@@ -176,11 +176,8 @@ defmodule Expresso.Check.Session do
     schemes = Keyword.get(opts, :schemes, [nil])
     sizes = Keyword.get(opts, :sizes, [{@width, @height}])
 
-    directory =
-      Path.join(System.tmp_dir!(), "expresso-session-#{System.unique_integer([:positive])}")
-
-    File.mkdir_p!(directory)
-    page_path = Path.join(directory, "deck.html")
+    private_dir = Expresso.PrivateDir.open!("session")
+    page_path = Path.join(private_dir.path, "deck.html")
     File.write!(page_path, Browser.with_axe(html, tools.axe))
     previous = Process.flag(:trap_exit, true)
 
@@ -195,7 +192,7 @@ defmodule Expresso.Check.Session do
       end
     after
       Process.flag(:trap_exit, previous)
-      File.rm_rf(directory)
+      Expresso.PrivateDir.close(private_dir)
     end
   end
 
