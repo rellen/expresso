@@ -265,7 +265,12 @@ defmodule Expresso.BinaryTest do
   # the command stops, and that the port closes. The request uses `:gen_tcp`
   # and not `:httpc`, because `:httpc` changes the monotonic counter of the VM,
   # and the first test reads that counter in the ids of a diagram.
-  test "serves the deck with --watch, and stops for SIGTERM", context do
+  # The binary gets its own temporary directory, so the test can read the
+  # private directory of the watch server, and see that it goes away.
+  test "serves the deck with --watch, and stops for SIGTERM", %{tmp_dir: dir} = context do
+    temporary = Path.join(dir, "tmp")
+    File.mkdir!(temporary)
+    env = [{"TMPDIR", temporary} | context.env]
     {:ok, socket} = :gen_tcp.listen(0, ip: {127, 0, 0, 1})
     {:ok, port} = :inet.port(socket)
     :gen_tcp.close(socket)
@@ -283,19 +288,28 @@ defmodule Expresso.BinaryTest do
           "--port",
           Integer.to_string(port)
         ],
-        env: Enum.map(context.env, fn {key, value} -> {~c"#{key}", ~c"#{value}"} end)
+        env: Enum.map(env, fn {key, value} -> {~c"#{key}", ~c"#{value}"} end)
       ])
 
     output = read_until(binary, "Rendered", "")
     assert output =~ "Serving examples/dsl_deck.exs at http://127.0.0.1:#{port}/"
 
+    assert [watch] = Path.wildcard(Path.join(temporary, "expresso-watch-*"))
+    assert Bitwise.band(File.stat!(watch).mode, 0o777) == 0o700
+
     assert raw_get(port, "/") =~ ~r{\AHTTP/1\.[01] 200 .*<!DOCTYPE html>.*const version = "1"}s
     assert raw_get(port, "/version") =~ ~r{\r\n\r\n1\z}
+    assert raw_get(port, "/?speaker=") =~ ~r{\AHTTP/1\.[01] 200 .*const version = "1"}s
 
     {:os_pid, pid} = Port.info(binary, :os_pid)
     System.cmd("kill", ["-TERM", Integer.to_string(pid)])
     assert_receive {^binary, {:exit_status, _status}}, 10_000
     assert {:error, :econnrefused} = :gen_tcp.connect({127, 0, 0, 1}, port, [])
+
+    assert Enum.any?(1..100, fn _try ->
+             Process.sleep(50)
+             not File.exists?(watch)
+           end)
   end
 
   # A request with HTTP/1.0, so the server closes the connection after the

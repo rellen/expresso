@@ -134,6 +134,20 @@ defmodule Expresso.WatchTest do
       assert_receive {Watch, {:rendered, 2}}, 10_000
     end
 
+    test "renders one time after an edit that removes a file of the deck", %{tmp_dir: dir} do
+      image = Path.join(dir, "dot.png")
+      File.cp!("test/fixtures/dot.png", image)
+      input = Path.join(dir, "deck.exs")
+      File.write!(input, script("text", ", image(#{inspect(image)})"))
+
+      start_watch(input)
+      assert_receive {Watch, {:rendered, 1}}, 10_000
+
+      change(input, script("text"))
+      assert_receive {Watch, {:rendered, 2}}, 10_000
+      refute_receive {Watch, {:rendered, 3}}, 500
+    end
+
     test "gives an error for a port in use", %{tmp_dir: dir} do
       {:ok, socket} = :gen_tcp.listen(0, ip: {127, 0, 0, 1})
       {:ok, port} = :inet.port(socket)

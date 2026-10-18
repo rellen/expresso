@@ -253,10 +253,8 @@ defmodule Expresso.Check.Browser do
           {:ok, result()} | {:error, String.t()}
   # sobelow_skip ["Traversal"]
   def run(html, browser, axe \\ nil, opts \\ []) do
-    directory =
-      Path.join(System.tmp_dir!(), "expresso-check-#{System.unique_integer([:positive])}")
-
-    File.mkdir_p!(directory)
+    private_dir = Expresso.PrivateDir.open!("check")
+    directory = private_dir.path
 
     try do
       page = Path.join(directory, "deck.html")
@@ -271,7 +269,7 @@ defmodule Expresso.Check.Browser do
 
       measure(browser, url, directory, Keyword.get(opts, :size, {@width, @height}), timeouts)
     after
-      File.rm_rf(directory)
+      Expresso.PrivateDir.close(private_dir)
     end
   end
 

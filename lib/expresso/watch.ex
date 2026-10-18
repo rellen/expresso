@@ -86,7 +86,8 @@ defmodule Expresso.Watch do
   # The snapshot of the known files comes before the render. A change during
   # the render then gives a different snapshot at the next look, and a new
   # render. A file that the render reads for the first time gets its state
-  # after the render.
+  # after the render. A file that the render does not read any more leaves the
+  # snapshot, so the next look does not see a change.
   defp render(state) do
     known = Files.snapshot(watched_paths(state.paths))
     started = System.monotonic_time(:millisecond)
@@ -99,8 +100,9 @@ defmodule Expresso.Watch do
         {:error, message} -> failed(state, message, read_paths)
       end
 
-    new_paths = state.paths |> watched_paths() |> Enum.reject(&Map.has_key?(known, &1))
-    %{state | snapshot: Map.merge(Files.snapshot(new_paths), known)}
+    paths = watched_paths(state.paths)
+    new_paths = Enum.reject(paths, &Map.has_key?(known, &1))
+    %{state | snapshot: Map.merge(Files.snapshot(new_paths), Map.take(known, paths))}
   end
 
   defp rendered(state, html, milliseconds, read_paths) do
