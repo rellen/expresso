@@ -171,6 +171,17 @@ defmodule Expresso.ChartElementTest do
     [figure] = figures(small)
     assert texts(figure, "text.chart-value") == ["0.00025"]
     refute figure |> LazyHTML.text() |> String.contains?("e-")
+
+    # A label keeps at most 100 decimals, so a value under 1.0e-253 does not
+    # stop the render.
+    smallest =
+      Builder.chart(:bar,
+        title: "T",
+        categories: ["A"],
+        elements: [Builder.series("S", [1.0e-300])]
+      )
+
+    assert [_figure] = figures(smallest)
   end
 
   test "the CSV reader names the line of a bad row" do

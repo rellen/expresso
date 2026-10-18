@@ -41,7 +41,8 @@ defmodule Expresso.Element.Stat do
 
   The shortest form of a very small or a very large float has an exponent,
   such as `1.5e-4`. The decimals are the digits of the fraction less the
-  exponent, and at least 0.
+  exponent, at least 0 and at most 100. The script writes a number with
+  `toFixed`, and `toFixed` accepts no more than 100 decimals.
 
       iex> Expresso.Element.Stat.decimals(1250)
       0
@@ -51,6 +52,8 @@ defmodule Expresso.Element.Stat do
       5
       iex> Expresso.Element.Stat.decimals(2.5e15)
       0
+      iex> Expresso.Element.Stat.decimals(1.0e-300)
+      100
   """
   @spec decimals(number()) :: non_neg_integer()
   def decimals(value) when is_integer(value), do: 0
@@ -68,7 +71,7 @@ defmodule Expresso.Element.Stat do
         [_whole] -> ""
       end
 
-    max(String.length(fraction) - exponent, 0)
+    (String.length(fraction) - exponent) |> max(0) |> min(100)
   end
 
   @doc """

@@ -49,6 +49,11 @@ defmodule Expresso.StatElementTest do
     assert numbers(Builder.stat(12_345_678_901_234_567_890, decimals: 1)) == [
              "12,345,678,901,234,567,890.0"
            ]
+
+    # The script writes a count with `toFixed`, which accepts at most 100
+    # decimals, so a value with more decimals keeps 100.
+    assert [text] = numbers(Builder.stat(1.0e-300))
+    assert text == "0." <> String.duplicate("0", 100)
   end
 
   test "count gives the number the class stat-count, the values of the count and its format" do
