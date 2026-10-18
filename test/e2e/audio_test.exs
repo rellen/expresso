@@ -118,8 +118,8 @@ defmodule Expresso.E2E.AudioTest do
     assert position(page) == "4.1"
     wait_for(page, "!#{sound(4)}.paused")
 
-    # Go near the end, so the test does not wait for the whole sound.
-    js(page, "#{sound(4)}.currentTime = #{sound(4)}.duration - 0.05")
+    # The sound lasts 1.6 seconds. The browser can give `duration` as
+    # `Infinity`, so the test waits for the end and does not seek near it.
     wait_for(page, "#{sound(4)}.ended")
 
     page |> keys(["j", "g", "j"])
