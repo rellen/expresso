@@ -61,6 +61,31 @@ defmodule Expresso.ChartFramesTest do
     x
   end
 
+  defp round_chart(kind, opts) do
+    categories =
+      if kind == :sunburst, do: [["G", "North"], ["G", "South"]], else: ["North", "South"]
+
+    Builder.chart(
+      kind,
+      [
+        title: "Share",
+        categories: categories,
+        timeline: [
+          frame("2023", [Builder.series("S", [1, 3])]),
+          frame("2024", [Builder.series("S", [3, 1])])
+        ]
+      ] ++ opts
+    )
+  end
+
+  # The x and the anchor of the first label of the frame.
+  defp frame_label(chart) do
+    label =
+      chart |> List.wrap() |> one_slide() |> document() |> LazyHTML.query("text.chart-frame")
+
+    {hd(LazyHTML.attribute(label, "x")), hd(LazyHTML.attribute(label, "text-anchor"))}
+  end
+
   describe "the steps" do
     test "the first frame shows from the first step, and each later frame takes the next step" do
       deck = one_slide([race()])
@@ -153,6 +178,21 @@ defmodule Expresso.ChartFramesTest do
       end
     end
 
+    test "the series of a later frame take no overlay option" do
+      for option <- [effect: :grow, speed: :slow, easing: :linear, morph: "x", class: "x"] do
+        assert_raise ArgumentError, ~r/the frame "2024" gives a series an overlay option/, fn ->
+          Builder.chart(:bar,
+            title: "Orders",
+            categories: ["North"],
+            timeline: [
+              frame("2023", [Builder.series("A", [1])]),
+              frame("2024", [Builder.series("A", [3], [option])])
+            ]
+          )
+        end
+      end
+    end
+
     test "each frame has a value for each category" do
       assert_raise ArgumentError, ~r/the series "A" needs 2 numbers/, fn ->
         Builder.chart(:bar,
@@ -189,6 +229,39 @@ defmodule Expresso.ChartFramesTest do
     test "the thumbnail option names a frame of the chart" do
       assert_raise ArgumentError, ~r/names frame 4, and the chart has 3 frames/, fn ->
         race(thumbnail: 4)
+      end
+    end
+
+    test "the thumbnail option of a chart without frames names frame 1 only" do
+      series = [Builder.series("A", [1])]
+
+      assert_raise ArgumentError, ~r/names frame 3, and a chart without frames has 1 frame/, fn ->
+        Builder.chart(:bar,
+          title: "Orders",
+          categories: ["North"],
+          thumbnail: 3,
+          elements: series
+        )
+      end
+
+      for thumbnail <- [1, :first, :last] do
+        assert %Chart{} =
+                 Builder.chart(:bar,
+                   title: "Orders",
+                   categories: ["North"],
+                   thumbnail: thumbnail,
+                   elements: series
+                 )
+      end
+    end
+
+    test "a pie and a sunburst take no frame_label :top_left" do
+      for kind <- [:pie, :sunburst] do
+        assert_raise ArgumentError,
+                     ~r/a #{kind} puts the label of the frame at the top right/,
+                     fn ->
+                       round_chart(kind, frame_label: :top_left)
+                     end
       end
     end
 
@@ -415,6 +488,24 @@ defmodule Expresso.ChartFramesTest do
         )
 
       assert Float.parse(x0_2024) < Float.parse(x0_2025)
+    end
+
+    test "frame_label puts the label at the top right, at the top left, or nowhere" do
+      assert frame_label(race()) == {"784", "end"}
+      assert frame_label(race(frame_label: :top_right)) == {"784", "end"}
+      assert frame_label(race(frame_label: :top_left)) == {"44", "start"}
+      assert count(document(one_slide([race(frame_label: :none)])), "text.chart-frame") == 0
+
+      for kind <- [:pie, :sunburst], place <- [:top_right, nil] do
+        opts = if place, do: [frame_label: place], else: []
+        assert frame_label(round_chart(kind, opts)) == {"784", "end"}
+      end
+
+      assert count(
+               document(one_slide([round_chart(:pie, frame_label: :none)])),
+               "text.chart-frame"
+             ) ==
+               0
     end
 
     test "a pie and a line chart with frames draw arcs and segments" do

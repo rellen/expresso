@@ -212,24 +212,31 @@ defmodule Expresso.Presenter.Program do
   @spec columns(non_neg_integer()) :: pos_integer()
   def columns(slides), do: max(1, ceil(:math.sqrt(slides)))
 
+  # The commands of `any`, of `each` and of each binding can hold a symbol,
+  # so each list goes through `resolve/2`.
   defp mode(mode, slides) do
+    each = resolve_all(mode.each, slides)
+
     bindings =
       Enum.map(mode.bindings, fn binding ->
-        each = if binding.each, do: mode.each, else: []
-        %{binding | commands: Enum.map(each ++ binding.commands, &resolve(&1, slides))}
+        commands = resolve_all(binding.commands, slides)
+        %{binding | commands: if(binding.each, do: each ++ commands, else: commands)}
       end)
 
     %{
       name: mode.name,
       when: mode.when,
-      any: mode.any,
+      any: resolve_all(mode.any, slides),
       keys: events(mode.name, bindings, :key),
       click: events(mode.name, bindings, :click),
       swipe: events(mode.name, bindings, :swipe),
-      element: if(mode.element, do: mode.each),
-      other: if(mode.other, do: mode.each)
+      element: if(mode.element, do: each),
+      other: if(mode.other, do: each)
     }
   end
+
+  defp resolve_all(nil, _slides), do: nil
+  defp resolve_all(commands, slides), do: Enum.map(commands, &resolve(&1, slides))
 
   # The map from each event of one kind to its commands.
   defp events(mode, bindings, kind) do
