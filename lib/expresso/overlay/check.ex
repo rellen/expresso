@@ -32,8 +32,9 @@ defmodule Expresso.Overlay.Check do
   An element without an `at` option shows at each step of its parent.
   Therefore its nearest ancestor with steps limits the steps of its
   descendants and of its `on` entities. An element without such an ancestor
-  shows at each step, and the function accepts each step for it. The transformer reports a step that is
-  more than the maximum, because the expansion needs the maximum.
+  shows at each step, and the function accepts each step for it. The
+  transformer reports a step that is more than the maximum, because the
+  expansion needs the maximum.
   """
   @spec slide(Slide.t()) :: :ok | {:error, String.t()}
   def slide(%Slide{elements: elements}) do

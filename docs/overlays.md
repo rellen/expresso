@@ -142,9 +142,9 @@ The option changes an element at the level of the slide only. A nested element k
 An earlier version of this document said "each element without an `at` option", with no
 level. That rule is not correct, and this document gives the evidence:
 
-- A nested element under a parent with a closed absolute `at`, such as `at 3`, takes the
-  step after the step of the parent. The child is then outside its parent, and the
-  verifier reports an error for a deck that the author wrote correctly.
+- A nested element under a parent with a closed absolute `at`, such as `at 3`, shows from
+  step 3 to the last step of the slide. A second nested element shows from step 4. The
+  verifier then reports a step after step 3, for a deck that the author wrote correctly.
 - Where each parent is also implicit, there is no error, but each container costs one step.
   A slide with one `text_box` and one `text_area` becomes a slide of two steps. The box
   then shows with no text in it at the first step.
@@ -190,8 +190,8 @@ These rules apply with the option:
   as each element does.
 - An element with a `header` option, such as a table, keeps its first child without a
   specification. The header then shows with the element.
-- An element without an `at` option shows at each step, and its children read the counter
-  of the slide. Therefore an element after it continues the sequence.
+- An element without an `at` option shows at each step of its parent. Its children read
+  the same counter as the element. Therefore an element after it continues the sequence.
 - An element with a relative `at` option, such as `at from: :next`, reads the counter
   first, and its children come after it. The element then shows with no child at its first
   step.
