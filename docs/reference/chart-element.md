@@ -38,7 +38,7 @@ end
 | `separator` | A string | The text between two levels of a category of a treemap or a sunburst. The default is `"/"`. |
 | `levels` | A list of strings | The headings of the CSV columns that hold the levels of a treemap or a sunburst, from the top level down. For a chart of flows, the headings of the CSV columns that hold the nodes of each path. Requires `src`, but an alluvial chart or a parallel sets chart can take `levels` without `src` to give the title of each column. |
 | `frames` | A string | The heading of the column of the CSV file that names the frame of each row. Requires `src`. |
-| `frame_label` | `:top_right`, `:top_left` or `:none` | The place of the label of the frame in a chart with frames. The default is `:top_right`. |
+| `frame_label` | `:top_right`, `:top_left` or `:none` | The place of the label of the frame in a chart with frames. The default is `:top_right`. A pie and a sunburst put the label at the top right, so they do not take `:top_left`. |
 | `sort` | `true` or `false` | Put the categories of a bar chart in order of their totals, from the largest, in each frame. A bar chart without frames, and each copy in the handout view and on paper, also uses this order. The default is `false`. |
 | `count` | `true` or `false` | Count each number from the value of one frame to the value of the next. The default is `false`, and the numbers fade. |
 | `thumbnail` | `:first`, `:last` or the number of a frame | The frame that the overview and the menu of the slides show. The default is `:first`. |
@@ -532,12 +532,15 @@ The compiler gives an error for these:
   without `src`, and an empty `separator`;
 - a chart with frames and a `series` of its own;
 - a frame with series that are not the series of the first frame, in the same order;
-- a series of a later frame with an overlay option or a `class`;
+- a series of a later frame with an overlay option, such as `at`, `effect`, `speed`,
+  `easing`, `morph` or an `on` entity, or with a `class`;
 - `sort` on a line chart or a pie, `count` on a chart without frames, and `frames` without
   `src`;
 - `delimiter` without `src`, and a `delimiter` that is not one character, or that is a
   quote or a line break;
-- a `thumbnail` with the number of a frame that the chart does not have;
+- a `thumbnail` with the number of a frame that the chart does not have. A chart without
+  frames has one frame, so it takes only `1`, `:first` and `:last`;
+- `frame_label: :top_left` on a pie or a sunburst;
 - a `flow` in a chart that is not a chart of flows, also in a frame;
 - a chart of flows with flows and also `categories`, a `series` or `src`;
 - a frame with flows and also a series;

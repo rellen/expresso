@@ -336,6 +336,18 @@ defmodule Expresso.Element.Chart do
   defp options(%__MODULE__{count: true, timeline: [], frames: nil}),
     do: {:error, "the count option counts from one frame to the next, so it needs frames"}
 
+  defp options(%__MODULE__{kind: kind, frame_label: :top_left}) when is_round(kind),
+    do:
+      {:error,
+       "a #{kind} puts the label of the frame at the top right, so it takes " <>
+         "frame_label :top_right or :none"}
+
+  defp options(%__MODULE__{thumbnail: thumbnail, timeline: [], frames: nil})
+       when is_integer(thumbnail) and thumbnail > 1,
+       do:
+         {:error,
+          "the thumbnail option names frame #{thumbnail}, and a chart without frames has 1 frame"}
+
   defp options(%__MODULE__{thumbnail: thumbnail, timeline: [_ | _] = timeline})
        when is_integer(thumbnail) and thumbnail > length(timeline),
        do:
@@ -367,7 +379,7 @@ defmodule Expresso.Element.Chart do
          "the frame \"#{label}\" needs the series #{Enum.map_join(names, ", ", &inspect/1)}, " <>
            "in the order of the first frame"}
 
-      Enum.any?(elements, &(&1.at != nil or &1.on != [] or &1.class != nil)) ->
+      Enum.any?(elements, &(overlay?(&1) or &1.class != nil)) ->
         {:error,
          "the frame \"#{label}\" gives a series an overlay option or a class. Give them to " <>
            "the series of the first frame."}
@@ -376,6 +388,15 @@ defmodule Expresso.Element.Chart do
         with :ok <- series(%__MODULE__{chart | elements: elements}),
              do: frame_single(%__MODULE__{chart | elements: elements})
     end
+  end
+
+  # True for a series with a value in a field of `Expresso.Overlay.fields/0`
+  # that is not the default.
+  defp overlay?(series) do
+    Enum.any?(Expresso.Overlay.fields(), fn
+      {field, default} -> Map.fetch!(series, field) != default
+      field -> Map.fetch!(series, field) != nil
+    end)
   end
 
   # `single/1` checks each frame of a chart of flows with the whole timeline,
@@ -1347,7 +1368,7 @@ defmodule Expresso.Element.Chart do
       end)
       |> elem(0)
 
-    radius = 180
+    radius = Motion.radius()
     cx = 40 + radius
     cy = @height / 2
     top = cy - length(assigns.categories) * 36 / 2

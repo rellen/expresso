@@ -22,6 +22,31 @@ defmodule Expresso.Presenter.ProgramTest do
       assert present.keys["End"] == [{:clear, :digits}, {:goto, 8}]
     end
 
+    test "changes each symbol of any and each into a number for the deck" do
+      definition = Definition.presenter()
+
+      modes =
+        Enum.map(definition.modes, fn
+          %{name: :present} = mode ->
+            %{mode | any: [{:goto, :last_slide}], each: [{:select_by, {:columns, 1}}]}
+
+          mode ->
+            mode
+        end)
+
+      deck = Expresso.Builder.deck(Enum.map(1..7, &Expresso.Builder.slide("slide #{&1}")))
+      program = Program.compile(%{definition | modes: modes}, deck)
+      present = mode(program, :present)
+
+      assert present.any == [{:goto, 6}]
+      assert present.other == [{:select_by, 3}]
+      assert present.element == [{:select_by, 3}]
+      assert present.keys["j"] == [{:select_by, 3}, {:step, 1}]
+
+      written = program |> Program.json() |> JSON.decode!()
+      assert Expresso.Presenter.Schema.Check.check(written, :written_program) == :ok
+    end
+
     test "a deck with no slide has no last slide" do
       assert mode(program([]), :present).keys["End"] == [{:clear, :digits}, {:goto, nil}]
     end
