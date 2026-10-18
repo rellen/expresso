@@ -280,7 +280,12 @@ defmodule Expresso.Element.Chart.Csv do
 
   Each row has the number of its first line. The function trims the spaces
   around a cell without quotes, and it keeps the text in quotes as it is. It
-  skips a line with only white space.
+  skips a line with only white space. It removes a byte order mark at the
+  start of the text, as the format "CSV UTF-8" of a spreadsheet writes it, so
+  the first cell keeps its name.
+
+      iex> Expresso.Element.Chart.Csv.rows("\\uFEFFyear,Orders\\n2024,3\\n", "a.csv")
+      {:ok, [{1, ["year", "Orders"]}, {2, ["2024", "3"]}]}
 
       iex> Expresso.Element.Chart.Csv.rows("a; b\\n\\n\\"x\\"\\"y\\";\\"1\\n2\\"\\n", "a.csv", delimiter: ";")
       {:ok, [{1, ["a", "b"]}, {3, [~s(x"y), "1\\n2"]}]}
@@ -290,11 +295,16 @@ defmodule Expresso.Element.Chart.Csv do
   def rows(text, src, opts \\ []) do
     delimiter = Keyword.get(opts, :delimiter, ",")
 
-    case read_rows(text, delimiter, 1, []) do
+    case read_rows(without_mark(text), delimiter, 1, []) do
       {:ok, rows} -> {:ok, rows}
       {:error, line, problem} -> {:error, "line #{line} of the chart file \"#{src}\" #{problem}"}
     end
   end
+
+  # U+FEFF at the start of a file is a byte order mark, and not a character
+  # of the first cell. `String.trim/1` does not remove it.
+  defp without_mark("\uFEFF" <> text), do: text
+  defp without_mark(text), do: text
 
   defp read_rows("", _delimiter, _line, rows), do: {:ok, Enum.reverse(rows)}
 
