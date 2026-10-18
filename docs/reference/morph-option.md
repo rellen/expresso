@@ -38,8 +38,10 @@ element of the two slides has that kind and that content. The content of each ki
 | A stat | Its label. |
 | Each other kind | Its text. |
 
-An element with an empty content, such as a text area without a text or a diagram with an
+An element without a text or a drawing, such as an empty text area or a diagram with an
 empty `svg` element, gets no signature and has no partner. Give it a `morph` key to move it.
+A code without a language and a stat without a label are not empty. Two codes without a
+language are partners, and two stats without a label are partners.
 
 Two code elements that are partners also move each token that the two codes share, in
 order. A token moves from its place in the old code to its place in the new code.

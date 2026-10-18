@@ -260,6 +260,21 @@ defmodule Expresso.MorphTest do
              |> signatures("text-area")
   end
 
+  test "a code without a language and a stat without a label still pair" do
+    [first, second] =
+      [Builder.code(text: "x = 1"), Builder.code(text: "x = 1 + 2")]
+      |> slides()
+      |> signatures("code")
+
+    assert first != nil
+    assert first == second
+
+    [one, two] = [Builder.stat(1), Builder.stat(2)] |> slides() |> signatures("stat")
+
+    assert one != nil
+    assert one == two
+  end
+
   test "the heading of the default template has the signature of its text" do
     [first, second, other] =
       [
