@@ -404,6 +404,7 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   font-size: 0.45rem;
   text-align: left;
   color: var(--footnote-color, var(--muted));
+  --dim-color: var(--muted-dim);
 }
 .footnote::marker {
   font-variant-numeric: tabular-nums;
@@ -943,7 +944,11 @@ body[data-view="handout"] .chart-frames {
 .handout-page .audio figcaption {
   display: block;
   font-size: 0.6em;
-  color: var(--muted);
+  color: color-mix(
+    in srgb,
+    var(--muted-dim) calc(var(--dimmed) * 100%),
+    var(--muted)
+  );
 }
 /*
  * The QR code element. A scanner reads a dark code on a light ground best, so
@@ -1323,6 +1328,11 @@ body[data-view="handout"] .chart-frames {
 .icon {
   --icon-color: var(--text);
   --icon-dim: var(--text-dim);
+  /* The rule `[data-el]` of an icon with an `on` entity comes later, and it
+     replaces `color`. It mixes `--color` and `--dim-color`, so these give the
+     colors of the role. A rule of `set: [color: ...]` replaces `--color`. */
+  --color: var(--icon-color);
+  --dim-color: var(--icon-dim);
   flex-grow: 1;
   display: flex;
   flex-direction: column;
@@ -1530,6 +1540,7 @@ body[data-view="present"][data-undim]
 .toc-entry,
 .footnote,
 .audio,
+.embed,
 .shape,
 .chart,
 .chart-series {
@@ -1639,7 +1650,8 @@ body[data-view="present"][data-undim]
     outline-width var(--dur) var(--ease),
     filter var(--dur) var(--ease),
     color var(--dur) var(--ease),
-    --dimmed var(--dur) var(--ease);
+    --dimmed var(--dur) var(--ease),
+    --highlight var(--dur) var(--ease);
 }
 /*
  * A graphic has colors that the palette does not know: an image, an SVG file
@@ -1648,7 +1660,13 @@ body[data-view="present"][data-undim]
  * role of text at 3:1 and at Lc 30. The rule applies only on a slide and on a
  * page of the handout view, so the presenter keeps its own icons.
  */
-:is(.slide, .handout-page) :is(img, svg, iframe) {
+:where(.slide, .handout-page, .menu-thumb)
+  :where(
+    img,
+    svg:not(.icon-svg, .icon-inline, .callout-icon, .shape-line),
+    iframe,
+    video
+  ) {
   filter: opacity(calc(1 - var(--dimmed) * (1 - var(--dim-opacity))));
 }
 /*
@@ -1699,7 +1717,49 @@ svg [data-el] {
     outline-width var(--dur) var(--ease),
     filter var(--dur) var(--ease),
     clip-path var(--dur) var(--ease),
-    color var(--dur) var(--ease);
+    color var(--dur) var(--ease),
+    --dimmed var(--dur) var(--ease),
+    --highlight var(--dur) var(--ease);
+}
+/*
+ * A series of a chart has its own list with `--chart-dim`, and that list
+ * replaces the lists of an element. Therefore a series with an overlay or with
+ * an `on` entity gets the list of the element and `--chart-dim`. Each rule has
+ * a higher specificity than the rule of the series.
+ */
+.chart :is(.chart-series, .chart-labels)[data-el] {
+  transition:
+    opacity var(--dur) var(--ease),
+    transform var(--dur) var(--ease),
+    outline-width var(--dur) var(--ease),
+    filter var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    --dimmed var(--dur) var(--ease),
+    --highlight var(--dur) var(--ease),
+    --chart-dim var(--dur) var(--ease);
+}
+.chart :is(.chart-series, .chart-labels)[data-on] {
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility 0s linear var(--dur),
+    transform var(--dur) var(--ease),
+    outline-width var(--dur) var(--ease),
+    filter var(--dur) var(--ease),
+    clip-path var(--dur) var(--ease),
+    --chart-dim var(--dur) var(--ease);
+}
+.chart :is(.chart-series, .chart-labels)[data-on][data-el] {
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility 0s linear var(--dur),
+    transform var(--dur) var(--ease),
+    outline-width var(--dur) var(--ease),
+    filter var(--dur) var(--ease),
+    clip-path var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    --dimmed var(--dur) var(--ease),
+    --highlight var(--dur) var(--ease),
+    --chart-dim var(--dur) var(--ease);
 }
 /*
  * The `main` element around the present view and the handout view. It is the
@@ -1837,8 +1897,14 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   body[data-view="present"][data-blank="true"] {
     background-color: #000;
   }
+  /* The reveal rule of a step sets `visibility: visible` on an element, and a
+     child with `visible` shows inside a parent with `hidden`. A child cannot
+     undo the opacity of its parent, so the screen also gets `opacity: 0`, and
+     it takes no click. */
   body[data-view="present"][data-blank="true"] .screen {
     visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
   }
 }
 /* The speaker view is for a screen. A printer gets the handout view. */

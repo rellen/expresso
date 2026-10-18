@@ -306,8 +306,15 @@ element. The renderer does not know the values of the theme:
 }
 ```
 
-A registered number interpolates. Therefore the state fades in across the step, and the
-theme does not write a transition for it. A value that CSS cannot multiply takes the
+A registered number can interpolate, but it changes smoothly only when a transition holds
+it. Without a transition, the state changes at once at the start of the step. Therefore
+the theme writes a transition for the state, or for each property that reads the state, as
+the example does. The rules `[data-el]` and `[data-on][data-el]` hold the transitions of
+`--dimmed` and `--highlight`, and the rules of a chart series also hold `--chart-dim`.
+
+A rule that writes its own list of transitions replaces the list of each rule with a lower
+specificity, or of an earlier rule with the same specificity. Thus such a rule must hold
+each entry of the list that it replaces. A value that CSS cannot multiply takes the
 space toggle. The theme writes `--alert-on: ;` for the state, and `var(--alert-on) #fee`
 for the value. This form does not interpolate, but it works in each browser with custom
 properties.
