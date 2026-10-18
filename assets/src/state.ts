@@ -12,8 +12,15 @@
 import { is } from "./decode.ts";
 import type { Deck, Entry } from "./deck.ts";
 import type { Program } from "./program.ts";
-import { decodeMessage } from "./schema.ts";
-import type { Direction, Message, Region, Scheme, State } from "./schema.ts";
+import { decodeMessage, decodeRequest } from "./schema.ts";
+import type {
+  Direction,
+  Message,
+  Region,
+  Request,
+  Scheme,
+  State,
+} from "./schema.ts";
 
 // The present view shows one slide at one step. The handout view shows one page
 // for each step of each slide. The speaker view shows the current step, the
@@ -123,6 +130,32 @@ export function accepts(
   speaker: boolean,
 ): boolean {
   return incoming > own || (incoming === own && speaker);
+}
+
+// The maximum time in milliseconds by which the time of a message can be
+// after the clock of the window. `stamp` can put the time of a window a few
+// milliseconds after the clock, when keys come fast.
+export const DRIFT = 1000;
+
+// The time that a window takes from a message with the time `incoming`. The
+// two windows read the same clock, so a time far after the clock is not
+// correct. Without this limit, one message with a very large time made the
+// window refuse each later message of the other window.
+export function limit(incoming: number, now: number): number {
+  return Math.min(incoming, now + DRIFT);
+}
+
+// The message that the speaker view sends to the present view after its load.
+// The present view answers with a message of its full state. Thus a reload of
+// the speaker view sends no state of its own, and the present view keeps its
+// black screen and its variant of the theme.
+export function request(): Request {
+  return { expresso: "request" };
+}
+
+// Tell if data from the other window is a request of the speaker view.
+export function isRequest(data: unknown): data is Request {
+  return is(decodeRequest, data);
 }
 
 // Tell if data from the other window is a message of the presenter. The other

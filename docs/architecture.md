@@ -2177,7 +2177,11 @@ The tables do not give these rules:
   `body`, and the style sheet shows them in the top right corner. A theme can set
   `--digits-color` and `--digits-background`.
 - The key after `b` closes the black screen, and it does nothing more.
-- A second `s` shows the window of the speaker view again, and it opens no second window.
+- A second `s` shows the window of the speaker view again with `focus()`, and it opens no
+  second window. It does not change the address of an open speaker view, because a new
+  address loads the window again, and the timer then starts again at `0:00`. After a
+  reload of the present view, the present view has no partner until the next message of
+  the speaker view, and a second `s` then loads the speaker view again.
 - `d` toggles the field `undim`. The projection of the attribute `data-undim` writes it on
   the `body`, and the attribute is present only while the field is true. While the
   attribute is present, a rule of the style sheet sets `--dim` and `--dimmed` to 0 on each
@@ -2209,6 +2213,10 @@ script operates it with little code:
 - The keydown handler of `main.ts` ignores a key in an `input`, a `textarea`, a `select`
   or an element with `contenteditable`. Thus the text in the field does not operate the
   deck.
+- The keydown handler also ignores a key on each other element inside the dialog. Thus
+  `Tab` moves the focus to the `summary` of a section, and `Enter` or the space bar opens
+  the section. Before this rule, the mode `help` closed the list at each key, also at
+  `Tab`.
 
 The field has `type="text"` and `role="searchbox"`. A field with `type="search"` clears its
 text at the first `Esc`, and the dialog then stays open.
@@ -2535,8 +2543,10 @@ next step. A mark writes `data-speaker` on these two pages, and the style sheet 
 in a grid and scales them with `zoom`. The notes of the current page, the position and a
 timer go into three elements that the renderer writes into the handout view. The style
 sheet hides them in each other view and on paper. The speaker view knows the keys of the
-present view, but `p`, `s` and `g` have no function in it. `r` sets the timer back to `0:00`,
-and the timer then starts at the next change of the step.
+present view, but `p`, `s` and `g` have no function in it. The timer starts at the first
+change of the step after the load. The step of the address at the load is not such a
+change, so a speaker view that opens at slide 3 also waits for a key. `r` sets the timer
+back to `0:00`, and the timer then starts at the next change of the step.
 
 The `duration` option of the deck gives the length of the talk in minutes. The list of the
 steps gives it in milliseconds, and `?duration=` in the address replaces it with a number
@@ -2560,11 +2570,22 @@ message also holds the variant of the theme that `t` chose. See "Two variants of
 theme". A window accepts a message only from the other window. The present view
 gets the speaker view from `window.open`, and the speaker view gets the present view from
 `window.opener`. After a reload of the present view, the next message of the speaker view
-makes the connection again. `BroadcastChannel` is not in this design, because a browser
-can give no shared origin to a document that it opens from a file.
+makes the connection again. The present view takes a window as its partner only when the
+`opener` of that window is the present view. A frame of the document, such as the page of
+an embed, has no opener, so it cannot control the present view. `BroadcastChannel` is not
+in this design, because a browser can give no shared origin to a document that it opens
+from a file.
+
+The state of the address at the load sends no message. After its load, the speaker view
+sends a request, `{expresso: "request"}`, to the present view. The present view answers
+with a message of its full state and its own time. Thus a reload of the speaker view does
+not remove the black screen of the present view. The old `?scheme` in the address of the
+speaker view also does not change the variant of the present view.
 
 A window sends only the changes of its own keys and of its own address, and each message
-holds the time of the change. A change of another part of the state, such as the overview or
+holds the time of the change. A window takes an incoming time only up to `DRIFT`, one
+second after its clock. `limit` in `state.ts` applies this rule. Without it, one message
+with a very large time made the window refuse each later message of the other window. A change of another part of the state, such as the overview or
 the list of keys, sends no message. For this reason, the overview shows only in the window
 that opens it. A window does not send a position from the other window back, and it ignores
 a message that is older than its own state.

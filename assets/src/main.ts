@@ -93,7 +93,10 @@ import {
   accepts,
   current,
   isMessage,
+  isRequest,
+  limit,
   message,
+  request,
   side,
   stamp,
   swipe,
@@ -135,8 +138,13 @@ let state: State = {
 let partner: Window | null = isSpeaker ? window.opener : null;
 
 // The timer of the speaker view starts at the first change of the slide or
-// the step. The key `r` sets it back to the start.
+// the step after the load. The step of the address at the load is not such a
+// change, so a speaker view that opens at slide 3 also waits for a key. The
+// key `r` sets the timer back to the start.
 let started: number | null = null;
+
+// True after the first state of the address shows.
+let loaded = false;
 
 // The length of the talk, from the list of the steps or the address
 // parameter `?duration=`. The speaker view opens with the address of the
@@ -182,7 +190,7 @@ function morphs(before: State, after: State): Pair[] {
 // Apply a new state, and write its fragment. `replaceState` adds no entry to
 // the history, so the back button of the browser does not go through the
 // steps. A change of this window goes to the other window. A change from the
-// other window does not go back to it. A message holds only the position, the
+// other window and the state of the address at the load do not go to it. A message holds only the position, the
 // fields of the option `sync` and the variant of the theme. A change to other
 // data, such as the overview, sends no message.
 function show(changed: State, local = true): void {
@@ -217,7 +225,7 @@ function show(changed: State, local = true): void {
     embeds();
   }
   videos();
-  if (isSpeaker && moved && started === null) {
+  if (isSpeaker && loaded && moved && started === null) {
     started = Date.now();
     tick();
   }
@@ -246,8 +254,14 @@ function videos(): void {
 
 // Open the speaker view, or show the window of the speaker view again. The
 // name of the window makes sure that a second `s` opens no second window. The
-// address gives the variant of the theme that this window shows.
+// address gives the variant of the theme that this window shows. A second `s`
+// does not change the address of an open speaker view, because a new address
+// loads the window again, and its timer then starts again at 0:00.
 function openSpeaker(): void {
+  if (partner !== null && !partner.closed) {
+    partner.focus();
+    return;
+  }
   const address = new URL(location.href);
   address.searchParams.set("speaker", "");
   const chosen = scheme();
@@ -298,7 +312,15 @@ if (isSpeaker) {
 apply(state, deck, program);
 count();
 
-show(fromHash(program, state, location.hash, deck));
+// The state of the address sends no message. Before this rule, a reload of
+// the speaker view sent its old state, and the present view lost its black
+// screen. The speaker view asks the present view for its state, and the
+// answer of the present view moves the speaker view.
+show(fromHash(program, state, location.hash, deck), false);
+loaded = true;
+if (isSpeaker && partner !== null && !partner.closed) {
+  partner.postMessage(request(), "*");
+}
 
 // `show` does nothing when the fragment gives no new step, so the video of the
 // first step needs its own call.
@@ -410,13 +432,16 @@ function handle(input: Event, event?: UIEvent): void {
 }
 
 // A key with Control, Alt or Meta goes to the browser, and so does a key in a
-// field of text, such as the search of the list of keys. `Escape` in that
-// field closes the dialog, and the browser then sends `close`.
+// field of text, such as the search of the list of keys. A key on an element
+// inside the list of keys also goes to the browser, so `Tab` moves the focus
+// to a section, and `Enter` or the space bar opens it. `Escape` in the list
+// closes the dialog, and the browser then sends `close`.
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.ctrlKey || event.altKey || event.metaKey) {
     return;
   }
-  if ((event.target as Element | null)?.closest?.(EDITABLE)) {
+  const target = event.target as Element | null;
+  if (target?.closest?.(EDITABLE) || target?.closest?.("#help")) {
     return;
   }
   handle({ kind: "key", key: event.key }, event);
@@ -540,21 +565,43 @@ window.addEventListener("hashchange", () => {
   show(fromHash(program, state, location.hash, deck));
 });
 
+// Tell if a window is a window that this window opened. The speaker view has
+// this window as its `opener`. A frame of the document, such as the page of an
+// embed, has no opener, so it cannot become the partner of the present view.
+function opened(source: Window | null): boolean {
+  try {
+    return source !== null && source.opener === window;
+  } catch {
+    return false;
+  }
+}
+
 // A message from the other window. A message from each other window has no
 // effect. After a reload, the present view has no partner, and the next
-// message of the speaker view makes the connection again.
+// message of the speaker view makes the connection again. The present view
+// answers a request of the speaker view with its full state and its own time.
 window.addEventListener("message", (event: MessageEvent) => {
   const source = event.source as Window | null;
-  if (partner === null && !isSpeaker && isMessage(event.data)) {
+  if (partner === null && !isSpeaker && opened(source)) {
     partner = source;
   }
-  if (partner === null || source !== partner || !isMessage(event.data)) {
+  if (partner === null || source !== partner) {
     return;
   }
-  if (!accepts(time, event.data.time, isSpeaker)) {
+  if (isRequest(event.data)) {
+    if (!isSpeaker) {
+      partner.postMessage(message(program, state, deck, time, scheme()), "*");
+    }
     return;
   }
-  time = event.data.time;
+  if (!isMessage(event.data)) {
+    return;
+  }
+  const incoming = limit(event.data.time, Date.now());
+  if (!accepts(time, incoming, isSpeaker)) {
+    return;
+  }
+  time = incoming;
   showScheme(event.data.scheme);
   show(follow(program, state, event.data, deck), false);
 });
