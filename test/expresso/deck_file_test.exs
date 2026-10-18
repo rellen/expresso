@@ -46,6 +46,62 @@ defmodule Expresso.DeckFileTest do
     end
   end
 
+  describe "read_text/1" do
+    # Latin-1 writes the character é as the one byte E9, which is not UTF-8.
+    @latin1 "caf\xE9 = 1\n"
+
+    test "returns the text of a UTF-8 file, and :not_utf8 for a different file", %{tmp_dir: dir} do
+      utf8 = Path.join(dir, "a.toml")
+      latin1 = Path.join(dir, "legacy.toml")
+      File.write!(utf8, "café = 1\n")
+      File.write!(latin1, @latin1)
+
+      assert DeckFile.read_text(utf8) == {:ok, "café = 1\n"}
+      assert DeckFile.read_text(latin1) == {:error, :not_utf8}
+      assert DeckFile.read_text(Path.join(dir, "missing.toml")) == {:error, :enoent}
+
+      assert_raise ArgumentError, DeckFile.read_error(latin1, "page", :not_utf8), fn ->
+        DeckFile.read_text!(latin1, "page")
+      end
+    end
+
+    test "a code file that is not UTF-8 gives an error that names the file", %{tmp_dir: dir} do
+      path = Path.join(dir, "legacy.toml")
+      File.write!(path, @latin1)
+
+      for code <- [Builder.code("toml", src: path), Builder.code(src: path)] do
+        error =
+          assert_raise Spark.Error.DslError, fn ->
+            [Builder.slide("one", elements: [code])] |> Builder.deck()
+          end
+
+        assert Exception.message(error) =~ DeckFile.read_error(path, "code file", :not_utf8)
+      end
+    end
+
+    test "a chart file that is not UTF-8 gives an error that names the file", %{tmp_dir: dir} do
+      path = Path.join(dir, "legacy.csv")
+      File.write!(path, "Caf\xE9,Orders\nA,1\n")
+
+      error =
+        assert_raise Spark.Error.DslError, fn ->
+          [Builder.slide("one", elements: [Builder.chart(:bar, title: "x", src: path)])]
+          |> Builder.deck()
+        end
+
+      assert Exception.message(error) =~ DeckFile.read_error(path, "chart file", :not_utf8)
+    end
+
+    test "a local page that is not UTF-8 gives an error that names the file", %{tmp_dir: dir} do
+      path = Path.join(dir, "legacy.html")
+      File.write!(path, "<p>caf\xE9</p>")
+
+      assert_raise ArgumentError, DeckFile.read_error(path, "page", :not_utf8), fn ->
+        render(Builder.embed(path, title: "x"))
+      end
+    end
+  end
+
   describe "read/1" do
     test "returns the result of File.read/1", %{tmp_dir: dir} do
       path = Path.join(dir, "deck.css")

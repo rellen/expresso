@@ -34,7 +34,8 @@ The element also takes the overlay options, such as `at` and `effect`. See
 
 The compiler gives an error for a first argument that is not an address or the path of an
 HTML file, for an `aspect` that is not a ratio, and for an element with no `title`. The
-render gives an error for a local file that it cannot read.
+render gives an error for a local file that it cannot read, and for a local file that is
+not UTF-8. The message names the file.
 
 ## When the page loads
 

@@ -274,7 +274,7 @@ defmodule Expresso.Element.Chart do
     do: if(String.downcase(Path.extname(src)) == ".tsv", do: "\t", else: ",")
 
   defp read(src) do
-    case Expresso.DeckFile.read(src) do
+    case Expresso.DeckFile.read_text(src) do
       {:ok, text} ->
         {:ok, text}
 
