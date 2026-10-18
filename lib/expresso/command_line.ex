@@ -34,7 +34,9 @@ defmodule Expresso.CommandLine do
     * `{:error, message}` for an unknown option, a third path, a bad
       `--port` or a bad level of `--check`. Each argument that starts with
       `-` is an option, except `-` alone. `--port` without `--watch` is an
-      error too, and so is `--check` with `--watch`.
+      error too, and so is `--check` with `--watch`. An output path that
+      names the input file is an error in each mode, because the HTML would
+      replace the deck.
     * `{:check, level, input, output, sizes}` for `--check`. The level is
       `:basic` for `--check`, `:layout` for `--check=layout`, `:a11y` for
       `--check=a11y` and `:browser` for `--check=browser`. The check needs an
@@ -176,9 +178,17 @@ defmodule Expresso.CommandLine do
     cond do
       option = Enum.find(args, &option?/1) -> {:error, "Unknown option: #{option}"}
       length(args) > 2 -> {:error, "Unexpected argument: #{Enum.at(args, 2)}"}
+      same_file?(args) -> {:error, "The output file is the input file"}
       true -> mode(options, Enum.at(args, 0), Enum.at(args, 1))
     end
   end
+
+  # An output path that names the input file replaces the deck with its HTML.
+  # `-` names the standard input or the standard output, and not a file.
+  defp same_file?([input, output]) when input != "-" and output != "-",
+    do: Path.expand(input) == Path.expand(output)
+
+  defp same_file?(_args), do: false
 
   # The mode of the command, from the options that `take_options/3` found.
   defp mode(%{watch: true, check: level}, _input, _output) when level != nil,

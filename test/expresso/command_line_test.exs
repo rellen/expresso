@@ -54,6 +54,24 @@ defmodule Expresso.CommandLineTest do
                {:error, "Unexpected argument: c"}
     end
 
+    test "gives an error for an output path that names the input file in each mode" do
+      error = {:error, "The output file is the input file"}
+
+      for args <- [
+            ["talk.exs", "talk.exs"],
+            ["talk.exs", "./talk.exs"],
+            ["talk.exs", Path.expand("talk.exs")],
+            ["talk.exs", "talk.exs", "--watch"],
+            ["talk.exs", "talk.exs", "--check"],
+            ["talk.exs", "talk.exs", "--check=layout"]
+          ] do
+        assert CommandLine.parse(args) == error
+      end
+
+      assert CommandLine.parse(["-", "-"]) == {:paths, "-", "-"}
+      assert CommandLine.parse(["talk.exs", "talk.html"]) == {:paths, "talk.exs", "talk.html"}
+    end
+
     test "gives an unknown option before a third path" do
       assert CommandLine.parse(["a.exs", "b.html", "c", "-x"]) ==
                {:error, "Unknown option: -x"}
@@ -217,6 +235,17 @@ defmodule Expresso.CommandLineTest do
 
       assert error =~ "Port #{port} is in use."
       :gen_tcp.close(socket)
+    end
+
+    @tag :tmp_dir
+    test "does not replace the deck when the output path names the input file", %{tmp_dir: dir} do
+      input = Path.join(dir, "talk.exs")
+      File.write!(input, "the deck script")
+
+      error = capture_io(:stderr, fn -> assert CommandLine.run([input, input], "x", "h") == 1 end)
+
+      assert error =~ "The output file is the input file"
+      assert File.read!(input) == "the deck script"
     end
 
     test "writes the help text that the entry point gives" do
