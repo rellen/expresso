@@ -79,6 +79,47 @@ defmodule Expresso.ChartFileTest do
     end
   end
 
+  describe "the byte order mark" do
+    @describetag :tmp_dir
+
+    # The format "CSV UTF-8" of Excel starts the file with the bytes EF BB BF.
+    @mark <<0xEF, 0xBB, 0xBF>>
+
+    test "the first column keeps its name for the frames", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "orders.csv")
+      File.write!(path, @mark <> "year,region,Orders\n2024,North,3\n2025,North,5\n")
+
+      [%{elements: [chart]}] =
+        one_slide(Builder.chart(:bar, title: "Orders", src: path, frames: "year")).slides
+
+      assert chart.categories == ["North"]
+      assert Enum.map(chart.timeline, &hd(&1.elements).values) == [[3], [5]]
+    end
+
+    test "the first column keeps its name for the levels", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "hours.csv")
+      File.write!(path, @mark <> "Division,Team,Hours\nOffice,Sales,15\n")
+
+      [%{elements: [chart]}] =
+        one_slide(
+          Builder.chart(:treemap, title: "Hours", src: path, levels: ["Division", "Team"])
+        ).slides
+
+      assert chart.categories == [["Office", "Sales"]]
+    end
+
+    test "a first cell in quotes loses its quotes", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "months.csv")
+      File.write!(path, @mark <> ~s("Month",Orders\nMay,3\n))
+
+      [%{elements: [chart]}] =
+        one_slide(Builder.chart(:bar, title: "Orders", src: path)).slides
+
+      assert chart.category_label == "Month"
+      assert chart.categories == ["May"]
+    end
+  end
+
   describe "the delimiter" do
     @describetag :tmp_dir
 
