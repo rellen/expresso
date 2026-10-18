@@ -10,8 +10,9 @@ import { search } from "./search.ts";
 import type { Transition } from "./interpreter.ts";
 import { visible } from "./morph.ts";
 import type { Pair } from "./morph.ts";
-import { parse as parseProgram } from "./program.ts";
+import { links as linkCommands, parse as parseProgram } from "./program.ts";
 import type { Program, Projections } from "./program.ts";
+import type { Commands, WrittenLinks } from "./schema.ts";
 import { fromAddress } from "./scheme.ts";
 import type { Scheme } from "./scheme.ts";
 import { position } from "./speaker.ts";
@@ -39,6 +40,26 @@ export function program(): Program {
     throw new Error("The document has no program of the presenter");
   }
   return parseProgram(element.textContent ?? "");
+}
+
+// The commands of the links of the `goto` option, from the first call. The
+// renderer writes them as JSON into the element `expresso-links`, in the
+// order of the numbers that the links hold in `data-link`. A deck with no link
+// has no such element. The renderer writes this list and the script into the
+// same document, so the script trusts the list, as it trusts the program.
+let written: WrittenLinks | undefined;
+
+// Return the commands of the link with a number, or null for a number that the
+// renderer did not write.
+export function link(number: string | undefined): Commands | null {
+  if (written === undefined) {
+    const element = document.getElementById("expresso-links");
+    written = element === null ? [] : linkCommands(element.textContent ?? "[]");
+  }
+  if (number === undefined || !/^\d+$/.test(number)) {
+    return null;
+  }
+  return written[Number(number)] ?? null;
 }
 
 // The number of the last transition with pairs, and the transition that

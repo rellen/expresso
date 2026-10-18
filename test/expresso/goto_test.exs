@@ -54,6 +54,18 @@ defmodule Expresso.GotoTest do
   defp links(selector),
     do: document() |> LazyHTML.query(".screen " <> selector) |> Enum.to_list()
 
+  # The commands of a link: the entry of the element `expresso-links` at the
+  # number in `data-link`.
+  defp commands(link) do
+    [number] = LazyHTML.attribute(link, "data-link")
+
+    document()
+    |> LazyHTML.query("#expresso-links")
+    |> LazyHTML.text()
+    |> JSON.decode!()
+    |> Enum.at(String.to_integer(number))
+  end
+
   describe "new/1" do
     test "takes a slide, and a step with the default 1" do
       assert Goto.new(slide: 3) == {:ok, %Goto{slide: 3, step: 1}}
@@ -83,7 +95,8 @@ defmodule Expresso.GotoTest do
       [link] = links(".text-area a.goto")
 
       assert LazyHTML.attribute(link, "href") == ["#3.1"]
-      assert LazyHTML.attribute(link, "data-commands") == [~s([["goto",3]])]
+      assert LazyHTML.attribute(link, "data-link") == ["0"]
+      assert commands(link) == [["goto", 3]]
       assert LazyHTML.text(link) =~ "The summary"
     end
 
@@ -91,7 +104,7 @@ defmodule Expresso.GotoTest do
       [link] = links(".image a.goto")
 
       assert LazyHTML.attribute(link, "href") == ["#2.2"]
-      assert LazyHTML.attribute(link, "data-commands") == [~s([["goto",2]])]
+      assert commands(link) == [["goto", 2]]
       assert link |> LazyHTML.query("img") |> LazyHTML.attribute("alt") == ["A red dot"]
     end
 
@@ -108,7 +121,38 @@ defmodule Expresso.GotoTest do
       [_details, link] = links(".item a.goto")
 
       assert LazyHTML.attribute(link, "href") == ["#3.1"]
-      assert LazyHTML.attribute(link, "data-commands") == [~s([["goto",3]])]
+      assert commands(link) == [["goto", 3]]
+    end
+
+    test "gives each link its number in document order, and holds no commands in a link" do
+      numbers = "a.goto" |> links() |> Enum.flat_map(&LazyHTML.attribute(&1, "data-link"))
+
+      assert numbers == ["0", "1", "2", "3"]
+      assert count(document(), "a.goto[data-commands]") == 0
+    end
+
+    test "gives each copy of a link the number of the link" do
+      numbers =
+        document()
+        |> LazyHTML.query(".handout .text-area a.goto")
+        |> LazyHTML.attribute("data-link")
+
+      assert numbers != []
+      assert Enum.uniq(numbers) == ["0"]
+    end
+
+    test "writes the commands of each link one time, in the order of the numbers" do
+      links =
+        document() |> LazyHTML.query("#expresso-links") |> LazyHTML.text() |> JSON.decode!()
+
+      assert links == [[["goto", 3]], [["goto", 2]], [["goto", 1]], [["goto", 3]]]
+    end
+
+    test "writes no element of links for a deck without links" do
+      deck = Expresso.Builder.deck([Expresso.Builder.slide("one")])
+
+      assert count(document(deck), "#expresso-links") == 0
+      assert Goto.json(Goto.resolve(deck)) == nil
     end
 
     test "gives no link to an element without the option" do
@@ -254,7 +298,8 @@ defmodule Expresso.GotoTest do
       [%Expresso.Slide{elements: [resolved]} | _] = Goto.resolve(deck).slides
 
       assert resolved.goto.slide == 2
-      assert resolved.goto.commands == ~s([["goto",1]])
+      assert resolved.goto.index == 0
+      assert resolved.goto.commands == [{:goto, 1}]
     end
 
     test "raises for a link of a deck struct to a slide that it does not have" do

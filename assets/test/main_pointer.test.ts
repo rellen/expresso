@@ -4,17 +4,18 @@ import { element, fakePage } from "./page.ts";
 
 // Two slides. Slide 1 has one step, and slide 2 has two steps. The window is
 // 1200 pixels wide, so the left third ends at 400. The tests run in sequence
-// on the same page.
-const page = fakePage([1, 2]);
+// on the same page. The deck has one link of the `goto` option, to step 2 of
+// slide 2. That step has the index 2 in the list of the steps.
+const page = fakePage([1, 2], { links: [[["goto", 2]]] });
 const { body } = page;
 
 before(async () => {
   await import("../src/main.ts");
 });
 
-// A link of the `goto` option to step 2 of slide 2. That step has the index 2
-// in the list of the steps.
-const link = element("", "goto", { commands: JSON.stringify([["goto", 2]]) });
+// The link of the deck. It holds only its number, and the commands come from
+// the element `expresso-links`.
+const link = element("", "goto", { link: "0" });
 
 test("a click on the right two thirds goes to the next step", () => {
   page.click(900);
@@ -100,6 +101,14 @@ test("a click runs no commands from an element that the renderer did not write",
 
   // A click on the left third at the first step does nothing.
   assert.equal(page.location.hash, "#1.1");
+});
+
+test("a click on a link with a number that the renderer did not write runs no commands", () => {
+  for (const number of ["1", "-1", "0.5", "x", "", " 0", undefined]) {
+    const stray = element("", "goto", { link: number });
+    page.click({ clientX: 100, link: stray });
+    assert.equal(page.location.hash, "#1.1");
+  }
 });
 
 test("a click on a link closes a black screen, and it does nothing more", () => {

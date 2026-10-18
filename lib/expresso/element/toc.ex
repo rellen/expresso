@@ -86,7 +86,7 @@ defmodule Expresso.Element.Toc do
                rest!: Expresso.Overlay.Render.attributes(entry) do
               a class: "goto toc-link",
                 href: Expresso.Goto.href(entry.goto),
-                data_commands: entry.goto.commands do
+                data_link: entry.goto.index do
                 entry.text
               end
             end

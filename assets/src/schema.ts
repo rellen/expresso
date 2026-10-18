@@ -348,6 +348,11 @@ export const decodeWrittenEmbeds: Decoder<WrittenEmbeds> = /* @__PURE__ */ list(
   value: /* @__PURE__ */ string(),
 }));
 
+// The commands of each link of the `goto` option of a deck, in the order of the
+// numbers of the links, as the renderer writes it.
+export type WrittenLinks = readonly Commands[];
+export const decodeWrittenLinks: Decoder<WrittenLinks> = /* @__PURE__ */ list(decodeCommands);
+
 // The data URI of each video of a deck, in the order of the numbers of the
 // elements, as the renderer writes it.
 export type WrittenVideos = readonly string[];
@@ -453,9 +458,11 @@ export const ELEMENT_KINDS: readonly ElementKind[] = [
 
 // The selectors of the three kinds of element that hold the commands of a
 // click: a link of the `goto` option, a page of the overview and a row of the
-// menu. The script reads commands only from these elements.
+// menu. A link holds the number of its commands in the element
+// `expresso-links`, and a page and a row hold their commands in
+// `data-commands`. The script reads commands only from these elements.
 export const COMMAND_HOLDERS: Readonly<{
   link: string;
   page: string;
   row: string;
-}> = {"link":"a.goto[data-commands]","page":".handout-page[data-commands]","row":"#menu .menu-slide[data-commands], #menu .menu-step[data-commands]"};
+}> = {"link":"a.goto[data-link]","page":".handout-page[data-commands]","row":"#menu .menu-slide[data-commands], #menu .menu-step[data-commands]"};

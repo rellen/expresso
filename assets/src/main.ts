@@ -108,6 +108,7 @@ import {
   apply,
   announce,
   deck as readDeck,
+  link,
   program as readProgram,
   scheme,
   showScheme,
@@ -501,17 +502,21 @@ function ignores(event: MouseEvent): boolean {
 
 // The commands of the nearest element under a click that holds commands, or
 // null. The renderer writes them on the page of the last step of each slide,
-// for the overview, on each link of the `goto` option, and on each row of the
-// menu. The script reads commands only from these three kinds of element. The
-// selectors examine only the tag, the class, the id and the attribute, so an
-// element of the HTML of a deck with the same names also runs its commands.
-// Thus these names are reserved. In the overview, the
-// style sheet stops a click on the content of a page, so the click finds the
-// page and not a link on it.
+// for the overview, and on each row of the menu. A link of the `goto` option
+// holds only its number in `data-link`, and the renderer writes the commands
+// of each link into the element `expresso-links`. Thus the HTML of a deck can
+// give a link no commands that the compiler did not make. The script reads
+// commands only from these three kinds of element. The selectors examine only
+// the tag, the class, the id and the attribute, so these names are reserved.
+// In the overview, the style sheet stops a click on the content of a page, so
+// the click finds the page and not a link on it.
 function element(event: MouseEvent) {
   const target = event.target as Element | null;
   const holder = target?.closest?.(`${LINK}, ${PAGE}, ${ROW}`) as
     HTMLElement | null | undefined;
+  if (holder?.matches(LINK)) {
+    return link(holder.dataset.link);
+  }
   const text = holder?.dataset.commands;
   return text === undefined ? null : commands(text);
 }

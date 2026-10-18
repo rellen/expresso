@@ -17,6 +17,15 @@ defmodule Expresso.E2E.GotoTest do
       text_box do
         text_area(text: ~s(<span class="stray" data-commands='[["goto",3]]'>Not a link</span>))
       end
+
+      # A link in the HTML of a text area with the class `goto` and its own
+      # commands. The renderer writes the commands of a link into the element
+      # `expresso-links`, so the script does not run these commands.
+      text_box do
+        text_area(
+          text: ~s(<a class="goto forged" href="#2.1" data-commands='[["goto",3]]'>Forged</a>)
+        )
+      end
     end
 
     slide "details" do
@@ -69,6 +78,17 @@ defmodule Expresso.E2E.GotoTest do
 
     # The click is a plain click, so it goes to the next step or it does nothing.
     assert position(page) in ["1.1", "2.1"]
+  end
+
+  test "a click on a link in the HTML of a deck with its own commands runs no commands",
+       %{page: page} do
+    %{"x" => x, "y" => y} = center(page, ".screen .forged")
+
+    page |> click(x, y)
+
+    # The browser follows the address of the link. The commands go to slide 3.
+    wait_for_position(page, "2.1")
+    assert js(page, "location.hash") == "#2.1"
   end
 
   test "Tab and Enter on a link go to its slide", %{page: page} do

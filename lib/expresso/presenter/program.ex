@@ -125,7 +125,19 @@ defmodule Expresso.Presenter.Program do
       ~s([["goto_slide",2],["set","overview",false]])
   """
   @spec json_commands([Definition.command()]) :: String.t()
-  def json_commands(commands), do: commands |> Enum.map(&command_json/1) |> JSON.encode!()
+  def json_commands(commands), do: commands |> commands_value() |> JSON.encode!()
+
+  @doc """
+  Return a list of commands as a value for JSON, such as `[["goto", 7]]`
+
+  `json_commands/1` encodes this value. A caller that puts the commands into a
+  larger value, such as `Expresso.Goto.json/1`, uses this function.
+
+      iex> Expresso.Presenter.Program.commands_value([{:goto, 7}])
+      [["goto", 7]]
+  """
+  @spec commands_value([Definition.command()]) :: [list()]
+  def commands_value(commands), do: Enum.map(commands, &command_json/1)
 
   defp mode_json(mode) do
     %{

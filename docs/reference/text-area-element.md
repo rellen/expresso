@@ -40,14 +40,16 @@ such as the text of your own deck. Give text from a different source to
 
 The presenter runs the commands of a click from three kinds of element:
 
-- a link with the class `goto` and the attribute `data-commands`;
+- a link with the class `goto` and the attribute `data-link`, which holds the number of a
+  link of the `goto` option;
 - an element with the class `handout-page` and the attribute `data-commands`;
 - an element with the class `menu-slide` or `menu-step` and the attribute
   `data-commands`, in the element with the id `menu`.
 
 These names are reserved. Do not use them in the text, because a click on such an element
-runs its commands. A command that the presenter does not know stops the click with an
-error.
+runs commands. A link with the class `goto` runs only the commands that the compiler wrote
+for a link of the deck, and it ignores an attribute `data-commands`. A command that the
+presenter does not know stops the click with an error.
 
 ## A link
 

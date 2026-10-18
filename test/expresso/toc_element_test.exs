@@ -41,7 +41,10 @@ defmodule Expresso.TocElementTest do
     links = LazyHTML.query(document, "#slide-1 .toc a.goto")
 
     assert LazyHTML.attribute(links, "href") == ["#2.1", "#3.1", "#5.1"]
-    assert Enum.all?(LazyHTML.attribute(links, "data-commands"), &(&1 =~ "goto"))
+    assert LazyHTML.attribute(links, "data-link") == ["0", "1", "2"]
+
+    assert document |> LazyHTML.query("#expresso-links") |> LazyHTML.text() |> JSON.decode!() ==
+             [[["goto", 1]], [["goto", 2]], [["goto", 4]]]
 
     assert document |> LazyHTML.query("#slide-1 nav.toc") |> LazyHTML.attribute("aria-label") == [
              "Contents"
