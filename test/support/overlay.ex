@@ -19,22 +19,24 @@ defmodule Expresso.Test.Overlay do
   def max, do: integer(1..15)
 
   @spec item() :: StreamData.t(term())
-  def item do
-    one_of([
-      step(),
-      map({step(), integer(0..4)}, fn {first, length} -> first..(first + length) end),
-      constant(:next),
-      map(step(), &{:from, &1}),
-      constant({:from, :next})
-    ])
-  end
+  def item, do: one_of([absolute_item(), constant(:next), constant({:from, :next})])
 
   @spec spec() :: StreamData.t(term())
   def spec, do: one_of([item(), list_of(item(), min_length: 1, max_length: 4)])
 
+  # A specification with no `:next`. The generator makes only such items, so it
+  # filters out no value.
   @spec absolute_spec() :: StreamData.t(term())
   def absolute_spec do
-    filter(spec(), fn term -> not Enum.any?(List.wrap(term), &(&1 in [:next, {:from, :next}])) end)
+    one_of([absolute_item(), list_of(absolute_item(), min_length: 1, max_length: 4)])
+  end
+
+  defp absolute_item do
+    one_of([
+      step(),
+      map({step(), integer(0..4)}, fn {first, length} -> first..(first + length) end),
+      map(step(), &{:from, &1})
+    ])
   end
 
   @spec relative_spec() :: StreamData.t(term())
