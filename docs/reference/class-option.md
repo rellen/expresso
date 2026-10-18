@@ -36,7 +36,7 @@ end
 | Place | The element that gets the classes |
 | --- | --- |
 | A slide | The `section` of the slide in the present view, and the `section` of each page of the slide in the handout view. |
-| `text_box`, `text_area`, `image`, `list`, `item`, `table`, `row`, `quotation`, `spacer`, `code`, `math`, `diagram`, `embed`, `video`, `audio`, `qr_code`, `chart`, `series`, `stat`, `icon`, `columns`, `column`, `callout`, `toc`, `footnote` and `shape` | The root element of the element, such as the `div` of a code element or the `tr` of a row. |
+| `text_box`, `text_area`, `image`, `list`, `item`, `table`, `row`, `quotation`, `spacer`, `code`, `math`, `diagram`, `embed`, `video`, `audio`, `qr_code`, `chart`, `series`, `node`, `stat`, `icon`, `columns`, `column`, `callout`, `toc`, `footnote` and `shape` | The root element of the element, such as the `div` of a code element or the `tr` of a row. |
 
 A `part` of a diagram, a `frame` of a chart, an `on` entity and `pause` do not take the
 option.
@@ -48,7 +48,8 @@ or `"dense wide"`. A name starts with a letter, an underscore, or a hyphen and a
 The other characters are letters, digits, underscores and hyphens.
 
 The compiler gives an error for a value that is not such a list of names.
-`Expresso.Builder` raises a `Spark.Error.DslError` with the same message.
+`Expresso.Builder` raises an `ArgumentError` with the same message after the name of
+the function and the option, such as `text_area: invalid value for :class option: ...`.
 
 ## The classes of the theme
 

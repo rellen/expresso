@@ -502,8 +502,10 @@ function ignores(event: MouseEvent): boolean {
 // The commands of the nearest element under a click that holds commands, or
 // null. The renderer writes them on the page of the last step of each slide,
 // for the overview, on each link of the `goto` option, and on each row of the
-// menu. The script reads commands only from these three kinds of element. Thus the script does not run
-// an attribute `data-commands` from the HTML of a deck. In the overview, the
+// menu. The script reads commands only from these three kinds of element. The
+// selectors examine only the tag, the class, the id and the attribute, so an
+// element of the HTML of a deck with the same names also runs its commands.
+// Thus these names are reserved. In the overview, the
 // style sheet stops a click on the content of a page, so the click finds the
 // page and not a link on it.
 function element(event: MouseEvent) {

@@ -38,6 +38,12 @@ The text goes into the document as it is, with no escape. Write only HTML that y
 such as the text of your own deck. Give text from a different source to
 `Phoenix.HTML.html_escape/1` before the deck uses it.
 
+The presenter runs the commands of a click from three kinds of element: a link with the
+class `goto` and the attribute `data-commands`, an element with the class `handout-page`
+and `data-commands`, and an element with `data-commands` in the element `#menu`. These
+names are reserved. Do not use them in the text, because a click on such an element runs
+its commands. A command that the presenter does not know stops the click with an error.
+
 ## A link
 
 With `goto`, the text goes into a link to a slide and a step of the deck. A click goes to
