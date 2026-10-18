@@ -30,8 +30,18 @@ end
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).
 
-The compiler gives an error for a `level` that is not in the list. The text can hold 2952
-bytes at most, and a long text makes a code with small modules. Keep an address short.
+The compiler gives an error for a `level` that is not in the list. It also gives an error
+for a text that is longer than the limit of its level. The error names the level and the
+limit. This table gives the limit of each level:
+
+| Level | The largest text |
+| --- | --- |
+| `:l` | 2,952 bytes |
+| `:m` | 2,331 bytes |
+| `:q` | 1,663 bytes |
+| `:h` | 1,273 bytes |
+
+A long text makes a code with small modules. Keep an address short.
 
 ## The colors
 

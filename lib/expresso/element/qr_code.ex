@@ -31,6 +31,10 @@ defmodule Expresso.Element.QrCode do
   # larger code that a scanner reads when a part of it is not clear.
   @levels [:l, :m, :q, :h]
 
+  # The largest text in bytes that a code of version 40 holds at each level.
+  # `EQRCode` writes each text in the byte mode.
+  @limits %{l: 2952, m: 2331, q: 1663, h: 1273}
+
   defstruct [
               :class,
               :text,
@@ -49,6 +53,37 @@ defmodule Expresso.Element.QrCode do
   """
   @spec levels() :: [atom()]
   def levels, do: @levels
+
+  @doc """
+  Return the largest text in bytes that a code holds at a level
+
+      iex> Expresso.Element.QrCode.limit(:m)
+      2331
+  """
+  @spec limit(atom()) :: pos_integer()
+  def limit(level), do: Map.fetch!(@limits, level)
+
+  @doc """
+  Make sure that the text of a QR code fits in a code at its level
+
+  This function is the transformer of the `qr_code` entity. A text that is
+  longer than the limit of its level gives an error that names the level, the
+  limit and the size of the text.
+  """
+  @spec check(t()) :: {:ok, t()} | {:error, String.t()}
+  def check(%__MODULE__{text: text, level: level} = qr_code) when is_binary(text) do
+    limit = limit(level)
+
+    if byte_size(text) <= limit do
+      {:ok, qr_code}
+    else
+      {:error,
+       "the text of a qr_code holds #{byte_size(text)} bytes, but a code at the level " <>
+         "#{inspect(level)} holds #{limit} bytes at most. Use a shorter text, or a lower level"}
+    end
+  end
+
+  def check(%__MODULE__{} = qr_code), do: {:ok, qr_code}
 
   @doc """
   Make the assigns of the render function from the struct

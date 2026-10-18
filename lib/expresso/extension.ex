@@ -255,6 +255,7 @@ defmodule Expresso.Extension do
     name: :qr_code,
     target: Expresso.Element.QrCode,
     args: [:text],
+    transform: {Expresso.Element.QrCode, :check, []},
     entities: [on: [@on]],
     schema:
       @overlay_schema ++

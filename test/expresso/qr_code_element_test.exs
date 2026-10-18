@@ -83,6 +83,51 @@ defmodule Expresso.QrCodeElementTest do
     end
   end
 
+  # EQRCode raises a MatchError or an ArgumentError for a text that is too long.
+  defp encodes?(bytes, level) do
+    match?(%EQRCode.Matrix{}, EQRCode.encode(String.duplicate("a", bytes), level))
+  rescue
+    _error in [MatchError, ArgumentError] -> false
+  end
+
+  test "the limit of each level is the largest text that EQRCode can encode" do
+    for level <- QrCode.levels() do
+      limit = QrCode.limit(level)
+
+      assert encodes?(limit, level)
+      refute encodes?(limit + 1, level)
+    end
+  end
+
+  test "the compiler refuses a text that is longer than the limit of its level" do
+    assert %QrCode{} = Builder.qr_code(String.duplicate("a", 2331))
+    assert %QrCode{} = Builder.qr_code(String.duplicate("a", 2332), level: :l)
+
+    assert_raise ArgumentError,
+                 "qr_code: the text of a qr_code holds 2332 bytes, but a code at the level :m " <>
+                   "holds 2331 bytes at most. Use a shorter text, or a lower level",
+                 fn -> Builder.qr_code(String.duplicate("a", 2332)) end
+
+    assert_raise ArgumentError, ~r/holds 1300 bytes, .* level :h holds 1273 bytes/, fn ->
+      Builder.qr_code(String.duplicate("a", 1300), level: :h)
+    end
+  end
+
+  test "the DSL entity refuses a text that is longer than the limit of its level" do
+    source = """
+    defmodule Expresso.QrCodeElementTest.LongDeck do
+      use Expresso
+
+      slide do
+        qr_code "#{String.duplicate("a", 1664)}", level: :q
+      end
+    end
+    """
+
+    error = assert_raise Spark.Error.DslError, fn -> Code.compile_string(source) end
+    assert Exception.message(error) =~ "a code at the level :q holds 1663 bytes at most"
+  end
+
   test "the overlay options apply to the code" do
     [figure] = render(Builder.qr_code(@address, at: [from: 2], class: "big"))
 
