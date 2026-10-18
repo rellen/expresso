@@ -248,6 +248,25 @@ defmodule Expresso.CommandLineTest do
       assert File.read!(input) == "the deck script"
     end
 
+    @tag :tmp_dir
+    test "does not replace the deck through a link to the input file", %{tmp_dir: dir} do
+      input = Path.join(dir, "talk.exs")
+      File.write!(input, "the deck script")
+      symbolic = Path.join(dir, "symbolic.html")
+      hard = Path.join(dir, "hard.html")
+      File.ln_s!(input, symbolic)
+      File.ln!(input, hard)
+
+      for output <- [symbolic, hard] do
+        error =
+          capture_io(:stderr, fn -> assert CommandLine.run([input, output], "x", "h") == 1 end)
+
+        assert error =~ "The output file is the input file"
+      end
+
+      assert File.read!(input) == "the deck script"
+    end
+
     test "writes the help text that the entry point gives" do
       assert capture_io(fn -> assert CommandLine.run(["-h"], "expresso", "the help") == 0 end) ==
                "the help"

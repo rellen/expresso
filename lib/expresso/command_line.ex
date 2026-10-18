@@ -36,7 +36,7 @@ defmodule Expresso.CommandLine do
       `-` is an option, except `-` alone. `--port` without `--watch` is an
       error too, and so is `--check` with `--watch`. An output path that
       names the input file is an error in each mode, because the HTML would
-      replace the deck.
+      replace the deck. A link to the input file is such a path too.
     * `{:check, level, input, output, sizes}` for `--check`. The level is
       `:basic` for `--check`, `:layout` for `--check=layout`, `:a11y` for
       `--check=a11y` and `:browser` for `--check=browser`. The check needs an
@@ -184,11 +184,24 @@ defmodule Expresso.CommandLine do
   end
 
   # An output path that names the input file replaces the deck with its HTML.
-  # `-` names the standard input or the standard output, and not a file.
+  # `-` names the standard input or the standard output, and not a file. A
+  # symbolic link, a hard link or a name with different case on macOS can name
+  # the input file too, so two files with the same device and inode are the
+  # same file. Windows gives the inode 0 for each file, so the inode does not
+  # count there.
   defp same_file?([input, output]) when input != "-" and output != "-",
-    do: Path.expand(input) == Path.expand(output)
+    do: Path.expand(input) == Path.expand(output) or same_inode?(input, output)
 
   defp same_file?(_args), do: false
+
+  defp same_inode?(input, output) do
+    with {:ok, %File.Stat{inode: inode, major_device: device}} when inode > 0 <- File.stat(input),
+         {:ok, %File.Stat{inode: ^inode, major_device: ^device}} <- File.stat(output) do
+      true
+    else
+      _other -> false
+    end
+  end
 
   # The mode of the command, from the options that `take_options/3` found.
   defp mode(%{watch: true, check: level}, _input, _output) when level != nil,

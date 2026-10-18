@@ -174,7 +174,7 @@ help text, so the two commands take the same arguments. `run/3` reads the argume
 | `--help` or `-h`, in any position | Writes the help text. | 0 |
 | `--version`, in any position | Writes the version from `mix.exs`. | 0 |
 | An unknown option, or a third path | Writes `Unknown option:` or `Unexpected argument:`, and the usage text, to the standard error. | 1 |
-| An output path that names the input file, in each mode | Writes `The output file is the input file`, and the usage text, to the standard error. The deck does not change. | 1 |
+| An output path that names the input file, also through a link, in each mode | Writes `The output file is the input file`, and the usage text, to the standard error. The deck does not change. | 1 |
 | No input path | Writes the usage text to the standard error. | 1 |
 | `<input> [output]` | Calls `Expresso.main/2`. | 0, or 1 for an error |
 | `<input> [output] --watch` | Calls `Expresso.Watch.run/3`. See "The watch mode". | 1, after an error |
