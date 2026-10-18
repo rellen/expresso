@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { fakePage, lastPosition } from "./page.ts";
 import { nth } from "./nth.ts";
 import { position } from "./messages.ts";
+import { DRIFT } from "../src/state.ts";
 
 // Two slides. Slide 1 has one step, and slide 2 has two steps. The address has
 // no fragment, and the tests run in sequence on the same page.
@@ -14,10 +15,15 @@ before(async () => {
 });
 
 // A time after each change of the present view. The present view reads the
-// clock, and each call gives a later time.
-let clock = Date.now() + 60_000;
+// clock, and each call gives a later time. A window takes no time more than
+// `DRIFT` after its clock, so the time must stay in that limit. Otherwise
+// the window takes the clock plus `DRIFT`, and two messages in the same
+// millisecond get the same time. The present view then refuses the second
+// message. Each step of 10 is more than the keys between two calls.
+let clock = Date.now() + DRIFT / 2;
 function later(): number {
-  clock += 1;
+  clock += 10;
+  assert.ok(clock <= Date.now() + DRIFT, "a time after the limit");
   return clock;
 }
 
