@@ -3,7 +3,7 @@ defmodule Expresso.Element.ListTest do
 
   import Expresso.Test.HTML
   import Expresso.Test.Decks
-  import Spark.Test, only: [dsl_errors: 1]
+  import Expresso.Test.CompileError
 
   alias Expresso.Builder
   alias Expresso.Element.Item
@@ -134,8 +134,8 @@ defmodule Expresso.Element.ListTest do
     end
 
     test "reports an item outside a list with a closed at option" do
-      errors =
-        dsl_errors do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.Element.ListTest.ClosedList do
             use Expresso
 
@@ -150,7 +150,6 @@ defmodule Expresso.Element.ListTest do
           end
         end
 
-      assert [{Expresso.Element.ListTest.ClosedList, [error]}] = errors
       assert Exception.message(error) =~ "the item has the step 4, and the list does not show"
     end
 

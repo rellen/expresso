@@ -59,10 +59,10 @@ These paths stay as they are:
 
 ## The errors
 
-The compiler gives an error for a code file, a chart file or an icon file that it cannot
-read, with the full path from the root. The renderer raises an `ArgumentError` for an image,
-a diagram, a page, a video, a poster, captions, a sound, a style sheet or a file of `url()`
-that it cannot read, with the full path. The message of an element names the file and the
+The compiler gives an error for a code file, a chart file, an icon file or a style sheet
+that it cannot read, with the full path from the root. The renderer raises an
+`ArgumentError` for an image, a diagram, a page, a video, a poster, captions, a sound or a
+file of `url()` that it cannot read, with the full path. The message of an element names the file and the
 reason, and it tells where a relative path starts:
 
 ```text

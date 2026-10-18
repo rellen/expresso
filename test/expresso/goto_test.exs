@@ -2,7 +2,7 @@ defmodule Expresso.GotoTest do
   use ExUnit.Case, async: true
 
   import Expresso.Test.HTML
-  import Spark.Test, only: [dsl_errors: 1]
+  import Expresso.Test.CompileError
 
   alias Expresso.Element.TextArea
   alias Expresso.Goto
@@ -119,8 +119,8 @@ defmodule Expresso.GotoTest do
 
   describe "the verifier" do
     test "refuses a link to a slide that the deck does not have" do
-      errors =
-        dsl_errors do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.GotoTest.NoSlide do
             use Expresso
 
@@ -130,14 +130,13 @@ defmodule Expresso.GotoTest do
           end
         end
 
-      assert [{Expresso.GotoTest.NoSlide, [error]}] = errors
       assert Exception.message(error) =~ "goto names the slide 2, and the deck has 1 slides"
       assert Exception.message(error) =~ "deck -> slide -> one"
     end
 
     test "refuses a link to a step that the slide does not have" do
-      errors =
-        dsl_errors do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.GotoTest.NoStep do
             use Expresso
 
@@ -153,8 +152,6 @@ defmodule Expresso.GotoTest do
           end
         end
 
-      assert [{Expresso.GotoTest.NoStep, [error]}] = errors
-
       assert Exception.message(error) =~
                "goto names the step 3 of the slide 2, and it has 2 steps"
     end
@@ -162,8 +159,8 @@ defmodule Expresso.GotoTest do
 
   describe "the verifier and a name" do
     test "refuses a name that no slide has" do
-      errors =
-        dsl_errors do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.GotoTest.NoName do
             use Expresso
 
@@ -173,15 +170,13 @@ defmodule Expresso.GotoTest do
           end
         end
 
-      assert [{Expresso.GotoTest.NoName, [error]}] = errors
-
       assert Exception.message(error) =~
                ~s(goto names the slide "two", and no slide has that name)
     end
 
     test "refuses a name that two slides have" do
-      errors =
-        dsl_errors do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.GotoTest.SharedName do
             use Expresso
 
@@ -199,15 +194,13 @@ defmodule Expresso.GotoTest do
           end
         end
 
-      assert [{Expresso.GotoTest.SharedName, [error]}] = errors
-
       assert Exception.message(error) =~
                ~s(goto names the slide "same", and 2 slides have that name: the slides 2, 3)
     end
 
     test "refuses a step that the named slide does not have" do
-      errors =
-        dsl_errors do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.GotoTest.NameStep do
             use Expresso
 
@@ -220,8 +213,6 @@ defmodule Expresso.GotoTest do
             end
           end
         end
-
-      assert [{Expresso.GotoTest.NameStep, [error]}] = errors
 
       assert Exception.message(error) =~
                ~s(goto names the step 2 of the slide "two", and it has 1 steps)

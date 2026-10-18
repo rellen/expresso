@@ -4,7 +4,7 @@ defmodule Expresso.EffectTest do
   import Expresso.Test.HTML
   use ExUnitProperties
 
-  import Spark.Test, only: [dsl_errors: 1]
+  import Expresso.Test.CompileError
 
   alias Expresso.Deck
   alias Expresso.Element.{Item, List, Part, TextArea, TextBox}
@@ -79,16 +79,14 @@ defmodule Expresso.EffectTest do
     end
 
     test "refuses an effect without a rule in the theme or in the CSS of the deck" do
-      errors =
-        dsl_errors do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.EffectTest.SpinDeck do
             use Expresso
 
             effect :spin
           end
         end
-
-      assert [{Expresso.EffectTest.SpinDeck, [error]}] = errors
 
       assert Exception.message(error) =~
                ~s(the effect :spin has no rule in the theme or in the CSS of the deck)

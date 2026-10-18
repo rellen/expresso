@@ -1,7 +1,8 @@
 defmodule Expresso.OverlayDslTest do
   use ExUnit.Case, async: true
 
-  import Spark.Test, only: [dsl_errors: 1, dsl_warnings: 1, refute_dsl_warnings: 1]
+  import Expresso.Test.CompileError
+  import Spark.Test, only: [dsl_warnings: 1, refute_dsl_warnings: 1]
 
   alias Expresso.Element.{On, TextArea, TextBox}
   alias Expresso.Overlay
@@ -222,8 +223,8 @@ defmodule Expresso.OverlayDslTest do
 
   describe "the verifier" do
     test "reports an on entity outside the at option" do
-      errors =
-        dsl_errors do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.OverlayDslTest.OnOutside do
             use Expresso
 
@@ -236,14 +237,13 @@ defmodule Expresso.OverlayDslTest do
           end
         end
 
-      assert [{Expresso.OverlayDslTest.OnOutside, [error]}] = errors
       assert Exception.message(error) =~ "deck -> slide -> outside"
       assert Exception.message(error) =~ "the on entity has the step 3"
     end
 
     test "reports a child element outside its parent" do
-      errors =
-        dsl_errors do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.OverlayDslTest.ChildOutside do
             use Expresso
 
@@ -259,7 +259,6 @@ defmodule Expresso.OverlayDslTest do
           end
         end
 
-      assert [{Expresso.OverlayDslTest.ChildOutside, [error]}] = errors
       assert Exception.message(error) =~ "the text_area has the step 1"
     end
   end
@@ -302,8 +301,8 @@ defmodule Expresso.OverlayDslTest do
     end
 
     test "reports a nested element with a step at which its parent does not show" do
-      errors =
-        dsl_errors do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.OverlayDslTest.AutoOutside do
             use Expresso
 
@@ -325,8 +324,6 @@ defmodule Expresso.OverlayDslTest do
             end
           end
         end
-
-      assert [{Expresso.OverlayDslTest.AutoOutside, [error]}] = errors
 
       assert Exception.message(error) =~
                "the text_area has the step 1, and the text_box does not show at that step"

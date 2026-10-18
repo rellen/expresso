@@ -1875,7 +1875,7 @@ In the present view, the style sheet puts the number in the corner of the window
 
 ### The transformer and the verifiers
 
-The extension imports nothing, and it lists six transformers and eight verifiers:
+The extension imports nothing, and it lists seven transformers and four verifiers:
 
 - `Expresso.PlacementTransformer` refuses an element in a wrong place. It runs first, and it
   changes nothing. See "The definitions of the elements".
@@ -1892,22 +1892,31 @@ The extension imports nothing, and it lists six transformers and eight verifiers
   contents".
 - `Expresso.Overlay.Transformer` expands the overlay specifications of each slide at
   compile time.
-- `Expresso.GotoVerifier` refuses a `goto` option that names no slide. See "The links".
-- `Expresso.Overlay.Verifier` reports a specification that breaks a rule.
+- `Expresso.VerifierTransformer` runs the four checks that give only errors. It runs last,
+  and it changes nothing. The four checks follow this list.
 - `Expresso.Overlay.PropertyVerifier` gives a warning for a custom property that neither
   the theme nor the CSS of the deck uses.
-- `Expresso.Overlay.EffectVerifier` gives an error for a `css` file that the CSS transformer
-  cannot read, and for an effect without a rule in the theme or in that style sheet.
-- `Expresso.TransitionVerifier` gives an error for a transition without a rule in the theme
-  or in the CSS of the deck. See "The transitions".
 - `Expresso.Overlay.SizeVerifier` gives a warning for a slide of very many steps.
 - `Expresso.ThemeVerifier` gives a warning for each role of a theme from a map that does
   not meet its minimum, with a color that passes. See "The contrast of a theme".
 - `Expresso.CodeVerifier` gives a warning for a language that no lexer registers. See
   "The code".
 
-A verifier gives errors or warnings, and not both, so each kind of warning has its own
-verifier.
+`Expresso.VerifierTransformer` calls `verify/1` of each of these four checks:
+
+- `Expresso.GotoVerifier` refuses a `goto` option that names no slide. See "The links".
+- `Expresso.Overlay.Verifier` reports a specification that breaks a rule.
+- `Expresso.Overlay.EffectVerifier` gives an error for a `css` file that the CSS transformer
+  cannot read, and for an effect without a rule in the theme or in that style sheet.
+- `Expresso.TransitionVerifier` gives an error for a transition without a rule in the theme
+  or in the CSS of the deck. See "The transitions".
+
+The four checks are a transformer and not verifiers, for the reason that "The definitions
+of the elements" gives. Spark reports the error of a verifier as a warning. The module then
+compiles, and `mix expresso` renders the deck as if the check gave no error.
+When more than one check gives an error, the transformer raises one error with each
+message. A check gives errors or warnings, and not both, so each kind of warning has its
+own verifier.
 
 `Expresso.Dsl` holds the plain functions that the transformers and the verifiers share:
 

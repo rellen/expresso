@@ -16,8 +16,8 @@ A rule of the style sheet applies to each slide. To style one slide or one eleme
 a class name with [the class option](class-option.md), and write a rule for that class.
 
 A file that the compiler cannot read gives an error at compile time. A deck from
-`Expresso.Builder` takes the same option, such as `deck(slides, css: "deck.css")`, and the
-renderer reads the file.
+`Expresso.Builder` takes the same option, such as `deck(slides, css: "deck.css")`, and
+`deck/2` raises the same error.
 
 The text `</` can close the `style` element, so the renderer writes `<\/`. CSS reads the
 two forms in the same way in a string, a comment or a URL.
