@@ -40,7 +40,7 @@ For the steps and the installation of the tools, see
 | --- | --- | --- |
 | The render | Error | A deck file that does not compile, or does not return a deck |
 | The theme | Problem | Each role of a theme of 16 colors under its minimum of contrast. The text is the warning of the compiler. See [The theme option](theme-option.md). |
-| The size | Note | The size of the document, and the type and the size of its three largest files |
+| The size | Note | The size of the document, and the type and the size of its three largest files. A file is a data URI in an attribute, such as `src`, or in a `url()` of the style sheet, such as a font of the theme. |
 | An image | Note | An image with no `alt` option. A screen reader skips it. |
 | A diagram | Note | A diagram with no `alt` option. A screen reader reads the text of its SVG. |
 | A hidden heading | Note | A slide with no visible heading. A screen reader reads [the hidden heading](accessibility.md). |
@@ -137,7 +137,7 @@ Each error of the script of the page, each rejected promise with no handler, and
 | Variable | Gives | Without it |
 | --- | --- | --- |
 | `EXPRESSO_CHROMIUM` | The path of Chrome or Chromium | The check looks in [the sequence of the search](#the-search-for-the-browser). |
-| `EXPRESSO_AXE` | The path of `axe.min.js` | The check looks for `node_modules/axe-core/axe.min.js` in the current directory, in the directory of the deck, in each parent of them, and then in the directory of the tools. |
+| `EXPRESSO_AXE` | The path of `axe.min.js` | The check looks for `node_modules/axe-core/axe.min.js` in the current directory, in the directory of the deck, then in each parent of them, and then in the directory of the tools. Thus the directory of the deck comes before a parent of the current directory. |
 | `EXPRESSO_PLAYWRIGHT` | The path of `cli.js` of the npm package `playwright` | The check looks for `node_modules/playwright/cli.js` in the same directories as axe-core. |
 | `EXPRESSO_TOOLS` | The directory of the tools | `--install-check-tools` uses `expresso` in the cache directory of the user, such as `~/.cache/expresso` on Linux and `~/Library/Caches/expresso` on macOS. |
 
@@ -164,7 +164,9 @@ this sequence:
 
 1. The headless shell of Playwright, and then its Chromium, in the directory of
    `PLAYWRIGHT_BROWSERS_PATH`, or in the cache of Playwright without it. The headless shell
-   starts fast, and it gives the page its size exactly.
+   starts fast, and it gives the page its size exactly. The check uses the largest revision
+   of each browser, such as `chromium_headless_shell-1194` before
+   `chromium_headless_shell-999`.
 2. `google-chrome`, `google-chrome-stable`, `chrome`, `chrome-headless-shell`,
    `headless_shell`, `chromium` and `chromium-browser` on the `PATH`. The check skips a
    command that runs or installs a snap, such as `chromium` on Ubuntu, because that command
@@ -172,6 +174,11 @@ this sequence:
 3. Chrome and Chromium in the folder `Applications` of macOS.
 
 The line `Browser:` of the report gives the path of the browser that ran.
+
+Chrome and Chromium cannot make a page narrower than 500 px. When the page of the browser
+does not have the size of `--size`, the check stops with an error, such as
+`The browser chrome made a page of 500 × 667, and not of 375 × 667`. For a width under
+500 px, give the headless shell of Playwright in `EXPRESSO_CHROMIUM`.
 
 `--check=browser` also needs `node` on the `PATH`, the Chromium of Playwright, and the Hex
 package `playwright_ex`. Expresso gives `playwright_ex` as an optional dependency, so a Mix

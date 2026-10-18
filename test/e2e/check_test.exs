@@ -131,6 +131,30 @@ defmodule Expresso.E2E.CheckTest do
     assert String.ends_with?(output, "\nNo problems.\n")
   end
 
+  test "a failed launch of the browser stops Playwright, so the next run starts", %{
+    tmp_dir: dir
+  } do
+    {:ok, deck} =
+      Expresso.to_deck(
+        Expresso.Builder.deck(
+          [Expresso.Builder.slide("one", heading: "One", elements: [])],
+          name: "launch"
+        )
+      )
+
+    html = Expresso.Deck.render(deck)
+    {:ok, tools} = Expresso.Check.Session.find([File.cwd!()])
+    env = Map.put(System.get_env(), "EXPRESSO_CHROMIUM", Path.join(dir, "none"))
+
+    assert {:error, "Playwright did not start Chromium: " <> _} =
+             Expresso.Check.Session.run(html, deck, tools, env: env)
+
+    assert {:ok, [{{{1920, 1080}, nil}, result}]} =
+             Expresso.Check.Session.run(html, deck, tools)
+
+    assert result.layout == []
+  end
+
   test "--check=browser finds a key that does not move, and an error of the script" do
     {:ok, deck} =
       Expresso.to_deck(

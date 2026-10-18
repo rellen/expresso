@@ -52,7 +52,7 @@ defmodule Expresso.CheckTest do
       assert status == 0
       assert output =~ "Check of #{input}: 1 slide\n"
       assert output =~ "Checks: the render, the theme and the text for a screen reader"
-      assert output =~ ~r/Notes:\n  - The document is \d+ KB\.\n/
+      assert output =~ ~r/Notes:\n  - The document is \d+ KB\. The largest files: font\/woff2 /
       refute output =~ "Slide 1"
       assert String.ends_with?(output, "\nNo problems.\n")
     end
@@ -152,6 +152,68 @@ defmodule Expresso.CheckTest do
 
       File.rm!(shell)
       assert Browser.playwright(env) == chromium
+    end
+
+    test "finds the Playwright browser with the largest revision as an integer",
+         %{tmp_dir: dir} do
+      paths =
+        for revision <- [999, 1194, 1200] do
+          path = Path.join(dir, "chromium_headless_shell-#{revision}/chrome-linux/headless_shell")
+          File.mkdir_p!(Path.dirname(path))
+          File.write!(path, "")
+          path
+        end
+
+      # As text, "999" comes after "1200", so a sort as text finds the revision 999.
+      assert Browser.playwright(%{"PLAYWRIGHT_BROWSERS_PATH" => dir}) == Enum.at(paths, 2)
+    end
+
+    test "looks for node_modules in each given directory before a parent", %{tmp_dir: dir} do
+      deck_dir = Path.join(dir, "project/talk")
+      old_axe = Path.join(dir, "node_modules/axe-core/axe.min.js")
+      new_axe = Path.join(deck_dir, "node_modules/axe-core/axe.min.js")
+
+      for path <- [old_axe, new_axe] do
+        File.mkdir_p!(Path.dirname(path))
+        File.write!(path, "")
+      end
+
+      env = %{"EXPRESSO_TOOLS" => Path.join(dir, "tools")}
+      directories = [Path.join(dir, "project"), deck_dir]
+
+      assert Browser.find_axe(directories, env) == {:ok, new_axe}
+
+      assert Enum.take(Browser.places(directories, env), 3) ==
+               [Path.join(dir, "project"), deck_dir, dir]
+    end
+
+    test "a page narrower than the browser can make is an error", %{tmp_dir: dir} do
+      # A fake Chrome with a minimum width of 500 px. The probe page writes the
+      # width 500 for each window narrower than 500 px, and the check page too.
+      browser = Path.join(dir, "chrome")
+
+      File.write!(browser, ~S"""
+      #!/bin/sh
+      for arg; do
+        case "$arg" in
+          --window-size=*) size=${arg#--window-size=}; width=${size%,*}; height=${size#*,} ;;
+        esac
+      done
+      [ "$width" -lt 500 ] && width=500
+      case "$arg" in
+        *size.html) echo "<body data-size=\"$width $height\"></body>" ;;
+        *) echo "<script type=\"application/json\" id=\"check-result\">{\"width\":$width,\"height\":$height,\"layout\":[]}</script>" ;;
+      esac
+      """)
+
+      File.chmod!(browser, 0o755)
+
+      assert {:error, message} = Browser.run("<body></body>", browser, nil, size: {375, 667})
+      assert message =~ "made a page of 500 × 667, and not of 375 × 667"
+      assert message =~ "narrower than 500 px"
+
+      assert {:ok, %{width: 640, height: 480}} =
+               Browser.run("<body></body>", browser, nil, size: {640, 480})
     end
 
     test "knows a command that installs a snap", %{tmp_dir: dir} do
@@ -268,6 +330,18 @@ defmodule Expresso.CheckTest do
 
       assert %{notes: [note]} = Document.size(html)
       assert note =~ "The largest files: image/webp 6 KB, image/png 3 KB."
+    end
+
+    test "the size note names a file in a url() of the style sheet" do
+      data = String.duplicate("A", 4096)
+
+      html =
+        ~s|<style>@font-face { src: url("data:font/woff2;base64,#{data}#{data}"); }| <>
+          ~s|a { background: url('data:image/png;base64,#{data}'); }| <>
+          ~s|b { background: url(data:image/gif;base64,#{data}#{data}#{data}); }</style>|
+
+      assert %{notes: [note]} = Document.size(html)
+      assert note =~ "The largest files: image/gif 9 KB, font/woff2 6 KB, image/png 3 KB."
     end
   end
 end

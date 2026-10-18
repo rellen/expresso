@@ -12,7 +12,9 @@ defmodule Expresso.Check.Browser do
 
   The page has the size 1920 × 1080. A browser can keep a part of the window
   for itself, so `run/3` first opens a small page that writes its size, and it
-  makes the window larger by the difference.
+  makes the window larger by the difference. A Chrome window is not narrower
+  than 500 px, so `run/3` returns an error when the page does not get the
+  requested size.
   """
 
   @typedoc "The result of the page: the size, the problems of the layout and the violations of axe-core"
@@ -151,7 +153,7 @@ defmodule Expresso.Check.Browser do
   The variable `PLAYWRIGHT_BROWSERS_PATH` in `env` gives the directory of the
   browsers, as for Playwright. Without it, the function looks in the cache of
   Playwright on Linux and on macOS. It prefers the headless shell, and the
-  latest version of each browser.
+  latest version of each browser, by the integer of its revision.
   """
   @spec playwright(%{String.t() => String.t()}) :: Path.t() | nil
   def playwright(env \\ System.get_env()) do
@@ -162,15 +164,31 @@ defmodule Expresso.Check.Browser do
       end
 
     Enum.find_value(@playwright, fn pattern ->
-      Enum.find_value(directories, fn directory ->
-        directory
-        |> Path.join(pattern)
-        |> Path.expand()
-        |> Path.wildcard()
-        |> Enum.filter(&File.regular?/1)
-        |> List.last()
-      end)
+      Enum.find_value(directories, &latest(Path.expand(&1), pattern))
     end)
+  end
+
+  # The browser of the pattern in the directory with the largest revision, or
+  # `nil`.
+  defp latest(root, pattern) do
+    root
+    |> Path.join(pattern)
+    |> Path.wildcard()
+    |> Enum.filter(&File.regular?/1)
+    |> Enum.max_by(&revision(&1, root), fn -> nil end)
+  end
+
+  # The revision of a browser of Playwright, such as 1194 for
+  # `chromium_headless_shell-1194/...`. `Path.wildcard/1` sorts the paths as
+  # text, so `-999` comes after `-1194`. The integer of the revision gives the
+  # correct sequence.
+  defp revision(path, root) do
+    [top | _rest] = path |> Path.relative_to(root) |> Path.split()
+
+    case Regex.run(~r/-(\d+)$/, top, capture: :all_but_first) do
+      [number] -> {String.to_integer(number), path}
+      nil -> {-1, path}
+    end
   end
 
   @doc """
@@ -216,13 +234,18 @@ defmodule Expresso.Check.Browser do
   @doc """
   Return the directories where the check looks for `node_modules`
 
-  The list holds each directory of `directories` and each parent of them,
-  and then the directory of `Expresso.Check.Tools.directory/1`.
+  The list holds each directory of `directories`, then each parent of them,
+  and then the directory of `Expresso.Check.Tools.directory/1`. Thus a
+  directory of `directories` comes before the parent of a different one.
+
+      iex> Expresso.Check.Browser.places(["/a/b", "/c"], %{"EXPRESSO_TOOLS" => "/t"})
+      ["/a/b", "/c", "/a", "/", "/t"]
   """
   @spec places([Path.t()], %{String.t() => String.t()}) :: [Path.t()]
   def places(directories, env \\ System.get_env()) do
-    directories
-    |> Enum.flat_map(&ancestors(Path.expand(&1)))
+    expanded = Enum.map(directories, &Path.expand/1)
+
+    (expanded ++ Enum.flat_map(expanded, &ancestors/1))
     |> Kernel.++([Expresso.Check.Tools.directory(env)])
     |> Enum.uniq()
   end
@@ -333,11 +356,44 @@ defmodule Expresso.Check.Browser do
     with {:ok, dom} <- browse(browser, "file://#{probe}", directory, window, probe_timeout),
          [w, h] <- Regex.run(~r/data-size="(\d+) (\d+)"/, dom, capture: :all_but_first) do
       larger = {2 * width - String.to_integer(w), 2 * height - String.to_integer(h)}
-      with {:ok, dom} <- browse(browser, url, directory, larger, timeout), do: result(dom)
+
+      with {:ok, dom} <- browse(browser, url, directory, larger, timeout),
+           {:ok, page} <- result(dom),
+           do: same_size(page, window, browser)
     else
       {:error, _message} = error -> error
       nil -> {:error, "The browser #{browser} did not run the script of a page."}
     end
+  end
+
+  @doc """
+  Return the result when the page has the requested size, or an error
+
+  A Chrome window is not narrower than 500 px, so Chrome can give a page that
+  is larger than the size of `--size`. The values of such a check come from
+  the wrong size, so the function returns an error. The headless shell gives
+  each size.
+
+      iex> page = %{width: 1920, height: 1080, layout: [], accessibility: nil}
+      iex> Expresso.Check.Browser.same_size(page, {1920, 1080}, "chrome")
+      {:ok, %{width: 1920, height: 1080, layout: [], accessibility: nil}}
+      iex> page = %{width: 500, height: 667, layout: [], accessibility: nil}
+      iex> {:error, message} = Expresso.Check.Browser.same_size(page, {375, 667}, "chrome")
+      iex> message
+      "The browser chrome made a page of 500 × 667, and not of 375 × 667. Chrome cannot " <>
+        "make a page narrower than 500 px. Use the headless shell of Playwright in " <>
+        "EXPRESSO_CHROMIUM, or a larger --size."
+  """
+  @spec same_size(result(), {pos_integer(), pos_integer()}, Path.t()) ::
+          {:ok, result()} | {:error, String.t()}
+  def same_size(%{width: width, height: height} = page, {width, height}, _browser),
+    do: {:ok, page}
+
+  def same_size(page, {width, height}, browser) do
+    {:error,
+     "The browser #{browser} made a page of #{page.width} × #{page.height}, and not of " <>
+       "#{width} × #{height}. Chrome cannot make a page narrower than 500 px. Use the " <>
+       "headless shell of Playwright in EXPRESSO_CHROMIUM, or a larger --size."}
   end
 
   defp browse(browser, url, directory, {width, height}, timeout) do
