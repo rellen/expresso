@@ -11,6 +11,10 @@
 // step. A black screen, the menu and the overview pause it. A medium gets its
 // source the first time that it plays, and it starts again from the start
 // when its slide shows again. `video.ts` and `audio.ts` make a player each.
+//
+// A player starts a medium only at the start of its slide, at the first step
+// where it shows, and after the player paused it. A medium that ended, or that
+// the presenter paused with the controls, stays paused at a later step.
 
 // The part of a media element that this module uses. A test gives a fake.
 export type Media = {
@@ -60,6 +64,14 @@ export function player(list: string, key: string): Player {
   // the last call.
   const started = new Set<Media>();
   let shown: number | null = null;
+  // The media that started on the slide that shows. A medium of this set that
+  // is paused ended, or the presenter paused it, so a step does not start it.
+  const begun = new Set<Media>();
+  // The media that the player paused, because a cover, a step or another
+  // slide hid them. The player starts them again when they show.
+  const held = new Set<Media>();
+  // The media that the browser refused to play. The next call tries again.
+  const refused = new Set<Media>();
 
   function read(): readonly string[] | null {
     if (sources === undefined) {
@@ -82,6 +94,9 @@ export function player(list: string, key: string): Player {
         : document.getElementById(`slide-${slide}`);
     const entered = slide !== shown;
     shown = slide;
+    if (entered) {
+      begun.clear();
+    }
     const playing = new Set<Media>();
     if (files !== null && section !== null) {
       const media = section.querySelectorAll(
@@ -99,17 +114,27 @@ export function player(list: string, key: string): Player {
         }
         playing.add(medium);
         started.add(medium);
-        if (medium.paused) {
+        const start =
+          !begun.has(medium) || held.has(medium) || refused.has(medium);
+        begun.add(medium);
+        held.delete(medium);
+        refused.delete(medium);
+        if (start && medium.paused) {
           // A browser can refuse to play: a file that it cannot decode, or
           // sound before the first key or click of the presenter. The medium
           // then stays paused, and the next change of the state tries again.
-          medium.play().catch(() => undefined);
+          medium.play().catch(() => {
+            if (medium.paused && !held.has(medium)) {
+              refused.add(medium);
+            }
+          });
         }
       }
     }
     for (const medium of started) {
       if (!playing.has(medium) && !medium.paused) {
         medium.pause();
+        held.add(medium);
       }
     }
   };

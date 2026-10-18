@@ -1323,6 +1323,10 @@ for the user. It follows the design of the embed, with these differences:
 - **A cover pauses it, and a new visit starts it again.** A black screen, the menu and the
   overview pause the video, and it goes on after them. A move to another slide and back
   starts it from the start, because the presenter shows it again from the beginning.
+- **A step does not start it again.** The player calls `play()` only at the start of the
+  slide, at the first step where the video shows, and after the player paused it for a
+  cover or a step. A video that ended, or that the presenter paused with the controls,
+  stays paused until the next visit to its slide.
 - **It has no sound.** A browser plays a video automatically only when it is muted. With
   `controls`, the video takes the clicks, and the presenter can turn the sound on.
 - **The captions are a `track`.** The `captions` option gives a WebVTT file, and the

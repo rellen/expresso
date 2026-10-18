@@ -36,7 +36,7 @@ render gives an error for a file that it cannot read.
 
 | View | The sound |
 | --- | --- |
-| The present view | The sound plays while its slide shows and the element shows at the current step. It starts from the start each time that its slide shows. |
+| The present view | The sound plays while its slide shows and the element shows at the current step. It starts from the start each time that its slide shows. A sound without `loop` plays one time: a later step does not play it again. |
 | A black screen, the menu, the overview | The sound pauses. It goes on from the same time when the slide shows again. |
 | The speaker view, the handout view and paper | No sound plays. The handout view and paper show the title with a note symbol. |
 
@@ -48,8 +48,9 @@ view or the screen. A sound on a later slide starts when its step shows.
 
 Without `controls`, the present view shows nothing in the place of the element. With
 `controls true`, the slide shows the controls of the browser. The sound still plays at its
-step, and the presenter can pause it, play it again or change its volume. A click on the
-controls goes to the controls, and not to the presenter.
+step, and the presenter can pause it, play it again or change its volume. A pause from
+the controls stays after a step and after a black screen, the menu or the overview. A
+click on the controls goes to the controls, and not to the presenter.
 
 ## The file
 

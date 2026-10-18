@@ -42,6 +42,7 @@ The box of a video is the box of an embed. A deck can set `--embed-width` and
 | The present view, while the slide and the step of the video show | The video plays, with no sound. |
 | A black screen, the menu or the overview | The video pauses, and it goes on from the same time after. |
 | A move to another slide, and a move back | The video pauses, and it starts again from the start. |
+| A later step on the same slide | A video that ended, or that the presenter paused with the controls, stays paused. |
 | The speaker view, the handout view, the overview, the menu and paper | The poster shows. |
 
 A browser starts a video with sound only after a click. Therefore the video has no sound,
