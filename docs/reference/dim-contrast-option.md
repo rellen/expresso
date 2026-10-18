@@ -38,7 +38,7 @@ SVG file, embed and video. Each variant of a theme with two variants, and the co
 follow the option.
 
 A higher ratio dims less. A role of text near 4.5:1, such as the numbers of the default
-theme, then has almost no dimming at 4.5. The focus of the `highlight` option of a code
+theme, then does not dim at 4.5. The focus of the `highlight` option of a code
 element still shows, because the lines in focus get a bar in the color `--accent`.
 
 ## A theme that does not dim
@@ -49,7 +49,7 @@ A theme does not dim when one role of text is near the ratio of the option. No o
 - A dimmed image, SVG file, embed and video do not dim, because the style sheet dims them
   with `--dim-opacity`.
 - Each role near the ratio keeps its color in the state `dim`.
-- With `:solarized_light` at 4.5, no role of text dims, so the state `dim` does nothing.
+- With `:solarized_light` at 4.5, no role of text dims, so the state `dim` does nothing to text.
 
 At 4.5, each light built-in theme has `--dim-opacity` 1.0:
 
