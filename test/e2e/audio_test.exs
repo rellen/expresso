@@ -131,15 +131,36 @@ defmodule Expresso.E2E.AudioTest do
     page |> keys(["k", "k", "k", "j"])
     assert position(page) == "4.1"
     wait_for(page, "!#{sound(4)}.paused")
-    assert js(page, "window.plays") == 2
+    # The browser sends the `play` event as a later task.
+    wait_for(page, "window.plays === 2")
   end
 
   test "a pause from the controls stays after a step and after a cover", %{page: page} do
     page |> keys(["j", "j", "j", "j", "j", "j"])
     assert position(page) == "5.1"
-    wait_for(page, "!#{sound(5)}.paused")
+    wait_for(page, "!#{sound(5)}.paused && #{sound(5)}.currentTime > 0")
 
     js(page, "#{sound(5)}.pause()")
+    page |> keys(["j", "b", "b", "j"])
+    assert position(page) == "5.3"
+    assert js(page, "#{sound(5)}.paused")
+  end
+
+  # A pause before the sound starts rejects the `play` promise with an
+  # `AbortError`. The player must not take that error as a refusal.
+  test "a pause from the controls before the sound starts stays after a step and after a cover",
+       %{page: page} do
+    js(page, """
+    (() => {
+      #{sound(5)}.addEventListener("play", () => { #{sound(5)}.pause(); }, { once: true });
+      return true;
+    })()
+    """)
+
+    page |> keys(["j", "j", "j", "j", "j", "j"])
+    assert position(page) == "5.1"
+    wait_for(page, "#{sound(5)}.paused")
+
     page |> keys(["j", "b", "b", "j"])
     assert position(page) == "5.3"
     assert js(page, "#{sound(5)}.paused")
