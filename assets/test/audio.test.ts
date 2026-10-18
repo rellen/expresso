@@ -155,3 +155,56 @@ test("a cover pauses a sound that plays, and the end of the cover plays it again
   assert.equal(medium.paused, false);
   assert.deepEqual(medium.calls, ["play", "pause", "play"]);
 });
+
+// A fake sound whose `play` promise waits. A pause before the promise settles
+// rejects it with an `AbortError`, as a browser does.
+function slow(): Media & { calls: string[] } {
+  const calls: string[] = [];
+  let abort: (() => void) | null = null;
+  const fake = {
+    calls,
+    dataset: { audio: "0" },
+    paused: true,
+    currentTime: 0,
+    src: "",
+    parentElement: null,
+    closest: () => null,
+    play: () => {
+      calls.push("play");
+      fake.paused = false;
+      return new Promise<void>((_resolve, reject) => {
+        abort = () => {
+          reject(
+            new DOMException(
+              "The play() request was interrupted",
+              "AbortError",
+            ),
+          );
+        };
+      });
+    },
+    pause: () => {
+      calls.push("pause");
+      fake.paused = true;
+      abort?.();
+      abort = null;
+    },
+  };
+  return fake;
+}
+
+test("a pause from the controls before the sound starts stays at a later step", async () => {
+  const medium = slow();
+  stage(medium);
+  const run = player("expresso-audios", "audio");
+
+  run(1, 1, false);
+  medium.pause();
+  // Let the rejection of the `play` promise come first.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  run(1, 2, false);
+  run(1, 2, true);
+  run(1, 2, false);
+  assert.equal(medium.paused, true);
+  assert.deepEqual(medium.calls, ["play", "pause"]);
+});
