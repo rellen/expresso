@@ -44,6 +44,24 @@ defmodule Expresso.E2E.StatTest do
     end
   end
 
+  # A stat with no steps of its own, in a column that shows at step 2.
+  defmodule ColumnDeck do
+    use Expresso
+
+    slide "column" do
+      columns do
+        column do
+          at from: 2
+
+          stat 5000 do
+            label "Orders"
+            count true
+          end
+        end
+      end
+    end
+  end
+
   @numbers "#slide-2 .stat-number"
   @big "#slide-3 .stat-number"
 
@@ -82,6 +100,16 @@ defmodule Expresso.E2E.StatTest do
     wait_for_texts(page, @numbers, ["1,250", "4.2"])
 
     assert animations(page, @numbers) == 0
+  end
+
+  test "a stat in a container with steps keeps the start of its count until the container shows",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(ColumnDeck, tmp_dir))
+    wait_for_texts(page, "#slide-1 .stat-number", ["0"])
+
+    press(page, "j")
+    assert position(page) == "1.2"
+    wait_for_texts(page, "#slide-1 .stat-number", ["5,000"])
   end
 
   # The browser keeps six significant digits in the text of `--chart-n`.
@@ -132,6 +160,22 @@ defmodule Expresso.E2E.StatTest do
 
       finish_animations(page, "#slide-2")
       wait_for_texts(page, @numbers, ["1,250", "4.2"])
+    end
+
+    test "a stat in a column with steps counts at the step of the column", %{
+      slow: page,
+      tmp_dir: tmp_dir
+    } do
+      page = page |> open(render(ColumnDeck, tmp_dir, "column")) |> slow_motion(10)
+      wait_for_texts(page, "#slide-1 .stat-number", ["0"])
+
+      press(page, "j")
+      pause_animations(page, "#slide-1", 9000)
+      [orders, property] = paused_count(page, "#slide-1 .stat-number", 0, 5000)
+      assert number(orders) == round(number(property))
+
+      finish_animations(page, "#slide-1")
+      wait_for_texts(page, "#slide-1 .stat-number", ["5,000"])
     end
 
     test "a number with more than six digits counts, and its count ends on each digit", %{

@@ -50,6 +50,25 @@ defmodule Expresso.E2E.ShapeTest do
     end
   end
 
+  # A line and an arrow that take the state alert at step 2.
+  defmodule AlertDeck do
+    use Expresso
+
+    slide "alert" do
+      shape :line do
+        from ["10%", "60%"]
+        to ["50%", "60%"]
+        on 2, state: :alert
+      end
+
+      shape :arrow do
+        from ["10%", "80%"]
+        to ["50%", "80%"]
+        on 2, state: :alert
+      end
+    end
+  end
+
   setup %{page: page, tmp_dir: tmp_dir} do
     %{page: open(page, render(Deck, tmp_dir))}
   end
@@ -91,5 +110,25 @@ defmodule Expresso.E2E.ShapeTest do
 
     assert [problem] = problems
     assert problem =~ ~r/^Slide 2, step 1: the shape .* past the right edge$/
+  end
+
+  # An outline of the svg is outside the shapes, which clip it, so the alert
+  # makes the line wider.
+  test "the state alert makes a line and an arrow wider", %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(AlertDeck, tmp_dir, "alert"))
+
+    widths = """
+    Array.from(document.querySelectorAll(".screen .shape-line line"),
+      (line) => parseFloat(getComputedStyle(line).strokeWidth))
+    """
+
+    [line, arrow] = js(page, widths)
+
+    press(page, "j")
+    assert position(page) == "1.2"
+    [alert_line, alert_arrow] = js(page, widths)
+
+    assert alert_line >= line + 3
+    assert alert_arrow >= arrow + 3
   end
 end

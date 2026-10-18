@@ -63,6 +63,11 @@ slide "the release" do
 end
 ```
 
+An `embed` or a `video` in a callout cannot take its size from the height that is left in
+the slide, because a callout takes the height of its content. Its width is the `width`
+option, or less when the window is not high enough for that width. Give a small `width`,
+such as `"40%"`, so that the callout fits in the slide.
+
 A slide, a text box and a column can hold a callout. A callout without elements shows only
 its header.
 

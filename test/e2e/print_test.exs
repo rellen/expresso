@@ -148,4 +148,29 @@ defmodule Expresso.E2E.PrintTest do
     assert js(speaker, "document.getElementById('speaker-notes').textContent") ==
              "Only for the speaker."
   end
+
+  test "a print from the handout view draws no line at the top of a sheet", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = page |> open(render(EveryDeck, tmp_dir)) |> press("p")
+
+    borders = """
+    Array.from(document.querySelectorAll(".handout-page"))
+      .filter((page) => getComputedStyle(page).display !== "none")
+      .map((page) => getComputedStyle(page).borderTopStyle)
+    """
+
+    assert js(page, borders) == ["none", "solid", "solid"]
+    assert page |> emulate("print") |> js(borders) == ["none", "none", "none"]
+  end
+
+  test "an open list of keys does not print", %{page: page, tmp_dir: tmp_dir} do
+    page = page |> open(render(EveryDeck, tmp_dir)) |> press("Shift+Slash")
+    display = "getComputedStyle(document.querySelector('#help')).display"
+
+    assert js(page, "document.querySelector('#help').open")
+    assert js(page, display) == "flex"
+    assert page |> emulate("print") |> js(display) == "none"
+  end
 end
