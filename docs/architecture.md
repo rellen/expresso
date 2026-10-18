@@ -718,7 +718,7 @@ of text toward its dimmed color with `color-mix(in srgb, ...)` and the value of
 `--dimmed`. `Color.blend/3` and `color-mix()` both blend in sRGB, so the browser shows the
 color that the palette measured. `docs/dim-state.md` gives the design and its decisions.
 
-An image, an SVG file and an embed have colors that the palette does not know.
+An image, an SVG file, an embed and a video have colors that the palette does not know.
 They dim with one opacity, `--dim-opacity`: the strongest opacity that keeps each role of
 text at 3:1 and at Lc 30.
 

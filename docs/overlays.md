@@ -314,10 +314,11 @@ the example does. The rules `[data-el]` and `[data-on][data-el]` hold the transi
 
 A rule that writes its own list of transitions replaces the list of each rule with a lower
 specificity, or of an earlier rule with the same specificity. Thus such a rule must hold
-each entry of the list that it replaces. A value that CSS cannot multiply takes the
-space toggle. The theme writes `--alert-on: ;` for the state, and `var(--alert-on) #fee`
-for the value. This form does not interpolate, but it works in each browser with custom
-properties.
+each entry of the list that it replaces.
+
+A value that CSS cannot multiply takes the space toggle. The theme writes `--alert-on: ;`
+for the state, and `var(--alert-on) #fee` for the value. This form does not interpolate,
+but it works in each browser with custom properties.
 
 The `set` option does not have this problem. A generated rule writes a custom property
 directly, and the property has a value at the step that the rule selects.
@@ -679,10 +680,10 @@ property starts a new transition at each frame of its parent, and it arrives lat
 reveal rule of a step sets `opacity: 1`, and that rule has a higher specificity than the
 rule of the theme. The filter multiplies the two values, so the fade of `at` works as
 before. The state `dim` changes the colors of the text, and not the filter:
-`docs/dim-state.md` gives the design. An image, an SVG file and an embed still dim with
-`filter: opacity(...)` and `--dim-opacity`, because the theme does not know their colors.
-A series of a chart fades its marks to `--chart-dim-opacity`, and its texts take the
-dimmed color of the text. `docs/reference/chart-element.md` gives the rules.
+`docs/dim-state.md` gives the design. An image, an SVG file, an embed and a video still
+dim with `filter: opacity(...)` and `--dim-opacity`, because the theme does not know their
+colors. A series of a chart fades its marks to `--chart-dim-opacity`, and its texts take
+the dimmed color of the text. `docs/reference/chart-element.md` gives the rules.
 
 The `@property` at-rule became available in all major browsers in July 2024. Chrome 85,
 Safari 16.4 and Firefox 128 support it. The floor of this design is that date, and not

@@ -254,7 +254,7 @@ option of the deck comes after them, so a deck can replace a role.
 | `--code-function` | `base0D` | Functions and headings |
 | `--code-keyword` | `base0E` | Keywords |
 | `--text-dim`, `--code-comment-dim` and one for each other role of text | – | The dimmed color of the role |
-| `--dim-opacity` | – | The opacity of a dimmed image, SVG file and embed |
+| `--dim-opacity` | – | The opacity of a dimmed image, SVG file, embed and video |
 
 No role uses `base02`, `base06`, `base07` or `base0F`. A variable keeps the color of the
 text, so a slide of code has fewer colors than an editor.
