@@ -202,6 +202,64 @@ defmodule Expresso.MorphTest do
     assert check != coffee
   end
 
+  @tag :tmp_dir
+  test "a diagram compares its SVG, so two drawings without a text differ and two copies pair",
+       %{tmp_dir: tmp_dir} do
+    circle = ~s(<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4"/></svg>)
+    square = ~s(<svg viewBox="0 0 10 10"><rect width="8" height="8"/></svg>)
+
+    for {name, svg} <- [{"circle.svg", circle}, {"square.svg", square}, {"copy.svg", circle}],
+        do: File.write!(Path.join(tmp_dir, name), svg)
+
+    File.write!(Path.join(tmp_dir, "empty.svg"), "<svg></svg>")
+
+    [first, other, copy, empty] =
+      ["circle.svg", "square.svg", "copy.svg", "empty.svg"]
+      |> Enum.map(&Builder.diagram(Path.join(tmp_dir, &1)))
+      |> slides()
+      |> signatures("diagram")
+
+    assert first != nil
+    assert first != other
+    assert first == copy
+    assert empty == nil
+  end
+
+  test "a shape compares its kind and its text" do
+    box = [x: "10%", y: "10%", width: "20%", height: "20%"]
+
+    [rect, ellipse, moved, labeled] =
+      [
+        Builder.shape(:rect, box),
+        Builder.shape(:ellipse, box),
+        Builder.shape(:rect, Keyword.put(box, :x, "50%")),
+        Builder.shape(:rect, Keyword.put(box, :text, "Cup"))
+      ]
+      |> slides()
+      |> signatures("shape")
+
+    assert rect != nil
+    assert rect != ellipse
+    assert rect == moved
+    assert rect != labeled
+
+    [line, arrow] =
+      [
+        Builder.shape(:line, from: ["5%", "5%"], to: ["50%", "50%"]),
+        Builder.shape(:arrow, from: ["5%", "5%"], to: ["50%", "50%"])
+      ]
+      |> slides()
+      |> signatures("shape")
+
+    assert line != arrow
+  end
+
+  test "an element with an empty content gets no signature" do
+    assert [nil] =
+             [Builder.slide("one", elements: [Builder.text_area(text: "  ")])]
+             |> signatures("text-area")
+  end
+
   test "the heading of the default template has the signature of its text" do
     [first, second, other] =
       [

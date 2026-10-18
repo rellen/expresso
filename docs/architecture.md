@@ -2442,6 +2442,12 @@ each kind. These are the reasons for this design:
 - **The browser still chooses the pairs.** A jump, such as `Home` or a link of the `goto`
   option, can go between any two slides. Thus the renderer cannot compute the pairs of
   each change.
+- **A drawing compares its drawing, and not its text.** A diagram and a shape often have
+  no text, and two different drawings without a text had the same signature. A diagram
+  now compares the SVG of its file, so two copies of one file are partners. A shape
+  compares its kind and its text.
+- **An empty content gets no signature.** Two elements without a content, such as two
+  text areas without a text, are not the same element, so they do not morph.
 - **The template writes the signature of the heading.** The default slide template puts
   it on the heading container. A custom template that writes no signature gets no morph
   of its heading.

@@ -29,7 +29,8 @@ defmodule Expresso.Element do
   The content that the auto morph compares for two elements of one kind.
   `Expresso.Morph` tells what each one is.
   """
-  @type morph_content :: :text | :source | :file | :drawing | :language | :label
+  @type morph_content ::
+          :text | :source | :file | :drawing | :svg | :shape | :language | :label
 
   @typedoc """
   A kind of element: its module, the class of its root tag, its name, and the
@@ -50,12 +51,12 @@ defmodule Expresso.Element do
     {Expresso.Element.Quotation, "quotation", "quotation", :text},
     {Expresso.Element.Code, "code", "code", :language},
     {Expresso.Element.Math, "math", "math", :text},
-    {Expresso.Element.Diagram, "diagram", "diagram", :text},
+    {Expresso.Element.Diagram, "diagram", "diagram", :svg},
     {Expresso.Element.Video, "video", "video", :file},
     {Expresso.Element.Embed, "embed", "embed", :source},
     {Expresso.Element.Audio, "audio", "audio", :file},
     {Expresso.Element.QrCode, "qr-code", "qr-code", :drawing},
-    {Expresso.Element.Shape, "shape", "shape", :text},
+    {Expresso.Element.Shape, "shape", "shape", :shape},
     {Expresso.Element.Chart, "chart", "chart", :text},
     {Expresso.Element.Callout, "callout", "callout", :text},
     {Expresso.Element.Toc, "toc", "toc", :text},

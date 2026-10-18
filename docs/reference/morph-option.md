@@ -32,9 +32,14 @@ element of the two slides has that kind and that content. The content of each ki
 | The heading of a slide | Its text. |
 | An image, a video, a sound, a page | The address of its file. |
 | An icon, a QR code | Its drawing. |
+| A diagram | The SVG of its file. Two files with the same SVG have the same content. |
+| A shape | Its kind and its text. A rectangle and an ellipse are never partners. |
 | A code | Its language. |
 | A stat | Its label. |
 | Each other kind | Its text. |
+
+An element with an empty content, such as a text area without a text or a diagram with an
+empty `svg` element, gets no signature and has no partner. Give it a `morph` key to move it.
 
 Two code elements that are partners also move each token that the two codes share, in
 order. A token moves from its place in the old code to its place in the new code.
