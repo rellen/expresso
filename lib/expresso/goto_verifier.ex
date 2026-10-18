@@ -3,9 +3,10 @@ defmodule Expresso.GotoVerifier do
   The check of the `goto` option
 
   `Expresso.VerifierTransformer` runs it after the other transformers, one
-  time for each deck module at compile time. It calls `Expresso.Goto.check/2` for each element with a `goto`
-  option, so a link to a slide or a step that the deck does not have stops the
-  compile. The transformer writes the maximum step number of each slide first.
+  time for each deck module at compile time. It calls `Expresso.Goto.check/2`
+  for each element with a `goto` option, so a link to a slide or a step that
+  the deck does not have stops the compile. `Expresso.Overlay.Transformer`
+  writes the maximum step number of each slide before this check runs.
   """
 
   use Spark.Dsl.Verifier
