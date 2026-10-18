@@ -142,9 +142,11 @@ defmodule Expresso.Presenter.Interpreter do
   @doc """
   Return the transition between two states, or nil
 
-  Only a move to a different slide in the present view has a transition. In
-  the two directions, the kind comes from the slide with the higher number. The
-  kind `"none"` has no transition.
+  Only a move to a different slide in the present view has a transition. A
+  black screen, the overview, the menu and the list of keys cover the slide, so
+  a move from them or to them has no transition. In the two directions, the
+  kind comes from the slide with the higher number. The kind `"none"` has no
+  transition.
   """
   @spec transition(Program.t(), state(), state()) :: transition() | nil
   def transition(program, before, after_event) do
@@ -159,7 +161,9 @@ defmodule Expresso.Presenter.Interpreter do
     end
   end
 
-  defp quiet?(state), do: state.view != :present or state.blank or state.overview or state.help
+  defp quiet?(state) do
+    state.view != :present or state.blank or state.overview or state.menu or state.help
+  end
 
   defp kind(program, slide) do
     if slide <= tuple_size(program.slides),

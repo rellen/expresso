@@ -71,8 +71,9 @@ For the steps and a complete deck, see
 
 - Only a change of slide in the present view has a transition. A change of the step keeps the
   animations of the overlays.
-- A black screen, the overview, the list of keys, the handout view and the speaker view have
-  no transition.
+- A black screen, the overview, the menu, the list of keys, the handout view and the
+  speaker view have no transition. A jump from the menu or from the overview shows the
+  slide at once, because these views cover the slide.
 - A transition belongs to the border between two slides. The slide with the higher number
   gives the kind in the two directions. A jump, such as `Home`, uses the kind of the slide
   with the higher number of the two.

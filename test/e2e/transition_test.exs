@@ -159,11 +159,37 @@ defmodule Expresso.E2E.TransitionTest do
     assert position(page) == "3.1"
   end
 
+  # The menu and the overview cover the slide, so a jump from them starts no
+  # view transition. Slide two slides in, so a jump to it from the present view
+  # starts one.
+  test "a jump from the menu or from the overview starts no transition", %{moving: page} do
+    count(page)
+
+    page |> keys(["m", "j", "Enter"]) |> wait_for_position("2.1")
+    assert js(page, "window.started") == 0
+
+    page |> press("k") |> started() |> settle()
+    page |> keys(["o", "j", "j", "Enter"]) |> wait_for_position("3.1")
+    assert js(page, "window.started") == 1
+  end
+
   test "a reader who asks for reduced motion gets no transition", %{page: page, tmp_dir: tmp_dir} do
     page |> open(render(Deck, tmp_dir)) |> press("j")
 
     assert animations(page) == []
     assert position(page) == "2.1"
+  end
+
+  # Count each call to `document.startViewTransition` in `window.started`.
+  defp count(page) do
+    js(page, """
+    window.started = 0;
+    const start = document.startViewTransition.bind(document);
+    document.startViewTransition = (update) => {
+      window.started += 1;
+      return start(update);
+    };
+    """)
   end
 
   defp navigate(page, hash) do

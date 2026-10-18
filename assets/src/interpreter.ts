@@ -292,7 +292,8 @@ export type Transition = Readonly<{
 
 // The transition between two states, or null for no transition. Only a move to
 // a different slide in the present view has a transition. A change of the step,
-// a black screen, the overview and the list of keys have no transition.
+// a black screen, the overview, the menu and the list of keys have no
+// transition, because each of the last four covers the slide.
 //
 // A transition belongs to the border between two slides, so in the two
 // directions the kind comes from the slide with the higher number. The style
@@ -303,7 +304,11 @@ export function transition(
   deck: Deck,
 ): Transition | null {
   const quiet = (state: State) =>
-    state.view !== "present" || state.blank || state.overview || state.help;
+    state.view !== "present" ||
+    state.blank ||
+    state.overview ||
+    state.menu ||
+    state.help;
   const from = slideOf(before, deck);
   const to = slideOf(after, deck);
   if (from === to || quiet(before) || quiet(after)) {

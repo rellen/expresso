@@ -218,13 +218,13 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     end
   end
 
-  property "a change of the slide in the present view with no black screen, overview or list of keys has a transition, except the kind none" do
+  property "a change of the slide in the present view with no black screen, overview, menu or list of keys has a transition, except the kind none" do
     check all program <- decks(),
               a <- state_in(program),
               b <- state_in(program),
               max_runs: @runs do
       quiet? = fn state ->
-        state.view != :present or state.blank or state.overview or state.help
+        state.view != :present or state.blank or state.overview or state.menu or state.help
       end
 
       {from, _step} = where(program, a)

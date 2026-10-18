@@ -2376,8 +2376,8 @@ hyphen, as the renderer does for an effect.
 
 `transition` in `interpreter.ts` decides if a change of state has a transition. Only a
 move to a different slide in the present view has one. A change of the step, a black
-screen, the overview and the list of keys have none. A transition belongs to the border
-between two slides, so the slide with the higher number gives the kind in the two
+screen, the overview, the menu and the list of keys have none. A transition belongs to the
+border between two slides, so the slide with the higher number gives the kind in the two
 directions. A move forward uses the kind of the next slide. A move back uses the kind of
 the slide that it leaves, and the direction `back` plays it in reverse.
 
