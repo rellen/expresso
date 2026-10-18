@@ -30,6 +30,9 @@ defmodule Expresso.BurritoEntryPoint do
       # Without the handler, only a closed standard output waits for ever, so a
       # failure to install it does not stop the command.
       _ = Expresso.SignalHandler.install()
+      # The launcher does not send SIGTERM on to the VM, so the VM halts when
+      # the launcher stops. Without the watch, the command still runs.
+      _ = Expresso.LauncherWatch.start()
       Burrito.Util.Args.get_arguments() |> run(program()) |> System.halt()
     end
 

@@ -390,6 +390,11 @@ gives the exit status 124, and the run of the tests does not stop. Linux gives `
 and `shell.nix` gives coreutils, also on macOS. Homebrew gives the command as `gtimeout`,
 and the tests accept both names.
 
+Two tests send SIGTERM to the launcher of Burrito, and they run the binary without
+`timeout`. `timeout` sends a signal to each process in its group, so the VM also gets the
+signal, and the tests then cannot find a VM that continues. These tests use `pgrep` to find
+the VM, and they kill the launcher and the VM after the test.
+
 Burrito puts a precompiled ERTS in the binary, and it downloads the ERTS for the exact OTP
 version of the computer. Its source is `https://beam-machine-universal.b-cdn.net`. For Linux
 on x86_64, the file is `OTP-<v>/linux/x86_64/any/otp_<v>_linux_any_x86_64.tar.gz`. On
