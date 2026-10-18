@@ -19,6 +19,11 @@ defmodule Expresso.Check.Document do
   # The number of the largest files that the note of the size names.
   @largest 3
 
+  # A data URI of 1 KB or more in an attribute, and in a `url()` of a style
+  # sheet. The first group is the media type, and the second is the data.
+  @attribute ~r/ (?:src|href|xlink:href)="data:([^;,"]+)[^,"]*,([^"]{1024,})"/
+  @url ~r/url\(\s*["']?data:([^;,"')]+)[^,"')]*,([^"')]{1024,})/
+
   @doc """
   Return a problem for each role of the theme of the deck under its minimum of contrast
 
@@ -39,7 +44,8 @@ defmodule Expresso.Check.Document do
   @doc """
   Return a note with the size of the document, and with the size and the type of its largest files
 
-  A file is a data URI in a `src`, an `href` or an `xlink:href` attribute.
+  A file is a data URI in a `src`, an `href` or an `xlink:href` attribute, or
+  in a `url()` of a style sheet, such as a font of the theme.
   `Expresso.Assets` keeps one copy of each large file, so the note names each
   file one time.
 
@@ -49,8 +55,8 @@ defmodule Expresso.Check.Document do
   @spec size(String.t()) :: result()
   def size(html) do
     files =
-      ~r/ (?:src|href|xlink:href)="data:([^;,"]+)[^,"]*,([^"]{1024,})"/
-      |> Regex.scan(html, capture: :all_but_first)
+      [@attribute, @url]
+      |> Enum.flat_map(&Regex.scan(&1, html, capture: :all_but_first))
       |> Enum.map(fn [type, data] -> {type, div(byte_size(data) * 3, 4)} end)
       |> Enum.sort_by(&elem(&1, 1), :desc)
       |> Enum.take(@largest)

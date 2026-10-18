@@ -182,10 +182,12 @@ defmodule Expresso.Check.Session do
     previous = Process.flag(:trap_exit, true)
 
     try do
-      with {:ok, supervisor} <- start(tools.cli),
-           {:ok, browser} <- launch(env) do
+      # The supervisor stops also when the launch fails. Otherwise the next
+      # run finds the name of the supervisor in use.
+      with {:ok, supervisor} <- start(tools.cli) do
         try do
-          session(browser, "file://" <> page_path, deck, sizes, schemes)
+          with {:ok, browser} <- launch(env),
+               do: session(browser, "file://" <> page_path, deck, sizes, schemes)
         after
           Supervisor.stop(supervisor)
         end

@@ -135,7 +135,7 @@ directory of the deck in place of that:
    ```
 
 The check looks for `node_modules/axe-core/axe.min.js` in the current directory, in the
-directory of the deck, in each parent of them, and then in the directory of
+directory of the deck, then in each parent of them, and then in the directory of
 `--install-check-tools`. To use a different copy, give its path in `EXPRESSO_AXE`.
 
 ## Install Playwright for the browser check
