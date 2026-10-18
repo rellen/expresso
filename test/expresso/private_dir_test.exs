@@ -5,8 +5,13 @@ defmodule Expresso.PrivateDirTest do
 
   @moduletag :tmp_dir
 
-  # Wait until the directory goes away, for up to five seconds.
-  defp wait_for_removal(path, tries \\ 100) do
+  # The time in milliseconds that a test waits for the owner process. The
+  # async tests of the full suite make the VM slow, and in one run `open!/1`
+  # took more than five seconds.
+  @wait 30_000
+
+  # Wait until the directory goes away, for up to 30 seconds.
+  defp wait_for_removal(path, tries \\ div(@wait, 50)) do
     cond do
       not File.exists?(path) -> :ok
       tries == 0 -> flunk("#{path} is still there")
@@ -75,7 +80,7 @@ defmodule Expresso.PrivateDirTest do
           Process.sleep(:infinity)
         end)
 
-      assert_receive {:path, path}, 5_000
+      assert_receive {:path, path}, @wait
       assert File.exists?(path)
 
       Process.exit(owner, :kill)
