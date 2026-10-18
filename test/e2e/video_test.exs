@@ -144,8 +144,8 @@ defmodule Expresso.E2E.VideoTest do
     assert position(page) == "4.1"
     wait_for(page, "!#{video(4)}.paused")
 
-    # Go near the end, so the test does not wait for the whole video.
-    js(page, "#{video(4)}.currentTime = #{video(4)}.duration - 0.05")
+    # The clip lasts two seconds. A WebM file can give `duration` as
+    # `Infinity`, so the test waits for the end and does not seek near it.
     wait_for(page, "#{video(4)}.ended")
 
     page |> keys(["j", "j"])
