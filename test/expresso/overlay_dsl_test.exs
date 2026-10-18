@@ -370,9 +370,9 @@ defmodule Expresso.OverlayDslTest do
       assert message =~ "the state `glow` writes the custom property `--glow`"
     end
 
-    test "gives a warning for a state that the theme registers with a different syntax" do
-      warnings =
-        dsl_warnings do
+    test "refuses a state that takes the name of a property that the theme registers" do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.OverlayDslTest.StateCollision do
             use Expresso
 
@@ -385,8 +385,56 @@ defmodule Expresso.OverlayDslTest do
           end
         end
 
-      assert [{Expresso.OverlayDslTest.StateCollision, [{message, _location}]}] = warnings
-      assert message =~ ~s(registers that property with the syntax "<length>")
+      assert Exception.message(error) =~
+               ~s(the state `x` writes the custom property `--x`, and the theme registers ) <>
+                 ~s(that property with the syntax "<length>")
+    end
+
+    test "refuses the state scale, which collapses each element of the deck" do
+      error =
+        compile_error do
+          defmodule Elixir.Expresso.OverlayDslTest.StateScale do
+            use Expresso
+
+            slide "first" do
+              text_box do
+                text_area(text: "a")
+              end
+            end
+
+            slide "second" do
+              text_box do
+                on 2, state: :scale
+                text_area(text: "b")
+              end
+            end
+          end
+        end
+
+      assert Exception.message(error) =~ "deck -> slide -> second"
+      assert Exception.message(error) =~ "the state `scale` writes the custom property `--scale`"
+    end
+
+    test "gives a warning for a set value that does not agree with the registration" do
+      warnings =
+        dsl_warnings do
+          defmodule Elixir.Expresso.OverlayDslTest.SetMismatch do
+            use Expresso
+
+            slide "mismatch" do
+              text_box do
+                at 1
+                on 1, set: [x: 400, scale: "150%", rotate: 45]
+              end
+            end
+          end
+        end
+
+      assert [{Expresso.OverlayDslTest.SetMismatch, messages}] = warnings
+      assert [x, scale, rotate] = Enum.map(messages, fn {message, _location} -> message end)
+      assert x =~ "deck -> slide -> mismatch: the set key `x` gives the value 400"
+      assert scale =~ ~s(the set key `scale` gives the value "150%")
+      assert rotate =~ ~s(the syntax "<angle>")
     end
 
     test "gives no warning for a property of the theme" do

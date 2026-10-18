@@ -103,6 +103,21 @@ The theme owns the custom properties that `set` writes. The compiler gives a war
 key that the theme does not use. The theme of this project uses `x`, `y`, `scale`,
 `rotate`, `opacity` and `color`.
 
+The theme registers `x`, `y`, `scale`, `rotate` and `opacity` with a type. The browser
+ignores a value of a different type, and the element does not change. The compiler gives a
+warning for such a value:
+
+| Key | Type | Correct value | Value with a warning |
+| --- | --- | --- | --- |
+| `x`, `y` | A length | `"400px"`, `"2rem"`, `0` | `400`, `"50%"` |
+| `rotate` | An angle | `"45deg"`, `"0.5turn"` | `45`, `0` |
+| `scale`, `opacity` | A number | `1.5`, `"0.3"` | `"150%"` |
+
+A value with a CSS function, such as `"calc(100% - 2rem)"`, gets no warning.
+
+A state cannot take the name of a property that the theme registers. `state: :scale` and
+`state: :x` are examples. The compiler gives an error for such a state.
+
 Two `on` entities can apply at the same step, and each writes its own keys. The element
 then moves, changes its size and turns together. Code keeps the colors of its syntax, and
 `color` changes only the text without a syntax color. The theme writes the dimmed color of

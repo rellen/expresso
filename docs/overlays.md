@@ -460,7 +460,7 @@ stops. A test catches the error with `assert_raise/2`.
 ### The warnings of the properties
 
 The verifier of the steps gives an error only. `Expresso.Overlay.PropertyVerifier` is a
-second verifier, and it gives a warning for three conditions of a custom property:
+second verifier, and it gives a warning for four conditions of a custom property:
 
 - The `state` option, or a key of the `set` option, names a property that the theme does
   not use. The renderer writes the property, and no rule of the theme reads it. Therefore
@@ -469,14 +469,45 @@ second verifier, and it gives a warning for three conditions of a custom propert
 - The `state` option names a property that the theme gives a value of a type that is not
   a number. The state `dur` is an example, because the theme gives `--dur` the value
   `300ms`. Each transition of the deck then takes no time.
-- The `state` option names a property that the theme registers with a different syntax
-  than a number. The state `x` is an example, because the theme registers `--x` as a
-  length.
+- The `state` option names a property that the CSS of the deck registers with a different
+  syntax than a number.
+- A key of the `set` option names a registered property, and the value does not agree
+  with the syntax of the registration. `set: [x: 400]` is an example, because the theme
+  registers `--x` as a length. The browser ignores the value, and the element does not
+  move.
 
 The compiler registers each state as a number with the initial value 0. A registration
 replaces the registration of the theme, and it makes a value of a different type invalid.
 The theme then loses the property. A value that is a number, such as `--alert: 0`, stays
 valid, and it gets no warning.
+
+#### The rule for a property that the theme registers
+
+The theme registers some custom properties with an `@property` rule. Each rule gives a
+syntax and an initial value. The value of a state or of a `set` key must agree with that
+rule:
+
+- A state must not take the name of a property that the theme registers.
+  `Expresso.Overlay.Verifier` gives an error for such a state, and the compile stops. The
+  registration of the state replaces the registration of the theme on each slide, so the
+  initial value of the theme changes to 0. The state `scale` thus gives each element of
+  the deck the size 0 × 0, and the state `opacity` hides each element.
+- The value of a `set` key must agree with the syntax of the registration. A `<length>`
+  needs a unit of length, such as `"400px"`, or the value 0. An `<angle>` needs a unit of
+  angle, such as `"45deg"`. A `<number>` needs a plain number, such as `1.5`. The
+  verifier gives a warning for a different value.
+
+A value with a CSS function, such as `var()` or `calc()`, and a CSS-wide keyword, such as
+`inherit`, get no warning. The browser calculates such a value, and the compiler cannot
+easily read it. The compiler does not add a unit to a plain number, so the value stays the
+value that the user wrote. The warning names the unit.
+
+The state is an error and the value is a warning, for two reasons. A state with a
+registered name breaks each slide of the deck. A value of the wrong type changes one
+element only, and the compiler cannot read each value that the browser accepts.
+`Expresso.Overlay.Properties.registered_state/2` makes the error for one slide, and it
+reads the registrations of the theme. A registration of the CSS of the deck gives the
+warning of the third condition above.
 
 `Expresso.Theme` reads `assets/style.css` at compile time, and it gives the names of the
 theme. A name after two hyphens is a name that the theme uses. CSS holds a custom property

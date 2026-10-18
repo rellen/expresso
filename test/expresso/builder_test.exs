@@ -238,6 +238,31 @@ defmodule Expresso.BuilderTest do
                    end
     end
 
+    test "raises an error for a state that takes the name of a registered property" do
+      box =
+        Builder.text_box(
+          on: [Builder.on(2, state: :scale)],
+          elements: [Builder.text_area(text: "x")]
+        )
+
+      slides = [Builder.slide("a"), Builder.slide("b", elements: [box])]
+
+      assert_raise Spark.Error.DslError,
+                   ~r/the state `scale` writes the custom property `--scale`/,
+                   fn -> Builder.deck(slides) end
+    end
+
+    test "writes the warning for a set value of the wrong type to the standard error" do
+      box =
+        Builder.text_box(
+          on: [Builder.on(2, set: [x: 400])],
+          elements: [Builder.text_area(text: "x")]
+        )
+
+      assert capture_io(:stderr, fn -> Builder.deck([Builder.slide("a", elements: [box])]) end) =~
+               ~s(the set key `x` gives the value 400 to the custom property `--x`)
+    end
+
     test "writes the warning of a verifier to the standard error" do
       slide = Builder.slide("a", elements: [Builder.text_box(at: 60)])
 
