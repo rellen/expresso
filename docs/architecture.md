@@ -1256,11 +1256,12 @@ A `<style>` element in an inline SVG applies to the whole document. Therefore
 number. The subject of each selector of the `<style>` gets
 `:where([data-svg-copy="N"], [data-svg-copy="N"] *)`. The `:where` adds no specificity.
 A rule inside `@scope` was not a solution: it adds `:scope` and a descendant combinator
-before a selector, so `#my-svg .node` cannot match a root with the id `my-svg`. `Expresso.Renderer.render/1` makes each
-document in `Expresso.Copies.number/1`, which counts from 1. Thus two renders of one deck
-give the same document, also in two different VMs. The release tests compare the document
-of the binary with the document of `Expresso.main/2`, so the numbers must not depend on
-the VM.
+before a selector, so `#my-svg .node` cannot match a root with the id `my-svg`.
+
+`Expresso.Renderer.render/1` makes each document in `Expresso.Copies.number/1`, which
+counts from 1. Thus two renders of one deck give the same document, also in two different
+VMs. The release tests compare the document of the binary with the document of
+`Expresso.main/2`, so the numbers must not depend on the VM.
 
 The document passes Floki, and Floki writes each name of an SVG in lowercase, such as
 `viewbox`. A browser reads the lowercase names inside an `svg` element as the names of
@@ -1814,7 +1815,9 @@ the elements at compile time. These are the reasons for this design:
   a `<style>` element. The document holds each slide more than one time, so the render
   function of an icon, of a text area and of an item gives each SVG its own ids with
   `Expresso.SvgCopy`, as for a diagram. `Expresso.Morph` makes the signature of an icon
-  from the SVG before this change, so two copies of one icon get the same signature.
+  from the SVG before this change, so two copies of one icon get the same signature. The
+  signature of a text area or of an item does not read the text of a `<style>`, so an
+  inline icon with a `<style>` does not change it.
 
 ## The DSL
 

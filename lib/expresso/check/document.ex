@@ -39,8 +39,9 @@ defmodule Expresso.Check.Document do
   @doc """
   Return a note with the size of the document, and with the size and the type of its largest files
 
-  A file is a data URI in a `src` or a `poster` attribute. `Expresso.Assets`
-  keeps one copy of each large file, so the note names each file one time.
+  A file is a data URI in a `src`, an `href` or an `xlink:href` attribute.
+  `Expresso.Assets` keeps one copy of each large file, so the note names each
+  file one time.
 
       iex> Expresso.Check.Document.size(String.duplicate("a", 2_500_000))
       %{problems: [], notes: ["The document is 2.4 MB."]}
@@ -48,7 +49,7 @@ defmodule Expresso.Check.Document do
   @spec size(String.t()) :: result()
   def size(html) do
     files =
-      ~r/ (?:src|poster)="data:([^;,"]+)[^,"]*,([^"]{1024,})"/
+      ~r/ (?:src|href|xlink:href)="data:([^;,"]+)[^,"]*,([^"]{1024,})"/
       |> Regex.scan(html, capture: :all_but_first)
       |> Enum.map(fn [type, data] -> {type, div(byte_size(data) * 3, 4)} end)
       |> Enum.sort_by(&elem(&1, 1), :desc)
