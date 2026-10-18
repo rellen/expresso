@@ -247,14 +247,16 @@ defmodule Expresso.Element.Chart.Sankey do
   A node with no link into it is in column 0. Each other node is one column
   after its last source. A link that closes a loop, as `back_links/1` finds
   it, does not count. `pinned` holds the columns of some nodes, from 0, and
-  the nodes after them move to follow them. A node of an alluvial chart
-  holds its column.
+  the nodes after them move to follow them. The pin of a node that no link
+  touches does not count. A node of an alluvial chart holds its column.
 
       iex> links = [%{from: "A", to: "B"}, %{from: "B", to: "C"}, %{from: "A", to: "C"}]
       iex> Expresso.Element.Chart.Sankey.columns(links)
       %{"A" => 0, "B" => 1, "C" => 2}
       iex> Expresso.Element.Chart.Sankey.columns(links, %{"C" => 4})
       %{"A" => 0, "B" => 1, "C" => 4}
+      iex> Expresso.Element.Chart.Sankey.columns(links, %{"D" => 4})
+      %{"A" => 0, "B" => 1, "C" => 2}
       iex> Expresso.Element.Chart.Sankey.columns([%{from: "A", to: "B"}, %{from: "B", to: "A"}])
       %{"A" => 0, "B" => 1}
       iex> Expresso.Element.Chart.Sankey.columns([%{from: {0, "A"}, to: {1, "A"}}])
@@ -268,8 +270,12 @@ defmodule Expresso.Element.Chart.Sankey do
     sources = Enum.group_by(forward, & &1.to, & &1.from)
     nodes = links |> Enum.flat_map(&[&1.from, &1.to]) |> Enum.uniq()
 
+    # The pin of a node that no link touches does not count, so the last
+    # column holds a node.
     pinned =
-      Map.merge(pinned, for({column, _name} = node <- nodes, into: %{}, do: {node, column}))
+      pinned
+      |> Map.take(nodes)
+      |> Map.merge(for({column, _name} = node <- nodes, into: %{}, do: {node, column}))
 
     Enum.reduce(nodes, pinned, fn node, known -> elem(column(node, sources, known), 1) end)
   end
@@ -447,7 +453,7 @@ defmodule Expresso.Element.Chart.Sankey do
         label = Map.get(shared.settings, name(name), %{label: nil}).label || name(name)
         String.length("#{label} #{Plot.label(value)}") * @character
       end
-      |> Enum.max()
+      |> Enum.max(fn -> 0 end)
 
     min(widest + 8, @width / 3)
   end
@@ -645,16 +651,25 @@ defmodule Expresso.Element.Chart.Sankey do
   so the opacity of the layers changes from one frame to the next.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
-  def render(%{frames: [_, _ | _] = frames} = assigns) do
+  def render(assigns) do
+    case Layers.frames(assigns) do
+      [_, _ | _] = frames -> render_frames(assigns, frames)
+      _one -> render_one(assigns)
+    end
+  end
+
+  # A copy of a chart with frames draws one layout of the frames, so it has
+  # the columns, the colors and the scale of the present view.
+  defp render_frames(assigns, frames) do
     layouts =
       frames
       |> Enum.map(&Layers.links(assigns.categories, &1.values))
       |> layout_frames(assigns.box.top, assigns.node_settings)
 
-    Layers.render(assigns, layouts, &drawing/1)
+    Layers.render(assigns, Layers.drawn(assigns, layouts), &drawing/1)
   end
 
-  def render(assigns) do
+  defp render_one(assigns) do
     layout =
       assigns.categories
       |> Layers.links(Enum.map(assigns.series, & &1.values))

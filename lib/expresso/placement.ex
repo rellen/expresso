@@ -116,8 +116,29 @@ defmodule Expresso.Placement do
   @spec slide(Slide.t()) :: :ok | {:error, String.t()}
   def slide(%Slide{} = slide), do: check(slide)
 
-  defp check(parent) do
-    for key <- [:elements, :timeline],
+  @doc """
+  Give an error for the first child of an element in a wrong place, at each
+  depth
+
+  `Expresso.Element.Chart` calls this function for each frame, because the
+  transform of the chart reads the flows of a frame before
+  `Expresso.PlacementTransformer` runs.
+
+      iex> alias Expresso.Builder
+      iex> {:error, message} = Expresso.Placement.element(%Expresso.Element.Frame{flows: [Builder.node("b")]})
+      iex> message
+      "a node is inside a frame, and a frame holds flow"
+  """
+  @spec element(struct()) :: :ok | {:error, String.t()}
+  def element(element) when is_struct(element), do: check(element)
+
+  # The keys that hold children: `elements` and `timeline` for each element,
+  # so an element that holds no children gets an error for a child, and each
+  # key of `@children` for the element.
+  defp check(%module{} = parent) do
+    keys = Enum.uniq([:elements, :timeline | Keyword.keys(Map.get(@children, module, []))])
+
+    for key <- keys,
         child <- Map.get(parent, key) || [],
         is_struct(child) do
       {key, child}
