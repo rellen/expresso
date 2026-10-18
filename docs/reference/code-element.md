@@ -129,7 +129,7 @@ The compiler gives an error for:
 
 - an element with both `text` and `src`, or with neither,
 - a `lines` option without `src`,
-- a file that it cannot read,
+- a file that it cannot read, or that is not UTF-8,
 - a `lines` range that goes past the end of the file,
 - a `from` text that is not in the file, or that is in it more than one time,
 - a `to` text that is not in the file after the `from` text,

@@ -45,7 +45,7 @@ entity. The `on` entity of a part also takes `move_to`. See
 
 The render gives an error for these:
 
-- a file that it cannot read;
+- a file that it cannot read, or that is not UTF-8;
 - a part with an `id` that the file does not have;
 - a `move_to` with an `id` that the file does not have, or with an element that has no shape.
 

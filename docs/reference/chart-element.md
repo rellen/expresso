@@ -564,8 +564,8 @@ The compiler gives an error for these:
 
 The compiler gives an error for a file that it cannot read or that is not UTF-8, for a
 quote with no closing quote, for text after a closing quote, and for a row with a cell that
-is not a number. The message names the file, and the line of a row. `Expresso.Builder.deck/2` raises a `Spark.Error.DslError` with the
-same message.
+is not a number. The message names the file, and the line of a row.
+`Expresso.Builder.deck/2` raises a `Spark.Error.DslError` with the same message.
 
 ## The colors
 

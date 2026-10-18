@@ -92,6 +92,15 @@ defmodule Expresso.DeckFileTest do
       assert Exception.message(error) =~ DeckFile.read_error(path, "chart file", :not_utf8)
     end
 
+    test "a diagram that is not UTF-8 gives an error that names the file", %{tmp_dir: dir} do
+      path = Path.join(dir, "legacy.svg")
+      File.write!(path, ~s(<svg xmlns="http://www.w3.org/2000/svg"><text>caf\xE9</text></svg>))
+
+      assert_raise ArgumentError, DeckFile.read_error(path, "diagram", :not_utf8), fn ->
+        render(Builder.diagram(path))
+      end
+    end
+
     test "a local page that is not UTF-8 gives an error that names the file", %{tmp_dir: dir} do
       path = Path.join(dir, "legacy.html")
       File.write!(path, "<p>caf\xE9</p>")

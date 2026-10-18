@@ -101,7 +101,11 @@ defmodule Expresso.Morph do
   # A diagram reads its file again, because the render gives each copy its
   # own ids and the attributes of its parts.
   defp content(element, :svg),
-    do: element.src |> Expresso.DeckFile.read!("diagram") |> Floki.parse_fragment!() |> children()
+    do:
+      element.src
+      |> Expresso.DeckFile.read_text!("diagram")
+      |> Floki.parse_fragment!()
+      |> children()
 
   # A line and an arrow have no text, so their kind is their content.
   defp content(element, :shape), do: String.trim("#{element.kind} #{words(element.text || "")}")
