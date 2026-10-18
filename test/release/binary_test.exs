@@ -260,14 +260,17 @@ defmodule Expresso.BinaryTest do
     assert output =~ "the deck is not complete"
   end
 
-  # The binary runs under `timeout`, which sends a SIGTERM on to the binary
-  # and then gives the exit status 143 itself. The test therefore reads that
-  # the command stops, and that the port closes. The request uses `:gen_tcp`
+  # The test sends SIGTERM to the launcher of Burrito, as `kill`, `systemctl
+  # stop` and `docker stop` do. The launcher does not send the signal on to the
+  # VM, so `Expresso.LauncherWatch` halts the VM. Before that module, the VM
+  # continued with no parent, and it kept the port. The test therefore reads
+  # that the VM stops, and that the port closes. The request uses `:gen_tcp`
   # and not `:httpc`, because `:httpc` changes the monotonic counter of the VM,
   # and the first test reads that counter in the ids of a diagram.
   # The binary gets its own temporary directory, so the test can read the
   # private directory of the watch server, and see that it goes away.
-  test "serves the deck with --watch, and stops for SIGTERM", %{tmp_dir: dir} = context do
+  test "serves the deck with --watch, and stops for SIGTERM to the launcher",
+       %{tmp_dir: dir} = context do
     temporary = Path.join(dir, "tmp")
     File.mkdir!(temporary)
     env = [{"TMPDIR", temporary} | context.env]
@@ -276,20 +279,11 @@ defmodule Expresso.BinaryTest do
     :gen_tcp.close(socket)
 
     binary =
-      Port.open({:spawn_executable, context.timeout_command}, [
-        :binary,
-        :exit_status,
-        :stderr_to_stdout,
-        args: [
-          @timeout,
-          context.binary,
-          "examples/dsl_deck.exs",
-          "--watch",
-          "--port",
-          Integer.to_string(port)
-        ],
-        env: Enum.map(env, fn {key, value} -> {~c"#{key}", ~c"#{value}"} end)
-      ])
+      open_binary(
+        context,
+        ["examples/dsl_deck.exs", "--watch", "--port", Integer.to_string(port)],
+        env
+      )
 
     output = read_until(binary, "Rendered", "")
     assert output =~ "Serving examples/dsl_deck.exs at http://127.0.0.1:#{port}/"
@@ -301,8 +295,9 @@ defmodule Expresso.BinaryTest do
     assert raw_get(port, "/version") =~ ~r{\r\n\r\n1\z}
     assert raw_get(port, "/?speaker=") =~ ~r{\AHTTP/1\.[01] 200 .*const version = "1"}s
 
-    {:os_pid, pid} = Port.info(binary, :os_pid)
-    System.cmd("kill", ["-TERM", Integer.to_string(pid)])
+    vm = vm_of(binary)
+    stop_launcher(binary)
+    assert stops?(vm), "the VM #{vm} did not stop after the launcher stopped"
     assert_receive {^binary, {:exit_status, _status}}, 10_000
     assert {:error, :econnrefused} = :gen_tcp.connect({127, 0, 0, 1}, port, [])
 
@@ -310,6 +305,84 @@ defmodule Expresso.BinaryTest do
              Process.sleep(50)
              not File.exists?(watch)
            end)
+  end
+
+  # The deck does not return, so the VM is busy, as in a long check of the
+  # layout. Before `Expresso.LauncherWatch`, the VM then continued after the
+  # launcher stopped.
+  test "stops the VM in --check for SIGTERM to the launcher", %{tmp_dir: dir} = context do
+    pid_file = Path.join(dir, "vm.pid")
+
+    input =
+      write_script(dir, "wait.exs", """
+      File.write!(#{inspect(pid_file)}, System.pid())
+      Process.sleep(:infinity)
+      """)
+
+    binary = open_binary(context, [input, Path.join(dir, "deck.html"), "--check"], context.env)
+
+    assert Enum.any?(1..600, fn _try ->
+             Process.sleep(50)
+             File.exists?(pid_file)
+           end)
+
+    vm = File.read!(pid_file)
+    on_exit(fn -> kill(vm) end)
+    stop_launcher(binary)
+    assert stops?(vm), "the VM #{vm} did not stop after the launcher stopped"
+    assert_receive {^binary, {:exit_status, _status}}, 10_000
+  end
+
+  # The binary runs without `timeout`, because `timeout` sends a signal to each
+  # process in its group, and the VM then gets the signal. The test kills the
+  # launcher and the VM after it, so a VM that does not stop does not continue.
+  defp open_binary(context, args, env) do
+    binary =
+      Port.open({:spawn_executable, context.binary}, [
+        :binary,
+        :exit_status,
+        :stderr_to_stdout,
+        args: args,
+        env: Enum.map(env, fn {key, value} -> {~c"#{key}", ~c"#{value}"} end)
+      ])
+
+    {:os_pid, launcher} = Port.info(binary, :os_pid)
+
+    on_exit(fn -> kill(Integer.to_string(launcher)) end)
+
+    binary
+  end
+
+  # The process id of the VM, which is the child process of the launcher.
+  defp vm_of(binary) do
+    {:os_pid, launcher} = Port.info(binary, :os_pid)
+    {output, 0} = System.cmd("pgrep", ["-P", Integer.to_string(launcher)])
+    [vm] = String.split(output)
+    on_exit(fn -> kill(vm) end)
+    vm
+  end
+
+  defp kill(pid), do: System.cmd("kill", ["-KILL", pid], stderr_to_stdout: true)
+
+  # The port gives the exit status after each process closes the standard
+  # output, so a VM that does not stop also keeps the port open.
+  defp stop_launcher(binary) do
+    {:os_pid, launcher} = Port.info(binary, :os_pid)
+    System.cmd("kill", ["-TERM", Integer.to_string(launcher)])
+  end
+
+  # True when the process `pid` stops in 10 seconds. A VM with no parent is a
+  # zombie until the process 1 waits for it, so a zombie also stops.
+  defp stops?(pid) do
+    Enum.any?(1..200, fn _try ->
+      Process.sleep(50)
+
+      case System.cmd("ps", ["-o", "stat=", "-p", pid], stderr_to_stdout: true) do
+        {"Z" <> _, 0} -> true
+        {_output, 0} -> false
+        {_output, _status} -> true
+      end
+    end)
   end
 
   # A request with HTTP/1.0, so the server closes the connection after the

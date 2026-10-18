@@ -17,6 +17,9 @@ defmodule Expresso.SignalHandler do
   This handler halts the VM at once for a SIGTERM, and it does not write to the
   standard output. The default handler of OTP handles the other signals.
 
+  The launcher does not send on a SIGTERM that the user sends to the binary.
+  `Expresso.LauncherWatch` halts the VM when the launcher stops.
+
   The exit status is 0. The launcher waits for the VM in two threads, and the
   thread that reads the exit status first decides the status of the binary.
   When the thread that sent SIGTERM reads it first, the binary gives 0 for each

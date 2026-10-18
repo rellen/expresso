@@ -455,6 +455,75 @@ defmodule Expresso.EntryPointsTest do
     end
   end
 
+  describe "Expresso.LauncherWatch" do
+    # A test cannot watch the parent of the VM, because the watch halts the VM.
+    # The tests watch a `sleep` process and its parent `sh`, and the release
+    # tests stop the launcher.
+    setup do
+      script = ~s(sleep 30 & echo $!; wait)
+
+      sh =
+        Port.open({:spawn_executable, System.find_executable("sh")}, [
+          :binary,
+          args: ["-c", script]
+        ])
+
+      {:os_pid, parent} = Port.info(sh, :os_pid)
+      assert_receive {^sh, {:data, child}}, 5_000
+      child = String.trim(child)
+      on_exit(fn -> System.cmd("kill", ["-KILL", child], stderr_to_stdout: true) end)
+      %{child: child, parent: Integer.to_string(parent)}
+    end
+
+    test "calls the function when the parent of the process stops", context do
+      test = self()
+
+      assert {:ok, watch} =
+               Expresso.LauncherWatch.watch(context.child, context.parent, fn ->
+                 send(test, :stopped)
+               end)
+
+      ref = Process.monitor(watch)
+      refute_receive :stopped, 500
+
+      System.cmd("kill", ["-KILL", context.parent])
+      assert_receive :stopped, 5_000
+      assert_receive {:DOWN, ^ref, :process, ^watch, :normal}, 1_000
+    end
+
+    test "calls the function when the process stops", context do
+      test = self()
+
+      assert {:ok, _watch} =
+               Expresso.LauncherWatch.watch(context.child, context.parent, fn ->
+                 send(test, :stopped)
+               end)
+
+      refute_receive :stopped, 500
+      System.cmd("kill", ["-KILL", context.child])
+      assert_receive :stopped, 5_000
+    end
+
+    test "calls the function at once for a different parent", context do
+      test = self()
+
+      assert {:ok, _watch} =
+               Expresso.LauncherWatch.watch(context.child, "1", fn -> send(test, :stopped) end)
+
+      assert_receive :stopped, 5_000
+    end
+
+    test "reads the parent process of the VM" do
+      assert {:ok, parent} = Expresso.LauncherWatch.parent(System.pid())
+      assert parent =~ ~r/\A[1-9][0-9]*\z/
+      assert parent != System.pid()
+    end
+
+    test "returns an error for a process that is not present" do
+      assert {:error, {:ps, _}} = Expresso.LauncherWatch.parent("999999999")
+    end
+  end
+
   describe "Expresso.Example" do
     test "parses and renders" do
       html = Expresso.Example |> Expresso.parse() |> Expresso.Deck.render()

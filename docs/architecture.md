@@ -225,6 +225,26 @@ a pipe that does not block. Therefore the release tests read the standard output
 binary from a file. The VM cannot see this error, so a fix must be in the launcher of
 Burrito.
 
+The launcher of Burrito 1.6 does not send SIGTERM or SIGINT on to the VM. Before
+2026-10-18, a SIGTERM to the binary, as from `kill`, `systemctl stop` or `docker stop`,
+stopped only the launcher. The VM then continued with no parent. In the watch mode, it kept
+the port. In `--check`, it waited for ever on the closed standard output.
+`Expresso.LauncherWatch` now halts the VM when the launcher stops:
+
+1. At the start of the binary, `ps` gives the process id of the parent of the VM, which is
+   the launcher.
+2. A port runs a shell loop. The loop reads the parent of the VM with `ps`, and it exits
+   when the parent is different. The operating system gives a new parent to the VM at once
+   when the launcher stops.
+3. The VM halts with the exit status 143 when the port closes.
+
+The loop does not use `kill -0` on the launcher, because `kill -0` succeeds for a zombie
+process. A launcher that stopped is a zombie until its own parent waits for it.
+
+The VM stops in less than one second after the launcher. This watch works with each version
+of Burrito, so Expresso does not wait for a change in the launcher. Two tests of
+`test/release/` send SIGTERM to the launcher, in the watch mode and in `--check`.
+
 ## The check mode
 
 `mix expresso deck.exs --check` checks a deck, and writes a report to the standard output.
