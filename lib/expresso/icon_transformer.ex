@@ -67,8 +67,9 @@ defmodule Expresso.IconTransformer do
   end
 
   defp read(path) do
-    case Expresso.DeckFile.read(path) do
+    case Expresso.DeckFile.read_text(path) do
       {:ok, text} -> {:ok, text}
+      {:error, :not_utf8} -> {:error, "is not UTF-8 text. Save the file with the UTF-8 encoding"}
       {:error, reason} -> {:error, "cannot be read: #{:file.format_error(reason)}"}
     end
   end

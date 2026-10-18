@@ -93,7 +93,8 @@ the meaning of the icon in the text too, because a screen reader does not read t
 The compiler gives an error for these:
 
 - a name that no icon has, in the element or in a text;
-- a file of the `icons` option that it cannot read, or that has no `svg` element;
+- a file of the `icons` option that it cannot read, that is not UTF-8, or that has no `svg`
+  element;
 - a `color` that is not in the list.
 
 ## The license

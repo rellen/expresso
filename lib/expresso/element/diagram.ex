@@ -229,7 +229,7 @@ defmodule Expresso.Element.Diagram do
     overlay ++ attrs
   end
 
-  defp read(src), do: Expresso.DeckFile.read!(src, "diagram")
+  defp read(src), do: Expresso.DeckFile.read_text!(src, "diagram")
 
   @doc """
   Make the HTML of a diagram

@@ -110,6 +110,15 @@ defmodule Expresso.IconElementTest do
     assert_raise Spark.Error.DslError, ~r/has no svg element/, fn ->
       render_slides(slide([]), root: tmp_dir, icons: [logo: "text.svg"])
     end
+
+    # Latin-1 writes the character é as the one byte E9, which is not UTF-8.
+    File.write!(Path.join(tmp_dir, "latin1.svg"), "<svg><title>caf\xE9</title></svg>")
+
+    assert_raise Spark.Error.DslError,
+                 ~r/the icon "logo" of the icons option: .*latin1.svg is not UTF-8 text/,
+                 fn ->
+                   render_slides(slide([]), root: tmp_dir, icons: [logo: "latin1.svg"])
+                 end
   end
 
   test "the compiler refuses a color that is not a role" do
