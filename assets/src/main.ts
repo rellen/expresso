@@ -190,9 +190,10 @@ function morphs(before: State, after: State): Pair[] {
 // Apply a new state, and write its fragment. `replaceState` adds no entry to
 // the history, so the back button of the browser does not go through the
 // steps. A change of this window goes to the other window. A change from the
-// other window and the state of the address at the load do not go to it. A message holds only the position, the
-// fields of the option `sync` and the variant of the theme. A change to other
-// data, such as the overview, sends no message.
+// other window and the state of the address at the load do not go to it. A
+// message holds only the position, the fields of the option `sync` and the
+// variant of the theme. A change to other data, such as the overview, sends no
+// message.
 function show(changed: State, local = true): void {
   if (changed === state) {
     return;
