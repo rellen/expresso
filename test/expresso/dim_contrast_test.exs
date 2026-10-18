@@ -91,6 +91,11 @@ defmodule Expresso.DimContrastTest do
       assert ThemeVerifier.dim_messages(:default, 4.5) == [example]
     end
 
+    test "names one role that does not dim in the singular" do
+      assert [message] = ThemeVerifier.dim_messages(:tokyo_night_light, 4.5)
+      assert message =~ "and the role warning does not dim."
+    end
+
     test "says that no role of text dims when each role keeps its color" do
       assert [message] = ThemeVerifier.dim_messages(:solarized_light, 4.5)
       assert message =~ "no role of text dims"

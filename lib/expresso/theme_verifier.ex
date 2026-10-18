@@ -87,9 +87,11 @@ defmodule Expresso.ThemeVerifier do
     full = Enum.filter(roles, fn role -> elem(dimmed[role], 0) == 1.0 end)
 
     text =
-      if length(full) == length(roles),
-        do: "no role of text dims",
-        else: "the roles #{Enum.join(full, ", ")} do not dim"
+      case full do
+        ^roles -> "no role of text dims"
+        [role] -> "the role #{role} does not dim"
+        _ -> "the roles #{Enum.join(full, ", ")} do not dim"
+      end
 
     "at a dim contrast of #{ratio_text(ratio)}:1, #{subject} gives --dim-opacity 1.0, so a " <>
       "dimmed image, SVG file, embed and video do not dim, and #{text}. Give a lower " <>
