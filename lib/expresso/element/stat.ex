@@ -39,19 +39,36 @@ defmodule Expresso.Element.Stat do
   Return the number of decimals of a value: 0 for an integer, else the
   decimals of its shortest form
 
+  The shortest form of a very small or a very large float has an exponent,
+  such as `1.5e-4`. The decimals are the digits of the fraction less the
+  exponent, and at least 0.
+
       iex> Expresso.Element.Stat.decimals(1250)
       0
       iex> Expresso.Element.Stat.decimals(99.95)
       2
+      iex> Expresso.Element.Stat.decimals(1.5e-4)
+      5
+      iex> Expresso.Element.Stat.decimals(2.5e15)
+      0
   """
   @spec decimals(number()) :: non_neg_integer()
   def decimals(value) when is_integer(value), do: 0
 
   def decimals(value) when is_float(value) do
-    case value |> :erlang.float_to_binary([:short]) |> String.split(".") do
-      [_whole, fraction] -> if fraction == "0", do: 0, else: String.length(fraction)
-      [_whole] -> 0
-    end
+    {mantissa, exponent} =
+      case value |> :erlang.float_to_binary([:short]) |> String.split("e") do
+        [mantissa, exponent] -> {mantissa, String.to_integer(exponent)}
+        [mantissa] -> {mantissa, 0}
+      end
+
+    fraction =
+      case String.split(mantissa, ".") do
+        [_whole, fraction] -> String.trim_trailing(fraction, "0")
+        [_whole] -> ""
+      end
+
+    max(String.length(fraction) - exponent, 0)
   end
 
   @doc """
@@ -64,16 +81,27 @@ defmodule Expresso.Element.Stat do
       "-1,234,567.50"
       iex> Expresso.Element.Stat.format(1250, 0, false)
       "1250"
+      iex> Expresso.Element.Stat.format(12345678901234567890, 0, true)
+      "12,345,678,901,234,567,890"
   """
   @spec format(number(), non_neg_integer(), boolean()) :: String.t()
   def format(value, decimals, group) do
-    text = :erlang.float_to_binary(abs(value) / 1, decimals: decimals)
+    text = digits(abs(value), decimals)
     [whole | fraction] = String.split(text, ".")
     whole = if group, do: group(whole), else: whole
     # A value that rounds to zero has no sign.
     sign = if value < 0 and String.trim(text, "0") not in ["", "."], do: "-", else: ""
     Enum.join([sign <> whole | fraction], ".")
   end
+
+  # The digits of a value that is not negative. An integer stays an integer,
+  # because a float keeps only approximately 16 significant digits.
+  defp digits(value, 0) when is_integer(value), do: Integer.to_string(value)
+
+  defp digits(value, decimals) when is_integer(value),
+    do: Integer.to_string(value) <> "." <> String.duplicate("0", decimals)
+
+  defp digits(value, decimals), do: :erlang.float_to_binary(value, decimals: decimals)
 
   # The texts of the number at rest, as JSON: `from` and the value. The script
   # writes one of them when the count ends, because Chromium keeps only six

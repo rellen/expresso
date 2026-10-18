@@ -4,8 +4,9 @@ defmodule Expresso.E2E.ChartTest do
   alias PlaywrightEx.{Browser, BrowserContext}
 
   # A bar chart with three frames and the count option, a line chart with two
-  # frames, a bar chart with the effect grow, and a bar chart that counts
-  # numbers with more than six digits.
+  # frames, a bar chart with the effect grow, a bar chart that counts
+  # numbers with more than six digits, and a bar chart that counts numbers
+  # with two decimals.
   defmodule Deck do
     use Expresso
 
@@ -71,6 +72,26 @@ defmodule Expresso.E2E.ChartTest do
         end
       end
     end
+
+    slide "price" do
+      chart :bar do
+        title "Price"
+        categories ["A"]
+        count true
+
+        frame "2024" do
+          series "S", [1.25]
+        end
+
+        frame "2025" do
+          series "S", [1.34]
+        end
+
+        frame "2026" do
+          series "S", [0.02]
+        end
+      end
+    end
   end
 
   # The value of a property on the first element of a selector in a slide.
@@ -127,6 +148,26 @@ defmodule Expresso.E2E.ChartTest do
 
     press(page, "k")
     wait_for(page, ~s|document.querySelector("#slide-4 .chart-count").textContent === "1234567"|)
+  end
+
+  # Each frame sets the channel of the number with each digit, so the count
+  # ends on the text of its frame and not on the text nearest to one decimal.
+  test "a number with two decimals shows the value of its frame at each step", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(Deck, tmp_dir) <> "#5")
+    count = ~s|document.querySelector("#slide-5 .chart-count").textContent|
+    wait_for(page, count <> ~s| === "1.25"|)
+
+    press(page, "j")
+    wait_for(page, count <> ~s| === "1.34"|)
+
+    press(page, "j")
+    wait_for(page, count <> ~s| === "0.02"|)
+
+    keys(page, ["k", "k"])
+    wait_for(page, count <> ~s| === "1.25"|)
   end
 
   test "a bar with the effect grow is at the base line until its step", %{

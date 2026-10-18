@@ -8,6 +8,7 @@ defmodule Expresso.ChartFramesTest do
   alias Expresso.Element.Chart.Csv
 
   doctest Csv
+  doctest Expresso.Element.Chart.Motion
 
   defp frame(label, series), do: Builder.frame(label, elements: series)
 
@@ -33,6 +34,31 @@ defmodule Expresso.ChartFramesTest do
 
   defp style(html) do
     html |> LazyHTML.query("style") |> Enum.map_join("\n", &LazyHTML.text/1)
+  end
+
+  # The names of the categories of a chart without motion or of one copy, from
+  # left to right.
+  defp category_order(html) do
+    html
+    |> LazyHTML.query("svg text.chart-category")
+    |> Enum.map(&{x(&1), LazyHTML.text(&1)})
+    |> Enum.sort()
+    |> Enum.map(&elem(&1, 1))
+  end
+
+  # The values of the bars of a chart without motion, from left to right.
+  defp value_order(html) do
+    html
+    |> LazyHTML.query("svg text.chart-value")
+    |> Enum.map(&{x(&1), LazyHTML.text(&1)})
+    |> Enum.sort()
+    |> Enum.map(&elem(&1, 1))
+  end
+
+  defp x(node) do
+    [x] = LazyHTML.attribute(node, "x")
+    {x, ""} = Float.parse(x)
+    x
   end
 
   describe "the steps" do
@@ -318,6 +344,59 @@ defmodule Expresso.ChartFramesTest do
       # The texts at rest: 0 before the effect grow, and the value of each frame.
       assert LazyHTML.attribute(count, "data-texts") == [~s(["0","10","12.5"])]
       assert figure |> LazyHTML.filter(":not(:has(.chart-value.chart-fade))") |> Enum.count() == 1
+    end
+
+    test "with count, the channel of a number keeps each digit of the number of its frame" do
+      chart =
+        Builder.chart(:bar,
+          title: "Price",
+          categories: ["A"],
+          count: true,
+          timeline: [
+            frame("2024", [Builder.series("S", [1.25])]),
+            frame("2025", [Builder.series("S", [1.34])]),
+            frame("2026", [Builder.series("S", [0.02])])
+          ]
+        )
+
+      html = chart |> one_slide() |> document()
+      css = style(html)
+
+      assert css =~ ~r/data-step="2"\] \[data-el="s1-e1"\] \{[^}]*--n1-0: 1\.34;/
+      assert css =~ ~r/data-step="3"\] \[data-el="s1-e1"\] \{[^}]*--n1-0: 0\.02;/
+
+      [count] = html |> screen("svg tspan.chart-count") |> Enum.to_list()
+      [style] = LazyHTML.attribute(count, "style")
+      assert style =~ "var(--n1-0, 1.25)"
+    end
+
+    test "with sort, the bars of a chart without frames take the order of their values" do
+      chart =
+        Builder.chart(:bar,
+          title: "T",
+          sort: true,
+          categories: ["A", "B", "C"],
+          elements: [Builder.series("S", [1, 30, 10])]
+        )
+
+      [figure] = chart |> one_slide() |> document() |> screen("figure.chart") |> Enum.to_list()
+
+      assert figure |> category_order() == ["B", "C", "A"]
+      assert figure |> value_order() == ["30", "10", "1"]
+    end
+
+    test "with sort, each copy of a chart with frames puts its bars in the order of its frame" do
+      [figure] =
+        race(sort: true) |> one_slide() |> document() |> screen("figure.chart") |> Enum.to_list()
+
+      copies = figure |> LazyHTML.query("figure.chart-copy") |> Enum.to_list()
+
+      # South leads in 2023 and in 2025, and North leads in 2024.
+      assert Enum.map(copies, &category_order/1) == [
+               ["South", "North"],
+               ["North", "South"],
+               ["South", "North"]
+             ]
     end
 
     test "with sort, the categories move to the order of their totals" do

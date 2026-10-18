@@ -93,9 +93,15 @@ defmodule Expresso.Element.Chart.Motion do
 
   defp declarations(channels, index) do
     Enum.map_join(channels, " ", fn {name, values} ->
-      "--#{name}: #{Plot.f(Enum.at(values, index))};"
+      "--#{name}: #{write(name, Enum.at(values, index))};"
     end)
   end
+
+  # The text of the value of a channel. A channel of a number, such as
+  # `n1-0`, keeps each digit of the number, so the count ends on the text of
+  # its frame. A channel of a coordinate keeps one decimal.
+  defp write("n" <> _rest, value), do: Plot.label(value)
+  defp write(_name, value), do: Plot.f(value)
 
   defp thumbnail(%{thumbnail: :first}), do: 0
   defp thumbnail(%{thumbnail: :last, frames: frames}), do: length(frames) - 1
@@ -193,9 +199,21 @@ defmodule Expresso.Element.Chart.Motion do
     end
   end
 
-  defp rank(_frame, i, false), do: i
+  @doc """
+  Return the place of a category in a frame of a bar chart, from 0
 
-  defp rank(frame, i, true) do
+  Without `sort`, the place is the index of the category. With `sort`, the
+  category with the largest total of the frame takes place 0, and two equal
+  totals keep the order of their categories.
+
+      iex> frame = %{values: [[1, 30, 10]]}
+      iex> Enum.map(0..2, &Expresso.Element.Chart.Motion.rank(frame, &1, true))
+      [2, 0, 1]
+  """
+  @spec rank(%{values: [[number()]]}, non_neg_integer(), boolean()) :: non_neg_integer()
+  def rank(_frame, i, false), do: i
+
+  def rank(frame, i, true) do
     frame.values
     |> Enum.zip_with(&Enum.sum/1)
     |> Enum.with_index()
@@ -278,13 +296,15 @@ defmodule Expresso.Element.Chart.Motion do
   Return the value of a channel for a style attribute
 
   The value is the custom property with the value of the first frame as its
-  fallback, or the value alone when no frame changes it.
+  fallback, or the value alone when no frame changes it. The value of a
+  channel of a number, such as `n1-0`, keeps each digit, and the value of a
+  channel of a coordinate keeps one decimal.
   """
   @spec ref(String.t(), [number()]) :: String.t()
   def ref(name, [first | _rest] = values) do
     if values |> Enum.uniq() |> length() == 1,
-      do: Plot.f(first),
-      else: "var(--#{name}, #{Plot.f(first)})"
+      do: write(name, first),
+      else: "var(--#{name}, #{write(name, first)})"
   end
 
   @doc """

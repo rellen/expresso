@@ -40,6 +40,17 @@ defmodule Expresso.StatElementTest do
     assert numbers(Builder.stat(12, decimals: 2)) == ["12.00"]
   end
 
+  test "a very small or a very large value keeps its digits, and an integer stays an integer" do
+    assert numbers(Builder.stat(0.00015)) == ["0.00015"]
+    assert numbers(Builder.stat(1.5e-5)) == ["0.000015"]
+    assert numbers(Builder.stat(2.5e15)) == ["2,500,000,000,000,000"]
+    assert numbers(Builder.stat(12_345_678_901_234_567_890)) == ["12,345,678,901,234,567,890"]
+
+    assert numbers(Builder.stat(12_345_678_901_234_567_890, decimals: 1)) == [
+             "12,345,678,901,234,567,890.0"
+           ]
+  end
+
   test "count gives the number the class stat-count, the values of the count and its format" do
     [figure] = render(Builder.stat(1250, count: true, from: 900))
     [number] = LazyHTML.query(figure, ".stat-number") |> Enum.to_list()

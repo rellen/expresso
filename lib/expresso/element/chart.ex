@@ -1126,7 +1126,7 @@ defmodule Expresso.Element.Chart do
         # the `sort` option moves them.
         if not (@moves and @kind == :bar) do
           for {category, index} <- Enum.with_index(@categories) do
-            text x: Plot.f(@category_x.(index)),
+            text x: Plot.f(@category_x.(place(assigns, index))),
                  y: @box.bottom + 28,
                  text_anchor: "middle",
                  class: "chart-category",
@@ -1188,6 +1188,14 @@ defmodule Expresso.Element.Chart do
     box.left + inset + (box.right - box.left - 2 * inset) * index / (length(categories) - 1)
   end
 
+  # The place of a category on the axis of a chart that does not move. With
+  # `sort`, a bar chart puts its categories in the order of the totals of its
+  # one frame, as `Expresso.Element.Chart.Motion` does in each frame.
+  defp place(%{kind: :bar, sort: true, frames: [frame]}, index),
+    do: Motion.rank(frame, index, true)
+
+  defp place(_assigns, index), do: index
+
   defp bars(assigns) do
     band = (assigns.box.right - assigns.box.left) / length(assigns.categories)
     group = band * 0.7
@@ -1212,7 +1220,7 @@ defmodule Expresso.Element.Chart do
   # gap of 2 units, in the order of the series.
   defp bar(assigns) do
     x =
-      category_x(assigns, assigns.index) - assigns.group / 2 +
+      category_x(assigns, place(assigns, assigns.index)) - assigns.group / 2 +
         (assigns.series.color - 1) * assigns.slot + 1
 
     width = max(assigns.slot - 2, 1)
