@@ -2,7 +2,8 @@ defmodule Expresso.E2E.VideoTest do
   use Expresso.E2E, async: false
 
   # Slide 1 plays a video at each step. Slide 2 has two steps, and its video
-  # shows from step 2. Slide 3 has no video.
+  # shows from step 2. Slide 3 has no video. Slide 4 plays a video one time,
+  # and it has three steps.
   defmodule Deck do
     use Expresso
 
@@ -26,6 +27,16 @@ defmodule Expresso.E2E.VideoTest do
     slide "none" do
       text_box do
         text_area(text: "No video")
+      end
+    end
+
+    slide "once" do
+      steps 3
+
+      video "examples/animations/clip.webm" do
+        title "The clip one time"
+        poster "examples/animations/clip.png"
+        loop false
       end
     end
   end
@@ -124,5 +135,21 @@ defmodule Expresso.E2E.VideoTest do
     assert js(speaker, """
            [...document.querySelectorAll("video[data-video]")].every((video) => !video.getAttribute("src"))
            """)
+  end
+
+  test "a video without loop plays one time, and a later step does not play it again", %{
+    page: page
+  } do
+    page |> keys(["j", "j", "j", "j"])
+    assert position(page) == "4.1"
+    wait_for(page, "!#{video(4)}.paused")
+
+    # Go near the end, so the test does not wait for the whole video.
+    js(page, "#{video(4)}.currentTime = #{video(4)}.duration - 0.05")
+    wait_for(page, "#{video(4)}.ended")
+
+    page |> keys(["j", "j"])
+    assert position(page) == "4.3"
+    assert js(page, "#{video(4)}.paused && #{video(4)}.ended")
   end
 end
