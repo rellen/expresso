@@ -127,3 +127,19 @@ test("helpMode returns the mode under the list of keys", () => {
   assert.equal(helpMode(program, { ...help, view: "speaker" }), "speaker");
   assert.equal(helpMode(program, { ...help, overview: true }), "overview");
 });
+
+test("a black screen, the overview, the menu and the list of keys have no transition", () => {
+  const { deck, program } = load("1,2");
+  const before = program.state;
+  const after = { ...program.state, index: 1 };
+  assert.deepEqual(transition(before, after, deck), {
+    kind: "fade",
+    direction: "forward",
+  });
+
+  for (const field of ["blank", "overview", "menu", "help"] as const) {
+    const covered = (state: State) => ({ ...state, [field]: true });
+    assert.equal(transition(covered(before), after, deck), null, field);
+    assert.equal(transition(before, covered(after), deck), null, field);
+  }
+});

@@ -411,8 +411,8 @@ defmodule Expresso.Presenter.InterpreterTest do
       assert transition(on(1, 1, :handout), on(2, 1)) == nil
     end
 
-    test "a black screen, the overview and the list of keys have no transition" do
-      for field <- [:blank, :overview, :help] do
+    test "a black screen, the overview, the menu and the list of keys have no transition" do
+      for field <- [:blank, :overview, :menu, :help] do
         assert transition(%{on(1, 1) | field => true}, on(2, 1)) == nil, inspect(field)
         assert transition(on(1, 1), %{on(2, 1) | field => true}) == nil, inspect(field)
       end
