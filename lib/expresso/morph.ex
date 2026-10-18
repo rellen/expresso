@@ -19,11 +19,17 @@ defmodule Expresso.Morph do
     * `:file` - the file of a video or of a sound.
     * `:drawing` - the SVG of the element before the render gives it the
       ids of its copy, or the SVG of the rendered element.
+    * `:svg` - the SVG of the file of a diagram, before the render gives it
+      the ids of its copy. Two files with the same SVG have the same content.
+    * `:shape` - the kind of a shape and its text.
     * `:language` - the language of a code element.
     * `:label` - the label of a stat.
 
-  A kind without a content gets no signature. An element with the `morph`
-  option gets no signature either, because its key gives its partner.
+  A kind without a content gets no signature. An element with an empty
+  content, such as a text area without a text or a diagram with an empty
+  `svg` element, gets no signature, because two such elements are not the
+  same element. An element with the `morph` option gets no signature either,
+  because its key gives its partner.
   """
 
   alias Expresso.Element.Tree
@@ -46,7 +52,11 @@ defmodule Expresso.Morph do
 
   defp sign_one(%module{morph: nil} = element) when is_map_key(@kinds, module) do
     {kind, content} = Map.fetch!(@kinds, module)
-    %{element | signature: signature(kind, content(element, content))}
+
+    case content(element, content) do
+      "" -> element
+      content -> %{element | signature: signature(kind, content)}
+    end
   end
 
   defp sign_one(element), do: element
@@ -79,16 +89,28 @@ defmodule Expresso.Morph do
         do: Floki.parse_fragment!(element.svg),
         else: html(element)
 
-    case Floki.find(svg, "svg") do
-      [{"svg", _attributes, children} | _others] -> Floki.raw_html(children)
-      [] -> ""
-    end
+    children(svg)
   end
+
+  # A diagram reads its file again, because the render gives each copy its
+  # own ids and the attributes of its parts.
+  defp content(element, :svg),
+    do: element.src |> Expresso.DeckFile.read!("diagram") |> Floki.parse_fragment!() |> children()
+
+  # A line and an arrow have no text, so their kind is their content.
+  defp content(element, :shape), do: String.trim("#{element.kind} #{words(element.text || "")}")
 
   defp content(element, :source), do: element.src
   defp content(element, :file), do: element.src
   defp content(element, :language), do: element.lang || ""
   defp content(element, :label), do: words(element.label || "")
+
+  defp children(svg) do
+    case Floki.find(svg, "svg") do
+      [{"svg", _attributes, children} | _others] -> children |> Floki.raw_html() |> String.trim()
+      [] -> ""
+    end
+  end
 
   defp html(%module{} = element) do
     element
