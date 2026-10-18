@@ -2,9 +2,10 @@ defmodule Expresso.Lexers.Toml do
   @moduledoc """
   The Makeup lexer of TOML
 
-  A key before `=` is an attribute. A table header at the start of a line,
-  such as `[server]` or `[[servers]]`, is a namespace, so it gets the color
-  of a keyword. A date and a time, such as `1979-05-27T07:32:00Z`, are a
+  A key before `=` is an attribute. A table header in the first column of a
+  line, such as `[server]` or `[[servers]]`, is a namespace, so it gets the
+  color of a keyword. An indented array, such as an array in an array, is
+  not a header. A date and a time, such as `1979-05-27T07:32:00Z`, are a
   date.
   """
 
@@ -19,13 +20,20 @@ defmodule Expresso.Lexers.Toml do
     |> lexeme()
     |> token(:keyword_namespace)
 
+  # A space separates a date and a time, so a date takes a space only when a
+  # time comes after it.
   date =
     ascii_string([?0..?9], 4)
     |> string("-")
     |> ascii_string([?0..?9], 2)
     |> string("-")
     |> ascii_string([?0..?9], 2)
-    |> optional(ascii_string([?0..?9, ?T, ?t, ?\s, ?:, ?., ?Z, ?z, ?+, ?-], min: 1))
+    |> optional(
+      ascii_string([?T, ?t, ?\s], 1)
+      |> ascii_string([?0..?9], 2)
+      |> string(":")
+      |> optional(ascii_string([?0..?9, ?:, ?., ?Z, ?z, ?+, ?-], min: 1))
+    )
     |> lexeme()
     |> token(:literal_date)
 
@@ -41,7 +49,7 @@ defmodule Expresso.Lexers.Toml do
 
   deflexer(
     [
-      line_start(header),
+      line_start(header, indent: false),
       whitespace(),
       line_comment("#"),
       delimited(~s("""), ~s("""), :string_heredoc, escape: "\\"),

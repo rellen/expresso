@@ -6,7 +6,8 @@ defmodule Expresso.Lexers.Typst do
   such as `*strong*` and `_emphasis_`, gets its style. An expression after
   `#`, such as `#set` or `#figure`, is a keyword or a function. Raw text in
   backticks is a string, math between `$` is a string, and a label such as
-  `<intro>` or a reference such as `@intro` is a label. A number can have a
+  `<intro>` or a reference such as `@intro` is a label. A URL, such as
+  `https://typst.app`, is a link, so its `//` does not start a comment. A number can have a
   unit, such as `12pt` or `1fr`.
   """
 
@@ -48,6 +49,14 @@ defmodule Expresso.Lexers.Typst do
     |> lexeme()
     |> token(:number)
 
+  # Typst makes a link of a URL in markup, so the `//` of a URL does not start
+  # a comment.
+  url =
+    choice([string("https://"), string("http://")])
+    |> optional(utf8_string([not: ?\s, not: ?\t, not: ?\r, not: ?\n], min: 1))
+    |> lexeme()
+    |> token(:string_other)
+
   bullet = choice([string("- "), string("+ ")]) |> token(:keyword)
 
   # A word with no `#` is most often a word of the text, so only the
@@ -60,6 +69,7 @@ defmodule Expresso.Lexers.Typst do
       line_start(heading),
       line_start(bullet),
       whitespace(),
+      url,
       line_comment("//"),
       delimited("/*", "*/", :comment_multiline),
       delimited("```", "```", :string_heredoc),

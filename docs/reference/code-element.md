@@ -62,9 +62,9 @@ lexer for these languages:
 | Nix | `nix` | keywords, attributes, paths, built-ins, strings, comments |
 | Org | `org`, `orgmode` | headings with their state, keyword lines, drawers, lists, `*bold*` and the other markup, links, dates, comments |
 | reStructuredText | `rst`, `restructuredtext` | section titles, directives, fields, lists, `**strong**` and the other markup, roles, links, comments |
-| TOML | `toml` | table headers, keys, dates, strings, constants, comments |
-| Typst | `typst`, `typ` | headings, `*strong*` and the other markup, keywords and functions after `#`, labels, references, math, numbers with a unit, comments |
-| YAML | `yaml`, `yml` | keys, document markers, anchors, aliases, tags, constants, strings, comments |
+| TOML | `toml` | table headers in the first column, keys, dates, strings, constants, comments |
+| Typst | `typst`, `typ` | headings, `*strong*` and the other markup, keywords and functions after `#`, labels, references, math, numbers with a unit, URLs, comments |
+| YAML | `yaml`, `yml` | keys, document markers, anchors, aliases, tags, constants, strings, block scalars as plain text, comments at the start of a line or after white space |
 
 Such a lexer finds the parts that a slide colors, and not each rule of the language.
 
