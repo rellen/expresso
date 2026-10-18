@@ -15,7 +15,8 @@ states.
 A rule of the style sheet applies to each slide. To style one slide or one element, give it
 a class name with [the class option](class-option.md), and write a rule for that class.
 
-A file that the compiler cannot read gives an error at compile time. A deck from
+A file that the compiler cannot read gives an error at compile time. A file that is not
+UTF-8 also gives an error. A deck from
 `Expresso.Builder` takes the same option, such as `deck(slides, css: "deck.css")`, and
 `deck/2` raises the same error.
 
@@ -43,6 +44,8 @@ sheet as a data URI. A rule can thus use a font or a picture of the deck:
   image types of the `image` element.
 - An address, such as `https://example.com/font.woff2`, a `data:` URI and a fragment, such
   as `url(#shadow)`, stay as they are.
+- A `url()` in a comment or in a quoted string, such as `content: "url(x.png)"`, stays as it
+  is. The renderer does not read its file.
 - A query of the path, such as `?v=2`, is not part of the file name. A fragment of a file,
   such as `icons.svg#arrow`, stays after the data URI.
 - The renderer raises an `ArgumentError` for a file that it cannot read, and for a file of

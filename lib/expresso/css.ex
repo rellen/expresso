@@ -61,7 +61,18 @@ defmodule Expresso.Css do
               |> Enum.join(", ")
 
   # A `url()` with a quoted or an unquoted value.
-  @url ~r/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)"'\s]+))\s*\)/
+  @url ~r/\Aurl\(\s*(?:"([^"]*)"|'([^']*)'|([^)"'\s]+))\s*\)\z/
+
+  # The parts of a style sheet that `embed/2` reads: a comment, a quoted
+  # string and a `url()`. A `url()` in a comment or in a string is text, so
+  # the comment and the string come first. A comment or a string with no
+  # end goes to the end of the style sheet, as in a browser.
+  @token ~r"""
+  /\*.*?(?:\*/|\z)
+  | "(?:[^"\\\n]|\\.)*(?:"|$|\z)
+  | '(?:[^'\\\n]|\\.)*(?:'|$|\z)
+  | url\(\s*(?:"[^"]*"|'[^']*'|[^)"'\s]+)\s*\)
+  """xsm
 
   @doc """
   Give the style sheet of a `css` option, with each local file of a `url()` as a data URI
@@ -90,22 +101,27 @@ defmodule Expresso.Css do
 
   `base` is the directory that a relative path starts from. A query or a
   fragment of the path, such as `font.woff2?v=2`, is not part of the file
-  name. The function gives an error tuple for a file that it cannot read, and
-  for a file of a type that it does not know.
+  name. A `url()` in a comment or in a quoted string stays as it is. The
+  function gives an error tuple for a file that it cannot read, and for a
+  file of a type that it does not know.
 
       iex> Expresso.Css.embed("a { background: url(#shadow); }", ".")
       {:ok, "a { background: url(#shadow); }"}
+
+      iex> Expresso.Css.embed(~s|/* url(gone.png) */ a::after { content: "url(x.png)"; }|, ".")
+      {:ok, ~s|/* url(gone.png) */ a::after { content: "url(x.png)"; }|}
   """
   @spec embed(String.t(), Path.t()) :: {:ok, String.t()} | {:error, String.t()}
   def embed(css, base) do
-    @url
+    @token
     |> Regex.split(css, include_captures: true)
     |> Enum.map(&part(&1, base))
     |> Result.collect()
     |> Result.map_ok(&IO.iodata_to_binary/1)
   end
 
-  # A part of the split is a `url()` or the text between two of them.
+  # A part of the split is a comment, a string, a `url()` or the text between
+  # two of them. Only a `url()` matches `@url`.
   defp part(text, base) do
     case Regex.run(@url, text, capture: :all_but_first) do
       nil ->
@@ -179,9 +195,9 @@ defmodule Expresso.Css do
   def inline?(css), do: String.contains?(css, ["{", "\n"])
 
   defp read(path) do
-    case Expresso.DeckFile.read(path) do
+    case Expresso.DeckFile.read_text(path) do
       {:ok, css} -> {:ok, css}
-      {:error, reason} -> {:error, "cannot read the CSS file \"#{path}\": #{reason}"}
+      {:error, reason} -> {:error, Expresso.DeckFile.read_error(path, "CSS file", reason)}
     end
   end
 
