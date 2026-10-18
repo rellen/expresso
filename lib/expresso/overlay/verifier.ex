@@ -1,10 +1,11 @@
 defmodule Expresso.Overlay.Verifier do
   @moduledoc """
-  The Spark verifier for overlays
+  The check of the overlays
 
-  It runs after the transformers, one time for each deck module at compile
-  time. It calls `Expresso.Overlay.Check.slide/1` for each slide. An error from
-  the check becomes a `Spark.Error.DslError` with the path of the slide.
+  `Expresso.VerifierTransformer` runs it after the other transformers, one
+  time for each deck module at compile time, so an error stops the compile.
+  It calls `Expresso.Overlay.Check.slide/1` for each slide. An error from the
+  check becomes a `Spark.Error.DslError` with the path of the slide.
   """
 
   use Spark.Dsl.Verifier

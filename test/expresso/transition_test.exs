@@ -2,7 +2,7 @@ defmodule Expresso.TransitionTest do
   use ExUnit.Case, async: true
 
   import Expresso.Test.HTML
-  import Spark.Test, only: [dsl_errors: 1]
+  import Expresso.Test.CompileError
 
   # The deck slides, slide two zooms, and slide three has no transition.
   defmodule MixedDeck do
@@ -127,8 +127,8 @@ defmodule Expresso.TransitionTest do
   end
 
   test "the DSL refuses a transition of the deck without a rule, and tells the selector" do
-    errors =
-      dsl_errors do
+    error =
+      compile_error do
         defmodule Elixir.Expresso.TransitionTest.SpinDeck do
           use Expresso
 
@@ -136,7 +136,6 @@ defmodule Expresso.TransitionTest do
         end
       end
 
-    assert [{Expresso.TransitionTest.SpinDeck, [error]}] = errors
     assert error.path == [:deck]
 
     assert Exception.message(error) =~
@@ -147,8 +146,8 @@ defmodule Expresso.TransitionTest do
   end
 
   test "the DSL refuses a transition of a slide without a rule, and names the slide" do
-    errors =
-      dsl_errors do
+    error =
+      compile_error do
         defmodule Elixir.Expresso.TransitionTest.SpinSlideDeck do
           use Expresso
 
@@ -167,7 +166,6 @@ defmodule Expresso.TransitionTest do
         end
       end
 
-    assert [{Expresso.TransitionTest.SpinSlideDeck, [error]}] = errors
     assert error.path == [:deck, :slide, "two"]
     assert Exception.message(error) =~ "the transition :spin has no rule"
   end

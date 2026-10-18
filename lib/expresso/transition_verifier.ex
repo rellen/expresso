@@ -1,8 +1,9 @@
 defmodule Expresso.TransitionVerifier do
   @moduledoc """
-  The Spark verifier of the transitions between slides
+  The check of the transitions between slides
 
-  It runs one time for each deck module at compile time. It makes sure that
+  `Expresso.VerifierTransformer` runs it one time for each deck module at
+  compile time, so an error stops the compile. It makes sure that
   the `transition` option of the deck and of each slide has a rule. The theme
   gives the rules of `:slide` and `:zoom`, and the fade and `:none` need no
   rule. The CSS of the deck can give more, such as
@@ -10,7 +11,7 @@ defmodule Expresso.TransitionVerifier do
   `transition :wipe_down`.
 
   `Expresso.Overlay.EffectVerifier` reports a `css` option that it cannot
-  read, so this verifier then checks the deck with the theme alone.
+  read, so this check then uses the rules of the theme alone.
   """
 
   use Spark.Dsl.Verifier

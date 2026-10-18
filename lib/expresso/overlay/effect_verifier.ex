@@ -1,8 +1,9 @@
 defmodule Expresso.Overlay.EffectVerifier do
   @moduledoc """
-  The Spark verifier of the `css` option and of the effects
+  The check of the `css` option and of the effects
 
-  It runs one time for each deck module at compile time. It reads the names
+  `Expresso.VerifierTransformer` runs it one time for each deck module at
+  compile time, so an error stops the compile. It reads the names
   of the `css` option from `Expresso.Dsl.css_names/1`, and a file that
   `Expresso.CssTransformer` cannot read is an error. It then makes sure that
   each effect of the deck, of a slide and of an element has a rule. The theme

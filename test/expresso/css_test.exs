@@ -4,7 +4,8 @@ defmodule Expresso.CssTest do
   import Expresso.Test.HTML
   use ExUnitProperties
 
-  import Spark.Test, only: [dsl_errors: 1, dsl_warnings: 1, refute_dsl_warnings: 1]
+  import Expresso.Test.CompileError
+  import Spark.Test, only: [dsl_warnings: 1, refute_dsl_warnings: 1]
 
   alias Expresso.Builder
   alias Expresso.Css
@@ -256,8 +257,8 @@ defmodule Expresso.CssTest do
     end
 
     test "gives an error for a CSS file that it cannot read" do
-      errors =
-        dsl_errors do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.CssTest.MissingDeck do
             use Expresso
 
@@ -265,13 +266,12 @@ defmodule Expresso.CssTest do
           end
         end
 
-      assert [{Expresso.CssTest.MissingDeck, [error]}] = errors
       assert Exception.message(error) =~ ~s(cannot read the CSS file "no/such/deck.css")
     end
 
     test "gives an error for an effect without a rule in the element" do
-      errors =
-        dsl_errors do
+      error =
+        compile_error do
           defmodule Elixir.Expresso.CssTest.TypoDeck do
             use Expresso
 
@@ -286,7 +286,6 @@ defmodule Expresso.CssTest do
           end
         end
 
-      assert [{Expresso.CssTest.TypoDeck, [error]}] = errors
       assert Exception.message(error) =~ "the effect :bounse has no rule"
     end
   end

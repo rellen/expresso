@@ -441,10 +441,11 @@ element, because the macros of the slide stay in scope in each nested block, and
 refuses it. `Expresso.Overlay.new/1` does not accept a step below 1, so the check of that
 condition applies to a slide that a script builds.
 
-Spark runs a verifier in an `@after_verify` callback of the module. Elixir reports an
-error from that callback as a compile warning, and `mix compile --warnings-as-errors`
-then fails. A test collects the error with `Spark.Test.dsl_errors/1`. An error from a
-transformer is different. Spark raises it at compile time, and `assert_raise/2` catches it.
+Spark runs a verifier in an `@after_verify` callback of the module, and it reports an
+error from that callback as a compile warning. The module then compiles. Therefore
+`Expresso.VerifierTransformer` runs `Expresso.Overlay.Verifier` after the other
+transformers. Spark raises an error from a transformer at compile time, and the compile
+stops. A test catches the error with `assert_raise/2`.
 
 ### The warnings of the properties
 
@@ -836,8 +837,9 @@ section "Progress" gives the date of each.
 
 ### The extension
 
-`Expresso.Extension` lists `Expresso.Overlay.Transformer` in its `transformers` option
-and `Expresso.Overlay.Verifier` in its `verifiers` option. It imports nothing, because a
+`Expresso.Extension` lists `Expresso.Overlay.Transformer` and
+`Expresso.VerifierTransformer` in its `transformers` option. The second transformer runs
+`Expresso.Overlay.Verifier`. It imports nothing, because a
 specification is a term.
 
 The extension contains a `pause` entity and an `on` entity. The `pause` entity has a
