@@ -26,9 +26,10 @@ defmodule Expresso.Morph do
     * `:label` - the label of a stat.
 
   A kind without a content gets no signature. An element with an empty
-  content, such as a text area without a text or a diagram with an empty
-  `svg` element, gets no signature, because two such elements are not the
-  same element. An element with the `morph` option gets no signature either,
+  `:text`, `:drawing` or `:svg` content, such as a text area without a text
+  or a diagram with an empty `svg` element, gets no signature, because two
+  such elements are not the same element. A code without a language and a
+  stat without a label still get a signature. An element with the `morph` option gets no signature either,
   because its key gives its partner.
   """
 
@@ -39,6 +40,11 @@ defmodule Expresso.Morph do
              module != nil and content != nil,
              into: %{},
              do: {module, {kind, content}}
+
+  # The contents that are empty for an element with no text or no drawing.
+  # An empty language or an empty label is a content: two codes without a
+  # language pair, as two stats without a label do.
+  @needs_content [:text, :drawing, :svg]
 
   # The number of the different signatures. Two different contents get the
   # same signature by chance only, with a probability of 1 in 2^32.
@@ -54,7 +60,7 @@ defmodule Expresso.Morph do
     {kind, content} = Map.fetch!(@kinds, module)
 
     case content(element, content) do
-      "" -> element
+      "" when content in @needs_content -> element
       content -> %{element | signature: signature(kind, content)}
     end
   end

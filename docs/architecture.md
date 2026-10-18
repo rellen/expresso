@@ -2446,8 +2446,10 @@ each kind. These are the reasons for this design:
   no text, and two different drawings without a text had the same signature. A diagram
   now compares the SVG of its file, so two copies of one file are partners. A shape
   compares its kind and its text.
-- **An empty content gets no signature.** Two elements without a content, such as two
-  text areas without a text, are not the same element, so they do not morph.
+- **An empty text or drawing gets no signature.** Two elements without a text or a
+  drawing, such as two empty text areas, are not the same element, so they do not morph.
+  An empty language and an empty label are a content, so two codes without a language
+  still morph.
 - **The template writes the signature of the heading.** The default slide template puts
   it on the heading container. A custom template that writes no signature gets no morph
   of its heading.
