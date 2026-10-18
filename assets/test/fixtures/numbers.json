@@ -11,7 +11,9 @@
     {"decimals":3,"labels":["99.999","100"],"numbers":[99.999,100]},
     {"decimals":3,"labels":["1.005","2.675"],"numbers":[1.005,2.675]},
     {"decimals":2,"labels":["-0.5","0.25"],"numbers":[-0.5,0.25]},
-    {"decimals":6,"labels":["0.123457","1"],"numbers":[0.1234567,1]}
+    {"decimals":7,"labels":["0.1234567","1"],"numbers":[0.1234567,1]},
+    {"decimals":5,"labels":["0.0001","0.00025"],"numbers":[0.0001,2.5e-4]},
+    {"decimals":7,"labels":["0.0000001","0.0000002"],"numbers":[1.0e-7,2.0e-7]}
   ],
   "stats": [
     {"decimals":0,"group":true,"text":"1,250","value":1250},
@@ -27,6 +29,8 @@
     {"decimals":2,"group":true,"text":"12.00","value":12},
     {"decimals":2,"group":true,"text":"12,345.67","value":12345.675},
     {"decimals":2,"group":true,"text":"0.13","value":0.125},
-    {"decimals":1,"group":false,"text":"4.2","value":4.2}
+    {"decimals":1,"group":false,"text":"4.2","value":4.2},
+    {"decimals":6,"group":true,"text":"0.000015","value":1.5e-5},
+    {"decimals":0,"group":true,"text":"2,500,000,000,000,000","value":2.5e15}
   ]
 }

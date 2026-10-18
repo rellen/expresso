@@ -39,7 +39,7 @@ end
 | `levels` | A list of strings | The headings of the CSV columns that hold the levels of a treemap or a sunburst, from the top level down. For a chart of flows, the headings of the CSV columns that hold the nodes of each path. Requires `src`, but an alluvial chart or a parallel sets chart can take `levels` without `src` to give the title of each column. |
 | `frames` | A string | The heading of the column of the CSV file that names the frame of each row. Requires `src`. |
 | `frame_label` | `:top_right`, `:top_left` or `:none` | The place of the label of the frame in a chart with frames. The default is `:top_right`. |
-| `sort` | `true` or `false` | Put the categories of a bar chart in order of their totals, from the largest, in each frame. The default is `false`. |
+| `sort` | `true` or `false` | Put the categories of a bar chart in order of their totals, from the largest, in each frame. A bar chart without frames, and each copy in the handout view and on paper, also uses this order. The default is `false`. |
 | `count` | `true` or `false` | Count each number from the value of one frame to the value of the next. The default is `false`, and the numbers fade. |
 | `thumbnail` | `:first`, `:last` or the number of a frame | The frame that the overview and the menu of the slides show. The default is `:first`. |
 | `width` | A CSS width, such as `"900px"` or `"70%"` | The width of the chart. A percentage is a part of the width of the slide. The default is `80%`. |
@@ -201,6 +201,7 @@ These rules apply to the frames:
 
 At a change of the frame, a bar moves to its new value, a line moves each point, and a slice
 of a pie changes its angle. A number fades to its new value, or counts to it with `count true`.
+A count stops on each digit of the value of its frame, such as `1.34`.
 The marks move with the `speed` and the `easing` of the chart. See
 [the overlay options](overlay-options.md).
 
@@ -221,6 +222,9 @@ chart does not change its size. With `count true`, a number counts from zero.
 The marks of a chart with frames or with the effect `:grow` move with registered custom
 properties. Chrome 85, Safari 16.4 and Firefox 128 support them. An earlier browser shows the
 first frame. The numbers with `count true` need the script of the presenter.
+
+A label of a value or of the axis has each digit of its number and no exponent, such as
+`0.00025`. The axis of very small values, such as `0.0000001`, has round ticks, and each tick has a label in the same form.
 
 ## The kinds
 

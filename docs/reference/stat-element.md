@@ -23,7 +23,7 @@ end
 | `label` | A string | The text under the number. Without it, the stat has no label. |
 | `prefix` | A string | The text before the number, such as `"$"`. |
 | `suffix` | A string | The text after the number, such as `"%"` or `"k"`. |
-| `decimals` | A non-negative integer | The number of digits after the point. The default is the decimals of the value: 0 for `1250`, and 1 for `98.6`. |
+| `decimals` | A non-negative integer | The number of digits after the point. The default is the decimals of the value: 0 for `1250`, 1 for `98.6`, and 5 for `0.00015`. The number never has an exponent, and an integer keeps each digit. |
 | `group` | `true` or `false` | Put a comma between each group of three digits, such as `1,250`. The default is `true`. |
 | `count` | `true` or `false` | Count from `from` to the value when the stat shows. The default is `false`, and the number shows at once. |
 | `from` | A number | The number at the start of the count. The default is `0`. |

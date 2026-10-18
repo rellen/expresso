@@ -147,6 +147,32 @@ defmodule Expresso.ChartElementTest do
     assert Enum.map(series, & &1.steps) == [[1, 2], [2]]
   end
 
+  test "a chart of very small values has an axis, and its labels have no exponent" do
+    tiny =
+      Builder.chart(:bar,
+        title: "T",
+        categories: ["A", "B"],
+        elements: [Builder.series("S", [1.0e-7, 2.0e-7])]
+      )
+
+    [figure] = figures(tiny)
+    assert texts(figure, "text.chart-value") == ["0.0000001", "0.0000002"]
+    ticks = texts(figure, "text.chart-tick")
+    assert List.first(ticks) == "0" and List.last(ticks) == "0.0000002"
+    assert ticks |> Enum.uniq() |> length() == length(ticks)
+
+    small =
+      Builder.chart(:bar,
+        title: "T",
+        categories: ["A"],
+        elements: [Builder.series("S", [0.00025])]
+      )
+
+    [figure] = figures(small)
+    assert texts(figure, "text.chart-value") == ["0.00025"]
+    refute figure |> LazyHTML.text() |> String.contains?("e-")
+  end
+
   test "the CSV reader names the line of a bad row" do
     chart = %Chart{kind: :bar, title: "x", src: "test/fixtures/missing.csv"}
     assert {:error, "cannot read the chart file" <> _rest} = Chart.build(chart)

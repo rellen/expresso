@@ -33,7 +33,10 @@ defmodule Expresso.Element.Chart.Plot do
       step = step((high - low) / 5)
       first = Float.floor(low / step) |> trunc()
       last = Float.ceil(high / step) |> trunc()
-      for n <- first..last, do: number(n * step)
+      ticks = for n <- first..last, do: number(n * step)
+      # The plot divides by the distance from the first tick to the last
+      # tick, so that distance must not be zero.
+      if List.first(ticks) == List.last(ticks), do: [0, 1], else: ticks
     end
   end
 
@@ -50,32 +53,41 @@ defmodule Expresso.Element.Chart.Plot do
   Return a number as an integer when it has no fraction, and with no error of
   the floating point
 
+  The function keeps 13 significant digits, so a very small number keeps its
+  value.
+
       iex> Expresso.Element.Chart.Plot.number(250.0)
       250
       iex> Expresso.Element.Chart.Plot.number(0.30000000000000004)
       0.3
+      iex> Expresso.Element.Chart.Plot.number(1.5000000000000002e-7)
+      1.5e-7
   """
   @spec number(number()) :: number()
   def number(value) when is_integer(value), do: value
 
   def number(value) do
-    rounded = Float.round(value, 6)
+    rounded = value |> :erlang.float_to_binary(scientific: 12) |> String.to_float()
     if rounded == trunc(rounded), do: trunc(rounded), else: rounded
   end
 
   @doc """
   Write a number for a label of a chart
 
+  The label has each digit of the number and no exponent.
+
       iex> Expresso.Element.Chart.Plot.label(1250)
       "1250"
       iex> Expresso.Element.Chart.Plot.label(2.5)
       "2.5"
+      iex> Expresso.Element.Chart.Plot.label(0.00025)
+      "0.00025"
   """
   @spec label(number()) :: String.t()
   def label(value) do
     case number(value) do
       integer when is_integer(integer) -> Integer.to_string(integer)
-      float -> :erlang.float_to_binary(float, [:short])
+      float -> :erlang.float_to_binary(float, decimals: Expresso.Element.Stat.decimals(float))
     end
   end
 

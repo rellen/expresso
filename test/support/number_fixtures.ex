@@ -26,7 +26,7 @@ defmodule Expresso.Test.NumberFixtures do
   @path "assets/test/fixtures/numbers.json"
 
   # The numbers of the frames of each chart: integers, decimals, negative
-  # numbers, numbers with more than six digits and halves.
+  # numbers, numbers with more than six digits, halves and very small numbers.
   @charts [
     [10, 20],
     [30, 15.5],
@@ -39,7 +39,9 @@ defmodule Expresso.Test.NumberFixtures do
     [99.999, 100],
     [1.005, 2.675],
     [-0.5, 0.25],
-    [0.1234567, 1]
+    [0.1234567, 1],
+    [0.0001, 0.00025],
+    [1.0e-7, 2.0e-7]
   ]
 
   # A value of a stat, its decimals and its `group` option. The values
@@ -58,7 +60,9 @@ defmodule Expresso.Test.NumberFixtures do
     {12, 2, true},
     {12_345.675, 2, true},
     {0.125, 2, true},
-    {4.2, 1, false}
+    {4.2, 1, false},
+    {1.5e-5, 6, true},
+    {2.5e15, 0, true}
   ]
 
   @doc "Return the path of the file"
