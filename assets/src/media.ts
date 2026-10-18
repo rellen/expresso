@@ -43,6 +43,17 @@ export function shows(media: Media, step: number): boolean {
   return true;
 }
 
+// True for the error of a `play` promise that a pause or a new source
+// interrupted. A browser refuses to play with a `NotAllowedError` or a
+// `NotSupportedError`.
+function aborted(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { name?: unknown }).name === "AbortError"
+  );
+}
+
 // The function that plays the media of one kind. `slide` is the slide of the
 // present view, or null in the speaker view and in the handout view.
 // `covered` is true while a black screen, the menu or the overview covers the
@@ -123,8 +134,10 @@ export function player(list: string, key: string): Player {
           // A browser can refuse to play: a file that it cannot decode, or
           // sound before the first key or click of the presenter. The medium
           // then stays paused, and the next change of the state tries again.
-          medium.play().catch(() => {
-            if (medium.paused && !held.has(medium)) {
+          // A pause before the start of the sound also rejects the promise,
+          // with an `AbortError`. That is not a refusal: the pause stays.
+          medium.play().catch((error: unknown) => {
+            if (!aborted(error) && medium.paused && !held.has(medium)) {
               refused.add(medium);
             }
           });
