@@ -64,6 +64,16 @@ defmodule Expresso.CssTest do
       assert {:error, message} = Css.resolve("no/such/deck.css")
       assert message =~ ~s(cannot read the CSS file "no/such/deck.css")
     end
+
+    test "gives an error that names a file that is not UTF-8", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "legacy.css")
+      File.write!(path, "h1::after { content: \"caf\xE9\"; }")
+
+      assert Css.resolve(path) ==
+               {:error,
+                ~s(cannot read the CSS file "#{path}": the file is not UTF-8 text. ) <>
+                  "Save the file with the UTF-8 encoding."}
+    end
   end
 
   describe "the files of url()" do
@@ -103,6 +113,38 @@ defmodule Expresso.CssTest do
 
       assert {:error, message} = Css.embed("a { background: url(code.js); }", "test/fixtures")
       assert message =~ "is not a font or an image of a type that Expresso knows"
+    end
+
+    test "embed/2 keeps a url() in a comment or in a quoted string, and reads no file" do
+      for css <- [
+            "/* .old { background: url(gone.png); } */ a { color: red; }",
+            "/*\n url(gone.png)\n*/",
+            ~s|a::after { content: "url(gone.png)"; }|,
+            ~s|a::after { content: 'url(gone.png)'; }|,
+            ~s|a::after { content: "a \\" url(gone.png)"; }|,
+            "/* a comment with no end url(gone.png)"
+          ] do
+        assert Css.embed(css, "test/fixtures") == {:ok, css}, css
+      end
+    end
+
+    test "embed/2 reads a url() after a comment and after a string" do
+      css = ~s|/* url(gone.png) */ a { content: "x"; background: url("dot.png"); }|
+
+      assert Css.embed(css, "test/fixtures") ==
+               {:ok, ~s|/* url(gone.png) */ a { content: "x"; background: url("#{@png}"); }|}
+
+      # A string that a line break ends is not a string after the line break.
+      assert Css.embed(~s|a { content: "x\n} b { background: url(dot.png); }|, "test/fixtures") ==
+               {:ok, ~s|a { content: "x\n} b { background: url("#{@png}"); }|}
+    end
+
+    test "the document holds no file of a url() in a comment" do
+      css = "/* h1 { background: url(test/fixtures/dot.png); } */ h1 { color: red; }"
+      html = [Builder.slide("one")] |> Builder.deck(css: css) |> Expresso.Deck.render()
+
+      assert html =~ css
+      refute html =~ @png
     end
 
     test "render/2 resolves the url() of a file from its directory, and of a style sheet from the root",
