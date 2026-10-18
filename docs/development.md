@@ -392,8 +392,9 @@ and the tests accept both names.
 
 Two tests send SIGTERM to the launcher of Burrito, and they run the binary without
 `timeout`. `timeout` sends a signal to each process in its group, so the VM also gets the
-signal, and the tests then cannot find a VM that continues. These tests use `pgrep` to find
-the VM, and they kill the launcher and the VM after the test.
+signal, and the tests then cannot find a VM that continues. The watch test uses `pgrep` to
+find the VM. The `--check` test runs a deck that writes the process id of the VM to a file.
+The two tests kill the launcher and the VM after the test.
 
 Burrito puts a precompiled ERTS in the binary, and it downloads the ERTS for the exact OTP
 version of the computer. Its source is `https://beam-machine-universal.b-cdn.net`. For Linux
