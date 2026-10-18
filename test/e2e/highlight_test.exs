@@ -107,6 +107,25 @@ defmodule Expresso.E2E.HighlightTest do
     assert dim(page) == [true, true, false, false, true]
   end
 
+  test "d shows each line in full on the current page of the speaker view", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(Deck, tmp_dir) <> "?speaker")
+
+    current = """
+    Array.from(document.querySelectorAll(".handout-page[data-speaker='current'] .code .line"))
+      .map((line) => getComputedStyle(line).color)
+    """
+
+    assert page |> js(current) |> Enum.map(&(rgb(&1) != "rgb(0, 0, 0)")) ==
+             [true, false, true, true, true]
+
+    press(page, "d")
+    assert js(page, "document.body.dataset.undim") == "true"
+    assert page |> js(current) |> Enum.map(&rgb/1) |> Enum.uniq() == ["rgb(0, 0, 0)"]
+  end
+
   test "d does not change the dimming of a list", %{page: page, tmp_dir: tmp_dir} do
     page = open(page, render(ListDeck, tmp_dir))
     first = "getComputedStyle(document.querySelector('.screen .item')).color"

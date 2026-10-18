@@ -42,6 +42,8 @@ With `count true`, the number counts from `from` to the value:
 
 - A stat without `at` counts when its slide shows.
 - A stat with `at` counts at the first step at which it shows.
+- A stat without `at` in a container with `at`, such as a column, counts at the first step
+  at which the container shows.
 - The count lasts three times the time of the animations of the element, which the `speed`
   option of the deck, the slide or the stat gives.
 - The number keeps its decimals and its commas during the count.

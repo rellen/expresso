@@ -65,7 +65,7 @@ step specification.
 
 | Option | Effect |
 | --- | --- |
-| `state: :alert` | The theme draws an outline around the element. |
+| `state: :alert` | The theme draws an outline around the element. A line or an arrow of the `shape` element gets a stroke that is 4px wider, and no outline. |
 | `state: :dim` | Each color of text in the element changes to the dimmed color of its role. An image, an SVG file, an embed and a video show at the dim opacity of the theme. |
 | `set: [x: "-300px", y: "0px"]` | The element moves by that distance. |
 | `set: [scale: 1.5]` | The element changes its size by that factor. |

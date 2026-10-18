@@ -35,7 +35,9 @@ A rectangle and an ellipse need `x`, `y`, `width` and `height`. A line and an ar
 other kinds.
 
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
-[the overlay options](overlay-options.md).
+[the overlay options](overlay-options.md). The state `alert` draws an outline around a
+rectangle and an ellipse. A line and an arrow get a stroke that is 4px wider, and the head
+of an arrow grows with the stroke.
 
 Write the options in the block when the shape also has a block, because the DSL does not
 take options and a block in the same call:

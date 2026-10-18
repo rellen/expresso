@@ -916,10 +916,22 @@ body[data-view="handout"] .chart-frames {
   height: 100%;
   overflow: visible;
 }
+/*
+ * The svg of a line or an arrow covers the whole slide, and `.shapes` clips
+ * an outline outside the slide. Therefore the state `alert` makes the line
+ * 4px wider and does not draw an outline. The head of an arrow grows with
+ * the line. The compiler registers `--alert` with `inherits: false`, so the
+ * svg copies it into `--line-alert`, which inherits.
+ */
+.shape.shape-line {
+  --line-alert: var(--alert, 0);
+  outline: none;
+}
 .shape-line line {
   stroke: currentColor;
-  stroke-width: var(--shape-width, 0.15rem);
+  stroke-width: calc(var(--shape-width, 0.15rem) + var(--line-alert, 0) * 4px);
   stroke-linecap: round;
+  transition: stroke-width var(--dur) var(--ease);
 }
 .shape-line marker path {
   fill: currentColor;
@@ -991,7 +1003,9 @@ body[data-view="handout"] .chart-frames {
  * The element is a size container, so `100cqh` is the height that is left in
  * the slide. A page of the handout view on a screen has no fixed height, so
  * there the element is not a container, and the box uses the height of the
- * window less the room for a heading.
+ * window less the room for a heading. A callout is a flex column with an
+ * automatic height, so an embed or a video in a callout is not a container
+ * either, and its box uses the same width in each view and on paper.
  *
  * Only the frame of the present view gets a source, so the handout view, the
  * overview and paper show the fallback, and they hide the frame. A frame that
@@ -1013,6 +1027,15 @@ body[data-view="handout"] .chart-frames {
   );
   max-width: 100%;
   aspect-ratio: var(--embed-aspect, 16/9);
+}
+.callout .embed {
+  container-type: normal;
+}
+.callout .embed-box {
+  width: min(
+    var(--embed-width, 80vw),
+    calc((100vh - 6rem) * var(--embed-aspect, 16/9))
+  );
 }
 @media screen {
   body[data-view="handout"] .embed {
@@ -1252,16 +1275,22 @@ body[data-view="handout"] .chart-frames {
  * A stat is a big number in the accent color, with a label in the muted
  * color under it. The number of a stat with `count` reads `--chart-n`, which
  * goes from `--stat-from` to `--stat-to` as `--stat-shown` goes from 0 to 1.
- * A stat with steps copies `--shown` into `--stat-shown`, so the count runs at
- * the step of the stat. `@starting-style` starts the count at `--stat-from`
- * when the slide shows, so a stat without steps counts when its slide shows.
+ * `--shown` does not inherit, so each element with steps copies it into
+ * `--on-shown`, which inherits. A stat reads `--on-shown` into `--stat-shown`,
+ * so the count runs at the step of the stat or of its nearest container with
+ * steps. `@starting-style` starts the count at `--stat-from` when the slide
+ * shows, so a stat with no steps in a container with no steps counts when its
+ * slide shows.
  * `assets/src/chart.ts` writes the value of `--chart-n` as the text. The
  * count lasts three times the time of the element, so the eye can follow it.
  * The number is at most a quarter of the width of the stat, so three stats fit
  * in a row of columns.
  */
+[data-on] {
+  --on-shown: var(--shown);
+}
 .stat {
-  --stat-shown: 1;
+  --stat-shown: var(--on-shown, 1);
   container-type: inline-size;
   flex-grow: 1;
   align-self: stretch;
@@ -1271,9 +1300,6 @@ body[data-view="handout"] .chart-frames {
   align-items: center;
   margin: 0;
   text-align: center;
-}
-.stat[data-on] {
-  --stat-shown: var(--shown);
 }
 .stat-value {
   margin: 0;
@@ -1430,17 +1456,25 @@ body[data-view="handout"] .chart-frames {
  * The key `d` turns off the dimming of code and of the series of a chart until
  * the next change of the step, so the presenter can show a dimmed line or
  * series when the audience asks about it. The presenter writes
- * `data-undim` on the `body`. Only the present view changes: the handout view
- * and paper keep the dimming of each step. A rule of a step selects the slide
- * with its id, so the rule needs `!important`. The bar of `highlight` and the
- * lines that `reveal` hides stay as they are.
+ * `data-undim` on the `body`. Only the present view and the current page of
+ * the speaker view change: the handout view, the next page of the speaker
+ * view and paper keep the dimming of each step. A rule of a step selects the
+ * slide with its id, so the rule needs `!important`. The bar of `highlight`
+ * and the lines that `reveal` hides stay as they are.
  */
-body[data-view="present"][data-undim] .screen .code [data-el] {
+:is(
+    body[data-view="present"][data-undim] .screen,
+    body[data-view="speaker"][data-undim] .handout-page[data-speaker="current"]
+  )
+  .code
+  [data-el] {
   --dim: 0 !important;
   --dimmed: 0 !important;
 }
-body[data-view="present"][data-undim]
-  .screen
+:is(
+    body[data-view="present"][data-undim] .screen,
+    body[data-view="speaker"][data-undim] .handout-page[data-speaker="current"]
+  )
   .chart
   :is(.chart-series, .chart-labels, [data-keys]) {
   --chart-dim: 0 !important;
@@ -1848,12 +1882,18 @@ body[data-view="handout"] .handout {
 body[data-view="handout"]:not([data-every="true"]) .handout-page[data-omit] {
   display: none;
 }
-body[data-view="handout"]
-  .handout-page:not([data-omit])
-  ~ .handout-page:not([data-omit]),
-body[data-view="handout"][data-every="true"] .handout-page ~ .handout-page,
-body[data-view="handout"] .sources {
-  border-top: 1px solid currentColor;
+/*
+ * On a screen, a line separates the pages of the handout view. Paper starts
+ * a new sheet for each page, so the rule is for a screen only.
+ */
+@media screen {
+  body[data-view="handout"]
+    .handout-page:not([data-omit])
+    ~ .handout-page:not([data-omit]),
+  body[data-view="handout"][data-every="true"] .handout-page ~ .handout-page,
+  body[data-view="handout"] .sources {
+    border-top: 1px solid currentColor;
+  }
 }
 /*
  * The deck option `print_notes false` leaves the notes out of the handout view
@@ -1883,7 +1923,6 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   }
   .handout-page {
     height: 100vh;
-    border-top: none;
   }
   body:not([data-every="true"]) .handout-page[data-omit] {
     display: none;
@@ -2311,8 +2350,13 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   font-size: 0.8em;
   border-top: 1px solid var(--muted);
 }
+/*
+ * The list of keys does not print. `#help[open]` sets `display: flex`, and
+ * that selector is more specific than `#help`, so the print rule names both.
+ */
 @media print {
-  #help {
+  #help,
+  #help[open] {
     display: none;
   }
 }

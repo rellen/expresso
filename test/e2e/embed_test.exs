@@ -40,6 +40,27 @@ defmodule Expresso.E2E.EmbedTest do
     end
   end
 
+  # A callout holds an embed and a video. A callout is a flex column with an
+  # automatic height, so the embed cannot take its height from the callout.
+  defmodule CalloutDeck do
+    use Expresso
+
+    slide "callout" do
+      callout :note do
+        text_area(text: "The demo:")
+
+        embed "https://example.com/" do
+          title "Demo"
+        end
+
+        video "examples/animations/clip.webm" do
+          title "A clip"
+          poster "examples/animations/clip.png"
+        end
+      end
+    end
+  end
+
   defp frames(page) do
     js(page, """
     Array.from(document.querySelectorAll("iframe.embed-frame")).map((frame) => ({
@@ -175,5 +196,31 @@ defmodule Expresso.E2E.EmbedTest do
     """)
 
     wait_for(page, "(window.videoTime ?? 0) > 0.3")
+  end
+
+  # The width and the height of each embed box in the callout, in a part of
+  # the document.
+  defp callout_boxes(page, selector) do
+    js(page, """
+    Array.from(document.querySelectorAll("#{selector} .callout .embed-box")).map((box) => {
+      const rect = box.getBoundingClientRect();
+      return [Math.round(rect.width), Math.round(rect.height)];
+    })
+    """)
+  end
+
+  test "an embed and a video in a callout have a size in each view and on paper", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    url = render(CalloutDeck, tmp_dir)
+    present = page |> open(url) |> callout_boxes(".screen")
+    speaker = page |> open(url <> "?speaker") |> callout_boxes("[data-speaker='current']")
+    printed = page |> open(url) |> emulate("print") |> callout_boxes(".handout-page")
+
+    for boxes <- [present, speaker, printed] do
+      assert [_embed, _video] = boxes
+      assert Enum.all?(boxes, fn [width, height] -> width > 100 and height > 50 end)
+    end
   end
 end

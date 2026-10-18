@@ -1304,7 +1304,9 @@ for the user. These are the reasons for its design:
   `max-height` cannot make it smaller without a change to its ratio. Therefore the box
   takes its width from `100cqh`, the height that is left in the slide, times the ratio.
   A page of the handout view on a screen has no fixed height, and a size container there
-  can have no height. Thus that view uses the height of the window less `6rem`.
+  can have no height. Thus that view uses the height of the window less `6rem`. A
+  callout is a flex column with an automatic height, so an embed or a video in a callout
+  is not a size container either. It uses the same width in each view and on paper.
 
 ### The video
 
@@ -1412,6 +1414,10 @@ in its place, as a footnote does. The renderer collects the shapes of a slide wi
   layer, with a `line` from point to point. A percentage of a `line` is a part of the
   width or of the height of the `svg`, so it keeps its meaning in each direction, and the
   head of an arrow keeps its shape.
+- **The state `alert` makes a line wider.** The `svg` of a line covers the layer, and the
+  layer clips an outline outside it. Thus the `svg` has no outline, and its `line` gets a
+  stroke that is 4px wider. The compiler registers `--alert` with `inherits: false`, so
+  the `svg` copies it into `--line-alert`, which inherits.
 - **The head of an arrow has a new id in each copy.** A browser draws a `marker` from the
   first element with its id, and a marker in a hidden view does not paint. Each render of
   an arrow therefore gets an id from `Expresso.Copies.next/0`, as each copy of a diagram
@@ -1764,8 +1770,10 @@ design:
   than the six significant digits that Chromium keeps in the text of `--chart-n`.
 - **`@starting-style` for a count when the slide shows.** A slide shows with `display`,
   and a transition does not run from `display: none`. `@starting-style` gives the start
-  of the count to a stat that shows with its slide. A stat with steps copies `--shown`
-  into `--stat-shown`, so it counts at its step.
+  of the count to a stat that shows with its slide. `--shown` does not inherit, so each
+  element with steps copies it into `--on-shown`, which inherits. A stat reads
+  `--on-shown` into `--stat-shown`, so it counts at its own step or at the step of its
+  nearest container with steps, such as a column.
 - **A text for a screen reader.** The number that counts is hidden from a screen reader,
   and a text that the style sheet hides from the eye holds the value. A screen reader
   thus never reads a number in the middle of the count.
@@ -2185,7 +2193,8 @@ The tables do not give these rules:
 - `d` toggles the field `undim`. The projection of the attribute `data-undim` writes it on
   the `body`, and the attribute is present only while the field is true. While the
   attribute is present, a rule of the style sheet sets `--dim` and `--dimmed` to 0 on each
-  element of a code element in the present view. It also sets `--chart-dim` to 0 on each
+  element of a code element in the present view and on the current page of the speaker
+  view. It also sets `--chart-dim` to 0 on each
   series of a chart and on each mark with a `data-keys` attribute.
   The rules of a step select the slide by its id, so this rule needs `!important`. The
   option `reset [:undim]` sets `undim` to `false` at each change of the step, so the next
