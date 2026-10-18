@@ -72,7 +72,7 @@ defmodule Expresso.TransitionTest do
   test "no element of the document gets a transition attribute" do
     document = document(MixedDeck)
 
-    assert count(document, "html:not(:has([data-transition]))") == 1
+    assert count(document, "[data-transition]") == 0
     assert count(document, "section.slide") == 3
   end
 

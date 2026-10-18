@@ -162,7 +162,7 @@ defmodule Expresso.StepsTest do
     test "gives no data-duration and no data-transition, because the list holds them" do
       document = deck([1, 2], %{duration: 5}) |> document()
 
-      assert count(document, "html:not(:has([data-duration]))") == 1
+      assert count(document, "[data-duration]") == 0
       assert count(document, "section.slide:not([data-transition])") == 2
     end
   end
