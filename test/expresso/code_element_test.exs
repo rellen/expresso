@@ -550,6 +550,31 @@ defmodule Expresso.Element.CodeTest do
       assert steps.([whole]) == steps.([Builder.pause(), paused])
     end
 
+    test "the groups of a code element with an absolute at option start at its first step" do
+      text = "a\nb\nc\n"
+
+      [slide] =
+        highlight_deck(Builder.code(text: text, at: [from: 3], highlight: [1, 2, 3])).slides
+
+      [code] = slide.elements
+
+      assert slide.metadata.max_step == 5
+      assert code.steps == [3, 4, 5]
+      assert [[3], [4], [5]] = Enum.map(code.elements, fn %Lines{on: [on]} -> on.steps end)
+    end
+
+    test "whole_first takes the first step of a code element with an absolute at option" do
+      code =
+        Builder.code(text: "a\nb\nc\n", at: [from: 3], highlight: [1, 2, 3], whole_first: true)
+
+      [slide] = highlight_deck(code).slides
+      [code] = slide.elements
+
+      assert slide.metadata.max_step == 6
+      assert code.steps == [3, 4, 5, 6]
+      assert [[4], [5], [6]] = Enum.map(code.elements, fn %Lines{on: [on]} -> on.steps end)
+    end
+
     test "whole_first needs the highlight option" do
       assert_raise ArgumentError,
                    ~r/the whole_first option of a code element needs the highlight option/,

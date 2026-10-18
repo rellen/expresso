@@ -60,13 +60,13 @@ defmodule Expresso.VerifierTransformerTest do
           title "Orders"
           categories ["2023", "2024"]
           at 2
-          highlight ["Orders"]
+          highlight ["Orders", "Returns"]
           series "Orders", [1, 2]
           series "Returns", [3, 4]
         end
       end
       """,
-      "the group of the highlight option has the step 1, and the chart does not show at that step"
+      "the group of the highlight option has the step 3, and the chart does not show at that step"
     },
     goto: {
       """

@@ -33,19 +33,23 @@ defmodule Expresso.Overlay.Expand do
   An element without an `at` option keeps `nil` in that field.
 
   The `auto_reveal` option of the slide gives an implicit `[from: :next]` to
-  each element at the level of the slide that has no `at` option. The function
-  applies the option before the counter walk. It changes no nested element,
-  and a nested element without an `at` option keeps `nil`.
+  each element at the level of the slide that has no `at` option, but not to a
+  `footnote` or a `spacer`. The function applies the option before the
+  counter walk. It changes no nested element, and a nested element without an
+  `at` option keeps `nil`.
 
   The `reveal` option of an element, such as a `list` or a `table`, gives the
   same implicit specification to each child of the element that has no `at`
   option. With a `header` option, the first child keeps `nil`. A code element
   holds a list in the option, and `Expresso.Element.Code.build/1` makes its
-  children with the specification before this function runs. The children of
-  an element with an absolute `at` option read a counter that starts at the
-  first step of the element, and the counter of the slide does not change.
-  Therefore the children show one after the other from the first step of the
-  element, and no child gets a step at which the element does not show.
+  children with the specification before this function runs.
+
+  The children of an element with an absolute `at` option read a counter that
+  starts at the first step of the element, and the counter of the slide does
+  not change. The same counter gives the steps of the `whole_first` option,
+  of the groups of the `highlight` option and of the frames of a chart. The
+  descendants of the children read the same counter. Therefore they show one
+  after the other from the first step of the element.
 
   The `dim` option of a list, a table or a code element gives each child the
   state `dim` from the first step of a later child. The function adds an `on`
@@ -129,11 +133,13 @@ defmodule Expresso.Overlay.Expand do
 
   # The implicit specification of the auto_reveal option. It goes on each
   # element at the level of the slide that has no at option. A pause has no at
-  # field, so the first clause does not match it.
+  # field, so the third clause does not match it. A footnote and a spacer
+  # keep nil, because neither has visible content of its own on the slide.
 
   defp auto_reveal(elements, true) do
     Enum.map(elements, fn
       %Expresso.Element.Footnote{} = footnote -> footnote
+      %Expresso.Element.Spacer{} = spacer -> spacer
       %{at: nil} = element -> %{element | at: Overlay.from_next()}
       element -> element
     end)
@@ -168,36 +174,41 @@ defmodule Expresso.Overlay.Expand do
         {%On{on | at: at}, counter}
       end)
 
-    counter = counter + lead(element)
-
-    {focus, counter} = Enum.map_reduce(focus(element), counter, &resolve_element/2)
-
-    children = reveal(element)
-
-    {children, counter, local} =
-      if reveals?(element) and absolute?(spec) do
-        first = Overlay.first_step(spec)
-        {children, local} = Enum.map_reduce(children, first, &resolve_element/2)
-        {children, counter, {first, local}}
-      else
-        {children, after_children} = Enum.map_reduce(children, counter, &resolve_element/2)
-        {children, after_children, nil}
-      end
-
+    {focus, children, counter, frames_from} = resolve_inside(element, spec, entry, counter)
     element = element |> put(at, on, children) |> put_focus(focus)
 
-    cond do
-      frames(element) == [] ->
+    case frames(element) do
+      [] ->
         {element, counter}
 
-      absolute?(spec) ->
-        {first, last} = local || {Overlay.first_step(spec), Overlay.first_step(spec)}
-        {element, _local} = resolve_frames(element, first, last)
-        {element, counter}
-
-      true ->
-        resolve_frames(element, entry, counter)
+      _frames ->
+        {first, last} = frames_from
+        {element, last} = resolve_frames(element, first, last)
+        if absolute?(spec), do: {element, counter}, else: {element, last}
     end
+  end
+
+  # The lead steps, the groups of the highlight option and the children of an
+  # element. They read a local counter that starts at the first step of an
+  # element with an absolute specification, and the counter of the slide does
+  # not change. Otherwise they read the counter of the slide. The last value
+  # goes to the frames of a chart, with the entry value of the counter.
+  defp resolve_inside(element, spec, entry, counter) do
+    if absolute?(spec) do
+      first = Overlay.first_step(spec)
+      {focus, children, local} = resolve_steps(element, first)
+      {focus, children, counter, {first, local}}
+    else
+      {focus, children, counter} = resolve_steps(element, counter)
+      {focus, children, counter, {entry, counter}}
+    end
+  end
+
+  defp resolve_steps(element, counter) do
+    counter = counter + lead(element)
+    {focus, counter} = Enum.map_reduce(focus(element), counter, &resolve_element/2)
+    {children, counter} = Enum.map_reduce(reveal(element), counter, &resolve_element/2)
+    {focus, children, counter}
   end
 
   # The frames of a chart. The first frame shows at the steps of the series,
@@ -250,16 +261,6 @@ defmodule Expresso.Overlay.Expand do
   end
 
   defp reveal(element), do: children(element)
-
-  # A list or a table has the value true, and a code element has a list of
-  # line groups. Either reveals its children.
-  defp reveals?(element) do
-    case Map.get(element, :reveal) do
-      true -> true
-      [_ | _] -> true
-      _other -> false
-    end
-  end
 
   defp absolute?(nil), do: false
   defp absolute?(%Overlay{} = spec), do: not Overlay.relative?(spec)

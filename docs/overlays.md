@@ -113,7 +113,9 @@ end
 `auto_reveal` is a boolean option of the `slide` entity, and its default value is `false`.
 With the value `true`, the transformer gives `at [from: :next]` to each element at the
 level of the slide that has no `at` option. The elements of the slide then show one after
-the other, which is the behavior of Beamer.
+the other, which is the behavior of Beamer. The option does not change a `footnote` or a
+`spacer`, because neither element has visible content of its own on the slide. Without
+this exception, a `spacer` takes a step at which the presenter sees no change.
 
 ```elixir
 slide "steps" do
@@ -140,9 +142,9 @@ The option changes an element at the level of the slide only. A nested element k
 An earlier version of this document said "each element without an `at` option", with no
 level. That rule is not correct, and this document gives the evidence:
 
-- A nested element under a parent with an explicit `at` takes the counter value 1, because
-  an absolute specification does not move the counter. The child is then outside its
-  parent, and the verifier reports an error for a deck that the author wrote correctly.
+- A nested element under a parent with a closed absolute `at`, such as `at 3`, takes the
+  step after the step of the parent. The child is then outside its parent, and the
+  verifier reports an error for a deck that the author wrote correctly.
 - Where each parent is also implicit, there is no error, but each container costs one step.
   A slide with one `text_box` and one `text_area` becomes a slide of two steps. The box
   then shows with no text in it at the first step.
@@ -196,7 +198,10 @@ These rules apply with the option:
 - An element with an absolute `at` option, such as `at from: 3`, gives its children a
   counter that starts at its own first step. The counter of the slide does not change.
   Therefore no child gets a step at which the element does not show, which is the error
-  of `auto_reveal` under a parent with an absolute specification.
+  of `auto_reveal` under a parent with an absolute specification. This rule applies to
+  each element with an absolute `at` option, also without `reveal`. The descendants of
+  the children read the same counter. Thus a `list` with `reveal true` and no `at`
+  option inside a `text_box` with `at from: 3` shows its first item at step 3.
 - A closed absolute specification, such as `at 3`, shows the element at one step only.
   The second child then gets the step 4, and the verifier reports it. Write `at from: 3`
   for an element that reveals its children.
@@ -426,7 +431,12 @@ The verifier gives an error for these conditions:
 - An `on` entity has a specification that no step of the `at` option contains.
 - A `pause` entity is inside a container element.
 - An `on` entity with `move_to` is not in a part of a diagram, or it also sets `x` or `y`.
-- A child element has a step that its parent does not contain.
+- A child element has a step that its nearest ancestor with steps does not contain. An
+  element without an `at` option shows at each step of its parent, so it does not limit
+  its children. The same rule applies to an `on` entity of an element without an `at`
+  option.
+- A frame of a chart starts at a step that the chart does not contain. The last frame can
+  show after the last step of the chart, so the condition reads only the first step.
 
 The first condition needs a maximum step number that comes from a different source than
 the specifications. If each slide calculates its own maximum from its specifications, an
@@ -434,7 +444,7 @@ absolute step number always raises the maximum, and the condition is unreachable
 `steps` option of the slide is that source. See the decisions.
 
 The transformer reports the first condition, because the expansion of an open
-specification needs the maximum. `Expresso.Overlay.Check.slide/1` reports the other five
+specification needs the maximum. `Expresso.Overlay.Check.slide/1` reports the other
 conditions on one expanded `Expresso.Slide` struct, and it is a pure function.
 `Expresso.Overlay.Verifier` calls it for each slide. The DSL accepts a `pause` inside an
 element, because the macros of the slide stay in scope in each nested block, and the check
@@ -640,7 +650,8 @@ The base rule gives this result without more work. A parent with `opacity: 0` hi
 children, and a parent with `display: none` removes them from the layout.
 
 A child with a step that its parent does not contain is a defect. The verifier must give an
-error for this condition.
+error for this condition. An element without an `at` option has no steps of its own, so the
+verifier compares the child with the nearest ancestor that has steps.
 
 ### Custom properties
 

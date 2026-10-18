@@ -152,7 +152,8 @@ see [Make a color of your own dim](../how-to/style-one-slide.md#make-a-color-of-
 ## `auto_reveal`
 
 The slide option `auto_reveal true` shows each element of the slide at its own step, one
-after the other.
+after the other. The option does not change a `footnote` or a `spacer`, because neither
+element has visible content of its own on the slide.
 
 ## `pause`
 

@@ -488,8 +488,16 @@ defmodule Expresso.ChartHighlightTest do
 
     test "the verifier refuses a group at a step at which the chart does not show" do
       assert_raise Spark.Error.DslError,
-                   ~r/the group of the highlight option has the step 1, and the chart does not show at that step/,
+                   ~r/the group of the highlight option has the step 3, and the chart does not show at that step/,
                    fn -> one_slide([bars(at: 2, highlight: ["Orders", "Returns"])]) end
+    end
+
+    test "the groups of a chart with an absolute at option start at its first step" do
+      [%{elements: [chart]}] =
+        one_slide([bars(at: [from: 2], highlight: ["Orders", "Returns"])]).slides
+
+      assert chart.steps == [2, 3]
+      assert Enum.map(chart.focus, & &1.steps) == [[2], [3]]
     end
   end
 end

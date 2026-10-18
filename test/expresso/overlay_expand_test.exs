@@ -191,6 +191,20 @@ defmodule Expresso.Overlay.ExpandTest do
       assert [%TextBox{steps: nil}] = expand([%TextBox{}]).elements
     end
 
+    test "gives no step to a spacer or a footnote" do
+      elements = [
+        %TextBox{},
+        %Expresso.Element.Spacer{},
+        %Expresso.Element.Footnote{},
+        %TextBox{}
+      ]
+
+      slide = auto(elements)
+
+      assert Enum.map(slide.elements, & &1.steps) == [[1, 2], nil, nil, [2]]
+      assert slide.metadata.max_step == 2
+    end
+
     test "leaves a pause of the slide in the counter only" do
       slide = auto([%Pause{}, %TextBox{}])
 
@@ -226,6 +240,17 @@ defmodule Expresso.Overlay.ExpandTest do
       assert Enum.map(list.elements, & &1.steps) == [[3, 4, 5], [4, 5], [5]]
       assert box.steps == [1]
       assert list.steps == [3, 5]
+    end
+
+    test "starts the local counter for the descendants of an element without reveal" do
+      box = %TextBox{at: spec(from: 3), elements: [list(elements: [item(), item()])]}
+      [box, next] = expand([box, %TextBox{at: spec(:next)}]).elements
+      [list] = box.elements
+
+      assert box.steps == [3, 4]
+      assert list.steps == nil
+      assert Enum.map(list.elements, & &1.steps) == [[3, 4], [4]]
+      assert next.steps == [1]
     end
 
     test "keeps the first child without a specification with the header option" do
