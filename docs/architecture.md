@@ -1769,6 +1769,11 @@ reasons for this design:
 - **HTML boxes in an SVG.** The lines are paths in one SVG, and each box is a
   `foreignObject` with the HTML of the box. The SVG scales the whole tree to the box of the
   element, and the text of a box ends with an ellipsis as HTML does.
+- **The values before the layout.** `Expresso.Element.Hierarchy.Values.prepare/2` applies
+  `depth`, `sum`, `sort` and `limit` to the tree, and `Expresso.Element.Hierarchy.prepared/1`
+  returns the result. The layout, the colors and the HTML read that tree only. The node of
+  the rest of a `limit` has a name that starts with a NUL character, so no name of the data
+  is the same.
 - **The colors in the compiler.** `Expresso.Element.Hierarchy.colors/1` finds the color of
   each node from a role, a branch or a field, and the renderer writes it into
   `--tree-color`. The palette is the palette of the charts, so a tree and a chart in one

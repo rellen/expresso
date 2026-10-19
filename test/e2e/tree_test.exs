@@ -60,6 +60,30 @@ defmodule Expresso.E2E.TreeTest do
     end
   end
 
+  # A disk with values in bytes, a bar in each box and a limit.
+  defmodule DiskDeck do
+    use Expresso
+
+    name "tree values"
+
+    slide "disk" do
+      tree do
+        title "The disk"
+        value_format :bytes
+        sort :value
+        bar true
+        limit 2
+
+        node "/" do
+          node "photos", value: 400_000_000_000
+          node "code", value: 40_000_000_000
+          node "music", value: 100_000_000_000
+          node "tmp", value: 60_000_000_000
+        end
+      end
+    end
+  end
+
   # The rectangle of each box, the drawing and the list on the screen.
   defp geometry(page) do
     js(page, """
@@ -212,5 +236,31 @@ defmodule Expresso.E2E.TreeTest do
              ["Berlin", property(page, "--chart-1"), true],
              ["Lyon", property(page, "--chart-2"), true]
            ]
+  end
+
+  test "the bar of a box has the length of its part of the value of the root",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(DiskDeck, tmp_dir))
+
+    boxes =
+      js(page, """
+      Array.from(document.querySelectorAll(".screen .tree-box"), (box) => [
+        box.querySelector(".tree-label").textContent,
+        box.querySelector(".tree-value").textContent,
+        box.querySelector(".tree-bar-fill").getBoundingClientRect().width /
+          box.querySelector(".tree-bar").getBoundingClientRect().width
+      ])
+      """)
+
+    assert Enum.map(boxes, &Enum.take(&1, 2)) == [
+             ["/", "600 GB"],
+             ["photos", "400 GB"],
+             ["music", "100 GB"],
+             ["2 more", "100 GB"]
+           ]
+
+    for {[_label, _text, ratio], expected} <- Enum.zip(boxes, [1, 2 / 3, 1 / 6, 1 / 6]) do
+      assert_in_delta ratio, expected, 0.01
+    end
   end
 end

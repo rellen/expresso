@@ -100,13 +100,18 @@ defmodule Expresso.BuilderTest do
           [
             title: "T",
             color: :branch,
+            value_format: :bytes,
+            sort: :value,
+            bar: true,
+            limit: 3,
+            depth: 4,
             box: [[width: 200, height: 80], [width: 160, height: 64]]
           ],
           elements: [
             entity(:node, ["A"], [detail: "a", image: "examples/logo.png"],
               elements: [
                 entity(:node, ["B"], label: "b", class: "x", icon: "rocket"),
-                entity(:node, ["C"], fields: [team: "x", floor: 2], color: :success)
+                entity(:node, ["C"], fields: [team: "x", floor: 2], color: :success, value: 2048)
               ]
             )
           ]

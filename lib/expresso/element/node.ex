@@ -12,8 +12,8 @@ defmodule Expresso.Element.Node do
 
   In a tree, the name is the identity of the node, and the default text of
   its box. The node holds the nodes under it in `elements`.
-  `Expresso.Element.Hierarchy` reads it. The `image`, `icon`, `fields` and
-  `color` options add to the box. `Expresso.PathTransformer` joins the path of
+  `Expresso.Element.Hierarchy` reads it. The `image`, `icon`, `fields`,
+  `color` and `value` options add to the box. `Expresso.PathTransformer` joins the path of
   the image to the root of the deck, and `Expresso.IconTransformer` puts the
   SVG of the icon into `svg`.
 
@@ -34,6 +34,7 @@ defmodule Expresso.Element.Node do
           svg: String.t() | nil,
           fields: [{String.t(), String.t()}] | nil,
           color: atom() | nil,
+          value: number() | nil,
           class: String.t() | nil,
           elements: [t()] | nil
         }
@@ -51,6 +52,7 @@ defmodule Expresso.Element.Node do
               :svg,
               :fields,
               :color,
+              :value,
               :class,
               elements: [],
               __spark_metadata__: nil
@@ -69,7 +71,7 @@ defmodule Expresso.Element.Node do
   def chart_options(%__MODULE__{} = node),
     do: for(key <- [:column, :order], Map.fetch!(node, key) != nil, do: key)
 
-  @tree_options [:detail, :image, :icon, :fields, :color]
+  @tree_options [:detail, :image, :icon, :fields, :color, :value]
 
   @doc """
   Make sure that a `fields` option is a list of names and texts
@@ -99,6 +101,21 @@ defmodule Expresso.Element.Node do
     do: (is_atom(name) or is_binary(name)) and (is_binary(text) or is_number(text))
 
   defp field?(_field), do: false
+
+  @doc """
+  Make sure that a `value` option is a number that is not negative
+
+      iex> Expresso.Element.Node.value(412.5)
+      {:ok, 412.5}
+
+      iex> {:error, _message} = Expresso.Element.Node.value(-1)
+  """
+  @spec value(term()) :: {:ok, number()} | {:error, String.t()}
+  def value(value) when is_number(value) and value >= 0, do: {:ok, value}
+
+  def value(value),
+    do:
+      {:error, "a value of a node is a number that is not negative, and #{inspect(value)} is not"}
 
   @doc """
   Return the options of a node that only a tree takes and that the node
