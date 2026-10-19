@@ -89,8 +89,10 @@ defmodule Expresso.Overlay.Render do
   defp identity?(%Chart{} = chart),
     do: on(chart) != [] or Chart.moves?(chart) or chart.focus != []
 
-  # A tree with `reflow` moves its boxes, and the rules of the moves name it.
+  # A tree with `reflow` moves its boxes, and a tree with the `highlight`
+  # option dims its boxes. The rules of the moves and of the groups name it.
   defp identity?(%Hierarchy{reflow: true}), do: true
+  defp identity?(%Hierarchy{focus: [_ | _]}), do: true
 
   defp identity?(element), do: on(element) != []
 
@@ -171,8 +173,8 @@ defmodule Expresso.Overlay.Render do
     `Expresso.Element.Chart.rules/1`. Each rule of a frame sets the custom
     properties of the frame at its steps, and each rule of a group dims the
     other series at the step of the group.
-  - The rules of the moves of each tree with `reflow`, from
-    `Expresso.Element.Hierarchy.rules/1`.
+  - The rules of the moves of each tree with `reflow` and of the groups of
+    its `highlight` option, from `Expresso.Element.Hierarchy.rules/1`.
   - One rule for each speed in milliseconds of the deck, such as
     `[data-speed="450"] { --speed: 450ms; }`. The theme gives the presets.
 
@@ -198,7 +200,7 @@ defmodule Expresso.Overlay.Render do
         do: rule
   end
 
-  # The rules of the moves of each tree with `reflow`.
+  # The rules of the moves and of the groups of each tree.
   # `Expresso.Element.Hierarchy.rules/1` writes them.
   defp trees(slides) do
     for slide <- slides,

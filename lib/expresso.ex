@@ -27,6 +27,7 @@ defmodule Expresso do
     quote do
       unquote(dsl)
       import Kernel, except: [node: 1]
+      import Expresso.Element.Hierarchy, only: [branch: 1]
     end
   end
 

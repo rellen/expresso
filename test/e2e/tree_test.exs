@@ -152,6 +152,30 @@ defmodule Expresso.E2E.TreeTest do
     end
   end
 
+  # A tree with a node, a branch and a list in focus, one at each step.
+  defmodule HighlightDeck do
+    use Expresso
+
+    name "tree highlight"
+
+    slide "focus" do
+      tree do
+        title "The plant"
+        highlight ["Ben", branch("Eve")]
+
+        node "Ana" do
+          node "Ben" do
+            node "Cy"
+          end
+
+          node "Eve" do
+            node "Gus"
+          end
+        end
+      end
+    end
+  end
+
   # The rectangle of each box, the drawing and the list on the screen.
   defp geometry(page) do
     js(page, """
@@ -428,5 +452,43 @@ defmodule Expresso.E2E.TreeTest do
     # The lines to Ben, Cy, Di, Eve and Gus show, and each one is drawn.
     assert length(offsets) == 5
     assert Enum.all?(offsets, &(&1 in ["0", "0px", "0%"]))
+  end
+
+  test "highlight dims each box and each line outside the group of the step",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = page |> open(render(HighlightDeck, tmp_dir)) |> slow_motion(0)
+    text = rgb(property(page, "--text"))
+    dimmed = rgb(property(page, "--text-dim"))
+
+    colors = fn ->
+      page |> boxes() |> Map.new(fn {label, [_opacity, color, _left]} -> {label, color} end)
+    end
+
+    assert colors.() == %{
+             "Ana" => dimmed,
+             "Ben" => text,
+             "Cy" => dimmed,
+             "Eve" => dimmed,
+             "Gus" => dimmed
+           }
+
+    press(page, "j")
+    wait_for_position(page, "1.2")
+
+    assert colors.() == %{
+             "Ana" => dimmed,
+             "Ben" => dimmed,
+             "Cy" => dimmed,
+             "Eve" => text,
+             "Gus" => text
+           }
+
+    # The lines to Eve and to Gus keep their color, and the others dim.
+    lines =
+      js(page, """
+      Array.from(#{@current}.querySelectorAll("path.tree-line"), (line) => getComputedStyle(line).getPropertyValue("--dimmed").trim())
+      """)
+
+    assert lines == ["1", "0", "1", "0"]
   end
 end

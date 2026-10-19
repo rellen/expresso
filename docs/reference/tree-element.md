@@ -67,6 +67,8 @@ tree(title: "The folders", elements: [
 | `reveal` | `:levels`, `:branches` or `:nodes` | Show the nodes in steps. See [the steps](#the-steps). |
 | `dim` | `true` or `false` | Dim the boxes of the earlier steps. The default is `false`. |
 | `reflow` | `true` or `false` | Calculate the layout at each step from the boxes that show. The default is `false`. |
+| `highlight` | A list of groups | One group of nodes in focus at each step. See [the highlight option](#the-highlight-option). |
+| `whole_first` | `true` or `false` | With `highlight`, show the whole tree in full color for one step first. The default is `false`. |
 | `stack_from` | A level of 2 or more | The first level that the tree stacks, with `1` for the root. |
 | `sum` | `true` or `false` | Give a node with no `value` the sum of the values under it. The default is `true`. |
 | `value_format` | `:number`, `:bytes` or `:percent` | The text of a value, such as `1,250`, `412 GB` or `12.5%`. The default is `:number`. |
@@ -272,6 +274,46 @@ The effect `:grow` draws each line from its parent to its box when the box shows
 box grows into its place.
 
 The node of the rest of a `limit` shows with the last node that the limit keeps.
+
+## The highlight option
+
+The `highlight` option puts one group of nodes in focus at each step, and the rest of the
+tree dims. Each box shows at each step.
+
+```elixir
+slide "the teams in turn" do
+  tree do
+    title "The plant"
+    highlight ["Ben", branch("Eve"), ["Cy", "Gus"]]
+
+    node "Ana" do
+      node "Ben" do
+        node "Cy"
+        node "Di"
+      end
+
+      node "Eve" do
+        node "Gus"
+      end
+    end
+  end
+end
+```
+
+A group is one of these:
+
+- the name of a node, such as `"Ben"`;
+- `branch("Eve")`, for the node and each node under it, also the node of the rest of a
+  `limit`. `use Expresso` imports `branch/1`, and `{:branch, "Eve"}` is the same value;
+- a list of those, such as `["Cy", "Gus"]`.
+
+The line to a box in focus keeps its color, so the path from the root to the group stays
+clear. A dimmed box takes the dimmed colors of the theme, as with `dim true`. With
+`whole_first true`, the first step shows the whole tree in full color, and the first group
+comes into focus at the next step.
+
+A tree takes `highlight` or `reveal`, and not both. The `highlight` option dims the other
+nodes itself, so a tree with it takes no `dim` option.
 
 ## The box
 
@@ -487,8 +529,9 @@ The renderer writes a `figure` with the class `tree`. It holds:
   `--tree-color` in its `style`, such as `var(--chart-2)` or `var(--danger)`;
 - the overlay attributes of each node on its `foreignObject`, which has the class
   `tree-node`, and on the line to the node. With `reflow true`, each `foreignObject` also
-  has `data-node` with its place in the tree, and each run of steps with the same boxes has
-  its own copy of the lines. Each line has `pathLength="1"` for the effect `:grow`;
+  each run of steps with the same boxes has its own copy of the lines. Each line has `pathLength="1"` for the effect `:grow`. With
+  `reflow true` or `highlight`, each box and each line also has `data-node`, the place of its
+  node in the tree, and the tree has `data-el`;
 - with `color {:field, name}`, a `foreignObject` under the boxes that holds a `ul` with the
   class `tree-legend`. Each `li` holds a `span` with the class `tree-swatch` and the value;
 - a `ul` with the class `tree-list` and an `aria-label` with the title. It holds the same
@@ -523,7 +566,9 @@ The compiler gives an error for these:
 - a `parent` option on a node inside a different node;
 - a `morph` option on a node. Give the option to the tree;
 - a node that shows at a step at which the node above it does not show;
-- a `reveal` value that is not `:levels`, `:branches` or `:nodes`.
+- a `reveal` value that is not `:levels`, `:branches` or `:nodes`;
+- a `highlight` option that is not a list of groups, a group that names no node of the
+  tree, `highlight` with `reveal` or with `dim`, and `whole_first` without `highlight`.
 
 A path of an image that the renderer cannot read is an error of the render, as for the
 image element.

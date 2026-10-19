@@ -1088,6 +1088,109 @@ defmodule Expresso.TreeElementTest do
 
   defp nodes_of(%Node{} = node), do: [node | Enum.flat_map(node.elements, &nodes_of/1)]
 
+  describe "the highlight option" do
+    defp identified(tree, slide_opts \\ []) do
+      [%{elements: [tree]}] =
+        (tree |> one_slide(slide_opts) |> Expresso.Overlay.Render.identify()).slides
+
+      tree
+    end
+
+    test "each group takes one step, after the step of whole_first" do
+      tree = identified(staff(highlight: ["Ben", {:branch, "Eve"}], whole_first: true))
+      assert Enum.map(tree.focus, & &1.steps) == [[2], [3]]
+      assert Enum.map(tree.focus, & &1.keys) == [["Ben"], [{:branch, "Eve"}]]
+    end
+
+    test "a group dims each box and each line whose node is not in the group" do
+      tree = identified(staff(highlight: ["Ben", {:branch, "Eve"}, ["Cy", "Gus"]]))
+      el = tree.el
+
+      # The full layout places Ana, Ben, Cy, Di, Eve and Gus as 0 to 5.
+      assert Hierarchy.rules(tree) == [
+               ~s|section[data-step="1"] [data-el="#{el}"] [data-node]:not([data-node="1"]) { --dimmed: 1; }|,
+               ~s|section[data-step="2"] [data-el="#{el}"] [data-node]:not([data-node="4"]):not([data-node="5"]) { --dimmed: 1; }|,
+               ~s|section[data-step="3"] [data-el="#{el}"] [data-node]:not([data-node="2"]):not([data-node="5"]) { --dimmed: 1; }|
+             ]
+    end
+
+    test "a branch holds the node of the rest of a limit, and a node that a limit removes has no box" do
+      tree =
+        identified(
+          Builder.tree(
+            title: "T",
+            limit: 1,
+            highlight: [{:branch, "A"}, "C"],
+            elements: [Builder.node("A", elements: [Builder.node("B"), Builder.node("C")])]
+          )
+        )
+
+      [branch, removed] = Hierarchy.rules(tree)
+
+      assert branch =~
+               ~s|[data-node]:not([data-node="0"]):not([data-node="1"]):not([data-node="2"])|
+
+      assert removed =~ ~s|[data-node] { --dimmed: 1; }|
+    end
+
+    test "each box and each line has the number of its node" do
+      figure = figure(staff(highlight: ["Ben"]))
+
+      assert figure
+             |> LazyHTML.query("foreignObject.tree-node")
+             |> LazyHTML.attribute("data-node") ==
+               ["0", "1", "2", "3", "4", "5"]
+
+      # The lines go to Ben, Eve, Cy, Di and Gus.
+      assert figure |> LazyHTML.query("path.tree-line") |> LazyHTML.attribute("data-node") ==
+               ["1", "4", "2", "3", "5"]
+
+      assert figure |> LazyHTML.attribute("data-el") != []
+    end
+
+    test "a tree without highlight has no number on its boxes" do
+      assert count(figure(staff()), "[data-node]") == 0
+    end
+
+    test "the DSL takes branch/1" do
+      defmodule HighlightDeck do
+        use Expresso
+
+        slide "s" do
+          tree do
+            title "T"
+            highlight ["A", branch("B")]
+
+            node "A" do
+              node "B"
+            end
+          end
+        end
+      end
+
+      assert {:ok, %Expresso.Deck{slides: [%{elements: [tree]}]}} =
+               Expresso.to_deck(HighlightDeck)
+
+      assert tree.highlight == [["A"], [{:branch, "B"}]]
+    end
+
+    test "the errors of the highlight option" do
+      for {opts, message} <- [
+            {[highlight: []], ~r/a highlight option takes a list of groups/},
+            {[highlight: [[]]], ~r/a highlight option takes a list of groups/},
+            {[highlight: [:ben]], ~r/a highlight option takes a list of groups/},
+            {[highlight: ["Zed"]], ~r/names the node "Zed", and the tree has no node/},
+            {[highlight: [{:branch, "Zed"}]], ~r/names the node "Zed"/},
+            {[highlight: ["Ben"], reveal: :levels],
+             ~r/the reveal option or the highlight option/},
+            {[highlight: ["Ben"], dim: true], ~r/so the tree takes no dim option/},
+            {[whole_first: true], ~r/the whole_first option of a tree needs the highlight option/}
+          ] do
+        assert_raise ArgumentError, message, fn -> staff(opts) end
+      end
+    end
+  end
+
   describe "the errors" do
     test "a tree holds one root" do
       assert_raise ArgumentError, ~r/this tree holds none/, fn -> Builder.tree(title: "T") end

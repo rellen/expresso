@@ -31,6 +31,8 @@ defmodule Expresso.Element.Hierarchy do
   alias Expresso.Element.Hierarchy.Steps
   alias Expresso.Element.Hierarchy.Values
   alias Expresso.Element.Chart
+  alias Expresso.Element.Focus
+  alias Expresso.Overlay
   alias Expresso.Element.Chart.Csv
   alias Expresso.Element.Hierarchy.Data
   alias Expresso.Element.Node
@@ -58,6 +60,9 @@ defmodule Expresso.Element.Hierarchy do
               reveal: nil,
               dim: false,
               reflow: false,
+              highlight: nil,
+              whole_first: false,
+              focus: [],
               separator: "/",
               elements: [],
               __spark_metadata__: nil
@@ -144,6 +149,50 @@ defmodule Expresso.Element.Hierarchy do
     do: {:ok, {:field, Atom.to_string(name)}}
 
   def color(_value), do: {:error, @color_error}
+
+  @doc """
+  Return the item of the `highlight` option for a node and each node under it
+
+  `use Expresso` imports this function, so a deck can write
+  `highlight ["Ben", branch("Ben")]`.
+
+      iex> Expresso.Element.Hierarchy.branch("Ben")
+      {:branch, "Ben"}
+  """
+  @spec branch(String.t()) :: {:branch, String.t()}
+  def branch(name) when is_binary(name), do: {:branch, name}
+
+  @highlight_error "a highlight option takes a list of groups, such as [\"Ben\", branch(\"Ben\"), [\"Cy\", \"Di\"]]. A group is the name of a node, branch(name), or a list of those"
+
+  @doc """
+  Make sure that a `highlight` option is a list of groups
+
+  This function is the custom type of the option. A group is the name of a
+  node, `{:branch, name}`, or a list of those. The function returns each
+  group as a list.
+
+      iex> Expresso.Element.Hierarchy.highlight(["Ben", {:branch, "Eve"}, ["Cy", "Di"]])
+      {:ok, [["Ben"], [{:branch, "Eve"}], ["Cy", "Di"]]}
+
+      iex> {:error, _message} = Expresso.Element.Hierarchy.highlight([[]])
+  """
+  @spec highlight(term()) :: {:ok, [[String.t() | {:branch, String.t()}]]} | {:error, String.t()}
+  def highlight([_ | _] = groups) do
+    groups = Enum.map(groups, &group/1)
+
+    if Enum.all?(groups, &(&1 != [] and Enum.all?(&1, fn item -> item?(item) end))),
+      do: {:ok, groups},
+      else: {:error, @highlight_error}
+  end
+
+  def highlight(_groups), do: {:error, @highlight_error}
+
+  defp group(items) when is_list(items), do: items
+  defp group(item), do: [item]
+
+  defp item?(name) when is_binary(name), do: true
+  defp item?({:branch, name}) when is_binary(name), do: true
+  defp item?(_item), do: false
 
   @doc """
   Make sure that a `stack_from` option is a level under the root
@@ -329,7 +378,7 @@ defmodule Expresso.Element.Hierarchy do
          :ok <- color_field(tree, nodes),
          :ok <- root_value(tree),
          :ok <- names(nodes),
-         do: {:ok, tree}
+         do: focus(tree, nodes)
   end
 
   defp nodes_check(%__MODULE__{elements: []}),
@@ -366,6 +415,44 @@ defmodule Expresso.Element.Hierarchy do
         {:error,
          "the node \"#{chart.name}\" gives the #{hd(Node.chart_options(chart))} option, " <>
            "and only a node of a chart of flows takes it"}
+    end
+  end
+
+  # The groups of the highlight option. Each group takes one step from the
+  # counter of the slide, as the groups of a chart do.
+  defp focus(%__MODULE__{highlight: nil, whole_first: true}, _nodes),
+    do: {:error, "the whole_first option of a tree needs the highlight option"}
+
+  defp focus(%__MODULE__{highlight: nil} = tree, _nodes), do: {:ok, tree}
+
+  defp focus(%__MODULE__{} = tree, nodes) do
+    names = MapSet.new(nodes, & &1.name)
+
+    unknown =
+      tree.highlight
+      |> List.flatten()
+      |> Enum.map(fn
+        {:branch, name} -> name
+        name -> name
+      end)
+      |> Enum.find(&(not MapSet.member?(names, &1)))
+
+    cond do
+      tree.reveal != nil ->
+        {:error, "a tree takes the reveal option or the highlight option, and not both"}
+
+      tree.dim ->
+        {:error,
+         "the highlight option dims the other nodes itself, so the tree takes no dim option"}
+
+      unknown != nil ->
+        {:error,
+         "the highlight option names the node \"#{unknown}\", and the tree has no node with that name"}
+
+      true ->
+        {:ok, next} = Overlay.new(:next)
+        groups = for group <- tree.highlight, do: %Focus{keys: group, at: next}
+        {:ok, %__MODULE__{tree | focus: groups}}
     end
   end
 
@@ -465,8 +552,9 @@ defmodule Expresso.Element.Hierarchy do
       title: tree.title,
       root: root,
       layout: layout,
-      boxes: Enum.map(layout.boxes, &{&1, node_attributes(&1.node, steps, tree.reflow, index)}),
-      lines: lines(tree, root, layout, steps, nodes),
+      boxes:
+        Enum.map(layout.boxes, &{&1, node_attributes(&1.node, steps, numbered?(tree), index)}),
+      lines: tree |> lines(root, layout, steps, nodes) |> number_lines(numbered?(tree), index),
       colors: Map.new(colors, fn {name, color} -> {name, css(color)} end),
       legend: legend,
       values: %{format: tree.value_format, total: root.value, bar: tree.bar},
@@ -478,16 +566,25 @@ defmodule Expresso.Element.Hierarchy do
   defp sizes(tree), do: tree.box || @box
   defp layout_options(tree), do: [layout: tree.layout, stack_from: tree.stack_from]
 
-  # The overlay attributes of the box of a node, with the steps of its box.
-  # A tree with `reflow` also gives the place of the box in the full layout,
-  # which the rules of the moves name.
-  defp node_attributes(%Node{} = node, steps, reflow, index) do
-    attributes = Expresso.Overlay.Render.attributes(%Node{node | steps: steps[node.name]})
+  # A tree with `reflow` or with the `highlight` option gives each box and
+  # each line the place of its node in the full layout, which the rules of
+  # the moves and of the groups name.
+  defp numbered?(%__MODULE__{reflow: reflow, focus: focus}), do: reflow or focus != []
 
-    if reflow,
-      do: attributes ++ [{"data-node", Integer.to_string(index[node.name])}],
-      else: attributes
+  # The overlay attributes of the box of a node, with the steps of its box.
+  defp node_attributes(%Node{} = node, steps, numbered?, index) do
+    attributes = Expresso.Overlay.Render.attributes(%Node{node | steps: steps[node.name]})
+    if numbered?, do: attributes ++ [number(node.name, index)], else: attributes
   end
+
+  defp number_lines(lines, false, _index),
+    do: Enum.map(lines, fn {path, _to, attributes} -> {path, attributes} end)
+
+  defp number_lines(lines, true, index),
+    do:
+      Enum.map(lines, fn {path, to, attributes} -> {path, attributes ++ [number(to, index)]} end)
+
+  defp number(name, index), do: {"data-node", Integer.to_string(index[name])}
 
   # The path of each line and its attributes. A line takes the steps of the
   # node at its end. With `reflow`, each run of steps with the same boxes has
@@ -503,14 +600,14 @@ defmodule Expresso.Element.Hierarchy do
             shown = Enum.filter(run, &(steps[to] == nil or &1 in steps[to])),
             shown != [] do
           node = %{nodes[to] | steps: shown}
-          {path, Expresso.Overlay.Render.attributes(node)}
+          {path, to, Expresso.Overlay.Render.attributes(node)}
         end
     end
   end
 
   defp lines(_tree, _root, layout, steps, nodes) do
     for {path, to} <- Enum.zip(layout.lines, layout.targets) do
-      {path, Expresso.Overlay.Render.attributes(%{nodes[to] | steps: steps[to]})}
+      {path, to, Expresso.Overlay.Render.attributes(%{nodes[to] | steps: steps[to]})}
     end
   end
 
@@ -522,19 +619,33 @@ defmodule Expresso.Element.Hierarchy do
   end
 
   @doc """
-  Return the rules of the moves of a tree with `reflow`
+  Return the rules of the moves and of the groups of a tree
 
-  At each step, a box that is not in its place of the full layout gets the
-  custom properties `--tree-dx` and `--tree-dy`, and the style sheet moves it
-  with a transition. `Expresso.Overlay.Render.style/1` adds the rules to the
-  style block of the deck. A tree without `reflow` has no rules.
+  With `reflow`, at each step, a box that is not in its place of the full
+  layout gets the custom properties `--tree-dx` and `--tree-dy`, and the style
+  sheet moves it with a transition.
+
+  A group of the `highlight` option gives one rule at its step. The rule sets
+  `--dimmed: 1` on each box and each line whose node is not in the group, so
+  the line to a box in focus keeps its color. A branch holds the node and
+  each node under it in the tree after the options of the values, also the
+  node of the rest of a `limit`. A node that `depth` or `limit` removes has
+  no box, so the rule leaves it out.
+
+  `Expresso.Overlay.Render.style/1` adds the rules to the style block of the
+  deck. A tree without `reflow` and without `highlight` has no rules.
   """
   @spec rules(t()) :: [String.t()]
-  def rules(%__MODULE__{reflow: true, el: el, elements: [_root]} = tree) when is_binary(el) do
+  def rules(%__MODULE__{el: el, elements: [_root]} = tree) when is_binary(el) do
     %__MODULE__{elements: [root]} = tree = prepared(tree)
     full = Layout.layout(root, sizes(tree), layout_options(tree))
     index = full.boxes |> Enum.with_index() |> Map.new(fn {box, i} -> {box.node.name, i} end)
+    move_rules(tree, root, full, index) ++ focus_rules(tree, root, index)
+  end
 
+  def rules(_tree), do: []
+
+  defp move_rules(%__MODULE__{reflow: true, el: el} = tree, root, full, index) do
     root
     |> Steps.layouts(sizes(tree), layout_options(tree), full)
     |> Steps.offsets(full)
@@ -545,7 +656,31 @@ defmodule Expresso.Element.Hierarchy do
     end)
   end
 
-  def rules(_tree), do: []
+  defp move_rules(_tree, _root, _full, _index), do: []
+
+  defp focus_rules(%__MODULE__{focus: focus, el: el}, root, index) do
+    for %Focus{keys: keys, steps: steps} <- focus, step <- steps || [] do
+      others =
+        keys
+        |> Enum.flat_map(&focused(&1, root))
+        |> Enum.filter(&Map.has_key?(index, &1))
+        |> Enum.map_join(&":not([data-node=\"#{index[&1]}\"])")
+
+      "section[data-step=\"#{step}\"] [data-el=\"#{el}\"] [data-node]#{others} " <>
+        "{ --dimmed: 1; }"
+    end
+  end
+
+  # The names of the nodes of an item of a group.
+  defp focused({:branch, name}, root),
+    do: root |> find(name) |> List.wrap() |> Enum.flat_map(&nodes/1) |> Enum.map(& &1.name)
+
+  defp focused(name, _root), do: [name]
+
+  defp find(%Node{name: name} = node, name), do: node
+
+  defp find(%Node{elements: children}, name),
+    do: Enum.find_value(children || [], &find(&1, name))
 
   # The CSS value of a color.
   defp css(nil), do: nil

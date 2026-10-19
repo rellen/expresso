@@ -880,6 +880,17 @@ defmodule Expresso.Extension do
             doc:
               "Dim the boxes of the earlier steps when a later box shows. The default is false."
           ],
+          highlight: [
+            type: {:custom, Expresso.Element.Hierarchy, :highlight, []},
+            doc:
+              "Groups of nodes, one group in focus at each step, such as [\"Ben\", branch(\"Ben\"), [\"Cy\", \"Di\"]]. An item is the name of a node, branch(name) for a node and each node under it, or a list of those. The rest of the tree dims. See docs/reference/tree-element.md."
+          ],
+          whole_first: [
+            type: :boolean,
+            default: false,
+            doc:
+              "With highlight, show the whole tree in full color for one step before the first group comes into focus. The default is false."
+          ],
           reflow: [
             type: :boolean,
             default: false,
