@@ -1784,6 +1784,20 @@ reasons for this design:
   returns the result. The layout, the colors and the HTML read that tree only. The node of
   the rest of a `limit` has a name that starts with a NUL character, so no name of the data
   is the same.
+- **The steps of a box from its node.** A box is a `foreignObject` and not a child of the
+  box of its parent, so the overlay contract cannot hide the boxes under a node with the
+  node. `Expresso.Element.Hierarchy.Steps.effective/1` gives each box the steps of its node,
+  or of the nearest node above it with steps, and the line to a node takes the same steps.
+- **The groups of `reveal` in the expansion.** `Expresso.Overlay.Expand` calls
+  `Expresso.Element.Hierarchy.Steps.groups/2` before the counter walk. Each group of
+  `:levels` or `:branches` takes one step, and its nodes get an absolute specification. A
+  relative `at` of a node takes its step there too, because the counter walk would give the
+  nodes under an absolute node a counter from that node.
+- **`reflow` with rules and copies.** The compiler calculates one layout for each step.
+  `Expresso.Element.Hierarchy.rules/1` writes a rule for each step and each box that is not in
+  its place, with `--tree-dx` and `--tree-dy`, and the transform moves the box. A path cannot
+  change its shape in each browser, so each run of steps with the same boxes has its own
+  copy of the lines, as the frames of a chart of flows do.
 - **The colors in the compiler.** `Expresso.Element.Hierarchy.colors/1` finds the color of
   each node from a role, a branch or a field, and the renderer writes it into
   `--tree-color`. The palette is the palette of the charts, so a tree and a chart in one

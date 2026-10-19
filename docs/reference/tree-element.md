@@ -64,6 +64,9 @@ tree(title: "The folders", elements: [
 | `color` | `:branch` or `{:field, name}` | The colors of the boxes from the palette. See [the colors](#the-colors). The default is no color. |
 | `layout` | `:top_down`, `:left_right` or `:stacked` | How the nodes under each node go. See [the layout](#the-layout). The default is `:top_down`. |
 | `src`, `delimiter`, `separator`, `fields` | | The CSV file of the nodes. See [the data](#the-data). |
+| `reveal` | `:levels`, `:branches` or `:nodes` | Show the nodes in steps. See [the steps](#the-steps). |
+| `dim` | `true` or `false` | Dim the boxes of the earlier steps. The default is `false`. |
+| `reflow` | `true` or `false` | Calculate the layout at each step from the boxes that show. The default is `false`. |
 | `stack_from` | A level of 2 or more | The first level that the tree stacks, with `1` for the root. |
 | `sum` | `true` or `false` | Give a node with no `value` the sum of the values under it. The default is `true`. |
 | `value_format` | `:number`, `:bytes` or `:percent` | The text of a value, such as `1,250`, `412 GB` or `12.5%`. The default is `:number`. |
@@ -95,6 +98,7 @@ A slide, a text box, a column and a callout can hold a tree.
 | `icon` | A name | An icon that the box shows at its left, in place of an image, such as `"factory"`. The names are the names of [the icon element](icon-element.md). |
 | `fields` | A keyword list | Short facts, one line each under the detail, such as `[team: "42 people", floor: 3]`. A name can also be a string, such as `[{"Cost center", "4100"}]`. A text is a string or a number. |
 | `color` | A role of the theme | The color of the box and of each box under it: `:text`, `:muted`, `:accent`, `:success`, `:emphasis`, `:warning` or `:danger`. |
+| `at`, `effect`, `speed`, `easing` and the `on` entity | | The steps of the box. See [the steps](#the-steps) and [the overlay options](overlay-options.md). |
 | `parent` | A name | The node above this node, in place of nesting. See [the parent option](#the-parent-option). |
 | `value` | A number that is not negative | A size or a count, such as `412_000_000_000`. See [the values](#the-values). |
 | `layout` | `:top_down`, `:left_right` or `:stacked` | How the nodes under this node go, and the nodes under them. See [the layout](#the-layout). |
@@ -108,7 +112,8 @@ Give a different name and a label to the second node, such as
 The `node` entity is also the entity of a node of a chart of flows. See
 [the chart element](chart-element.md). A chart takes the options `column` and `order`, and a
 tree does not. A tree takes `detail`, `image`, `icon`, `fields`, `color`, `value`,
-`layout`, `parent` and nested nodes, and a chart does not.
+`layout`, `parent`, the overlay options, the `on` entity and nested nodes, and a chart does
+not.
 
 ## The data
 
@@ -187,6 +192,86 @@ end
 
 Only a node at the top of the tree takes the option. The nodes under one parent keep their
 order, after the nodes that the parent holds in its block.
+
+## The steps
+
+Each box takes the overlay options of a node, so `at` and the `on` entity work as for each
+element. A box is not inside the box of its parent in the HTML, so the compiler gives each
+box the steps of its node, or of the nearest node above it with steps. Thus `at` on a node
+shows the node and the nodes under it at that step, unless they have their own `at`. The
+line to a node shows with the node.
+
+The `reveal` option of the tree gives the steps for the usual orders:
+
+| Value | The steps |
+| --- | --- |
+| `:levels` | The root shows first, then level 2, then level 3, and so on. |
+| `:branches` | The root shows first, then each node under the root with its branch, in order. |
+| `:nodes` | One node at each step, in the order of the tree. With `sort :value`, the largest node of a row comes first. |
+
+A node with its own `at` option keeps it, and the nodes under it take its steps. A `:next`
+in such an `at` takes a step after the steps of `reveal`.
+
+```elixir
+slide "the plant in steps" do
+  tree do
+    title "The plant"
+    reveal :levels
+    dim true
+
+    node "Ana" do
+      detail "Plant manager"
+
+      node "Ben" do
+        detail "Production"
+        node "Cy", detail: "Press"
+      end
+
+      node "Eve", detail: "Quality"
+    end
+  end
+end
+```
+
+`dim true` dims each box from the first step of a later box, as the `dim` option of a list
+does. A dimmed box moves its text to the dimmed colors of the theme, and its border, its
+tint, its icon, its bar and its line fade.
+
+### The reflow option
+
+With `reflow false`, the default, the layout keeps a place for each box from the first step.
+A box fades in at its place, and no box moves.
+
+With `reflow true`, the compiler calculates the layout at each step from the boxes that show
+at that step. When a box shows, the other boxes move to the new layout, with the `speed` and
+the `easing` of the tree. The layout of each step is at the center of the full layout: across
+for `:top_down`, and down for `:left_right`. A node that does not show keeps its place when a
+node under it shows.
+
+```elixir
+slide "a tree that grows" do
+  tree do
+    title "The plant"
+    reveal :branches
+    reflow true
+    effect :grow
+
+    node "Ana" do
+      node "Ben" do
+        node "Cy"
+        node "Di"
+      end
+
+      node "Eve"
+    end
+  end
+end
+```
+
+The effect `:grow` draws each line from its parent to its box when the box shows, and the
+box grows into its place.
+
+The node of the rest of a `limit` shows with the last node that the limit keeps.
 
 ## The box
 
@@ -400,6 +485,10 @@ The renderer writes a `figure` with the class `tree`. It holds:
 
   A box with a color also has the class `tree-colored` and the custom property
   `--tree-color` in its `style`, such as `var(--chart-2)` or `var(--danger)`;
+- the overlay attributes of each node on its `foreignObject`, which has the class
+  `tree-node`, and on the line to the node. With `reflow true`, each `foreignObject` also
+  has `data-node` with its place in the tree, and each run of steps with the same boxes has
+  its own copy of the lines. Each line has `pathLength="1"` for the effect `:grow`;
 - with `color {:field, name}`, a `foreignObject` under the boxes that holds a `ul` with the
   class `tree-legend`. Each `li` holds a `span` with the class `tree-swatch` and the value;
 - a `ul` with the class `tree-list` and an `aria-label` with the title. It holds the same
@@ -431,7 +520,10 @@ The compiler gives an error for these:
   that the file does not have;
 - a row with a value, a color or a layout that is not correct, with the number of its line;
 - two nodes with one identity, a parent that no node has, and a loop of parents;
-- a `parent` option on a node inside a different node.
+- a `parent` option on a node inside a different node;
+- a `morph` option on a node. Give the option to the tree;
+- a node that shows at a step at which the node above it does not show;
+- a `reveal` value that is not `:levels`, `:branches` or `:nodes`.
 
 A path of an image that the renderer cannot read is an error of the render, as for the
 image element.

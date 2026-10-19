@@ -14,6 +14,7 @@ defmodule Expresso.TreeElementTest do
   doctest Data
   doctest Layout
   doctest Values
+  doctest Expresso.Element.Hierarchy.Steps
   doctest Node
 
   # The plant: a root with three nodes, and nodes under two of them.
@@ -856,6 +857,236 @@ defmodule Expresso.TreeElementTest do
       end
     end
   end
+
+  describe "the steps" do
+    alias Expresso.Element.Hierarchy.Steps
+
+    # Ana holds Ben with Cy and Di, and Eve with Gus.
+    defp staff(tree_opts \\ [], ben \\ []) do
+      Builder.tree(
+        [
+          title: "T",
+          elements: [
+            Builder.node("Ana",
+              elements: [
+                Builder.node(
+                  "Ben",
+                  [elements: [Builder.node("Cy"), Builder.node("Di")]] ++ ben
+                ),
+                Builder.node("Eve", elements: [Builder.node("Gus")])
+              ]
+            )
+          ]
+        ] ++ tree_opts
+      )
+    end
+
+    # The tree of the one slide after the transformers, as the renderer gets it.
+    defp expanded(tree, slide_opts \\ []) do
+      [%{elements: [tree]}] = (tree |> one_slide(slide_opts)).slides
+      tree
+    end
+
+    defp node_steps(%Hierarchy{elements: [root]}), do: Steps.effective(root)
+
+    # The data-on of each box, by its label.
+    defp box_steps(tree) do
+      tree
+      |> figure()
+      |> LazyHTML.query("foreignObject.tree-node")
+      |> Enum.map(fn box ->
+        {hd(texts(box, ".tree-label")), LazyHTML.attribute(box, "data-on")}
+      end)
+    end
+
+    test "reveal :levels shows one level at each step" do
+      assert node_steps(expanded(staff(reveal: :levels))) == %{
+               "Ana" => [1, 2, 3],
+               "Ben" => [2, 3],
+               "Eve" => [2, 3],
+               "Cy" => [3],
+               "Di" => [3],
+               "Gus" => [3]
+             }
+    end
+
+    test "reveal :branches shows the root, then one branch at each step" do
+      assert node_steps(expanded(staff(reveal: :branches))) == %{
+               "Ana" => [1, 2, 3],
+               "Ben" => [2, 3],
+               "Cy" => [2, 3],
+               "Di" => [2, 3],
+               "Eve" => [3],
+               "Gus" => [3]
+             }
+    end
+
+    test "reveal :nodes shows one node at each step, in the order of the tree after sort" do
+      tree =
+        Builder.tree(
+          title: "T",
+          reveal: :nodes,
+          sort: :value,
+          elements: [
+            Builder.node("A",
+              elements: [Builder.node("small", value: 1), Builder.node("large", value: 9)]
+            )
+          ]
+        )
+
+      assert node_steps(expanded(tree)) == %{"A" => [1, 2, 3], "large" => [2, 3], "small" => [3]}
+    end
+
+    test "a node with its own at keeps it after the groups, and the nodes under it take its steps" do
+      steps = node_steps(expanded(staff([reveal: :levels], at: :next)))
+      assert {steps["Ana"], steps["Eve"], steps["Gus"]} == {[1, 2, 3, 4], [2, 3, 4], [3, 4]}
+      assert {steps["Ben"], steps["Cy"]} == {[4], [4]}
+    end
+
+    test "at on a node shows it and the nodes under it at that step" do
+      steps = node_steps(expanded(staff([], at: [from: 2]), steps: 3))
+
+      assert steps == %{
+               "Ana" => nil,
+               "Ben" => [2, 3],
+               "Cy" => [2, 3],
+               "Di" => [2, 3],
+               "Eve" => nil,
+               "Gus" => nil
+             }
+
+      assert box_steps(staff([], at: [from: 2])) == [
+               {"Ana", []},
+               {"Ben", ["2"]},
+               {"Cy", ["2"]},
+               {"Di", ["2"]},
+               {"Eve", []},
+               {"Gus", []}
+             ]
+    end
+
+    test "the line to a node has the steps of the node" do
+      lines =
+        staff(reveal: :levels)
+        |> figure()
+        |> LazyHTML.query("path.tree-line")
+        |> LazyHTML.attribute("data-on")
+
+      # The lines go to Ben, Eve, Cy, Di and Gus, in the order of the layout.
+      assert lines == ["2 3", "2 3", "3", "3", "3"]
+    end
+
+    test "dim true dims each box from the first step of a later box" do
+      %Hierarchy{elements: [root]} = expanded(staff(reveal: :levels, dim: true))
+
+      dims =
+        for node <- nodes_of(root),
+            on <- node.on,
+            on.state == :dim,
+            into: %{},
+            do: {node.name, on.steps}
+
+      assert dims == %{"Ana" => [2, 3], "Ben" => [3], "Eve" => [3]}
+
+      figure = figure(staff(reveal: :levels, dim: true))
+      assert count(figure, "foreignObject.tree-node[data-el]") == 3
+      assert count(figure, "path.tree-line[data-el]") == 2
+    end
+
+    test "the node of the rest of a limit shows with the last node that the limit keeps" do
+      tree =
+        Builder.tree(
+          title: "T",
+          reveal: :nodes,
+          limit: 1,
+          elements: [Builder.node("A", elements: [Builder.node("B"), Builder.node("C")])]
+        )
+
+      assert box_steps(tree) == [{"A", ["1 2"]}, {"B", ["2"]}, {"1 more", ["2"]}]
+    end
+
+    test "the effect of the tree goes to each box and each line" do
+      figure = figure(staff(reveal: :levels, effect: :grow))
+      assert figure |> LazyHTML.query("[data-effect=grow]") |> Enum.count() == 11
+      assert figure |> LazyHTML.query("path.tree-line[pathLength='1']") |> Enum.count() == 5
+    end
+
+    test "reflow moves the boxes at each step to the layout of the boxes that show" do
+      deck =
+        staff(reveal: :branches, reflow: true)
+        |> one_slide()
+        |> Expresso.Overlay.Render.identify()
+
+      [%{elements: [tree]}] = deck.slides
+      assert is_binary(tree.el)
+      rules = Hierarchy.rules(tree)
+
+      # At step 1 and 2, the branch of Ben is at the center: it moves by half
+      # the width of the branch of Eve and the gap.
+      assert Enum.any?(
+               rules,
+               &(&1 =~
+                   ~s(section[data-step="2"] [data-el="#{tree.el}"] [data-node="1"] { --tree-dx: 122px; --tree-dy: 0px; }))
+             )
+
+      refute Enum.any?(rules, &(&1 =~ ~s(data-step="3")))
+
+      figure = figure(staff(reveal: :branches, reflow: true))
+
+      assert figure
+             |> LazyHTML.query("foreignObject.tree-node")
+             |> LazyHTML.attribute("data-node") ==
+               ["0", "1", "2", "3", "4", "5"]
+
+      # Step 1 has no line, steps 2 and 3 each have a copy of the lines.
+      assert figure |> LazyHTML.query("path.tree-line") |> LazyHTML.attribute("data-on") ==
+               ["2", "2", "2", "3", "3", "3", "3", "3"]
+    end
+
+    test "a tree without reflow and a tree without steps have no rules" do
+      assert Hierarchy.rules(expanded(staff(reveal: :levels))) == []
+      assert Hierarchy.rules(expanded(staff(reflow: true))) == []
+    end
+
+    test "the style block of the deck holds the rules of a tree with reflow" do
+      html = staff(reveal: :branches, reflow: true) |> one_slide() |> Expresso.Deck.render()
+      assert html =~ "--tree-dx: 122px"
+    end
+
+    test "a node of a tree takes no morph option, and a node of a chart takes no step" do
+      assert_raise ArgumentError,
+                   ~r/the node "A" gives the morph option, and a node of a tree takes none/,
+                   fn ->
+                     Builder.tree(title: "T", elements: [Builder.node("A", morph: "a")])
+                   end
+
+      for option <- [at: 2, effect: :grow] do
+        assert_raise ArgumentError,
+                     ~r/the node entity "A" gives the #{elem(option, 0)} option/,
+                     fn ->
+                       Builder.chart(:sankey,
+                         title: "T",
+                         flows: [Builder.flow("A", "B", 1), Builder.node("A", [option])]
+                       )
+                     end
+      end
+
+      assert_raise ArgumentError, ~r/the node entity "A" gives the on entity/, fn ->
+        Builder.chart(:sankey,
+          title: "T",
+          flows: [Builder.flow("A", "B", 1), Builder.node("A", on: [Builder.on(2, state: :dim)])]
+        )
+      end
+    end
+
+    test "the options of the steps take their types" do
+      for {option, value} <- [reveal: :rows, dim: 1, reflow: "yes"] do
+        assert_raise ArgumentError, ~r/#{option}/, fn -> plant([{option, value}]) end
+      end
+    end
+  end
+
+  defp nodes_of(%Node{} = node), do: [node | Enum.flat_map(node.elements, &nodes_of/1)]
 
   describe "the errors" do
     test "a tree holds one root" do

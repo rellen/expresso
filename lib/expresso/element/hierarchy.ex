@@ -28,6 +28,7 @@ defmodule Expresso.Element.Hierarchy do
   use Expresso.Element
 
   alias Expresso.Element.Hierarchy.Layout
+  alias Expresso.Element.Hierarchy.Steps
   alias Expresso.Element.Hierarchy.Values
   alias Expresso.Element.Chart
   alias Expresso.Element.Chart.Csv
@@ -54,6 +55,9 @@ defmodule Expresso.Element.Hierarchy do
               sort: :none,
               bar: false,
               layout: :top_down,
+              reveal: nil,
+              dim: false,
+              reflow: false,
               separator: "/",
               elements: [],
               __spark_metadata__: nil
@@ -321,6 +325,7 @@ defmodule Expresso.Element.Hierarchy do
     nodes = nodes(root)
 
     with :ok <- chart_options(nodes),
+         :ok <- morph(nodes),
          :ok <- color_field(tree, nodes),
          :ok <- root_value(tree),
          :ok <- names(nodes),
@@ -361,6 +366,18 @@ defmodule Expresso.Element.Hierarchy do
         {:error,
          "the node \"#{chart.name}\" gives the #{hd(Node.chart_options(chart))} option, " <>
            "and only a node of a chart of flows takes it"}
+    end
+  end
+
+  defp morph(nodes) do
+    case Enum.find(nodes, & &1.morph) do
+      nil ->
+        :ok
+
+      node ->
+        {:error,
+         "the node \"#{node.name}\" gives the morph option, and a node of a tree takes none. " <>
+           "Give the morph option to the tree"}
     end
   end
 
@@ -421,11 +438,11 @@ defmodule Expresso.Element.Hierarchy do
   @impl Expresso.Element
   def get_assigns(%__MODULE__{} = tree) do
     %__MODULE__{elements: [root]} = tree = prepared(tree)
-
-    layout =
-      Layout.layout(root, tree.box || @box, layout: tree.layout, stack_from: tree.stack_from)
-
+    layout = Layout.layout(root, sizes(tree), layout_options(tree))
     {colors, legend} = colors(tree)
+    steps = Steps.effective(root)
+    index = layout.boxes |> Enum.with_index() |> Map.new(fn {box, i} -> {box.node.name, i} end)
+    nodes = Map.new(layout.boxes, &{&1.node.name, &1.node})
 
     legend =
       if legend == [],
@@ -448,6 +465,8 @@ defmodule Expresso.Element.Hierarchy do
       title: tree.title,
       root: root,
       layout: layout,
+      boxes: Enum.map(layout.boxes, &{&1, node_attributes(&1.node, steps, tree.reflow, index)}),
+      lines: lines(tree, root, layout, steps, nodes),
       colors: Map.new(colors, fn {name, color} -> {name, css(color)} end),
       legend: legend,
       values: %{format: tree.value_format, total: root.value, bar: tree.bar},
@@ -455,6 +474,78 @@ defmodule Expresso.Element.Hierarchy do
       overlay: Expresso.Overlay.Render.attributes(tree) ++ width
     }
   end
+
+  defp sizes(tree), do: tree.box || @box
+  defp layout_options(tree), do: [layout: tree.layout, stack_from: tree.stack_from]
+
+  # The overlay attributes of the box of a node, with the steps of its box.
+  # A tree with `reflow` also gives the place of the box in the full layout,
+  # which the rules of the moves name.
+  defp node_attributes(%Node{} = node, steps, reflow, index) do
+    attributes = Expresso.Overlay.Render.attributes(%Node{node | steps: steps[node.name]})
+
+    if reflow,
+      do: attributes ++ [{"data-node", Integer.to_string(index[node.name])}],
+      else: attributes
+  end
+
+  # The path of each line and its attributes. A line takes the steps of the
+  # node at its end. With `reflow`, each run of steps with the same boxes has
+  # its own copy of the lines, at the steps of the run.
+  defp lines(%__MODULE__{reflow: true} = tree, root, layout, steps, nodes) do
+    case Steps.layouts(root, sizes(tree), layout_options(tree), layout) do
+      [] ->
+        lines(%__MODULE__{tree | reflow: false}, root, layout, steps, nodes)
+
+      layouts ->
+        for {run, run_layout} <- runs(layouts),
+            {path, to} <- Enum.zip(run_layout.lines, run_layout.targets),
+            shown = Enum.filter(run, &(steps[to] == nil or &1 in steps[to])),
+            shown != [] do
+          node = %{nodes[to] | steps: shown}
+          {path, Expresso.Overlay.Render.attributes(node)}
+        end
+    end
+  end
+
+  defp lines(_tree, _root, layout, steps, nodes) do
+    for {path, to} <- Enum.zip(layout.lines, layout.targets) do
+      {path, Expresso.Overlay.Render.attributes(%{nodes[to] | steps: steps[to]})}
+    end
+  end
+
+  # The steps in a row that show the same boxes, with the layout of the first.
+  defp runs(layouts) do
+    layouts
+    |> Enum.chunk_by(fn {_step, layout} -> Enum.map(layout.boxes, & &1.node.name) end)
+    |> Enum.map(fn [{_step, layout} | _rest] = run -> {Enum.map(run, &elem(&1, 0)), layout} end)
+  end
+
+  @doc """
+  Return the rules of the moves of a tree with `reflow`
+
+  At each step, a box that is not in its place of the full layout gets the
+  custom properties `--tree-dx` and `--tree-dy`, and the style sheet moves it
+  with a transition. `Expresso.Overlay.Render.style/1` adds the rules to the
+  style block of the deck. A tree without `reflow` has no rules.
+  """
+  @spec rules(t()) :: [String.t()]
+  def rules(%__MODULE__{reflow: true, el: el, elements: [_root]} = tree) when is_binary(el) do
+    %__MODULE__{elements: [root]} = tree = prepared(tree)
+    full = Layout.layout(root, sizes(tree), layout_options(tree))
+    index = full.boxes |> Enum.with_index() |> Map.new(fn {box, i} -> {box.node.name, i} end)
+
+    root
+    |> Steps.layouts(sizes(tree), layout_options(tree), full)
+    |> Steps.offsets(full)
+    |> Enum.sort()
+    |> Enum.map(fn {step, name, dx, dy} ->
+      "section[data-step=\"#{step}\"] [data-el=\"#{el}\"] [data-node=\"#{index[name]}\"] " <>
+        "{ --tree-dx: #{dx}px; --tree-dy: #{dy}px; }"
+    end)
+  end
+
+  def rules(_tree), do: []
 
   # The CSS value of a color.
   defp css(nil), do: nil
@@ -476,13 +567,18 @@ defmodule Expresso.Element.Hierarchy do
       figure class: Expresso.Element.classes("tree", assigns[:class]), rest!: @overlay do
         svg viewBox: @view_box, aria_hidden: "true" do
           g class: "tree-lines" do
-            for line <- @layout.lines do
-              path class: "tree-line", d: line
+            for {line, attributes} <- @lines do
+              path class: "tree-line", d: line, pathLength: "1", rest!: attributes
             end
           end
 
-          for box <- @layout.boxes do
-            foreignObject x: box.x, y: box.y, width: box.width, height: box.height do
+          for {box, attributes} <- @boxes do
+            foreignObject class: "tree-node",
+                          x: box.x,
+                          y: box.y,
+                          width: box.width,
+                          height: box.height,
+                          rest!: attributes do
               c(&card/1, node: box.node, color: @colors[box.node.name], values: @values)
             end
           end

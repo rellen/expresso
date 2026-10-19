@@ -329,9 +329,10 @@ defmodule Expresso.Extension do
     name: :node,
     target: Expresso.Element.Node,
     args: [:name],
-    entities: [elements: []],
+    entities: [elements: [], on: [@on]],
     schema:
-      @class_schema ++
+      @overlay_schema ++
+        @class_schema ++
         [
           name: [
             type: :string,
@@ -867,6 +868,23 @@ defmodule Expresso.Extension do
             type: {:custom, Expresso.Element.Hierarchy, :color, []},
             doc:
               "The colors of the boxes from the palette: :branch gives each node under the root and its boxes a color, and {:field, \"name\"} gives each value of a field a color and adds a legend. The color option of a node comes first. The default is no color."
+          ],
+          reveal: [
+            type: {:in, [:levels, :branches, :nodes]},
+            doc:
+              "Show the nodes in steps: :levels shows one level at each step, :branches shows the root and then one branch at each step, and :nodes shows one node at each step. A node with its own at option keeps it."
+          ],
+          dim: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Dim the boxes of the earlier steps when a later box shows. The default is false."
+          ],
+          reflow: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Calculate the layout at each step from the boxes that show, and move the boxes when a box shows. The default is false: the layout keeps a place for each box from the first step, and no box moves."
           ],
           src: [
             type: :string,

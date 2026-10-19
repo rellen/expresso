@@ -98,12 +98,19 @@ defmodule Expresso.Element.Hierarchy.Values do
   defp limit(children, limit, parent) when is_integer(limit) and length(children) > limit do
     {kept, rest} = Enum.split(children, limit)
 
+    # The node of the rest shows with the last node that the limit keeps.
+    last = List.last(kept)
+
     more = %Node{
       name: more_name(parent),
       label: "#{length(rest)} more",
       class: "tree-more",
       value: rest |> Enum.map(&total/1) |> sum(),
-      elements: []
+      elements: [],
+      steps: last.steps,
+      effect: last.effect,
+      speed: last.speed,
+      easing: last.easing
     }
 
     kept ++ [more]

@@ -53,11 +53,27 @@ defmodule Expresso.Element.Hierarchy.Layout do
           height: pos_integer()
         }
 
-  @typedoc "The boxes in the order of the tree, the paths of the lines, and the size of the drawing"
-  @type t :: %{boxes: [box()], lines: [String.t()], width: number(), height: number()}
+  @typedoc """
+  The boxes in the order of the tree, the paths of the lines, the name of the
+  node at the end of each line, and the size of the drawing
+  """
+  @type t :: %{
+          boxes: [box()],
+          lines: [String.t()],
+          targets: [String.t()],
+          width: number(),
+          height: number()
+        }
 
-  @typedoc "The options of the layout: the layout of the tree and the first stacked level"
-  @type options :: [layout: layout(), stack_from: pos_integer() | nil]
+  @typedoc """
+  The options of the layout: the layout of the tree, the first stacked level,
+  and an offset that moves each box and each line
+  """
+  @type options :: [
+          layout: layout(),
+          stack_from: pos_integer() | nil,
+          offset: {number(), number()}
+        ]
 
   @doc "Return the three layouts"
   @spec layouts() :: [layout()]
@@ -96,11 +112,13 @@ defmodule Expresso.Element.Hierarchy.Layout do
       inherited: Keyword.get(options, :layout) || :top_down
     }
 
-    placed = place(root, 0, context)
+    {dx, dy} = Keyword.get(options, :offset) || {0, 0}
+    placed = root |> place(0, context) |> shift(dx, dy)
 
     %{
       boxes: Enum.map(placed.boxes, &round_box/1),
-      lines: Enum.map(placed.lines, &path/1),
+      lines: Enum.map(placed.lines, fn {points, _to} -> path(points) end),
+      targets: Enum.map(placed.lines, fn {_points, to} -> to end),
       width: number(placed.width),
       height: number(placed.height)
     }
@@ -223,10 +241,14 @@ defmodule Expresso.Element.Hierarchy.Layout do
   defp row_size(children, key),
     do: Enum.sum(Enum.map(children, &Map.fetch!(&1, key))) + @gap * (length(children) - 1)
 
+  # Each line of a node goes to the box of one child, the first box of the
+  # child, and it carries the name of that child.
   defp join(box, children, lines, width, height) do
+    targets = Enum.map(children, fn %{boxes: [child | _rest]} -> child.node.name end)
+
     %{
       boxes: [box | Enum.flat_map(children, & &1.boxes)],
-      lines: lines ++ Enum.flat_map(children, & &1.lines),
+      lines: Enum.zip(lines, targets) ++ Enum.flat_map(children, & &1.lines),
       width: width,
       height: height
     }
@@ -237,7 +259,9 @@ defmodule Expresso.Element.Hierarchy.Layout do
     boxes = Enum.map(placed.boxes, &%{&1 | x: &1.x + dx, y: &1.y + dy})
 
     lines =
-      Enum.map(placed.lines, fn points -> Enum.map(points, fn {x, y} -> {x + dx, y + dy} end) end)
+      Enum.map(placed.lines, fn {points, to} ->
+        {Enum.map(points, fn {x, y} -> {x + dx, y + dy} end), to}
+      end)
 
     %{placed | boxes: boxes, lines: lines}
   end

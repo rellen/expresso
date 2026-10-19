@@ -11,7 +11,7 @@ defmodule Expresso.Overlay.Render do
   """
 
   alias Expresso.Deck
-  alias Expresso.Element.{Chart, On, Pause, Tree}
+  alias Expresso.Element.{Chart, Hierarchy, On, Pause, Tree}
   alias Expresso.Slide
 
   @doc """
@@ -88,6 +88,9 @@ defmodule Expresso.Overlay.Render do
   # its groups name it.
   defp identity?(%Chart{} = chart),
     do: on(chart) != [] or Chart.moves?(chart) or chart.focus != []
+
+  # A tree with `reflow` moves its boxes, and the rules of the moves name it.
+  defp identity?(%Hierarchy{reflow: true}), do: true
 
   defp identity?(element), do: on(element) != []
 
@@ -168,6 +171,8 @@ defmodule Expresso.Overlay.Render do
     `Expresso.Element.Chart.rules/1`. Each rule of a frame sets the custom
     properties of the frame at its steps, and each rule of a group dims the
     other series at the step of the group.
+  - The rules of the moves of each tree with `reflow`, from
+    `Expresso.Element.Hierarchy.rules/1`.
   - One rule for each speed in milliseconds of the deck, such as
     `[data-speed="450"] { --speed: 450ms; }`. The theme gives the presets.
 
@@ -179,7 +184,8 @@ defmodule Expresso.Overlay.Render do
     ons = Enum.flat_map(slides, &ons/1)
 
     (properties(ons) ++
-       reveals(slides) ++ Enum.map(ons, &rule/1) ++ charts(slides) ++ speeds(slides))
+       reveals(slides) ++
+       Enum.map(ons, &rule/1) ++ charts(slides) ++ trees(slides) ++ speeds(slides))
     |> Enum.join("\n")
   end
 
@@ -189,6 +195,15 @@ defmodule Expresso.Overlay.Render do
     for slide <- slides,
         %Chart{} = chart <- Tree.descendants(slide.elements),
         rule <- Chart.rules(chart),
+        do: rule
+  end
+
+  # The rules of the moves of each tree with `reflow`.
+  # `Expresso.Element.Hierarchy.rules/1` writes them.
+  defp trees(slides) do
+    for slide <- slides,
+        %Hierarchy{} = tree <- Tree.descendants(slide.elements),
+        rule <- Hierarchy.rules(tree),
         do: rule
   end
 
