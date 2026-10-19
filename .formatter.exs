@@ -54,6 +54,7 @@ spark_locals_without_parens = [
   event: 3,
   event: 4,
   fallback: 1,
+  fields: 1,
   fill: 1,
   flag: 1,
   flow: 3,

@@ -26,6 +26,40 @@ defmodule Expresso.E2E.TreeTest do
     end
   end
 
+  # A tree with a color for each branch, a role on one node, an image, an
+  # icon, and a slide with a legend.
+  defmodule ColorDeck do
+    use Expresso
+
+    name "tree colors"
+    root "examples"
+
+    slide "branches" do
+      tree do
+        title "The plant"
+        color :branch
+
+        node "Ana" do
+          image "logo.png"
+          node "Ben", icon: "factory", fields: [team: "42 people"]
+          node "Hal", color: :danger
+        end
+      end
+    end
+
+    slide "sites" do
+      tree do
+        title "The sites"
+        color {:field, "site"}
+
+        node "HQ" do
+          fields site: "Berlin"
+          node "Sales", fields: [site: "Lyon"]
+        end
+      end
+    end
+  end
+
   # The rectangle of each box, the drawing and the list on the screen.
   defp geometry(page) do
     js(page, """
@@ -94,5 +128,89 @@ defmodule Expresso.E2E.TreeTest do
 
     assert scroll > client
     assert overflow == "ellipsis"
+  end
+
+  # The color of a custom property of the root, as the browser gives it.
+  defp property(page, name) do
+    js(page, """
+    (() => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(#{name})";
+      document.body.append(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    })()
+    """)
+  end
+
+  test "a box of a branch has a border in the color of the palette, and a role comes first",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(ColorDeck, tmp_dir))
+
+    borders =
+      js(page, """
+      Array.from(
+        document.querySelectorAll(".screen .tree-box"),
+        (box) => [box.querySelector(".tree-label").textContent, getComputedStyle(box).borderTopColor]
+      ).slice(0, 3)
+      """)
+
+    assert borders == [
+             ["Ana", property(page, "--muted")],
+             ["Ben", property(page, "--chart-1")],
+             ["Hal", property(page, "--danger")]
+           ]
+  end
+
+  test "the image is a circle, and the icon has the color of its box",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(ColorDeck, tmp_dir))
+
+    [[width, height, radius, loaded], icon] =
+      js(page, """
+      (() => {
+        const image = document.querySelector(".screen .tree-image");
+        const style = getComputedStyle(image);
+        const box = image.getBoundingClientRect();
+        const icon = document.querySelector(".screen .tree-icon");
+        return [
+          [box.width, box.height, style.borderRadius, image.naturalWidth > 0],
+          getComputedStyle(icon).color
+        ];
+      })()
+      """)
+
+    assert width > 0 and abs(width - height) < 1
+    assert radius == "50%"
+    assert loaded
+    assert icon == property(page, "--chart-1")
+  end
+
+  test "the legend shows each value with the color of its boxes",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(ColorDeck, tmp_dir))
+    press(page, "j")
+
+    legend =
+      js(page, """
+      (() => {
+        const figure = document.querySelectorAll(".screen figure.tree")[1];
+        const svg = figure.querySelector("svg").getBoundingClientRect();
+        return Array.from(figure.querySelectorAll(".tree-legend li"), (item) => {
+          const box = item.getBoundingClientRect();
+          return [
+            item.textContent.trim(),
+            getComputedStyle(item.querySelector(".tree-swatch")).backgroundColor,
+            box.height > 0 && box.bottom <= svg.bottom + 1
+          ];
+        });
+      })()
+      """)
+
+    assert legend == [
+             ["Berlin", property(page, "--chart-1"), true],
+             ["Lyon", property(page, "--chart-2"), true]
+           ]
   end
 end

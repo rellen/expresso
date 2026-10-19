@@ -6,6 +6,12 @@ defmodule Expresso.Element.Hierarchy do
   The `tree` entity holds one `node` entity, the root, and each node holds the
   nodes under it. The name of a node is its identity, and the default text of
   its box. The `detail` option of a node gives a second line, such as a role.
+  A box can also show an image or an icon, and a line for each field.
+
+  The color of a box comes from the `color` option of the node or of the
+  nearest node above it, then from the `color` option of the tree, which takes
+  the colors of the palette for each branch or for each value of a field.
+  `colors/1` returns the color of each node.
 
   `Expresso.Element.Hierarchy.Layout` places each box, and the drawing is one
   SVG with the `viewBox` of the layout, so it scales to the box of the element.
@@ -22,6 +28,7 @@ defmodule Expresso.Element.Hierarchy do
   use Expresso.Element
 
   alias Expresso.Element.Hierarchy.Layout
+  alias Expresso.Element.Chart
   alias Expresso.Element.Node
 
   @typedoc "The struct of a tree"
@@ -31,6 +38,7 @@ defmodule Expresso.Element.Hierarchy do
               :title,
               :width,
               :box,
+              :color,
               :class,
               elements: [],
               __spark_metadata__: nil
@@ -86,6 +94,97 @@ defmodule Expresso.Element.Hierarchy do
     end
   end
 
+  # The height of the legend under the tree, and the gap above it, in the
+  # units of the drawing.
+  @legend 40
+  @legend_gap 24
+
+  @color_error "a color option of a tree takes :branch or {:field, \"name\"}"
+
+  @doc """
+  Make sure that a `color` option of a tree is `:branch` or a field
+
+  This function is the custom type of the option. The name of a field can be
+  an atom or a string, and the function returns it as a string.
+
+      iex> Expresso.Element.Hierarchy.color(:branch)
+      {:ok, :branch}
+
+      iex> Expresso.Element.Hierarchy.color({:field, :team})
+      {:ok, {:field, "team"}}
+
+      iex> {:error, _message} = Expresso.Element.Hierarchy.color(:leaf)
+  """
+  @spec color(term()) :: {:ok, :branch | {:field, String.t()}} | {:error, String.t()}
+  def color(:branch), do: {:ok, :branch}
+  def color({:field, name}) when is_binary(name) and name != "", do: {:ok, {:field, name}}
+
+  def color({:field, name}) when is_atom(name) and name not in [nil, true, false],
+    do: {:ok, {:field, Atom.to_string(name)}}
+
+  def color(_value), do: {:error, @color_error}
+
+  @doc """
+  Return the color of each node, by its name, and the values of the legend
+
+  A color is `{:role, role}` for the `color` option of a node or of a node
+  above it, `{:palette, n}` for a color of the palette from 1 to 8, or `nil`.
+  The legend holds each value of the field of `color {:field, name}` and its
+  color of the palette, in the order of the first node with the value.
+
+      iex> alias Expresso.Element.{Hierarchy, Node}
+      iex> root = %Node{name: "A", elements: [%Node{name: "B", elements: [%Node{name: "C"}]}, %Node{name: "D", color: :danger}]}
+      iex> Hierarchy.colors(%Hierarchy{color: :branch, elements: [root]})
+      {%{"A" => nil, "B" => {:palette, 1}, "C" => {:palette, 1}, "D" => {:role, :danger}}, []}
+  """
+  @spec colors(t()) :: {%{String.t() => color}, [{String.t(), pos_integer()}]}
+        when color: {:role, atom()} | {:palette, pos_integer()} | nil
+  def colors(%__MODULE__{elements: [root], color: color}) do
+    legend = legend(root, color)
+    {paint(root, {color, Map.new(legend)}, {nil, nil, 0}, %{}), legend}
+  end
+
+  # Put the color of a node and of each node under it into `colors`. The
+  # context holds the role of the nearest node above with the option, the
+  # branch and the depth. A role comes before a color of the palette.
+  defp paint(%Node{} = node, {color, palette} = scheme, {role, branch, depth}, colors) do
+    role = if node.color, do: {:role, node.color}, else: role
+    colors = Map.put(colors, node.name, role || palette(node, color, branch, palette))
+
+    (node.elements || [])
+    |> Enum.with_index()
+    |> Enum.reduce(colors, fn {child, index}, colors ->
+      branch = if depth == 0, do: {:palette, Chart.Layers.color(index)}, else: branch
+      paint(child, scheme, {role, branch, depth + 1}, colors)
+    end)
+  end
+
+  defp palette(_node, :branch, branch, _palette), do: branch
+
+  defp palette(node, {:field, name}, _branch, palette) do
+    case field(node, name) do
+      nil -> nil
+      value -> {:palette, Map.fetch!(palette, value)}
+    end
+  end
+
+  defp palette(_node, nil, _branch, _palette), do: nil
+
+  defp legend(root, {:field, name}) do
+    root
+    |> nodes()
+    |> Enum.map(&field(&1, name))
+    |> Enum.reject(&is_nil/1)
+    |> Enum.uniq()
+    |> Enum.with_index(fn value, index -> {value, Chart.Layers.color(index)} end)
+  end
+
+  defp legend(_root, _color), do: []
+
+  defp field(%Node{fields: fields}, name) do
+    Enum.find_value(fields || [], fn {key, value} -> if key == name, do: value end)
+  end
+
   @doc """
   Make sure that a tree has one root, and that each node is a node of a tree
 
@@ -103,6 +202,12 @@ defmodule Expresso.Element.Hierarchy do
         {:error,
          "the node \"#{chart.name}\" gives the #{hd(Node.chart_options(chart))} option, " <>
            "and only a node of a chart of flows takes it"}
+
+      match?({:field, _name}, tree.color) and
+          not Enum.any?(nodes, &field(&1, elem(tree.color, 1))) ->
+        {:error,
+         "the color option of the tree names the field \"#{elem(tree.color, 1)}\", " <>
+           "and no node of the tree has that field. Give the field in the fields option of a node"}
 
       twice != [] ->
         {:error,
@@ -133,12 +238,27 @@ defmodule Expresso.Element.Hierarchy do
 
   The key `layout` holds the boxes and the lines of
   `Expresso.Element.Hierarchy.Layout`, and the key `root` holds the root node
-  for the list of a screen reader.
+  for the list of a screen reader. The key `colors` holds the CSS color of
+  each node by its name, and the key `legend` holds the place of the legend
+  and each value with its color.
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
   def get_assigns(%__MODULE__{elements: [root]} = tree) do
     layout = Layout.top_down(root, tree.box || @box)
+    {colors, legend} = colors(tree)
+
+    legend =
+      if legend == [],
+        do: nil,
+        else: %{
+          y: layout.height + @legend_gap,
+          width: layout.width,
+          height: @legend,
+          values: Enum.map(legend, fn {value, n} -> {value, css({:palette, n})} end)
+        }
+
+    height = if legend, do: legend.y + legend.height, else: layout.height
 
     width =
       if tree.width,
@@ -149,16 +269,25 @@ defmodule Expresso.Element.Hierarchy do
       title: tree.title,
       root: root,
       layout: layout,
-      view_box: "0 0 #{layout.width} #{layout.height}",
+      colors: Map.new(colors, fn {name, color} -> {name, css(color)} end),
+      legend: legend,
+      view_box: "0 0 #{layout.width} #{height}",
       overlay: Expresso.Overlay.Render.attributes(tree) ++ width
     }
   end
+
+  # The CSS value of a color.
+  defp css(nil), do: nil
+  defp css({:role, role}), do: "var(--#{role})"
+  defp css({:palette, n}), do: "var(--chart-#{n})"
 
   @doc """
   Make the HTML of a tree
 
   The `figure` holds the SVG of the drawing, which a screen reader does not
-  read, and a nested list of the nodes, which the eye does not see.
+  read, and a nested list of the nodes, which the eye does not see. The
+  legend is in the SVG under the tree, and each field of a node is in the
+  list, so a screen reader reads the value that gives a color.
   """
   @spec render(map()) :: Phoenix.HTML.safe()
   @impl Expresso.Element
@@ -174,15 +303,17 @@ defmodule Expresso.Element.Hierarchy do
 
           for box <- @layout.boxes do
             foreignObject x: box.x, y: box.y, width: box.width, height: box.height do
-              div class: Expresso.Element.classes("tree-box", box.node.class),
-                  xmlns: "http://www.w3.org/1999/xhtml" do
-                p class: "tree-label" do
-                  box.node.label || box.node.name
-                end
+              c(&card/1, node: box.node, color: @colors[box.node.name])
+            end
+          end
 
-                if box.node.detail do
-                  p class: "tree-detail" do
-                    box.node.detail
+          if @legend do
+            foreignObject x: 0, y: @legend.y, width: @legend.width, height: @legend.height do
+              ul class: "tree-legend", xmlns: "http://www.w3.org/1999/xhtml" do
+                for {value, color} <- @legend.values do
+                  li style: "--tree-color: #{color}" do
+                    span class: "tree-swatch"
+                    value
                   end
                 end
               end
@@ -197,9 +328,77 @@ defmodule Expresso.Element.Hierarchy do
     end
   end
 
-  # The label and the detail of a node, for a screen reader.
-  defp spoken(%Node{} = node),
-    do: Enum.join(Enum.reject([node.label || node.name, node.detail], &is_nil/1), ", ")
+  # The HTML of one box: the image or the icon, then the label, the detail
+  # and the fields.
+  defp card(assigns) do
+    assigns = Map.merge(assigns, card_attributes(assigns.node, assigns.color))
+
+    temple do
+      div class: @classes, style: @style, xmlns: "http://www.w3.org/1999/xhtml" do
+        c(&media/1, node: @node)
+
+        div class: "tree-text" do
+          p class: "tree-label" do
+            @node.label || @node.name
+          end
+
+          if @node.detail do
+            p class: "tree-detail" do
+              @node.detail
+            end
+          end
+
+          for {name, value} <- @node.fields || [] do
+            p class: "tree-field" do
+              span class: "tree-field-name" do
+                name
+              end
+
+              " " <> value
+            end
+          end
+        end
+      end
+    end
+  end
+
+  # The classes and the style of a box.
+  defp card_attributes(%Node{} = node, color) do
+    classes =
+      ["tree-box"] ++
+        if(color, do: ["tree-colored"], else: []) ++
+        if(node.image || node.svg, do: ["tree-media"], else: []) ++
+        List.wrap(node.class)
+
+    %{classes: Enum.join(classes, " "), style: color && "--tree-color: #{color}"}
+  end
+
+  # The image or the icon of a box, or nothing.
+  defp media(%{node: %Node{image: image}} = assigns) when is_binary(image) do
+    assigns = Map.put(assigns, :src, Expresso.Image.data_uri!(image))
+
+    temple do
+      img class: "tree-image", src: @src, alt: ""
+    end
+  end
+
+  defp media(%{node: %Node{svg: svg}} = assigns) when is_binary(svg) do
+    assigns = Map.put(assigns, :svg, Expresso.SvgCopy.copy(svg))
+
+    temple do
+      span class: "tree-icon" do
+        Phoenix.HTML.raw(@svg)
+      end
+    end
+  end
+
+  defp media(_assigns), do: ""
+
+  # The label, the detail and the fields of a node, for a screen reader.
+  defp spoken(%Node{} = node) do
+    fields = Enum.map(node.fields || [], fn {name, value} -> "#{name}: #{value}" end)
+    Enum.join(Enum.reject([node.label || node.name, node.detail], &is_nil/1) ++ fields, ", ")
+  end
 
   # One node and the nodes under it, for a screen reader.
   defp item(assigns) do

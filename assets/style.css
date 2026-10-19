@@ -513,6 +513,95 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   font-size: 0.8em;
   color: var(--muted);
 }
+/*
+ * A box with a color has a border in the color and a light tint of it. The
+ * color is `--tree-color`, from a role of the theme or from `--chart-1` to
+ * `--chart-8` of the palette.
+ */
+.tree-colored {
+  border-color: var(--tree-color);
+  background: color-mix(
+    in srgb,
+    var(--tree-color) 14%,
+    var(--tree-box, var(--background))
+  );
+}
+/*
+ * A box with an image or an icon puts it at the left of the text, and the
+ * text starts at the left.
+ */
+.tree-media {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6em;
+  text-align: left;
+}
+.tree-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15em;
+  min-width: 0;
+  flex: 1;
+}
+.tree-image,
+.tree-icon {
+  flex: none;
+  width: 2.6em;
+  height: 2.6em;
+  border-radius: 50%;
+}
+.tree-image {
+  object-fit: cover;
+}
+.tree-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tree-color, var(--accent));
+}
+.tree-icon-svg {
+  width: 70%;
+  height: 70%;
+}
+.tree-field {
+  margin: 0;
+  overflow: hidden;
+  font-size: 0.7em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tree-field-name {
+  color: var(--muted);
+}
+/*
+ * The legend of `color {:field, name}`: a row of a swatch and a value for
+ * each value of the field, under the tree.
+ */
+.tree-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3em 1.2em;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+  font-size: 0.8em;
+  color: var(--text);
+}
+.tree-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+.tree-swatch {
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 2px;
+  background: var(--tree-color);
+}
 .chart-c1 {
   --series: var(--chart-1);
 }

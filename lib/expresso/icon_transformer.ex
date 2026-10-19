@@ -6,7 +6,8 @@ defmodule Expresso.IconTransformer do
   `Expresso.PathTransformer`, which makes the `root` option an absolute path.
   It reads each SVG file of the `icons` option of the deck through
   `Expresso.DeckFile`, so the watch mode renders the deck again after a change
-  to a file. Then it puts the SVG into each `icon` element, and it replaces
+  to a file. Then it puts the SVG into each `icon` element and into each node of a tree
+  with the `icon` option, and it replaces
   each `:icon:name:` in the text of a text area and of an item with the SVG.
 
   A file that it cannot read, a file without an `svg` element and a name that
@@ -16,7 +17,7 @@ defmodule Expresso.IconTransformer do
   use Spark.Dsl.Transformer
 
   alias Expresso.Dsl
-  alias Expresso.Element.{Icon, Item, TextArea, Tree}
+  alias Expresso.Element.{Icon, Item, Node, TextArea, Tree}
   alias Spark.Dsl.Transformer
 
   @doc """
@@ -76,6 +77,11 @@ defmodule Expresso.IconTransformer do
 
   defp element(%Icon{name: name} = icon, own) do
     with {:ok, svg} <- Expresso.Icon.svg(name, "icon-svg", own), do: {:ok, %{icon | svg: svg}}
+  end
+
+  defp element(%Node{icon: name} = node, own) when is_binary(name) do
+    with {:ok, svg} <- Expresso.Icon.svg(name, "tree-icon-svg", own),
+         do: {:ok, %{node | svg: svg}}
   end
 
   defp element(%TextArea{text: text} = text_area, own) when is_binary(text) do
