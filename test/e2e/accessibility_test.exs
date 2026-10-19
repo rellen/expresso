@@ -155,6 +155,33 @@ defmodule Expresso.E2E.AccessibilityTest do
     assert js(page, "document.getElementById('progress').getAttribute('aria-valuenow')") == "75"
   end
 
+  test "the live region tells the opening of the overview and each selected slide", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(Deck, tmp_dir))
+    announced = fn -> js(page, "document.getElementById('announce').textContent") end
+
+    # The overview shows the last step of each slide, and Enter goes to step 1,
+    # so the name of a selected slide has no step.
+    press(page, "o")
+    assert announced.() == "Overview. Slide 1 of 3: Hello"
+
+    press(page, "ArrowRight")
+    assert announced.() == "Slide 2 of 3: The detail"
+
+    press(page, "End")
+    assert announced.() == "Slide 3 of 3: numbers"
+
+    press(page, "Escape")
+    assert announced.() == "Slide 1 of 3: Hello"
+    assert position(page) == "1.1"
+
+    page |> press("o") |> press("ArrowRight") |> press("Enter")
+    assert announced.() == "Slide 2 of 3, step 1 of 2: The detail"
+    assert position(page) == "2.1"
+  end
+
   test "the open menu has the focus, and its cursor is the selected option", %{
     page: page,
     tmp_dir: tmp_dir

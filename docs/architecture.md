@@ -2526,6 +2526,14 @@ test `test/e2e/accessibility_test.exs` runs axe-core on each view. These are the
   renderer writes on the page of the step, so the script does not make the text again. At
   a move inside a slide, it writes the step only, so a fast series of steps gives short
   texts.
+- **The overview writes to the same live region.** The keys of the overview change the
+  field `selected`, and not the step, so `announce` does not run. `announceOverview` in
+  `dom.ts` writes the name of the selected slide when the overview opens and at each
+  change of `selected`. The renderer writes that name with no step in
+  `data-overview-label` on the page of the last step of each slide, because Enter goes to
+  step 1. A close of the overview with no move writes the position again. The overview
+  does not take the focus, because its pages are also the pages of the handout view, and
+  a role of `option` would not agree with that view.
 - **The ARIA state of the menu comes from `dom.ts`, and not from the projections.** A
   projection writes only `data-` attributes, and `Expresso.Presenter.Verifier` keeps this
   rule. `menu` in `dom.ts` copies `data-cursor` and `data-current` into `aria-selected`,

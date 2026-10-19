@@ -53,6 +53,9 @@ does not stop what it reads. The screen and paper do not show it.
 | --- | --- |
 | To a different slide | The name of the slide, with its step when it has more than one step, such as `Slide 2 of 3, step 1 of 2: A restart`. |
 | To a different step of the same slide | The step, such as `Step 2 of 2`. |
+| `o` opens the overview | The word "Overview" and the name of the selected slide, such as `Overview. Slide 1 of 3: The start`. |
+| A different slide in the overview | The name of the selected slide with no step, such as `Slide 2 of 3: A restart`. Enter goes to step 1 of that slide. |
+| The overview closes with no move | The name of the current slide and its step, as for a move to a different slide. |
 | A key with no move | No new text. |
 
 The region is empty at load.
