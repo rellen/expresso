@@ -61,7 +61,7 @@ defmodule Expresso.Element.Chart do
     Table
   }
 
-  alias Expresso.Element.{Flow, Focus, Frame, Series}
+  alias Expresso.Element.{Flow, Focus, Frame, Node, Series}
   alias Expresso.Placement
   alias Shoddy.Result
 
@@ -734,7 +734,14 @@ defmodule Expresso.Element.Chart do
     given = Enum.map(nodes, & &1.name)
     twice = given -- Enum.uniq(given)
 
+    tree = Enum.find(nodes, &(Node.tree_options(&1) != []))
+
     cond do
+      tree != nil ->
+        {:error,
+         "the node entity \"#{tree.name}\" gives the #{tree_option(tree)}, " <>
+           "and only a node of a tree takes it"}
+
       twice != [] ->
         {:error, "the node \"#{hd(twice)}\" has two node entities, and a node has one"}
 
@@ -748,6 +755,13 @@ defmodule Expresso.Element.Chart do
 
       true ->
         :ok
+    end
+  end
+
+  defp tree_option(node) do
+    case hd(Node.tree_options(node)) do
+      :node -> "nested node entity"
+      option -> "#{option} option"
     end
   end
 

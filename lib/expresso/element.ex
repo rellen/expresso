@@ -58,6 +58,7 @@ defmodule Expresso.Element do
     {Expresso.Element.QrCode, "qr-code", "qr-code", :drawing},
     {Expresso.Element.Shape, "shape", "shape", :shape},
     {Expresso.Element.Chart, "chart", "chart", :text},
+    {Expresso.Element.Hierarchy, "tree", "tree", :text},
     {Expresso.Element.Callout, "callout", "callout", :text},
     {Expresso.Element.Toc, "toc", "toc", :text},
     {Expresso.Element.Stat, "stat", "stat", :label},
@@ -145,6 +146,23 @@ defmodule Expresso.Element do
   @spec classes(String.t(), String.t() | nil) :: String.t()
   def classes(base, nil), do: base
   def classes(base, extra), do: base <> " " <> extra
+
+  @doc """
+  Return the name of the entity of a module of an element, for an error
+
+  The name is the last part of the module, with underscores. The module of
+  the `tree` entity is `Expresso.Element.Hierarchy`, because
+  `Expresso.Element.Tree` holds the walks over the elements.
+
+      iex> Expresso.Element.name(Expresso.Element.TextBox)
+      "text_box"
+
+      iex> Expresso.Element.name(Expresso.Element.Hierarchy)
+      "tree"
+  """
+  @spec name(module()) :: String.t()
+  def name(Expresso.Element.Hierarchy), do: "tree"
+  def name(module), do: module |> Module.split() |> List.last() |> Macro.underscore()
 
   # A percentage of the slide, and not of the container of the element. The pattern
   # takes each form of a CSS number: a sign, a decimal part and an exponent are

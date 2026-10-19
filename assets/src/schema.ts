@@ -447,6 +447,7 @@ export const ELEMENT_KINDS: readonly ElementKind[] = [
   ["qr-code","qr-code"],
   ["shape","shape"],
   ["chart","chart"],
+  ["tree","tree"],
   ["callout","callout"],
   ["toc","toc"],
   ["stat","stat"],

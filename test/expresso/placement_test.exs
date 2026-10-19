@@ -114,7 +114,7 @@ defmodule Expresso.PlacementTest do
              {:error,
               "a column is at the level of the slide, and a slide holds text_box, columns, " <>
                 "callout, toc, text_area, image, list, table, quotation, spacer, code, math, " <>
-                "diagram, embed, video, audio, qr_code, chart, stat, icon, footnote, shape"}
+                "diagram, embed, video, audio, qr_code, chart, tree, stat, icon, footnote, shape"}
   end
 
   test "a pause inside an element is the check of the overlays, and not of the places" do

@@ -319,17 +319,34 @@ defmodule Expresso.Extension do
     ]
   }
 
+  # A node of a chart of flows, or a node of a tree. A node of a tree holds
+  # the nodes under it. The node declares the key of its children without
+  # their definitions: in the block of a node, the `node` macro of the tree
+  # stays in scope, so a tree can nest to each depth, as a list does. See
+  # "The definitions of the elements" in docs/architecture.md. Each parent
+  # refuses the options of the other parent: see `Expresso.Element.Node`.
   @node %Spark.Dsl.Entity{
     name: :node,
     target: Expresso.Element.Node,
     args: [:name],
+    entities: [elements: []],
     schema:
       @class_schema ++
         [
-          name: [type: :string, required: true, doc: "The name of the node in the flows."],
+          name: [
+            type: :string,
+            required: true,
+            doc:
+              "The name of the node in the flows of a chart, or the identity of the node in a tree."
+          ],
           label: [
             type: :string,
             doc: "The text of the label of the node. The default is the name."
+          ],
+          detail: [
+            type: :string,
+            doc:
+              "The second line of the box of a node in a tree, such as a role. Only a tree takes this option."
           ],
           column: [
             type: :pos_integer,
@@ -793,6 +810,32 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @tree %Spark.Dsl.Entity{
+    name: :tree,
+    target: Expresso.Element.Hierarchy,
+    entities: [elements: [@node], on: [@on]],
+    transform: {Expresso.Element.Hierarchy, :check, []},
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          title: [
+            type: :string,
+            required: true,
+            doc: "The name of the tree for a screen reader."
+          ],
+          width: [
+            type: :string,
+            doc: "The width of the tree, such as 900px or 70%. The default is 80%."
+          ],
+          box: [
+            type: {:custom, Expresso.Element.Hierarchy, :box, []},
+            doc:
+              "The size of the boxes of each level, from the root down, in the units of the drawing, such as [[width: 280, height: 120], [width: 220, height: 96]]. The last size applies to each deeper level. The default is [width: 220, height: 96] for each level. See docs/reference/tree-element.md."
+          ]
+        ]
+  }
+
   # The elements that a text box and a column hold
   @inner_elements [
     @text_area,
@@ -809,6 +852,7 @@ defmodule Expresso.Extension do
     @audio,
     @qr_code,
     @chart,
+    @tree,
     @stat,
     @icon
   ]
