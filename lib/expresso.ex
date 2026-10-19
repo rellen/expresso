@@ -17,6 +17,19 @@ defmodule Expresso do
   use Spark.Dsl,
     default_extensions: [extensions: Expresso.Extension]
 
+  # The `node` entity of a tree and of a chart of flows has the name of
+  # `Kernel.node/1`, so a call such as `node "Ben"` would name two functions.
+  # A deck module does not use the node of the Erlang runtime, so it does not
+  # import that function.
+  defmacro __using__(opts) do
+    dsl = super(opts)
+
+    quote do
+      unquote(dsl)
+      import Kernel, except: [node: 1]
+    end
+  end
+
   @doc """
   Make a deck from a module that uses the DSL
   """

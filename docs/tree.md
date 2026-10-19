@@ -53,8 +53,13 @@ CSV reader, the `highlight` steps, the format of numbers and the colors of the p
 tree do
   title "The plant"
 
-  node "Ana", detail: "Plant manager", image: "ana.jpg" do
-    node "Ben", detail: "Production", fields: [team: "42 people"] do
+  node "Ana" do
+    detail "Plant manager"
+    image "ana.jpg"
+
+    node "Ben" do
+      detail "Production"
+      fields team: "42 people"
       node "Cy", detail: "Press"
       node "Di", detail: "Paint"
     end
@@ -63,6 +68,10 @@ tree do
   end
 end
 ```
+
+A node with nodes under it gives its options in its block. A Spark entity takes at most two
+arguments, the name and the options, and the block is a third. A node with no nodes under it
+can give its options after the name.
 
 The same element shows the use of a disk:
 
@@ -112,8 +121,12 @@ The identity connects a node to the `highlight` option and to the same node in a
 frame. Two nodes of one tree cannot have the same identity, so a folder `docs` in two places
 needs `node "home/docs", label: "docs"`.
 
-`Expresso.Builder` keeps one function `node/2`, and a tree takes the nodes in its `nodes`
-key: `tree(title: "The plant", nodes: [node("Ana", detail: "Plant manager", nodes: [...])])`.
+`Expresso.Builder` keeps one function `node/2`. A tree and a node take the nodes under them
+in the `elements` key, as a list takes its items:
+`tree(title: "The plant", elements: [node("Ana", detail: "Plant manager", elements: [...])])`.
+
+The name `node` is also the name of `Kernel.node/1`. `use Expresso` imports `Kernel` without
+`node/1`, so the `node` of the DSL has no conflict in a module of a deck.
 
 ### The values
 
@@ -299,7 +312,8 @@ as for each element with `at`.
 
 ### The rendering
 
-The drawing is one SVG with a `viewBox` of the layout. The lines are paths in the SVG. Each
+The module of the element is `Expresso.Element.Hierarchy`, because `Expresso.Element.Tree`
+holds the functions that walk the elements of a slide. The drawing is one SVG with a `viewBox` of the layout. The lines are paths in the SVG. Each
 box is a `foreignObject` in the SVG, and it holds the HTML of the box. Thus the SVG scales
 the whole tree to the box of the element, and the text of a box wraps and ends with an
 ellipsis as HTML does. Safari has defects with a transform on an element inside a

@@ -134,7 +134,5 @@ defmodule Expresso.Overlay.Check do
 
   defp name(%Focus{}), do: "group of the highlight option"
 
-  defp name(%module{}) do
-    module |> Module.split() |> List.last() |> Macro.underscore()
-  end
+  defp name(%module{}), do: Expresso.Element.name(module)
 end

@@ -26,6 +26,7 @@ defmodule Expresso.Placement do
     Flow,
     Footnote,
     Frame,
+    Hierarchy,
     Icon,
     Image,
     Item,
@@ -69,6 +70,7 @@ defmodule Expresso.Placement do
     Audio,
     QrCode,
     Chart,
+    Hierarchy,
     Stat,
     Icon
   ]
@@ -87,6 +89,8 @@ defmodule Expresso.Placement do
     Diagram => [elements: [Part]],
     Chart => [elements: [Series], timeline: [Frame], flows: [Flow, Node]],
     Frame => [elements: [Series], flows: [Flow]],
+    Hierarchy => [elements: [Node]],
+    Node => [elements: [Node]],
     Code => [elements: [Lines]],
     Toc => [elements: [TocEntry]]
   }
@@ -174,5 +178,5 @@ defmodule Expresso.Placement do
 
   defp names(modules), do: modules |> Enum.reject(&(&1 == Pause)) |> Enum.map_join(", ", &name/1)
 
-  defp name(module), do: module |> Module.split() |> Elixir.List.last() |> Macro.underscore()
+  defp name(module), do: Expresso.Element.name(module)
 end

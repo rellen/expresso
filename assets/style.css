@@ -456,6 +456,63 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   overflow: visible;
   font-size: 20px;
 }
+/*
+ * A tree. The SVG takes the viewBox of the layout, so the whole drawing
+ * scales to the box of the element, as a chart does. Each box is HTML in a
+ * foreignObject, in the units of the drawing, so its text ends with an
+ * ellipsis. A deck can set the colors with the custom properties
+ * `--tree-box`, `--tree-border`, `--tree-line` and `--tree-text`.
+ */
+.tree {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  margin: 0;
+}
+.tree svg {
+  width: var(--tree-width, 80vw);
+  max-width: 100%;
+  max-height: min(var(--tree-height, 72vh), 100%);
+  overflow: visible;
+  font-size: 20px;
+}
+.tree-line {
+  fill: none;
+  stroke: var(--tree-line, var(--muted));
+  stroke-width: 2;
+}
+.tree-box {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15em;
+  width: 100%;
+  height: 100%;
+  padding: 0.4em 0.7em;
+  overflow: hidden;
+  border: 2px solid var(--tree-border, var(--muted));
+  border-radius: 8px;
+  background: var(--tree-box, var(--background));
+  color: var(--tree-text, var(--text));
+  text-align: center;
+}
+.tree-label,
+.tree-detail {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tree-label {
+  font-weight: 600;
+}
+.tree-detail {
+  font-size: 0.8em;
+  color: var(--muted);
+}
 .chart-c1 {
   --series: var(--chart-1);
 }
@@ -1815,10 +1872,13 @@ svg [data-el] {
  * paper do not show it.
  */
 .announce,
-.menu-hidden {
+.menu-hidden,
+.tree-list {
   position: absolute;
   width: 1px;
   height: 1px;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;

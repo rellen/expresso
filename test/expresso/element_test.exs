@@ -113,6 +113,8 @@ defmodule Expresso.ElementTest do
            :bar,
            sample ++ [title: "a", categories: ["a"], elements: [Builder.series("a", [1])]]
          ), Expresso.Element.Chart},
+        {Builder.tree(sample ++ [title: "a", elements: [Builder.node("a")]]),
+         Expresso.Element.Hierarchy},
         {Builder.callout(:tip, sample), Expresso.Element.Callout},
         {Builder.toc(sample), Expresso.Element.Toc},
         {Builder.stat(1, sample), Expresso.Element.Stat},

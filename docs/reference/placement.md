@@ -18,9 +18,12 @@ element in a place that this page does not give.
 | `diagram` | `part` |
 | `chart` | `series`, `flow` and `node`, and `frame` in `timeline` |
 | `frame` | `series` and `flow` |
+| `tree` | one `node` |
+| `node` in a `tree` | `node` |
 
 The elements of a text box are `text_area`, `image`, `list`, `table`, `quotation`, `spacer`,
-`code`, `math`, `diagram`, `embed`, `video`, `audio`, `qr_code`, `chart`, `stat` and `icon`.
+`code`, `math`, `diagram`, `embed`, `video`, `audio`, `qr_code`, `chart`, `tree`, `stat` and
+`icon`.
 Each other element holds no elements. Each element holds its `on` entities.
 
 These rules give some facts:
@@ -29,7 +32,8 @@ These rules give some facts:
 - A callout holds no callout and no `columns`.
 - A column holds no `columns` and no `text_box`. A text box holds no `text_box`.
 - A list nests to each depth: an item holds a list, and that list holds items.
-- A `node` entity goes in a chart only. A frame holds no `node`.
+- A `node` entity goes in a chart or in a tree. A frame holds no `node`.
+- A tree nests to each depth: a node of a tree holds nodes.
 
 ## The error
 

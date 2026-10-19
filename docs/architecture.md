@@ -1746,6 +1746,33 @@ browser runs no script for a mark. These are the reasons for this design:
   present view. A small chart has no morph key, because the morph between two slides pairs
   a key only when it occurs one time.
 
+### The tree
+
+A `tree` shows a hierarchy of nodes as boxes and lines, such as an org chart or the folders
+of a disk. `docs/tree.md` gives the design and the plan of its pull requests. These are the
+reasons for this design:
+
+- **A general tree, not a chart of people.** The element knows nodes, labels and details,
+  and not people or roles. Thus one element shows an org chart and the use of a disk.
+- **A module with a different name.** The module of the element is
+  `Expresso.Element.Hierarchy`, because `Expresso.Element.Tree` holds the walks over the
+  elements of a slide.
+- **The check in the transform of the entity.** `Expresso.Element.Hierarchy.check/1` makes
+  sure that the tree has one root, and that two nodes do not have the same name. The DSL and
+  `Expresso.Builder` call it, so each one gives the same errors. Each parent of a `node`
+  refuses the options of the other parent: `Expresso.Element.Node` lists the options of each
+  one.
+- **A layout in the compiler.** `Expresso.Element.Hierarchy.Layout` places each box from the
+  tree and the size of each level. The handout view, paper and the layout check thus show
+  the same tree, with no script. The layout does not move a subtree into the space under a
+  smaller subtree next to it, so the author can predict the place of each box.
+- **HTML boxes in an SVG.** The lines are paths in one SVG, and each box is a
+  `foreignObject` with the HTML of the box. The SVG scales the whole tree to the box of the
+  element, and the text of a box ends with an ellipsis as HTML does.
+- **A list for a screen reader.** The SVG is hidden from a screen reader. A nested `ul` with
+  the title as its `aria-label` holds the same tree, and the style sheet hides it from the
+  eye, as it hides the live region.
+
 ### The callout
 
 A `callout` is a box with a kind, a header and the elements of a text box.
@@ -1900,6 +1927,12 @@ the rules, and `docs/reference/placement.md` lists them. `Expresso.PlacementTran
 calls it for each slide, before the other transformers. The rules are the tree that the
 extension declared until 2026-10-11, when each container held the definitions of its
 elements. A footnote and a shape go at the level of the slide only.
+
+A `node` of a tree is a container of the same kind. It declares the key `elements` with no
+definitions, so the `node` macro of the tree stays in scope in its block, and a tree nests to
+each depth. The `node` of a tree and the `node` of a chart of flows have one definition,
+because `Expresso.Builder` makes one function for each name. The name is also the name of
+`Kernel.node/1`, so `use Expresso` imports `Kernel` without `node/1`.
 
 The check is a transformer and not a verifier. Spark raises an error from a transformer, and
 the compile stops. Spark runs a verifier in an `@after_verify` callback, and Elixir reports

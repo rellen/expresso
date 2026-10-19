@@ -88,6 +88,7 @@ defmodule Expresso.MixProject do
         "docs/reference/icon-element.md",
         "docs/reference/shape-element.md",
         "docs/reference/chart-element.md",
+        "docs/reference/tree-element.md",
         "docs/reference/code-element.md",
         "docs/reference/layout-check.md",
         "docs/reference/check-option.md",

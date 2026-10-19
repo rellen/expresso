@@ -91,6 +91,17 @@ defmodule Expresso.BuilderTest do
         ),
         entity(:spacer)
       ]
+    ),
+    entity(:slide, ["tree"], [],
+      elements: [
+        entity(:tree, [], [title: "T", box: [[width: 200, height: 80], [width: 160, height: 64]]],
+          elements: [
+            entity(:node, ["A"], [detail: "a"],
+              elements: [entity(:node, ["B"], label: "b", class: "x"), entity(:node, ["C"])]
+            )
+          ]
+        )
+      ]
     )
   ]
 
