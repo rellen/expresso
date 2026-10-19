@@ -37,6 +37,7 @@ defmodule Expresso.Element.Node do
           color: atom() | nil,
           value: number() | nil,
           layout: :top_down | :left_right | :stacked | nil,
+          parent: String.t() | nil,
           class: String.t() | nil,
           elements: [t()] | nil
         }
@@ -56,6 +57,7 @@ defmodule Expresso.Element.Node do
               :color,
               :value,
               :layout,
+              :parent,
               :class,
               elements: [],
               __spark_metadata__: nil
@@ -74,7 +76,7 @@ defmodule Expresso.Element.Node do
   def chart_options(%__MODULE__{} = node),
     do: for(key <- [:column, :order], Map.fetch!(node, key) != nil, do: key)
 
-  @tree_options [:detail, :image, :icon, :fields, :color, :value, :layout]
+  @tree_options [:detail, :image, :icon, :fields, :color, :value, :layout, :parent]
 
   @doc """
   Make sure that a `fields` option is a list of names and texts

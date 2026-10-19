@@ -30,6 +30,8 @@ defmodule Expresso.Element.Hierarchy do
   alias Expresso.Element.Hierarchy.Layout
   alias Expresso.Element.Hierarchy.Values
   alias Expresso.Element.Chart
+  alias Expresso.Element.Chart.Csv
+  alias Expresso.Element.Hierarchy.Data
   alias Expresso.Element.Node
 
   @typedoc "The struct of a tree"
@@ -43,12 +45,16 @@ defmodule Expresso.Element.Hierarchy do
               :limit,
               :depth,
               :stack_from,
+              :src,
+              :delimiter,
+              :fields,
               :class,
               sum: true,
               value_format: :number,
               sort: :none,
               bar: false,
               layout: :top_down,
+              separator: "/",
               elements: [],
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
@@ -109,6 +115,8 @@ defmodule Expresso.Element.Hierarchy do
   @legend_gap 24
 
   @color_error "a color option of a tree takes :branch or {:field, \"name\"}"
+
+  @delimiter_error "the delimiter option is one character, and not a quote or a line break"
 
   @doc """
   Make sure that a `color` option of a tree is `:branch` or a field
@@ -218,10 +226,98 @@ defmodule Expresso.Element.Hierarchy do
   Make sure that a tree has one root, and that each node is a node of a tree
 
   `Expresso.Extension` calls this function when it builds the entity, so the
-  DSL and `Expresso.Builder` give the same errors.
+  DSL and `Expresso.Builder` give the same errors. A tree with `src` has no
+  nodes yet, so the function checks only its options, and `build/1` checks
+  the tree after it reads the file. Nodes with the `parent` option become a
+  nested tree first.
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
-  def check(%__MODULE__{elements: [%Node{} = root]} = tree) do
+  def check(%__MODULE__{src: src, elements: []} = tree) when is_binary(src) do
+    cond do
+      tree.separator == "" -> {:error, "the separator option needs at least one character"}
+      not delimiter?(tree.delimiter) -> {:error, @delimiter_error}
+      true -> {:ok, tree}
+    end
+  end
+
+  def check(%__MODULE__{src: src}) when is_binary(src),
+    do:
+      {:error,
+       "a tree takes its nodes from the src file or from node entities, and this tree has both"}
+
+  def check(%__MODULE__{delimiter: delimiter}) when is_binary(delimiter),
+    do:
+      {:error,
+       "the delimiter option gives the character between two cells, so it needs the src option"}
+
+  def check(%__MODULE__{fields: [_ | _]}),
+    do:
+      {:error,
+       "the fields option names columns of the src file, so it needs the src option. " <>
+         "Give the fields option to a node in place of it"}
+
+  def check(%__MODULE__{} = tree) do
+    with {:ok, tree} <- parents(tree), do: nodes_check(tree)
+  end
+
+  @doc """
+  Read the CSV file of a tree with `src`, and make its nodes
+
+  `Expresso.PathTransformer` calls this function after it joins the path to
+  the root of the deck. `Expresso.Element.Hierarchy.Data` tells the two
+  forms of a file. The function reads the file through `Expresso.DeckFile`,
+  so the watch mode renders the deck again after a change to the file.
+  """
+  @spec build(t()) :: {:ok, t()} | {:error, String.t()}
+  def build(%__MODULE__{src: src} = tree) when is_binary(src) do
+    delimiter =
+      tree.delimiter || if(String.downcase(Path.extname(src)) == ".tsv", do: "\t", else: ",")
+
+    with {:ok, text} <- read(src),
+         {:ok, rows} <- Csv.rows(text, src, delimiter: delimiter),
+         {:ok, roots} <- Data.rows(rows, src, fields: tree.fields, separator: tree.separator) do
+      nodes_check(%__MODULE__{tree | elements: roots})
+    end
+  end
+
+  defp read(src) do
+    case Expresso.DeckFile.read_text(src) do
+      {:ok, text} -> {:ok, text}
+      {:error, reason} -> {:error, Expresso.DeckFile.read_error(src, "tree file", reason)}
+    end
+  end
+
+  defp delimiter?(nil), do: true
+
+  defp delimiter?(delimiter),
+    do: String.length(delimiter) == 1 and delimiter not in ["\"", "\n", "\r"]
+
+  # Nodes with the parent option go under the node that they name. Only a
+  # node at the top of the tree takes the option.
+  defp parents(%__MODULE__{elements: elements} = tree) do
+    nested = elements |> Enum.flat_map(&(&1.elements || [])) |> Enum.flat_map(&nodes/1)
+
+    cond do
+      nested_parent = Enum.find(nested, & &1.parent) ->
+        {:error,
+         "the node entity \"#{nested_parent.name}\" is inside a node and gives the parent option. " <>
+           "Give the parent option only to a node at the top of the tree"}
+
+      Enum.any?(elements, & &1.parent) ->
+        elements
+        |> Enum.map(&{&1, &1.parent, "the node entity \"#{&1.name}\""})
+        |> Data.assemble()
+        |> case do
+          {:ok, roots} -> {:ok, %__MODULE__{tree | elements: roots}}
+          error -> error
+        end
+
+      true ->
+        {:ok, tree}
+    end
+  end
+
+  defp nodes_check(%__MODULE__{elements: [%Node{} = root]} = tree) do
     nodes = nodes(root)
 
     with :ok <- chart_options(nodes),
@@ -231,10 +327,10 @@ defmodule Expresso.Element.Hierarchy do
          do: {:ok, tree}
   end
 
-  def check(%__MODULE__{elements: []}),
+  defp nodes_check(%__MODULE__{elements: []}),
     do: {:error, "a tree holds one node entity, the root, and this tree holds none"}
 
-  def check(%__MODULE__{elements: elements}),
+  defp nodes_check(%__MODULE__{elements: elements}),
     do:
       {:error,
        "a tree holds one node entity, the root, and this tree holds #{length(elements)}. " <>
@@ -274,7 +370,8 @@ defmodule Expresso.Element.Hierarchy do
       else:
         {:error,
          "the color option of the tree names the field \"#{name}\", " <>
-           "and no node of the tree has that field. Give the field in the fields option of a node"}
+           "and no node of the tree has that field. Give the field in the fields option of a node, " <>
+           "or name its column in the fields option of the tree"}
   end
 
   defp color_field(_tree, _nodes), do: :ok

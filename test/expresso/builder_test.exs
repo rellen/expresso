@@ -92,6 +92,18 @@ defmodule Expresso.BuilderTest do
         entity(:spacer)
       ]
     ),
+    entity(:slide, ["tree data"], [],
+      elements: [
+        entity(:tree, [], title: "F", src: "test/fixtures/tree.csv", fields: ["team"], bar: true),
+        entity(:tree, [], [title: "P"],
+          elements: [
+            entity(:node, ["A"]),
+            entity(:node, ["B"], parent: "A"),
+            entity(:node, ["C"], parent: "B")
+          ]
+        )
+      ]
+    ),
     entity(:slide, ["tree"], [],
       elements: [
         entity(

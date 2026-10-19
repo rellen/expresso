@@ -116,6 +116,7 @@ spark_locals_without_parens = [
   order: 1,
   ordered: 1,
   other: 1,
+  parent: 1,
   part: 1,
   part: 2,
   pause: 0,

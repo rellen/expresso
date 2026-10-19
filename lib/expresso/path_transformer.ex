@@ -12,7 +12,8 @@ defmodule Expresso.PathTransformer do
   path, so the renderer can resolve a `url()` of an inline style sheet.
 
   Then it builds each code element with `src`: it reads the file, and it
-  makes the groups of lines with `Expresso.Element.Code.build/1`. The entity
+  makes the groups of lines with `Expresso.Element.Code.build/1`. It builds
+  a chart and a tree with `src` from their files in the same way. The entity
   of a code element cannot read the file, because the `root` option of the
   deck is not known when the entity is made. An error of the build becomes a
   `Spark.Error.DslError` with the path of the slide.
@@ -22,7 +23,7 @@ defmodule Expresso.PathTransformer do
 
   use Spark.Dsl.Transformer
 
-  alias Expresso.Element.{Audio, Chart, Code, Diagram, Embed, Image, Node, Tree, Video}
+  alias Expresso.Element.{Audio, Chart, Code, Diagram, Embed, Hierarchy, Image, Node, Tree, Video}
   alias Expresso.Dsl
   alias Spark.Dsl.Transformer
 
@@ -76,6 +77,9 @@ defmodule Expresso.PathTransformer do
 
   defp own(%Chart{src: src} = chart, root) when is_binary(src),
     do: Chart.build(%Chart{chart | src: path(src, root)})
+
+  defp own(%Hierarchy{src: src} = tree, root) when is_binary(src),
+    do: Hierarchy.build(%Hierarchy{tree | src: path(src, root)})
 
   defp own(%Image{src: src} = image, root), do: {:ok, %Image{image | src: path(src, root)}}
 

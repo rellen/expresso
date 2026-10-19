@@ -5,11 +5,15 @@ defmodule Expresso.TreeElementTest do
 
   alias Expresso.Builder
   alias Expresso.Element.Hierarchy
+  alias Expresso.Element.Hierarchy.Data
   alias Expresso.Element.Hierarchy.Layout
+  alias Expresso.Element.Hierarchy.Values
   alias Expresso.Element.Node
 
   doctest Hierarchy
+  doctest Data
   doctest Layout
+  doctest Values
   doctest Node
 
   # The plant: a root with three nodes, and nodes under two of them.
@@ -507,8 +511,6 @@ defmodule Expresso.TreeElementTest do
   end
 
   describe "the values" do
-    alias Expresso.Element.Hierarchy.Values
-
     # A disk: home holds three folders, and var has its own value.
     defp disk(opts \\ []) do
       Builder.tree(
@@ -671,6 +673,190 @@ defmodule Expresso.TreeElementTest do
     end
   end
 
+  describe "the data" do
+    # A tree from a file in the temporary directory.
+    defp from_file(tmp_dir, name, text, opts \\ []) do
+      path = Path.join(tmp_dir, name)
+      File.write!(path, text)
+      one_slide(Builder.tree([title: "T", src: path] ++ opts))
+    end
+
+    defp tree_of(deck) do
+      [%{elements: [%Hierarchy{elements: [root]}]}] = deck.slides
+      root
+    end
+
+    defp outline(%Node{} = node),
+      do: {node.name, node.label, Enum.map(node.elements, &outline/1)}
+
+    defp rows(text), do: elem(Expresso.Element.Chart.Csv.rows(text, "a.csv"), 1)
+
+    @tag :tmp_dir
+    test "the parent form gives each row a node, with the options of its columns",
+         %{tmp_dir: tmp_dir} do
+      text = """
+      id,parent,label,detail,value,color,layout,class,team
+      ana,,Ana,Plant manager,,,stacked,boss,
+      ben,ana,Ben,Production,42,success,,,40 people
+      cy,ben,,Press,"1,250",,,,
+      eve,ana,Eve,,7,,,,
+      """
+
+      root = tree_of(from_file(tmp_dir, "org.csv", text, fields: ["team"]))
+
+      assert outline(root) ==
+               {"ana", "Ana", [{"ben", "Ben", [{"cy", nil, []}]}, {"eve", "Eve", []}]}
+
+      assert %Node{layout: :stacked, class: "boss", detail: "Plant manager"} = root
+      [ben, _eve] = root.elements
+      assert %Node{value: 42, color: :success, fields: [{"team", "40 people"}]} = ben
+      assert hd(ben.elements).value == 1250
+      assert hd(ben.elements).fields == nil
+    end
+
+    @tag :tmp_dir
+    test "the path form makes the levels without a row, in the order of the file",
+         %{tmp_dir: tmp_dir} do
+      text = """
+      path,value
+      /var,21
+      /home/photos,412
+      /home/code,38
+      """
+
+      root = tree_of(from_file(tmp_dir, "disk.csv", text))
+
+      assert outline(root) ==
+               {"/", "/",
+                [
+                  {"var", "var", []},
+                  {"home", "home", [{"home/photos", "photos", []}, {"home/code", "code", []}]}
+                ]}
+    end
+
+    test "the path form has the one top level as its root, or a row for the root" do
+      one_top = rows("path,label\nPlant,The plant\nPlant/Press,\nPlant/Paint,\n")
+      assert {:ok, [root]} = Data.rows(one_top, "a.csv", separator: "/")
+      assert {root.name, root.label, length(root.elements)} == {"Plant", "The plant", 2}
+
+      with_root = rows("path,label\n/,Disk\nhome,\n")
+      assert {:ok, [root]} = Data.rows(with_root, "a.csv", separator: "/")
+
+      assert {root.name, root.label, Enum.map(root.elements, & &1.name)} ==
+               {"/", "Disk", ["home"]}
+    end
+
+    @tag :tmp_dir
+    test "the separator, a tab file and the delimiter option", %{tmp_dir: tmp_dir} do
+      root = tree_of(from_file(tmp_dir, "a.csv", "path\nA::B\nA::C\n", separator: "::"))
+      assert outline(root) == {"A", "A", [{"A::B", "B", []}, {"A::C", "C", []}]}
+
+      root = tree_of(from_file(tmp_dir, "b.tsv", "id\tparent\na\t\nb\ta\n"))
+      assert outline(root) == {"a", nil, [{"b", nil, []}]}
+
+      root = tree_of(from_file(tmp_dir, "c.txt", "id;parent\na;\nb;a\n", delimiter: ";"))
+      assert outline(root) == {"a", nil, [{"b", nil, []}]}
+    end
+
+    test "the errors of a file" do
+      for {text, opts, message} <- [
+            {"name,value\na,1\n", [], ~r/needs the columns id and parent, or the column path/},
+            {"id,parent\na,\n", [fields: ["team"]], ~r/names the column "team"/},
+            {"id,parent\na,\na,\n", [],
+             ~r/line 3 of the tree file "a.csv" gives the node "a" a second time/},
+            {"id,parent\na,\nb,x\n", [],
+             ~r/line 3 of the tree file "a.csv" names the parent "x"/},
+            {"id,parent\na,\nb,c\nc,b\n", [], ~r/the parents of the nodes "b", "c" make a loop/},
+            {"id,parent,value\na,,many\n", [], ~r/line 2 .*: the value "many" is not a number/},
+            {"id,parent,color\na,,pink\n", [],
+             ~r/line 2 .*: the color "pink" is not one of text/},
+            {"id,parent,layout\na,,radial\n", [], ~r/the layout "radial" is not one of top_down/}
+          ] do
+        assert {:error, error} = Data.rows(rows(text), "a.csv", [separator: "/"] ++ opts)
+        assert error =~ message
+      end
+
+      assert Data.rows([], "a.csv", []) == {:error, "the tree file \"a.csv\" has no rows"}
+    end
+
+    @tag :tmp_dir
+    test "a file with two roots, and a file that cannot be read", %{tmp_dir: tmp_dir} do
+      assert_raise Spark.Error.DslError, ~r/this tree holds 2/, fn ->
+        from_file(tmp_dir, "a.csv", "id,parent\na,\nb,\n")
+      end
+
+      assert_raise Spark.Error.DslError, ~r/tree file/, fn ->
+        one_slide(Builder.tree(title: "T", src: Path.join(tmp_dir, "none.csv")))
+      end
+    end
+
+    test "the options of the file need the src option, and src takes no node entity" do
+      assert_raise ArgumentError,
+                   ~r/from the src file or from node entities, and this tree has both/,
+                   fn ->
+                     Builder.tree(title: "T", src: "a.csv", elements: [Builder.node("A")])
+                   end
+
+      assert_raise ArgumentError, ~r/the delimiter option .* needs the src option/, fn ->
+        plant(delimiter: ";")
+      end
+
+      assert_raise ArgumentError, ~r/the fields option names columns of the src file/, fn ->
+        plant(fields: ["team"])
+      end
+
+      assert_raise ArgumentError, ~r/the separator option needs at least one character/, fn ->
+        Builder.tree(title: "T", src: "a.csv", separator: "")
+      end
+
+      assert_raise ArgumentError, ~r/the delimiter option is one character/, fn ->
+        Builder.tree(title: "T", src: "a.csv", delimiter: ";;")
+      end
+    end
+
+    test "the parent option puts a node at the top of the tree under the node that it names" do
+      tree =
+        Builder.tree(
+          title: "T",
+          elements: [
+            Builder.node("Ana"),
+            Builder.node("Ben", parent: "Ana", elements: [Builder.node("Cy")]),
+            Builder.node("Eve", parent: "Ana"),
+            Builder.node("Di", parent: "Ben")
+          ]
+        )
+
+      assert [root] = tree.elements
+
+      assert outline(root) ==
+               {"Ana", nil, [{"Ben", nil, [{"Cy", nil, []}, {"Di", nil, []}]}, {"Eve", nil, []}]}
+    end
+
+    test "the errors of the parent option" do
+      assert_raise ArgumentError, ~r/the node entity "B" names the parent "X"/, fn ->
+        Builder.tree(title: "T", elements: [Builder.node("A"), Builder.node("B", parent: "X")])
+      end
+
+      assert_raise ArgumentError, ~r/the parents of the nodes "B", "C" make a loop/, fn ->
+        Builder.tree(
+          title: "T",
+          elements: [
+            Builder.node("A"),
+            Builder.node("B", parent: "C"),
+            Builder.node("C", parent: "B")
+          ]
+        )
+      end
+
+      assert_raise ArgumentError, ~r/"B" is inside a node and gives the parent option/, fn ->
+        Builder.tree(
+          title: "T",
+          elements: [Builder.node("A", elements: [Builder.node("B", parent: "A")])]
+        )
+      end
+    end
+  end
+
   describe "the errors" do
     test "a tree holds one root" do
       assert_raise ArgumentError, ~r/this tree holds none/, fn -> Builder.tree(title: "T") end
@@ -762,7 +948,8 @@ defmodule Expresso.TreeElementTest do
             fields: [a: "b"],
             color: :danger,
             value: 1,
-            layout: :stacked
+            layout: :stacked,
+            parent: "B"
           ] do
         assert_raise ArgumentError,
                      ~r/the node entity "A" gives the #{elem(option, 0)} option/,
