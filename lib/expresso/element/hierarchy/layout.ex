@@ -3,34 +3,45 @@ defmodule Expresso.Element.Hierarchy.Layout do
   The layout of a tree: the place of each box and the path of each line
 
   The layout is recursive. Each subtree is a box, and the layout of a node
-  places the boxes of the subtrees under it. In the layout `:top_down`, the
-  subtrees of a node are side by side in one row, with a gap between two of
-  them, and the node is at the center above the row. The layout does not move
-  a subtree into the space under a smaller subtree next to it, so the author
-  can predict the place of each box. `docs/tree.md` gives the reasons.
+  places the boxes of the subtrees under it with one of three layouts:
 
-  Each level has a size of its own, from the `box` option of the tree. The
-  boxes of one level have their tops in one row, so the top of a level is the
-  sum of the heights of the levels above it and of the gaps between them.
+  | Layout | The nodes under a node |
+  | --- | --- |
+  | `:top_down` | Side by side in one row under the node. The node is at the center above the row. |
+  | `:left_right` | One under the other in a column at the right of the node. The node is at the middle at the left. |
+  | `:stacked` | One under the other below the node, with an indent. |
 
-  A line goes from the bottom of a box down to the middle of the gap under
-  it, along to the center of the box of the child, and down to the top of
-  that box. The lines of the children of one node thus share the part from
-  the box of the node.
+  The layout does not move a subtree into the space next to a smaller
+  subtree, so the author can predict the place of each box. `docs/tree.md`
+  gives the reasons.
 
-  The layout is a function of the tree and the sizes only, so the same tree
+  Each level has a size of its own, from the `box` option of the tree. In a
+  tree with one layout, the boxes of one level thus have their tops in one
+  row for `:top_down`, and their left edges in one column for `:left_right`.
+
+  A line goes from the edge of a box to the edge of the box of a child, with
+  horizontal and vertical parts only. The lines of the children of one node
+  share the part from the box of the node.
+
+  The layout is a function of the tree and the options only, so the same tree
   gives the same picture each time.
   """
 
   alias Expresso.Element.Node
 
-  # The gap between two subtrees of one row, and the gap between two levels,
-  # in the units of the drawing.
+  # The gap between two subtrees, and the gap between a node and the nodes
+  # under it, in the units of the drawing. A stacked node has an indent.
   @gap 24
   @level_gap 48
+  @indent 32
+
+  @layouts [:top_down, :left_right, :stacked]
 
   @typedoc "The width and the height of a box"
   @type size :: %{width: pos_integer(), height: pos_integer()}
+
+  @typedoc "A layout of the nodes under a node"
+  @type layout :: :top_down | :left_right | :stacked
 
   @typedoc "One box: its node, its level from 0, its place and its size"
   @type box :: %{
@@ -45,26 +56,61 @@ defmodule Expresso.Element.Hierarchy.Layout do
   @typedoc "The boxes in the order of the tree, the paths of the lines, and the size of the drawing"
   @type t :: %{boxes: [box()], lines: [String.t()], width: number(), height: number()}
 
+  @typedoc "The options of the layout: the layout of the tree and the first stacked level"
+  @type options :: [layout: layout(), stack_from: pos_integer() | nil]
+
+  @doc "Return the three layouts"
+  @spec layouts() :: [layout()]
+  def layouts, do: @layouts
+
   @doc """
   Return the layout of a tree from its root and the size of each level
 
-  The last size applies to each deeper level.
+  The last size applies to each deeper level. The layout of the nodes under a
+  node comes from the first of these:
 
-      iex> alias Expresso.Element.Node
-      iex> root = %Node{name: "A", elements: [%Node{name: "B"}, %Node{name: "C"}]}
-      iex> layout = Expresso.Element.Hierarchy.Layout.top_down(root, [%{width: 100, height: 40}])
-      iex> Enum.map(layout.boxes, &{&1.node.name, &1.x, &1.y})
-      [{"A", 62, 0}, {"B", 0, 88}, {"C", 124, 88}]
-      iex> {layout.width, layout.height}
-      {224, 128}
+  1. The `layout` option of the node.
+  2. The option `stack_from`: the nodes of that level and below are stacked.
+     The root is level 1.
+  3. The `layout` option of the nearest node above it with the option.
+  4. The `layout` option of the tree, which is `:top_down` by default.
+
+  ```
+  iex> alias Expresso.Element.Node
+  iex> root = %Node{name: "A", elements: [%Node{name: "B"}, %Node{name: "C"}]}
+  iex> layout = Expresso.Element.Hierarchy.Layout.layout(root, [%{width: 100, height: 40}], [])
+  iex> Enum.map(layout.boxes, &{&1.node.name, &1.x, &1.y})
+  [{"A", 62, 0}, {"B", 0, 88}, {"C", 124, 88}]
+  iex> {layout.width, layout.height}
+  {224, 128}
+  iex> layout = Expresso.Element.Hierarchy.Layout.layout(root, [%{width: 100, height: 40}], layout: :left_right)
+  iex> Enum.map(layout.boxes, &{&1.node.name, &1.x, &1.y})
+  [{"A", 0, 32}, {"B", 148, 0}, {"C", 148, 64}]
+  ```
+  """
+  @spec layout(Node.t(), [size()], options()) :: t()
+  def layout(%Node{} = root, [_ | _] = sizes, options) do
+    context = %{
+      sizes: sizes,
+      stack_from: options[:stack_from],
+      inherited: Keyword.get(options, :layout) || :top_down
+    }
+
+    placed = place(root, 0, context)
+
+    %{
+      boxes: Enum.map(placed.boxes, &round_box/1),
+      lines: Enum.map(placed.lines, &path/1),
+      width: number(placed.width),
+      height: number(placed.height)
+    }
+  end
+
+  @doc """
+  Return the layout of a tree in which each node has the layout `:top_down`
   """
   @spec top_down(Node.t(), [size()]) :: t()
-  def top_down(%Node{} = root, [_ | _] = sizes) do
-    tops = tops(sizes, depth(root))
-    {boxes, lines, width} = place(root, 0, 0, sizes, tops)
-    height = boxes |> Enum.map(&(&1.y + &1.height)) |> Enum.max()
-    %{boxes: boxes, lines: lines, width: width, height: height}
-  end
+  def top_down(root, sizes), do: layout(root, sizes, layout: :top_down)
 
   @doc """
   Return the size of the boxes of a level, from 0 for the root
@@ -78,86 +124,135 @@ defmodule Expresso.Element.Hierarchy.Layout do
   @spec size([size()], non_neg_integer()) :: size()
   def size(sizes, depth), do: Enum.at(sizes, depth) || List.last(sizes)
 
-  # The number of levels of a tree.
-  defp depth(%Node{elements: children}) do
-    case children || [] do
-      [] -> 1
-      children -> 1 + (children |> Enum.map(&depth/1) |> Enum.max())
+  # The layout of the nodes under a node at a depth from 0.
+  defp own_layout(%Node{layout: layout}, _depth, _context) when layout != nil, do: layout
+
+  defp own_layout(_node, depth, %{stack_from: from}) when is_integer(from) and depth + 2 >= from,
+    do: :stacked
+
+  defp own_layout(_node, _depth, %{inherited: inherited}), do: inherited
+
+  # Place a subtree with its top left corner at 0, 0. The result holds the
+  # boxes in the order of the tree, the lines as lists of points, and the
+  # size of the subtree.
+  defp place(%Node{} = node, depth, context) do
+    %{width: width, height: height} = size(context.sizes, depth)
+    box = %{node: node, depth: depth, x: 0, y: 0, width: width, height: height}
+    layout = own_layout(node, depth, context)
+    context = if node.layout, do: %{context | inherited: node.layout}, else: context
+
+    case node.elements || [] do
+      [] -> %{boxes: [box], lines: [], width: width, height: height}
+      children -> arrange(layout, box, Enum.map(children, &place(&1, depth + 1, context)))
     end
   end
 
-  # The top of each level.
-  defp tops(sizes, levels) do
-    {tops, _top} =
-      Enum.map_reduce(0..(levels - 1)//1, 0, fn depth, top ->
-        {top, top + size(sizes, depth).height + @level_gap}
+  defp arrange(:top_down, box, children) do
+    row = row_size(children, :width)
+    total = max(box.width, row)
+    box = %{box | x: (total - box.width) / 2}
+    top = box.height + @level_gap
+
+    {children, _x} =
+      Enum.map_reduce(children, (total - row) / 2, fn child, x ->
+        {shift(child, x, top), x + child.width + @gap}
       end)
 
-    List.to_tuple(tops)
-  end
-
-  # The width of a subtree: the width of its box, or the width of the row of
-  # its children with the gaps, the larger.
-  defp width(%Node{elements: children}, depth, sizes) do
-    own = size(sizes, depth).width
-
-    case children || [] do
-      [] ->
-        own
-
-      children ->
-        row = children |> Enum.map(&width(&1, depth + 1, sizes)) |> Enum.sum()
-        max(own, row + @gap * (length(children) - 1))
-    end
-  end
-
-  # Place a subtree with its left edge at `left`. The function returns the
-  # boxes of the subtree in the order of the tree, the paths of its lines, and
-  # its width.
-  defp place(%Node{} = node, depth, left, sizes, tops) do
-    %{width: own, height: height} = size(sizes, depth)
-    total = width(node, depth, sizes)
-    top = elem(tops, depth)
-    children = node.elements || []
-
-    {child_boxes, child_lines} =
-      case children do
-        [] ->
-          {[], []}
-
-        children ->
-          widths = Enum.map(children, &width(&1, depth + 1, sizes))
-          row = Enum.sum(widths) + @gap * (length(children) - 1)
-          start = left + (total - row) / 2
-
-          {placed, _x} =
-            children
-            |> Enum.zip(widths)
-            |> Enum.map_reduce(start, fn {child, child_width}, x ->
-              {place(child, depth + 1, x, sizes, tops), x + child_width + @gap}
-            end)
-
-          {Enum.flat_map(placed, &elem(&1, 0)), Enum.flat_map(placed, &elem(&1, 1))}
-      end
-
-    x = left + (total - own) / 2
-    box = %{node: node, depth: depth, x: number(x), y: top, width: own, height: height}
+    from = {box.x + box.width / 2, box.height}
+    middle = box.height + @level_gap / 2
 
     lines =
-      for child <- Enum.filter(child_boxes, &(&1.depth == depth + 1)),
-          do: line(box, child)
+      for %{boxes: [child | _rest]} <- children,
+          do: [
+            from,
+            {elem(from, 0), middle},
+            {child.x + child.width / 2, middle},
+            {child.x + child.width / 2, child.y}
+          ]
 
-    {[box | child_boxes], lines ++ child_lines, total}
+    join(box, children, lines, total, top + Enum.max(Enum.map(children, & &1.height)))
   end
 
-  # The path from the bottom of a box to the top of the box of a child.
-  defp line(parent, child) do
-    from = parent.x + parent.width / 2
-    to = child.x + child.width / 2
-    bottom = parent.y + parent.height
-    middle = bottom + (child.y - bottom) / 2
+  defp arrange(:left_right, box, children) do
+    column = row_size(children, :height)
+    total = max(box.height, column)
+    box = %{box | y: (total - box.height) / 2}
+    left = box.width + @level_gap
 
-    "M#{f(from)} #{f(bottom)} V#{f(middle)} H#{f(to)} V#{f(child.y)}"
+    {children, _y} =
+      Enum.map_reduce(children, (total - column) / 2, fn child, y ->
+        {shift(child, left, y), y + child.height + @gap}
+      end)
+
+    from = {box.width, box.y + box.height / 2}
+    middle = box.width + @level_gap / 2
+
+    lines =
+      for %{boxes: [child | _rest]} <- children,
+          do: [
+            from,
+            {middle, elem(from, 1)},
+            {middle, child.y + child.height / 2},
+            {child.x, child.y + child.height / 2}
+          ]
+
+    join(box, children, lines, left + Enum.max(Enum.map(children, & &1.width)), total)
+  end
+
+  defp arrange(:stacked, box, children) do
+    {children, bottom} =
+      Enum.map_reduce(children, box.height + @gap, fn child, y ->
+        {shift(child, @indent, y), y + child.height + @gap}
+      end)
+
+    rail = @indent / 2
+
+    lines =
+      for %{boxes: [child | _rest]} <- children,
+          do: [
+            {rail, box.height},
+            {rail, child.y + child.height / 2},
+            {child.x, child.y + child.height / 2}
+          ]
+
+    width = max(box.width, @indent + Enum.max(Enum.map(children, & &1.width)))
+    join(box, children, lines, width, bottom - @gap)
+  end
+
+  # The width of a row or the height of a column of subtrees, with the gaps.
+  defp row_size(children, key),
+    do: Enum.sum(Enum.map(children, &Map.fetch!(&1, key))) + @gap * (length(children) - 1)
+
+  defp join(box, children, lines, width, height) do
+    %{
+      boxes: [box | Enum.flat_map(children, & &1.boxes)],
+      lines: lines ++ Enum.flat_map(children, & &1.lines),
+      width: width,
+      height: height
+    }
+  end
+
+  # Move a placed subtree by dx and dy. The subtree keeps its size.
+  defp shift(placed, dx, dy) do
+    boxes = Enum.map(placed.boxes, &%{&1 | x: &1.x + dx, y: &1.y + dy})
+
+    lines =
+      Enum.map(placed.lines, fn points -> Enum.map(points, fn {x, y} -> {x + dx, y + dy} end) end)
+
+    %{placed | boxes: boxes, lines: lines}
+  end
+
+  defp round_box(box), do: %{box | x: number(box.x), y: number(box.y)}
+
+  # The SVG path of a line with horizontal and vertical parts only.
+  defp path([{x, y} | rest]) do
+    {parts, _point} =
+      Enum.map_reduce(rest, {x, y}, fn {nx, ny}, {px, _py} ->
+        part = if nx == px, do: "V#{f(ny)}", else: "H#{f(nx)}"
+        {part, {nx, ny}}
+      end)
+
+    Enum.join(["M#{f(x)} #{f(y)}" | parts], " ")
   end
 
   @doc """

@@ -1764,8 +1764,13 @@ reasons for this design:
   one.
 - **A layout in the compiler.** `Expresso.Element.Hierarchy.Layout` places each box from the
   tree and the size of each level. The handout view, paper and the layout check thus show
-  the same tree, with no script. The layout does not move a subtree into the space under a
-  smaller subtree next to it, so the author can predict the place of each box.
+  the same tree, with no script. The layout does not move a subtree into the space next to
+  a smaller subtree, so the author can predict the place of each box.
+- **A recursive layout.** Each subtree returns its boxes and lines with its top left corner
+  at 0, 0, and its parent moves them into place. Thus each node can have its own layout,
+  `:top_down`, `:left_right` or `:stacked`, and a mix of layouts needs no special case. A
+  line is a list of points with horizontal and vertical parts only, and the renderer writes
+  it as an SVG path.
 - **HTML boxes in an SVG.** The lines are paths in one SVG, and each box is a
   `foreignObject` with the HTML of the box. The SVG scales the whole tree to the box of the
   element, and the text of a box ends with an ellipsis as HTML does.

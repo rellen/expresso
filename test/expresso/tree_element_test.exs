@@ -105,6 +105,93 @@ defmodule Expresso.TreeElementTest do
     end
   end
 
+  describe "the layouts" do
+    @size [%{width: 100, height: 40}]
+
+    # A holds B with D and E, and C.
+    defp abc(opts \\ []) do
+      %Node{
+        name: "A",
+        layout: opts[:a],
+        elements: [
+          %Node{name: "B", layout: opts[:b], elements: [%Node{name: "D"}, %Node{name: "E"}]},
+          %Node{name: "C"}
+        ]
+      }
+    end
+
+    defp places(layout), do: Enum.map(layout.boxes, &{&1.node.name, &1.x, &1.y})
+
+    test ":left_right puts the nodes in a column at the right, with the node at the middle" do
+      layout = Layout.layout(abc(), @size, layout: :left_right)
+
+      # B holds D and E: 40 + 24 + 40. C is 40 high, with a gap of 24.
+      assert places(layout) == [
+               {"A", 0, 64},
+               {"B", 148, 32},
+               {"D", 296, 0},
+               {"E", 296, 64},
+               {"C", 148, 128}
+             ]
+
+      assert {layout.width, layout.height} == {396, 168}
+      assert hd(layout.lines) == "M100 84 H124 V52 H148"
+    end
+
+    test ":stacked puts the nodes one under the other below the node, with an indent" do
+      layout = Layout.layout(abc(), @size, layout: :stacked)
+
+      assert places(layout) == [
+               {"A", 0, 0},
+               {"B", 32, 64},
+               {"D", 64, 128},
+               {"E", 64, 192},
+               {"C", 32, 256}
+             ]
+
+      assert {layout.width, layout.height} == {164, 296}
+      assert Enum.take(layout.lines, 2) == ["M16 40 V84 H32", "M16 40 V276 H32"]
+    end
+
+    test "the layout of a node applies to the nodes under it, and the root keeps the tree layout" do
+      layout = Layout.layout(abc(b: :stacked), @size, layout: :top_down)
+
+      assert places(layout) == [
+               {"A", 78, 0},
+               {"B", 0, 88},
+               {"D", 32, 152},
+               {"E", 32, 216},
+               {"C", 156, 88}
+             ]
+    end
+
+    test "stack_from stacks the nodes of a level and below, and a layout of a node comes first" do
+      stacked = Layout.layout(abc(), @size, stack_from: 3)
+      assert Enum.find(stacked.boxes, &(&1.node.name == "D")).x == 32
+
+      kept = Layout.layout(abc(b: :top_down), @size, stack_from: 3)
+      assert Enum.find(kept.boxes, &(&1.node.name == "D")).y == 176
+      assert Enum.find(kept.boxes, &(&1.node.name == "E")).y == 176
+
+      root = Layout.layout(abc(), @size, stack_from: 2)
+      assert Enum.find(root.boxes, &(&1.node.name == "B")).x == 32
+    end
+
+    test "the layout options reach the HTML" do
+      tree =
+        Builder.tree(
+          title: "T",
+          layout: :left_right,
+          elements: [Builder.node("A", elements: [Builder.node("B")])]
+        )
+
+      figure = figure(tree)
+
+      assert figure |> LazyHTML.query("foreignObject") |> LazyHTML.attribute("x") == ["0", "268"]
+      assert figure |> LazyHTML.query("svg") |> LazyHTML.attribute("viewBox") == ["0 0 488 96"]
+    end
+  end
+
   describe "the box option" do
     test "takes one size or a list of sizes" do
       assert Hierarchy.box(width: 1, height: 2) == {:ok, [%{width: 1, height: 2}]}
@@ -669,7 +756,14 @@ defmodule Expresso.TreeElementTest do
     end
 
     test "a node of a chart takes no option of the box of a tree" do
-      for option <- [image: "a.png", icon: "rocket", fields: [a: "b"], color: :danger, value: 1] do
+      for option <- [
+            image: "a.png",
+            icon: "rocket",
+            fields: [a: "b"],
+            color: :danger,
+            value: 1,
+            layout: :stacked
+          ] do
         assert_raise ArgumentError,
                      ~r/the node entity "A" gives the #{elem(option, 0)} option/,
                      fn ->
@@ -713,6 +807,20 @@ defmodule Expresso.TreeElementTest do
             bar: 1
           ] do
         assert_raise ArgumentError, ~r/#{option}/, fn -> plant([{option, value}]) end
+      end
+    end
+
+    test "a layout is :top_down, :left_right or :stacked, and stack_from is a level of 2 or more" do
+      assert_raise ArgumentError, ~r/layout/, fn -> plant(layout: :radial) end
+
+      assert_raise ArgumentError, ~r/layout/, fn ->
+        Builder.tree(title: "T", elements: [Builder.node("A", layout: :radial)])
+      end
+
+      for level <- [1, 0, "2"] do
+        assert_raise ArgumentError, ~r/a stack_from option takes a level of 2 or more/, fn ->
+          plant(stack_from: level)
+        end
       end
     end
 

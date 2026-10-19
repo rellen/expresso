@@ -363,6 +363,11 @@ defmodule Expresso.Extension do
             doc:
               "Short facts under the detail of the box of a node in a tree, one line each, such as [team: \"42 people\"]. Only a tree takes this option."
           ],
+          layout: [
+            type: {:in, Expresso.Element.Hierarchy.Layout.layouts()},
+            doc:
+              "How the nodes under a node in a tree go, and the nodes under them: :top_down, :left_right or :stacked. The default is the layout of the tree. Only a tree takes this option."
+          ],
           value: [
             type: {:custom, Expresso.Element.Node, :value, []},
             doc:
@@ -857,6 +862,17 @@ defmodule Expresso.Extension do
             type: {:custom, Expresso.Element.Hierarchy, :color, []},
             doc:
               "The colors of the boxes from the palette: :branch gives each node under the root and its boxes a color, and {:field, \"name\"} gives each value of a field a color and adds a legend. The color option of a node comes first. The default is no color."
+          ],
+          layout: [
+            type: {:in, Expresso.Element.Hierarchy.Layout.layouts()},
+            default: :top_down,
+            doc:
+              "How the nodes under each node go: :top_down puts them in a row under the node, :left_right puts them in a column at its right, and :stacked puts them one under the other below it. The default is :top_down."
+          ],
+          stack_from: [
+            type: {:custom, Expresso.Element.Hierarchy, :stack_from, []},
+            doc:
+              "The first level that the tree puts in the layout :stacked, with 1 for the root. The default is no stacked level."
           ],
           sum: [
             type: :boolean,
