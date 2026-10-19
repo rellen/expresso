@@ -160,9 +160,17 @@ defmodule Expresso.Element.Hierarchy.Layout do
     "M#{f(from)} #{f(bottom)} V#{f(middle)} H#{f(to)} V#{f(child.y)}"
   end
 
-  # An integer stays an integer, so a place on the grid writes no ".0".
-  defp number(value) when is_float(value) and value == trunc(value), do: trunc(value)
-  defp number(value), do: value
+  @doc """
+  Return a float with no fraction as an integer, so its text has no ".0"
+
+      iex> Expresso.Element.Hierarchy.Layout.number(62.0)
+      62
+      iex> Expresso.Element.Hierarchy.Layout.number(61.5)
+      61.5
+  """
+  @spec number(number()) :: number()
+  def number(value) when is_float(value) and value == trunc(value), do: trunc(value)
+  def number(value), do: value
 
   defp f(value), do: value |> number() |> to_string()
 end

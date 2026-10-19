@@ -419,6 +419,171 @@ defmodule Expresso.TreeElementTest do
     end
   end
 
+  describe "the values" do
+    alias Expresso.Element.Hierarchy.Values
+
+    # A disk: home holds three folders, and var has its own value.
+    defp disk(opts \\ []) do
+      Builder.tree(
+        [
+          title: "The disk",
+          elements: [
+            Builder.node("/",
+              elements: [
+                Builder.node("home",
+                  elements: [
+                    Builder.node("photos", value: 400),
+                    Builder.node("code", value: 30),
+                    Builder.node("music", value: 90)
+                  ]
+                ),
+                Builder.node("var", value: 600)
+              ]
+            )
+          ]
+        ] ++ opts
+      )
+    end
+
+    defp values(tree) do
+      %Hierarchy{elements: [root]} = Hierarchy.prepared(tree)
+      flatten(root)
+    end
+
+    defp flatten(node),
+      do: [{node.label || node.name, node.value} | Enum.flat_map(node.elements, &flatten/1)]
+
+    test "sum gives a node with no value the sum of the values under it" do
+      assert values(disk()) == [
+               {"/", 1120},
+               {"home", 520},
+               {"photos", 400},
+               {"code", 30},
+               {"music", 90},
+               {"var", 600}
+             ]
+    end
+
+    test "sum false keeps a node with no value without a value" do
+      assert values(disk(sum: false)) |> Enum.take(2) == [{"/", nil}, {"home", nil}]
+    end
+
+    test "a value of a node comes before the sum" do
+      tree =
+        Builder.tree(
+          title: "T",
+          elements: [Builder.node("A", value: 5, elements: [Builder.node("B", value: 2)])]
+        )
+
+      assert values(tree) == [{"A", 5}, {"B", 2}]
+    end
+
+    test "sort :value puts the largest first, and a node with no value last" do
+      tree =
+        Builder.tree(
+          title: "T",
+          sort: :value,
+          sum: false,
+          elements: [
+            Builder.node("A",
+              elements: [
+                Builder.node("x"),
+                Builder.node("b", value: 1),
+                Builder.node("c", value: 3),
+                Builder.node("d", value: 1)
+              ]
+            )
+          ]
+        )
+
+      assert tree |> values() |> Enum.map(&elem(&1, 0)) == ["A", "c", "b", "d", "x"]
+    end
+
+    test "limit keeps the first nodes, and one more node holds the total of the rest" do
+      assert values(disk(limit: 1, sort: :value)) == [
+               {"/", 1120},
+               {"var", 600},
+               {"1 more", 520}
+             ]
+
+      %Hierarchy{elements: [root]} = Hierarchy.prepared(disk(limit: 1))
+      [_home, more] = root.elements
+      assert more.name == Values.more_name(root)
+      assert more.class == "tree-more"
+    end
+
+    test "limit applies under each node, after the sort" do
+      assert values(disk(limit: 2, sort: :value)) == [
+               {"/", 1120},
+               {"var", 600},
+               {"home", 520},
+               {"photos", 400},
+               {"music", 90},
+               {"1 more", 30}
+             ]
+    end
+
+    test "depth cuts the tree, and a node at the last level shows the total under it" do
+      assert values(disk(depth: 2, sum: false)) == [{"/", nil}, {"home", 520}, {"var", 600}]
+      assert values(disk(depth: 1)) == [{"/", 1120}]
+    end
+
+    test "each box shows the text of its value, after the fields" do
+      figure = figure(disk(value_format: :bytes))
+
+      assert texts(figure, ".tree-box .tree-value") ==
+               ["1.1 KB", "520 B", "400 B", "30 B", "90 B", "600 B"]
+
+      assert count(figure, ".tree-text > .tree-value:last-child") == 6
+    end
+
+    test "value_format :percent gives the part of the value of the root" do
+      figure = figure(disk(value_format: :percent))
+
+      assert texts(figure, ".tree-value") ==
+               ["100%", "46.4%", "35.7%", "2.7%", "8%", "53.6%"]
+    end
+
+    test "the screen reader reads the value after the fields" do
+      list = figure(disk()) |> LazyHTML.query("ul.tree-list li") |> Enum.map(&own_text/1)
+      assert Enum.take(list, 2) == ["/, 1,120", "home, 520"]
+    end
+
+    test "bar gives each box a bar with the part of the value of the root" do
+      widths =
+        disk(bar: true)
+        |> figure()
+        |> LazyHTML.query(".tree-box > .tree-bar > .tree-bar-fill")
+        |> LazyHTML.attribute("style")
+
+      assert widths == [
+               "width: 100%",
+               "width: 46.43%",
+               "width: 35.71%",
+               "width: 2.68%",
+               "width: 8.04%",
+               "width: 53.57%"
+             ]
+    end
+
+    test "a tree without bar has no bar, and a node without a value has no value" do
+      figure = figure(plant())
+      assert count(figure, ".tree-bar") == 0
+      assert count(figure, ".tree-value") == 0
+    end
+
+    test "the text of a value in each format" do
+      assert Values.text(0, :number, nil) == "0"
+      assert Values.text(1_234_567.891, :number, nil) == "1,234,567.89"
+      assert Values.text(999, :bytes, nil) == "999 B"
+      assert Values.text(1000, :bytes, nil) == "1 KB"
+      assert Values.text(9_960, :bytes, nil) == "10 KB"
+      assert Values.text(2.5e18, :bytes, nil) == "2.5 EB"
+      assert Values.text(2.5e21, :bytes, nil) == "2,500 EB"
+      assert Values.text(1, :percent, 3) == "33.3%"
+    end
+  end
+
   describe "the errors" do
     test "a tree holds one root" do
       assert_raise ArgumentError, ~r/this tree holds none/, fn -> Builder.tree(title: "T") end
@@ -504,7 +669,7 @@ defmodule Expresso.TreeElementTest do
     end
 
     test "a node of a chart takes no option of the box of a tree" do
-      for option <- [image: "a.png", icon: "rocket", fields: [a: "b"], color: :danger] do
+      for option <- [image: "a.png", icon: "rocket", fields: [a: "b"], color: :danger, value: 1] do
         assert_raise ArgumentError,
                      ~r/the node entity "A" gives the #{elem(option, 0)} option/,
                      fn ->
@@ -513,6 +678,41 @@ defmodule Expresso.TreeElementTest do
                          flows: [Builder.flow("A", "B", 1), Builder.node("A", [option])]
                        )
                      end
+      end
+    end
+
+    test "a value is a number that is not negative" do
+      for value <- [-1, -0.5, "12"] do
+        assert_raise ArgumentError, ~r/a value of a node is a number that is not negative/, fn ->
+          Builder.tree(title: "T", elements: [Builder.node("A", value: value)])
+        end
+      end
+    end
+
+    test "bar and value_format :percent need a value of the root above 0" do
+      assert_raise ArgumentError, ~r/the bar option of a tree needs the value of the root/, fn ->
+        plant(bar: true)
+      end
+
+      assert_raise ArgumentError, ~r/the value_format :percent of a tree needs/, fn ->
+        Builder.tree(
+          title: "T",
+          value_format: :percent,
+          elements: [Builder.node("A", elements: [Builder.node("B", value: 0)])]
+        )
+      end
+    end
+
+    test "the options of the values take their types" do
+      for {option, value} <- [
+            value_format: :kb,
+            sort: :name,
+            limit: 0,
+            depth: 0,
+            sum: "yes",
+            bar: 1
+          ] do
+        assert_raise ArgumentError, ~r/#{option}/, fn -> plant([{option, value}]) end
       end
     end
 

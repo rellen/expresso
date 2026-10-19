@@ -28,6 +28,7 @@ defmodule Expresso.Element.Hierarchy do
   use Expresso.Element
 
   alias Expresso.Element.Hierarchy.Layout
+  alias Expresso.Element.Hierarchy.Values
   alias Expresso.Element.Chart
   alias Expresso.Element.Node
 
@@ -39,7 +40,13 @@ defmodule Expresso.Element.Hierarchy do
               :width,
               :box,
               :color,
+              :limit,
+              :depth,
               :class,
+              sum: true,
+              value_format: :number,
+              sort: :none,
+              bar: false,
               elements: [],
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
@@ -194,30 +201,12 @@ defmodule Expresso.Element.Hierarchy do
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
   def check(%__MODULE__{elements: [%Node{} = root]} = tree) do
     nodes = nodes(root)
-    names = Enum.map(nodes, & &1.name)
-    twice = names -- Enum.uniq(names)
 
-    cond do
-      chart = Enum.find(nodes, &(Node.chart_options(&1) != [])) ->
-        {:error,
-         "the node \"#{chart.name}\" gives the #{hd(Node.chart_options(chart))} option, " <>
-           "and only a node of a chart of flows takes it"}
-
-      match?({:field, _name}, tree.color) and
-          not Enum.any?(nodes, &field(&1, elem(tree.color, 1))) ->
-        {:error,
-         "the color option of the tree names the field \"#{elem(tree.color, 1)}\", " <>
-           "and no node of the tree has that field. Give the field in the fields option of a node"}
-
-      twice != [] ->
-        {:error,
-         "the tree has two nodes with the name \"#{hd(twice)}\". " <>
-           "A name is the identity of a node, so give one node a different name and a label, " <>
-           "such as node \"#{hd(twice)}-2\", label: \"#{hd(twice)}\""}
-
-      true ->
-        {:ok, tree}
-    end
+    with :ok <- chart_options(nodes),
+         :ok <- color_field(tree, nodes),
+         :ok <- root_value(tree),
+         :ok <- names(nodes),
+         do: {:ok, tree}
   end
 
   def check(%__MODULE__{elements: []}),
@@ -228,6 +217,73 @@ defmodule Expresso.Element.Hierarchy do
       {:error,
        "a tree holds one node entity, the root, and this tree holds #{length(elements)}. " <>
          "Put the nodes under one root node"}
+
+  defp positive?(%__MODULE__{elements: [%Node{value: value}]}),
+    do: is_number(value) and value > 0
+
+  @doc """
+  Return the tree after the options of the values
+
+  `Expresso.Element.Hierarchy.Values.prepare/2` applies `depth`, `sum`,
+  `sort` and `limit` to the root. The layout, the colors and the HTML read
+  this tree, so each one shows the same nodes.
+  """
+  @spec prepared(t()) :: t()
+  def prepared(%__MODULE__{elements: [root]} = tree) do
+    options = [depth: tree.depth, sum: tree.sum, sort: tree.sort, limit: tree.limit]
+    %__MODULE__{tree | elements: [Values.prepare(root, options)]}
+  end
+
+  defp chart_options(nodes) do
+    case Enum.find(nodes, &(Node.chart_options(&1) != [])) do
+      nil ->
+        :ok
+
+      chart ->
+        {:error,
+         "the node \"#{chart.name}\" gives the #{hd(Node.chart_options(chart))} option, " <>
+           "and only a node of a chart of flows takes it"}
+    end
+  end
+
+  defp color_field(%__MODULE__{color: {:field, name}}, nodes) do
+    if Enum.any?(nodes, &field(&1, name)),
+      do: :ok,
+      else:
+        {:error,
+         "the color option of the tree names the field \"#{name}\", " <>
+           "and no node of the tree has that field. Give the field in the fields option of a node"}
+  end
+
+  defp color_field(_tree, _nodes), do: :ok
+
+  defp root_value(%__MODULE__{bar: bar, value_format: format} = tree)
+       when bar or format == :percent do
+    if positive?(prepared(tree)),
+      do: :ok,
+      else:
+        {:error,
+         "the #{if bar, do: "bar option", else: "value_format :percent"} of a tree " <>
+           "needs the value of the root, and the root has no value above 0. " <>
+           "Give a value to the nodes, or keep the sum option true"}
+  end
+
+  defp root_value(_tree), do: :ok
+
+  defp names(nodes) do
+    names = Enum.map(nodes, & &1.name)
+
+    case names -- Enum.uniq(names) do
+      [] ->
+        :ok
+
+      [name | _rest] ->
+        {:error,
+         "the tree has two nodes with the name \"#{name}\". " <>
+           "A name is the identity of a node, so give one node a different name and a label, " <>
+           "such as node \"#{name}-2\", label: \"#{name}\""}
+    end
+  end
 
   # Each node of a subtree, in the order of the tree.
   defp nodes(%Node{elements: children} = node),
@@ -244,7 +300,8 @@ defmodule Expresso.Element.Hierarchy do
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
-  def get_assigns(%__MODULE__{elements: [root]} = tree) do
+  def get_assigns(%__MODULE__{} = tree) do
+    %__MODULE__{elements: [root]} = tree = prepared(tree)
     layout = Layout.top_down(root, tree.box || @box)
     {colors, legend} = colors(tree)
 
@@ -271,6 +328,7 @@ defmodule Expresso.Element.Hierarchy do
       layout: layout,
       colors: Map.new(colors, fn {name, color} -> {name, css(color)} end),
       legend: legend,
+      values: %{format: tree.value_format, total: root.value, bar: tree.bar},
       view_box: "0 0 #{layout.width} #{height}",
       overlay: Expresso.Overlay.Render.attributes(tree) ++ width
     }
@@ -303,7 +361,7 @@ defmodule Expresso.Element.Hierarchy do
 
           for box <- @layout.boxes do
             foreignObject x: box.x, y: box.y, width: box.width, height: box.height do
-              c(&card/1, node: box.node, color: @colors[box.node.name])
+              c(&card/1, node: box.node, color: @colors[box.node.name], values: @values)
             end
           end
 
@@ -322,7 +380,7 @@ defmodule Expresso.Element.Hierarchy do
         end
 
         ul class: "tree-list", aria_label: @title do
-          c(&item/1, node: @root)
+          c(&item/1, node: @root, values: @values)
         end
       end
     end
@@ -331,7 +389,10 @@ defmodule Expresso.Element.Hierarchy do
   # The HTML of one box: the image or the icon, then the label, the detail
   # and the fields.
   defp card(assigns) do
-    assigns = Map.merge(assigns, card_attributes(assigns.node, assigns.color))
+    assigns =
+      assigns
+      |> Map.merge(card_attributes(assigns.node, assigns.color))
+      |> Map.merge(value_attributes(assigns.node, assigns.values))
 
     temple do
       div class: @classes, style: @style, xmlns: "http://www.w3.org/1999/xhtml" do
@@ -357,6 +418,18 @@ defmodule Expresso.Element.Hierarchy do
               " " <> value
             end
           end
+
+          if @value do
+            p class: "tree-value" do
+              @value
+            end
+          end
+        end
+
+        if @bar do
+          span class: "tree-bar" do
+            span class: "tree-bar-fill", style: "width: #{@bar}%"
+          end
         end
       end
     end
@@ -371,6 +444,16 @@ defmodule Expresso.Element.Hierarchy do
         List.wrap(node.class)
 
     %{classes: Enum.join(classes, " "), style: color && "--tree-color: #{color}"}
+  end
+
+  # The text of the value of a node, and the length of its bar in percent.
+  defp value_attributes(%Node{value: nil}, _values), do: %{value: nil, bar: nil}
+
+  defp value_attributes(%Node{value: value}, %{format: format, total: total, bar: bar}) do
+    %{
+      value: Values.text(value, format, total),
+      bar: if(bar, do: Layout.number(Float.round(min(value / total, 1.0) * 100, 2)))
+    }
   end
 
   # The image or the icon of a box, or nothing.
@@ -394,22 +477,28 @@ defmodule Expresso.Element.Hierarchy do
 
   defp media(_assigns), do: ""
 
-  # The label, the detail and the fields of a node, for a screen reader.
-  defp spoken(%Node{} = node) do
+  # The label, the detail, the fields and the value of a node, for a screen
+  # reader.
+  defp spoken(%Node{} = node, values) do
     fields = Enum.map(node.fields || [], fn {name, value} -> "#{name}: #{value}" end)
-    Enum.join(Enum.reject([node.label || node.name, node.detail], &is_nil/1) ++ fields, ", ")
+    %{value: value} = value_attributes(node, values)
+
+    Enum.join(
+      Enum.reject([node.label || node.name, node.detail], &is_nil/1) ++ fields ++ List.wrap(value),
+      ", "
+    )
   end
 
   # One node and the nodes under it, for a screen reader.
   defp item(assigns) do
     temple do
       li do
-        spoken(@node)
+        spoken(@node, @values)
 
         if (@node.elements || []) != [] do
           ul do
             for child <- @node.elements do
-              c(&item/1, node: child)
+              c(&item/1, node: child, values: @values)
             end
           end
         end

@@ -484,6 +484,7 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   stroke-width: 2;
 }
 .tree-box {
+  position: relative;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -573,6 +574,29 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 }
 .tree-field-name {
   color: var(--muted);
+}
+/*
+ * The value of a node, and the bar of the part of the value of the root
+ * along the bottom of the box. The bar has the color of the box, or
+ * `--tree-bar`.
+ */
+.tree-value {
+  margin: 0;
+  font-size: 0.8em;
+  font-weight: 600;
+}
+.tree-bar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 0.3em;
+  background: color-mix(in srgb, var(--muted) 20%, transparent);
+}
+.tree-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--tree-bar, var(--tree-color, var(--accent)));
 }
 /*
  * The legend of `color {:field, name}`: a row of a swatch and a value for

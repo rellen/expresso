@@ -363,6 +363,11 @@ defmodule Expresso.Extension do
             doc:
               "Short facts under the detail of the box of a node in a tree, one line each, such as [team: \"42 people\"]. Only a tree takes this option."
           ],
+          value: [
+            type: {:custom, Expresso.Element.Node, :value, []},
+            doc:
+              "A number of a node in a tree that is not negative, such as a size or a count. Only a tree takes this option."
+          ],
           color: [
             type: {:in, Expresso.Element.Icon.colors()},
             doc:
@@ -852,6 +857,40 @@ defmodule Expresso.Extension do
             type: {:custom, Expresso.Element.Hierarchy, :color, []},
             doc:
               "The colors of the boxes from the palette: :branch gives each node under the root and its boxes a color, and {:field, \"name\"} gives each value of a field a color and adds a legend. The color option of a node comes first. The default is no color."
+          ],
+          sum: [
+            type: :boolean,
+            default: true,
+            doc:
+              "Give a node with no value the sum of the values of the nodes under it. The default is true."
+          ],
+          value_format: [
+            type: {:in, [:number, :bytes, :percent]},
+            default: :number,
+            doc:
+              "The text of a value: :number gives 1,250, :bytes gives 412 GB, and :percent gives the part of the value of the root, such as 12.5%. The default is :number."
+          ],
+          sort: [
+            type: {:in, [:value, :none]},
+            default: :none,
+            doc:
+              "The order of the nodes under each node: :value puts the largest value first, and :none keeps the order of the data. The default is :none."
+          ],
+          bar: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Show a bar along the bottom of each box, with a length in proportion to the part of the value of the root. The default is false."
+          ],
+          limit: [
+            type: :pos_integer,
+            doc:
+              "The most nodes under each node. One more node holds the rest, with the sum of their values."
+          ],
+          depth: [
+            type: :pos_integer,
+            doc:
+              "The most levels of the tree, with 1 for the root only. A node at the last level shows the total of the values under it."
           ],
           box: [
             type: {:custom, Expresso.Element.Hierarchy, :box, []},

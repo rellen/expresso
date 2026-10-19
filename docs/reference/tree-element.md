@@ -62,6 +62,12 @@ tree(title: "The folders", elements: [
 | --- | --- | --- |
 | `title` | A string, required | The name of the tree for a screen reader. |
 | `color` | `:branch` or `{:field, name}` | The colors of the boxes from the palette. See [the colors](#the-colors). The default is no color. |
+| `sum` | `true` or `false` | Give a node with no `value` the sum of the values under it. The default is `true`. |
+| `value_format` | `:number`, `:bytes` or `:percent` | The text of a value, such as `1,250`, `412 GB` or `12.5%`. The default is `:number`. |
+| `sort` | `:value` or `:none` | The order of the nodes under each node. `:value` puts the largest value first. The default is `:none`, the order of the data. |
+| `bar` | `true` or `false` | A bar along the bottom of each box, with the part of the value of the root. The default is `false`. |
+| `limit` | A positive integer | The most nodes under each node. One more node, such as "3 more", holds the total of the rest. |
+| `depth` | A positive integer | The most levels, with `1` for the root only. A node at the last level shows the total of the values under it. |
 | `box` | One size, or a list of sizes | The size of the boxes of each level, from the root down, such as `[[width: 280, height: 120], [width: 220, height: 96]]`. The last size applies to each deeper level. One size, such as `[width: 200, height: 80]`, applies to each level. The default is `[width: 220, height: 96]`. |
 | `width` | A CSS length | The width of the tree, such as `"900px"` or `"70%"`. The default is 80% of the width of the slide. |
 | `class` | CSS class names | See [the class option](class-option.md). |
@@ -86,6 +92,7 @@ A slide, a text box, a column and a callout can hold a tree.
 | `icon` | A name | An icon that the box shows at its left, in place of an image, such as `"factory"`. The names are the names of [the icon element](icon-element.md). |
 | `fields` | A keyword list | Short facts, one line each under the detail, such as `[team: "42 people", floor: 3]`. A name can also be a string, such as `[{"Cost center", "4100"}]`. A text is a string or a number. |
 | `color` | A role of the theme | The color of the box and of each box under it: `:text`, `:muted`, `:accent`, `:success`, `:emphasis`, `:warning` or `:danger`. |
+| `value` | A number that is not negative | A size or a count, such as `412_000_000_000`. See [the values](#the-values). |
 | `class` | CSS class names | The classes of the box. |
 | Nested `node` entities | | The nodes under this node, from the left. |
 
@@ -95,8 +102,8 @@ Give a different name and a label to the second node, such as
 
 The `node` entity is also the entity of a node of a chart of flows. See
 [the chart element](chart-element.md). A chart takes the options `column` and `order`, and a
-tree does not. A tree takes `detail`, `image`, `icon`, `fields`, `color` and nested nodes,
-and a chart does not.
+tree does not. A tree takes `detail`, `image`, `icon`, `fields`, `color`, `value` and
+nested nodes, and a chart does not.
 
 ## The box
 
@@ -106,6 +113,8 @@ A box shows its parts in this order:
 2. The label, in bold.
 3. The detail, in the muted color.
 4. A line for each field, with the name in the muted color.
+5. The value, in bold.
+6. With `bar true`, a bar along the bottom edge.
 
 Each line that is longer than its box ends with an ellipsis. The list for a screen reader
 holds the full text, such as `Ben, Production, team: 42 people`.
@@ -131,6 +140,53 @@ slide "the team" do
   end
 end
 ```
+
+## The values
+
+A node can have a value, such as the size of a folder or the number of people in a team. The
+tree applies the options of the values in this order:
+
+1. `depth` cuts the tree. A node at the last level gets the total of the values under it.
+2. `sum` gives each node with no value the sum of the values of the nodes under it. A value
+   of a node comes first, so a folder can show its own size.
+3. `sort :value` puts the nodes under each node in the order of their values, from the
+   largest. A node with no value goes last.
+4. `limit` keeps that number of nodes under each node. One more node holds the rest, with
+   the label "N more" and the total of their values.
+
+```elixir
+slide "the disk" do
+  tree do
+    title "The use of the disk"
+    value_format :bytes
+    sort :value
+    bar true
+    limit 3
+
+    node "/" do
+      node "home" do
+        node "photos", value: 412_000_000_000
+        node "music", value: 95_000_000_000
+        node "code", value: 38_000_000_000
+        node "docs", value: 4_200_000_000
+      end
+
+      node "var", value: 21_000_000_000
+    end
+  end
+end
+```
+
+The formats of a value are these:
+
+| Format | Example | Text |
+| --- | --- | --- |
+| `:number` | `1250.456` | `1,250.46`, with at most two decimals |
+| `:bytes` | `412_000_000_000` | `412 GB`, in units of 1000. A value under 10 units has one decimal, such as `4.2 MB`. |
+| `:percent` | `25` of a root of `200` | `12.5%`, with at most one decimal |
+
+The bar of a box has the part of the value of the root, so the bar of the root is full. A
+box without a color has a bar in the accent color.
 
 ## The colors
 
@@ -197,6 +253,7 @@ properties in the `css` option:
 | `--tree-line` | The color of the lines | the muted color |
 | `--tree-box` | The color of the background of a box | the background color |
 | `--tree-text` | The color of the label | the text color |
+| `--tree-bar` | The color of the bar | the color of the box, or the accent color |
 
 ## The HTML
 
@@ -210,7 +267,11 @@ The renderer writes a `figure` with the class `tree`. It holds:
   - a `div` with the class `tree-text`. It holds a `p` with the class `tree-label`, a `p`
     with the class `tree-detail` when the node has a detail, and a `p` with the class
     `tree-field` for each field. The name of a field is in a `span` with the class
-    `tree-field-name`.
+    `tree-field-name`. A `p` with the class `tree-value` holds the text of the value;
+  - with `bar true`, a `span` with the class `tree-bar` that holds a `span` with the class
+    `tree-bar-fill`. Its `width` is the part of the value of the root.
+
+  The node of the rest of a `limit` has the class `tree-more`.
 
   A box with a color also has the class `tree-colored` and the custom property
   `--tree-color` in its `style`, such as `var(--chart-2)` or `var(--danger)`;
@@ -235,7 +296,9 @@ The compiler gives an error for these:
 - `color {:field, name}` when no node of the tree has the field;
 - a `color` option of a node that is not a role of the theme;
 - a `fields` option that is not a list of names and texts;
-- an `icon` name that no icon has.
+- an `icon` name that no icon has;
+- a `value` that is negative or not a number;
+- `bar true` or `value_format :percent` when the root has no value above 0.
 
 A path of an image that the renderer cannot read is an error of the render, as for the
 image element.
