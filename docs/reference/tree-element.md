@@ -62,6 +62,8 @@ tree(title: "The folders", elements: [
 | --- | --- | --- |
 | `title` | A string, required | The name of the tree for a screen reader. |
 | `color` | `:branch` or `{:field, name}` | The colors of the boxes from the palette. See [the colors](#the-colors). The default is no color. |
+| `layout` | `:top_down`, `:left_right` or `:stacked` | How the nodes under each node go. See [the layout](#the-layout). The default is `:top_down`. |
+| `stack_from` | A level of 2 or more | The first level that the tree stacks, with `1` for the root. |
 | `sum` | `true` or `false` | Give a node with no `value` the sum of the values under it. The default is `true`. |
 | `value_format` | `:number`, `:bytes` or `:percent` | The text of a value, such as `1,250`, `412 GB` or `12.5%`. The default is `:number`. |
 | `sort` | `:value` or `:none` | The order of the nodes under each node. `:value` puts the largest value first. The default is `:none`, the order of the data. |
@@ -93,6 +95,7 @@ A slide, a text box, a column and a callout can hold a tree.
 | `fields` | A keyword list | Short facts, one line each under the detail, such as `[team: "42 people", floor: 3]`. A name can also be a string, such as `[{"Cost center", "4100"}]`. A text is a string or a number. |
 | `color` | A role of the theme | The color of the box and of each box under it: `:text`, `:muted`, `:accent`, `:success`, `:emphasis`, `:warning` or `:danger`. |
 | `value` | A number that is not negative | A size or a count, such as `412_000_000_000`. See [the values](#the-values). |
+| `layout` | `:top_down`, `:left_right` or `:stacked` | How the nodes under this node go, and the nodes under them. See [the layout](#the-layout). |
 | `class` | CSS class names | The classes of the box. |
 | Nested `node` entities | | The nodes under this node, from the left. |
 
@@ -102,8 +105,8 @@ Give a different name and a label to the second node, such as
 
 The `node` entity is also the entity of a node of a chart of flows. See
 [the chart element](chart-element.md). A chart takes the options `column` and `order`, and a
-tree does not. A tree takes `detail`, `image`, `icon`, `fields`, `color`, `value` and
-nested nodes, and a chart does not.
+tree does not. A tree takes `detail`, `image`, `icon`, `fields`, `color`, `value`,
+`layout` and nested nodes, and a chart does not.
 
 ## The box
 
@@ -226,17 +229,59 @@ field of each node in the list, so it gets the same information as the colors.
 
 ## The layout
 
-The compiler calculates the place of each box:
+The compiler calculates the place of each box. Each node places the nodes under it with one
+of three layouts:
 
-- The boxes of one level have their tops in one row.
-- The nodes under a node are side by side in a row, with a gap between two of them.
-- A node is at the center above the row of the nodes under it.
-- A line goes down from the bottom of a box, along to the center of each box under it, and
-  down to the top of that box.
+| Layout | The nodes under a node | The line to each node |
+| --- | --- | --- |
+| `:top_down` | Side by side in a row under the node. The node is at the center above the row. | Down from the node, along the row, and down to each box. |
+| `:left_right` | One under the other in a column at the right of the node. The node is at the middle at the left. | Right from the node, along the column, and right to each box. |
+| `:stacked` | One under the other below the node, with an indent. | Down a line at the left, and right to each box. |
 
-The layout does not move a subtree into the space under a smaller subtree next to it. Thus
-the place of each box depends only on its branch, and the same tree gives the same picture
-each time.
+The layout of the nodes under a node comes from the first of these:
+
+1. The `layout` option of the node.
+2. The `stack_from` option of the tree. The nodes of that level and below are stacked, and
+   the root is level 1.
+3. The `layout` option of the nearest node above it with the option.
+4. The `layout` option of the tree. The default is `:top_down`.
+
+A wide last level is the usual problem of an org chart. `stack_from 3` stacks the nodes of
+level 3 under each node of level 2, so the tree gets taller and not wider. A disk has deep
+folders, and `layout :left_right` puts each level in a column.
+
+```elixir
+slide "the plant" do
+  tree do
+    title "The plant"
+    stack_from 3
+    box [[width: 220, height: 96], [width: 200, height: 80], [width: 170, height: 56]]
+
+    node "Ana" do
+      detail "Plant manager"
+
+      node "Ben" do
+        detail "Production"
+        node "Cy", detail: "Press"
+        node "Di", detail: "Paint"
+        node "Fay", detail: "Pack"
+      end
+
+      node "Hal" do
+        detail "Maintenance"
+        layout :top_down
+        node "Jo", detail: "Electric"
+        node "Kim", detail: "Mechanic"
+      end
+    end
+  end
+end
+```
+
+In a tree with one layout, the boxes of one level have their tops in one row for
+`:top_down`, and their left edges in one column for `:left_right`. The layout does not move
+a subtree into the space next to a smaller subtree. Thus the place of each box depends only
+on its branch, and the same tree gives the same picture each time.
 
 ## The look
 
@@ -289,8 +334,8 @@ The compiler gives an error for these:
 - a tree with no `node` entity, or with more than one `node` entity at its top;
 - two nodes of one tree with the same name;
 - a node of a tree with the option `column` or `order`;
-- a node of a chart with the option `detail`, `image`, `icon`, `fields` or `color`, or
-  with a nested `node` entity;
+- a node of a chart with an option of a tree, such as `detail` or `layout`, or with a
+  nested `node` entity;
 - a `box` value that is not one size or a list of sizes with positive integers;
 - a `color` option of the tree that is not `:branch` or `{:field, name}`;
 - `color {:field, name}` when no node of the tree has the field;
@@ -298,7 +343,9 @@ The compiler gives an error for these:
 - a `fields` option that is not a list of names and texts;
 - an `icon` name that no icon has;
 - a `value` that is negative or not a number;
-- `bar true` or `value_format :percent` when the root has no value above 0.
+- `bar true` or `value_format :percent` when the root has no value above 0;
+- a `layout` that is not `:top_down`, `:left_right` or `:stacked`;
+- a `stack_from` level under 2.
 
 A path of an image that the renderer cannot read is an error of the render, as for the
 image element.

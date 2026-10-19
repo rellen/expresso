@@ -13,7 +13,8 @@ defmodule Expresso.Element.Node do
   In a tree, the name is the identity of the node, and the default text of
   its box. The node holds the nodes under it in `elements`.
   `Expresso.Element.Hierarchy` reads it. The `image`, `icon`, `fields`,
-  `color` and `value` options add to the box. `Expresso.PathTransformer` joins the path of
+  `color` and `value` options add to the box, and the `layout` option sets
+  how the nodes under it go. `Expresso.PathTransformer` joins the path of
   the image to the root of the deck, and `Expresso.IconTransformer` puts the
   SVG of the icon into `svg`.
 
@@ -35,6 +36,7 @@ defmodule Expresso.Element.Node do
           fields: [{String.t(), String.t()}] | nil,
           color: atom() | nil,
           value: number() | nil,
+          layout: :top_down | :left_right | :stacked | nil,
           class: String.t() | nil,
           elements: [t()] | nil
         }
@@ -53,6 +55,7 @@ defmodule Expresso.Element.Node do
               :fields,
               :color,
               :value,
+              :layout,
               :class,
               elements: [],
               __spark_metadata__: nil
@@ -71,7 +74,7 @@ defmodule Expresso.Element.Node do
   def chart_options(%__MODULE__{} = node),
     do: for(key <- [:column, :order], Map.fetch!(node, key) != nil, do: key)
 
-  @tree_options [:detail, :image, :icon, :fields, :color, :value]
+  @tree_options [:detail, :image, :icon, :fields, :color, :value, :layout]
 
   @doc """
   Make sure that a `fields` option is a list of names and texts

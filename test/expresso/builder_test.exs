@@ -105,12 +105,16 @@ defmodule Expresso.BuilderTest do
             bar: true,
             limit: 3,
             depth: 4,
+            layout: :left_right,
+            stack_from: 3,
             box: [[width: 200, height: 80], [width: 160, height: 64]]
           ],
           elements: [
             entity(:node, ["A"], [detail: "a", image: "examples/logo.png"],
               elements: [
-                entity(:node, ["B"], label: "b", class: "x", icon: "rocket"),
+                entity(:node, ["B"], [label: "b", class: "x", icon: "rocket", layout: :stacked],
+                  elements: [entity(:node, ["B1"], value: 1)]
+                ),
                 entity(:node, ["C"], fields: [team: "x", floor: 2], color: :success, value: 2048)
               ]
             )

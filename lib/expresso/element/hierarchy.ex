@@ -42,11 +42,13 @@ defmodule Expresso.Element.Hierarchy do
               :color,
               :limit,
               :depth,
+              :stack_from,
               :class,
               sum: true,
               value_format: :number,
               sort: :none,
               bar: false,
+              layout: :top_down,
               elements: [],
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
@@ -130,6 +132,26 @@ defmodule Expresso.Element.Hierarchy do
     do: {:ok, {:field, Atom.to_string(name)}}
 
   def color(_value), do: {:error, @color_error}
+
+  @doc """
+  Make sure that a `stack_from` option is a level under the root
+
+  This function is the custom type of the option. The root is level 1, and
+  it has no node above it to stack under, so the first level is 2.
+
+      iex> Expresso.Element.Hierarchy.stack_from(3)
+      {:ok, 3}
+
+      iex> {:error, _message} = Expresso.Element.Hierarchy.stack_from(1)
+  """
+  @spec stack_from(term()) :: {:ok, pos_integer()} | {:error, String.t()}
+  def stack_from(level) when is_integer(level) and level >= 2, do: {:ok, level}
+
+  def stack_from(level),
+    do:
+      {:error,
+       "a stack_from option takes a level of 2 or more, because the root is level 1, " <>
+         "and #{inspect(level)} is not"}
 
   @doc """
   Return the color of each node, by its name, and the values of the legend
@@ -302,7 +324,10 @@ defmodule Expresso.Element.Hierarchy do
   @impl Expresso.Element
   def get_assigns(%__MODULE__{} = tree) do
     %__MODULE__{elements: [root]} = tree = prepared(tree)
-    layout = Layout.top_down(root, tree.box || @box)
+
+    layout =
+      Layout.layout(root, tree.box || @box, layout: tree.layout, stack_from: tree.stack_from)
+
     {colors, legend} = colors(tree)
 
     legend =

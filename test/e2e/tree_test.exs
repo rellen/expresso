@@ -84,6 +84,30 @@ defmodule Expresso.E2E.TreeTest do
     end
   end
 
+  # A tree from left to right, with the nodes of level 3 stacked.
+  defmodule LayoutDeck do
+    use Expresso
+
+    name "tree layouts"
+
+    slide "layouts" do
+      tree do
+        title "The plant"
+        layout :left_right
+        stack_from 3
+
+        node "Ana" do
+          node "Ben" do
+            node "Cy"
+            node "Di"
+          end
+
+          node "Eve"
+        end
+      end
+    end
+  end
+
   # The rectangle of each box, the drawing and the list on the screen.
   defp geometry(page) do
     js(page, """
@@ -262,5 +286,32 @@ defmodule Expresso.E2E.TreeTest do
     for {[_label, _text, ratio], expected} <- Enum.zip(boxes, [1, 2 / 3, 1 / 6, 1 / 6]) do
       assert_in_delta ratio, expected, 0.01
     end
+  end
+
+  test "a left to right tree has its levels in columns, and a stacked level has an indent",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(LayoutDeck, tmp_dir))
+
+    boxes =
+      js(page, """
+      Object.fromEntries(Array.from(document.querySelectorAll(".screen .tree-box"), (box) => {
+        const rect = box.getBoundingClientRect();
+        return [box.querySelector(".tree-label").textContent, [rect.left, rect.top, rect.bottom]];
+      }))
+      """)
+
+    [ana_left, ana_top, ana_bottom] = boxes["Ana"]
+    [ben_left, ben_top, _ben_bottom] = boxes["Ben"]
+    [eve_left, eve_top, _eve_bottom] = boxes["Eve"]
+    [cy_left, cy_top, _cy_bottom] = boxes["Cy"]
+    [di_left, di_top, _di_bottom] = boxes["Di"]
+
+    # Ben and Eve are in one column at the right of Ana, one under the other.
+    assert ben_left > ana_left and abs(ben_left - eve_left) < 1
+    assert ben_top < eve_top
+    assert ana_top < eve_top and ana_bottom > ben_top
+    # Cy and Di are stacked under Ben with an indent, in one column.
+    assert cy_left > ben_left and abs(cy_left - di_left) < 1
+    assert ben_top < cy_top and cy_top < di_top
   end
 end
