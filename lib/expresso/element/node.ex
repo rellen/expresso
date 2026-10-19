@@ -12,7 +12,10 @@ defmodule Expresso.Element.Node do
 
   In a tree, the name is the identity of the node, and the default text of
   its box. The node holds the nodes under it in `elements`.
-  `Expresso.Element.Hierarchy` reads it.
+  `Expresso.Element.Hierarchy` reads it. The `image`, `icon`, `fields` and
+  `color` options add to the box. `Expresso.PathTransformer` joins the path of
+  the image to the root of the deck, and `Expresso.IconTransformer` puts the
+  SVG of the icon into `svg`.
 
   The two parents share one entity, so `Expresso.Builder` has one function
   `node/2`. Each parent refuses the options of the other parent:
@@ -26,6 +29,11 @@ defmodule Expresso.Element.Node do
           column: pos_integer() | nil,
           order: integer() | nil,
           detail: String.t() | nil,
+          image: String.t() | nil,
+          icon: String.t() | nil,
+          svg: String.t() | nil,
+          fields: [{String.t(), String.t()}] | nil,
+          color: atom() | nil,
           class: String.t() | nil,
           elements: [t()] | nil
         }
@@ -38,10 +46,17 @@ defmodule Expresso.Element.Node do
               :column,
               :order,
               :detail,
+              :image,
+              :icon,
+              :svg,
+              :fields,
+              :color,
               :class,
               elements: [],
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
+
+  @fields_error "a fields option takes a name and a text for each field, such as [team: \"42 people\", floor: 3]. A name is an atom or a string, and a text is a string or a number"
 
   @doc """
   Return the options of a node that only a chart of flows takes and that the
@@ -54,6 +69,37 @@ defmodule Expresso.Element.Node do
   def chart_options(%__MODULE__{} = node),
     do: for(key <- [:column, :order], Map.fetch!(node, key) != nil, do: key)
 
+  @tree_options [:detail, :image, :icon, :fields, :color]
+
+  @doc """
+  Make sure that a `fields` option is a list of names and texts
+
+  This function is the custom type of the option. A name is an atom or a
+  string, and a text is a string or a number. The function returns each name
+  and each text as a string, in the order of the option.
+
+      iex> Expresso.Element.Node.fields(team: "42 people", floor: 3)
+      {:ok, [{"team", "42 people"}, {"floor", "3"}]}
+
+      iex> Expresso.Element.Node.fields([{"Cost center", "4100"}])
+      {:ok, [{"Cost center", "4100"}]}
+
+      iex> {:error, _message} = Expresso.Element.Node.fields(team: nil)
+  """
+  @spec fields(term()) :: {:ok, [{String.t(), String.t()}]} | {:error, String.t()}
+  def fields(fields) when is_list(fields) do
+    if Enum.all?(fields, &field?/1),
+      do: {:ok, Enum.map(fields, fn {name, text} -> {to_string(name), to_string(text)} end)},
+      else: {:error, @fields_error}
+  end
+
+  def fields(_fields), do: {:error, @fields_error}
+
+  defp field?({name, text}),
+    do: (is_atom(name) or is_binary(name)) and (is_binary(text) or is_number(text))
+
+  defp field?(_field), do: false
+
   @doc """
   Return the options of a node that only a tree takes and that the node
   gives, with `:node` for a nested node
@@ -63,7 +109,7 @@ defmodule Expresso.Element.Node do
   """
   @spec tree_options(t()) :: [atom()]
   def tree_options(%__MODULE__{} = node) do
-    given = for key <- [:detail], Map.fetch!(node, key) != nil, do: key
+    given = for key <- @tree_options, Map.fetch!(node, key) != nil, do: key
     if (node.elements || []) == [], do: given, else: given ++ [:node]
   end
 end

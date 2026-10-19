@@ -202,6 +202,9 @@ defmodule Expresso.TreeElementTest do
     end
   end
 
+  # A text with each run of white space as one space, as a browser shows it.
+  defp squish(text), do: text |> String.split() |> Enum.join(" ")
+
   # The text of an item without the text of its nested list.
   defp own_text(item) do
     item
@@ -210,6 +213,210 @@ defmodule Expresso.TreeElementTest do
     |> Enum.filter(&is_binary/1)
     |> Enum.join()
     |> String.trim()
+  end
+
+  describe "the box" do
+    # A tree with one node under the root, and the options of that node.
+    defp one(opts, tree_opts \\ []) do
+      Builder.tree(
+        [title: "T", elements: [Builder.node("A", elements: [Builder.node("B", opts)])]] ++
+          tree_opts
+      )
+    end
+
+    defp box_of(tree, name) do
+      figure = figure(tree)
+
+      figure
+      |> LazyHTML.query(".tree-box")
+      |> Enum.find(&(texts(&1, ".tree-label") == [name]))
+    end
+
+    test "an image shows in a circle at the left, with the data of the file" do
+      box = box_of(one(image: "examples/logo.png"), "B")
+
+      assert LazyHTML.attribute(box, "class") == ["tree-box tree-media"]
+      assert [src] = box |> LazyHTML.query("img.tree-image") |> LazyHTML.attribute("src")
+      assert String.starts_with?(src, "data:image/png;base64,")
+      assert box |> LazyHTML.query("img.tree-image") |> LazyHTML.attribute("alt") == [""]
+    end
+
+    test "an icon shows the SVG of its name" do
+      box = box_of(one(icon: "rocket"), "B")
+
+      assert LazyHTML.attribute(box, "class") == ["tree-box tree-media"]
+      assert count(box, ".tree-icon svg.tree-icon-svg") == 1
+    end
+
+    test "an icon with a name that no icon has is an error of the compile" do
+      assert_raise Spark.Error.DslError, ~r/no icon has the name "rokcet"/, fn ->
+        one_slide(one(icon: "rokcet"))
+      end
+    end
+
+    test "each field is a line with its name and its text, and the screen reader reads them" do
+      tree = one(detail: "Production", fields: [team: "42 people", floor: 3])
+      box = box_of(tree, "B")
+
+      assert texts(box, ".tree-field .tree-field-name") == ["team", "floor"]
+
+      assert box |> texts(".tree-field") |> Enum.map(&squish/1) == [
+               "team 42 people",
+               "floor 3"
+             ]
+
+      assert figure(tree) |> LazyHTML.query("ul.tree-list li li") |> Enum.map(&own_text/1) == [
+               "B, Production, team: 42 people, floor: 3"
+             ]
+    end
+  end
+
+  describe "the colors" do
+    # Ana holds Ben with Cy, Eve with Gus, and Hal.
+    defp org(tree_opts \\ [], hal \\ []) do
+      Builder.tree(
+        [
+          title: "T",
+          elements: [
+            Builder.node("Ana",
+              fields: [site: "Berlin"],
+              elements: [
+                Builder.node("Ben",
+                  fields: [site: "Lyon"],
+                  elements: [Builder.node("Cy", fields: [site: "Berlin"])]
+                ),
+                Builder.node("Eve", elements: [Builder.node("Gus", fields: [site: "Oslo"])]),
+                Builder.node("Hal", hal)
+              ]
+            )
+          ]
+        ] ++ tree_opts
+      )
+    end
+
+    defp colors(tree), do: tree |> Hierarchy.colors() |> elem(0)
+
+    test "no color option gives no color" do
+      assert org() |> colors() |> Map.values() |> Enum.uniq() == [nil]
+      assert count(figure(org()), ".tree-colored") == 0
+      assert Hierarchy.colors(org()) |> elem(1) == []
+    end
+
+    test "color :branch gives each node under the root a color of the palette, and its nodes too" do
+      assert colors(org(color: :branch)) == %{
+               "Ana" => nil,
+               "Ben" => {:palette, 1},
+               "Cy" => {:palette, 1},
+               "Eve" => {:palette, 2},
+               "Gus" => {:palette, 2},
+               "Hal" => {:palette, 3}
+             }
+    end
+
+    test "color {:field, name} gives each value a color in the order of the first node with it" do
+      assert {colors, legend} = Hierarchy.colors(org(color: {:field, :site}))
+      assert legend == [{"Berlin", 1}, {"Lyon", 2}, {"Oslo", 3}]
+
+      assert colors == %{
+               "Ana" => {:palette, 1},
+               "Ben" => {:palette, 2},
+               "Cy" => {:palette, 1},
+               "Eve" => nil,
+               "Gus" => {:palette, 3},
+               "Hal" => nil
+             }
+    end
+
+    test "the color of a node applies to the nodes under it, and comes before the palette" do
+      tree =
+        Builder.tree(
+          title: "T",
+          color: :branch,
+          elements: [
+            Builder.node("A",
+              elements: [
+                Builder.node("B",
+                  color: :danger,
+                  elements: [Builder.node("C"), Builder.node("D", color: :success)]
+                )
+              ]
+            )
+          ]
+        )
+
+      assert colors(tree) == %{
+               "A" => nil,
+               "B" => {:role, :danger},
+               "C" => {:role, :danger},
+               "D" => {:role, :success}
+             }
+    end
+
+    test "the palette has eight colors, and the ninth branch takes the first color" do
+      children = for i <- 1..9, do: Builder.node("N#{i}")
+
+      tree =
+        Builder.tree(
+          title: "T",
+          color: :branch,
+          elements: [Builder.node("A", elements: children)]
+        )
+
+      assert colors(tree)["N8"] == {:palette, 8}
+      assert colors(tree)["N9"] == {:palette, 1}
+    end
+
+    test "a box with a color has the class tree-colored and the CSS color" do
+      figure = figure(org([color: :branch], color: :warning))
+
+      styles =
+        figure
+        |> LazyHTML.query(".tree-box")
+        |> Enum.map(&{texts(&1, ".tree-label"), LazyHTML.attribute(&1, "style")})
+
+      assert styles == [
+               {["Ana"], []},
+               {["Ben"], ["--tree-color: var(--chart-1)"]},
+               {["Cy"], ["--tree-color: var(--chart-1)"]},
+               {["Eve"], ["--tree-color: var(--chart-2)"]},
+               {["Gus"], ["--tree-color: var(--chart-2)"]},
+               {["Hal"], ["--tree-color: var(--warning)"]}
+             ]
+
+      assert count(figure, ".tree-box.tree-colored") == 5
+    end
+
+    test "the legend is under the tree, with a swatch and the value of each color" do
+      figure = figure(org(color: {:field, "site"}))
+
+      [legend] =
+        figure |> LazyHTML.query("svg > foreignObject > ul.tree-legend") |> Enum.to_list()
+
+      assert legend |> texts("li") |> Enum.map(&squish/1) == ["Berlin", "Lyon", "Oslo"]
+      assert count(legend, "li > span.tree-swatch") == 3
+
+      assert legend |> LazyHTML.query("li") |> LazyHTML.attribute("style") == [
+               "--tree-color: var(--chart-1)",
+               "--tree-color: var(--chart-2)",
+               "--tree-color: var(--chart-3)"
+             ]
+
+      [box] = figure |> LazyHTML.query("svg > foreignObject:last-child") |> Enum.to_list()
+
+      [_, _, _, height] =
+        figure |> LazyHTML.query("svg") |> LazyHTML.attribute("viewBox") |> hd() |> String.split()
+
+      y = box |> LazyHTML.attribute("y") |> hd() |> String.to_integer()
+
+      # The tree has three levels of 96 and two gaps of 48: 384. The legend is
+      # 24 under it, and 40 high.
+      assert y == 384 + 24
+      assert String.to_integer(height) == y + 40
+    end
+
+    test "a tree without color {:field, name} has no legend" do
+      assert count(figure(org(color: :branch)), ".tree-legend") == 0
+    end
   end
 
   describe "the errors" do
@@ -270,6 +477,45 @@ defmodule Expresso.TreeElementTest do
       end
     end
 
+    test "a color option of a tree is :branch or a field" do
+      for value <- [:leaf, {:field, ""}, {:field, nil}, "branch"] do
+        assert_raise ArgumentError, ~r/a color option of a tree takes :branch/, fn ->
+          plant(color: value)
+        end
+      end
+    end
+
+    test "color {:field, name} needs a node with the field" do
+      assert_raise ArgumentError,
+                   ~r/names the field "site", and no node of the tree has that field/,
+                   fn -> plant(color: {:field, "site"}) end
+    end
+
+    test "a color option of a node is a role of the theme" do
+      assert_raise ArgumentError, ~r/color/, fn ->
+        Builder.tree(title: "T", elements: [Builder.node("A", color: :pink)])
+      end
+    end
+
+    test "a fields option takes a name and a text for each field" do
+      assert_raise ArgumentError, ~r/a fields option takes a name and a text/, fn ->
+        Builder.tree(title: "T", elements: [Builder.node("A", fields: [team: [1]])])
+      end
+    end
+
+    test "a node of a chart takes no option of the box of a tree" do
+      for option <- [image: "a.png", icon: "rocket", fields: [a: "b"], color: :danger] do
+        assert_raise ArgumentError,
+                     ~r/the node entity "A" gives the #{elem(option, 0)} option/,
+                     fn ->
+                       Builder.chart(:sankey,
+                         title: "T",
+                         flows: [Builder.flow("A", "B", 1), Builder.node("A", [option])]
+                       )
+                     end
+      end
+    end
+
     test "a box option with a wrong value" do
       assert_raise ArgumentError, ~r/a box option takes the width and the height/, fn ->
         plant(box: [width: 0, height: 1])
@@ -324,6 +570,26 @@ defmodule Expresso.TreeElementTest do
                  ]
                }
              ] = tree.elements
+    end
+
+    test "joins the path of an image to the root of the deck" do
+      defmodule RootDeck do
+        use Expresso
+
+        root "examples"
+
+        slide "s" do
+          tree do
+            title "T"
+            node "A", image: "logo.png", icon: "rocket"
+          end
+        end
+      end
+
+      assert {:ok, %Expresso.Deck{slides: [%{elements: [tree]}]}} = Expresso.to_deck(RootDeck)
+      assert [%Node{image: image, svg: svg}] = tree.elements
+      assert image == Path.expand("examples/logo.png")
+      assert svg =~ ~s(<svg class="tree-icon-svg")
     end
 
     test "gives the error of the check at the compile" do

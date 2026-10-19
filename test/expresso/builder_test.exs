@@ -94,10 +94,20 @@ defmodule Expresso.BuilderTest do
     ),
     entity(:slide, ["tree"], [],
       elements: [
-        entity(:tree, [], [title: "T", box: [[width: 200, height: 80], [width: 160, height: 64]]],
+        entity(
+          :tree,
+          [],
+          [
+            title: "T",
+            color: :branch,
+            box: [[width: 200, height: 80], [width: 160, height: 64]]
+          ],
           elements: [
-            entity(:node, ["A"], [detail: "a"],
-              elements: [entity(:node, ["B"], label: "b", class: "x"), entity(:node, ["C"])]
+            entity(:node, ["A"], [detail: "a", image: "examples/logo.png"],
+              elements: [
+                entity(:node, ["B"], label: "b", class: "x", icon: "rocket"),
+                entity(:node, ["C"], fields: [team: "x", floor: 2], color: :success)
+              ]
             )
           ]
         )

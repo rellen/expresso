@@ -1769,6 +1769,14 @@ reasons for this design:
 - **HTML boxes in an SVG.** The lines are paths in one SVG, and each box is a
   `foreignObject` with the HTML of the box. The SVG scales the whole tree to the box of the
   element, and the text of a box ends with an ellipsis as HTML does.
+- **The colors in the compiler.** `Expresso.Element.Hierarchy.colors/1` finds the color of
+  each node from a role, a branch or a field, and the renderer writes it into
+  `--tree-color`. The palette is the palette of the charts, so a tree and a chart in one
+  deck agree. A legend for a field is HTML in the drawing, so it scales with the tree.
+- **The files of the box in the transformers.** `Expresso.PathTransformer` joins the path
+  of an image to the root, and `Expresso.IconTransformer` puts the SVG of an icon into the
+  node. The renderer writes the image as a data URI, and `Expresso.Assets` keeps one copy
+  of each file.
 - **A list for a screen reader.** The SVG is hidden from a screen reader. A nested `ul` with
   the title as its `aria-label` holds the same tree, and the style sheet hides it from the
   eye, as it hides the live region.

@@ -348,6 +348,26 @@ defmodule Expresso.Extension do
             doc:
               "The second line of the box of a node in a tree, such as a role. Only a tree takes this option."
           ],
+          image: [
+            type: :string,
+            doc:
+              "The path of an image that the box of a node in a tree shows in a circle, such as \"ana.jpg\". Only a tree takes this option."
+          ],
+          icon: [
+            type: :string,
+            doc:
+              "The name of an icon that the box of a node in a tree shows, in place of an image. See the icon element. Only a tree takes this option."
+          ],
+          fields: [
+            type: {:custom, Expresso.Element.Node, :fields, []},
+            doc:
+              "Short facts under the detail of the box of a node in a tree, one line each, such as [team: \"42 people\"]. Only a tree takes this option."
+          ],
+          color: [
+            type: {:in, Expresso.Element.Icon.colors()},
+            doc:
+              "The role of the theme that gives the color of the box of a node in a tree, and of the boxes under it: :text, :muted, :accent, :success, :emphasis, :warning or :danger. Only a tree takes this option."
+          ],
           column: [
             type: :pos_integer,
             doc:
@@ -827,6 +847,11 @@ defmodule Expresso.Extension do
           width: [
             type: :string,
             doc: "The width of the tree, such as 900px or 70%. The default is 80%."
+          ],
+          color: [
+            type: {:custom, Expresso.Element.Hierarchy, :color, []},
+            doc:
+              "The colors of the boxes from the palette: :branch gives each node under the root and its boxes a color, and {:field, \"name\"} gives each value of a field a color and adds a legend. The color option of a node comes first. The default is no color."
           ],
           box: [
             type: {:custom, Expresso.Element.Hierarchy, :box, []},
