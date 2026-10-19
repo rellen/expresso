@@ -646,8 +646,12 @@ defmodule Expresso.Renderer do
               # `data-omit`, and the style sheet hides it in the handout view and
               # on paper. The overview shows the page of the last step of each
               # slide, which has `data-thumbnail`, and a click on that page runs
-              # its `data-commands`. `data-index` is the index of the step in the
-              # list of the steps, and the speaker view marks pages by it.
+              # its `data-commands`. That page also holds the name of its slide
+              # with no step in `data-overview-label`, because Enter in the
+              # overview goes to step 1. The script tells a screen reader that
+              # name when the overview selects the slide. `data-index` is the
+              # index of the step in the list of the steps, and the speaker view
+              # marks pages by it.
               for {slide, %{first: first}} <- Enum.zip(@deck.slides, Expresso.Steps.slides(@deck)),
                   printed <- [Expresso.Handout.printed(@deck, slide)],
                   max = Expresso.Overlay.Render.max_step(slide),
@@ -661,7 +665,8 @@ defmodule Expresso.Renderer do
                         data_index: first + step - 1,
                         data_omit: step not in printed,
                         data_thumbnail: step == max,
-                        data_commands: step == max && page_commands(slide) do
+                        data_commands: step == max && page_commands(slide),
+                        data_overview_label: step == max && slide_label(@deck, slide, nil) do
                   c(&slide_parts/1, deck: @deck, slide: slide)
 
                   # The notes of the speaker go under each page of the slide, and

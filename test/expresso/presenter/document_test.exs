@@ -215,5 +215,22 @@ defmodule Expresso.Presenter.DocumentTest do
                {["3"], ["2"], commands.(3)}
              ]
     end
+
+    test "only the page of the last step of each slide holds the name of its slide with no step" do
+      pages =
+        for page <- LazyHTML.query(with_steps(), ".handout-page") do
+          {LazyHTML.attribute(page, "aria-label"),
+           LazyHTML.attribute(page, "data-overview-label")}
+        end
+
+      assert pages == [
+               {["Slide 1 of 3: slide 1"], ["Slide 1 of 3: slide 1"]},
+               {["Slide 2 of 3, step 1 of 3: slide 2"], []},
+               {["Slide 2 of 3, step 2 of 3: slide 2"], []},
+               {["Slide 2 of 3, step 3 of 3: slide 2"], ["Slide 2 of 3: slide 2"]},
+               {["Slide 3 of 3, step 1 of 2: slide 3"], []},
+               {["Slide 3 of 3, step 2 of 2: slide 3"], ["Slide 3 of 3: slide 3"]}
+             ]
+    end
   end
 end

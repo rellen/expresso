@@ -107,6 +107,7 @@ import {
   animate,
   apply,
   announce,
+  announceOverview,
   deck as readDeck,
   link,
   program as readProgram,
@@ -199,6 +200,7 @@ function show(changed: State, local = true): void {
   if (changed === state) {
     return;
   }
+  const before = state;
   const moved = changed.index !== state.index;
   const slideChanged =
     current(changed, deck)?.slide !== current(state, deck)?.slide;
@@ -218,6 +220,17 @@ function show(changed: State, local = true): void {
   );
   if (moved) {
     announce(state, deck, slideChanged);
+  }
+  // The overview changes `selected` and not the step, so a screen reader
+  // hears the selected slide at each change of it. A close of the overview
+  // with no move gives the position again.
+  if (
+    state.overview &&
+    (!before.overview || state.selected !== before.selected)
+  ) {
+    announceOverview(state.selected, !before.overview);
+  } else if (before.overview && !state.overview && !moved) {
+    announce(state, deck, true);
   }
   history.replaceState(null, "", toHash(state, deck));
   if (local && sent) {

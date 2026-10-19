@@ -284,6 +284,26 @@ export function announce(
   region.textContent = max > 1 ? `Step ${entry.step} of ${max}` : "";
 }
 
+// Tell a screen reader the slide that the overview selects, such as
+// "Slide 3 of 12: Supervisors". The renderer writes that name with no step in
+// `data-overview-label` on the page of the last step of each slide, which is
+// the page that the overview shows. Enter goes to step 1 of the slide, so the
+// name gives no step. At the opening of the overview, the text starts with
+// "Overview".
+export function announceOverview(selected: number, opened: boolean): void {
+  const region = document.getElementById("announce");
+  if (region === null) {
+    return;
+  }
+  const page = pages().find(
+    (each) =>
+      each.dataset.thumbnail !== undefined &&
+      Number(each.dataset.slide) === selected,
+  );
+  const label = page?.dataset.overviewLabel ?? "";
+  region.textContent = opened ? `Overview. ${label}` : label;
+}
+
 // The notes of the page of the current step go into the element
 // `speaker-notes`, and the position goes into the element `speaker-position`.
 // The renderer writes the index of each step on its page in `data-index`.
