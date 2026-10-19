@@ -257,6 +257,7 @@ defmodule Expresso.Overlay.Expand do
   # The steps that an element takes before its children, as a pause does.
   defp lead(%Code{} = code), do: Code.lead(code)
   defp lead(%Chart{} = chart), do: Chart.lead(chart)
+  defp lead(%Hierarchy{whole_first: true}), do: 1
   defp lead(_element), do: 0
 
   # The implicit specification of the reveal option. It goes on each child of

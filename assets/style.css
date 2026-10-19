@@ -503,7 +503,18 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
       calc(var(--tree-dy, 0px) + (1 - var(--shown)) * var(--enter-y))
     )
     scale(calc(1 - (1 - var(--shown)) * (1 - var(--enter-scale))));
-  transition: transform var(--dur) var(--ease);
+  transition:
+    transform var(--dur) var(--ease),
+    --dimmed var(--dur) var(--ease);
+}
+.tree-node[data-on] {
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility 0s linear var(--dur),
+    transform var(--dur) var(--ease),
+    filter var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    --dimmed var(--dur) var(--ease);
 }
 /*
  * The effect `grow` draws a line from its parent to its box. Each line has
@@ -514,11 +525,15 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   stroke-dasharray: 1;
   stroke-dashoffset: calc(1 - var(--shown));
 }
+.tree-line {
+  transition: --dimmed var(--dur) var(--ease);
+}
 .tree-line[data-on] {
   transition:
     opacity var(--dur) var(--ease),
     visibility 0s linear var(--dur),
-    stroke-dashoffset var(--dur) var(--ease);
+    stroke-dashoffset var(--dur) var(--ease),
+    --dimmed var(--dur) var(--ease);
 }
 .tree-line[data-on][data-el] {
   transition:

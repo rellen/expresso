@@ -1798,6 +1798,11 @@ reasons for this design:
   its place, with `--tree-dx` and `--tree-dy`, and the transform moves the box. A path cannot
   change its shape in each browser, so each run of steps with the same boxes has its own
   copy of the lines, as the frames of a chart of flows do.
+- **The highlight of a chart.** The groups of `highlight` are `Expresso.Element.Focus`
+  structs in the `focus` field of the tree, so `Expresso.Overlay.Expand` gives each one a
+  step, as it does for a chart. `Expresso.Element.Hierarchy.rules/1` sets `--dimmed: 1` on
+  each box and line with a `data-node` outside the group. A branch comes from the tree
+  after the options of the values, so it holds the node of the rest of a `limit`.
 - **The colors in the compiler.** `Expresso.Element.Hierarchy.colors/1` finds the color of
   each node from a role, a branch or a field, and the renderer writes it into
   `--tree-color`. The palette is the palette of the charts, so a tree and a chart in one

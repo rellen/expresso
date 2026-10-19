@@ -105,6 +105,9 @@ defmodule Expresso.BuilderTest do
             )
           ]
         ),
+        entity(:tree, [], [title: "H", highlight: ["R", {:branch, "R"}], whole_first: true],
+          elements: [entity(:node, ["R"], [], elements: [entity(:node, ["Q"])])]
+        ),
         entity(:tree, [], [title: "P"],
           elements: [
             entity(:node, ["A"]),
