@@ -108,6 +108,50 @@ defmodule Expresso.E2E.TreeTest do
     end
   end
 
+  # A tree that shows one level at each step and dims the earlier levels, and
+  # a tree that shows one branch at each step and moves its boxes.
+  defmodule StepsDeck do
+    use Expresso
+
+    name "tree steps"
+
+    slide "levels" do
+      tree do
+        title "The plant"
+        reveal :levels
+        dim true
+
+        node "Ana" do
+          node "Ben" do
+            node "Cy"
+          end
+
+          node "Eve"
+        end
+      end
+    end
+
+    slide "reflow" do
+      tree do
+        title "The plant"
+        reveal :branches
+        reflow true
+        effect :grow
+
+        node "Ana" do
+          node "Ben" do
+            node "Cy"
+            node "Di"
+          end
+
+          node "Eve" do
+            node "Gus"
+          end
+        end
+      end
+    end
+  end
+
   # The rectangle of each box, the drawing and the list on the screen.
   defp geometry(page) do
     js(page, """
@@ -203,11 +247,12 @@ defmodule Expresso.E2E.TreeTest do
         (box) => [box.querySelector(".tree-label").textContent, getComputedStyle(box).borderTopColor]
       ).slice(0, 3)
       """)
+      |> Enum.map(fn [label, color] -> [label, rgb(color)] end)
 
     assert borders == [
-             ["Ana", property(page, "--muted")],
-             ["Ben", property(page, "--chart-1")],
-             ["Hal", property(page, "--danger")]
+             ["Ana", rgb(property(page, "--muted"))],
+             ["Ben", rgb(property(page, "--chart-1"))],
+             ["Hal", rgb(property(page, "--danger"))]
            ]
   end
 
@@ -232,7 +277,7 @@ defmodule Expresso.E2E.TreeTest do
     assert width > 0 and abs(width - height) < 1
     assert radius == "50%"
     assert loaded
-    assert icon == property(page, "--chart-1")
+    assert rgb(icon) == rgb(property(page, "--chart-1"))
   end
 
   test "the legend shows each value with the color of its boxes",
@@ -313,5 +358,75 @@ defmodule Expresso.E2E.TreeTest do
     # Cy and Di are stacked under Ben with an indent, in one column.
     assert cy_left > ben_left and abs(cy_left - di_left) < 1
     assert ben_top < cy_top and cy_top < di_top
+  end
+
+  # The slide that the present view shows.
+  @current ~s|[...document.querySelectorAll("section.slide")].find((section) => section.style.display === "flex")|
+
+  # The opacity, the color of the label and the left edge of each box of the
+  # current slide, by its label.
+  defp boxes(page) do
+    page
+    |> boxes_js()
+    |> Map.new(fn {label, [opacity, color, left]} -> {label, [opacity, rgb(color), left]} end)
+  end
+
+  defp boxes_js(page) do
+    js(page, """
+    Object.fromEntries(
+      Array.from(#{@current}.querySelectorAll(".tree-node"), (node) => [
+        node.querySelector(".tree-label").textContent,
+        [
+          Number(getComputedStyle(node).opacity),
+          getComputedStyle(node.querySelector(".tree-box")).color,
+          Math.round(node.getBoundingClientRect().left)
+        ]
+      ])
+    )
+    """)
+  end
+
+  test "reveal :levels shows one level at each step, and dim dims the earlier levels",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = page |> open(render(StepsDeck, tmp_dir)) |> slow_motion(0)
+    text = rgb(property(page, "--text"))
+    dimmed = rgb(property(page, "--text-dim"))
+
+    at_1 = boxes(page)
+    assert {at_1["Ana"] |> Enum.take(2), at_1["Ben"] |> hd()} == {[1, text], 0}
+
+    press(page, "j")
+    wait_for_position(page, "1.2")
+    at_2 = boxes(page)
+    assert Enum.take(at_2["Ana"], 2) == [1, dimmed]
+    assert Enum.take(at_2["Ben"], 2) == [1, text]
+    assert hd(at_2["Cy"]) == 0
+  end
+
+  test "reflow moves a box when a later branch shows, and grow draws each line",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = page |> open(render(StepsDeck, tmp_dir) <> "#2") |> slow_motion(0)
+    wait_for_position(page, "2.1")
+    press(page, "j")
+    wait_for_position(page, "2.2")
+    [_opacity, _color, ben_alone] = boxes(page)["Ben"]
+
+    press(page, "j")
+    wait_for_position(page, "2.3")
+    [_opacity, _color, ben_with_eve] = boxes(page)["Ben"]
+
+    # Ben is at the center of the slide alone, and at the left with Eve.
+    assert ben_with_eve < ben_alone
+
+    offsets =
+      js(page, """
+      Array.from(#{@current}.querySelectorAll("path.tree-line"))
+        .filter((line) => getComputedStyle(line).visibility === "visible")
+        .map((line) => getComputedStyle(line).strokeDashoffset)
+      """)
+
+    # The lines to Ben, Cy, Di, Eve and Gus show, and each one is drawn.
+    assert length(offsets) == 5
+    assert Enum.all?(offsets, &(&1 in ["0", "0px", "0%"]))
   end
 end

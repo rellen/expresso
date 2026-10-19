@@ -11,7 +11,8 @@ defmodule Expresso.Overlay.Expand do
   `docs/overlays.md` gives the rules.
   """
 
-  alias Expresso.Element.{Chart, Code, On, Pause}
+  alias Expresso.Element.{Chart, Code, Hierarchy, On, Pause}
+  alias Expresso.Element.Hierarchy.Steps
   alias Expresso.Overlay
   alias Expresso.Slide
   alias Shoddy.Result
@@ -50,6 +51,10 @@ defmodule Expresso.Overlay.Expand do
   of the groups of the `highlight` option and of the frames of a chart. The
   descendants of the children read the same counter. Therefore they show one
   after the other from the first step of the element.
+
+  The `reveal` option of a tree gives each group of nodes one step, and the
+  `dim` option of a tree dims each node. `Expresso.Element.Hierarchy.Steps`
+  gives the rules.
 
   The `dim` option of a list, a table or a code element gives each child the
   state `dim` from the first step of a later child. The function adds an `on`
@@ -207,9 +212,16 @@ defmodule Expresso.Overlay.Expand do
   defp resolve_steps(element, counter) do
     counter = counter + lead(element)
     {focus, counter} = Enum.map_reduce(focus(element), counter, &resolve_element/2)
+    {element, counter} = groups(element, counter)
     {children, counter} = Enum.map_reduce(reveal(element), counter, &resolve_element/2)
     {focus, children, counter}
   end
+
+  # The groups of the reveal option of a tree. Each group of nodes takes one
+  # step from the counter, and the nodes of a group get that step.
+  # `Expresso.Element.Hierarchy.Steps` gives the rules.
+  defp groups(%Hierarchy{} = tree, counter), do: Steps.groups(tree, counter)
+  defp groups(element, counter), do: {element, counter}
 
   # The frames of a chart. The first frame shows at the steps of the series,
   # and each later frame takes the next value of the counter. When nothing of
@@ -339,6 +351,10 @@ defmodule Expresso.Overlay.Expand do
   # applies only at the steps of the child, so the child shows at each step of
   # its on entity. A child without steps never dims, and a later child does
   # not wait for it. The on entity goes after the on entities of the child.
+
+  # A box of a tree is not inside the box of its parent, so the dim option of
+  # a tree applies to each node, with the steps of its box.
+  defp dim(%Hierarchy{dim: true}, children), do: Steps.dim(children)
 
   defp dim(%{dim: true}, children) do
     firsts = for %{steps: [first | _]} <- children, uniq: true, do: first

@@ -480,8 +480,52 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 }
 .tree-line {
   fill: none;
-  stroke: var(--tree-line, var(--muted));
+  stroke: color-mix(
+    in srgb,
+    var(--muted-dim) calc(var(--dimmed) * 100%),
+    var(--tree-line, var(--muted))
+  );
   stroke-width: 2;
+}
+/*
+ * The steps of a tree. A box is a foreignObject with the steps of its node,
+ * and the line to a node has the same steps. A box of a tree with `reflow`
+ * moves by `--tree-dx` and `--tree-dy` at each step, from the rules of
+ * `Expresso.Element.Hierarchy.rules/1`. The transform also plays the effect
+ * of the box, as the rule of the elements does. A box without steps keeps a
+ * transition of its transform, so it moves when a different box shows.
+ */
+.tree-node {
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: translate(
+      calc(var(--tree-dx, 0px) + (1 - var(--shown)) * var(--enter-x)),
+      calc(var(--tree-dy, 0px) + (1 - var(--shown)) * var(--enter-y))
+    )
+    scale(calc(1 - (1 - var(--shown)) * (1 - var(--enter-scale))));
+  transition: transform var(--dur) var(--ease);
+}
+/*
+ * The effect `grow` draws a line from its parent to its box. Each line has
+ * `pathLength="1"`, so a dash of 1 is the whole line, and the offset moves
+ * from 1 to 0 when the line shows.
+ */
+.tree-line[data-effect="grow"] {
+  stroke-dasharray: 1;
+  stroke-dashoffset: calc(1 - var(--shown));
+}
+.tree-line[data-on] {
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility 0s linear var(--dur),
+    stroke-dashoffset var(--dur) var(--ease);
+}
+.tree-line[data-on][data-el] {
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility 0s linear var(--dur),
+    stroke-dashoffset var(--dur) var(--ease),
+    --dimmed var(--dur) var(--ease);
 }
 .tree-box {
   position: relative;
@@ -494,10 +538,19 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   height: 100%;
   padding: 0.4em 0.7em;
   overflow: hidden;
-  border: 2px solid var(--tree-border, var(--muted));
+  border: 2px solid
+    color-mix(
+      in srgb,
+      var(--muted-dim) calc(var(--dimmed) * 100%),
+      var(--tree-border, var(--muted))
+    );
   border-radius: 8px;
   background: var(--tree-box, var(--background));
-  color: var(--tree-text, var(--text));
+  color: color-mix(
+    in srgb,
+    var(--text-dim) calc(var(--dimmed) * 100%),
+    var(--tree-text, var(--text))
+  );
   text-align: center;
 }
 .tree-label,
@@ -512,18 +565,31 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 }
 .tree-detail {
   font-size: 0.8em;
-  color: var(--muted);
+  color: color-mix(
+    in srgb,
+    var(--muted-dim) calc(var(--dimmed) * 100%),
+    var(--muted)
+  );
 }
 /*
  * A box with a color has a border in the color and a light tint of it. The
  * color is `--tree-color`, from a role of the theme or from `--chart-1` to
  * `--chart-8` of the palette.
  */
+/*
+ * A dimmed box mixes its color with the background, so the border, the
+ * tint, the icon and the bar fade with the text.
+ */
 .tree-colored {
-  border-color: var(--tree-color);
+  --tree-shade: color-mix(
+    in srgb,
+    var(--background) calc(var(--dimmed) * 60%),
+    var(--tree-color)
+  );
+  border-color: var(--tree-shade);
   background: color-mix(
     in srgb,
-    var(--tree-color) 14%,
+    var(--tree-shade) 14%,
     var(--tree-box, var(--background))
   );
 }
@@ -559,7 +625,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--tree-color, var(--accent));
+  color: color-mix(
+    in srgb,
+    var(--background) calc(var(--dimmed) * 60%),
+    var(--tree-color, var(--accent))
+  );
 }
 .tree-icon-svg {
   width: 70%;
@@ -573,7 +643,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   text-overflow: ellipsis;
 }
 .tree-field-name {
-  color: var(--muted);
+  color: color-mix(
+    in srgb,
+    var(--muted-dim) calc(var(--dimmed) * 100%),
+    var(--muted)
+  );
 }
 /*
  * The value of a node, and the bar of the part of the value of the root
@@ -596,7 +670,11 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
 .tree-bar-fill {
   display: block;
   height: 100%;
-  background: var(--tree-bar, var(--tree-color, var(--accent)));
+  background: color-mix(
+    in srgb,
+    var(--background) calc(var(--dimmed) * 60%),
+    var(--tree-bar, var(--tree-color, var(--accent)))
+  );
 }
 /*
  * The legend of `color {:field, name}`: a row of a swatch and a value for
@@ -1873,7 +1951,13 @@ body[data-view="handout"] .chart-frames {
 :where(.slide, .handout-page, .menu-thumb)
   :where(
     img,
-    svg:not(.icon-svg, .icon-inline, .callout-icon, .shape-line),
+    svg:not(
+      .icon-svg,
+      .icon-inline,
+      .callout-icon,
+      .shape-line,
+      .tree-icon-svg
+    ),
     iframe,
     video
   ) {

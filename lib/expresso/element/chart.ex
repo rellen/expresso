@@ -761,6 +761,7 @@ defmodule Expresso.Element.Chart do
   defp tree_option(node) do
     case hd(Node.tree_options(node)) do
       :node -> "nested node entity"
+      :on -> "on entity"
       option -> "#{option} option"
     end
   end

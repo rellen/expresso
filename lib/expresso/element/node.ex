@@ -76,7 +76,8 @@ defmodule Expresso.Element.Node do
   def chart_options(%__MODULE__{} = node),
     do: for(key <- [:column, :order], Map.fetch!(node, key) != nil, do: key)
 
-  @tree_options [:detail, :image, :icon, :fields, :color, :value, :layout, :parent]
+  @tree_options [:detail, :image, :icon, :fields, :color, :value, :layout, :parent] ++
+                  [:at, :effect, :speed, :easing, :morph]
 
   @doc """
   Make sure that a `fields` option is a list of names and texts
@@ -124,7 +125,7 @@ defmodule Expresso.Element.Node do
 
   @doc """
   Return the options of a node that only a tree takes and that the node
-  gives, with `:node` for a nested node
+  gives, with `:on` for an `on` entity and `:node` for a nested node
 
       iex> Expresso.Element.Node.tree_options(%Expresso.Element.Node{name: "a", detail: "Role"})
       [:detail]
@@ -132,6 +133,7 @@ defmodule Expresso.Element.Node do
   @spec tree_options(t()) :: [atom()]
   def tree_options(%__MODULE__{} = node) do
     given = for key <- @tree_options, Map.fetch!(node, key) != nil, do: key
+    given = if (node.on || []) == [], do: given, else: given ++ [:on]
     if (node.elements || []) == [], do: given, else: given ++ [:node]
   end
 end

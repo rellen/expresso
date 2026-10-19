@@ -37,7 +37,7 @@ defmodule Expresso.OverlayFieldsTest do
   end
 
   test "each element entity has the overlay options and an on child" do
-    assert length(entities()) == 28
+    assert length(entities()) == 29
 
     for entity <- entities() do
       assert @options -- Keyword.keys(entity.schema) == [], inspect(entity.name)
@@ -52,7 +52,7 @@ defmodule Expresso.OverlayFieldsTest do
   test "the struct of each element has the overlay fields" do
     structs = Enum.map(entities(), & &1.target) ++ [Lines, TocEntry]
 
-    assert length(structs) == 30
+    assert length(structs) == 31
 
     for module <- structs do
       assert overlay_fields() -- fields(module) == [], inspect(module)
