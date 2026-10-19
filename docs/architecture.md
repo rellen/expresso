@@ -1774,6 +1774,11 @@ reasons for this design:
 - **HTML boxes in an SVG.** The lines are paths in one SVG, and each box is a
   `foreignObject` with the HTML of the box. The SVG scales the whole tree to the box of the
   element, and the text of a box ends with an ellipsis as HTML does.
+- **One assembly for each flat list.** `Expresso.Element.Hierarchy.Data.assemble/1` makes
+  a tree from the parent of each node. The parent form of a file, the path form and the
+  `parent` option of the DSL each make a flat list, so the three give the same errors for a
+  name that shows two times, an unknown parent and a loop. `Expresso.PathTransformer` reads
+  the file, as it reads the file of a chart, and the CSV reader of the charts divides it.
 - **The values before the layout.** `Expresso.Element.Hierarchy.Values.prepare/2` applies
   `depth`, `sum`, `sort` and `limit` to the tree, and `Expresso.Element.Hierarchy.prepared/1`
   returns the result. The layout, the colors and the HTML read that tree only. The node of

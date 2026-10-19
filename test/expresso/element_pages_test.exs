@@ -36,6 +36,7 @@ defmodule Expresso.ElementPagesTest do
     File.cp!("examples/flow.svg", Path.join(root, "flow.svg"))
     File.cp!("examples/animations/chime.ogg", Path.join(root, "chime.ogg"))
     File.cp!("examples/animations/visitors.csv", Path.join(root, "visitors.csv"))
+    File.cp!("test/fixtures/tree.csv", Path.join(root, "team.csv"))
 
     for path <- ["assets/logo.svg", "icons/espresso.svg"] do
       File.mkdir_p!(Path.join(root, Path.dirname(path)))

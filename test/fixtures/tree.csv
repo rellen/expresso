@@ -1,0 +1,4 @@
+id,parent,label,detail,value,team
+ana,,Ana,Plant manager,,
+ben,ana,Ben,Production,42,40 people
+eve,ana,Eve,Quality,7,6 people

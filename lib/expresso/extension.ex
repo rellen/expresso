@@ -363,6 +363,11 @@ defmodule Expresso.Extension do
             doc:
               "Short facts under the detail of the box of a node in a tree, one line each, such as [team: \"42 people\"]. Only a tree takes this option."
           ],
+          parent: [
+            type: :string,
+            doc:
+              "The name of the node above a node in a tree, in place of nesting, such as \"Ana\". Only a node at the top of the tree takes this option. Only a tree takes this option."
+          ],
           layout: [
             type: {:in, Expresso.Element.Hierarchy.Layout.layouts()},
             doc:
@@ -862,6 +867,27 @@ defmodule Expresso.Extension do
             type: {:custom, Expresso.Element.Hierarchy, :color, []},
             doc:
               "The colors of the boxes from the palette: :branch gives each node under the root and its boxes a color, and {:field, \"name\"} gives each value of a field a color and adds a legend. The color option of a node comes first. The default is no color."
+          ],
+          src: [
+            type: :string,
+            doc:
+              "The path of a CSV file with a row for each node, from the root option of the deck or from the working directory of the command. The file has the columns id and parent, or the column path. See docs/reference/tree-element.md."
+          ],
+          delimiter: [
+            type: :string,
+            doc:
+              "The character between two cells of the src file, such as \";\". The default is a comma, or a tab for a file that ends in .tsv. Requires the src option."
+          ],
+          separator: [
+            type: :string,
+            default: "/",
+            doc:
+              "The text between two levels of a path in the column path of the src file, such as \"home/photos\". The default is a slash."
+          ],
+          fields: [
+            type: {:list, :string},
+            doc:
+              "The headings of the columns of the src file that become the fields of each box, in that order, such as [\"team\", \"site\"]. Requires the src option."
           ],
           layout: [
             type: {:in, Expresso.Element.Hierarchy.Layout.layouts()},

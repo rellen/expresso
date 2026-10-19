@@ -428,7 +428,21 @@ defmodule Expresso.Element.Chart.Csv do
 
   defp numbers(_cells, _count), do: :error
 
-  defp number(text) do
+  @doc """
+  Read the number of a cell, or return `nil` for a cell that is not a number
+
+  A number can have a comma between each group of three digits, as a
+  spreadsheet writes it.
+
+      iex> Expresso.Element.Chart.Csv.number(" 1,250 ")
+      1250
+      iex> Expresso.Element.Chart.Csv.number("2.5")
+      2.5
+      iex> Expresso.Element.Chart.Csv.number("many")
+      nil
+  """
+  @spec number(String.t()) :: number() | nil
+  def number(text) do
     text = String.trim(text)
     text = if text =~ @grouped, do: String.replace(text, ",", ""), else: text
 

@@ -63,6 +63,7 @@ tree(title: "The folders", elements: [
 | `title` | A string, required | The name of the tree for a screen reader. |
 | `color` | `:branch` or `{:field, name}` | The colors of the boxes from the palette. See [the colors](#the-colors). The default is no color. |
 | `layout` | `:top_down`, `:left_right` or `:stacked` | How the nodes under each node go. See [the layout](#the-layout). The default is `:top_down`. |
+| `src`, `delimiter`, `separator`, `fields` | | The CSV file of the nodes. See [the data](#the-data). |
 | `stack_from` | A level of 2 or more | The first level that the tree stacks, with `1` for the root. |
 | `sum` | `true` or `false` | Give a node with no `value` the sum of the values under it. The default is `true`. |
 | `value_format` | `:number`, `:bytes` or `:percent` | The text of a value, such as `1,250`, `412 GB` or `12.5%`. The default is `:number`. |
@@ -94,6 +95,7 @@ A slide, a text box, a column and a callout can hold a tree.
 | `icon` | A name | An icon that the box shows at its left, in place of an image, such as `"factory"`. The names are the names of [the icon element](icon-element.md). |
 | `fields` | A keyword list | Short facts, one line each under the detail, such as `[team: "42 people", floor: 3]`. A name can also be a string, such as `[{"Cost center", "4100"}]`. A text is a string or a number. |
 | `color` | A role of the theme | The color of the box and of each box under it: `:text`, `:muted`, `:accent`, `:success`, `:emphasis`, `:warning` or `:danger`. |
+| `parent` | A name | The node above this node, in place of nesting. See [the parent option](#the-parent-option). |
 | `value` | A number that is not negative | A size or a count, such as `412_000_000_000`. See [the values](#the-values). |
 | `layout` | `:top_down`, `:left_right` or `:stacked` | How the nodes under this node go, and the nodes under them. See [the layout](#the-layout). |
 | `class` | CSS class names | The classes of the box. |
@@ -106,7 +108,85 @@ Give a different name and a label to the second node, such as
 The `node` entity is also the entity of a node of a chart of flows. See
 [the chart element](chart-element.md). A chart takes the options `column` and `order`, and a
 tree does not. A tree takes `detail`, `image`, `icon`, `fields`, `color`, `value`,
-`layout` and nested nodes, and a chart does not.
+`layout`, `parent` and nested nodes, and a chart does not.
+
+## The data
+
+A tree can come from a CSV file in place of node entities. The `src` option names the file,
+and the file has a row for each node. The file has one of two forms:
+
+| Form | Columns | Example row |
+| --- | --- | --- |
+| Parent | `id`, `parent`, and the other columns. An empty `parent` makes the root. | `ben,ana,Ben,Production` |
+| Path | `path`, and the other columns. The `separator` option divides a path. | `/home/photos,412000000000` |
+
+The other columns have the names of the options of a node: `label`, `detail`, `image`,
+`icon`, `value`, `color`, `layout` and `class`. An empty cell gives no option. The tree
+does not read a different column, unless its `fields` option names the column. Each column
+of `fields` becomes a field of each box, with its heading as the name of the field.
+
+```text
+id,parent,label,detail,value,team
+ana,,Ana,Plant manager,,
+ben,ana,Ben,Production,42,40 people
+eve,ana,Eve,Quality,7,6 people
+```
+
+```elixir
+slide "the team" do
+  tree do
+    title "The team"
+    src "team.csv"
+    fields ["team"]
+    bar true
+  end
+end
+```
+
+In the path form, the identity of a node is its path without a separator at the start or at
+the end, such as `home/photos`. A level without a row of its own becomes a node with no
+options, just before the first row under it. When the paths start with two or more levels,
+such as `/home` and `/var`, a root with the label `/` holds them. A row with the path `/`
+gives the options of that root.
+
+```text
+path,value
+/var,21000000000
+/home/photos,412000000000
+/home/code,38000000000
+```
+
+The options of the file are these:
+
+| Option | Value | Effect |
+| --- | --- | --- |
+| `src` | A path | The CSV file, from the `root` option of the deck. A file that ends in `.tsv` has a tab between two cells. |
+| `delimiter` | One character | The character between two cells, such as `";"`. The default is a comma. |
+| `separator` | A string | The text between two levels of a path. The default is `"/"`. |
+| `fields` | A list of headings | The columns that become the fields of each box, in that order. |
+
+A tree with `src` takes no node entities. The watch mode renders the deck again after a
+change to the file.
+
+### The parent option
+
+The `parent` option of a node puts the node under the node that it names, so you can type a
+flat list in place of nesting:
+
+```elixir
+slide "the flat list" do
+  tree do
+    title "The plant"
+    node "Ana"
+    node "Ben", parent: "Ana"
+    node "Cy", parent: "Ben"
+    node "Eve", parent: "Ana"
+  end
+end
+```
+
+Only a node at the top of the tree takes the option. The nodes under one parent keep their
+order, after the nodes that the parent holds in its block.
 
 ## The box
 
@@ -345,7 +425,13 @@ The compiler gives an error for these:
 - a `value` that is negative or not a number;
 - `bar true` or `value_format :percent` when the root has no value above 0;
 - a `layout` that is not `:top_down`, `:left_right` or `:stacked`;
-- a `stack_from` level under 2.
+- a `stack_from` level under 2;
+- a tree with `src` and node entities, and `delimiter` or `fields` without `src`;
+- a file without the columns `id` and `parent` or the column `path`, and a `fields` column
+  that the file does not have;
+- a row with a value, a color or a layout that is not correct, with the number of its line;
+- two nodes with one identity, a parent that no node has, and a loop of parents;
+- a `parent` option on a node inside a different node.
 
 A path of an image that the renderer cannot read is an error of the render, as for the
 image element.
