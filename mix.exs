@@ -16,9 +16,11 @@ defmodule Expresso.MixProject do
     ]
   end
 
-  # The pages of `mix docs`. The groups follow Diataxis: a how-to guide gives
-  # the steps of one task, a reference page describes each option, and an
-  # explanation gives the design and its reasons. The GIFs of the guides come
+  # The pages of `mix docs`. The groups follow Diataxis: a tutorial teaches the
+  # basics, a how-to guide gives the steps of one task, a reference page
+  # describes each option, and an explanation gives the design and its
+  # reasons. The site is for a user, so the documents for a contributor stay
+  # out of it. `CONTRIBUTING.md` lists them. The GIFs of the guides come
   # from `mix expresso.gifs`, and the workflow publishes them to the branch
   # `media`. See `docs/development/gifs.md`.
   defp docs do
@@ -105,43 +107,13 @@ defmodule Expresso.MixProject do
         "docs/reference/root-option.md",
         "docs/reference/theme-option.md",
         "docs/overlays.md",
-        "docs/architecture.md",
-        "docs/development.md",
-        "docs/development/toolchain.md",
-        "docs/development/checks.md",
-        "docs/development/unit-tests.md",
-        "docs/development/browser-tests.md",
-        "docs/development/release.md",
-        "docs/development/ci.md",
-        "docs/development/dependencies.md",
-        "docs/development/presenter-script.md",
-        "docs/development/themes.md",
-        "docs/development/gifs.md",
-        "docs/typescript.md",
-        "docs/dim-state.md",
-        "docs/tree.md"
+        "docs/architecture.md"
       ],
       groups_for_extras: [
         Tutorials: ~r"docs/tutorials/",
         "How-to guides": ~r"docs/how-to/",
         Reference: ~r"docs/reference/",
-        Explanation: ["docs/overlays.md", "docs/architecture.md"],
-        Contributing: [
-          "docs/development.md",
-          "docs/development/toolchain.md",
-          "docs/development/checks.md",
-          "docs/development/unit-tests.md",
-          "docs/development/browser-tests.md",
-          "docs/development/release.md",
-          "docs/development/ci.md",
-          "docs/development/dependencies.md",
-          "docs/development/presenter-script.md",
-          "docs/development/themes.md",
-          "docs/development/gifs.md",
-          "docs/typescript.md",
-          "docs/dim-state.md",
-          "docs/tree.md"
-        ]
+        Explanation: ["docs/overlays.md", "docs/architecture.md"]
       ]
     ]
   end

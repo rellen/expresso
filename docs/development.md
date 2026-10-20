@@ -26,7 +26,11 @@ mix check
 
 `mix docs` makes the site of the documents in `doc/`, and https://rellen.github.io/expresso/
 shows the site of the last push to `main`. `mix.exs` gives ExDoc the list of the documents
-and their groups.
+and their groups. The site holds the documents for a user: the README, the tutorial, the
+how-to guides, the reference pages and the two explanations below. The documents for a
+contributor, such as this index and `docs/development/`, stay in the repository, and
+GitHub shows them. A link from a page of the site to one of them uses its address on
+GitHub.
 
 - `docs/architecture.md` — how the code makes an HTML document from a deck.
 - `docs/overlays.md` — the design for overlays, and its decisions.
