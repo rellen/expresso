@@ -15,7 +15,8 @@ Read these documents before you change the code:
   code contains each part of the design. The document ends with six decisions, and
   each is settled.
 - `docs/development.md` — how to get a toolchain, how to run the checks and how to look at
-  a deck in a browser.
+  a deck in a browser. Each topic has a page in `docs/development/`, and the index lists
+  them.
 - `docs/typescript.md` — the plan for the presenter script in TypeScript, and the record
   of its result. The code contains this conversion.
 - `docs/tree.md` — the design for the element `tree`, which shows a hierarchy as boxes and
@@ -30,7 +31,7 @@ Read these documents before you change the code:
 
 A remote session has no Elixir. The hook `.claude/hooks/session-start.sh` installs a
 toolchain at the start of the session. Run it by hand if a command reports that `mix` is
-not present. `docs/development.md` gives the details.
+not present. `docs/development/toolchain.md` gives the details.
 
 Run these commands before each commit:
 
@@ -62,8 +63,8 @@ the release tests with that binary. `.check.exs` gives the tools.
 
 `mix test --only e2e` runs the browser tests of `test/e2e/`. They need Node, the Playwright
 driver of `package.json` and Chromium. `mix test` excludes them. In a remote session, the
-hook sets `EXPRESSO_CHROMIUM` to the Chromium of the container. `docs/development.md` gives
-the details.
+hook sets `EXPRESSO_CHROMIUM` to the Chromium of the container.
+`docs/development/browser-tests.md` gives the details.
 
 `mix test --only dependency` runs the test of `test/dependency/`. It makes a project that
 takes Expresso as a dev dependency, and it runs `mix expresso` there. It needs the network
@@ -71,11 +72,11 @@ for the dependencies of that project. `mix test` excludes it.
 
 `mix test --only release` runs the tests of `test/release/`. They run the binary that
 Burrito makes, and `EXPRESSO_BINARY` gives its path. `mix release` needs Zig, and the hook
-installs it. `mix test` excludes these tests. `docs/development.md` gives the details.
+installs it. `mix test` excludes these tests. `docs/development/release.md` gives the details.
 
 `mix hex.audit` fails for a dependency with a security advisory or a retirement on Hex.
 `mix deps.get` writes a warning for the same advisory, and the session start hook runs it,
-so read its output. `docs/development.md` tells how to act on an advisory.
+so read its output. `docs/development/dependencies.md` tells how to act on an advisory.
 
 These results come from Erlang/OTP 29.1, Elixir 1.20.4, Node 24.20.0 and Zig 0.16.0, which
 `.tool-versions` gives. The hook installs these versions, the Nix shell gives them, and the
@@ -83,7 +84,7 @@ workflow uses them. Therefore a command in a session gives the same result as a 
 a machine.
 
 Do not change a version in `.tool-versions` or in `mix.exs` to make a command work. Four
-places give the toolchain, and `docs/development.md` names each one. A change to one place
+places give the toolchain, and `docs/development/toolchain.md` names each one. A change to one place
 needs a change to the other three.
 
 ## Git

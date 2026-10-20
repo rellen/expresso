@@ -6,7 +6,7 @@ defmodule Expresso.E2E do
   with Playwright, and operates the presenter as a person does. `use
   Expresso.E2E` tags each test of the module with `:e2e`. `test_helper.exs`
   excludes that tag, so `mix test` does not start a browser. `mix test --only
-  e2e` runs these tests. `docs/development.md` gives the setup.
+  e2e` runs these tests. `docs/development/browser-tests.md` gives the setup.
 
   Each module starts one Playwright connection and one browser. Each test gets
   a new browser context and a new page, so no state goes from one test to the

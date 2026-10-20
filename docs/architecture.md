@@ -2215,7 +2215,7 @@ A new key with the current commands is therefore a change to `Expresso.Presenter
 only. Only this module uses the DSL, and a deck cannot change the keys. The TypeScript
 interpreter must return the result of the Elixir interpreter.
 `assets/test/interpreter.test.ts` runs the fixtures of the Elixir interpreter, and
-`docs/development.md` tells how to write them again.
+`docs/development/presenter-script.md` tells how to write them again.
 `docs/research/elixir-presenter-report.md` gives the reason for the design.
 
 The script trusts the program, because the renderer writes the program and the script
@@ -2251,8 +2251,8 @@ examines no value. These parts find a defect of the program:
 `assets/src/schema.ts` holds the TypeScript type and the decoder of each value. A test
 writes that file from the schema, so the types of the script and the forms of Elixir
 cannot differ. The script decodes only the message from the other window, because that
-value comes from outside the document. `docs/development.md` tells how to write the file
-again.
+value comes from outside the document. `docs/development/presenter-script.md` tells how to
+write the file again.
 
 A short array of the JSON, such as an entry of the list of the steps, has a record form.
 The form names the value at each place. `Expresso.Presenter.Schema.Record.write/2` writes
@@ -2305,7 +2305,8 @@ and the step, and a change of `index` starts the reset.
 
 The unit tests of `assets/test/` test these modules with no browser. The browser tests of
 `test/e2e/` open a rendered deck in Chromium and operate the presenter with its keys, with
-the mouse and with a finger. `docs/development.md` gives both.
+the mouse and with a finger. `docs/development/presenter-script.md` gives the unit tests,
+and `docs/development/browser-tests.md` gives the browser tests.
 
 `Mix.Tasks.Compile.Presenter` bundles these modules with esbuild into one minified script,
 `priv/static/presenter.js`. The compiler runs in front of the Elixir compiler, and Git does
@@ -2884,7 +2885,7 @@ to a remote session.
 Each dependency comes from Hex, except Shoddy. Shoddy gives the functions for results,
 lists, maps and keyword lists, such as `Shoddy.Result.collect/2` for the transformer and
 the verifiers. It comes from the `main` branch on GitHub, and the lockfile gives the
-commit. `docs/development.md` tells how to update it.
+commit. `docs/development/dependencies.md` tells how to update it.
 
 The commands are:
 
@@ -2897,12 +2898,12 @@ The commands are:
   the target of the computer and runs the release tests.
 - `mix expresso.gifs` records the GIFs and the stills of the example decks. The task,
   `Expresso.Recorder` and `Expresso.Gif` are in `tools/`, which only dev and test
-  compile. `docs/development.md` gives the details.
+  compile. `docs/development/gifs.md` gives the details.
 - `mix release expresso_cli_app` makes a binary with Burrito. The targets are macOS and
   Linux, for x86_64 and for aarch64. Burrito needs Zig 0.16.0 and `xz` on the path.
   `shell.nix` pins the Zig version, and `mix.exs` must agree with it.
 - `mix test --only release` runs the binary, and `EXPRESSO_BINARY` gives its path.
-  `docs/development.md` gives the commands.
+  `docs/development/release.md` gives the commands.
 
 ## Open work
 

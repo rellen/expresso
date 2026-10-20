@@ -1,4 +1,4 @@
-# The configuration of `mix check`. `docs/development.md` gives each tool.
+# The configuration of `mix check`. `docs/development/checks.md` gives each tool.
 
 # The target of Burrito for this computer. The tool `release` makes the binary
 # for this target only, because a binary of a different target does not run
@@ -26,8 +26,8 @@ burrito_target =
 
     # The presenter script in TypeScript: the type check, the lint, the format
     # and the tests of `assets/test`. They need Node and `npm install`, as the
-    # browser tests do. `docs/development.md` gives the details in "Check the
-    # presenter script".
+    # browser tests do. `docs/development/presenter-script.md` gives the
+    # details.
     {:tsc, "npm run check"},
     {:oxlint, "npm run lint"},
     {:prettier, "npm run format:check"},
@@ -39,7 +39,7 @@ burrito_target =
 
     # The binary of Burrito and its tests. The release uses the build of prod.
     # The tests start after the browser tests, and only after a release that
-    # succeeded. `docs/development.md` gives the details in "The release tests".
+    # succeeded. `docs/development/release.md` gives the details in "The release tests".
     {:release, "mix release expresso_cli_app --overwrite",
      env: %{"MIX_ENV" => "prod", "BURRITO_TARGET" => burrito_target}},
     # The test of Expresso as a dev dependency of a project. It fetches the

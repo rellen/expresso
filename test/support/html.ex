@@ -2,7 +2,7 @@ defmodule Expresso.Test.HTML do
   @moduledoc """
   Shortens the steps and the LazyHTML queries that the unit tests use most
 
-  "The HTML in a unit test" in `docs/development.md` tells how to write a test
+  "The HTML in a unit test" in `docs/development/unit-tests.md` tells how to write a test
   with LazyHTML. Put `import Expresso.Test.HTML` in the test module.
 
   A test of the HTML usually makes a deck, renders it and queries the

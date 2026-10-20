@@ -8,7 +8,7 @@
 # start the workflow from the tab "Actions".
 #
 # `mix hex.audit` fails for a dependency with a security advisory or a
-# retirement. `docs/development.md` tells how to act on a failure.
+# retirement. `docs/development/dependencies.md` tells how to act on a failure.
 
 name: audit
 
@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v7
       # `.github/actions/setup-elixir` reads the versions from the environment.
       # This step takes them from `.tool-versions`, so the versions stay in the
-      # four places that `docs/development.md` names.
+      # four places that `docs/development/toolchain.md` names.
       - name: Read the versions of .tool-versions
         run: |
           echo "OTP_VERSION=$(awk '$1 == "erlang" { print $2 }' .tool-versions)" >> "$GITHUB_ENV"
