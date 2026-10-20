@@ -78,8 +78,12 @@ defmodule Expresso.PathTransformer do
   defp own(%Chart{src: src} = chart, root) when is_binary(src),
     do: Chart.build(%Chart{chart | src: path(src, root)})
 
-  defp own(%Hierarchy{src: src} = tree, root) when is_binary(src),
-    do: Hierarchy.build(%Hierarchy{tree | src: path(src, root)})
+  defp own(%Hierarchy{src: src} = tree, root) when is_binary(src) do
+    with {:ok, tree} <- Hierarchy.build(%Hierarchy{tree | src: path(src, root)}),
+         do: Hierarchy.map_frames(tree, &own(&1, root))
+  end
+
+  defp own(%Hierarchy{} = tree, root), do: Hierarchy.map_frames(tree, &own(&1, root))
 
   defp own(%Image{src: src} = image, root), do: {:ok, %Image{image | src: path(src, root)}}
 

@@ -1,6 +1,6 @@
 defmodule Expresso.Element.Frame do
   @moduledoc """
-  A frame of a chart: the values of its series at one point in time
+  A frame of a chart or of a tree: its data at one point in time
 
   The `frame` entity takes a label as its argument, such as `"2024"`, and it
   holds one `series` entity for each series of the chart. Each frame after
@@ -16,12 +16,15 @@ defmodule Expresso.Element.Frame do
 
   A frame of a chart of flows can hold `flow` entities in place of a series.
   `Expresso.Element.Chart.check/1` changes them into one series.
+
+  A frame of a tree holds `node` entities in place of a series: the whole
+  tree at that point in time. `Expresso.Element.Hierarchy` checks and draws them.
   """
 
   @typedoc "The struct of a frame"
   @type t :: %__MODULE__{
           label: String.t(),
-          elements: [Expresso.Element.Series.t()],
+          elements: [Expresso.Element.Series.t() | Expresso.Element.Node.t()],
           at: Expresso.Overlay.t() | nil,
           steps: [pos_integer()] | nil
         }

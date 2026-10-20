@@ -17,7 +17,7 @@ defmodule Expresso.IconTransformer do
   use Spark.Dsl.Transformer
 
   alias Expresso.Dsl
-  alias Expresso.Element.{Icon, Item, Node, TextArea, Tree}
+  alias Expresso.Element.{Hierarchy, Icon, Item, Node, TextArea, Tree}
   alias Spark.Dsl.Transformer
 
   @doc """
@@ -83,6 +83,8 @@ defmodule Expresso.IconTransformer do
     with {:ok, svg} <- Expresso.Icon.svg(name, "tree-icon-svg", own),
          do: {:ok, %{node | svg: svg}}
   end
+
+  defp element(%Hierarchy{} = tree, own), do: Hierarchy.map_frames(tree, &element(&1, own))
 
   defp element(%TextArea{text: text} = text_area, own) when is_binary(text) do
     with {:ok, text} <- Expresso.Icon.inline(text, own), do: {:ok, %{text_area | text: text}}

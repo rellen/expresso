@@ -149,7 +149,7 @@ defmodule Expresso.ChartFlowCopiesTest do
   end
 
   describe "a node inside a frame" do
-    test "the Builder and the DSL give the error of the placement check" do
+    test "the Builder gives the error of the placement check, and the DSL the error of the chart" do
       assert_raise ArgumentError, ~r/a node is inside a frame, and a frame holds flow/, fn ->
         Builder.chart(:sankey,
           title: "T",
@@ -161,7 +161,7 @@ defmodule Expresso.ChartFlowCopiesTest do
       end
 
       assert_raise Spark.Error.DslError,
-                   ~r/a node is inside a frame, and a frame holds flow/,
+                   ~r/a frame of a chart holds series or flows. Put a node of a chart of flows in the chart, outside the frames/,
                    fn ->
                      defmodule NodeInFrame do
                        use Expresso

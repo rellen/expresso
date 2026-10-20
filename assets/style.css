@@ -719,6 +719,67 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   border-radius: 2px;
   background: var(--tree-color);
 }
+/*
+ * The frames of a tree. A box with a different content in two frames holds
+ * one card for each content, on top of each other, and each card shows at
+ * the steps of its frames. The label of the frame is under the tree, and
+ * each label shows at the steps of its frame.
+ */
+.tree-stack {
+  display: grid;
+  width: 100%;
+  height: 100%;
+}
+.tree-stack > .tree-box {
+  grid-area: 1 / 1;
+}
+.tree-frame-labels {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  margin: 0;
+}
+.tree-frame-label {
+  grid-area: 1 / 1;
+  margin: 0;
+  font-size: 0.9em;
+  color: var(--muted);
+}
+/*
+ * Paper and the handout view show each frame of a tree as a small tree in a
+ * grid, and not the tree that moves, as for the frames of a chart. Each small
+ * tree has the size of the largest frame, so the trees compare.
+ */
+.tree-frames {
+  display: none;
+  width: var(--tree-width, 80vw);
+  max-width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 0.5rem 1rem;
+}
+.tree-copy {
+  margin: 0;
+  text-align: center;
+  font-size: 0.6em;
+}
+.tree .tree-copy svg {
+  width: 100%;
+  max-height: none;
+}
+body[data-view="handout"] .tree:has(.tree-frames) > svg {
+  display: none;
+}
+body[data-view="handout"] .tree-frames {
+  display: grid;
+}
+@media print {
+  .tree:has(.tree-frames) > svg {
+    display: none;
+  }
+  .tree-frames {
+    display: grid;
+  }
+}
 .chart-c1 {
   --series: var(--chart-1);
 }

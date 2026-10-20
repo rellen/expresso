@@ -401,7 +401,7 @@ defmodule Expresso.Extension do
     name: :frame,
     target: Expresso.Element.Frame,
     args: [:label],
-    entities: [elements: [@series], flows: [@flow]],
+    entities: [elements: [@series, @node], flows: [@flow]],
     schema: [
       label: [
         type: :string,
@@ -849,7 +849,7 @@ defmodule Expresso.Extension do
   @tree %Spark.Dsl.Entity{
     name: :tree,
     target: Expresso.Element.Hierarchy,
-    entities: [elements: [@node], on: [@on]],
+    entities: [elements: [@node], timeline: [@frame], on: [@on]],
     transform: {Expresso.Element.Hierarchy, :check, []},
     schema:
       @overlay_schema ++
@@ -906,6 +906,11 @@ defmodule Expresso.Extension do
             type: :string,
             doc:
               "The character between two cells of the src file, such as \";\". The default is a comma, or a tab for a file that ends in .tsv. Requires the src option."
+          ],
+          frames: [
+            type: :string,
+            doc:
+              "The heading of the column of the src file that names the frame of each row, such as \"year\". Each value of the column is a frame, in the order of the file. Requires the src option."
           ],
           separator: [
             type: :string,

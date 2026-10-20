@@ -108,6 +108,24 @@ defmodule Expresso.BuilderTest do
         entity(:tree, [], [title: "H", highlight: ["R", {:branch, "R"}], whole_first: true],
           elements: [entity(:node, ["R"], [], elements: [entity(:node, ["Q"])])]
         ),
+        entity(:tree, [], [title: "M", color: {:field, "site"}],
+          timeline: [
+            entity(:frame, ["Before"], [],
+              elements: [
+                entity(:node, ["R"], [fields: [site: "n"]],
+                  elements: [entity(:node, ["Q"], detail: "q")]
+                )
+              ]
+            ),
+            entity(:frame, ["After"], [],
+              elements: [
+                entity(:node, ["R"], [fields: [site: "s"]],
+                  elements: [entity(:node, ["Q"], detail: "q2"), entity(:node, ["Z"])]
+                )
+              ]
+            )
+          ]
+        ),
         entity(:tree, [], [title: "P"],
           elements: [
             entity(:node, ["A"]),

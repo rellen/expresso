@@ -112,7 +112,13 @@ defmodule Expresso.Element.Chart do
   option of the deck can change the path, and `build/1` then reads it.
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
-  def check(%__MODULE__{} = chart), do: with({:ok, chart} <- flows(chart), do: data(chart))
+  def check(%__MODULE__{timeline: timeline} = chart) do
+    if Enum.any?(timeline, fn frame -> Enum.any?(frame.elements, &is_struct(&1, Node)) end),
+      do:
+        {:error,
+         "a frame of a chart holds series or flows. Put a node of a chart of flows in the chart, outside the frames"},
+      else: with({:ok, chart} <- flows(chart), do: data(chart))
+  end
 
   # The flows and the nodes of a sankey. The flows of the chart and of its
   # frames become its categories and its series, and the `flows` field then
