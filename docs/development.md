@@ -946,11 +946,11 @@ steps:
 
 ### The tables of keys
 
-`README.md` holds a table of keys for each mode, and `Expresso.Test.KeyTables` makes each
+`docs/reference/presenter.md` holds a table of keys for each mode, and `Expresso.Test.KeyTables` makes each
 table from `Expresso.Presenter.Default`. Its test in
 `test/expresso/presenter/key_tables_test.exs` fails when a table does not agree with the
-module. After a change to a binding, write the tables again, and commit `README.md` with
-the change:
+module. After a change to a binding, write the tables again, and commit the page with the
+change:
 
 ```sh
 EXPRESSO_KEYS=write mix test test/expresso/presenter/key_tables_test.exs
@@ -995,8 +995,9 @@ The name of the theme is the name of its file, with underscores, such as
 ## Record the GIFs and the stills of the examples
 
 The how-to guides and the reference pages show a GIF or a still of each example deck of
-`examples/animations/`, and each how-to guide shows at least one. "Present a deck" in
-`README.md` shows a GIF or a still of each example deck of `examples/presenter/`. "The gallery" of `docs/reference/theme-option.md`
+`examples/animations/`, and each how-to guide shows at least one. `docs/reference/presenter.md`
+and `docs/how-to/present-a-deck.md` show a GIF or a still of each example deck of
+`examples/presenter/`. "The gallery" of `docs/reference/theme-option.md`
 shows a still of `examples/themes/showcase.exs` for each built-in theme.
 `mix expresso.gifs` records them:
 
@@ -1061,11 +1062,12 @@ file from that branch, so the history of main holds no GIF.
 
 To add an example of a guide, write a deck in `examples/animations/`, and add it with its
 keys to the list of the task. Then show its code and its GIF in a guide. To add an example
-of the README, write a deck in `examples/presenter/`, or use one of the decks there, and
-add the example to the list. Then show its file in the README.
+of the presenter, write a deck in `examples/presenter/`, or use one of the decks there,
+and add the example to the list. Then show its file in one of the two presenter pages.
 `test/expresso/examples_test.exs` makes sure that a how-to guide shows the code of each
 deck of the guides as it is in the file, that the guides show each of their files, that
-each how-to guide shows at least one file, and that the README shows each of its files.
+each how-to guide shows at least one file, and that the README shows no file that the task
+does not record.
 
 ## Look at a deck
 
@@ -1154,6 +1156,26 @@ that change alters each deck.
 Read the computed style, and do not read the attribute. A defect in a style attribute gives
 no error. The browser drops the declaration, and the page looks almost correct.
 
+## Make a binary
+
+Burrito makes a binary for macOS and for Linux, on x86_64 and on aarch64:
+
+```sh
+mix release expresso_cli_app
+```
+
+The command needs Zig 0.16.0 and `xz` on the path. The Nix shell gives both, and so does
+the hook of a remote Claude Code session.
+
+`burrito_out/` holds one binary for each computer, such as
+`burrito_out/expresso_cli_app_linux_x86`. `BURRITO_TARGET=linux_x86` in front of the
+command makes only that binary.
+
+The first run of a binary installs its release on the computer, in a directory that has
+the version of the release. A later binary of the same version runs that installed release,
+and not its own. Therefore change the version in `mix.exs` for each binary that you give
+to other users. `<binary> maintenance uninstall` removes the installed release.
+
 ## Documents
 
 `mix docs` makes the site of the documents in `doc/`, and https://rellen.github.io/expresso/
@@ -1162,3 +1184,6 @@ and their groups.
 
 - `docs/architecture.md` — how the code makes an HTML document from a deck.
 - `docs/overlays.md` — the design for overlays, and its decisions.
+- `docs/typescript.md` — the plan for the presenter script in TypeScript, and its result.
+- `docs/dim-state.md` — the design for a dim state with a color for each role.
+- `docs/tree.md` — the design for the element `tree`, and its result.

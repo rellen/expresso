@@ -114,4 +114,4 @@ A reader who asks for reduced motion gets no effect, no transition and no morph.
 
 The keys of the presenter are single characters, such as `j` and `p`, and `?` opens the
 list of keys. A key does nothing while the focus is in a field of text, such as the search
-of the list of keys. See [The keys](../../README.md#the-keys).
+of the list of keys. See [The presenter](presenter.md).

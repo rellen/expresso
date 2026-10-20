@@ -6,7 +6,7 @@ defmodule Expresso.Presenter.KeyTablesTest do
 
   # `Expresso.Test.KeyTables` tells where the tables are and how to write them
   # again.
-  test "the tables of keys in the README agree with the definition of the presenter" do
+  test "the tables of keys of the presenter page agree with the definition of the presenter" do
     text = File.read!(KeyTables.path())
     written = KeyTables.write(text)
 
@@ -21,7 +21,7 @@ defmodule Expresso.Presenter.KeyTablesTest do
     """
   end
 
-  test "the README has a table for each mode with a list of keys" do
+  test "the presenter page has a table for each mode with a list of keys" do
     modes = for {mode, _rows} <- Help.rows(Definition.presenter()), do: mode
 
     assert Enum.sort(KeyTables.modes(File.read!(KeyTables.path()))) == Enum.sort(modes)

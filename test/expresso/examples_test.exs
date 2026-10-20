@@ -35,9 +35,9 @@ defmodule Expresso.ExamplesTest do
     assert listed == Enum.sort(Path.wildcard("examples/{animations,presenter,themes}/*.exs"))
   end
 
-  test "each example of the guides is in examples/animations, and each of the README in examples/presenter" do
+  test "each example of the guides is in examples/animations, and each of the presenter pages in examples/presenter" do
     for example <- of(:guides), do: assert(example.deck =~ ~r{^examples/animations/})
-    for example <- of(:readme), do: assert(example.deck =~ ~r{^examples/presenter/})
+    for example <- of(:presenter), do: assert(example.deck =~ ~r{^examples/presenter/})
     for example <- of(:themes), do: assert(example.deck =~ ~r{^examples/themes/})
   end
 
@@ -64,19 +64,16 @@ defmodule Expresso.ExamplesTest do
     end
   end
 
-  test "the guides show each file of the guides and of the themes, and no file that the task does not record" do
-    files = Enum.map(of(:guides) ++ of(:themes), &Gifs.file/1)
+  test "the guides show each file of the guides, the presenter and the themes, and no file that the task does not record" do
+    files = Enum.map(of(:guides) ++ of(:presenter) ++ of(:themes), &Gifs.file/1)
 
     assert shown(guides()) == Enum.sort(files)
   end
 
-  test "the README shows each file of its examples, and no file that the task does not record" do
-    shown = shown(File.read!("README.md"))
-    readme = of(:readme) |> Enum.map(&Gifs.file/1) |> Enum.sort()
+  test "the README shows no file that the task does not record" do
     all = Gifs.examples() |> Enum.map(&Gifs.file/1)
 
-    assert readme -- shown == []
-    assert shown -- all == []
+    assert shown(File.read!("README.md")) -- all == []
   end
 
   test "the talk about Line 4 renders each of its slides" do

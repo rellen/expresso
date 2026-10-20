@@ -1,9 +1,9 @@
 defmodule Expresso.Test.KeyTables do
   @moduledoc """
-  Makes the tables of keys in `README.md` from the definition of the presenter
+  Makes the tables of keys in `docs/reference/presenter.md` from the definition of the presenter
 
   `Expresso.Presenter.Default` holds the keys of each mode. The table of a mode
-  in `README.md` goes between two comments:
+  in that page goes between two comments:
 
       <!-- keys present -->
 
@@ -24,7 +24,7 @@ defmodule Expresso.Test.KeyTables do
 
   alias Expresso.Presenter.{Definition, Help}
 
-  @path "README.md"
+  @path "docs/reference/presenter.md"
 
   @table ~r/(<!-- keys (\w+) -->\n).*?(<!-- \/keys -->)/s
 

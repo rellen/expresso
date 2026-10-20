@@ -6,7 +6,7 @@ defmodule Expresso.Presenter.Help do
   mode that has bindings, and the script opens the section of the mode under
   the list of keys. Each row holds the names of the keys, or the label of a
   binding, and the text of the binding. The `group` option of a binding gives
-  the heading of its row. `rows/1` gives the rows of the tables of the README,
+  the heading of its row. `rows/1` gives the rows of the tables of `docs/reference/presenter.md`,
   and `groups/1` gives the rows of the document.
   """
 

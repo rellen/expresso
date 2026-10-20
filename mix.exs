@@ -31,6 +31,8 @@ defmodule Expresso.MixProject do
       skip_code_autolink_to: ["Mix.Tasks.Help.run/1"],
       extras: [
         "README.md",
+        "docs/tutorials/make-your-first-deck.md",
+        "docs/how-to/present-a-deck.md",
         "docs/how-to/add-transitions.md",
         "docs/how-to/animate-elements.md",
         "docs/how-to/make-a-deck-from-data.md",
@@ -61,6 +63,8 @@ defmodule Expresso.MixProject do
         "docs/how-to/render-a-deck-in-your-project.md",
         "docs/how-to/put-files-into-the-css.md",
         "docs/how-to/give-a-deck-two-variants.md",
+        "docs/reference/deck-options.md",
+        "docs/reference/presenter.md",
         "docs/reference/transition-option.md",
         "docs/reference/placement.md",
         "docs/reference/accessibility.md",
@@ -108,6 +112,7 @@ defmodule Expresso.MixProject do
         "docs/tree.md"
       ],
       groups_for_extras: [
+        Tutorials: ~r"docs/tutorials/",
         "How-to guides": ~r"docs/how-to/",
         Reference: ~r"docs/reference/",
         Explanation: ["docs/overlays.md", "docs/architecture.md"],

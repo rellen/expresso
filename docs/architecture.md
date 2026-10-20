@@ -2315,7 +2315,8 @@ compiles `lib/`. `docs/typescript.md` gives the design.
 ### The keys
 
 `Expresso.Presenter.Default` holds the keys of each mode. The list of keys that `?` or `/`
-shows comes from it, and so do the tables of keys in `README.md`. `Expresso.Test.KeyTables`
+shows comes from it, and so do the tables of keys in
+`docs/reference/presenter.md`. `Expresso.Test.KeyTables`
 writes each table between two comments, such as `<!-- keys present -->` and
 `<!-- /keys -->`. A test fails when a table does not agree with the module. This command
 writes the tables again:
