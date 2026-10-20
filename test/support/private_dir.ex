@@ -14,7 +14,7 @@ defmodule Expresso.Test.PrivateDir do
   @wait 30_000
 
   # The time in milliseconds between two looks at the directory.
-  @interval 50
+  @interval 500
 
   @doc """
   The time in milliseconds that a test waits for a process that opens a
