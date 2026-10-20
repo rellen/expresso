@@ -212,7 +212,8 @@ export function owner(node: Element): string | null {
 
 // The texts for a screen reader. The style sheet hides each from the eye in a
 // box of 1 px, and its text runs out of that box, so the check skips them.
-const SCREEN_READER = ".chart-table, .stat-text, .table-caption-hidden";
+const SCREEN_READER =
+  ".chart-table, .stat-text, .table-caption-hidden, .tree-list";
 
 function shown(element: Element): boolean {
   const style = getComputedStyle(element);

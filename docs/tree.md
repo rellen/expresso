@@ -1,8 +1,9 @@
 # A tree element
 
 This document gives a plan for the element `tree`, which shows a hierarchy as boxes and
-lines. An org chart is one use, and the use of a disk by folders is another. The code does
-not contain this plan yet. The document ends with nine decisions, and each is settled.
+lines. An org chart is one use, and the use of a disk by folders is another. The code
+contains this plan. The document records nine decisions, and each is settled. The last
+section, "The result", tells what changed during the work.
 
 ## The problem
 
@@ -373,3 +374,25 @@ writes the channels of each step that changes a place, from the layout of that s
    9. The frames, and the grid of frames in the handout view.
    10. A guide in `docs/how-to/`, two example decks (an org chart and the use of a disk) and
        their GIFs.
+
+## The result
+
+The ten pull requests of the stack contain the plan. These parts changed during the work:
+
+- **The module.** The module of the element is `Expresso.Element.Hierarchy`, because
+  `Expresso.Element.Tree` holds the walks over the tree of elements. The name of the
+  element in the DSL is `tree`.
+- **The lines at a step.** A path cannot change its shape in each browser, so a line does not
+  move with its two boxes. With `reflow` or frames, each run of steps with the same boxes has
+  its own copy of the lines, as the frames of a chart of flows do.
+- **The highlight.** The groups of `highlight` are the groups of the highlight of a chart,
+  with a step from `Expresso.Overlay.Expand`, and `branch/1` names a node and each node
+  under it.
+- **The nodes of a frame.** A frame holds its nodes in its `elements` key, the key of a
+  nested node. With a key of its own, the `node` macro in the block of a node put the nested
+  nodes under that key of the node, and the nodes were lost.
+- **The content of a box in frames.** A box with a different content in two frames holds
+  one card for each content, and the cards fade from one to the other. A value does not
+  count from one number to the next.
+- **The examples.** The guide `docs/how-to/show-a-hierarchy-as-a-tree.md` shows three
+  example decks: an org chart, the use of a disk and a change of a team.

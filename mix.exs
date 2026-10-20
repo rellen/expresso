@@ -38,6 +38,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/show-a-change-over-time-in-a-chart.md",
         "docs/how-to/show-parts-of-a-whole-in-a-treemap-or-a-sunburst.md",
         "docs/how-to/show-flows-between-nodes-in-a-chart.md",
+        "docs/how-to/show-a-hierarchy-as-a-tree.md",
         "docs/how-to/show-code.md",
         "docs/how-to/check-the-layout.md",
         "docs/how-to/check-a-deck.md",
@@ -103,13 +104,19 @@ defmodule Expresso.MixProject do
         "docs/architecture.md",
         "docs/development.md",
         "docs/typescript.md",
-        "docs/dim-state.md"
+        "docs/dim-state.md",
+        "docs/tree.md"
       ],
       groups_for_extras: [
         "How-to guides": ~r"docs/how-to/",
         Reference: ~r"docs/reference/",
         Explanation: ["docs/overlays.md", "docs/architecture.md"],
-        Contributing: ["docs/development.md", "docs/typescript.md", "docs/dim-state.md"]
+        Contributing: [
+          "docs/development.md",
+          "docs/typescript.md",
+          "docs/dim-state.md",
+          "docs/tree.md"
+        ]
       ]
     ]
   end
