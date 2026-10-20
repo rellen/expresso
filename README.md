@@ -9,8 +9,8 @@ a small script. Open the document in a browser, and present from there.
 
 Expresso is at an early stage. It has 27 built-in themes and these elements: `text_box`,
 `text_area`, `image`, `list`, `table`, `quotation`, `spacer`, `code`, `columns`, `math`,
-`diagram`, `embed`, `video`, `audio`, `qr_code`, `footnote`, `shape`, `chart`, `callout`,
-`toc`, `stat` and `icon`.
+`diagram`, `embed`, `video`, `audio`, `qr_code`, `footnote`, `shape`, `chart`, `tree`,
+`callout`, `toc`, `stat` and `icon`.
 
 Overlays are the steps inside one slide. A slide takes steps, and an element shows at a set
 of steps. The document also holds a handout view for a printer. `docs/overlays.md` gives
@@ -584,6 +584,7 @@ How-to guides give the steps of one task, with the code of a deck and a recordin
 - [Show a change over time in a chart](docs/how-to/show-a-change-over-time-in-a-chart.md)
 - [Show the parts of a whole in a treemap or a sunburst](docs/how-to/show-parts-of-a-whole-in-a-treemap-or-a-sunburst.md)
 - [Show flows between nodes in a chart](docs/how-to/show-flows-between-nodes-in-a-chart.md)
+- [Show a hierarchy as a tree](docs/how-to/show-a-hierarchy-as-a-tree.md)
 - [Show code on a slide](docs/how-to/show-code.md)
 - [Check that a deck fits the screen](docs/how-to/check-the-layout.md)
 - [Check a deck before the talk](docs/how-to/check-a-deck.md)
@@ -647,6 +648,7 @@ These pages describe each element:
 - [Footnote](docs/reference/footnote-element.md)
 - [Shape](docs/reference/shape-element.md)
 - [Chart](docs/reference/chart-element.md)
+- [Tree](docs/reference/tree-element.md)
 - [Callout](docs/reference/callout-element.md)
 - [Table of contents](docs/reference/toc-element.md)
 - [Stat](docs/reference/stat-element.md)
@@ -662,6 +664,8 @@ For a contributor:
 - `docs/development.md` — the toolchain, the checks and a browser.
 - `docs/typescript.md` — the plan for the presenter script in TypeScript.
 - `docs/dim-state.md` — the design for a dim state with a color for each role.
+- `docs/tree.md` — the design for the element `tree`, which shows a hierarchy as boxes and
+  lines.
 
 ## License
 

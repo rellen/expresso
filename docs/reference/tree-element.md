@@ -29,6 +29,9 @@ A node with nodes under it gives its options in its block, such as `detail "Prod
 node with no nodes under it can give its options after its name, such as
 `node "Cy", detail: "Press"`.
 
+[Show a hierarchy as a tree](../how-to/show-a-hierarchy-as-a-tree.md) gives three example
+decks with their recordings.
+
 `Expresso.Builder` takes the same options. A tree and a node take the nodes under them in
 the `elements` key:
 

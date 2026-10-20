@@ -19,8 +19,9 @@ Read these documents before you change the code:
 - `docs/typescript.md` — the plan for the presenter script in TypeScript, and the record
   of its result. The code contains this conversion.
 - `docs/tree.md` — the design for the element `tree`, which shows a hierarchy as boxes and
-  lines, such as an org chart or the use of a disk. The document records nine decisions,
-  and each is settled. The code does not contain this design yet.
+  lines, such as an org chart or the use of a disk. The code contains this design. The
+  document records nine decisions, and each is settled. Its last section, "The result",
+  tells what changed during the work.
 - `docs/dim-state.md` — the design for a dim state with a color for each role. The code
   contains this design. The document records four decisions, and each is settled. Its
   last section, "The result", tells what changed during the work.
