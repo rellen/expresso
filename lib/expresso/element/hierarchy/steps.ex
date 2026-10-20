@@ -185,9 +185,9 @@ defmodule Expresso.Element.Hierarchy.Steps do
     if visible or children != [], do: %Node{node | elements: children}
   end
 
-  defp center(:left_right, layout, _width, height), do: {0, (height - layout.height) / 2}
-  defp center(:stacked, _layout, _width, _height), do: {0, 0}
-  defp center(_top_down, layout, width, _height), do: {(width - layout.width) / 2, 0}
+  def center(:left_right, layout, _width, height), do: {0, (height - layout.height) / 2}
+  def center(:stacked, _layout, _width, _height), do: {0, 0}
+  def center(_top_down, layout, width, _height), do: {(width - layout.width) / 2, 0}
 
   @doc """
   Return the offset of each box at each step of a tree with `reflow`

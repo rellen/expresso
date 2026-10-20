@@ -64,6 +64,7 @@ tree(title: "The folders", elements: [
 | `color` | `:branch` or `{:field, name}` | The colors of the boxes from the palette. See [the colors](#the-colors). The default is no color. |
 | `layout` | `:top_down`, `:left_right` or `:stacked` | How the nodes under each node go. See [the layout](#the-layout). The default is `:top_down`. |
 | `src`, `delimiter`, `separator`, `fields` | | The CSV file of the nodes. See [the data](#the-data). |
+| `frames` | A column of the `src` file | The column that names the frame of each row. See [the frames](#the-frames). |
 | `reveal` | `:levels`, `:branches` or `:nodes` | Show the nodes in steps. See [the steps](#the-steps). |
 | `dim` | `true` or `false` | Dim the boxes of the earlier steps. The default is `false`. |
 | `reflow` | `true` or `false` | Calculate the layout at each step from the boxes that show. The default is `false`. |
@@ -315,6 +316,87 @@ comes into focus at the next step.
 A tree takes `highlight` or `reveal`, and not both. The `highlight` option dims the other
 nodes itself, so a tree with it takes no `dim` option.
 
+## The frames
+
+A tree with `frame` entities shows the same hierarchy at two or more points in time, such as
+an org chart before and after a reorg, or a disk on two dates. Each frame holds a whole tree.
+The first frame shows first, and each later frame takes one step.
+
+```elixir
+slide "the reorg" do
+  tree do
+    title "The plant"
+
+    frame "Before" do
+      node "Ana" do
+        node "Ben" do
+          node "Cy"
+          node "Di"
+        end
+
+        node "Eve", detail: "Quality"
+      end
+    end
+
+    frame "After" do
+      node "Ana" do
+        node "Ben" do
+          node "Cy"
+        end
+
+        node "Eve" do
+          detail "Quality and paint"
+          node "Di"
+          node "Hal"
+        end
+      end
+    end
+  end
+end
+```
+
+The name of a node is its identity across the frames. At the step of a frame:
+
+- a box at a different place moves to its new place;
+- a box that the frame does not hold fades out, and a new box fades in;
+- a box with a different label, detail, fields, image, icon, value or color fades from the
+  old content to the new content;
+- the lines of the frame and the label of the frame show under the tree.
+
+Each frame has the layout of its own tree, at the center of the size of the largest frame.
+With `color {:field, name}`, one legend holds the values of each frame, so a value has one
+color in each frame.
+
+`Expresso.Builder` takes the frames in the `timeline` key, and each frame takes its nodes in
+the `elements` key:
+
+```text
+tree(title: "The plant", timeline: [
+  frame("Before", elements: [node("Ana", elements: [node("Ben")])]),
+  frame("After", elements: [node("Ana", elements: [node("Ben"), node("Eve")])])
+])
+```
+
+A CSV file gives the frames with the `frames` option, which names the column of the frame
+of each row. Each value of the column is a frame, in the order of the file, and the rows of
+each frame make one tree:
+
+```text
+year,id,parent,detail
+2024,ana,,Plant manager
+2024,ben,ana,Production
+2025,ana,,Plant manager
+2025,ben,ana,Production
+2025,eve,ana,Quality
+```
+
+The frames give the steps of the tree, so a tree with frames takes no `reveal`,
+`highlight`, `reflow` or `dim` option, and a node of a frame takes no `at` option and no
+`on` entity. The tree itself can take `at` and the `on` entity.
+
+Paper and the handout view show each frame as a small tree in a grid, with its label under
+it, in place of the tree that moves.
+
 ## The box
 
 A box shows its parts in this order:
@@ -528,8 +610,8 @@ The renderer writes a `figure` with the class `tree`. It holds:
   A box with a color also has the class `tree-colored` and the custom property
   `--tree-color` in its `style`, such as `var(--chart-2)` or `var(--danger)`;
 - the overlay attributes of each node on its `foreignObject`, which has the class
-  `tree-node`, and on the line to the node. With `reflow true`, each `foreignObject` also
-  each run of steps with the same boxes has its own copy of the lines. Each line has `pathLength="1"` for the effect `:grow`. With
+  `tree-node`, and on the line to the node. With `reflow true`, each run of steps with the
+  same boxes has its own copy of the lines. Each line has `pathLength="1"` for the effect `:grow`. With
   `reflow true` or `highlight`, each box and each line also has `data-node`, the place of its
   node in the tree, and the tree has `data-el`;
 - with `color {:field, name}`, a `foreignObject` under the boxes that holds a `ul` with the
@@ -538,6 +620,23 @@ The renderer writes a `figure` with the class `tree`. It holds:
   tree as nested lists, and each item holds the label and the detail, such as
   `Ben, Production`. The style sheet hides the list from the eye, and a screen reader reads
   it in place of the drawing.
+
+A tree with frames has these differences:
+
+- each node of each frame has one `foreignObject`, with `data-node`, at its place in the
+  first frame that holds it. A box that is not in each frame has the steps of its frames in
+  `data-on`;
+- a box with a different content in two frames holds a `div` with the class `tree-stack`.
+  It holds one `div` with the class `tree-box` for each content, and each one has the steps
+  of its frames in `data-on`;
+- each frame has its own copy of the lines, with the steps of the frame;
+- a `foreignObject` under the tree holds a `div` with the class `tree-frame-labels`, with a
+  `p` with the class `tree-frame-label` for each frame;
+- a `div` with the class `tree-frames` holds a `figure` with the class `tree-copy` for each
+  frame: an `svg` of the frame with no steps, and a `figcaption` with its label. Only paper
+  and the handout view show it;
+- each frame has its own `ul` with the class `tree-list`. Its `aria-label` holds the title
+  and the label of the frame, such as `The plant, After`.
 
 ## The errors
 
@@ -568,7 +667,13 @@ The compiler gives an error for these:
 - a node that shows at a step at which the node above it does not show;
 - a `reveal` value that is not `:levels`, `:branches` or `:nodes`;
 - a `highlight` option that is not a list of groups, a group that names no node of the
-  tree, `highlight` with `reveal` or with `dim`, and `whole_first` without `highlight`.
+  tree, `highlight` with `reveal` or with `dim`, and `whole_first` without `highlight`;
+- a tree with frames and node entities of its own, a frame that holds a series or a flow,
+  and a frame whose tree has an error, with the label of the frame;
+- a tree with frames and the option `reveal`, `highlight`, `reflow` or `dim`, and a node of
+  a frame with `at` or an `on` entity;
+- the `frames` option without `src`, and a `frames` column that the file does not have;
+- a `node` entity in a frame of a chart.
 
 A path of an image that the renderer cannot read is an error of the render, as for the
 image element.

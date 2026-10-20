@@ -1191,12 +1191,193 @@ defmodule Expresso.TreeElementTest do
     end
   end
 
+  describe "the frames" do
+    # Before: Ana holds Ben with Cy and Di, and Eve with Gus. After: Di moves
+    # to Eve, Eve gets a new detail, and Hal comes in under Eve.
+    defp reorg(tree_opts \\ [], before \\ []) do
+      Builder.tree(
+        [
+          title: "T",
+          timeline: [
+            Builder.frame("Before",
+              elements: [
+                Builder.node(
+                  "Ana",
+                  [
+                    elements: [
+                      Builder.node("Ben", elements: [Builder.node("Cy"), Builder.node("Di")]),
+                      Builder.node("Eve", detail: "Quality", elements: [Builder.node("Gus")])
+                    ]
+                  ] ++ before
+                )
+              ]
+            ),
+            Builder.frame("After",
+              elements: [
+                Builder.node("Ana",
+                  elements: [
+                    Builder.node("Ben", elements: [Builder.node("Cy")]),
+                    Builder.node("Eve",
+                      detail: "Quality and paint",
+                      elements: [Builder.node("Di"), Builder.node("Gus"), Builder.node("Hal")]
+                    )
+                  ]
+                )
+              ]
+            )
+          ]
+        ] ++ tree_opts
+      )
+    end
+
+    test "the first frame shows at each step at which no later frame shows" do
+      frames = Hierarchy.frame_layouts(identified(reorg()))
+      assert Enum.map(frames, &{&1.label, &1.steps}) == [{"Before", [1]}, {"After", [2]}]
+    end
+
+    test "each node has one box, and a box shows at the steps of the frames that hold it" do
+      figure = figure(reorg())
+      boxes = LazyHTML.query(figure, "figure.tree > svg > foreignObject.tree-node")
+
+      assert Enum.map(boxes, &LazyHTML.attribute(&1, "data-node")) ==
+               Enum.map(0..6, &[Integer.to_string(&1)])
+
+      assert Enum.map(boxes, &LazyHTML.attribute(&1, "data-on")) ==
+               [[], [], [], [], [], [], ["2"]]
+    end
+
+    test "a box with a different content in two frames holds one card for each content" do
+      figure = figure(reorg())
+
+      [stack] =
+        LazyHTML.query(figure, "figure.tree > svg > foreignObject .tree-stack") |> Enum.to_list()
+
+      cards = LazyHTML.query(stack, ".tree-box")
+      assert Enum.map(cards, &LazyHTML.attribute(&1, "data-on")) == [["1"], ["2"]]
+      assert texts(stack, ".tree-detail") == ["Quality", "Quality and paint"]
+      assert count(figure, "figure.tree > svg > foreignObject .tree-stack") == 1
+    end
+
+    test "each frame has its own copy of the lines and its label" do
+      figure = figure(reorg())
+
+      assert figure
+             |> LazyHTML.query("figure.tree > svg > g path.tree-line")
+             |> LazyHTML.attribute("data-on") ==
+               List.duplicate("1", 5) ++ List.duplicate("2", 6)
+
+      labels = LazyHTML.query(figure, "p.tree-frame-label")
+      assert texts(figure, "p.tree-frame-label") == ["Before", "After"]
+      assert LazyHTML.attribute(labels, "data-on") == ["1", "2"]
+    end
+
+    test "a box at a different place in a later frame moves at the steps of that frame" do
+      tree = identified(reorg())
+      rules = Hierarchy.rules(tree)
+      assert rules != []
+      assert Enum.all?(rules, &(&1 =~ ~s(section[data-step="2"] [data-el="#{tree.el}"])))
+      # Di is the box 3: it moves under Eve.
+      assert Enum.any?(rules, &(&1 =~ ~s([data-node="3"] { --tree-dx: )))
+      # Ana stays at the center of the largest frame.
+      refute Enum.any?(rules, &(&1 =~ ~s([data-node="0"])))
+    end
+
+    test "the handout view has a small tree for each frame, and a screen reader a list" do
+      figure = figure(reorg())
+      assert texts(figure, ".tree-frames figcaption") == ["Before", "After"]
+      assert count(figure, ".tree-frames figure.tree-copy") == 2
+      assert count(figure, ".tree-copy [data-on]") == 0
+
+      assert figure |> LazyHTML.query("ul.tree-list") |> LazyHTML.attribute("aria-label") ==
+               ["T, Before", "T, After"]
+    end
+
+    test "a value of a field has one color in each frame" do
+      field = fn site -> [fields: [{"site", site}]] end
+
+      tree =
+        Builder.tree(
+          title: "T",
+          color: {:field, "site"},
+          timeline: [
+            Builder.frame("1", elements: [Builder.node("A", field.("North"))]),
+            Builder.frame("2", elements: [Builder.node("A", field.("South"))])
+          ]
+        )
+
+      figure = figure(tree)
+      assert figure |> texts(".tree-legend li") |> Enum.map(&squish/1) == ["North", "South"]
+
+      assert figure
+             |> LazyHTML.query("figure.tree > svg .tree-stack .tree-box")
+             |> LazyHTML.attribute("style") ==
+               ["--tree-color: var(--chart-1)", "--tree-color: var(--chart-2)"]
+    end
+
+    @tag :tmp_dir
+    test "the frames option names the column of the frame of each row", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "org.csv")
+      File.write!(path, "year,id,parent\n2024,A,\n2024,B,A\n2025,A,\n2025,C,A\n")
+      deck = one_slide(Builder.tree(title: "T", src: path, frames: "year"))
+      [%{elements: [tree]}] = deck.slides
+
+      assert Enum.map(tree.timeline, fn frame ->
+               [root] = frame.elements
+               {frame.label, root.name, Enum.map(root.elements, & &1.name)}
+             end) == [{"2024", "A", ["B"]}, {"2025", "A", ["C"]}]
+    end
+  end
+
   describe "the errors" do
     test "a tree holds one root" do
       assert_raise ArgumentError, ~r/this tree holds none/, fn -> Builder.tree(title: "T") end
 
       assert_raise ArgumentError, ~r/this tree holds 2. Put the nodes under one root node/, fn ->
         Builder.tree(title: "T", elements: [Builder.node("A"), Builder.node("B")])
+      end
+    end
+
+    test "the errors of the frames" do
+      frame = fn label, nodes -> Builder.frame(label, elements: nodes) end
+      a = fn opts -> Builder.node("A", opts) end
+
+      assert_raise ArgumentError, ~r/holds its nodes in the frames, and this tree also/, fn ->
+        Builder.tree(title: "T", elements: [a.([])], timeline: [frame.("1", [a.([])])])
+      end
+
+      for option <- [reveal: :levels, highlight: ["A"], reflow: true, dim: true] do
+        assert_raise ArgumentError,
+                     ~r/a tree with frames takes no #{elem(option, 0)} option/,
+                     fn ->
+                       Builder.tree([title: "T", timeline: [frame.("1", [a.([])])]] ++ [option])
+                     end
+      end
+
+      assert_raise ArgumentError, ~r/the node "A" of a frame gives a step/, fn ->
+        Builder.tree(title: "T", timeline: [frame.("1", [a.(at: 2)])])
+      end
+
+      assert_raise ArgumentError, ~r/a frame of a tree holds node entities/, fn ->
+        Builder.tree(title: "T", timeline: [frame.("1", [Builder.series("S", [1])])])
+      end
+
+      assert_raise ArgumentError, ~r/the frame "2":.*this tree holds 2/, fn ->
+        Builder.tree(
+          title: "T",
+          timeline: [frame.("1", [a.([])]), frame.("2", [a.([]), Builder.node("B")])]
+        )
+      end
+
+      assert_raise ArgumentError, ~r/the frames option names a column of the src file/, fn ->
+        Builder.tree(title: "T", frames: "year", elements: [a.([])])
+      end
+
+      assert_raise ArgumentError, ~r/a frame of a chart holds series or flows. Put a node/, fn ->
+        Builder.chart(:bar,
+          title: "C",
+          categories: ["x"],
+          timeline: [Builder.frame("1", elements: [Builder.node("A")])]
+        )
       end
     end
 
@@ -1418,6 +1599,41 @@ defmodule Expresso.TreeElementTest do
       assert {:ok, %Expresso.Deck{slides: [%{elements: [tree]}]}} = Expresso.to_deck(RootDeck)
       assert [%Node{image: image, svg: svg}] = tree.elements
       assert image == Path.expand("examples/logo.png")
+      assert svg =~ ~s(<svg class="tree-icon-svg")
+    end
+
+    test "nests the nodes of a frame, and joins the path of an image in a frame" do
+      defmodule FrameDeck do
+        use Expresso
+
+        root "examples"
+
+        slide "s" do
+          tree do
+            title "T"
+
+            frame "Before" do
+              node "A" do
+                node "B", image: "logo.png"
+              end
+            end
+
+            frame "After" do
+              node "A" do
+                node "B", icon: "rocket"
+                node "C"
+              end
+            end
+          end
+        end
+      end
+
+      assert {:ok, %Expresso.Deck{slides: [%{elements: [tree]}]}} = Expresso.to_deck(FrameDeck)
+      assert tree.elements == []
+      [before, after_] = tree.timeline
+      assert [%Node{name: "A", elements: [%Node{name: "B", image: image}]}] = before.elements
+      assert image == Path.expand("examples/logo.png")
+      assert [%Node{elements: [%Node{name: "B", svg: svg}, %Node{name: "C"}]}] = after_.elements
       assert svg =~ ~s(<svg class="tree-icon-svg")
     end
 

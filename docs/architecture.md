@@ -1803,6 +1803,14 @@ reasons for this design:
   step, as it does for a chart. `Expresso.Element.Hierarchy.rules/1` sets `--dimmed: 1` on
   each box and line with a `data-node` outside the group. A branch comes from the tree
   after the options of the values, so it holds the node of the rest of a `limit`.
+- **Frames as one tree that moves.** A frame holds a whole tree, and the name of a node is
+  its identity across the frames. The renderer writes one box for each name, at its place
+  in the first frame that holds it, and `Expresso.Element.Hierarchy.rules/1` moves it at
+  the steps of the later frames, as for `reflow`. A box with a different content in two
+  frames holds one card for each content, and each card shows at the steps of its frames.
+  The node of a frame is in the `elements` key of the frame, the key of a nested node, so
+  the `node` macro of a frame nests to each depth. `Expresso.Element.Tree.map_ok/2` does not
+  walk the frames, so the transformers call `Expresso.Element.Hierarchy.map_frames/2`.
 - **The colors in the compiler.** `Expresso.Element.Hierarchy.colors/1` finds the color of
   each node from a role, a branch or a field, and the renderer writes it into
   `--tree-color`. The palette is the palette of the charts, so a tree and a chart in one

@@ -289,8 +289,9 @@ end
 
 The identity of a node connects the boxes of two frames. At the step of a frame, a box that
 is in both frames moves to its new place, and its value changes. A box of the new frame only
-fades in, and a box of the old frame only fades out. A line moves with its two boxes. A CSV
-file gives frames with a `frame` column, as for a chart.
+fades in, and a box of the old frame only fades out. Each frame has its own copy of the
+lines, as with `reflow`, because a path cannot change its shape in each browser. A CSV file
+gives frames with the `frames` option, which names a column, as for a chart.
 
 ### The views
 

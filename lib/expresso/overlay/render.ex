@@ -89,9 +89,11 @@ defmodule Expresso.Overlay.Render do
   defp identity?(%Chart{} = chart),
     do: on(chart) != [] or Chart.moves?(chart) or chart.focus != []
 
-  # A tree with `reflow` moves its boxes, and a tree with the `highlight`
-  # option dims its boxes. The rules of the moves and of the groups name it.
+  # A tree with `reflow` or with frames moves its boxes, and a tree with the
+  # `highlight` option dims its boxes. The rules of the moves and of the
+  # groups name it.
   defp identity?(%Hierarchy{reflow: true}), do: true
+  defp identity?(%Hierarchy{timeline: [_ | _]}), do: true
   defp identity?(%Hierarchy{focus: [_ | _]}), do: true
 
   defp identity?(element), do: on(element) != []

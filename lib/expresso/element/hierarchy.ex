@@ -32,10 +32,12 @@ defmodule Expresso.Element.Hierarchy do
   alias Expresso.Element.Hierarchy.Values
   alias Expresso.Element.Chart
   alias Expresso.Element.Focus
+  alias Expresso.Element.Frame
   alias Expresso.Overlay
   alias Expresso.Element.Chart.Csv
   alias Expresso.Element.Hierarchy.Data
   alias Expresso.Element.Node
+  alias Expresso.Element.Tree
 
   @typedoc "The struct of a tree"
   @type t :: %__MODULE__{}
@@ -63,6 +65,8 @@ defmodule Expresso.Element.Hierarchy do
               highlight: nil,
               whole_first: false,
               focus: [],
+              timeline: [],
+              frames: nil,
               separator: "/",
               elements: [],
               __spark_metadata__: nil
@@ -229,8 +233,20 @@ defmodule Expresso.Element.Hierarchy do
   """
   @spec colors(t()) :: {%{String.t() => color}, [{String.t(), pos_integer()}]}
         when color: {:role, atom()} | {:palette, pos_integer()} | nil
-  def colors(%__MODULE__{elements: [root], color: color}) do
-    legend = legend(root, color)
+  def colors(%__MODULE__{elements: [root], color: color} = tree),
+    do: colors(tree, legend(root, color))
+
+  @doc """
+  Return the color of each node and the values of a legend that holds the
+  values of more than one tree, such as the frames of a tree
+
+  The colors of a field come from the legend, so a value has one color in
+  each frame.
+  """
+  @spec colors(t(), [{String.t(), pos_integer()}]) ::
+          {%{String.t() => color}, [{String.t(), pos_integer()}]}
+        when color: {:role, atom()} | {:palette, pos_integer()} | nil
+  def colors(%__MODULE__{elements: [root], color: color}, legend) do
     {paint(root, {color, Map.new(legend)}, {nil, nil, 0}, %{}), legend}
   end
 
@@ -276,6 +292,29 @@ defmodule Expresso.Element.Hierarchy do
   end
 
   @doc """
+  Change each node of each frame of a tree, and stop at the first error
+
+  `Expresso.Element.Tree.map_ok/2` walks the key `:elements` only, so a
+  transformer calls this function for the nodes of the frames.
+  """
+  @spec map_frames(t(), (map() -> {:ok, map()} | {:error, reason})) ::
+          {:ok, t()} | {:error, reason}
+        when reason: term()
+  def map_frames(%__MODULE__{timeline: timeline} = tree, fun) do
+    timeline
+    |> Enum.reduce_while({:ok, []}, fn frame, {:ok, frames} ->
+      case Tree.map_ok(frame.elements, fun) do
+        {:ok, nodes} -> {:cont, {:ok, [%{frame | elements: nodes} | frames]}}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+    |> case do
+      {:ok, frames} -> {:ok, %__MODULE__{tree | timeline: Enum.reverse(frames)}}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc """
   Make sure that a tree has one root, and that each node is a node of a tree
 
   `Expresso.Extension` calls this function when it builds the entity, so the
@@ -309,8 +348,82 @@ defmodule Expresso.Element.Hierarchy do
        "the fields option names columns of the src file, so it needs the src option. " <>
          "Give the fields option to a node in place of it"}
 
+  def check(%__MODULE__{frames: frames}) when is_binary(frames),
+    do: {:error, "the frames option names a column of the src file, so it needs the src option"}
+
+  def check(%__MODULE__{timeline: [_ | _]} = tree), do: frames_check(tree)
+
   def check(%__MODULE__{} = tree) do
     with {:ok, tree} <- parents(tree), do: nodes_check(tree)
+  end
+
+  # A tree with frames: each frame holds a whole tree, and each one gets the
+  # check of a tree. The options that give steps to the nodes do not apply,
+  # because each frame takes a step.
+  defp frames_check(%__MODULE__{timeline: timeline} = tree) do
+    nodes =
+      for frame <- timeline, %Node{} = node <- frame.elements, node <- nodes(node), do: node
+
+    with :ok <- frames_shape(tree),
+         :ok <- frames_steps(tree, nodes),
+         {:ok, timeline} <- frame_trees(tree),
+         :ok <- color_field(tree, nodes),
+         do: {:ok, %__MODULE__{tree | timeline: timeline}}
+  end
+
+  # A tree with frames holds no node of its own, and a frame holds nodes only.
+  defp frames_shape(%__MODULE__{elements: [_ | _]}),
+    do:
+      {:error,
+       "a tree with frames holds its nodes in the frames, and this tree also holds node entities"}
+
+  defp frames_shape(%__MODULE__{timeline: timeline}) do
+    if Enum.any?(
+         timeline,
+         &(&1.flows != [] or Enum.any?(&1.elements, fn item -> not is_struct(item, Node) end))
+       ),
+       do: {:error, "a frame of a tree holds node entities, and not series or flows"},
+       else: :ok
+  end
+
+  # The frames give the steps, so no option of the tree and no node gives one.
+  defp frames_steps(tree, nodes) do
+    stepped =
+      Enum.find([:reveal, :highlight, :reflow, :dim], &(Map.fetch!(tree, &1) not in [nil, false]))
+
+    cond do
+      stepped != nil ->
+        {:error,
+         "a tree with frames takes no #{stepped} option, because each frame after the first takes a step"}
+
+      node = Enum.find(nodes, &(&1.at != nil or (&1.on || []) != [])) ->
+        {:error,
+         "the node \"#{node.name}\" of a frame gives a step, and a node of a frame takes none"}
+
+      true ->
+        :ok
+    end
+  end
+
+  defp frame_trees(%__MODULE__{timeline: timeline} = tree) do
+    Enum.reduce_while(timeline, {:ok, []}, fn frame, {:ok, frames} ->
+      single = %__MODULE__{
+        tree
+        | elements: frame.elements,
+          timeline: [],
+          color: nil,
+          src: nil,
+          frames: nil
+      }
+
+      case check(single) do
+        {:ok, %__MODULE__{elements: nodes}} ->
+          {:cont, {:ok, frames ++ [%{frame | elements: nodes}]}}
+
+        {:error, message} ->
+          {:halt, {:error, "the frame \"#{frame.label}\": " <> message}}
+      end
+    end)
   end
 
   @doc """
@@ -327,10 +440,48 @@ defmodule Expresso.Element.Hierarchy do
       tree.delimiter || if(String.downcase(Path.extname(src)) == ".tsv", do: "\t", else: ",")
 
     with {:ok, text} <- read(src),
-         {:ok, rows} <- Csv.rows(text, src, delimiter: delimiter),
-         {:ok, roots} <- Data.rows(rows, src, fields: tree.fields, separator: tree.separator) do
-      nodes_check(%__MODULE__{tree | elements: roots})
+         {:ok, rows} <- Csv.rows(text, src, delimiter: delimiter) do
+      from_rows(tree, rows)
     end
+  end
+
+  defp from_rows(%__MODULE__{frames: nil} = tree, rows) do
+    with {:ok, roots} <- Data.rows(rows, tree.src, fields: tree.fields, separator: tree.separator),
+         do: nodes_check(%__MODULE__{tree | elements: roots})
+  end
+
+  # The rows of each value of the column of the frames, in the order of the
+  # file. Each group of rows is a whole tree.
+  defp from_rows(%__MODULE__{frames: column, src: src} = tree, [{line, headings} | data]) do
+    case Enum.find_index(headings, &(String.trim(&1) == column)) do
+      nil ->
+        {:error,
+         "the frames option names the column \"#{column}\", and the tree file \"#{src}\" has no column with that heading"}
+
+      index ->
+        with {:ok, timeline} <- frame_rows(tree, {line, headings}, data, index),
+             do: frames_check(%__MODULE__{tree | timeline: timeline})
+    end
+  end
+
+  defp from_rows(%__MODULE__{src: src}, []), do: {:error, "the tree file \"#{src}\" has no rows"}
+
+  # One frame for each value of the column at `index`, with the headings and
+  # the rows of that value.
+  defp frame_rows(tree, headings, data, index) do
+    label = fn {_line, cells} -> cells |> Enum.at(index, "") |> String.trim() end
+
+    data
+    |> Enum.map(label)
+    |> Enum.uniq()
+    |> Enum.reduce_while({:ok, []}, fn frame, {:ok, frames} ->
+      rows = [headings | Enum.filter(data, &(label.(&1) == frame))]
+
+      case Data.rows(rows, tree.src, fields: tree.fields, separator: tree.separator) do
+        {:ok, roots} -> {:cont, {:ok, frames ++ [%Frame{label: frame, elements: roots}]}}
+        error -> {:halt, error}
+      end
+    end)
   end
 
   defp read(src) do
@@ -515,53 +666,212 @@ defmodule Expresso.Element.Hierarchy do
   @doc """
   Make the assigns of the render function from the struct
 
-  The key `layout` holds the boxes and the lines of
-  `Expresso.Element.Hierarchy.Layout`, and the key `root` holds the root node
-  for the list of a screen reader. The key `colors` holds the CSS color of
-  each node by its name, and the key `legend` holds the place of the legend
-  and each value with its color.
+  The key `boxes` holds each box with its overlay attributes and its cards,
+  one card for each content of the box. The key `lines` holds the path and
+  the attributes of each line. The key `lists` holds the root of each list
+  for a screen reader, and the key `copies` holds the small trees of the
+  handout view. A tree without frames has one card for each box, one list
+  and no copy.
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
+  def get_assigns(%__MODULE__{timeline: [_ | _]} = tree), do: frame_assigns(tree)
+
   def get_assigns(%__MODULE__{} = tree) do
     %__MODULE__{elements: [root]} = tree = prepared(tree)
     layout = Layout.layout(root, sizes(tree), layout_options(tree))
     {colors, legend} = colors(tree)
+    colors = Map.new(colors, fn {name, color} -> {name, css(color)} end)
     steps = Steps.effective(root)
     index = layout.boxes |> Enum.with_index() |> Map.new(fn {box, i} -> {box.node.name, i} end)
     nodes = Map.new(layout.boxes, &{&1.node.name, &1.node})
+    values = values(tree, root)
 
-    legend =
-      if legend == [],
-        do: nil,
-        else: %{
-          y: layout.height + @legend_gap,
-          width: layout.width,
-          height: @legend,
-          values: Enum.map(legend, fn {value, n} -> {value, css({:palette, n})} end)
-        }
+    boxes =
+      for box <- layout.boxes do
+        attributes = node_attributes(box.node, steps, numbered?(tree), index)
+        {box, attributes, [{box.node, colors[box.node.name], values, []}]}
+      end
 
-    height = if legend, do: legend.y + legend.height, else: layout.height
+    %{
+      title: tree.title,
+      boxes: boxes,
+      lines: tree |> lines(root, layout, steps, nodes) |> number_lines(numbered?(tree), index),
+      legend: legend(legend, layout.height, layout.width),
+      labels: nil,
+      copies: [],
+      lists: [{tree.title, root, values}]
+    }
+    |> Map.merge(frame_box(tree, layout.width, layout.height, legend != [], false))
+  end
 
-    width =
+  # The size of the drawing and the attributes of the figure. The legend and
+  # the label of the frame are rows under the tree.
+  defp frame_box(tree, width, height, legend?, labels?) do
+    rows = Enum.count([legend?, labels?], & &1) * (@legend_gap + @legend)
+
+    style =
       if tree.width,
         do: [{"style", "--tree-width: #{Expresso.Element.viewport_unit(tree.width)}"}],
         else: []
 
     %{
-      title: tree.title,
-      root: root,
-      layout: layout,
-      boxes:
-        Enum.map(layout.boxes, &{&1, node_attributes(&1.node, steps, numbered?(tree), index)}),
-      lines: tree |> lines(root, layout, steps, nodes) |> number_lines(numbered?(tree), index),
-      colors: Map.new(colors, fn {name, color} -> {name, css(color)} end),
-      legend: legend,
-      values: %{format: tree.value_format, total: root.value, bar: tree.bar},
-      view_box: "0 0 #{layout.width} #{height}",
-      overlay: Expresso.Overlay.Render.attributes(tree) ++ width
+      view_box: "0 0 #{width} #{height + rows}",
+      overlay: Expresso.Overlay.Render.attributes(tree) ++ style
     }
   end
+
+  defp values(tree, root), do: %{format: tree.value_format, total: root.value, bar: tree.bar}
+
+  defp legend([], _top, _width), do: nil
+
+  defp legend(legend, top, width) do
+    %{
+      y: top + @legend_gap,
+      width: width,
+      height: @legend,
+      values: Enum.map(legend, fn {value, n} -> {value, css({:palette, n})} end)
+    }
+  end
+
+  # The assigns of a tree with frames. Each box is a node of one or more
+  # frames, at its place in the first frame that holds it. The rules of
+  # `rules/1` move it at the steps of the other frames. A box holds one card
+  # for each content that it has in the frames, and a card shows at the steps
+  # of the frames with that content. Each frame has its own copy of the lines.
+  defp frame_assigns(tree) do
+    frames = frame_layouts(tree)
+    {width, height} = frames_size(frames)
+    names = frame_names(frames)
+    index = names |> Enum.with_index() |> Map.new()
+
+    boxes =
+      for name <- names do
+        shown = Enum.filter(frames, &Map.has_key?(&1.boxes, name))
+        home = hd(shown).boxes[name]
+
+        steps =
+          if length(shown) == length(frames), do: [], else: on(Enum.flat_map(shown, & &1.steps))
+
+        {home, steps ++ [number(name, index)], cards(shown, name)}
+      end
+
+    lines =
+      for frame <- frames, {path, to} <- Enum.zip(frame.layout.lines, frame.layout.targets) do
+        {path, on(frame.steps) ++ [number(to, index)]}
+      end
+
+    labels = %{
+      y:
+        height + if(frames_legend(frames) != [], do: @legend_gap + @legend, else: 0) + @legend_gap,
+      width: width,
+      height: @legend,
+      values: Enum.map(frames, &{&1.label, on(&1.steps)})
+    }
+
+    %{
+      title: tree.title,
+      boxes: boxes,
+      lines: lines,
+      legend: legend(frames_legend(frames), height, width),
+      labels: labels,
+      copies: Enum.map(frames, &copy(&1, width, height)),
+      lists: Enum.map(frames, &{"#{tree.title}, #{&1.label}", &1.root, &1.values})
+    }
+    |> Map.merge(frame_box(tree, width, height, frames_legend(frames) != [], true))
+  end
+
+  defp on([]), do: []
+  defp on(steps), do: [{"data-on", Enum.join(steps, " ")}]
+
+  # One card for each content of a box, at the steps of the frames with that
+  # content. A box with one content needs no steps on its card.
+  defp cards(shown, name) do
+    groups =
+      Enum.chunk_by(shown, fn frame ->
+        node = frame.boxes[name].node
+        {card_key(node), frame.colors[name], value_attributes(node, frame.values)}
+      end)
+
+    for [first | _rest] = group <- groups do
+      steps = if length(groups) == 1, do: [], else: on(Enum.flat_map(group, & &1.steps))
+      {first.boxes[name].node, first.colors[name], first.values, steps}
+    end
+  end
+
+  defp card_key(node),
+    do: Map.take(node, [:label, :detail, :fields, :image, :svg, :class, :value, :color])
+
+  # The small tree of one frame for the handout view, with no steps.
+  defp copy(frame, width, height) do
+    %{
+      label: frame.label,
+      view_box: "0 0 #{width} #{height}",
+      boxes:
+        Enum.map(
+          frame.layout.boxes,
+          &{&1, [], [{&1.node, frame.colors[&1.node.name], frame.values, []}]}
+        ),
+      lines: Enum.map(frame.layout.lines, &{&1, []})
+    }
+  end
+
+  @doc false
+  # The layout, the colors and the steps of each frame of a tree. Each layout
+  # is at the center of the size of the largest frame, as the layouts of
+  # `reflow` are. The first frame shows at each step at which no later frame
+  # shows.
+  @spec frame_layouts(t()) :: [map()]
+  def frame_layouts(%__MODULE__{timeline: timeline} = tree) do
+    trees = Enum.map(timeline, &prepared(%__MODULE__{tree | elements: &1.elements}))
+    roots = Enum.map(trees, fn %__MODULE__{elements: [root]} -> root end)
+
+    legend =
+      trees
+      |> Enum.flat_map(fn %__MODULE__{elements: [root]} -> legend(root, tree.color) end)
+      |> Enum.map(&elem(&1, 0))
+      |> Enum.uniq()
+      |> Enum.with_index(fn value, i -> {value, Chart.Layers.color(i)} end)
+
+    plain = Enum.map(roots, &Layout.layout(&1, sizes(tree), layout_options(tree)))
+    width = plain |> Enum.map(& &1.width) |> Enum.max()
+    height = plain |> Enum.map(& &1.height) |> Enum.max()
+    later = timeline |> tl() |> Enum.flat_map(&(&1.steps || []))
+    last = Enum.max([1 | later])
+
+    for {{frame, root, layout}, i} <- Enum.with_index(Enum.zip([timeline, roots, plain])) do
+      offset = Steps.center(tree.layout, layout, width, height)
+
+      layout =
+        Layout.layout(root, sizes(tree), Keyword.put(layout_options(tree), :offset, offset))
+
+      {colors, _legend} = colors(%__MODULE__{tree | elements: [root]}, legend)
+      steps = if i == 0, do: Enum.to_list(1..last) -- later, else: frame.steps || []
+
+      %{
+        label: frame.label,
+        root: root,
+        layout: layout,
+        boxes: Map.new(layout.boxes, &{&1.node.name, &1}),
+        colors: Map.new(colors, fn {name, color} -> {name, css(color)} end),
+        legend: legend,
+        values: values(tree, root),
+        steps: steps,
+        size: {width, height}
+      }
+    end
+  end
+
+  # The name of each box of a tree with frames, in the order of its first
+  # frame.
+  defp frame_names(frames),
+    do:
+      frames
+      |> Enum.flat_map(&Enum.map(&1.layout.boxes, fn box -> box.node.name end))
+      |> Enum.uniq()
+
+  defp frames_size([frame | _rest]), do: frame.size
+  defp frames_legend([frame | _rest]), do: frame.legend
 
   defp sizes(tree), do: tree.box || @box
   defp layout_options(tree), do: [layout: tree.layout, stack_from: tree.stack_from]
@@ -621,6 +931,10 @@ defmodule Expresso.Element.Hierarchy do
   @doc """
   Return the rules of the moves and of the groups of a tree
 
+  With frames, each box is at its place in the first frame that holds it. At
+  each step of a later frame, a box at a different place gets the custom
+  properties `--tree-dx` and `--tree-dy`, as with `reflow`.
+
   With `reflow`, at each step, a box that is not in its place of the full
   layout gets the custom properties `--tree-dx` and `--tree-dy`, and the style
   sheet moves it with a transition.
@@ -636,6 +950,23 @@ defmodule Expresso.Element.Hierarchy do
   deck. A tree without `reflow` and without `highlight` has no rules.
   """
   @spec rules(t()) :: [String.t()]
+  def rules(%__MODULE__{el: el, timeline: [_ | _]} = tree) when is_binary(el) do
+    frames = frame_layouts(tree)
+    names = frame_names(frames)
+    index = names |> Enum.with_index() |> Map.new()
+    homes = Map.new(names, fn name -> {name, Enum.find_value(frames, & &1.boxes[name])} end)
+
+    for frame <- frames,
+        step <- frame.steps,
+        name <- names,
+        %{x: x, y: y} <- List.wrap(frame.boxes[name]),
+        home = homes[name],
+        x != home.x or y != home.y do
+      "section[data-step=\"#{step}\"] [data-el=\"#{el}\"] [data-node=\"#{index[name]}\"] " <>
+        "{ --tree-dx: #{Layout.number(x - home.x)}px; --tree-dy: #{Layout.number(y - home.y)}px; }"
+    end
+  end
+
   def rules(%__MODULE__{el: el, elements: [_root]} = tree) when is_binary(el) do
     %__MODULE__{elements: [root]} = tree = prepared(tree)
     full = Layout.layout(root, sizes(tree), layout_options(tree))
@@ -701,22 +1032,7 @@ defmodule Expresso.Element.Hierarchy do
     temple do
       figure class: Expresso.Element.classes("tree", assigns[:class]), rest!: @overlay do
         svg viewBox: @view_box, aria_hidden: "true" do
-          g class: "tree-lines" do
-            for {line, attributes} <- @lines do
-              path class: "tree-line", d: line, pathLength: "1", rest!: attributes
-            end
-          end
-
-          for {box, attributes} <- @boxes do
-            foreignObject class: "tree-node",
-                          x: box.x,
-                          y: box.y,
-                          width: box.width,
-                          height: box.height,
-                          rest!: attributes do
-              c(&card/1, node: box.node, color: @colors[box.node.name], values: @values)
-            end
-          end
+          c(&drawing/1, boxes: @boxes, lines: @lines)
 
           if @legend do
             foreignObject x: 0, y: @legend.y, width: @legend.width, height: @legend.height do
@@ -730,10 +1046,77 @@ defmodule Expresso.Element.Hierarchy do
               end
             end
           end
+
+          if @labels do
+            foreignObject x: 0, y: @labels.y, width: @labels.width, height: @labels.height do
+              div class: "tree-frame-labels", xmlns: "http://www.w3.org/1999/xhtml" do
+                for {frame_name, attributes} <- @labels.values do
+                  p class: "tree-frame-label", rest!: attributes do
+                    frame_name
+                  end
+                end
+              end
+            end
+          end
         end
 
-        ul class: "tree-list", aria_label: @title do
-          c(&item/1, node: @root, values: @values)
+        if @copies != [] do
+          div class: "tree-frames", aria_hidden: "true" do
+            for copy <- @copies do
+              figure class: "tree-copy" do
+                svg viewBox: copy.view_box do
+                  c(&drawing/1, boxes: copy.boxes, lines: copy.lines)
+                end
+
+                figcaption do
+                  copy.label
+                end
+              end
+            end
+          end
+        end
+
+        for {title, root, values} <- @lists do
+          ul class: "tree-list", aria_label: title do
+            c(&item/1, node: root, values: values)
+          end
+        end
+      end
+    end
+  end
+
+  # The lines and the boxes of one tree. A box with more than one card puts
+  # the cards on top of each other, and each card shows at its steps.
+  defp drawing(assigns) do
+    temple do
+      g class: "tree-lines" do
+        for {line, attributes} <- @lines do
+          path class: "tree-line", d: line, pathLength: "1", rest!: attributes
+        end
+      end
+
+      for {box, attributes, cards} <- @boxes do
+        foreignObject class: "tree-node",
+                      x: box.x,
+                      y: box.y,
+                      width: box.width,
+                      height: box.height,
+                      rest!: attributes do
+          c(&cards/1, cards: cards)
+        end
+      end
+    end
+  end
+
+  # The cards of one box. More than one card are on top of each other.
+  defp cards(%{cards: [{node, color, values, attributes}]}),
+    do: card(%{node: node, color: color, values: values, attributes: attributes})
+
+  defp cards(assigns) do
+    temple do
+      div class: "tree-stack", xmlns: "http://www.w3.org/1999/xhtml" do
+        for {node, color, values, attributes} <- @cards do
+          c(&card/1, node: node, color: color, values: values, attributes: attributes)
         end
       end
     end
@@ -748,7 +1131,10 @@ defmodule Expresso.Element.Hierarchy do
       |> Map.merge(value_attributes(assigns.node, assigns.values))
 
     temple do
-      div class: @classes, style: @style, xmlns: "http://www.w3.org/1999/xhtml" do
+      div class: @classes,
+          style: @style,
+          xmlns: "http://www.w3.org/1999/xhtml",
+          rest!: @attributes do
         c(&media/1, node: @node)
 
         div class: "tree-text" do

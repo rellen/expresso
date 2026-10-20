@@ -176,6 +176,45 @@ defmodule Expresso.E2E.TreeTest do
     end
   end
 
+  # A reorg in two frames: Di moves from Ben to Eve, Eve gets a new detail,
+  # and Hal comes in.
+  defmodule FramesDeck do
+    use Expresso
+
+    name "tree frames"
+
+    slide "reorg" do
+      tree do
+        title "The plant"
+
+        frame "Before" do
+          node "Ana" do
+            node "Ben" do
+              node "Cy"
+              node "Di"
+            end
+
+            node "Eve", detail: "Quality"
+          end
+        end
+
+        frame "After" do
+          node "Ana" do
+            node "Ben" do
+              node "Cy"
+            end
+
+            node "Eve" do
+              detail "Quality and paint"
+              node "Di"
+              node "Hal"
+            end
+          end
+        end
+      end
+    end
+  end
+
   # The rectangle of each box, the drawing and the list on the screen.
   defp geometry(page) do
     js(page, """
@@ -490,5 +529,70 @@ defmodule Expresso.E2E.TreeTest do
       """)
 
     assert lines == ["1", "0", "1", "0"]
+  end
+
+  # The opacity, the left edge and the visible detail of each box of the
+  # drawing that moves, by its label, and the visible lines and label.
+  defp frame_state(page) do
+    js(page, """
+    (() => {
+      const shown = (element) => getComputedStyle(element).visibility === "visible";
+      const figure = #{@current}.querySelector("figure.tree");
+      const boxes = Array.from(figure.querySelectorAll(":scope > svg > foreignObject.tree-node"));
+      return {
+        boxes: Object.fromEntries(boxes.map((node) => {
+          const card = Array.from(node.querySelectorAll(".tree-box")).find(shown);
+          return [
+            node.querySelector(".tree-label").textContent,
+            [
+              Number(getComputedStyle(node).opacity),
+              Math.round(node.getBoundingClientRect().left),
+              card?.querySelector(".tree-detail")?.textContent ?? null
+            ]
+          ];
+        })),
+        lines: Array.from(figure.querySelectorAll(":scope > svg path.tree-line")).filter(shown).length,
+        label: Array.from(figure.querySelectorAll(".tree-frame-label")).filter(shown).map((p) => p.textContent)
+      };
+    })()
+    """)
+  end
+
+  test "a tree with frames moves its boxes and changes their content at the step of a frame",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = page |> open(render(FramesDeck, tmp_dir)) |> slow_motion(0)
+    %{"boxes" => before, "lines" => 4, "label" => ["Before"]} = frame_state(page)
+    assert hd(before["Hal"]) == 0
+    assert {hd(before["Di"]), List.last(before["Eve"])} == {1, "Quality"}
+
+    press(page, "j")
+    wait_for_position(page, "1.2")
+    %{"boxes" => after_, "lines" => 5, "label" => ["After"]} = frame_state(page)
+    assert hd(after_["Hal"]) == 1
+    assert List.last(after_["Eve"]) == "Quality and paint"
+    # Ben keeps only Cy, so it moves to the left, above Cy.
+    assert Enum.at(after_["Ben"], 1) < Enum.at(before["Ben"], 1)
+  end
+
+  test "the handout view shows a small tree for each frame in place of the tree that moves",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(FramesDeck, tmp_dir))
+
+    shown =
+      js(page, """
+      (() => {
+        document.body.dataset.view = "handout";
+        const figure = Array.from(document.querySelectorAll("figure.tree")).find(
+          (figure) => figure.getBoundingClientRect().width > 0
+        );
+        return [
+          getComputedStyle(figure.querySelector(":scope > svg")).display,
+          Array.from(figure.querySelectorAll(".tree-copy"), (copy) => copy.getBoundingClientRect().width > 0),
+          Array.from(figure.querySelectorAll(".tree-copy figcaption"), (caption) => caption.textContent.trim())
+        ];
+      })()
+      """)
+
+    assert shown == ["none", [true, true], ["Before", "After"]]
   end
 end
