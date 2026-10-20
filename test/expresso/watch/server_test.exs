@@ -2,6 +2,7 @@ defmodule Expresso.Watch.ServerTest do
   use ExUnit.Case, async: true
 
   import Expresso.Test.HTTP
+  import Expresso.Test.PrivateDir
 
   alias Expresso.Watch.Server
 
@@ -72,15 +73,12 @@ defmodule Expresso.Watch.ServerTest do
         Process.sleep(:infinity)
       end)
 
-    assert_receive {:server, %Server{directory: directory} = server}, 5_000
+    assert_receive {:server, %Server{directory: directory} = server}, wait()
     on_exit(fn -> :inets.stop(:httpd, server.pid) end)
     assert File.exists?(directory)
     Process.exit(owner, :kill)
 
-    assert Enum.any?(1..100, fn _try ->
-             Process.sleep(50)
-             not File.exists?(directory)
-           end)
+    wait_for_removal(directory)
   end
 
   test "listens on 127.0.0.1 only", %{server: server} do
