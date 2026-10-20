@@ -26,7 +26,7 @@ nix develop      # or: direnv allow, after you copy .envrc.example to .envrc
 mix deps.get
 ```
 
-Without Nix, `docs/development.md` tells how to get the same versions.
+Without Nix, `docs/development/toolchain.md` tells how to get the same versions.
 
 ## Quick start
 

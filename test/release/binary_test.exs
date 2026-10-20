@@ -2,7 +2,7 @@ defmodule Expresso.BinaryTest do
   # The tests of the binary that Burrito makes. Each test runs the binary as a
   # person does, from the root of the repository. `mix test --only release` runs
   # them, and `EXPRESSO_BINARY` gives the path of the binary. `mix test` does not
-  # run them. `docs/development.md` gives the commands.
+  # run them. `docs/development/release.md` gives the commands.
   use ExUnit.Case, async: true
 
   import ExUnit.CaptureIO
@@ -18,8 +18,11 @@ defmodule Expresso.BinaryTest do
   setup_all do
     binary =
       case System.get_env("EXPRESSO_BINARY") do
-        nil -> raise "EXPRESSO_BINARY must give the path of the binary. See docs/development.md."
-        path -> Path.expand(path)
+        nil ->
+          raise "EXPRESSO_BINARY must give the path of the binary. See docs/development/release.md."
+
+        path ->
+          Path.expand(path)
       end
 
     if not File.regular?(binary), do: raise("#{binary} is not a file")

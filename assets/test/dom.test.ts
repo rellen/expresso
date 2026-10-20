@@ -15,7 +15,7 @@ const program = load("1,2").program;
 
 // `dom.ts` reads the global `document` each time a function runs, so a fake
 // document is enough to test it. Node has no DOM, and a browser is not
-// necessary for these rules. The Playwright recipe of docs/development.md
+// necessary for these rules. The Playwright recipe of docs/development/browser-tests.md
 // covers the parts that need a real browser, such as the CSS.
 
 type FakeElement = {

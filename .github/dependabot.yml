@@ -1,5 +1,5 @@
 # Dependabot opens a pull request each week for the new versions of the
-# dependencies. `docs/development.md` gives the rules, in "Dependency updates".
+# dependencies. `docs/development/dependencies.md` gives the rules, in "Dependency updates".
 #
 # Each commit message obeys Conventional Commits, as `CLAUDE.md` tells: `ci:`
 # for an action, and `build(deps):` or `build(deps-dev):` for a package.

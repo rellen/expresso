@@ -136,7 +136,7 @@ This works on Node 24, which `.tool-versions` gives. It also worked on Node 22.2
 the remote container gave at that time. A test of two cases ran on this container with no
 flag and with no build step.
 
-The tests cover `state.ts`. The Playwright recipe in `docs/development.md` covers `dom.ts`
+The tests cover `state.ts`. The Playwright recipe in `docs/development/browser-tests.md` covers `dom.ts`
 and `main.ts`. Add one line to that recipe: make sure that `document.compatMode` is
 `CSS1Compat`, so that the result comes from the standards mode.
 
@@ -333,4 +333,4 @@ go from 8,979 to 9,846 bytes minified, and from 3,702 to 4,054 bytes gzipped.
 On 2026-10-10, `npm run lint` added oxlint with the type-aware rules of `tsgolint`, and
 `mix check` began to run the four `npm` commands. The first run found one promise that
 nothing handled: the layout check in `main.ts`. "The lint and the format of the script" in
-`docs/development.md` gives the rules and the reasons.
+`docs/development/presenter-script.md` gives the rules and the reasons.

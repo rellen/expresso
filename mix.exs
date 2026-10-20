@@ -20,7 +20,7 @@ defmodule Expresso.MixProject do
   # the steps of one task, a reference page describes each option, and an
   # explanation gives the design and its reasons. The GIFs of the guides come
   # from `mix expresso.gifs`, and the workflow publishes them to the branch
-  # `media`. See `docs/development.md`.
+  # `media`. See `docs/development/gifs.md`.
   defp docs do
     [
       main: "readme",
@@ -107,6 +107,16 @@ defmodule Expresso.MixProject do
         "docs/overlays.md",
         "docs/architecture.md",
         "docs/development.md",
+        "docs/development/toolchain.md",
+        "docs/development/checks.md",
+        "docs/development/unit-tests.md",
+        "docs/development/browser-tests.md",
+        "docs/development/release.md",
+        "docs/development/ci.md",
+        "docs/development/dependencies.md",
+        "docs/development/presenter-script.md",
+        "docs/development/themes.md",
+        "docs/development/gifs.md",
         "docs/typescript.md",
         "docs/dim-state.md",
         "docs/tree.md"
@@ -118,6 +128,16 @@ defmodule Expresso.MixProject do
         Explanation: ["docs/overlays.md", "docs/architecture.md"],
         Contributing: [
           "docs/development.md",
+          "docs/development/toolchain.md",
+          "docs/development/checks.md",
+          "docs/development/unit-tests.md",
+          "docs/development/browser-tests.md",
+          "docs/development/release.md",
+          "docs/development/ci.md",
+          "docs/development/dependencies.md",
+          "docs/development/presenter-script.md",
+          "docs/development/themes.md",
+          "docs/development/gifs.md",
           "docs/typescript.md",
           "docs/dim-state.md",
           "docs/tree.md"
@@ -231,7 +251,7 @@ defmodule Expresso.MixProject do
       # the queries of the HTML in the unit tests. Lexbor parses the HTML as a
       # browser does, and it takes each CSS selector of a browser. Floki stays
       # for `lib/` and for the tests that use it. See "The HTML in a unit test"
-      # in docs/development.md.
+      # in docs/development/unit-tests.md.
       {:lazy_html, "~> 0.1.13", only: :test},
 
       # the browser tests of `mix test --only e2e`, the recorder of the GIFs in

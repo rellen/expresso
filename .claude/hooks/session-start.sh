@@ -34,7 +34,7 @@ ZIG_DIR="/opt/zig"
 # of a different target needs different archives, and the versions above then
 # give a file that does not exist.
 if [ "$(uname -m)" != "x86_64" ] || ! grep -q 'VERSION_ID="24.04"' /etc/os-release; then
-  echo "This hook needs Ubuntu 24.04 on x86_64. See docs/development.md." >&2
+  echo "This hook needs Ubuntu 24.04 on x86_64. See docs/development/toolchain.md." >&2
   exit 1
 fi
 
@@ -94,7 +94,7 @@ export PATH="${NODE_DIR}/bin:${PATH}"
 # download gives a warning, and the hook continues. `mix compile` then fails.
 #
 # The script of the workflow installs Zig. It downloads Zig from a community
-# mirror, and it makes sure of the SHA-256. `docs/development.md` tells more in
+# mirror, and it makes sure of the SHA-256. `docs/development/ci.md` tells more in
 # "Zig in the workflow".
 repository="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 if [ "$("${ZIG_DIR}/zig" version 2>/dev/null || true)" != "${ZIG_VERSION}" ]; then
@@ -121,7 +121,7 @@ fi
 
 # The browser tests of `mix test --only e2e` use the Chromium of the container.
 # Playwright does not find it at its own path, so the tests read the path from
-# EXPRESSO_CHROMIUM. `docs/development.md` gives the details.
+# EXPRESSO_CHROMIUM. `docs/development/browser-tests.md` gives the details.
 if [ -x /opt/pw-browsers/chromium ]; then
   export EXPRESSO_CHROMIUM="/opt/pw-browsers/chromium"
   if [ -n "${CLAUDE_ENV_FILE:-}" ]; then

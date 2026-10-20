@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
   recorder needs the Playwright driver of `npm install` and Chromium. The
   environment variable `EXPRESSO_CHROMIUM` gives the path of a Chromium
   executable, as it does for the browser tests. `Expresso.Gif` needs Zig to
-  compile. `docs/development.md` gives the details.
+  compile. `docs/development/gifs.md` gives the details.
   """
 
   use Mix.Task

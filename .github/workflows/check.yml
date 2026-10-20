@@ -22,7 +22,7 @@
 #   aarch64, and `mix test --only release`, the tests of each binary
 #
 # No job runs on macOS, because a macOS runner costs more than a Linux runner.
-# `docs/development.md` tells how to check the project on a Mac.
+# `docs/development/ci.md` tells how to check the project on a Mac.
 #
 # `.github/workflows/audit.yml` also runs `mix hex.audit` on main each day, so
 # an advisory that Hex publishes after a merge fails a run of main.

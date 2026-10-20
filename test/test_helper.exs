@@ -3,7 +3,8 @@
 # binary that Burrito makes. `mix test --only release` runs them. The test of
 # `test/dependency/` makes a project that takes Expresso as a dependency, and it
 # needs the network. `mix test --only dependency` runs it.
-# `docs/development.md` gives the setup of each.
+# `docs/development/browser-tests.md` and `docs/development/release.md` give the
+# setup of each.
 ExUnit.start(exclude: [:e2e, :release, :dependency])
 
 # Some tests compile the same deck file more than one time, and
