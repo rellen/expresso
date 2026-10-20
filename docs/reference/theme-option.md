@@ -93,7 +93,7 @@ APCA minimum then makes the color lighter.
 
 Each picture shows the deck `examples/themes/showcase.exs` at its second step, with code,
 a dimmed item, the progress bar and the slide number. `mix expresso.gifs` records one
-still for each built-in theme. [Record the GIFs and the stills](../development/gifs.md)
+still for each built-in theme. [Record the GIFs and the stills](https://github.com/rellen/expresso/blob/main/docs/development/gifs.md)
 tells how.
 
 | Name | Still |
@@ -130,7 +130,7 @@ tells how.
 
 A scheme is built in only when no color moves more than 0.4. A larger change gives a
 color that the reader does not know as a color of the scheme. These schemes meet the
-limit, and they are not built in. [Add a built-in theme](../development/themes.md) tells
+limit, and they are not built in. [Add a built-in theme](https://github.com/rellen/expresso/blob/main/docs/development/themes.md) tells
 how to add one.
 
 | Scheme | Change |

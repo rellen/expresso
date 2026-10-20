@@ -67,7 +67,7 @@ Your project does not start Expresso, and a release of your project does not hol
 
 The binary needs no Elixir, so a computer with no Elixir can render the deck.
 
-1. Make the binary, as [Make a binary](../development/release.md#make-a-binary) tells, and copy it
+1. Make the binary, as [Make a binary](https://github.com/rellen/expresso/blob/main/docs/development/release.md#make-a-binary) tells, and copy it
    to a directory on your path.
 2. Render the deck:
 
