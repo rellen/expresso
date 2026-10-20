@@ -236,7 +236,7 @@ defmodule Expresso.E2E.LayoutCheckTest do
   # problems on purpose, and the guide shows its report.
   @broken "examples/animations/layout_check.exs"
 
-  # The size of the GIFs of the guides, of the README and of the themes.
+  # The size of the GIFs of the guides, of the presenter pages and of the themes.
   test "each example deck fits a window of 1280 × 720", %{browser: browser, tmp_dir: tmp_dir} do
     {:ok, context} =
       Browser.new_context(browser.guid,

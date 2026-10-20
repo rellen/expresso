@@ -13,7 +13,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
 
   The decks of `examples/animations/` give the GIFs of the guides of `docs/`.
   The decks of `examples/presenter/` give the GIFs and the stills of
-  `README.md`. The deck of `examples/themes/` gives one still for each built-in
+  `docs/reference/presenter.md` and `docs/how-to/present-a-deck.md`. The deck of `examples/themes/` gives one still for each built-in
   theme, which `docs/reference/theme-option.md` shows.
 
   The task is in `tools/`, so it is available in dev and in test only. The
@@ -48,7 +48,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
           actions: [String.t() | {:advance, pos_integer()}],
           still: boolean(),
           height: pos_integer(),
-          page: :guides | :readme | :themes,
+          page: :guides | :presenter | :themes,
           theme: atom() | nil
         }
 
@@ -162,10 +162,10 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "check-deck", deck: "check_deck.exs", still: true}
   ]
 
-  # The examples of "Present a deck" in README.md. The tour deck has ten
+  # The examples of the presenter pages. The tour deck has ten
   # steps and a talk of ten minutes, so the pace of the speaker view changes
   # at the times below: it is behind from three minutes, and over from ten.
-  @readme [
+  @presenter [
     %{name: "present-keys", deck: "tour.exs", actions: ["j", "j", "j", "k", "b", "b", "End"]},
     %{name: "present-help", deck: "tour.exs", address: "#2", actions: ["/", "d", "a", "r", "k"]},
     %{
@@ -216,7 +216,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
   @spec examples() :: [example()]
   def examples do
     Enum.map(@guides, &example(&1, :guides, "examples/animations")) ++
-      Enum.map(@readme, &example(&1, :readme, "examples/presenter")) ++
+      Enum.map(@presenter, &example(&1, :presenter, "examples/presenter")) ++
       Enum.map(@themes, &example(&1, :themes, "examples/themes"))
   end
 

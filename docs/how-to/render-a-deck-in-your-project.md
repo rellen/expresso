@@ -67,13 +67,21 @@ Your project does not start Expresso, and a release of your project does not hol
 
 The binary needs no Elixir, so a computer with no Elixir can render the deck.
 
-1. Make the binary, as "Make a binary" in the README tells, and copy it to a directory on
-   your path.
+1. Make the binary, as [Make a binary](../development.md#make-a-binary) tells, and copy it
+   to a directory on your path.
 2. Render the deck:
 
    ```sh
    expresso_cli_app_linux_x86 talk/deck.exs talk/deck.html
    ```
+
+The binary takes the same arguments as `mix expresso`, `--watch` too, and it gives the same
+exit status. Its usage text has the file name of the binary, such as
+`Usage: expresso_cli_app_linux_x86 <input> [output]`.
+
+The binary can write only a part of the HTML to a pipe that does not block, when the reader
+of the pipe is slow. The exit status is then 0. Give an output path, or write the standard
+output to a file with `> deck.html`, to get all the HTML.
 
 ## The complete deck
 

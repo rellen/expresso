@@ -17,7 +17,7 @@
 # - presenter: `npm run check`, `npm run lint`, `npm run format:check` and
 #   `npm test`
 # - gifs: `mix expresso.gifs`, the GIFs and the stills of the example decks
-#   of the guides and of the README
+#   of the guides and of the presenter pages
 # - binary: `mix release expresso_cli_app` for Linux on x86_64 and on
 #   aarch64, and `mix test --only release`, the tests of each binary
 #
