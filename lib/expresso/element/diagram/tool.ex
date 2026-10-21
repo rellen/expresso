@@ -58,16 +58,20 @@ defmodule Expresso.Element.Diagram.Tool do
   @doc """
   Run a tool, and return the SVG that it writes
 
-  `args` is a function that takes the path of the output file and returns the
-  arguments of the program. The function raises an `ArgumentError` for a tool
-  that is not present and for a tool that fails.
+  `command` is a function that takes the private directory of the run and
+  returns the arguments of the program and its variables of the environment.
+  The tool writes the SVG to `graph.svg` in that directory. `files` go into the
+  directory before the run, such as the files of a font. The function raises an
+  `ArgumentError` for a tool that is not present and for a tool that fails.
   """
-  @spec run!(t(), Path.t(), (Path.t() -> [String.t()])) :: String.t()
+  @spec run!(t(), Path.t(), (Path.t() -> {[String.t()], [{String.t(), String.t()}]}), [
+          {String.t(), binary()}
+        ]) :: String.t()
   # The program comes from the `PATH` or from the variable of the tool, and
-  # System.cmd/3 starts no shell, so no shell reads the arguments. The output
-  # file is in a private directory of this run.
+  # System.cmd/3 starts no shell, so no shell reads the arguments. Each file is
+  # in a private directory of this run.
   # sobelow_skip ["CI.System", "Traversal"]
-  def run!(tool, src, args) do
+  def run!(tool, src, command, files \\ []) do
     program =
       case find(tool, src) do
         {:ok, program} -> program
@@ -75,12 +79,14 @@ defmodule Expresso.Element.Diagram.Tool do
       end
 
     private_dir = Expresso.PrivateDir.open!("graph")
-    output = Path.join(private_dir.path, "graph.svg")
 
     try do
-      case System.cmd(program, args.(output), stderr_to_stdout: true) do
+      for {name, bytes} <- files, do: File.write!(Path.join(private_dir.path, name), bytes)
+      {args, env} = command.(private_dir.path)
+
+      case System.cmd(program, args, stderr_to_stdout: true, env: env) do
         {_output, 0} ->
-          File.read!(output)
+          File.read!(Path.join(private_dir.path, "graph.svg"))
 
         {message, status} ->
           raise ArgumentError,

@@ -29,7 +29,7 @@ defmodule Expresso.Element.Diagram.D2 do
   `data-graph-to`, for the `edges` option of `Expresso.Element.Diagram`.
   """
 
-  alias Expresso.Element.Diagram.Tool
+  alias Expresso.Element.Diagram.{Font, Tool}
 
   @tool %{
     name: "D2",
@@ -57,13 +57,51 @@ defmodule Expresso.Element.Diagram.D2 do
   order of the file. The function raises an `ArgumentError` when D2 is not
   present and when D2 fails.
   """
-  @spec draw!(Path.t(), atom()) :: {String.t(), [String.t()]}
-  def draw!(src, layout) do
-    args = &["--layout", "#{layout}", "--omit-version", "--pad", "0", src, &1]
+  @spec draw!(Path.t(), atom(), Font.t()) :: {String.t(), [String.t()]}
+  def draw!(src, layout, font \\ Font.builtin()) do
+    # D2 measures each text with the font, and it puts the font into the SVG.
+    # D2 uses the semibold style for some text, and the bold file stands for it.
+    command = fn dir ->
+      fonts =
+        for {option, style} <- [regular: :regular, bold: :bold, italic: :italic, semibold: :bold],
+            do: ["--font-#{option}", Path.join(dir, "font-#{style}.ttf")]
+
+      args =
+        ["--layout", "#{layout}", "--omit-version", "--pad", "0"] ++
+          List.flatten(fonts) ++ [src, Path.join(dir, "graph.svg")]
+
+      {args, []}
+    end
 
     @tool
-    |> Tool.run!(src, args)
+    |> Tool.run!(src, command, Font.files(font))
     |> name()
+  end
+
+  # The classes of the palette of D2: N1 to N7 for the text, the lines and the
+  # background, B1 to B6 for the shapes and the connections, and AA and AB for
+  # the second and third colors.
+  @palette ~r/\.(fill|stroke|background-color|color)-(N[1-7]|B[1-6]|AA[2-5]|AB[45])\{(fill|stroke|background-color|color):(#[0-9A-Fa-f]{3,8});\}/
+
+  @doc """
+  Give a graph of D2 the colors of the theme
+
+  D2 gives each element a class of its palette, such as `fill-B4`, and a rule
+  of its style sheet gives the class a color. The function writes each color
+  as `var(--graph-B4, #E3E9FD)`, so the custom property of the style sheet of
+  the deck gives the color. It also removes the rectangle of the background.
+
+      iex> svg = ~s(<svg><style>.d2-1 .fill-B4{fill:#E3E9FD;}</style></svg>)
+      iex> Expresso.Element.Diagram.D2.theme(svg)
+      ~s(<svg><style>.d2-1 .fill-B4{fill:var(--graph-B4, #E3E9FD);}</style></svg>)
+  """
+  @spec theme(String.t()) :: String.t()
+  def theme(svg) do
+    svg = Regex.replace(@palette, svg, ".\\1-\\2{\\3:var(--graph-\\2, \\4);}")
+
+    Regex.replace(~r/(<svg class="d2-[^"]*"[^>]*>)<rect\b[^>]*\bfill-N7\b[^>]*\/>/, svg, "\\1",
+      global: false
+    )
   end
 
   @doc """

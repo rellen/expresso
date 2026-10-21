@@ -70,6 +70,8 @@ defmodule Expresso.Element.Diagram do
               :alt,
               :layout,
               :edges,
+              :colors,
+              :font,
               # The SVG and the names of a graph, from `draw/1`.
               :svg,
               :names,
@@ -145,13 +147,25 @@ defmodule Expresso.Element.Diagram do
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
   def get_assigns(diagram) do
-    %__MODULE__{width: width, alt: alt} = diagram
+    %__MODULE__{src: src, width: width, alt: alt, colors: colors} = diagram
 
     %{
       svg: svg(diagram),
+      kind: kind(tool(src), colors),
       overlay: Expresso.Overlay.Render.attributes(diagram) ++ width(width) ++ alt(alt)
     }
   end
+
+  # The classes of the diagram. A graph with the colors of the theme has the
+  # class `diagram-graph` and a class for its tool, so the style sheet gives
+  # it the colors of the theme.
+  defp kind(nil, _colors), do: "diagram"
+  defp kind(_tool, :tool), do: "diagram"
+
+  defp kind(Expresso.Element.Diagram.Graphviz, _colors),
+    do: "diagram diagram-graph diagram-graphviz"
+
+  defp kind(Expresso.Element.Diagram.D2, _colors), do: "diagram diagram-graph diagram-d2"
 
   # A diagram with a text is one image for a screen reader, and the text of
   # the SVG is then not read. Without a text, a screen reader reads the text
@@ -325,12 +339,16 @@ defmodule Expresso.Element.Diagram do
         # The read records the source for the watch mode, and it stops the
         # render for a file that it cannot read.
         read(src)
-        {svg, names} = tool.draw!(src, layout || hd(tool.layouts()))
+        {svg, names} = tool.draw!(src, layout || hd(tool.layouts()), font(diagram.font))
+        svg = if diagram.colors == :tool, do: svg, else: tool.theme(svg)
         %__MODULE__{diagram | svg: svg, names: names}
     end
   end
 
   defp draw_one(element), do: element
+
+  defp font(nil), do: Expresso.Element.Diagram.Font.builtin()
+  defp font(dir), do: Expresso.Element.Diagram.Font.read!(dir)
 
   # The tool of a source, from the extension of its file. An SVG file has no
   # tool.
@@ -348,15 +366,13 @@ defmodule Expresso.Element.Diagram do
   The entity of the DSL and `Expresso.Builder` call this function.
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
-  def check(%__MODULE__{src: src, layout: layout, edges: edges} = diagram) do
+  def check(%__MODULE__{src: src, layout: layout} = diagram) do
     tool = tool(src)
+    given = Enum.find([:layout, :edges, :colors, :font], &(Map.fetch!(diagram, &1) != nil))
 
     cond do
-      tool == nil and layout != nil ->
-        {:error, graph_option(:layout, src)}
-
-      tool == nil and edges != nil ->
-        {:error, graph_option(:edges, src)}
+      tool == nil and given != nil ->
+        {:error, graph_option(given, src)}
 
       tool != nil and layout != nil and layout not in tool.layouts() ->
         {:error,
@@ -383,7 +399,7 @@ defmodule Expresso.Element.Diagram do
   @impl Expresso.Element
   def render(assigns) do
     temple do
-      div class: Expresso.Element.classes("diagram", assigns[:class]), rest!: @overlay do
+      div class: Expresso.Element.classes(@kind, assigns[:class]), rest!: @overlay do
         Phoenix.HTML.raw(@svg)
       end
     end

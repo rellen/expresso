@@ -1,0 +1,4 @@
+// A node with a long label, for the test of the font of a graph.
+digraph label {
+  long [label="A label with many words for the width of a box" shape=box]
+}

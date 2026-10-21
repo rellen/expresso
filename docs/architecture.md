@@ -1340,6 +1340,18 @@ code:
   part for each edge without its own part. Its steps are the steps that both of its ends
   have. `Expresso.Overlay.Render.identify/1` runs after `draw/1`, so the added part gets its
   identity and its `data-on` as each other part does.
+- **The colors come from the theme.** With `colors :theme`, `draw/1` calls `theme/1` of the
+  tool. Graphviz writes its colors as attributes, which cannot hold a custom property, so
+  `Expresso.Element.Diagram.Graphviz.theme/1` changes `black` to `currentColor`. D2 writes
+  its colors in rules of its style sheet, so `Expresso.Element.Diagram.D2.theme/1` writes
+  each color as `var(--graph-B4, #E3E9FD)`. The style sheet gives each property a role of
+  the theme.
+- **The tool gets the font of the slide.** `Expresso.Element.Diagram.Font` holds the TTF
+  files of Atkinson Hyperlegible from compile time, so a release needs no `assets/`. The
+  tool reads them from its private directory: D2 through its font options, and Graphviz
+  through a fontconfig file. Graphviz uses a font of the system for a font that it does not
+  find, so a test with the tag `:graphviz` makes sure that the width of a box changes with
+  the font.
 - **The source is a file of the deck.** The render reads the source with
   `Expresso.DeckFile`, so the watch mode renders again after a change to the source.
 
@@ -2969,8 +2981,8 @@ The commands are:
 1. **A diagram from Graphviz or D2.** `docs/graph-diagrams.md` gives the plan, and issue
    #386 holds it too. The render runs the tool, and a part names a node or an edge in the
    words of the source. The ten decisions of the plan are settled. The code holds the first
-   three of the seven pull requests: the sources of Graphviz and D2, the `layout` option,
-   the names and the `edges` option.
+   four of the seven pull requests: the sources of Graphviz and D2, the `layout` option, the
+   names, and the options `edges`, `colors` and `font`.
 
 The last item before this one, the dim state of `docs/dim-state.md`, gave each role of text
 its own dimmed color.
