@@ -60,6 +60,8 @@ defmodule Expresso.Element.Diagram do
 
   use Expresso.Element
 
+  alias Expresso.Element.Diagram.{Cache, Tool}
+
   @typedoc "The struct of a diagram"
   @type t :: %__MODULE__{}
 
@@ -338,8 +340,15 @@ defmodule Expresso.Element.Diagram do
       tool ->
         # The read records the source for the watch mode, and it stops the
         # render for a file that it cannot read.
-        read(src)
-        {svg, names} = tool.draw!(src, layout || hd(tool.layouts()), font(diagram.font))
+        source = read(src)
+        layout = layout || hd(tool.layouts())
+        font = font(diagram.font)
+
+        # The watch mode keeps the SVG of each graph from one render to the
+        # next. A new version of the tool, a different layout, a different
+        # font or a change to the source gives a new key.
+        key = {tool, Tool.identity(tool.tool(), src), layout, font, source}
+        {svg, names} = Cache.fetch(key, fn -> tool.draw!(src, layout, font) end)
         svg = if diagram.colors == :tool, do: svg, else: tool.theme(svg)
         %__MODULE__{diagram | svg: svg, names: names}
     end

@@ -49,6 +49,23 @@ defmodule Expresso.Element.Diagram.Tool do
     end
   end
 
+  @doc """
+  The identity of the program of a tool, for the key of a cache
+
+  The identity is the path of the program and the time and the size of its
+  file, so a new version of the tool gives a new identity. The function
+  returns `nil` for a tool that is not present.
+  """
+  @spec identity(t(), Path.t()) :: {Path.t(), integer(), non_neg_integer()} | nil
+  def identity(tool, src) do
+    with {:ok, path} <- find(tool, src),
+         {:ok, %File.Stat{mtime: mtime, size: size}} <- File.stat(path, time: :posix) do
+      {path, mtime, size}
+    else
+      _other -> nil
+    end
+  end
+
   defp given(tool, path) do
     if File.regular?(path),
       do: {:ok, path},

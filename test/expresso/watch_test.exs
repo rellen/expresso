@@ -148,6 +148,50 @@ defmodule Expresso.WatchTest do
       refute_receive {Watch, {:rendered, 3}}, 500
     end
 
+    test "runs the tool of a graph again only after a change to its source", %{tmp_dir: dir} do
+      # A program in the place of Graphviz: it counts its runs, and it writes
+      # the SVG of the fixture to the path after `-o`.
+      counter = Path.join(dir, "runs")
+      tool = Path.join(dir, "dot")
+
+      File.write!(tool, """
+      #!/bin/sh
+      echo run >> #{counter}
+      while [ $# -gt 0 ]; do
+        if [ "$1" = "-o" ]; then cp #{Path.expand("test/fixtures/graphviz/flow.svg")} "$2"; fi
+        shift
+      done
+      """)
+
+      File.chmod!(tool, 0o755)
+      previous = System.get_env("EXPRESSO_DOT")
+      System.put_env("EXPRESSO_DOT", tool)
+
+      on_exit(fn ->
+        if previous,
+          do: System.put_env("EXPRESSO_DOT", previous),
+          else: System.delete_env("EXPRESSO_DOT")
+      end)
+
+      source = Path.join(dir, "flow.dot")
+      File.write!(source, "digraph { web -> api }")
+      input = Path.join(dir, "deck.exs")
+      File.write!(input, script("first text", ", diagram(#{inspect(source)})"))
+      runs = fn -> counter |> File.read!() |> String.split() |> length() end
+
+      start_watch(input)
+      assert_receive {Watch, {:rendered, 1}}, 10_000
+      assert runs.() == 1
+
+      change(input, script("second text", ", diagram(#{inspect(source)})"))
+      assert_receive {Watch, {:rendered, 2}}, 10_000
+      assert runs.() == 1
+
+      change(source, "digraph { web -> api -> db }")
+      assert_receive {Watch, {:rendered, 3}}, 10_000
+      assert runs.() == 2
+    end
+
     test "gives an error for a port in use", %{tmp_dir: dir} do
       {:ok, socket} = :gen_tcp.listen(0, ip: {127, 0, 0, 1})
       {:ok, port} = :inet.port(socket)

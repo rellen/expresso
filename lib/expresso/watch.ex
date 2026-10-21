@@ -13,17 +13,21 @@ defmodule Expresso.Watch do
   The page then keeps the last good document, and the output file does not
   change. Stop the watch mode with Ctrl-C.
 
-  Three modules do the work:
+  Four modules do the work:
 
     * `Expresso.DeckFile` records the files that each render reads.
     * `Expresso.Watch.Files` finds a change to one of those files.
     * `Expresso.Watch.Server` serves the page, and makes it reload.
+    * `Expresso.Element.Diagram.Cache` keeps the SVG of each graph from one
+      render to the next, so a change does not run each tool of the deck
+      again.
 
   The section "The watch mode" of `docs/architecture.md` gives the design, and
   the parts that a later version can replace.
   """
 
   alias Expresso.DeckFile
+  alias Expresso.Element.Diagram.Cache
   alias Expresso.Watch.{Files, Server}
 
   # The time between two snapshots of the files, in milliseconds.
@@ -63,7 +67,8 @@ defmodule Expresso.Watch do
           server: server,
           options: options,
           paths: [input_path],
-          snapshot: %{}
+          snapshot: %{},
+          cache: %{}
         }
         |> render()
         |> loop()
@@ -91,8 +96,12 @@ defmodule Expresso.Watch do
   defp render(state) do
     known = Files.snapshot(watched_paths(state.paths))
     started = System.monotonic_time(:millisecond)
-    {result, read_paths} = DeckFile.track(fn -> render_file(state.input) end)
+
+    {{result, read_paths}, cache} =
+      Cache.run(state.cache, fn -> DeckFile.track(fn -> render_file(state.input) end) end)
+
     milliseconds = System.monotonic_time(:millisecond) - started
+    state = %{state | cache: cache}
 
     state =
       case result do

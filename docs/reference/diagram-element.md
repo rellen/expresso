@@ -82,8 +82,12 @@ The layout engines `:sfdp`, `:circo` and `:twopi` draw no cluster. With them, a 
 name a cluster.
 
 The render finds the program `dot` on the `PATH`. The variable `EXPRESSO_DOT` gives a
-different path. A deck without a graph does not need Graphviz. Each render runs Graphviz
-again, and the watch mode renders the deck again after a change to the source.
+different path. A deck without a graph does not need Graphviz.
+
+The watch mode renders the deck again after a change to the source. It keeps the SVG of each
+graph, so it runs the tool again only after a change to the source, the `layout` option, the
+font or the program of the tool. D2 can import a different file of D2 into a source. The
+watch mode does not see a change to that file, so save the source again after such a change.
 
 The graph gets the colors and the font of the theme. See
 [The colors and the font of a graph](#the-colors-and-the-font-of-a-graph).
@@ -241,4 +245,6 @@ its color. It cannot move or get an outline.
 
 ## The watch mode
 
-The watch mode renders the deck again after a change to the SVG file.
+The watch mode renders the deck again after a change to the SVG file, or to the source of a
+graph. It runs the tool of a graph again only after a change that changes the graph. See
+[A graph from Graphviz](#a-graph-from-graphviz).
