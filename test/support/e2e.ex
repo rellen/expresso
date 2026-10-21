@@ -26,6 +26,13 @@ defmodule Expresso.E2E do
 
   @timeout 10_000
 
+  # The time in milliseconds for the start of Playwright and of Chromium in
+  # `setup_all`. `mix check` runs the browser tests while the release and the
+  # dependency test compile, and in one run Chromium did not end its start in
+  # 10 seconds. A start usually takes less than 1 second, so this time limits
+  # only a start that hangs.
+  @start 60_000
+
   using do
     quote do
       import Expresso.E2E
@@ -37,12 +44,12 @@ defmodule Expresso.E2E do
 
   setup_all do
     start_supervised!(
-      {PlaywrightEx.Supervisor, timeout: @timeout, executable: "node_modules/playwright/cli.js"}
+      {PlaywrightEx.Supervisor, timeout: @start, executable: "node_modules/playwright/cli.js"}
     )
 
     launch =
       Shoddy.Keywords.put_present(
-        [timeout: @timeout, headless: true],
+        [timeout: @start, headless: true],
         :executable_path,
         System.get_env("EXPRESSO_CHROMIUM")
       )
