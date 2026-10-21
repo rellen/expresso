@@ -12,8 +12,8 @@ The jobs run in parallel on Linux, so the slowest of them gives their time:
   of unused dependencies, `mix docs`, Doctor and Dialyzer.
 - `test`: the unit tests, in two jobs, `test (1/2)` and `test (2/2)`.
 - `e2e`: the browser tests, in three jobs, `e2e (1/3)` to `e2e (3/3)`.
-- `graph`: the tests that run a tool that draws a graph. The job installs Graphviz. See
-  `graph-tools.md`.
+- `graph`: the tests that run a tool that draws a graph. The job installs Graphviz and D2.
+  See `graph-tools.md`.
 - `dependency`: the dependency test.
 - `presenter`: `npm run check`, `npm run lint`, `npm run format:check` and `npm test`.
 - `gifs`: `mix expresso.gifs`, the GIFs and the stills of the example decks. The artifact

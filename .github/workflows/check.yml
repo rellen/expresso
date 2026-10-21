@@ -77,6 +77,8 @@ env:
   ELIXIR_VERSION: "1.20.4-otp-29"
   NODE_VERSION: "24.20.0"
   ZIG_VERSION: "0.16.0"
+  # The version of D2 for the job `graph`, as the session hook gives it.
+  D2_VERSION: "0.7.1"
 
 jobs:
   format:
@@ -186,13 +188,24 @@ jobs:
 
   # The tests that run a tool that draws a graph. The runner and a remote
   # session both run Ubuntu 24.04, so `apt-get` gives both the same version of
-  # Graphviz. `docs/development/graph-tools.md` gives the details.
+  # Graphviz. D2 comes from its release on GitHub, at the version of
+  # `D2_VERSION`. `docs/development/graph-tools.md` gives the details.
   graph:
     name: graph
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq graphviz
+      - name: Install D2
+        run: |
+          tmp_dir="$(mktemp -d)"
+          curl -sSfL -o "${tmp_dir}/d2.tar.gz" \
+            "https://github.com/terrastruct/d2/releases/download/v${D2_VERSION}/d2-v${D2_VERSION}-linux-amd64.tar.gz"
+          tar -xzf "${tmp_dir}/d2.tar.gz" -C "${tmp_dir}"
+          mkdir -p "${HOME}/d2"
+          find "${tmp_dir}" -type f -name d2 -perm -u+x -exec cp {} "${HOME}/d2/d2" \;
+          echo "${HOME}/d2" >> "${GITHUB_PATH}"
+          "${HOME}/d2/d2" --version
       - uses: ./.github/actions/setup-elixir
         with:
           cache: test

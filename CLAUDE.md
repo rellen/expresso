@@ -71,7 +71,7 @@ hook sets `EXPRESSO_CHROMIUM` to the Chromium of the container.
 `docs/development/browser-tests.md` gives the details.
 
 `mix test --only graphviz --only d2` runs the tests that run a tool that draws a graph.
-They need Graphviz, and the hook installs it. `mix test` excludes them.
+They need Graphviz and D2, and the hook installs both. `mix test` excludes them.
 `docs/development/graph-tools.md` gives the details.
 
 `mix test --only dependency` runs the test of `test/dependency/`. It makes a project that

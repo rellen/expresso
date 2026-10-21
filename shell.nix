@@ -12,9 +12,10 @@ let
 in pkgs.mkShell rec {
   name = "Elixir";
   # coreutils gives `timeout` to the release tests, also on macOS. graphviz
-  # gives `dot` to the tests with the tag `:graphviz`.
+  # gives `dot` to the tests with the tag `:graphviz`, and d2 gives `d2` to the
+  # tests with the tag `:d2`.
   buildInputs = with pkgs;
-    [ rebar rebar3 erlang elixir elixir-ls nodejs_24 zig xz coreutils graphviz ]
+    [ rebar rebar3 erlang elixir elixir-ls nodejs_24 zig xz coreutils graphviz d2 ]
     ++ optional stdenv.hostPlatform.isLinux inotify-tools;
 
   shellHook = ''

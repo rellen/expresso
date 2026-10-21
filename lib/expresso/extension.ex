@@ -775,9 +775,12 @@ defmodule Expresso.Extension do
             doc: "The width of the diagram, such as 900px or 60%. See docs/architecture.md."
           ],
           layout: [
-            type: {:in, Expresso.Element.Diagram.Graphviz.layouts()},
+            type:
+              {:in,
+               Expresso.Element.Diagram.Graphviz.layouts() ++
+                 Expresso.Element.Diagram.D2.layouts()},
             doc:
-              "The layout engine of the tool that draws a graph, such as :neato for Graphviz. See docs/reference/diagram-element.md."
+              "The layout engine of the tool that draws a graph, such as :neato for Graphviz or :dagre for D2. See docs/reference/diagram-element.md."
           ],
           alt: [
             type: :string,

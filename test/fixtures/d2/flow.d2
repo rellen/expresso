@@ -1,0 +1,13 @@
+# The graph of the tests of a diagram from D2. `flow.svg` is the output of
+# `d2 --layout elk --omit-version --pad 0 flow.d2 flow.svg`, for the tests that
+# run without D2.
+direction: right
+app: App {
+  web
+  api
+  web -> api
+}
+db: {shape: cylinder}
+app.api -> db
+app.api -> db: replica
+db <- cache
