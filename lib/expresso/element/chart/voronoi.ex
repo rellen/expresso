@@ -139,6 +139,17 @@ defmodule Expresso.Element.Chart.Voronoi do
   def check_shape(_shape),
     do: {:error, "the shape is :rectangle, :circle, :hexagon or a list of points"}
 
+  @doc """
+  Check the `shape` option of a chart, for the DSL
+
+      iex> Expresso.Element.Chart.Voronoi.shape(:circle)
+      {:ok, :circle}
+  """
+  @spec shape(term()) :: {:ok, shape()} | {:error, String.t()}
+  def shape(shape) do
+    with :ok <- check_shape(shape), do: {:ok, shape}
+  end
+
   defp unit_point?({x, y}) when is_number(x) and is_number(y),
     do: x >= 0 and x <= 1 and y >= 0 and y <= 1
 

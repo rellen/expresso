@@ -8,7 +8,7 @@ defmodule Expresso.Element.Chart.Kinds do
   | --- | --- | --- |
   | `:axis` | `:bar`, `:line` | The series on an axis, as bars or as lines |
   | `:pie` | `:pie` | One series as the slices of a circle |
-  | `:parts` | `:treemap`, `:sunburst` | One series as the parts of a whole, in groups |
+  | `:parts` | `:treemap`, `:sunburst`, `:voronoi` | One series as the parts of a whole, in groups |
   | `:flows` | `:sankey`, `:alluvial`, `:parallel_sets`, `:chord` | The flows between nodes |
 
   A kind can also have these properties:
@@ -33,6 +33,7 @@ defmodule Expresso.Element.Chart.Kinds do
     pie: [family: :pie, round: true],
     treemap: [family: :parts],
     sunburst: [family: :parts, round: true],
+    voronoi: [family: :parts],
     sankey: [family: :flows],
     alluvial: [family: :flows, titles: true],
     parallel_sets: [family: :flows, titles: true],
@@ -51,7 +52,7 @@ defmodule Expresso.Element.Chart.Kinds do
   Return each kind of a chart, in the order of the table
 
       iex> Expresso.Element.Chart.Kinds.all()
-      [:bar, :line, :pie, :treemap, :sunburst, :sankey, :alluvial, :parallel_sets, :chord]
+      [:bar, :line, :pie, :treemap, :sunburst, :voronoi, :sankey, :alluvial, :parallel_sets, :chord]
   """
   @spec all() :: [atom()]
   def all, do: @all
@@ -68,13 +69,16 @@ defmodule Expresso.Element.Chart.Kinds do
   @doc "Return true for a kind with an axis: a bar chart or a line chart"
   defguard is_axis(kind) when kind in @axis
 
-  @doc "Return true for a kind that shows the parts of a whole in groups: a treemap or a sunburst"
+  @doc """
+  Return true for a kind that shows the parts of a whole in groups: a treemap, a sunburst
+  or a Voronoi treemap
+  """
   defguard is_part(kind) when kind in @parts
 
   @doc "Return true for a kind that shows the flows between nodes, such as a sankey"
   defguard is_flow(kind) when kind in @flows
 
-  @doc "Return true for a kind with one series: a pie, a treemap or a sunburst"
+  @doc "Return true for a kind with one series: a pie, or a kind of the family `:parts`"
   defguard is_single(kind) when kind in @single
 
   @doc """

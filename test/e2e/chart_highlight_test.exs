@@ -63,6 +63,21 @@ defmodule Expresso.E2E.ChartHighlightTest do
     end
   end
 
+  # The same parts and steps as the treemap, in a Voronoi treemap.
+  defmodule VoronoiDeck do
+    use Expresso
+
+    slide "hours" do
+      chart :voronoi do
+        title "Hours"
+        shape :hexagon
+        categories ["Production/Press", "Production/Paint", "Office/IT", "Logistics"]
+        highlight ["Production", "Production/Paint"]
+        series "Hours", [40, 25, 15, 30]
+      end
+    end
+  end
+
   # The node "Coal" is in focus at step 1, and the node "Homes" at step 2.
   defmodule SankeyDeck do
     use Expresso
@@ -188,6 +203,30 @@ defmodule Expresso.E2E.ChartHighlightTest do
     press(page, "j")
     assert position(page) == "1.2"
     assert boxes(page) == ["1", "0.3", "1", "0.3", "0.3", "0.3"]
+  end
+
+  # The fill opacity of each cell of the Voronoi treemap of the present view,
+  # and of the outline of each group. The outline has no fill, and the rule
+  # of a dimmed mark sets its fill opacity and its stroke opacity together.
+  defp cells(page) do
+    js(page, """
+    Array.from(document.querySelectorAll(".screen .chart :is(.chart-cell, .chart-cell-group)"))
+      .map((cell) => getComputedStyle(cell).fillOpacity)
+    """)
+  end
+
+  test "a group of a Voronoi treemap in focus keeps its cells in full, and a part keeps its group",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(VoronoiDeck, tmp_dir))
+
+    # In the order of the document: the cells of Press and Paint, the outline
+    # of Production, the cell of Logistics, the cell of IT and the outline of
+    # Office.
+    assert cells(page) == ["1", "1", "1", "0.3", "0.3", "0.3"]
+
+    press(page, "j")
+    assert position(page) == "1.2"
+    assert cells(page) == ["0.3", "1", "1", "0.3", "0.3", "0.3"]
   end
 
   # The fill opacity of each link and of each node of the present view, in
