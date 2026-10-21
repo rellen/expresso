@@ -499,6 +499,11 @@ defmodule Expresso.Extension do
             doc:
               "The text between two levels of a category of a treemap or a sunburst, such as \"Production/Press\". The default is a slash."
           ],
+          shape: [
+            type: {:custom, Expresso.Element.Chart.Voronoi, :shape, []},
+            doc:
+              "The container of a voronoi chart: :rectangle, :circle, :hexagon, or a list of points in a unit box, such as [{0, 0}, {1, 0}, {0.5, 1}]. The y axis goes down, so {0.5, 1} is at the bottom. The polygon must be convex. The default is :rectangle."
+          ],
           levels: [
             type: {:list, :string},
             doc:

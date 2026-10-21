@@ -293,6 +293,18 @@ defmodule Expresso.ChartHighlightTest do
       assert rule =~ ~s|[data-keys]:not([data-keys~="p3"])|
     end
 
+    test "a voronoi chart gives the keys to its cells, its group outlines, its labels and its legend" do
+      html = parts(:voronoi, ["Production/Paint"])
+
+      assert {"chart-cell chart-depth-2", "p1 p3"} in keyed(html)
+      assert {"chart-cell-group", "p1 p2 p3"} in keyed(html)
+      assert {"chart-cell-label", "p1 p3"} in keyed(html)
+      assert {"chart-swatch chart-c1", "p1 p2 p3"} in keyed(html)
+      assert {"chart-name", "p6"} in keyed(html)
+      assert [rule] = rules(html)
+      assert rule =~ ~s|[data-keys]:not([data-keys~="p3"])|
+    end
+
     test "a name takes the separator of the chart, and a category can be a list of levels" do
       html =
         [

@@ -1073,6 +1073,26 @@ body[data-view="handout"] .tree-frames {
   transform: rotate(calc(var(--chart-w) * 1deg - 90deg));
   transform-box: view-box;
 }
+/*
+ * A Voronoi treemap. A cell of a leaf has the tint of its depth, as a ring of
+ * a sunburst. The outline of a group has the color of the background, and it
+ * is thicker than the edge between two leaves, so the eye sees each group as
+ * one region.
+ */
+.chart-cell {
+  fill: color-mix(in oklab, var(--series) var(--tint), var(--background));
+  stroke: var(--background);
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.chart-cell-group {
+  fill: none;
+  stroke: var(--background);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
 .chart-depth-1 {
   --tint: 80%;
 }

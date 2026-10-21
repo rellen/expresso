@@ -88,6 +88,7 @@ defmodule Expresso.Element.Chart do
               :levels,
               :delimiter,
               :highlight,
+              :shape,
               separator: "/",
               values: true,
               reveal: false,
@@ -330,6 +331,22 @@ defmodule Expresso.Element.Chart do
   defp options(%__MODULE__{kind: kind} = chart)
        when is_flow(kind) and (chart.effect == :grow or chart.count == true),
        do: {:error, "a sankey takes no effect :grow and no count option"}
+
+  defp options(%__MODULE__{kind: kind, shape: shape}) when kind != :voronoi and shape != nil,
+    do:
+      {:error,
+       "the shape option gives the container of a voronoi chart, so a #{kind} chart takes no shape option"}
+
+  defp options(%__MODULE__{kind: :voronoi} = chart)
+       when chart.frames != nil or chart.timeline != [],
+       do:
+         {:error,
+          "a voronoi chart takes no frames, because a cell can change its number of corners " <>
+            "from one frame to the next. Use a treemap for a change over time."}
+
+  defp options(%__MODULE__{kind: :voronoi} = chart)
+       when chart.effect == :grow or chart.count == true,
+       do: {:error, "a voronoi chart takes no effect :grow and no count option"}
 
   defp options(%__MODULE__{separator: ""}),
     do: {:error, "the separator option needs at least one character"}
@@ -596,6 +613,9 @@ defmodule Expresso.Element.Chart do
 
   defp values?(values, count),
     do: is_list(values) and length(values) == count and Enum.all?(values, &is_number/1)
+
+  defp single(%__MODULE__{kind: :voronoi, elements: [%Series{effect: :grow} | _]}),
+    do: {:error, "a voronoi chart takes no effect :grow and no count option"}
 
   # The checks of a chart of one series: a pie, a treemap or a sunburst.
   defp single(
@@ -897,6 +917,7 @@ defmodule Expresso.Element.Chart do
       sort: chart.sort,
       frame_label: chart.frame_label,
       separator: chart.separator,
+      shape: chart.shape || :rectangle,
       levels: chart.levels,
       thumbnail: chart.thumbnail,
       node_settings: Map.new(chart.flows, &{&1.name, &1}),
@@ -1108,6 +1129,12 @@ defmodule Expresso.Element.Chart do
     top = 8 + 44 * rows
     Map.put(assigns, :box, %{left: 4, right: @width - 4, top: top, bottom: @height - 8})
   end
+
+  # A Voronoi treemap fills the left part of the SVG, and the legend of its
+  # top-level groups takes the right part. It has one frame, so it has no
+  # label of a frame.
+  defp layout(%{kind: :voronoi} = assigns),
+    do: Map.put(assigns, :box, %{left: 4, right: 556, top: 4, bottom: @height - 4})
 
   # A treemap fills the SVG. The label of the frame takes a row at the top.
   defp layout(%{kind: :treemap} = assigns) do

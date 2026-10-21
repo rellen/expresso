@@ -1,6 +1,7 @@
 defmodule Expresso.Element.Chart.Hierarchy do
   @moduledoc """
-  The treemap and the sunburst: charts of the parts of a whole in groups
+  The treemap, the sunburst and the Voronoi treemap: charts of the parts of a
+  whole in groups
 
   A category with a slash names a part in a group, such as
   `"Production/Press"`, and the `separator` option of the chart can give a
@@ -16,16 +17,22 @@ defmodule Expresso.Element.Chart.Hierarchy do
   top. A sunburst draws each level of the tree as a ring around a center, and
   each part as an arc of its ring.
 
+  A Voronoi treemap divides a convex container into cells, with the layout of
+  `Expresso.Element.Chart.Voronoi`. Each part is a cell, and a group is the
+  cell that holds the cells of its parts, with a thicker outline. A leaf has
+  its label at the pole of its cell, and a legend gives the top-level groups.
+  The chart has one frame and no effect `:grow`.
+
   Each top-level group has a color of the palette, and its parts have lighter
-  tints of the same color. The drawing uses the channels of
-  `Expresso.Element.Chart.Motion`, so the parts move from frame to frame, and
-  the effect `:grow` opens the chart.
+  tints of the same color. The drawing of a treemap and of a sunburst uses the
+  channels of `Expresso.Element.Chart.Motion`, so the parts move from frame to
+  frame, and the effect `:grow` opens the chart.
   """
 
   import Temple
   use Temple.Component
 
-  alias Expresso.Element.Chart.{Motion, Plot}
+  alias Expresso.Element.Chart.{Motion, Plot, Voronoi}
 
   # The most groups at the top level, one for each color of the palette.
   @groups 8
@@ -313,6 +320,63 @@ defmodule Expresso.Element.Chart.Hierarchy do
     }
   end
 
+  # A Voronoi treemap has one frame, so it has one place for each part: its
+  # cell, and the place of its label. The label goes to the centroid of the
+  # cell when it fits there, as the eye sees the centroid as the center. Else
+  # it goes to the pole of the cell, the point farthest from its edges. A
+  # label that fits at neither place does not show.
+  defp scene(:voronoi, assigns, parts, [first] = values) do
+    polygon = Voronoi.container(assigns.shape, assigns.box)
+    cells = parts |> Enum.map(&item(&1, first)) |> Voronoi.layout(polygon)
+    all = flatten(parts)
+
+    labels =
+      for %{children: []} = part <- all, cells[part.id] != [], into: %{} do
+        cell = cells[part.id]
+        {pole, _room} = Voronoi.pole(cell)
+        places = [Voronoi.centroid(cell), pole]
+        {part.id, Enum.find(places, &cell_fits?(part, first, &1, cell, assigns.values))}
+      end
+
+    %{
+      parts: parts,
+      all: all,
+      cells: cells,
+      labels: labels,
+      values: values,
+      channels: Motion.flags(assigns.frames),
+      keys: keys(parts)
+    }
+  end
+
+  defp item(part, values),
+    do: %{
+      id: part.id,
+      value: value(part, values),
+      children: Enum.map(part.children, &item(&1, values))
+    }
+
+  # A label fits a cell when its box, at the pole of the cell, is inside the
+  # cell: the name at 18px in bold, and the value under it at 16px. A cell is
+  # convex, so the box is inside when its four corners are inside.
+  defp cell_fits?(part, values, {x, y}, cell, numbers?) do
+    width = 8 + max(10.5 * String.length(part.name), cell_value_width(part, values, numbers?))
+    height = if numbers?, do: 48, else: 28
+    {dx, dy} = {width / 2, height / 2}
+
+    Enum.all?(
+      [{x - dx, y - dy}, {x + dx, y - dy}, {x + dx, y + dy}, {x - dx, y + dy}],
+      fn corner ->
+        Voronoi.inside?(corner, cell)
+      end
+    )
+  end
+
+  defp cell_value_width(part, values, true),
+    do: 9 * String.length(Plot.label(value(part, values)))
+
+  defp cell_value_width(_part, _values, false), do: 0
+
   defp share(part, values),
     do: Float.round(value(part, values) / Enum.sum(values) * 100, 1)
 
@@ -468,6 +532,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
   @spec render(map()) :: Phoenix.HTML.safe()
   def render(%{kind: :treemap} = assigns), do: treemap_marks(assigns)
   def render(%{kind: :sunburst} = assigns), do: sunburst_marks(assigns)
+  def render(%{kind: :voronoi} = assigns), do: voronoi_marks(assigns)
 
   defp treemap_marks(assigns) do
     scene = assigns.scene
@@ -665,4 +730,89 @@ defmodule Expresso.Element.Chart.Hierarchy do
   end
 
   defp middle(part, ring), do: @hole + (part.depth - 0.5) * ring
+
+  # The cells of the leaves first, then the outline of each group over them,
+  # then the labels of the leaves, and the legend of the top-level groups at
+  # the right. A part with the value 0 has no cell, and a label that does not
+  # fit its cell does not show.
+  defp voronoi_marks(assigns) do
+    scene = assigns.scene
+    [series] = assigns.series
+    [values] = scene.values
+    roots = scene.parts
+    top = @cy - length(roots) * 36 / 2
+
+    assigns =
+      Map.merge(assigns, %{item: series, roots: roots, top: top, numbers: values, legend_x: 580})
+
+    temple do
+      g class: Expresso.Element.classes("chart-series", @item.class), rest!: @item.overlay do
+        for root <- @roots do
+          g class: "chart-c#{root.color}" do
+            for part <- flatten([root]), part.children == [], @scene.cells[part.id] != [] do
+              path class: "chart-cell chart-depth-#{min(part.depth, 3)}",
+                   d: cell_path(@scene.cells[part.id]),
+                   data_keys: key(assigns, part)
+            end
+
+            for part <- flatten([root]), part.children != [], @scene.cells[part.id] != [] do
+              path class: "chart-cell-group",
+                   d: cell_path(@scene.cells[part.id]),
+                   data_keys: key(assigns, part)
+            end
+
+            for part <- flatten([root]), point = @scene.labels[part.id] do
+              c(&cell_label/1, rest!: Map.merge(assigns, %{part: part, point: point}))
+            end
+          end
+        end
+
+        for {root, i} <- Enum.with_index(@roots) do
+          rect class: "chart-swatch chart-c#{root.color}",
+               x: @legend_x,
+               y: Plot.f(@top + i * 36 + 4),
+               width: 16,
+               height: 16,
+               rx: 3,
+               data_keys: key(assigns, root)
+
+          text class: "chart-name",
+               x: @legend_x + 28,
+               y: Plot.f(@top + i * 36 + 18),
+               data_keys: key(assigns, root) do
+            "#{root.name} #{Plot.label(share(root, @numbers))}%"
+          end
+        end
+      end
+    end
+  end
+
+  # The name of a leaf at the pole of its cell, and its value under it.
+  defp cell_label(assigns) do
+    {x, y} = assigns.point
+    value = Plot.label(value(assigns.part, assigns.numbers))
+    assigns = Map.merge(assigns, %{x: Plot.f(x), y: y, value: value})
+
+    temple do
+      g class: "chart-cell-label", data_keys: key(assigns, @part) do
+        text x: @x,
+             y: Plot.f(if(@values, do: @y - 2, else: @y + 6)),
+             text_anchor: "middle",
+             class: "chart-part" do
+          @part.name
+        end
+
+        if @values do
+          text x: @x, y: Plot.f(@y + 18), text_anchor: "middle", class: "chart-part-value" do
+            @value
+          end
+        end
+      end
+    end
+  end
+
+  defp cell_path(cell) do
+    corners = Enum.map_join(cell, " L ", fn {x, y} -> "#{Plot.f(x)},#{Plot.f(y)}" end)
+    "M " <> corners <> " Z"
+  end
 end
