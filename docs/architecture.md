@@ -1335,6 +1335,11 @@ code:
   element. D2 gives no `id`, and it puts the key of each element in Base64 into its class.
   `Expresso.Element.Diagram.D2.name/1` decodes the key and writes it as the `id`. A part
   then names a node or an edge in the words of the source.
+- **An edge follows its ends.** Each tool module writes the ends of an edge into the
+  attributes `data-graph-from` and `data-graph-to`. With `edges :follow`, `draw/1` adds a
+  part for each edge without its own part. Its steps are the steps that both of its ends
+  have. `Expresso.Overlay.Render.identify/1` runs after `draw/1`, so the added part gets its
+  identity and its `data-on` as each other part does.
 - **The source is a file of the deck.** The render reads the source with
   `Expresso.DeckFile`, so the watch mode renders again after a change to the source.
 
@@ -2964,8 +2969,8 @@ The commands are:
 1. **A diagram from Graphviz or D2.** `docs/graph-diagrams.md` gives the plan, and issue
    #386 holds it too. The render runs the tool, and a part names a node or an edge in the
    words of the source. The ten decisions of the plan are settled. The code holds the first
-   two of the seven pull requests: the sources of Graphviz and D2, the `layout` option and
-   the names.
+   three of the seven pull requests: the sources of Graphviz and D2, the `layout` option,
+   the names and the `edges` option.
 
 The last item before this one, the dim state of `docs/dim-state.md`, gave each role of text
 its own dimmed color.

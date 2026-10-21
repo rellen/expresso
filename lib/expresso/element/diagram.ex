@@ -48,8 +48,9 @@ defmodule Expresso.Element.Diagram do
   names of the graph in the struct. `Expresso.Element.Diagram.Graphviz` and
   `Expresso.Element.Diagram.D2` give each element of the graph a name from the
   source, so a part names it in the words of the source. The `layout` option
-  gives the layout engine of the tool. `docs/graph-diagrams.md` gives the
-  plan.
+  gives the layout engine of the tool. With the `edges` option `:follow`, the
+  default, `draw/1` gives each edge without its own part the steps where both
+  of its ends show. `docs/graph-diagrams.md` gives the plan.
 
   `Expresso.Deck.render/1` writes the document with Floki, which writes each
   name of the SVG in lowercase. A browser reads `viewbox` as `viewBox` and
@@ -68,6 +69,7 @@ defmodule Expresso.Element.Diagram do
               :width,
               :alt,
               :layout,
+              :edges,
               # The SVG and the names of a graph, from `draw/1`.
               :svg,
               :names,
@@ -284,7 +286,35 @@ defmodule Expresso.Element.Diagram do
   each tool one time. A diagram of an SVG file does not change.
   """
   @spec draw(Expresso.Deck.t()) :: Expresso.Deck.t()
-  def draw(%Expresso.Deck{} = deck), do: Expresso.Element.Tree.map_deck(deck, &draw_one/1)
+  def draw(%Expresso.Deck{} = deck),
+    do: Expresso.Element.Tree.map_deck(deck, &(&1 |> draw_one() |> follow()))
+
+  # With `edges :follow`, an edge without its own part shows from the step
+  # where both of its ends show. Each tool writes the ends of an edge into the
+  # attributes `data-graph-from` and `data-graph-to`. An end without a part, or
+  # with a part without steps, shows at each step. An edge with two such ends
+  # shows at each step, so it needs no part.
+  defp follow(%__MODULE__{svg: svg, edges: edges, elements: parts} = diagram)
+       when is_binary(svg) and edges in [nil, :follow] do
+    steps = Map.new(parts, &{&1.id, &1.steps})
+
+    added =
+      for {"g", attrs, _children} <-
+            svg |> Floki.parse_fragment!() |> Floki.find("g[data-graph-from]"),
+          attrs = Map.new(attrs),
+          not Map.has_key?(steps, attrs["id"]),
+          shown = both(steps[attrs["data-graph-from"]], steps[attrs["data-graph-to"]]),
+          shown != nil,
+          do: %Expresso.Element.Part{id: attrs["id"], steps: shown}
+
+    %__MODULE__{diagram | elements: parts ++ added}
+  end
+
+  defp follow(element), do: element
+
+  defp both(nil, steps), do: steps
+  defp both(steps, nil), do: steps
+  defp both(from, to), do: Enum.filter(from, &(&1 in to))
 
   defp draw_one(%__MODULE__{svg: nil, src: src, layout: layout} = diagram) do
     case tool(src) do
@@ -313,29 +343,35 @@ defmodule Expresso.Element.Diagram do
   end
 
   @doc """
-  Refuse a `layout` option for an SVG file, and a layout of a different tool
+  Refuse the options of a graph for an SVG file, and a layout of a different tool
 
   The entity of the DSL and `Expresso.Builder` call this function.
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
-  def check(%__MODULE__{layout: nil} = diagram), do: {:ok, diagram}
+  def check(%__MODULE__{src: src, layout: layout, edges: edges} = diagram) do
+    tool = tool(src)
 
-  def check(%__MODULE__{src: src, layout: layout} = diagram) do
-    case tool(src) do
-      nil ->
+    cond do
+      tool == nil and layout != nil ->
+        {:error, graph_option(:layout, src)}
+
+      tool == nil and edges != nil ->
+        {:error, graph_option(:edges, src)}
+
+      tool != nil and layout != nil and layout not in tool.layouts() ->
         {:error,
-         "the layout option applies to the source of a graph, such as a .dot or a .d2 file, " <>
-           "so the diagram \"#{src}\" takes no layout option"}
+         "the layout of the diagram \"#{src}\" is one of " <>
+           Enum.map_join(tool.layouts(), ", ", &inspect/1) <> ", and not #{inspect(layout)}"}
 
-      tool ->
-        if layout in tool.layouts(),
-          do: {:ok, diagram},
-          else:
-            {:error,
-             "the layout of the diagram \"#{src}\" is one of " <>
-               Enum.map_join(tool.layouts(), ", ", &inspect/1) <> ", and not #{inspect(layout)}"}
+      true ->
+        {:ok, diagram}
     end
   end
+
+  defp graph_option(option, src),
+    do:
+      "the #{option} option applies to the source of a graph, such as a .dot or a .d2 file, " <>
+        "so the diagram \"#{src}\" takes no #{option} option"
 
   @doc """
   Make the HTML of a diagram

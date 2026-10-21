@@ -782,6 +782,11 @@ defmodule Expresso.Extension do
             doc:
               "The layout engine of the tool that draws a graph, such as :neato for Graphviz or :dagre for D2. See docs/reference/diagram-element.md."
           ],
+          edges: [
+            type: {:in, [:follow, :own]},
+            doc:
+              "When an edge of a graph without its own part shows. :follow, the default, shows it from the step where both of its ends show. :own shows it at each step. See docs/reference/diagram-element.md."
+          ],
           alt: [
             type: :string,
             doc:

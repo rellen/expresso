@@ -31,6 +31,7 @@ end
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 | `layout` | For Graphviz, `:dot`, `:neato`, `:fdp`, `:sfdp`, `:circo` or `:twopi`. For D2, `:elk` or `:dagre`. | The layout engine of the tool. The default is `:dot` for Graphviz and `:elk` for D2. |
+| `edges` | `:follow` or `:own` | When an edge of a graph without its own part shows. The default is `:follow`. See [The edges of a graph](#the-edges-of-a-graph). |
 
 ## The options of a part
 
@@ -119,6 +120,34 @@ but ELK takes only some seconds for a graph of a slide.
 The render finds the program `d2` on the `PATH`. The variable `EXPRESSO_D2` gives a
 different path. D2 holds its font in the SVG, and the graph keeps the colors of D2.
 
+## The edges of a graph
+
+An edge of a graph joins two nodes. With `edges :follow`, the default, an edge without its
+own part shows from the step where both of its ends show:
+
+```elixir
+slide "the steps of a graph" do
+  diagram "system.dot" do
+    part "api", at: [from: 2]
+    part "store", at: [from: 3]
+  end
+end
+```
+
+| Edge | Ends | Steps |
+| --- | --- | --- |
+| `web->api` | `web` shows at each step, and `api` from step 2 | From step 2 |
+| `api->db` | `api` from step 2, and `store` from step 3 | From step 3 |
+
+An end is a node or a container with its own part. An end without a part, or with a part
+without `at`, shows at each step. An edge with two such ends shows at each step. An end of
+an edge in Graphviz is the `id` of its node, so the node `db [id="store"]` is the end
+`store`.
+
+An edge with its own part keeps the steps of that part, so an edge can show later than its
+ends. With `edges :own`, an edge without a part shows at each step, as an element of an SVG
+file does.
+
 ## The errors
 
 The render gives an error for these:
@@ -131,8 +160,8 @@ The render gives an error for these:
 - a source that the tool cannot draw, such as a source with a syntax error. The message
   gives the message of the tool.
 
-The DSL and `Expresso.Builder` give an error for the `layout` option of an `.svg` file, and
-for a layout of a different tool.
+The DSL and `Expresso.Builder` give an error for the `layout` and the `edges` options of an
+`.svg` file, and for a layout of a different tool.
 
 ## The theme and the SVG file
 
