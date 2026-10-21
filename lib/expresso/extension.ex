@@ -759,6 +759,7 @@ defmodule Expresso.Extension do
     target: Expresso.Element.Diagram,
     args: [:src],
     entities: [elements: [@part], on: [@on]],
+    transform: {Expresso.Element.Diagram, :check, []},
     schema:
       @overlay_schema ++
         @class_schema ++
@@ -767,11 +768,16 @@ defmodule Expresso.Extension do
             type: :string,
             required: true,
             doc:
-              "The path of the SVG file, from the root option of the deck or from the working directory of the command."
+              "The path of the SVG file, or of the source of a graph such as a .dot file, from the root option of the deck or from the working directory of the command."
           ],
           width: [
             type: :string,
             doc: "The width of the diagram, such as 900px or 60%. See docs/architecture.md."
+          ],
+          layout: [
+            type: {:in, Expresso.Element.Diagram.Graphviz.layouts()},
+            doc:
+              "The layout engine of the tool that draws a graph, such as :neato for Graphviz. See docs/reference/diagram-element.md."
           ],
           alt: [
             type: :string,

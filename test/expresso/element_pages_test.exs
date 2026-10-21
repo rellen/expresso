@@ -37,11 +37,37 @@ defmodule Expresso.ElementPagesTest do
     File.cp!("examples/animations/chime.ogg", Path.join(root, "chime.ogg"))
     File.cp!("examples/animations/visitors.csv", Path.join(root, "visitors.csv"))
     File.cp!("test/fixtures/tree.csv", Path.join(root, "team.csv"))
+    File.cp!("test/fixtures/graphviz/flow.dot", Path.join(root, "system.dot"))
 
     for path <- ["assets/logo.svg", "icons/espresso.svg"] do
       File.mkdir_p!(Path.join(root, Path.dirname(path)))
       File.cp!("examples/animations/icons/espresso.svg", Path.join(root, path))
     end
+  end
+
+  # A block with the source of a graph needs the tool of the graph to render.
+  # The test without a tag compiles such a block, and the test with the tag
+  # `:graphviz` renders it.
+  defp graph?(block), do: block =~ ~r/"[^"]+\.(dot|gv)"/
+
+  defp compile(block, page, index, tmp_dir, path) do
+    module = Module.concat([Expresso.ElementPagesTest, Macro.camelize(page), "D#{index}"])
+
+    code = """
+    defmodule #{inspect(module)} do
+      use Expresso
+      name "page"
+      root #{inspect(tmp_dir)}
+    #{block}
+    end
+    """
+
+    {compiled, warnings} = with_io(:stderr, fn -> Code.compile_string(code, path) end)
+    on_exit(fn -> remove(compiled) end)
+    assert warnings == "", "#{path}, block #{index + 1}:\n#{warnings}"
+
+    assert {:ok, deck} = Expresso.to_deck(module)
+    deck
   end
 
   for page <- @pages do
@@ -54,25 +80,28 @@ defmodule Expresso.ElementPagesTest do
       assert blocks != [], "#{path} has no code block"
 
       for {block, index} <- Enum.with_index(blocks) do
-        module =
-          Module.concat([Expresso.ElementPagesTest, Macro.camelize(unquote(page)), "D#{index}"])
-
-        code = """
-        defmodule #{inspect(module)} do
-          use Expresso
-          name "page"
-          root #{inspect(tmp_dir)}
-        #{block}
-        end
-        """
-
-        {compiled, warnings} = with_io(:stderr, fn -> Code.compile_string(code, path) end)
-        on_exit(fn -> remove(compiled) end)
-        assert warnings == "", "#{path}, block #{index + 1}:\n#{warnings}"
-
-        assert {:ok, deck} = Expresso.to_deck(module)
-        assert Expresso.Deck.render(deck) =~ "<html"
+        deck = compile(block, unquote(page), index, tmp_dir, path)
+        if not graph?(block), do: assert(Expresso.Deck.render(deck) =~ "<html")
       end
+    end
+  end
+
+  @tag :tmp_dir
+  @tag :graphviz
+  test "each code block of the page of the diagram element with a graph renders", %{
+    tmp_dir: tmp_dir
+  } do
+    files(tmp_dir)
+    path = "docs/reference/diagram-element.md"
+
+    graphs =
+      path |> blocks() |> Enum.with_index() |> Enum.filter(fn {block, _} -> graph?(block) end)
+
+    assert graphs != [], "#{path} has no code block with a graph"
+
+    for {block, index} <- graphs do
+      deck = compile(block, "graph", index, tmp_dir, path)
+      assert Expresso.Deck.render(deck) =~ "<html"
     end
   end
 

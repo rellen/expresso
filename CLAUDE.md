@@ -10,7 +10,7 @@ Read these documents before you change the code:
 
 - `docs/architecture.md` — the two input paths, the render pipeline, the templates, the
   elements, the DSL, the presenter and the build. Its section "Open work" gives the next
-  items in the order of their value. It has no item at this time.
+  items in the order of their value. It has one item at this time.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide. The
   code contains each part of the design. The document ends with six decisions, and
   each is settled.
@@ -26,6 +26,9 @@ Read these documents before you change the code:
 - `docs/dim-state.md` — the design for a dim state with a color for each role. The code
   contains this design. The document records four decisions, and each is settled. Its
   last section, "The result", tells what changed during the work.
+- `docs/graph-diagrams.md` — the plan for a `diagram` from the source of a graph, in the
+  language of Graphviz or of D2. The code does not contain this plan yet. The document
+  ends with ten decisions, and each is settled.
 
 ## Build and test
 
@@ -48,6 +51,7 @@ npm run lint
 npm run format:check
 npm test
 mix test --only e2e
+mix test --only graphviz --only d2
 mix test --only dependency
 BURRITO_TARGET=linux_x86 MIX_ENV=prod mix release expresso_cli_app --overwrite
 EXPRESSO_BINARY=burrito_out/expresso_cli_app_linux_x86 mix test --only release
@@ -65,6 +69,10 @@ the release tests with that binary. `.check.exs` gives the tools.
 driver of `package.json` and Chromium. `mix test` excludes them. In a remote session, the
 hook sets `EXPRESSO_CHROMIUM` to the Chromium of the container.
 `docs/development/browser-tests.md` gives the details.
+
+`mix test --only graphviz --only d2` runs the tests that run a tool that draws a graph.
+They need Graphviz, and the hook installs it. `mix test` excludes them.
+`docs/development/graph-tools.md` gives the details.
 
 `mix test --only dependency` runs the test of `test/dependency/`. It makes a project that
 takes Expresso as a dev dependency, and it runs `mix expresso` there. It needs the network

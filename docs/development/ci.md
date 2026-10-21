@@ -12,6 +12,8 @@ The jobs run in parallel on Linux, so the slowest of them gives their time:
   of unused dependencies, `mix docs`, Doctor and Dialyzer.
 - `test`: the unit tests, in two jobs, `test (1/2)` and `test (2/2)`.
 - `e2e`: the browser tests, in three jobs, `e2e (1/3)` to `e2e (3/3)`.
+- `graph`: the tests that run a tool that draws a graph. The job installs Graphviz. See
+  `graph-tools.md`.
 - `dependency`: the dependency test.
 - `presenter`: `npm run check`, `npm run lint`, `npm run format:check` and `npm test`.
 - `gifs`: `mix expresso.gifs`, the GIFs and the stills of the example decks. The artifact
@@ -22,8 +24,8 @@ The jobs run in parallel on Linux, so the slowest of them gives their time:
   Neither job publishes the binary. `.github/actions/setup-zig` installs Zig, as "Zig in
   the workflow" below tells.
 
-Together they run each tool of `mix check`, with the four npm commands, the browser tests
-and the release tests. They make and test the binary for `linux_x86` and `linux_arm`. No job
+Together they run each tool of `mix check`, with the four npm commands, the browser tests,
+the tests of the graph tools and the release tests. They make and test the binary for `linux_x86` and `linux_arm`. No job
 makes a binary for macOS.
 
 The jobs do not run `mix check`, because that command runs the tools one after the other
@@ -36,12 +38,12 @@ job `macos` ran the compiler, the unit tests, the browser tests, the binary for
 
 A job compiles the project for one environment. Therefore the tools that need the same
 build share one job, and the project compiles two times for the development environment,
-in `lint` and in `gifs`. It compiles for the test environment in each job of `test`, `e2e`
-and `dependency`, and in the two `binary` jobs. It compiles two times for the production
+in `lint` and in `gifs`. It compiles for the test environment in each job of `test`, `e2e`,
+`graph` and `dependency`, and in the two `binary` jobs. It compiles two times for the production
 environment, in the two `binary` jobs. A step of `lint` or of `presenter` runs also when a
 step before it fails, so one run reports each defect.
 
-The jobs of `test` and `e2e` share the cache `test`. Each job reads the build
+The jobs of `test`, `e2e` and `graph` share the cache `test`. Each job reads the build
 of the commit before, and compiles only the files that changed. The first job to finish
 saves the build of its commit. A build job that the other jobs wait for adds its setup and
 the save of the cache to the time of each run, so the workflow has no such job.

@@ -1,0 +1,10 @@
+// The graph of the tests of a diagram from Graphviz. `flow.svg` is the
+// output of `dot -Tsvg flow.dot`, for the tests that run without Graphviz.
+digraph flow {
+  rankdir=LR
+  subgraph cluster_app { label="App"; web; api }
+  db [id="store" shape=cylinder]
+  web -> api
+  api -> db
+  api -> db [label="replica"]
+}

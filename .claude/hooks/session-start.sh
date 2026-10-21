@@ -105,6 +105,17 @@ fi
 
 export PATH="${ZIG_DIR}:${PATH}"
 
+# Graphviz. The tests with the tag `:graphviz` run `dot`, and a remote session
+# and the workflow both run Ubuntu 24.04, so `apt-get` gives both the same
+# version. `docs/development/graph-tools.md` gives the details. A failed install
+# gives a warning, and the hook continues.
+if ! command -v dot >/dev/null 2>&1; then
+  export DEBIAN_FRONTEND=noninteractive
+  if ! { apt-get update -qq && apt-get install -y -qq graphviz; } >/dev/null 2>&1; then
+    echo "The hook did not get Graphviz. mix test --only graphviz needs it." >&2
+  fi
+fi
+
 # The container gives a latin1 name encoding, and Elixir expects utf8. The
 # language gives the tools a utf8 output.
 export ELIXIR_ERL_OPTIONS="+fnu"

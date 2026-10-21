@@ -98,12 +98,13 @@ defmodule Expresso.Morph do
     children(svg)
   end
 
-  # A diagram reads its file again, because the render gives each copy its
-  # own ids and the attributes of its parts.
+  # A diagram reads its SVG again, because the render gives each copy its own
+  # ids and the attributes of its parts. The SVG of a graph comes from the
+  # tool, and `Expresso.Element.Diagram.draw/1` keeps it in the struct.
   defp content(element, :svg),
     do:
-      element.src
-      |> Expresso.DeckFile.read_text!("diagram")
+      element
+      |> Expresso.Element.Diagram.text()
       |> Floki.parse_fragment!()
       |> children()
 

@@ -542,7 +542,9 @@ defmodule Expresso.Renderer do
   The assigns hold the deck under the key `deck`. `Expresso.Deck.render/1` calls
   this function, and it writes the tree and adds the doctype. The function
   dims the lines of each code element with the `highlight` option with
-  `Expresso.Element.Code.spotlight/1` first. It gives each element its identity
+  `Expresso.Element.Code.spotlight/1` first. It runs the tool of each graph
+  with `Expresso.Element.Diagram.draw/1`, so a render runs each tool one time.
+  It gives each element its identity
   with `Expresso.Overlay.Render.identify/1` next. Then `Expresso.Goto.resolve/1` gives each link its number and its
   commands, and it raises for a link to a slide or a step that the deck does not have.
 
@@ -565,6 +567,7 @@ defmodule Expresso.Renderer do
         :deck,
         &(&1
           |> Expresso.Element.Code.spotlight()
+          |> Expresso.Element.Diagram.draw()
           |> Expresso.Element.Diagram.place()
           |> Expresso.Element.Embed.number()
           |> Expresso.Element.Video.number()
