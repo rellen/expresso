@@ -1317,6 +1317,24 @@ center of the part to the center of the target. These are the reasons for this d
   is in the same parent as the part, and the theme moves the wrapper. A parent with
   `scale(2)` therefore gets half the distance of the file.
 
+A `diagram` can also take the source of a graph, such as a `.dot` file for Graphviz.
+`docs/graph-diagrams.md` gives the plan and its decisions. These are the parts of the
+code:
+
+- **One run of the tool.** `Expresso.Element.Diagram.draw/1` runs before `place/1`. It runs
+  the tool of each graph, and it keeps the SVG and the names in the struct. `place/1`, the
+  render function and `Expresso.Morph` read the SVG with `Expresso.Element.Diagram.text/1`,
+  so a render runs each tool one time.
+- **The tool is outside Expresso.** `Expresso.Element.Diagram.Tool` finds the program on
+  the `PATH`, or at the path of a variable such as `EXPRESSO_DOT`. `System.cmd/3` cannot
+  keep the standard error apart, so the tool writes the SVG to a file in a private
+  directory. The output of a tool that fails goes into the message of the error.
+- **The names come from the source.** `Expresso.Element.Diagram.Graphviz.name/1` replaces
+  each `id` that Graphviz numbers, such as `node1`, with the text of the `<title>` of its
+  element. A part then names a node or an edge in the words of the source.
+- **The source is a file of the deck.** The render reads the source with
+  `Expresso.DeckFile`, so the watch mode renders again after a change to the source.
+
 ### The embed
 
 An `embed` shows a web page in a frame. `docs/reference/embed-element.md` gives the options
@@ -2940,8 +2958,13 @@ The commands are:
 
 ## Open work
 
-The list has no item at this time. The last item, the dim state of `docs/dim-state.md`,
-gave each role of text its own dimmed color.
+1. **A diagram from Graphviz or D2.** `docs/graph-diagrams.md` gives the plan, and issue
+   #386 holds it too. The render runs the tool, and a part names a node or an edge in the
+   words of the source. The ten decisions of the plan are settled. The code holds the first
+   of the seven pull requests: the source of Graphviz, the `layout` option and the names.
+
+The last item before this one, the dim state of `docs/dim-state.md`, gave each role of text
+its own dimmed color.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on

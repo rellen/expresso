@@ -184,6 +184,24 @@ jobs:
           cache: test
       - run: mix test --only e2e --partitions 3
 
+  # The tests that run a tool that draws a graph. The runner and a remote
+  # session both run Ubuntu 24.04, so `apt-get` gives both the same version of
+  # Graphviz. `docs/development/graph-tools.md` gives the details.
+  graph:
+    name: graph
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq graphviz
+      - uses: ./.github/actions/setup-elixir
+        with:
+          cache: test
+      - uses: ./.github/actions/setup-zig
+        with:
+          version: ${{ env.ZIG_VERSION }}
+          cache: test
+      - run: mix test --only graphviz --only d2
+
   # The test of `test/dependency/` makes a project that takes Expresso as a dev
   # dependency, and it fetches the dependencies of that project from Hex and
   # GitHub. The project is in `_build/dependency_project`, so the cache keeps
@@ -349,7 +367,7 @@ jobs:
   all:
     name: Erlang/OTP 29, Elixir 1.20, Node 24
     if: always()
-    needs: [format, lint, test, e2e, dependency, presenter, gifs, binary]
+    needs: [format, lint, test, e2e, graph, dependency, presenter, gifs, binary]
     runs-on: ubuntu-latest
     steps:
       - name: Fail when a check does not succeed

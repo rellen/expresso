@@ -4,8 +4,10 @@
 # `test/dependency/` makes a project that takes Expresso as a dependency, and it
 # needs the network. `mix test --only dependency` runs it.
 # `docs/development/browser-tests.md` and `docs/development/release.md` give the
-# setup of each.
-ExUnit.start(exclude: [:e2e, :release, :dependency])
+# setup of each. The tests with the tags `:graphviz` and `:d2` run a tool that
+# draws a graph. `mix test --only graphviz --only d2` runs them, and
+# `docs/development/graph-tools.md` tells how to install the tools.
+ExUnit.start(exclude: [:e2e, :release, :dependency, :graphviz, :d2])
 
 # Some tests compile the same deck file more than one time, and
 # `mix test --repeat-until-failure` compiles each module again. Elixir then

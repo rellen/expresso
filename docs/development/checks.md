@@ -13,6 +13,7 @@ mix test
 mix test --only e2e            # the browser tests, see browser-tests.md
 mix test --only dependency     # Expresso as a dependency, see release.md
 mix test --only release        # the tests of the binary, see release.md
+mix test --only graphviz --only d2   # the tests of the graph tools, see graph-tools.md
 npm run check                  # tsc, the type check of the presenter script
 npm run lint                   # oxlint, see presenter-script.md
 npm run format:check           # prettier --check
@@ -30,7 +31,8 @@ Each result above comes from Erlang/OTP 29.1, Elixir 1.20.4 and Zig 0.16.0, whic
 versions. Therefore a check that passes in a session also passes on your machine and in the
 workflow.
 
-`mix check` also runs the browser tests, the dependency test and the release tests. Before
+`mix check` also runs the browser tests, the tests of the graph tools, the dependency test
+and the release tests. The tests of the graph tools need Graphviz, see `graph-tools.md`. Before
 the release tests,
 it makes the binary for the target of the computer: `macos_arm`, `macos_x86`, `linux_x86`
 or `linux_arm`. `.check.exs` finds the target. Therefore `mix check` needs Node, the

@@ -42,6 +42,13 @@ defmodule Expresso.Element.Diagram do
   class `diagram-part`. The render function finds a part by its `id`
   attribute, so an id such as `step.1` or `a:b` works.
 
+  A `.dot` or a `.gv` file is the source of a graph in the language of
+  Graphviz. `draw/1` runs the tool before the render, and it keeps the SVG and
+  the names of the graph in the struct. `Expresso.Element.Diagram.Graphviz`
+  gives each node, edge and cluster a name from the source, so a part names
+  it in the words of the source. The `layout` option gives the layout engine
+  of the tool. `docs/graph-diagrams.md` gives the plan.
+
   `Expresso.Deck.render/1` writes the document with Floki, which writes each
   name of the SVG in lowercase. A browser reads `viewbox` as `viewBox` and
   `lineargradient` as `linearGradient` inside an `svg` element, so the
@@ -58,6 +65,10 @@ defmodule Expresso.Element.Diagram do
               :src,
               :width,
               :alt,
+              :layout,
+              # The SVG and the names of a graph, from `draw/1`.
+              :svg,
+              :names,
               elements: [],
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
@@ -88,7 +99,7 @@ defmodule Expresso.Element.Diagram do
   defp moves?(%Expresso.Element.Part{on: on}), do: Enum.any?(on, &(&1.move_to != nil))
 
   defp place_parts(%__MODULE__{src: src, elements: parts} = diagram) do
-    tree = parse(src)
+    tree = parse(diagram)
     %__MODULE__{diagram | elements: Enum.map(parts, &place_part(&1, tree, src))}
   end
 
@@ -130,10 +141,10 @@ defmodule Expresso.Element.Diagram do
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
   def get_assigns(diagram) do
-    %__MODULE__{src: src, elements: parts, width: width, alt: alt} = diagram
+    %__MODULE__{width: width, alt: alt} = diagram
 
     %{
-      svg: svg(src, parts),
+      svg: svg(diagram),
       overlay: Expresso.Overlay.Render.attributes(diagram) ++ width(width) ++ alt(alt)
     }
   end
@@ -150,13 +161,15 @@ defmodule Expresso.Element.Diagram do
     [{"style", "--diagram-width: #{Expresso.Element.viewport_unit(width)}"}]
   end
 
-  defp svg(src, parts) do
-    tree = parse(src)
+  defp svg(%__MODULE__{src: src, elements: parts} = diagram) do
+    diagram = draw_one(diagram)
+    tree = parse(diagram)
 
     parts
     |> Enum.reduce(tree, fn %Expresso.Element.Part{id: id} = part, tree ->
       if not has_id?(tree, id) do
-        raise ArgumentError, "the diagram \"#{src}\" has no element with the id \"#{id}\""
+        raise ArgumentError,
+              "the diagram \"#{src}\" has no element with the id \"#{id}\"" <> names(diagram)
       end
 
       mark(tree, id, part_attributes(part), nil)
@@ -168,7 +181,15 @@ defmodule Expresso.Element.Diagram do
   # An SVG file from Graphviz, Inkscape or Illustrator starts with an XML
   # declaration and a DOCTYPE. Neither one is valid in an HTML document, so
   # the parse removes them.
-  defp parse(src), do: src |> read() |> Floki.parse_fragment!() |> Enum.reject(&prolog?/1)
+  defp parse(diagram),
+    do: diagram |> text() |> Floki.parse_fragment!() |> Enum.reject(&prolog?/1)
+
+  # The author cannot read the names of a graph in its SVG, so the message
+  # lists them.
+  defp names(%__MODULE__{names: [_ | _] = names}),
+    do: ". The graph has these names: " <> Enum.map_join(names, ", ", &~s("#{&1}"))
+
+  defp names(_diagram), do: ""
 
   defp prolog?({:pi, "xml", _attrs}), do: true
   defp prolog?({:doctype, _name, _public, _system}), do: true
@@ -240,7 +261,78 @@ defmodule Expresso.Element.Diagram do
     overlay ++ attrs
   end
 
+  @doc """
+  Return the SVG of a diagram
+
+  The SVG of a graph comes from `draw/1`, and the SVG of a file comes from the
+  file. `Expresso.Morph` reads the SVG with this function too.
+  """
+  @spec text(t()) :: String.t()
+  def text(%__MODULE__{svg: svg}) when is_binary(svg), do: svg
+
+  def text(%__MODULE__{src: src} = diagram),
+    do: if(tool(src), do: draw_one(diagram).svg, else: read(src))
+
   defp read(src), do: Expresso.DeckFile.read_text!(src, "diagram")
+
+  @doc """
+  Run the tool of each graph of a deck, and keep the SVG and the names
+
+  `Expresso.Renderer` calls this function before `place/1`, so a render runs
+  each tool one time. A diagram of an SVG file does not change.
+  """
+  @spec draw(Expresso.Deck.t()) :: Expresso.Deck.t()
+  def draw(%Expresso.Deck{} = deck), do: Expresso.Element.Tree.map_deck(deck, &draw_one/1)
+
+  defp draw_one(%__MODULE__{svg: nil, src: src, layout: layout} = diagram) do
+    case tool(src) do
+      nil ->
+        diagram
+
+      tool ->
+        # The read records the source for the watch mode, and it stops the
+        # render for a file that it cannot read.
+        read(src)
+        {svg, names} = tool.draw!(src, layout || hd(tool.layouts()))
+        %__MODULE__{diagram | svg: svg, names: names}
+    end
+  end
+
+  defp draw_one(element), do: element
+
+  # The tool of a source, from the extension of its file. An SVG file has no
+  # tool.
+  defp tool(src) do
+    case src |> Path.extname() |> String.downcase() do
+      ext when ext in [".dot", ".gv"] -> Expresso.Element.Diagram.Graphviz
+      _other -> nil
+    end
+  end
+
+  @doc """
+  Refuse a `layout` option for an SVG file, and a layout of a different tool
+
+  The entity of the DSL and `Expresso.Builder` call this function.
+  """
+  @spec check(t()) :: {:ok, t()} | {:error, String.t()}
+  def check(%__MODULE__{layout: nil} = diagram), do: {:ok, diagram}
+
+  def check(%__MODULE__{src: src, layout: layout} = diagram) do
+    case tool(src) do
+      nil ->
+        {:error,
+         "the layout option applies to the source of a graph, such as a .dot file, " <>
+           "so the diagram \"#{src}\" takes no layout option"}
+
+      tool ->
+        if layout in tool.layouts(),
+          do: {:ok, diagram},
+          else:
+            {:error,
+             "the layout of the diagram \"#{src}\" is one of " <>
+               Enum.map_join(tool.layouts(), ", ", &inspect/1) <> ", and not #{inspect(layout)}"}
+    end
+  end
 
   @doc """
   Make the HTML of a diagram
