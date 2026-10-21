@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 685 406">
+  <svg class="inner" width="685" height="406" viewBox="-89 -89 685 406">
+    <rect x="-89" y="-89" width="685" height="406" fill="#eef"/>
+    <g id="box"><rect x="0" y="0" width="120" height="60" fill="#88c"/></g>
+    <text x="400" y="200" font-size="16">The right side</text>
+  </svg>
+</svg>

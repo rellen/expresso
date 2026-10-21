@@ -126,6 +126,33 @@ defmodule Expresso.E2E.LayoutCheckTest do
     assert stat =~ ~r/^Slide 1, step 1: the stat “.*cups” goes \d+ px past the right edge$/
   end
 
+  # A diagram from D2 holds its drawing in an `svg` inside the root `svg`. The
+  # width option applies to the root only, so the inner `svg` keeps the
+  # coordinates of the root.
+  defmodule NestedDeck do
+    use Expresso
+
+    slide "nested" do
+      diagram "test/fixtures/nested.svg" do
+        width "80%"
+        part "box", at: [from: 2]
+      end
+    end
+  end
+
+  test "?check reports no problem for a diagram with an svg inside its root svg", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(NestedDeck, tmp_dir) <> "?check")
+
+    assert report(page)["problems"] == []
+
+    box = &~s|document.querySelector("#slide-1 .diagram #{&1}").getBoundingClientRect()|
+    assert js(page, "#{box.("svg.inner")}.left") >= js(page, "#{box.("> svg")}.left") - 1
+    assert js(page, "#{box.("svg.inner")}.right") <= js(page, "#{box.("> svg")}.right") + 1
+  end
+
   # A table with a caption, and a table with a long caption that only a screen
   # reader reads. The check measures a table by its box, and a text box by
   # each text in it, so the second table is in a text box.

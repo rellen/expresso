@@ -1900,8 +1900,9 @@ body[data-view="handout"] .chart-frames {
   min-height: 0;
 }
 /* A part can move, turn or get an outline beyond the box of the file, so the
-   SVG does not cut its content at the edge of the box. */
-.diagram svg {
+   SVG does not cut its content at the edge of the box. The rule applies to the
+   root only: a file from D2 holds an svg inside its root, with its own size. */
+.diagram > svg {
   width: var(--diagram-width, auto);
   max-width: 100%;
   max-height: 100%;
