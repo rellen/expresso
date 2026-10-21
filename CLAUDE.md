@@ -28,7 +28,7 @@ Read these documents before you change the code:
   last section, "The result", tells what changed during the work.
 - `docs/graph-diagrams.md` — the plan for a `diagram` from the source of a graph, in the
   language of Graphviz or of D2. The code does not contain this plan yet. The document
-  ends with ten decisions, and each is open.
+  ends with ten decisions, and each is settled.
 
 ## Build and test
 

@@ -3,7 +3,7 @@
 This document gives a plan for a `diagram` that takes the source of a graph, in the
 language of Graphviz or of D2. The render runs the tool, and the deck animates the nodes
 and the edges with the parts of the `diagram` element. The document ends with ten
-decisions. Each decision is open, and each one gives a recommendation.
+decisions, and each is settled.
 
 ## The problem
 
@@ -107,9 +107,10 @@ The diagram gets these options:
 | `layout` | For D2, `:elk` or `:dagre`. For Graphviz, `:dot`, `:neato`, `:fdp`, `:sfdp`, `:circo` or `:twopi`. | The layout engine. The default is `:elk` for D2 and `:dot` for Graphviz. |
 | `edges` | `:follow` or `:own` | `:follow` shows an edge from the step where both of its ends show. `:own` gives an edge only the steps of its own part. The default is `:follow`. |
 | `colors` | `:theme` or `:tool` | `:theme` gives the graph the colors of the theme. `:tool` keeps the colors of the tool. The default is `:theme`. |
+| `font` | The path of a directory with TTF files | The font of the text. The default is the font of the built-in theme. See "The fonts". |
 
-A verifier refuses `layout`, `edges` and `colors` for an SVG file, and a layout that is not
-a layout of the tool.
+A verifier refuses `layout`, `edges`, `colors` and `font` for an SVG file, and a layout that
+is not a layout of the tool.
 
 ### The run of the tool
 
@@ -142,7 +143,7 @@ each change, so a deck with five graphs would wait 10 s after a change of the te
 slide.
 
 The watch mode therefore keeps the SVG of each source in a cache. The key is the hash of the
-tool, its version, its arguments and the source. A render from the command line runs each
+tool, its version, its arguments, the font and the source. A render from the command line runs each
 tool one time and does not need the cache.
 
 ### The names of the parts
@@ -200,10 +201,31 @@ theme apply. The dark variant of a theme changes the graph with the slide.
 
 ### The fonts
 
-Each tool measures the text with its own font, and it calculates the size of each box from
-that measure. A different font would make a text wider than its box. Therefore the text
-keeps the font of the tool. D2 holds its font in the SVG. For Graphviz, the author gives a
-font of the system with `fontname` in the source.
+The text of a graph gets the font of the slide. Each tool measures the text with the font
+that it gets, and it calculates the size of each box from that measure. Therefore the render
+gives the font to the tool, and the browser then shows the text in the same font. A font
+that only the style sheet changes would make a text wider than its box.
+
+Expresso holds the font of the built-in theme, Atkinson Hyperlegible, only as WOFF2 files.
+The tools read TTF files. Therefore `assets/fonts/` gets the four TTF files of the font:
+regular, bold, italic and bold italic. The OFL license of the font lets Expresso hold them.
+
+The render gives the font to each tool in this way:
+
+| Tool | How the tool gets the font |
+| --- | --- |
+| D2 | `--font-regular`, `--font-bold`, `--font-italic` and `--font-semibold` with the TTF files. D2 then holds the font in the SVG. |
+| Graphviz | A fontconfig file in a private directory names the directory of the TTF files. `FONTCONFIG_FILE` gives that file to the tool, and `-Nfontname`, `-Efontname` and `-Gfontname` name the font. |
+
+Graphviz measures a text with fontconfig only through its plugin `cairo`. A test in the
+session showed the effect: the same label got a box of 155 pt with Times and 185 pt with
+DejaVu Sans. Graphviz uses a font of the system for a font that it does not find, and it
+writes no warning. A test of the render must therefore make sure that the box fits the text
+of the theme font.
+
+A deck with a different font, from a theme or from the `css` option, gives the TTF files of
+that font with the `font` option. The render cannot read a font from the CSS of the deck.
+Without the option, the tool gets the font of the built-in theme.
 
 ### The views
 
@@ -252,26 +274,27 @@ get the modules.
 ## The decisions
 
 1. **The `diagram` element takes the source, and the extension selects the tool.** A new
-   element would repeat most of `diagram`. Recommendation: the same element.
+   element would repeat most of `diagram`.
 2. **The render finds each tool on the path, and an environment variable gives a
-   different path.** Expresso and the binary of Burrito do not hold the tools.
-   Recommendation: the path, `EXPRESSO_DOT` and `EXPRESSO_D2`.
+   different path.** The variables are `EXPRESSO_DOT` and `EXPRESSO_D2`. Expresso and the
+   binary of Burrito do not hold the tools.
 3. **The default layout of D2 is ELK.** ELK gives the better layout, and dagre is 7 times
-   faster. Recommendation: `:elk`, because the cache of the watch mode hides the time.
+   faster. The cache of the watch mode hides the time of ELK.
 4. **The render gives each element an `id` from the source.** The names of the table in
-   "The names of the parts" are the words of the source. Recommendation: these names, with
-   `:2` for a second edge between the same ends.
-5. **An edge follows its nodes by default.** Recommendation: `edges :follow` as the
-   default, and `edges :own` for a deck that gives each edge its own steps.
-6. **The theme gives the colors by default.** Recommendation: `colors :theme` as the
-   default, and `colors :tool` for a graph with colors that carry a meaning.
-7. **The text keeps the font of the tool.** A different font would make a text wider than
-   its box. Recommendation: the font of the tool.
-8. **The watch mode keeps a cache of each SVG.** Recommendation: a cache in the process of
-   the watch mode, with the hash of the tool, its version, its arguments and the source as
-   the key.
+   "The names of the parts" are the words of the source. A second edge between the same
+   ends gets `:2`.
+5. **An edge follows its nodes by default.** `edges :follow` is the default, and
+   `edges :own` is for a deck that gives each edge its own steps.
+6. **The theme gives the colors by default.** `colors :theme` is the default, and
+   `colors :tool` is for a graph with colors that have a meaning.
+7. **The text gets the font of the slide, and the render gives that font to the tool.**
+   The tool then sizes each box for that font. `assets/fonts/` gets the TTF files of the
+   font of the built-in theme. A `font` option gives the TTF files of a different font.
+8. **The watch mode keeps a cache of each SVG.** The cache is in the process of the watch
+   mode. The key is the hash of the tool, its version, its arguments, the font and the
+   source.
 9. **The tests that need a tool get a tag, and `mix test` excludes them.** The workflow
-   installs both tools in one job. Recommendation: the tags `:graphviz` and `:d2`, and a job
+   installs both tools in one job. The tags are `:graphviz` and `:d2`, and the job is
    `graph` in `.github/workflows/check.yml`.
 10. **The work comes in this stack of pull requests.** Each pull request is small and works
     alone:
@@ -281,7 +304,8 @@ get the modules.
     3. D2: the run of the tool, the `layout` option, the names of the parts, and the
        `svg` inside the root `svg`.
     4. The `edges` option.
-    5. The `colors` option, and the classes of D2 in the theme.
+    5. The `colors` option, the classes of D2 in the theme, the TTF files and the `font`
+       option.
     6. The cache of the watch mode.
     7. The list for a screen reader.
     8. A guide in `docs/how-to/`, an example deck for each tool, and their GIFs.

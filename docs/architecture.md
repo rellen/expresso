@@ -2942,7 +2942,7 @@ The commands are:
 
 1. **A diagram from Graphviz or D2.** `docs/graph-diagrams.md` gives the plan. The render
    runs the tool, and a part names a node or an edge in the words of the source. The ten
-   decisions of the plan are open.
+   decisions of the plan are settled.
 
 The last item before this one, the dim state of `docs/dim-state.md`, gave each role of text
 its own dimmed color.
