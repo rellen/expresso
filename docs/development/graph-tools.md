@@ -30,12 +30,15 @@ d2 --layout elk --omit-version --pad 0 test/fixtures/d2/flow.d2 test/fixtures/d2
 `mix check` runs the tests with the tags in the tool `graph`, and the job `graph` of the
 workflow runs them too.
 
+Two example decks of `examples/animations/` draw a graph. The browser test that renders each
+example deck, and `mix expresso.gifs`, therefore need both tools too.
+
 ## The installation
 
 | Place | Graphviz | D2 |
 | --- | --- | --- |
 | A remote session | The hook installs the package `graphviz` with `apt-get`. | The hook builds D2 0.7.1 with `go install` into `/opt/d2`. |
-| The workflow | The job `graph` installs the package `graphviz` with `apt-get`. | The job `graph` gets the release of D2 0.7.1 from GitHub. |
+| The workflow | `.github/actions/setup-graph-tools` installs the package `graphviz` with `apt-get`, in the jobs `graph`, `e2e` and `gifs`. | The same action gets the release of D2 0.7.1 from GitHub. |
 | The Nix shell | `shell.nix` gives the package `graphviz`. | `shell.nix` gives the package `d2`. |
 | macOS | `brew install graphviz` | `brew install d2` |
 

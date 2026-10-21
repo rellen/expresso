@@ -43,6 +43,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/show-parts-of-a-whole-in-a-treemap-or-a-sunburst.md",
         "docs/how-to/show-flows-between-nodes-in-a-chart.md",
         "docs/how-to/show-a-hierarchy-as-a-tree.md",
+        "docs/how-to/draw-a-graph-from-graphviz-or-d2.md",
         "docs/how-to/show-code.md",
         "docs/how-to/check-the-layout.md",
         "docs/how-to/check-a-deck.md",

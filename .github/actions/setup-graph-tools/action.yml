@@ -1,0 +1,38 @@
+# The setup of the tools that draw a graph, for each job of
+# `.github/workflows/check.yml` that renders a graph: the tests with the tags
+# `:graphviz` and `:d2`, the browser tests that render each example deck, and
+# the GIFs of the example decks.
+#
+# The runner and a remote session both run Ubuntu 24.04, so `apt-get` gives
+# both the same version of Graphviz. D2 comes from its release on GitHub, at the
+# version of the input, which must agree with `D2_VERSION` in
+# `.claude/hooks/session-start.sh`. `docs/development/graph-tools.md` gives the
+# details.
+
+name: Set up the graph tools
+description: Install Graphviz with apt-get, and D2 from its release on GitHub.
+
+inputs:
+  d2-version:
+    description: The version of D2, such as 0.7.1.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install Graphviz
+      shell: bash
+      run: sudo apt-get update -qq && sudo apt-get install -y -qq graphviz
+    - name: Install D2
+      shell: bash
+      env:
+        D2_VERSION: ${{ inputs.d2-version }}
+      run: |
+        tmp_dir="$(mktemp -d)"
+        curl -sSfL -o "${tmp_dir}/d2.tar.gz" \
+          "https://github.com/terrastruct/d2/releases/download/v${D2_VERSION}/d2-v${D2_VERSION}-linux-amd64.tar.gz"
+        tar -xzf "${tmp_dir}/d2.tar.gz" -C "${tmp_dir}"
+        mkdir -p "${HOME}/d2"
+        find "${tmp_dir}" -type f -name d2 -perm -u+x -exec cp {} "${HOME}/d2/d2" \;
+        echo "${HOME}/d2" >> "${GITHUB_PATH}"
+        "${HOME}/d2/d2" --version

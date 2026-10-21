@@ -12,7 +12,8 @@ mix test --only e2e
 ```
 
 `mix test` excludes these tests, because they need Node, the Playwright driver and a
-browser. `playwright_ex` is the Elixir client, and it starts the driver of
+browser. A test renders each example deck, and two of them draw a graph, so the browser
+tests also need Graphviz and D2. `graph-tools.md` tells how to install them. `playwright_ex` is the Elixir client, and it starts the driver of
 `node_modules/playwright`, which `package.json` pins. `Expresso.E2E` in `test/support/`
 is the case template. It starts one browser for each module and a new context for each
 test, and it gives the helpers, such as `press/2`, `position/1`, `pause_animations/3` and

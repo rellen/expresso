@@ -1,0 +1,17 @@
+digraph system {
+  rankdir=LR
+  node [shape=box style=rounded]
+
+  subgraph cluster_app {
+    label="App"
+    web
+    api
+  }
+
+  db [shape=cylinder]
+  web -> api
+  api -> db
+  api -> queue
+  queue -> worker
+  worker -> db
+}

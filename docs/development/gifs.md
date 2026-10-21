@@ -13,6 +13,8 @@ mix expresso.gifs /tmp/gifs overlay-at   # one example, into /tmp/gifs
 ```
 
 The task renders each example deck to an HTML file, and `Expresso.Recorder` records it.
+Two example decks draw a graph, so the task needs Graphviz and D2. `graph-tools.md` tells
+how to install them.
 `Expresso.Gif` then encodes the frames as a GIF. The task and the two modules are in
 `tools/`, so only dev and test compile them, and the binary does not hold them. The list of
 the examples is in `Mix.Tasks.Expresso.Gifs`. An example has:
