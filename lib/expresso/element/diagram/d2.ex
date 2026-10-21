@@ -46,6 +46,10 @@ defmodule Expresso.Element.Diagram.D2 do
   # arrow and the index, such as `app.(web -> api)[0]`.
   @connection ~r/\A((?:.*\.)?)\((.+) (<->|->|<-|--) (.+)\)\[(\d+)\]\z/
 
+  @doc "The tool, for `Expresso.Element.Diagram.Tool`"
+  @spec tool() :: Tool.t()
+  def tool, do: @tool
+
   @doc "The layout engines of D2, for the `layout` option"
   @spec layouts() :: [atom()]
   def layouts, do: @layouts

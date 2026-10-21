@@ -323,7 +323,9 @@ same step. `--port` gives a different port, and the binary takes the same option
 1. `Expresso.Watch.Server.start/1` starts the web server.
 2. `Expresso.render_file/1` makes the HTML inside `Expresso.DeckFile.track/1`, which
    records each file that the render reads. `render_file/1` returns an error tuple for each
-   failure and does not raise, so a deck with an error does not stop the watch mode.
+   failure and does not raise, so a deck with an error does not stop the watch mode. The
+   render also runs inside `Expresso.Element.Diagram.Cache.run/2`, which keeps the SVG of
+   each graph from the render before. See "The diagram".
 3. After a good render, `Expresso.Watch.Server.publish/2` serves the new document, and the
    page reloads. With an output path, the watch mode also writes that file.
 4. After a failed render, the watch mode writes the error to the standard error. The page
@@ -1352,6 +1354,12 @@ code:
   through a fontconfig file. Graphviz uses a font of the system for a font that it does not
   find, so a test with the tag `:graphviz` makes sure that the width of a box changes with
   the font.
+- **The watch mode keeps each SVG.** D2 with ELK takes some seconds for a graph, and the
+  watch mode renders the whole deck after each change. `Expresso.Element.Diagram.Cache`
+  keeps the SVG of each graph in the process of the render, from one render to the next.
+  The key holds the tool, the path, the time and the size of its program, the layout, the
+  font and the text of the source. A render keeps only the entries that it used. A render
+  from the command line runs each tool one time and keeps nothing.
 - **The source is a file of the deck.** The render reads the source with
   `Expresso.DeckFile`, so the watch mode renders again after a change to the source.
 
@@ -2981,8 +2989,8 @@ The commands are:
 1. **A diagram from Graphviz or D2.** `docs/graph-diagrams.md` gives the plan, and issue
    #386 holds it too. The render runs the tool, and a part names a node or an edge in the
    words of the source. The ten decisions of the plan are settled. The code holds the first
-   four of the seven pull requests: the sources of Graphviz and D2, the `layout` option, the
-   names, and the options `edges`, `colors` and `font`.
+   five of the seven pull requests: the sources of Graphviz and D2, the `layout` option, the
+   names, the options `edges`, `colors` and `font`, and the cache of the watch mode.
 
 The last item before this one, the dim state of `docs/dim-state.md`, gave each role of text
 its own dimmed color.

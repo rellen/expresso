@@ -49,6 +49,10 @@ defmodule Expresso.Element.Diagram.Graphviz do
   @named ~w(node edge cluster)
   @numbered ~r/\A(node|edge|clust)\d+\z/
 
+  @doc "The tool, for `Expresso.Element.Diagram.Tool`"
+  @spec tool() :: Tool.t()
+  def tool, do: @tool
+
   @doc "The layout engines of Graphviz, for the `layout` option"
   @spec layouts() :: [atom()]
   def layouts, do: @layouts
