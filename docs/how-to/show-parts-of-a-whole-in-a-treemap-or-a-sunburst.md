@@ -172,7 +172,7 @@ defmodule Examples.ChartVoronoi do
     chart :voronoi do
       title "The staff of each department, by team"
       shape :hexagon
-      highlight ["Production", "Sales/Online"]
+      highlight ["Production", "Sales", "Sales/Online"]
 
       categories [
         "Production/Press",
@@ -195,7 +195,7 @@ end
 Examples.ChartVoronoi
 ```
 
-![A hexagon of cells: the group Production is in focus, and then the part Online of Sales](https://raw.githubusercontent.com/rellen/expresso/media/chart-voronoi.gif)
+![A hexagon of cells: the group Production is in focus, then the group Sales, and then its part Online](https://raw.githubusercontent.com/rellen/expresso/media/chart-voronoi.gif)
 
 A polygon must be convex, such as a triangle: `shape [{0, 0}, {1, 0}, {0.5, 1}]`. The y axis
 goes down, so this triangle has its corner at the bottom. The compiler refuses a polygon

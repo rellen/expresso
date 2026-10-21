@@ -7,7 +7,7 @@ defmodule Examples.ChartVoronoi do
     chart :voronoi do
       title "The staff of each department, by team"
       shape :hexagon
-      highlight ["Production", "Sales/Online"]
+      highlight ["Production", "Sales", "Sales/Online"]
 
       categories [
         "Production/Press",
