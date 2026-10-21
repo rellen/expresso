@@ -166,6 +166,29 @@ defmodule Expresso.Element.DiagramTest do
       assert LazyHTML.attribute(word, "data-on") == ["1"]
     end
 
+    test "takes a file with an XML declaration, a DOCTYPE and a processing instruction" do
+      # Graphviz writes the declaration and the DOCTYPE, and Illustrator writes
+      # an `xpacket` instruction in the metadata.
+      diagram =
+        Builder.diagram("test/fixtures/prolog.svg",
+          elements: [
+            Builder.part("web_api", at: 2),
+            Builder.part("api", on: [Builder.on(2, move_to: "web")])
+          ]
+        )
+
+      document = [diagram] |> one_slide() |> document()
+      svg = screen(document, ".diagram > svg")
+
+      assert [edge] = LazyHTML.query(svg, "g.edge") |> Enum.to_list()
+      assert LazyHTML.attribute(edge, "data-on") == ["2"]
+      assert count(svg, "g.diagram-part > g.node") == 1
+
+      html = LazyHTML.to_html(document)
+      refute html =~ "<?xml"
+      refute html =~ "DTD SVG"
+    end
+
     test "raises for an id that the file does not hold" do
       diagram = Builder.diagram(@svg, elements: [Builder.part("no-such-id")])
 
