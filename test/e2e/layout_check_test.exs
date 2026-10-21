@@ -126,6 +126,30 @@ defmodule Expresso.E2E.LayoutCheckTest do
     assert stat =~ ~r/^Slide 1, step 1: the stat “.*cups” goes \d+ px past the right edge$/
   end
 
+  test "?check skips the list of a graph for a screen reader", %{page: page, tmp_dir: tmp_dir} do
+    # A node with a long name and no text: its item in the list is wider than
+    # the slide, and the SVG itself is small. The SVG is as a tool would give
+    # it, so the test needs no tool.
+    name = String.duplicate("a node with a long name ", 12)
+
+    svg = """
+    <svg viewBox="0 0 100 50"><g id="#{name}" data-graph-kind="node">
+    <rect x="10" y="10" width="20" height="20"></rect></g></svg>
+    """
+
+    diagram = struct!(Expresso.Builder.diagram("graph.d2", width: "40%"), svg: svg, names: [name])
+
+    deck =
+      Expresso.Builder.deck([Expresso.Builder.slide("graph", elements: [diagram])], name: "graph")
+
+    page = open(page, render(deck, tmp_dir) <> "?check")
+
+    assert report(page)["problems"] == []
+
+    list = ~s|document.querySelector("#slide-1 .graph-list").getBoundingClientRect()|
+    assert js(page, "#{list}.width") <= 1
+  end
+
   # A diagram from D2 holds its drawing in an `svg` inside the root `svg`. The
   # width option applies to the root only, so the inner `svg` keeps the
   # coordinates of the root.

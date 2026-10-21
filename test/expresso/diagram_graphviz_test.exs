@@ -7,6 +7,8 @@ defmodule Expresso.Element.DiagramGraphvizTest do
   alias Expresso.Element.Diagram
   alias Expresso.Element.Diagram.{Graphviz, Tool}
 
+  doctest Graphviz
+
   @source "test/fixtures/graphviz/flow.dot"
 
   # The output of `dot -Tsvg` for `@source`, so these tests run without
@@ -18,7 +20,7 @@ defmodule Expresso.Element.DiagramGraphvizTest do
   # A diagram of the source, with the SVG that `Diagram.draw/1` would keep.
   defp drawn(parts) do
     {svg, names} = Graphviz.name(@svg)
-    %Diagram{Builder.diagram(@source, elements: parts) | svg: svg, names: names}
+    struct!(Builder.diagram(@source, elements: parts), svg: svg, names: names)
   end
 
   describe "Graphviz.name/1" do

@@ -4,7 +4,6 @@ defmodule Expresso.Element.DiagramThemeTest do
   import Expresso.Test.HTML
 
   alias Expresso.Builder
-  alias Expresso.Element.Diagram
   alias Expresso.Element.Diagram.{D2, Font, Graphviz}
 
   @graphviz File.read!("test/fixtures/graphviz/flow.svg")
@@ -49,7 +48,7 @@ defmodule Expresso.Element.DiagramThemeTest do
     end
 
     defp drawn(src, svg, opts),
-      do: %Diagram{Builder.diagram(src, opts) | svg: svg, names: []}
+      do: struct!(Builder.diagram(src, opts), svg: svg, names: [])
 
     test "a graph with the colors of the theme has the class of the graph and of its tool" do
       assert classes(drawn("test/fixtures/graphviz/flow.dot", @graphviz, [])) ==

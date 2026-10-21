@@ -2204,13 +2204,14 @@ svg [data-el] {
   display: contents;
 }
 /*
- * The live region of the moves, and the word "Step" in front of the number of
- * each step of the menu. A screen reader reads the text, and the screen and
- * paper do not show it.
+ * The live region of the moves, the word "Step" in front of the number of each
+ * step of the menu, and the lists of a tree and of a graph. A screen reader
+ * reads the text, and the screen and paper do not show it.
  */
 .announce,
 .menu-hidden,
-.tree-list {
+.tree-list,
+.graph-list {
   position: absolute;
   width: 1px;
   height: 1px;

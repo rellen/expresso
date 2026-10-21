@@ -27,7 +27,7 @@ end
 | --- | --- | --- |
 | The first argument | The path of an `.svg` file, or of a `.dot`, a `.gv` or a `.d2` file | The diagram, or the source of a graph. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. See [A graph from Graphviz](#a-graph-from-graphviz) and [A graph from D2](#a-graph-from-d2). |
 | `width` | A CSS width, such as `"900px"` or `"60%"` | The width of the diagram. A percentage is a part of the width of the slide. The default is the width that the file gives. |
-| `alt` | A string | The text of the diagram for a screen reader. The diagram then has the role `img`, and a screen reader reads this text in the place of the text of the SVG. Without it, a screen reader reads the text of the SVG. |
+| `alt` | A string | The text of the diagram for a screen reader. The diagram then has the role `img`, and a screen reader reads this text in the place of the text of the SVG. Without it, a screen reader reads the text of the SVG, or the list of a graph. See [A graph and a screen reader](#a-graph-and-a-screen-reader). |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 | `layout` | For Graphviz, `:dot`, `:neato`, `:fdp`, `:sfdp`, `:circo` or `:twopi`. For D2, `:elk` or `:dagre`. | The layout engine of the tool. The default is `:dot` for Graphviz and `:elk` for D2. |
@@ -168,6 +168,26 @@ end
 The directory holds a TTF file for each style: regular, bold, italic and bold italic. The
 render reads the family and the style from each file. A style without a file takes the
 regular file. In Graphviz, a `fontname` of the source still applies to its element.
+
+## A graph and a screen reader
+
+A screen reader reads the text of an SVG in the order of the file, and that order is not the
+order of the graph. Therefore a graph without the `alt` option gets a nested list for a
+screen reader, and the screen reader does not read its SVG. The screen and paper do not show
+the list.
+
+The list holds each container with its nodes, and each node with the edges that leave it.
+For the graph of the examples above, a screen reader reads this list:
+
+- App
+  - web, to api
+  - api, to db, to db (replica)
+- db
+
+An edge with a label gets the label in parentheses. An edge with no direction, such as
+`a -- b`, reads "with b". The label of a node is the text that it shows, or its name when it
+shows no text. With the `alt` option, the diagram is one image with that name, and it gets no
+list.
 
 ## The edges of a graph
 
