@@ -24,6 +24,12 @@ defmodule Expresso.Element.Diagram.Graphviz do
 
   An `id` that the source gives stays, unless it has the form of an `id` of
   Graphviz, such as `node1`.
+
+  Each edge also gets the names of its two ends, in the attributes
+  `data-graph-from` and `data-graph-to`. An end is the `id` of its node, so
+  `db [id="store"]` gives the end `store`. `Expresso.Element.Diagram` reads
+  the ends for the `edges` option. A port of an end, such as `web:out`, is not
+  a part of the name of the end.
   """
 
   alias Expresso.Element.Diagram.Tool
@@ -77,7 +83,61 @@ defmodule Expresso.Element.Diagram.Graphviz do
       |> Floki.parse_fragment!()
       |> walk({[], %{}})
 
-    {Floki.raw_html(tree), Enum.reverse(names)}
+    {tree |> put_ends(ids(tree)) |> Floki.raw_html(), Enum.reverse(names)}
+  end
+
+  # The `id` of each node and cluster, by its title. An edge names its ends by
+  # their titles.
+  defp ids(tree) do
+    for {"g", attrs, children} <- Floki.find(tree, "g.node, g.cluster"),
+        title = title(children),
+        {"id", id} <- [List.keyfind(attrs, "id", 0)],
+        title != nil,
+        into: %{},
+        do: {title, id}
+  end
+
+  defp put_ends(nodes, ids) when is_list(nodes), do: Enum.map(nodes, &put_ends(&1, ids))
+
+  defp put_ends({"g", attrs, children}, ids) do
+    children = put_ends(children, ids)
+
+    with {"class", class} <- List.keyfind(attrs, "class", 0),
+         true <- "edge" in String.split(class),
+         [from, to] <- ends(title(children), ids) do
+      {"g", attrs ++ [{"data-graph-from", from}, {"data-graph-to", to}], children}
+    else
+      _other -> {"g", attrs, children}
+    end
+  end
+
+  defp put_ends({tag, attrs, children}, ids) when is_binary(tag),
+    do: {tag, attrs, put_ends(children, ids)}
+
+  defp put_ends(node, _ids), do: node
+
+  # The two ends of the title of an edge, such as `web->api`, as the ids of
+  # their nodes.
+  defp ends(nil, _ids), do: nil
+
+  defp ends(title, ids) do
+    case String.split(title, ["->", "--"], parts: 2) do
+      [from, to] -> [end_id(from, ids), end_id(to, ids)]
+      _other -> nil
+    end
+  end
+
+  # An end can have a port, such as `web:out`. The name without the port is
+  # the name of the node.
+  defp end_id(name, ids) do
+    case Map.fetch(ids, name) do
+      {:ok, id} ->
+        id
+
+      :error ->
+        node = name |> String.split(":") |> Enum.drop(-1) |> Enum.join(":")
+        Map.get(ids, node, name)
+    end
   end
 
   defp walk(nodes, acc) when is_list(nodes), do: Enum.map_reduce(nodes, acc, &walk/2)

@@ -24,7 +24,9 @@ defmodule Expresso.Element.Diagram.D2 do
   | A second connection between the same ends | `(app.api -> db)[1]` | `app.api->db:2` |
 
   The name of a connection has no spaces, and each end has its full key, so a
-  part names a connection as the source names its ends.
+  part names a connection as the source names its ends. Each connection also
+  gets the keys of its two ends, in the attributes `data-graph-from` and
+  `data-graph-to`, for the `edges` option of `Expresso.Element.Diagram`.
   """
 
   alias Expresso.Element.Diagram.Tool
@@ -118,19 +120,24 @@ defmodule Expresso.Element.Diagram.D2 do
   end
 
   defp give_name(attrs, key, {names, counts}) do
-    base = name_of(key)
+    {base, ends} = name_of(key)
     count = Map.get(counts, base, 0) + 1
     name = if count == 1, do: base, else: "#{base}:#{count}"
-    {[{"id", name} | attrs], {[name | names], Map.put(counts, base, count)}}
+    {[{"id", name} | attrs] ++ ends, {[name | names], Map.put(counts, base, count)}}
   end
 
   # The name of a connection has its two ends with the key of their container,
   # and no spaces. The index of D2 does not go into the name, because
-  # `give_name/3` counts the connections with the same ends.
+  # `give_name/3` counts the connections with the same ends. The function also
+  # returns the attributes of the ends of a connection.
   defp name_of(key) do
     case Regex.run(@connection, key, capture: :all_but_first) do
-      [container, from, arrow, to, _index] -> container <> from <> arrow <> container <> to
-      nil -> key
+      [container, from, arrow, to, _index] ->
+        {container <> from <> arrow <> container <> to,
+         [{"data-graph-from", container <> from}, {"data-graph-to", container <> to}]}
+
+      nil ->
+        {key, []}
     end
   end
 
