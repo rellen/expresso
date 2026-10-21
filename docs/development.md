@@ -37,3 +37,4 @@ GitHub.
 - `docs/typescript.md` — the plan for the presenter script in TypeScript, and its result.
 - `docs/dim-state.md` — the design for a dim state with a color for each role.
 - `docs/tree.md` — the design for the element `tree`, and its result.
+- `docs/graph-diagrams.md` — the plan for a diagram from Graphviz or D2, with open decisions.

@@ -2940,8 +2940,12 @@ The commands are:
 
 ## Open work
 
-The list has no item at this time. The last item, the dim state of `docs/dim-state.md`,
-gave each role of text its own dimmed color.
+1. **A diagram from Graphviz or D2.** `docs/graph-diagrams.md` gives the plan. The render
+   runs the tool, and a part names a node or an edge in the words of the source. The ten
+   decisions of the plan are open.
+
+The last item before this one, the dim state of `docs/dim-state.md`, gave each role of text
+its own dimmed color.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on
