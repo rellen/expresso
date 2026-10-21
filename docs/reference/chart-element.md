@@ -23,7 +23,7 @@ end
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst`, `:sankey`, `:alluvial`, `:parallel_sets` or `:chord` | The kind of the chart. |
+| The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst`, `:voronoi`, `:sankey`, `:alluvial`, `:parallel_sets` or `:chord` | The kind of the chart. |
 | `title` | A string, required | The name of the chart for a screen reader, and the caption of its table. |
 | `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels. A category of a chart of flows is a path of nodes. |
 | `category_label` | A string | The name of the categories, such as `"Year"`. See [the names of the axes](#the-names-of-the-axes). A chart with `src` takes the first heading of its file. |
@@ -35,7 +35,8 @@ end
 | `dim` | `true` or `false` | Dim each series when a later series shows. The default is `false`. See [a dimmed series](#a-dimmed-series). |
 | `highlight` | A list of groups, such as `["Returns", ["Orders", "Repairs"], "2024"]` | Each series shows at each step. Each group of series or of categories is in focus at its own step, and the rest of the chart dims. A chart of flows takes the names of nodes in place of categories. Each kind of chart takes it. See [the highlight option](#the-highlight-option). |
 | `whole_first` | `true` or `false` | With `highlight`, the whole chart shows in full color for one step before the first group. The default is `false`. |
-| `separator` | A string | The text between two levels of a category of a treemap or a sunburst. The default is `"/"`. |
+| `separator` | A string | The text between two levels of a category of a treemap, a sunburst or a Voronoi treemap. The default is `"/"`. |
+| `shape` | `:rectangle`, `:circle`, `:hexagon` or a list of points | The container of a Voronoi treemap. The default is `:rectangle`. See [a Voronoi treemap](#a-voronoi-treemap). |
 | `levels` | A list of strings | The headings of the CSV columns that hold the levels of a treemap or a sunburst, from the top level down. For a chart of flows, the headings of the CSV columns that hold the nodes of each path. Requires `src`, but an alluvial chart or a parallel sets chart can take `levels` without `src` to give the title of each column. |
 | `frames` | A string | The heading of the column of the CSV file that names the frame of each row. Requires `src`. |
 | `frame_label` | `:top_right`, `:top_left` or `:none` | The place of the label of the frame in a chart with frames. The default is `:top_right`. A pie and a sunburst put the label at the top right, so they do not take `:top_left`. |
@@ -236,6 +237,7 @@ tick has a label in the same form.
 | `:pie` | Exactly one. Each category is a slice, from the top and clockwise. | The name and the part in percent of each slice, in a legend at the right. |
 | `:treemap` | Exactly one. Each category is a box, and a group holds its parts. | The name and the value of each part, and the name of each group in a strip at its top. |
 | `:sunburst` | Exactly one. Each level of the groups is a ring, and each category is an arc of the outer rings. | The name of each arc, and the part in percent of each group of the top level, in a legend at the right. |
+| `:voronoi` | Exactly one. Each category is a cell of a convex shape, and a group is the cell that holds its parts. | The name and the value of each part in its cell, and the part in percent of each group of the top level, in a legend at the right. See [a Voronoi treemap](#a-voronoi-treemap). |
 | `:sankey` | Exactly one. Each category is a path of nodes, and its value goes along each link of the path. | The name and the value of each node. See [the labels](#the-labels). |
 | `:alluvial` | Exactly one. Each category is a path with one name for each column. | As a sankey, and a title over each column. See [an alluvial chart](#an-alluvial-chart). |
 | `:parallel_sets` | Exactly one. Each category is a path with one name for each column, and it is one ribbon through the columns. | As an alluvial chart. See [a parallel sets chart](#a-parallel-sets-chart). |
@@ -248,7 +250,8 @@ item of the legend shows and dims with its series.
 
 ## The groups of a treemap and a sunburst
 
-A slash in a category names a part of a group. The category `"Production/Press"` is the part
+The rules of this section also apply to a Voronoi treemap. A slash in a category names a
+part of a group. The category `"Production/Press"` is the part
 "Press" of the group "Production", and a category can have more levels, such as
 `"Production/Line 4/Press"`. A category with no slash is a part of the top level. The value
 of a group is the sum of its parts. The spaces next to a slash do not count.
@@ -280,6 +283,55 @@ These rules apply to the groups:
 A treemap divides its box into rectangles that are close to squares. A sunburst has a hole in
 its center, and each level is a ring of the same width. A treemap with frames has the label of
 the frame in a row above the boxes.
+
+## A Voronoi treemap
+
+A **Voronoi treemap** divides a convex shape into cells, with an area in proportion to the
+value of each part. Each group then divides its own cell for its parts. A cell has no fixed
+direction, so the cell of a small part does not become a thin strip, as a rectangle of a
+treemap can. The chart takes the data of a treemap.
+
+```elixir
+slide "staff" do
+  chart :voronoi do
+    title "The staff of each department"
+    shape :hexagon
+    categories ["Production/Press", "Production/Paint", "Sales/North", "Office"]
+    series "Staff", [42, 18, 30, 14]
+  end
+end
+```
+
+The `shape` option gives the container:
+
+| Value | The container |
+| --- | --- |
+| `:rectangle` | The box of the plot. This is the default. |
+| `:circle` | A circle at the center of the box, with the largest size that fits. |
+| `:hexagon` | A regular hexagon at the center of the box, with the largest size that fits. |
+| A list of points, such as `[{0, 0}, {1, 0}, {0.5, 1}]` | The polygon of the points, in a unit box from 0 to 1. The y axis goes down, so `{0.5, 1}` is at the bottom. The chart puts the unit box in the largest square at the center of the box of the plot, so the polygon keeps its proportions. |
+
+These rules apply to a Voronoi treemap:
+
+- **The polygon must be convex.** A polygon with a dent, such as a U, can cut a cell into two
+  pieces. The compiler refuses a concave polygon, a polygon that crosses itself, a polygon
+  with fewer than 3 points, and a point outside the unit box.
+- **The areas.** The error of the layout is less than 1 percent of the area of each
+  container: the sum of the differences between each area and its target. A very thin
+  polygon, such as a triangle with one short side, can keep a larger error.
+- **The same data gives the same chart.** The layout uses no random numbers.
+- **The marks.** Each part is a cell. A group is the outline of the cell that holds its
+  parts, thicker than the edge between two parts. The cells of a top-level group have tints
+  of its color, lighter for a deeper level. A part with the value 0 has no cell.
+- **The labels.** The label of a part goes to the center of its cell when it fits there, and
+  else to the point of the cell that is farthest from its edges. A label that does not fit
+  does not show. A group below the top level has no label, and the table for a screen
+  reader gives its name.
+- **The legend.** The legend at the right gives each group of the top level, with its part
+  of the whole in percent.
+- **No frames.** A Voronoi treemap takes no frames, no `count` option and no effect
+  `:grow`. A cell can change its number of corners from one frame to the next, so a cell
+  cannot move from one frame to the next. Use a treemap for a change over time.
 
 ## The charts of flows
 
@@ -524,8 +576,13 @@ The compiler gives an error for these:
 - a chart with no series, or with more than 8 series;
 - a pie with more than one series, with more than 8 categories, with a negative value, or
   with `reveal`;
-- a treemap or a sunburst with more than one series, with a negative value, with `reveal`,
-  or with more than 8 groups at the top level;
+- a treemap, a sunburst or a Voronoi treemap with more than one series, with a negative
+  value, with `reveal`, or with more than 8 groups at the top level;
+- a Voronoi treemap with frames, with `count` or with the effect `:grow`, on the chart or
+  on its series;
+- a `shape` on a chart that is not a Voronoi treemap, and a `shape` that is a concave
+  polygon, a polygon that crosses itself, a polygon with fewer than 3 points or a point
+  outside the unit box;
 - a category with a level with no name, a category that shows two times, and a category
   that is also a group;
 - a list of levels or the `levels` option on a bar chart, a line chart or a pie, `levels`
