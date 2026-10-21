@@ -1360,6 +1360,13 @@ code:
   The key holds the tool, the path, the time and the size of its program, the layout, the
   font and the text of the source. A render keeps only the entries that it used. A render
   from the command line runs each tool one time and keeps nothing.
+- **A screen reader gets a list.** Each tool module marks each node, container and edge with
+  `data-graph-kind`, and a node and a container with `data-graph-parent`. D2 gives the
+  parent in the key, such as `app` for `app.web`. The SVG of Graphviz does not put a node
+  into the group of its cluster, so the parent is the smallest cluster that holds the center
+  of the node. `Expresso.Element.Diagram.Outline` reads the marks, and the render writes a
+  nested list with the class `graph-list`. The SVG then gets `aria-hidden`. The style sheet
+  hides the list as it hides the list of a `tree`, and the layout check skips it.
 - **The source is a file of the deck.** The render reads the source with
   `Expresso.DeckFile`, so the watch mode renders again after a change to the source.
 
@@ -2989,8 +2996,9 @@ The commands are:
 1. **A diagram from Graphviz or D2.** `docs/graph-diagrams.md` gives the plan, and issue
    #386 holds it too. The render runs the tool, and a part names a node or an edge in the
    words of the source. The ten decisions of the plan are settled. The code holds the first
-   five of the seven pull requests: the sources of Graphviz and D2, the `layout` option, the
-   names, the options `edges`, `colors` and `font`, and the cache of the watch mode.
+   six of the seven pull requests: the sources of Graphviz and D2, the `layout` option, the
+   names, the options `edges`, `colors` and `font`, the cache of the watch mode and the list
+   for a screen reader.
 
 The last item before this one, the dim state of `docs/dim-state.md`, gave each role of text
 its own dimmed color.

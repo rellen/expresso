@@ -7,6 +7,8 @@ defmodule Expresso.Element.DiagramD2Test do
   alias Expresso.Element.Diagram
   alias Expresso.Element.Diagram.D2
 
+  doctest D2
+
   @source "test/fixtures/d2/flow.d2"
 
   # The output of `d2 --layout elk` for `@source`, so these tests run without
@@ -28,7 +30,7 @@ defmodule Expresso.Element.DiagramD2Test do
   # A diagram of the source, with the SVG that `Diagram.draw/1` would keep.
   defp drawn(parts) do
     {svg, names} = D2.name(@svg)
-    %Diagram{Builder.diagram(@source, elements: parts) | svg: svg, names: names}
+    struct!(Builder.diagram(@source, elements: parts), svg: svg, names: names)
   end
 
   describe "D2.name/1" do

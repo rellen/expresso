@@ -4,7 +4,6 @@ defmodule Expresso.Element.DiagramEdgesTest do
   import Expresso.Test.HTML
 
   alias Expresso.Builder
-  alias Expresso.Element.Diagram
   alias Expresso.Element.Diagram.{D2, Graphviz}
 
   # The fixtures of `test/expresso/diagram_graphviz_test.exs` and
@@ -12,7 +11,7 @@ defmodule Expresso.Element.DiagramEdgesTest do
   # would keep, so these tests run without the tools.
   defp drawn(tool, src, svg, opts) do
     {svg, names} = tool.name(File.read!(svg))
-    %Diagram{Builder.diagram(src, opts) | svg: svg, names: names}
+    struct!(Builder.diagram(src, opts), svg: svg, names: names)
   end
 
   defp graphviz(opts),

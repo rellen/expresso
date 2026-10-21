@@ -150,9 +150,19 @@ defmodule Expresso.Element.Diagram do
   @impl Expresso.Element
   def get_assigns(diagram) do
     %__MODULE__{src: src, width: width, alt: alt, colors: colors} = diagram
+    diagram = draw_one(diagram)
+
+    # A graph gets a list for a screen reader, and its SVG is then hidden from
+    # the screen reader. With the `alt` option, the diagram is one image with
+    # that name, and it gets no list.
+    outline =
+      if tool(src) && alt == nil,
+        do: Expresso.Element.Diagram.Outline.items(diagram.svg),
+        else: []
 
     %{
-      svg: svg(diagram),
+      svg: svg(diagram, outline != []),
+      outline: outline,
       kind: kind(tool(src), colors),
       overlay: Expresso.Overlay.Render.attributes(diagram) ++ width(width) ++ alt(alt)
     }
@@ -181,9 +191,8 @@ defmodule Expresso.Element.Diagram do
     [{"style", "--diagram-width: #{Expresso.Element.viewport_unit(width)}"}]
   end
 
-  defp svg(%__MODULE__{src: src, elements: parts} = diagram) do
-    diagram = draw_one(diagram)
-    tree = parse(diagram)
+  defp svg(%__MODULE__{src: src, elements: parts} = diagram, hidden?) do
+    tree = diagram |> parse() |> hide(hidden?)
 
     parts
     |> Enum.reduce(tree, fn %Expresso.Element.Part{id: id} = part, tree ->
@@ -196,6 +205,15 @@ defmodule Expresso.Element.Diagram do
     end)
     |> Floki.raw_html()
     |> Expresso.SvgCopy.number(Expresso.Copies.next())
+  end
+
+  defp hide(tree, false), do: tree
+
+  defp hide(tree, true) do
+    Enum.map(tree, fn
+      {"svg", attrs, children} -> {"svg", [{"aria-hidden", "true"} | attrs], children}
+      node -> node
+    end)
   end
 
   # An SVG file from Graphviz, Inkscape or Illustrator starts with an XML
@@ -410,6 +428,32 @@ defmodule Expresso.Element.Diagram do
     temple do
       div class: Expresso.Element.classes(@kind, assigns[:class]), rest!: @overlay do
         Phoenix.HTML.raw(@svg)
+
+        if @outline != [] do
+          ul class: "graph-list", aria_label: "Graph" do
+            c(&outline/1, items: @outline)
+          end
+        end
+      end
+    end
+  end
+
+  defp item_text(%{label: label, edges: edges}), do: Enum.join([label | edges], ", ")
+
+  # The items of the list of a graph: each node with the edges that leave it,
+  # and each container with a list of its children.
+  defp outline(assigns) do
+    temple do
+      for item <- @items do
+        li do
+          item_text(item)
+
+          if item.children != [] do
+            ul do
+              c(&outline/1, items: item.children)
+            end
+          end
+        end
       end
     end
   end

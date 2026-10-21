@@ -151,7 +151,7 @@ defmodule Expresso.Element.Diagram.Graphviz do
 
       iex> svg = ~s(<svg><g id="node1" class="node"><title>web</title></g></svg>)
       iex> Expresso.Element.Diagram.Graphviz.name(svg)
-      {~s(<svg><g id="web" class="node"><title>web</title></g></svg>), ["web"]}
+      {~s(<svg><g id="web" class="node" data-graph-kind="node"><title>web</title></g></svg>), ["web"]}
   """
   @spec name(String.t()) :: {String.t(), [String.t()]}
   def name(svg) do
@@ -160,7 +160,92 @@ defmodule Expresso.Element.Diagram.Graphviz do
       |> Floki.parse_fragment!()
       |> walk({[], %{}})
 
-    {tree |> put_ends(ids(tree)) |> Floki.raw_html(), Enum.reverse(names)}
+    tree = tree |> put_ends(ids(tree)) |> put_kinds(parents(tree))
+    {Floki.raw_html(tree), Enum.reverse(names)}
+  end
+
+  # The box of each cluster, and the center of each node and cluster. The
+  # parent of an element is the smallest cluster that holds its center. The
+  # SVG of Graphviz does not put a node into the group of its cluster, so the
+  # boxes give the parent. Each element is in the group of the graph, so the
+  # boxes need no transform.
+  @identity {1.0, 0.0, 0.0, 1.0, 0.0, 0.0}
+
+  defp parents(tree) do
+    clusters =
+      for {"g", attrs, _} = group <- Floki.find(tree, "g.cluster"),
+          {"id", id} <- [List.keyfind(attrs, "id", 0)],
+          box = Expresso.Element.Diagram.Geometry.box(group, @identity),
+          box != nil,
+          do: {id, box}
+
+    for {"g", attrs, _} = group <- Floki.find(tree, "g.node, g.cluster"),
+        {"id", id} <- [List.keyfind(attrs, "id", 0)],
+        box = Expresso.Element.Diagram.Geometry.box(group, @identity),
+        box != nil,
+        parent = smallest(clusters, id, box),
+        parent != nil,
+        into: %{},
+        do: {id, parent}
+  end
+
+  defp smallest(clusters, id, {left, top, right, bottom} = box) do
+    {x, y} = {(left + right) / 2, (top + bottom) / 2}
+
+    clusters
+    |> Enum.filter(fn {other, {l, t, r, b} = outer} ->
+      other != id and l <= x and x <= r and t <= y and y <= b and area(outer) > area(box)
+    end)
+    |> Enum.min_by(fn {_other, outer} -> area(outer) end, fn -> {nil, nil} end)
+    |> elem(0)
+  end
+
+  defp area({left, top, right, bottom}), do: (right - left) * (bottom - top)
+
+  # The kind of each element for the list of `Expresso.Element.Diagram.Outline`,
+  # the parent of a node and a cluster, and the arrow of an edge.
+  defp put_kinds(nodes, parents) when is_list(nodes), do: Enum.map(nodes, &put_kinds(&1, parents))
+
+  defp put_kinds({"g", attrs, children}, parents) do
+    children = put_kinds(children, parents)
+    {"g", attrs ++ kind(attrs, children, parents), children}
+  end
+
+  defp put_kinds({tag, attrs, children}, parents) when is_binary(tag),
+    do: {tag, attrs, put_kinds(children, parents)}
+
+  defp put_kinds(node, _parents), do: node
+
+  defp kind(attrs, children, parents) do
+    classes =
+      case List.keyfind(attrs, "class", 0) do
+        {"class", class} -> String.split(class)
+        nil -> []
+      end
+
+    id = with {"id", id} <- List.keyfind(attrs, "id", 0), do: id
+
+    cond do
+      "edge" in classes ->
+        arrow = if String.contains?(title(children) || "", "->"), do: "->", else: "--"
+        [{"data-graph-kind", "edge"}, {"data-graph-arrow", arrow}]
+
+      "node" in classes ->
+        [{"data-graph-kind", "node"} | parent(parents, id)]
+
+      "cluster" in classes ->
+        [{"data-graph-kind", "container"} | parent(parents, id)]
+
+      true ->
+        []
+    end
+  end
+
+  defp parent(parents, id) do
+    case Map.fetch(parents, id) do
+      {:ok, parent} -> [{"data-graph-parent", parent}]
+      :error -> []
+    end
   end
 
   # The `id` of each node and cluster, by its title. An edge names its ends by

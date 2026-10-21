@@ -83,7 +83,7 @@ part of the deck before the current step, from 0 to 100, as the width of the bar
 | Element | What a screen reader gets |
 | --- | --- |
 | `image` | The `alt` option as the `alt` attribute. Without it, the image is decorative. |
-| `diagram` | With the `alt` option, an `img` with that text as its name. Without it, the text of the SVG. |
+| `diagram` | With the `alt` option, an `img` with that text as its name. Without it, the text of the SVG. A graph from Graphviz or D2 without `alt` gives a nested list of its nodes and edges, such as "web, to api", in the place of the text of the SVG. |
 | `chart` | An `img` with the `title` option as its name, and a table of the values. |
 | `stat` | The whole value as one text, such as "$4.2M", and the `label` option. |
 | `icon` | Nothing for the drawing. The `label` option as text. |

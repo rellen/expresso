@@ -95,9 +95,9 @@ defmodule Expresso.Element.Diagram.D2 do
   as `var(--graph-B4, #E3E9FD)`, so the custom property of the style sheet of
   the deck gives the color. It also removes the rectangle of the background.
 
-      iex> svg = ~s(<svg><style>.d2-1 .fill-B4{fill:#E3E9FD;}</style></svg>)
+      iex> svg = ~s|<svg><style>.d2-1 .fill-B4{fill:#E3E9FD;}</style></svg>|
       iex> Expresso.Element.Diagram.D2.theme(svg)
-      ~s(<svg><style>.d2-1 .fill-B4{fill:var(--graph-B4, #E3E9FD);}</style></svg>)
+      ~s|<svg><style>.d2-1 .fill-B4{fill:var(--graph-B4, #E3E9FD);}</style></svg>|
   """
   @spec theme(String.t()) :: String.t()
   def theme(svg) do
@@ -115,7 +115,7 @@ defmodule Expresso.Element.Diagram.D2 do
 
       iex> svg = ~s(<svg><g class="YXBwLndlYg=="><g class="shape"></g></g></svg>)
       iex> Expresso.Element.Diagram.D2.name(svg)
-      {~s(<svg><g id="app.web" class="YXBwLndlYg=="><g class="shape"></g></g></svg>), ["app.web"]}
+      {~s(<svg><g id="app.web" class="YXBwLndlYg==" data-graph-kind="node"><g class="shape"></g></g></svg>), ["app.web"]}
   """
   @spec name(String.t()) :: {String.t(), [String.t()]}
   def name(svg) do
@@ -124,7 +124,49 @@ defmodule Expresso.Element.Diagram.D2 do
       |> Floki.parse_fragment!()
       |> walk({[], %{}})
 
-    {Floki.raw_html(tree), Enum.reverse(names)}
+    shapes =
+      for {"g", attrs, _} <- Floki.find(tree, "g[id]:not([data-graph-kind])"), do: id(attrs)
+
+    {tree |> put_kinds(MapSet.new(shapes)) |> Floki.raw_html(), Enum.reverse(names)}
+  end
+
+  defp id(attrs), do: with({"id", id} <- List.keyfind(attrs, "id", 0), do: id)
+
+  # The kind of each shape for the list of `Expresso.Element.Diagram.Outline`:
+  # a container holds a shape with its key in front, such as `app` for
+  # `app.web`. The parent of a shape is the longest key in front of its key.
+  defp put_kinds(nodes, shapes) when is_list(nodes), do: Enum.map(nodes, &put_kinds(&1, shapes))
+
+  defp put_kinds({"g", attrs, children}, shapes) do
+    children = put_kinds(children, shapes)
+    id = id(attrs)
+
+    if is_binary(id) and MapSet.member?(shapes, id) and
+         List.keyfind(attrs, "data-graph-kind", 0) == nil do
+      kind =
+        if Enum.any?(shapes, &String.starts_with?(&1, id <> ".")), do: "container", else: "node"
+
+      {"g", attrs ++ [{"data-graph-kind", kind} | parent(id, shapes)], children}
+    else
+      {"g", attrs, children}
+    end
+  end
+
+  defp put_kinds({tag, attrs, children}, shapes) when is_binary(tag),
+    do: {tag, attrs, put_kinds(children, shapes)}
+
+  defp put_kinds(node, _shapes), do: node
+
+  defp parent(id, shapes) do
+    parts = String.split(id, ".")
+
+    (length(parts) - 1)..1//-1
+    |> Enum.map(&(parts |> Enum.take(&1) |> Enum.join(".")))
+    |> Enum.find(&MapSet.member?(shapes, &1))
+    |> case do
+      nil -> []
+      parent -> [{"data-graph-parent", parent}]
+    end
   end
 
   defp walk(nodes, acc) when is_list(nodes), do: Enum.map_reduce(nodes, acc, &walk/2)
@@ -176,7 +218,12 @@ defmodule Expresso.Element.Diagram.D2 do
     case Regex.run(@connection, key, capture: :all_but_first) do
       [container, from, arrow, to, _index] ->
         {container <> from <> arrow <> container <> to,
-         [{"data-graph-from", container <> from}, {"data-graph-to", container <> to}]}
+         [
+           {"data-graph-from", container <> from},
+           {"data-graph-to", container <> to},
+           {"data-graph-kind", "edge"},
+           {"data-graph-arrow", arrow}
+         ]}
 
       nil ->
         {key, []}
