@@ -186,3 +186,6 @@ Examples.TreeReorg
 The label of each frame shows under the tree. The handout view and paper show each frame as
 a small tree in a grid. A CSV file gives frames too: the `frames` option names the column of
 the frame of each row.
+
+[Animate a supervision tree](animate-a-supervision-tree.md) uses frames to show processes
+that start, crash and start again.

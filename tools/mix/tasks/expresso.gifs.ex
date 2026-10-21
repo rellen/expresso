@@ -107,6 +107,37 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "tree-org", deck: "tree_org.exs", actions: ["j", "j"]},
     %{name: "tree-disk", deck: "tree_disk.exs", actions: ["j", "j"]},
     %{name: "tree-reorg", deck: "tree_reorg.exs", actions: ["j"]},
+    %{name: "tree-supervision", deck: "tree_supervision.exs", actions: ["j", "j"]},
+    %{
+      name: "tree-one-for-one",
+      deck: "tree_supervision.exs",
+      address: "#2",
+      actions: ["j", "j"]
+    },
+    %{
+      name: "tree-one-for-all",
+      deck: "tree_supervision.exs",
+      address: "#3",
+      actions: ["j", "j", "j"]
+    },
+    %{
+      name: "tree-rest-for-one",
+      deck: "tree_supervision.exs",
+      address: "#4",
+      actions: ["j", "j", "j"]
+    },
+    %{
+      name: "tree-dynamic-supervisor",
+      deck: "tree_supervision.exs",
+      address: "#5",
+      actions: ["j", "j", "j", "j", "j"]
+    },
+    %{
+      name: "tree-partition-supervisor",
+      deck: "tree_supervision.exs",
+      address: "#6",
+      actions: ["j", "j", "j", "j"]
+    },
     %{name: "graph-graphviz", deck: "graph_graphviz.exs", actions: ["j", "j", "j"]},
     %{name: "graph-d2", deck: "graph_d2.exs", actions: ["j", "j", "j"]},
     %{
