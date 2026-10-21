@@ -215,6 +215,14 @@ defmodule Expresso.E2E.ChartHighlightTest do
     """)
   end
 
+  # The stroke opacity of the outline of each group of the Voronoi treemap.
+  defp outlines(page) do
+    js(page, """
+    Array.from(document.querySelectorAll(".screen .chart .chart-cell-group"))
+      .map((outline) => getComputedStyle(outline).strokeOpacity)
+    """)
+  end
+
   test "a group of a Voronoi treemap in focus keeps its cells in full, and a part keeps its group",
        %{page: page, tmp_dir: tmp_dir} do
     page = open(page, render(VoronoiDeck, tmp_dir))
@@ -224,9 +232,13 @@ defmodule Expresso.E2E.ChartHighlightTest do
     # Office.
     assert cells(page) == ["1", "1", "1", "0.3", "0.3", "0.3"]
 
+    # An outline separates two groups, so it does not fade with its group.
+    assert outlines(page) == ["1", "1"]
+
     press(page, "j")
     assert position(page) == "1.2"
     assert cells(page) == ["0.3", "1", "1", "0.3", "0.3", "0.3"]
+    assert outlines(page) == ["1", "1"]
   end
 
   # The fill opacity of each link and of each node of the present view, in
