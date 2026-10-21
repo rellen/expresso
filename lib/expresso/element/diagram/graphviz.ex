@@ -32,7 +32,7 @@ defmodule Expresso.Element.Diagram.Graphviz do
   a part of the name of the end.
   """
 
-  alias Expresso.Element.Diagram.Tool
+  alias Expresso.Element.Diagram.{Font, Tool}
 
   @tool %{
     name: "Graphviz",
@@ -57,15 +57,88 @@ defmodule Expresso.Element.Diagram.Graphviz do
   Run Graphviz on a source file, and return the SVG and the names
 
   The names are the `id` of each node, edge and cluster, in the order of the
-  file. The function raises an `ArgumentError` when Graphviz is not present
-  and when Graphviz fails.
+  file. Graphviz measures each text with the font, and a `fontname` of the
+  source still applies to its element. The function raises an
+  `ArgumentError` when Graphviz is not present and when Graphviz fails.
   """
-  @spec draw!(Path.t(), atom()) :: {String.t(), [String.t()]}
-  def draw!(src, layout) do
+  @spec draw!(Path.t(), atom(), Font.t()) :: {String.t(), [String.t()]}
+  def draw!(src, layout, font \\ Font.builtin()) do
+    family = font.family
+
+    command = fn dir ->
+      args =
+        ["-Tsvg", "-K#{layout}"] ++
+          for(kind <- ~w(N E G), do: "-#{kind}fontname=#{family}") ++
+          ["-o", Path.join(dir, "graph.svg"), src]
+
+      {args, [{"FONTCONFIG_FILE", fontconfig(dir)}]}
+    end
+
     @tool
-    |> Tool.run!(src, &["-Tsvg", "-K#{layout}", "-o", &1, src])
+    |> Tool.run!(src, command, Font.files(font))
     |> name()
   end
+
+  # Graphviz finds a font through fontconfig. The file of the configuration
+  # names the private directory, which holds the files of the font, and it
+  # keeps the fonts of the system for a `fontname` of the source. `dir` is the
+  # private directory of the run.
+  # sobelow_skip ["Traversal"]
+  defp fontconfig(dir) do
+    path = Path.join(dir, "fonts.conf")
+
+    File.write!(path, """
+    <?xml version="1.0"?>
+    <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+    <fontconfig>
+      <dir>#{dir}</dir>
+      <cachedir>#{Path.join(dir, "cache")}</cachedir>
+      <include ignore_missing="yes">/etc/fonts/fonts.conf</include>
+    </fontconfig>
+    """)
+
+    path
+  end
+
+  @doc """
+  Give a graph of Graphviz the colors of the theme
+
+  Graphviz writes black lines, black text and a white background. The function
+  removes the polygon of the background, and it changes `black` to
+  `currentColor`, so the lines take the color of the text of the theme. A
+  color that the source gives stays. The style sheet gives a text without a
+  `fill` the color of the text.
+
+      iex> svg = ~s(<svg><g class="graph"><polygon fill="white" stroke="transparent"></polygon><path stroke="black"></path></g></svg>)
+      iex> Expresso.Element.Diagram.Graphviz.theme(svg)
+      ~s(<svg><g class="graph"><path stroke="currentColor"></path></g></svg>)
+  """
+  @spec theme(String.t()) :: String.t()
+  def theme(svg), do: svg |> Floki.parse_fragment!() |> colors(nil) |> Floki.raw_html()
+
+  defp colors(nodes, parent) when is_list(nodes) do
+    for node <- nodes, not background?(node, parent), do: colors(node, parent)
+  end
+
+  defp colors({tag, attrs, children}, _parent) when is_binary(tag) do
+    attrs =
+      Enum.map(attrs, fn
+        {name, "black"} when name in ["fill", "stroke"] -> {name, "currentColor"}
+        attr -> attr
+      end)
+
+    {tag, attrs, colors(children, {tag, attrs})}
+  end
+
+  defp colors(node, _parent), do: node
+
+  # The background is the white polygon in the group of the graph.
+  defp background?({"polygon", attrs, _children}, {"g", parent}) do
+    List.keyfind(parent, "class", 0) == {"class", "graph"} and
+      List.keyfind(attrs, "fill", 0) == {"fill", "white"}
+  end
+
+  defp background?(_node, _parent), do: false
 
   @doc """
   Give each node, edge and cluster of an SVG of Graphviz the name from its title

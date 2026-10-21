@@ -49,5 +49,8 @@ D2 with Go. The build takes approximately 30 seconds, and the hook removes the c
 after it. `D2_VERSION` in the hook and in `.github/workflows/check.yml` gives the version,
 and the two must agree.
 
+Graphviz measures a text through fontconfig only when it has its plugin `cairo`. The
+package `graphviz` of Ubuntu, of Homebrew and of Nix has it.
+
 The render finds `dot` and `d2` on the `PATH`. The variables `EXPRESSO_DOT` and
 `EXPRESSO_D2` give a different path.

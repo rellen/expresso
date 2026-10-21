@@ -32,6 +32,8 @@ end
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 | `layout` | For Graphviz, `:dot`, `:neato`, `:fdp`, `:sfdp`, `:circo` or `:twopi`. For D2, `:elk` or `:dagre`. | The layout engine of the tool. The default is `:dot` for Graphviz and `:elk` for D2. |
 | `edges` | `:follow` or `:own` | When an edge of a graph without its own part shows. The default is `:follow`. See [The edges of a graph](#the-edges-of-a-graph). |
+| `colors` | `:theme` or `:tool` | The colors of a graph. The default is `:theme`. See [The colors and the font of a graph](#the-colors-and-the-font-of-a-graph). |
+| `font` | The path of a directory with TTF files | The font of the text of a graph. The default is the font of the built-in theme. A path is relative to the root option of the deck. |
 
 ## The options of a part
 
@@ -83,7 +85,8 @@ The render finds the program `dot` on the `PATH`. The variable `EXPRESSO_DOT` gi
 different path. A deck without a graph does not need Graphviz. Each render runs Graphviz
 again, and the watch mode renders the deck again after a change to the source.
 
-The graph keeps the colors and the fonts that Graphviz gives it.
+The graph gets the colors and the font of the theme. See
+[The colors and the font of a graph](#the-colors-and-the-font-of-a-graph).
 
 ## A graph from D2
 
@@ -118,7 +121,49 @@ ELK draws each connection with right angles. Dagre is approximately seven times 
 but ELK takes only some seconds for a graph of a slide.
 
 The render finds the program `d2` on the `PATH`. The variable `EXPRESSO_D2` gives a
-different path. D2 holds its font in the SVG, and the graph keeps the colors of D2.
+different path. D2 holds the font in the SVG.
+
+## The colors and the font of a graph
+
+A graph gets the colors of the theme, so it changes with the theme and with the dark variant
+of a theme. With `colors :tool`, the graph keeps the colors of the tool. Use `:tool` for a
+graph with colors that have a meaning.
+
+| Tool | The colors of the theme |
+| --- | --- |
+| Graphviz | The lines and the text take the color `--text`, and the white background goes away. A color that the source gives, such as `color=red`, stays. |
+| D2 | Each class of the palette of D2 takes a custom property, such as `--graph-B4` for the fill of a shape. The table below gives the default of each property. The background goes away. |
+
+| Properties | D2 uses them for | Default |
+| --- | --- | --- |
+| `--graph-N1` | The text | `--text` |
+| `--graph-N2`, `--graph-N3` | The text of less importance | `--muted` |
+| `--graph-N4` to `--graph-N6` | The lines of less importance and the fills | A mix of `--muted` and `--background` |
+| `--graph-N7` | The background | `--background` |
+| `--graph-B1`, `--graph-B2` | The lines of the shapes and the connections | `--accent` |
+| `--graph-B3` to `--graph-B6` | The fills of the shapes and the containers | A mix of `--accent` and `--background` |
+| `--graph-AA2` to `--graph-AA5` | The second colors, such as a cylinder | `--chart-2`, and a mix of it with `--background` |
+| `--graph-AB4`, `--graph-AB5` | The third colors | A mix of `--chart-3` and `--background` |
+
+The [css option](css-option.md) can change each property, such as
+`.diagram-d2 { --graph-B4: var(--chart-4); }`.
+
+The text of a graph gets the font of the slide. The render gives the font to the tool, so the
+tool sizes each box for the text in that font. The default is Atkinson Hyperlegible, the font
+of the built-in theme. A deck with a different font gives its TTF files with the `font`
+option:
+
+```elixir
+slide "the system" do
+  diagram "system.d2" do
+    font "fonts/inter"
+  end
+end
+```
+
+The directory holds a TTF file for each style: regular, bold, italic and bold italic. The
+render reads the family and the style from each file. A style without a file takes the
+regular file. In Graphviz, a `fontname` of the source still applies to its element.
 
 ## The edges of a graph
 
@@ -160,8 +205,10 @@ The render gives an error for these:
 - a source that the tool cannot draw, such as a source with a syntax error. The message
   gives the message of the tool.
 
-The DSL and `Expresso.Builder` give an error for the `layout` and the `edges` options of an
-`.svg` file, and for a layout of a different tool.
+The DSL and `Expresso.Builder` give an error for the options `layout`, `edges`, `colors`
+and `font` of an `.svg` file, and for a layout of a different tool. The render gives an error
+for a font directory without a TTF file, without a regular file, or with more than one
+family.
 
 ## The theme and the SVG file
 

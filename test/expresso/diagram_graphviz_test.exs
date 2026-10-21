@@ -117,8 +117,22 @@ defmodule Expresso.Element.DiagramGraphvizTest do
 
     test "run!/3 returns the file that the program writes, and keeps its other output out" do
       tool = %{@missing | program: "sh"}
-      args = &["-c", "echo warning >&2; printf '<svg/>' > '#{&1}'"]
-      assert Tool.run!(tool, "g.dot", args) == "<svg/>"
+      command = &{["-c", "echo warning >&2; printf '<svg/>' > '#{&1}/graph.svg'"], []}
+      assert Tool.run!(tool, "g.dot", command) == "<svg/>"
+    end
+
+    test "run!/4 writes the files into the private directory, and gives the environment" do
+      tool = %{@missing | program: "sh"}
+
+      command =
+        &{[
+           "-c",
+           ~s(cat "$1/a.txt" "$1/b.txt" > "$1/graph.svg"; echo "$NAME" >> "$1/graph.svg"),
+           "sh",
+           &1
+         ], [{"NAME", "env"}]}
+
+      assert Tool.run!(tool, "g.dot", command, [{"a.txt", "a"}, {"b.txt", "b"}]) == "abenv\n"
     end
 
     test "run!/3 raises with the output and the status of a program that fails" do
@@ -126,8 +140,8 @@ defmodule Expresso.Element.DiagramGraphvizTest do
 
       error =
         assert_raise ArgumentError, fn ->
-          Tool.run!(tool, "g.dot", fn _output ->
-            ["-c", "echo 'syntax error in line 3' >&2; exit 3"]
+          Tool.run!(tool, "g.dot", fn _dir ->
+            {["-c", "echo 'syntax error in line 3' >&2; exit 3"], []}
           end)
         end
 

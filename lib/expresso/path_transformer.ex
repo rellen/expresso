@@ -87,8 +87,8 @@ defmodule Expresso.PathTransformer do
 
   defp own(%Image{src: src} = image, root), do: {:ok, %Image{image | src: path(src, root)}}
 
-  defp own(%Diagram{src: src} = diagram, root),
-    do: {:ok, %Diagram{diagram | src: path(src, root)}}
+  defp own(%Diagram{src: src, font: font} = diagram, root),
+    do: {:ok, %Diagram{diagram | src: path(src, root), font: path(font, root)}}
 
   defp own(%Embed{src: src, fallback: fallback} = embed, root) do
     src = if Embed.address?(src), do: src, else: path(src, root)

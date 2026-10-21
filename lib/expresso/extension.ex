@@ -787,6 +787,16 @@ defmodule Expresso.Extension do
             doc:
               "When an edge of a graph without its own part shows. :follow, the default, shows it from the step where both of its ends show. :own shows it at each step. See docs/reference/diagram-element.md."
           ],
+          colors: [
+            type: {:in, [:theme, :tool]},
+            doc:
+              "The colors of a graph. :theme, the default, gives the graph the colors of the theme. :tool keeps the colors of the tool. See docs/reference/diagram-element.md."
+          ],
+          font: [
+            type: :string,
+            doc:
+              "A directory with the TTF files of the font of a graph, from the root option of the deck. The default is the font of the built-in theme. See docs/reference/diagram-element.md."
+          ],
           alt: [
             type: :string,
             doc:

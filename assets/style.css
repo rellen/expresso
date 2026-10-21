@@ -1909,6 +1909,36 @@ body[data-view="handout"] .chart-frames {
   height: auto;
   overflow: visible;
 }
+/*
+ * A graph from Graphviz or D2 with the colors of the theme. Graphviz draws
+ * with `currentColor`, and a text without a `fill` takes the color too. D2
+ * gives each class of its palette the custom property of the class, such as
+ * `--graph-B4`. A theme or the css option of a deck can change each property.
+ */
+.diagram-graph {
+  color: var(--text);
+  --graph-N1: var(--text);
+  --graph-N2: var(--muted);
+  --graph-N3: var(--muted);
+  --graph-N4: color-mix(in srgb, var(--muted) 40%, var(--background));
+  --graph-N5: color-mix(in srgb, var(--muted) 25%, var(--background));
+  --graph-N6: color-mix(in srgb, var(--muted) 12%, var(--background));
+  --graph-N7: var(--background);
+  --graph-B1: var(--accent);
+  --graph-B2: var(--accent);
+  --graph-B3: color-mix(in srgb, var(--accent) 18%, var(--background));
+  --graph-B4: color-mix(in srgb, var(--accent) 15%, var(--background));
+  --graph-B5: color-mix(in srgb, var(--accent) 10%, var(--background));
+  --graph-B6: color-mix(in srgb, var(--accent) 5%, var(--background));
+  --graph-AA2: var(--chart-2);
+  --graph-AA4: color-mix(in srgb, var(--chart-2) 12%, var(--background));
+  --graph-AA5: color-mix(in srgb, var(--chart-2) 6%, var(--background));
+  --graph-AB4: color-mix(in srgb, var(--chart-3) 12%, var(--background));
+  --graph-AB5: color-mix(in srgb, var(--chart-3) 6%, var(--background));
+}
+.diagram-graphviz text:not([fill]) {
+  fill: currentColor;
+}
 .text-box,
 .text-area,
 .image,
