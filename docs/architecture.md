@@ -1529,7 +1529,7 @@ to the items of a list. These are the reasons for this design:
   sets it on each mark with a `data-keys` attribute that does not hold a key of the
   group. The property inherits, so a group mixes series and categories only in different
   steps: a mark of a category in focus cannot stay in full color inside a dimmed series.
-  A mark of a treemap or a sunburst holds the keys of its part, of the groups above it and
+  A mark of a treemap, a sunburst or a Voronoi treemap holds the keys of its part, of the groups above it and
   of the parts under it, so one rule keeps a part, its groups and its own parts in full
   color. In the same way, a link of a chart of flows holds the keys of its two nodes, so
   one rule keeps a node and its links in full color.
@@ -1545,7 +1545,7 @@ family, and the family decides which code draws it:
 | --- | --- | --- |
 | `:axis` | `:bar`, `:line` | `Expresso.Element.Chart` |
 | `:pie` | `:pie` | `Expresso.Element.Chart` |
-| `:parts` | `:treemap`, `:sunburst` | `Expresso.Element.Chart.Hierarchy` |
+| `:parts` | `:treemap`, `:sunburst`, `:voronoi` | `Expresso.Element.Chart.Hierarchy`, with the layout of `Expresso.Element.Chart.Voronoi` for `:voronoi` |
 | `:flows` | `:sankey`, `:alluvial`, `:parallel_sets`, `:chord` | `Expresso.Element.Chart.Sankey`, `ParallelSets` and `Chord` |
 
 The module makes each group of kinds from the table, and it gives a guard for each group,
@@ -1596,6 +1596,34 @@ are the reasons for this design:
   color of text, and a tint keeps the contrast of that text.
 - **A label shows only when it fits.** The renderer estimates the width of the text of each
   label in each frame, and a channel hides a label that does not fit.
+
+### The Voronoi treemap
+
+A Voronoi treemap fills a convex container with the parts of a whole in groups.
+`Expresso.Element.Chart.Voronoi` makes the layout, and `Expresso.Element.Chart.Hierarchy`
+builds the tree and draws the cells, as for a treemap. These are the reasons for this
+design:
+
+- **A new kind, and not an option of the treemap.** The layout, the labels, the legend and
+  the limits are different, so each function that branches on the kind has its own clause
+  for it.
+- **The algorithm of Nocaj and Brandes.** A cell is the container, clipped by one half-plane
+  for each other site of a power diagram. Each iteration moves a site to the centroid of its
+  cell and changes its weight by the ratio of its target area to its area. The algorithm
+  needs no library, and it runs in the compiler.
+- **A deterministic layout.** The first sites come from the Halton sequence, and a layout
+  that stays above its limit starts again from the next sites of the sequence. Thus the same
+  deck gives the same HTML, and a test can compare the output.
+- **A convex container only.** A cell is convex before the clip, so a convex container gives
+  convex cells, and each group can divide its cell again. The dent of a concave container
+  can cut a cell into two pieces, so the compiler refuses a concave polygon.
+- **One frame.** A cell can change its number of corners from one frame to the next, so the
+  channels of `Expresso.Element.Chart.Motion` cannot move it. The chart therefore takes no
+  frames, no `count` and no effect `:grow`, and it draws each cell as a static `path`.
+- **A label at the center of its cell.** The label goes to the centroid of its cell when its
+  box fits there, and else to the pole of inaccessibility. In a long cell, each point of the
+  middle line is as far from the edges as the pole, so the centroid looks more central.
+  A cell is convex, so the box fits when its four corners are inside the cell.
 
 ### The charts of flows
 

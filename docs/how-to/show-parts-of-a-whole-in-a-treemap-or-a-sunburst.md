@@ -1,7 +1,7 @@
 # Show the parts of a whole in a treemap or a sunburst
 
-This guide shows how to draw a treemap and a sunburst, which show the parts of a whole in
-groups. For each option, see [The chart element](../reference/chart-element.md).
+This guide shows how to draw a treemap, a sunburst and a Voronoi treemap, which show the
+parts of a whole in groups. For each option, see [The chart element](../reference/chart-element.md).
 
 ## Draw a treemap of groups and their parts
 
@@ -155,10 +155,58 @@ You can also give each category as a list of its levels. A list needs no separat
 categories [["I/O", "Disks"], ["I/O", "Network"], ["CPU"]]
 ```
 
+## Fill a circle, a hexagon or a polygon
+
+Write a `chart` element with the kind `:voronoi`, and give it the data of a treemap. The
+`shape` option gives the container: `:rectangle`, `:circle`, `:hexagon`, or the points of a
+convex polygon in a unit box. Each part is a cell with an area in proportion to its value,
+and each group is the cell that holds its parts:
+
+```elixir
+defmodule Examples.ChartVoronoi do
+  use Expresso
+
+  slide "staff" do
+    heading "Where the staff work"
+
+    chart :voronoi do
+      title "The staff of each department, by team"
+      shape :hexagon
+      highlight ["Production", "Sales/Online"]
+
+      categories [
+        "Production/Press",
+        "Production/Paint",
+        "Production/Weld",
+        "Production/Pack",
+        "Sales/North",
+        "Sales/South",
+        "Sales/Online",
+        "Research/Labs",
+        "Research/Field",
+        "Office"
+      ]
+
+      series "Staff", [42, 18, 25, 12, 30, 22, 12, 16, 8, 14]
+    end
+  end
+end
+
+Examples.ChartVoronoi
+```
+
+![A hexagon of cells: the group Production is in focus, and then the part Online of Sales](https://raw.githubusercontent.com/rellen/expresso/media/chart-voronoi.gif)
+
+A polygon must be convex, such as a triangle: `shape [{0, 0}, {1, 0}, {0.5, 1}]`. The y axis
+goes down, so this triangle has its corner at the bottom. The compiler refuses a polygon
+with a dent. A Voronoi treemap takes no frames, so use a treemap for a change over time.
+
 ## Choose the kind
 
 - Use a treemap when the parts are many, or when the reader compares the sizes of parts.
   An eye compares the areas of rectangles better than the angles of arcs.
 - Use a sunburst when the levels are the message, such as the share of each group and of
   its parts.
+- Use a Voronoi treemap when the chart must fill a shape, such as a circle or a hexagon, or
+  when a treemap gives small parts as thin strips. A cell has no fixed direction.
 - Use a pie or a bar chart when the data has no groups.
