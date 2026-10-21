@@ -21,6 +21,9 @@ ELIXIR_VERSION="1.20.4"
 NODE_VERSION="24.20.0"
 ZIG_VERSION="0.16.0"
 
+# Keep this version in agreement with `.github/workflows/check.yml`.
+D2_VERSION="0.7.1"
+
 # The OTP release of the Elixir build. Elixir publishes one build for each OTP
 # release, and the build must agree with the Erlang archive.
 OTP_RELEASE="29"
@@ -29,6 +32,7 @@ OTP_DIR="/opt/otp"
 ELIXIR_DIR="/opt/elixir"
 NODE_DIR="/opt/node"
 ZIG_DIR="/opt/zig"
+D2_DIR="/opt/d2"
 
 # The Erlang archive and the Node archive are builds for one target. A container
 # of a different target needs different archives, and the versions above then
@@ -116,6 +120,23 @@ if ! command -v dot >/dev/null 2>&1; then
   fi
 fi
 
+# D2. The tests with the tag `:d2` run `d2`. The proxy of a remote session
+# refuses a download from a repository that the session does not hold, such as
+# a release of D2 on GitHub, and it lets Go get the modules. Therefore the hook
+# builds D2 with Go, and it removes the caches of Go after the build. A failed
+# build gives a warning, and the hook continues.
+if ! "${D2_DIR}/d2" --version 2>/dev/null | grep -q "^v${D2_VERSION}"; then
+  go="$(command -v go || echo /usr/local/go/bin/go)"
+  tmp_dir="$(mktemp -d)"
+  if ! GOBIN="${D2_DIR}" GOPATH="${tmp_dir}/go" GOCACHE="${tmp_dir}/cache" GOFLAGS=-modcacherw \
+    "${go}" install "oss.terrastruct.com/d2@v${D2_VERSION}" >/dev/null 2>&1; then
+    echo "The hook did not get D2 ${D2_VERSION}. mix test --only d2 needs it." >&2
+  fi
+  rm -rf "${tmp_dir}"
+fi
+
+export PATH="${D2_DIR}:${PATH}"
+
 # The container gives a latin1 name encoding, and Elixir expects utf8. The
 # language gives the tools a utf8 output.
 export ELIXIR_ERL_OPTIONS="+fnu"
@@ -124,7 +145,7 @@ export LANG="C.UTF-8"
 # Keep the tools on the path for each command of the session.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   {
-    echo "export PATH=\"${OTP_DIR}/bin:${ELIXIR_DIR}/bin:${NODE_DIR}/bin:${ZIG_DIR}:\$PATH\""
+    echo "export PATH=\"${OTP_DIR}/bin:${ELIXIR_DIR}/bin:${NODE_DIR}/bin:${ZIG_DIR}:${D2_DIR}:\$PATH\""
     echo 'export ELIXIR_ERL_OPTIONS="+fnu"'
     echo 'export LANG="C.UTF-8"'
   } >> "${CLAUDE_ENV_FILE}"

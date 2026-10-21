@@ -1317,7 +1317,8 @@ center of the part to the center of the target. These are the reasons for this d
   is in the same parent as the part, and the theme moves the wrapper. A parent with
   `scale(2)` therefore gets half the distance of the file.
 
-A `diagram` can also take the source of a graph, such as a `.dot` file for Graphviz.
+A `diagram` can also take the source of a graph: a `.dot` file for Graphviz, or a `.d2` file
+for D2.
 `docs/graph-diagrams.md` gives the plan and its decisions. These are the parts of the
 code:
 
@@ -1331,7 +1332,9 @@ code:
   directory. The output of a tool that fails goes into the message of the error.
 - **The names come from the source.** `Expresso.Element.Diagram.Graphviz.name/1` replaces
   each `id` that Graphviz numbers, such as `node1`, with the text of the `<title>` of its
-  element. A part then names a node or an edge in the words of the source.
+  element. D2 gives no `id`, and it puts the key of each element in Base64 into its class.
+  `Expresso.Element.Diagram.D2.name/1` decodes the key and writes it as the `id`. A part
+  then names a node or an edge in the words of the source.
 - **The source is a file of the deck.** The render reads the source with
   `Expresso.DeckFile`, so the watch mode renders again after a change to the source.
 
@@ -2961,7 +2964,8 @@ The commands are:
 1. **A diagram from Graphviz or D2.** `docs/graph-diagrams.md` gives the plan, and issue
    #386 holds it too. The render runs the tool, and a part names a node or an edge in the
    words of the source. The ten decisions of the plan are settled. The code holds the first
-   of the seven pull requests: the source of Graphviz, the `layout` option and the names.
+   two of the seven pull requests: the sources of Graphviz and D2, the `layout` option and
+   the names.
 
 The last item before this one, the dim state of `docs/dim-state.md`, gave each role of text
 its own dimmed color.

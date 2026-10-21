@@ -43,11 +43,13 @@ defmodule Expresso.Element.Diagram do
   attribute, so an id such as `step.1` or `a:b` works.
 
   A `.dot` or a `.gv` file is the source of a graph in the language of
-  Graphviz. `draw/1` runs the tool before the render, and it keeps the SVG and
-  the names of the graph in the struct. `Expresso.Element.Diagram.Graphviz`
-  gives each node, edge and cluster a name from the source, so a part names
-  it in the words of the source. The `layout` option gives the layout engine
-  of the tool. `docs/graph-diagrams.md` gives the plan.
+  Graphviz, and a `.d2` file is the source of a graph in the language of D2.
+  `draw/1` runs the tool before the render, and it keeps the SVG and the
+  names of the graph in the struct. `Expresso.Element.Diagram.Graphviz` and
+  `Expresso.Element.Diagram.D2` give each element of the graph a name from the
+  source, so a part names it in the words of the source. The `layout` option
+  gives the layout engine of the tool. `docs/graph-diagrams.md` gives the
+  plan.
 
   `Expresso.Deck.render/1` writes the document with Floki, which writes each
   name of the SVG in lowercase. A browser reads `viewbox` as `viewBox` and
@@ -305,6 +307,7 @@ defmodule Expresso.Element.Diagram do
   defp tool(src) do
     case src |> Path.extname() |> String.downcase() do
       ext when ext in [".dot", ".gv"] -> Expresso.Element.Diagram.Graphviz
+      ".d2" -> Expresso.Element.Diagram.D2
       _other -> nil
     end
   end
@@ -321,7 +324,7 @@ defmodule Expresso.Element.Diagram do
     case tool(src) do
       nil ->
         {:error,
-         "the layout option applies to the source of a graph, such as a .dot file, " <>
+         "the layout option applies to the source of a graph, such as a .dot or a .d2 file, " <>
            "so the diagram \"#{src}\" takes no layout option"}
 
       tool ->

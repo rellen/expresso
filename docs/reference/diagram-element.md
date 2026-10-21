@@ -25,18 +25,18 @@ end
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | The path of an `.svg` file, or of a `.dot` or a `.gv` file | The diagram, or the source of a graph. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. See [A graph from Graphviz](#a-graph-from-graphviz). |
+| The first argument | The path of an `.svg` file, or of a `.dot`, a `.gv` or a `.d2` file | The diagram, or the source of a graph. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. See [A graph from Graphviz](#a-graph-from-graphviz) and [A graph from D2](#a-graph-from-d2). |
 | `width` | A CSS width, such as `"900px"` or `"60%"` | The width of the diagram. A percentage is a part of the width of the slide. The default is the width that the file gives. |
 | `alt` | A string | The text of the diagram for a screen reader. The diagram then has the role `img`, and a screen reader reads this text in the place of the text of the SVG. Without it, a screen reader reads the text of the SVG. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
-| `layout` | `:dot`, `:neato`, `:fdp`, `:sfdp`, `:circo` or `:twopi` | The layout engine of Graphviz, for a `.dot` or a `.gv` file. The default is `:dot`. |
+| `layout` | For Graphviz, `:dot`, `:neato`, `:fdp`, `:sfdp`, `:circo` or `:twopi`. For D2, `:elk` or `:dagre`. | The layout engine of the tool. The default is `:dot` for Graphviz and `:elk` for D2. |
 
 ## The options of a part
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | A string | The `id` of an element of the SVG file, or the name of a node, an edge or a cluster of a graph. |
+| The first argument | A string | The `id` of an element of the SVG file, or the name of an element of a graph. |
 
 A diagram and a part each take the overlay options, such as `at`, `effect` and the `on`
 entity. The `on` entity of a part also takes `move_to`. See
@@ -84,6 +84,41 @@ again, and the watch mode renders the deck again after a change to the source.
 
 The graph keeps the colors and the fonts that Graphviz gives it.
 
+## A graph from D2
+
+A `.d2` file is the source of a graph in the language of D2. The render runs D2 with the
+layout engine ELK, or with the engine of the `layout` option. A part names a shape, a
+container or a connection by its key in the source:
+
+```elixir
+slide "the system" do
+  diagram "system.d2" do
+    part "app.web"
+    part "app.web->app.api", at: [from: 2]
+    part "app.api", at: [from: 2]
+    part "db", at: [from: 3]
+
+    part "app" do
+      on 4, state: :alert
+    end
+  end
+end
+```
+
+| Element | Name | Example |
+| --- | --- | --- |
+| A shape | Its key, with the keys of its containers | `app.web` |
+| A container | Its key | `app` |
+| A connection | The keys of the two ends and the arrow, with no spaces | `app.api->db`, `db<-cache` |
+| A connection inside a container | The key of the container in front of each end | `app.web->app.api` for `web -> api` in `app` |
+| A second connection between the same ends | The name of the first connection, then `:2` | `app.api->db:2` |
+
+ELK draws each connection with right angles. Dagre is approximately seven times faster,
+but ELK takes only some seconds for a graph of a slide.
+
+The render finds the program `d2` on the `PATH`. The variable `EXPRESSO_D2` gives a
+different path. D2 holds its font in the SVG, and the graph keeps the colors of D2.
+
 ## The errors
 
 The render gives an error for these:
@@ -91,11 +126,13 @@ The render gives an error for these:
 - a file that it cannot read, or that is not UTF-8;
 - a part with an `id` that the file does not have;
 - a `move_to` with an `id` that the file does not have, or with an element that has no shape;
-- a `.dot` or a `.gv` file when the render does not find Graphviz;
-- a source that Graphviz cannot draw, such as a source with a syntax error. The message
-  gives the message of Graphviz.
+- a `.dot` or a `.gv` file when the render does not find Graphviz, and a `.d2` file when
+  the render does not find D2;
+- a source that the tool cannot draw, such as a source with a syntax error. The message
+  gives the message of the tool.
 
-The DSL and `Expresso.Builder` give an error for the `layout` option of an `.svg` file.
+The DSL and `Expresso.Builder` give an error for the `layout` option of an `.svg` file, and
+for a layout of a different tool.
 
 ## The theme and the SVG file
 

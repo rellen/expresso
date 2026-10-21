@@ -9,7 +9,7 @@ deck in a browser. Each topic has a page in `docs/development/`:
 | [The checks](development/checks.md) | Each command of `mix check`, what it needs, and flaky tests |
 | [The unit tests](development/unit-tests.md) | Property tests, and the HTML of a deck in a unit test |
 | [The browser tests](development/browser-tests.md) | The tests in Chromium, and how to look at a deck in a browser |
-| [The graph tools](development/graph-tools.md) | Graphviz for the diagrams from the source of a graph, and its tests |
+| [The graph tools](development/graph-tools.md) | Graphviz and D2 for the diagrams from the source of a graph, and their tests |
 | [The binary and its tests](development/release.md) | The binary, the dependency test and the release tests |
 | [The workflow](development/ci.md) | The checks of a pull request on GitHub, and Zig in the workflow |
 | [The dependencies](development/dependencies.md) | The audit of the dependencies, their updates and the icons |
