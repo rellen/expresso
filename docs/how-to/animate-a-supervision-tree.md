@@ -24,13 +24,13 @@ Put the whole tree into a `frame` entity for each event. The name of a node is i
 across the frames. At the step of each frame, the box of a process changes to its new
 state:
 
-| Event | The node in the frame | The animation |
-| --- | --- | --- |
-| A child starts | A new node | The new box fades in, and the other boxes move to make space. |
-| A child crashes | `color :danger`, the icon `"skull"` and the exit reason as the detail | The box fades to red. |
-| The supervisor stops a child | `color :warning`, the icon `"circle-x"` and `exit: :shutdown` | The box fades to orange. |
-| The supervisor starts a child again | `color :success`, the icon `"refresh-cw"` and a new PID | The box fades to green with the new PID. |
-| A child stops for all time | The frame does not hold the node | The box fades out, and the other boxes move. |
+| Event                               | The node in the frame                                                 | The animation                                                 |
+| ----------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------- |
+| A child starts                      | A new node                                                            | The new box fades in, and the other boxes move to make space. |
+| A child crashes                     | `color :danger`, the icon `"skull"` and the exit reason as the detail | The box fades to red.                                         |
+| The supervisor stops a child        | `color :warning`, the icon `"circle-x"` and `exit: :shutdown`         | The box fades to orange.                                      |
+| The supervisor starts a child again | `color :success`, the icon `"refresh-cw"` and a new PID               | The box fades to green with the new PID.                      |
+| A child stops for all time          | The frame does not hold the node                                      | The box fades out, and the other boxes move.                  |
 
 The label of each frame shows under the tree, so it tells the audience what occurs.
 
