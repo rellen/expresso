@@ -1086,6 +1086,12 @@ body[data-view="handout"] .tree-frames {
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
+.chart-cell-label-small .chart-part {
+  font-size: 14px;
+}
+.chart-cell-label-small .chart-part-value {
+  font-size: 12px;
+}
 .chart-cell-group {
   fill: none;
   stroke: var(--background);

@@ -20,7 +20,8 @@ defmodule Expresso.Element.Chart.Hierarchy do
   A Voronoi treemap divides a convex container into cells, with the layout of
   `Expresso.Element.Chart.Voronoi`. Each part is a cell, and a group is the
   cell that holds the cells of its parts, with a thicker outline. A leaf has
-  its label at the pole of its cell, and a legend gives the top-level groups.
+  its label in its cell, in smaller text when the cell is narrow, and a
+  legend gives the top-level groups.
   The chart has one frame and no effect `:grow`.
 
   Each top-level group has a color of the palette, and its parts have lighter
@@ -321,10 +322,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
   end
 
   # A Voronoi treemap has one frame, so it has one place for each part: its
-  # cell, and the place of its label. The label goes to the centroid of the
-  # cell when it fits there, as the eye sees the centroid as the center. Else
-  # it goes to the pole of the cell, the point farthest from its edges. A
-  # label that fits at neither place does not show.
+  # cell, and the place and the form of its label.
   defp scene(:voronoi, assigns, parts, [first] = values) do
     polygon = Voronoi.container(assigns.shape, assigns.box)
     cells = parts |> Enum.map(&item(&1, first)) |> Voronoi.layout(polygon)
@@ -332,10 +330,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
 
     labels =
       for %{children: []} = part <- all, cells[part.id] != [], into: %{} do
-        cell = cells[part.id]
-        {pole, _room} = Voronoi.pole(cell)
-        places = [Voronoi.centroid(cell), pole]
-        {part.id, Enum.find(places, &cell_fits?(part, first, &1, cell, assigns.values))}
+        {part.id, cell_label_place(part, first, cells[part.id], assigns.values)}
       end
 
     %{
@@ -356,13 +351,37 @@ defmodule Expresso.Element.Chart.Hierarchy do
       children: Enum.map(part.children, &item(&1, values))
     }
 
-  # A label fits a cell when its box, at the pole of the cell, is inside the
-  # cell: the name at 18px in bold, and the value under it at 16px. A cell is
+  # The forms of the label of a cell, from the first choice: the name and the
+  # value, then the two in small text, then the name alone in each size. A
+  # cell is often a narrow wedge, so a smaller form shows where the first one
+  # does not fit. A form goes to the centroid of the cell when it fits there,
+  # as the eye sees the centroid as the center, and else to the pole of the
+  # cell, the point farthest from its edges. A label that fits in no form at
+  # neither place does not show, and the table still gives the part.
+  @cell_forms [{:large, true}, {:small, true}, {:large, false}, {:small, false}]
+
+  # The size of the text of each form, against the size of the text of a
+  # treemap: 14px for the name and 12px for the value.
+  @cell_scale %{large: 1.0, small: 0.78}
+
+  defp cell_label_place(part, values, cell, numbers?) do
+    {pole, _room} = Voronoi.pole(cell)
+    places = [Voronoi.centroid(cell), pole]
+
+    Enum.find_value(@cell_forms, fn {size, value?} ->
+      form = %{size: size, value: value? and numbers?}
+      point = Enum.find(places, &cell_fits?(part, values, &1, cell, form))
+      if point, do: Map.put(form, :point, point)
+    end)
+  end
+
+  # A label fits a cell when its box is inside the cell: the name at 18px in
+  # bold, and the value under it at 16px, in the scale of the form. A cell is
   # convex, so the box is inside when its four corners are inside.
-  defp cell_fits?(part, values, {x, y}, cell, numbers?) do
-    width = 8 + max(10.5 * String.length(part.name), cell_value_width(part, values, numbers?))
-    height = if numbers?, do: 48, else: 28
-    {dx, dy} = {width / 2, height / 2}
+  defp cell_fits?(part, values, {x, y}, cell, form) do
+    scale = @cell_scale[form.size]
+    text = 8 + max(10.5 * String.length(part.name), cell_value_width(part, values, form.value))
+    {dx, dy} = {text * scale / 2, if(form.value, do: 48, else: 28) * scale / 2}
 
     Enum.all?(
       [{x - dx, y - dy}, {x + dx, y - dy}, {x + dx, y + dy}, {x - dx, y + dy}],
@@ -761,8 +780,8 @@ defmodule Expresso.Element.Chart.Hierarchy do
                    data_keys: key(assigns, part)
             end
 
-            for part <- flatten([root]), point = @scene.labels[part.id] do
-              c(&cell_label/1, rest!: Map.merge(assigns, %{part: part, point: point}))
+            for part <- flatten([root]), form = @scene.labels[part.id] do
+              c(&cell_label/1, rest!: Map.merge(assigns, %{part: part, form: form}))
             end
           end
         end
@@ -787,23 +806,33 @@ defmodule Expresso.Element.Chart.Hierarchy do
     end
   end
 
-  # The name of a leaf at the pole of its cell, and its value under it.
+  # The name of a leaf at the place of its label, and its value under it when
+  # the form holds the value. A small form has the class
+  # `chart-cell-label-small`, and the style sheet gives it smaller text.
   defp cell_label(assigns) do
-    {x, y} = assigns.point
-    value = Plot.label(value(assigns.part, assigns.numbers))
-    assigns = Map.merge(assigns, %{x: Plot.f(x), y: y, value: value})
+    %{form: form} = assigns
+    {x, y} = form.point
+    small? = form.size == :small
+    {name_y, value_y} = if small?, do: {y - 1, y + 14}, else: {y - 2, y + 18}
+    name_y = if form.value, do: name_y, else: if(small?, do: y + 5, else: y + 6)
+
+    assigns =
+      Map.merge(assigns, %{
+        x: Plot.f(x),
+        name_y: Plot.f(name_y),
+        value_y: Plot.f(value_y),
+        value: Plot.label(value(assigns.part, assigns.numbers)),
+        class: if(small?, do: "chart-cell-label chart-cell-label-small", else: "chart-cell-label")
+      })
 
     temple do
-      g class: "chart-cell-label", data_keys: key(assigns, @part) do
-        text x: @x,
-             y: Plot.f(if(@values, do: @y - 2, else: @y + 6)),
-             text_anchor: "middle",
-             class: "chart-part" do
+      g class: @class, data_keys: key(assigns, @part) do
+        text x: @x, y: @name_y, text_anchor: "middle", class: "chart-part" do
           @part.name
         end
 
-        if @values do
-          text x: @x, y: Plot.f(@y + 18), text_anchor: "middle", class: "chart-part-value" do
+        if @form.value do
+          text x: @x, y: @value_y, text_anchor: "middle", class: "chart-part-value" do
             @value
           end
         end

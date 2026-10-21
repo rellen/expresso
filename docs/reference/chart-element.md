@@ -324,8 +324,10 @@ These rules apply to a Voronoi treemap:
   parts, thicker than the edge between two parts. The cells of a top-level group have tints
   of its color, lighter for a deeper level. A part with the value 0 has no cell.
 - **The labels.** The label of a part goes to the center of its cell when it fits there, and
-  else to the point of the cell that is farthest from its edges. A label that does not fit
-  does not show. A group below the top level has no label, and the table for a screen
+  else to the point of the cell that is farthest from its edges. A narrow cell gets a
+  smaller form of the label. The forms are, in order: the name and the value; the two in
+  small text; the name alone; and the name alone in small text. A label that fits in no
+  form does not show. A group below the top level has no label, and the table for a screen
   reader gives its name.
 - **The legend.** The legend at the right gives each group of the top level, with its part
   of the whole in percent.

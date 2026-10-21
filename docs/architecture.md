@@ -1624,6 +1624,11 @@ design:
   box fits there, and else to the pole of inaccessibility. In a long cell, each point of the
   middle line is as far from the edges as the pole, so the centroid looks more central.
   A cell is convex, so the box fits when its four corners are inside the cell.
+- **A smaller label in a narrow cell.** A cell is often a narrow wedge, which holds a part
+  of its area away from both places. A search of the whole cell for a place found no more
+  room, so the label changes its form in place of its place: the name and the value at
+  14px and 12px, then the name alone in each size. In the samples of the guide, these forms
+  labeled each cell that the first form left with no label.
 
 ### The charts of flows
 

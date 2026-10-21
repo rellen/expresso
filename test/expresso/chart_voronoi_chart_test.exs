@@ -106,6 +106,49 @@ defmodule Expresso.ChartVoronoiChartTest do
       assert "A part with a long name" in texts(figure, ".chart-table td, .chart-table th")
     end
 
+    test "a narrow cell gets a smaller label, and a narrower cell gets the name alone" do
+      categories = [
+        "Production/Press",
+        "Production/Paint",
+        "Production/Weld",
+        "Production/Cut",
+        "Sales/North",
+        "Sales/South",
+        "Sales/Online",
+        "Research/Labs",
+        "Research/Field",
+        "Office"
+      ]
+
+      figure =
+        figure(
+          chart(
+            shape: [{0, 0}, {1, 0}, {0.5, 1}],
+            categories: categories,
+            elements: [Builder.series("Staff", [42, 18, 25, 9, 30, 22, 12, 16, 8, 14])]
+          )
+        )
+
+      # Each of the 10 parts has a label.
+      assert count(figure, ".chart-cell-label") == 10
+
+      small = texts(figure, ".chart-cell-label-small .chart-part")
+      assert "Cut" in small and "Field" in small
+
+      # The small label of Cut holds its value, and the small label of Field
+      # has room for its name alone.
+      values = fn name ->
+        figure
+        |> LazyHTML.query(".chart-cell-label-small")
+        |> Enum.find(&(texts(&1, ".chart-part") == [name]))
+        |> texts(".chart-part-value")
+      end
+
+      assert values.("Cut") == ["9"]
+      assert values.("Field") == []
+      assert "Press" not in small
+    end
+
     test "a part with the value 0 gets no cell and no label" do
       figure = figure(chart(elements: [Builder.series("Staff", [42, 18, 25, 30, 22, 0])]))
 
