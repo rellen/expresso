@@ -54,6 +54,10 @@ The render gives an error for these:
 The document holds the SVG as elements, and not as a picture. The rules of the theme and
 of [the css option](css-option.md) thus reach the parts of the diagram.
 
+The render removes the XML declaration and the DOCTYPE at the start of the file, because
+an HTML document cannot hold them. A file from Graphviz, Inkscape or Illustrator thus
+works as the tool writes it.
+
 Each view gets its own copy of the file, with its own `id` values. A gradient or a marker
 thus works in each view. An `id` in the document is therefore not the same as the `id` in
 the file. Write a rule of the css option with a class of the file, and not with an `id`.

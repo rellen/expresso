@@ -86,7 +86,8 @@ defmodule Expresso.Element.Diagram.Geometry do
     Enum.find_value(nodes, &find(&1, id, matrix))
   end
 
-  defp find({_tag, attrs, children} = node, id, matrix) do
+  # A processing instruction is also a tuple of 3, and it has no attributes.
+  defp find({tag, attrs, children} = node, id, matrix) when is_binary(tag) do
     case List.keyfind(attrs, "id", 0) do
       {"id", ^id} -> {node, matrix}
       _other -> find(children, id, multiply(matrix, transform(attrs)))

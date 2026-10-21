@@ -88,7 +88,7 @@ defmodule Expresso.Element.Diagram do
   defp moves?(%Expresso.Element.Part{on: on}), do: Enum.any?(on, &(&1.move_to != nil))
 
   defp place_parts(%__MODULE__{src: src, elements: parts} = diagram) do
-    tree = src |> read() |> Floki.parse_fragment!()
+    tree = parse(src)
     %__MODULE__{diagram | elements: Enum.map(parts, &place_part(&1, tree, src))}
   end
 
@@ -151,7 +151,7 @@ defmodule Expresso.Element.Diagram do
   end
 
   defp svg(src, parts) do
-    tree = src |> read() |> Floki.parse_fragment!()
+    tree = parse(src)
 
     parts
     |> Enum.reduce(tree, fn %Expresso.Element.Part{id: id} = part, tree ->
@@ -165,11 +165,22 @@ defmodule Expresso.Element.Diagram do
     |> Expresso.SvgCopy.number(Expresso.Copies.next())
   end
 
+  # An SVG file from Graphviz, Inkscape or Illustrator starts with an XML
+  # declaration and a DOCTYPE. Neither one is valid in an HTML document, so
+  # the parse removes them.
+  defp parse(src), do: src |> read() |> Floki.parse_fragment!() |> Enum.reject(&prolog?/1)
+
+  defp prolog?({:pi, "xml", _attrs}), do: true
+  defp prolog?({:doctype, _name, _public, _system}), do: true
+  defp prolog?(_node), do: false
+
   # Compare the attribute `id` exactly. A CSS selector such as `#step.1`
   # reads the id `step` and the class `1`.
   defp has_id?(nodes, id) when is_list(nodes), do: Enum.any?(nodes, &has_id?(&1, id))
 
-  defp has_id?({_tag, attrs, children}, id),
+  # Only an element has attributes. A processing instruction, such as the
+  # `xpacket` of Illustrator in its metadata, is also a tuple of 3.
+  defp has_id?({tag, attrs, children}, id) when is_binary(tag),
     do: List.keyfind(attrs, "id", 0) == {"id", id} or has_id?(children, id)
 
   defp has_id?(_node, _id), do: false
