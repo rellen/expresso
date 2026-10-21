@@ -1,9 +1,10 @@
 # Diagrams from Graphviz and D2
 
 This document gives a plan for a `diagram` that takes the source of a graph, in the
-language of Graphviz or of D2. The render runs the tool, and the deck animates the nodes
-and the edges with the parts of the `diagram` element. The document ends with ten
-decisions, and each is settled. Issue #386 holds the same plan.
+language of Graphviz or of D2, and the record of its result. The render runs the tool, and
+the deck animates the nodes and the edges with the parts of the `diagram` element. The code
+contains this plan. The document records ten decisions, and each is settled. The last
+section, "The result", tells what changed during the work. Issue #386 holds the same plan.
 
 ## The problem
 
@@ -308,3 +309,39 @@ get the modules.
     5. The cache of the watch mode.
     6. The list for a screen reader.
     7. A guide in `docs/how-to/`, an example deck for each tool, and their GIFs.
+
+## The result
+
+The stack of pull requests #387, #388, #390, #391, #392, #393 and the pull request of the
+guide holds the code. These parts are different from the plan:
+
+- **The first pull request was a fix.** A test of the plan found two defects of the
+  `diagram` element: a file with an XML declaration stopped the render, and the width of
+  the root went to each `svg` of a file from D2. #384 repaired both before the stack, so the
+  pull request of D2 needed no change for the `svg` inside the root.
+- **The tool writes to a file.** `System.cmd/3` cannot keep the standard error apart from
+  the standard output. Therefore the tool writes the SVG to a file in a private directory,
+  and a warning of the tool does not reach the standard error of a test.
+- **The ends, the kinds and the parents are attributes.** Each tool module writes them on
+  the groups of the SVG, such as `data-graph-from` and `data-graph-parent`. The `edges`
+  option and the list for a screen reader read the same attributes, so neither needs to
+  know the tool.
+- **The parent of a node of Graphviz comes from the boxes.** The SVG of Graphviz does not
+  put a node into the group of its cluster. The parent is the smallest cluster that holds
+  the center of the node.
+- **Some layouts of Graphviz draw no cluster.** `:sfdp`, `:circo` and `:twopi` draw no
+  cluster, so a part cannot name a cluster with them. The reference page tells this.
+- **The font option reads the name table.** The `font` option takes a directory, and
+  `Expresso.Element.Diagram.Font` reads the family and the style from the `name` table of
+  each TTF file. Graphviz gets the font through a fontconfig file. Graphviz takes a font of
+  the system for a font that it does not find, so the test of the font compares with a font
+  that does not exist.
+- **The key of the cache has the file of the program.** The key holds the path, the time
+  and the size of the program, and not the output of `--version`, so a lookup of the cache
+  starts no program.
+- **More jobs need the tools.** Two example decks draw a graph, so the browser tests and the
+  GIFs need Graphviz and D2 too. `.github/actions/setup-graph-tools` installs both tools in
+  the jobs `graph`, `e2e` and `gifs`.
+- **The disk of a session filled.** The Zig cache of Burrito in `deps/burrito/.zig-cache`
+  grows with each release, and it reached 7.7 GB during the work. The first build of D2 in
+  the hook then failed. Remove that cache when the disk is full.

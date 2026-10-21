@@ -107,6 +107,8 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "tree-org", deck: "tree_org.exs", actions: ["j", "j"]},
     %{name: "tree-disk", deck: "tree_disk.exs", actions: ["j", "j"]},
     %{name: "tree-reorg", deck: "tree_reorg.exs", actions: ["j"]},
+    %{name: "graph-graphviz", deck: "graph_graphviz.exs", actions: ["j", "j", "j"]},
+    %{name: "graph-d2", deck: "graph_d2.exs", actions: ["j", "j", "j"]},
     %{
       name: "chart-parallel-sets",
       deck: "chart_parallel_sets.exs",

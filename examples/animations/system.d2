@@ -1,0 +1,15 @@
+direction: right
+
+app: App {
+  web
+  api
+  web -> api
+}
+
+db: {shape: cylinder}
+queue: {shape: queue}
+
+app.api -> db
+app.api -> queue
+queue -> worker
+worker -> db: write

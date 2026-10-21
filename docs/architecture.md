@@ -2993,15 +2993,9 @@ The commands are:
 
 ## Open work
 
-1. **A diagram from Graphviz or D2.** `docs/graph-diagrams.md` gives the plan, and issue
-   #386 holds it too. The render runs the tool, and a part names a node or an edge in the
-   words of the source. The ten decisions of the plan are settled. The code holds the first
-   six of the seven pull requests: the sources of Graphviz and D2, the `layout` option, the
-   names, the options `edges`, `colors` and `font`, the cache of the watch mode and the list
-   for a screen reader.
-
-The last item before this one, the dim state of `docs/dim-state.md`, gave each role of text
-its own dimmed color.
+The list has no item at this time. The last item, the diagrams from Graphviz and D2 of
+`docs/graph-diagrams.md`, let a `diagram` take the source of a graph. Issue #386 holds the
+same plan.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on
