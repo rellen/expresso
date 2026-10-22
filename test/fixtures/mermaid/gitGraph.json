@@ -1,0 +1,102 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-gitGraph\" viewBox=\"0 0 336 159\" width=\"336\" height=\"159\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"gitGraph\"><g transform=\"translate(87.61,20.5)\"><g class=\"pele-branches\" fill=\"none\" font-size=\"14\"><g class=\"pele-branch\" data-id=\"main\"><path class=\"pele-lane\" d=\"M-20,0L240,0\" stroke=\"var(--pele-series-1,#4c78a8)\" stroke-dasharray=\"2 4\"/><rect x=\"-66.67\" y=\"-12.5\" width=\"46.67\" height=\"25\" fill=\"var(--pele-series-1,#4c78a8)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" fill=\"var(--_bg)\" x=\"-43.34\" y=\"4.9\" text-anchor=\"middle\">main</text></g><g class=\"pele-branch\" data-id=\"feature\"><path class=\"pele-lane\" d=\"M-20,88.65L240,88.65\" stroke=\"var(--pele-series-2,#f58518)\" stroke-dasharray=\"2 4\"/><rect x=\"-79.61\" y=\"76.15\" width=\"59.61\" height=\"25\" fill=\"var(--pele-series-2,#f58518)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" fill=\"var(--_bg)\" x=\"-49.8\" y=\"93.55\" text-anchor=\"middle\">feature</text></g></g><g class=\"pele-edges\" fill=\"none\" stroke-width=\"2\" stroke-linecap=\"round\"><path class=\"pele-edge\" d=\"M44,0C62,0 62,88.65 80,88.65L88,88.65\" stroke=\"var(--pele-series-2,#f58518)\"/><path class=\"pele-edge pele-edge-merge\" d=\"M132,88.65L184,88.65C202,88.65 202,0 220,0\" stroke=\"var(--pele-series-2,#f58518)\"/><path class=\"pele-edge\" d=\"M0,0L44,0\" stroke=\"var(--pele-series-1,#4c78a8)\"/><path class=\"pele-edge\" d=\"M88,88.65L132,88.65\" stroke=\"var(--pele-series-2,#f58518)\"/><path class=\"pele-edge\" d=\"M44,0L176,0\" stroke=\"var(--pele-series-1,#4c78a8)\"/><path class=\"pele-edge\" d=\"M176,0L220,0\" stroke=\"var(--pele-series-1,#4c78a8)\"/></g><g class=\"pele-commits\" font-size=\"12\" fill=\"var(--_m)\"><g class=\"pele-commit pele-commit-normal\" data-id=\"init\"><circle cx=\"0\" cy=\"0\" r=\"7\" fill=\"var(--pele-series-1,#4c78a8)\"/><g class=\"pele-commit-label\" transform=\"rotate(-45 3 16.36)\"><rect x=\"-16.11\" y=\"9.36\" width=\"21.11\" height=\"14\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"-5.56\" y=\"20.56\" text-anchor=\"middle\">init</text></g></g><g class=\"pele-commit pele-commit-normal\" data-id=\"deck\"><circle cx=\"44\" cy=\"0\" r=\"7\" fill=\"var(--pele-series-1,#4c78a8)\"/><g class=\"pele-commit-label\" transform=\"rotate(-45 47 16.36)\"><rect x=\"19.88\" y=\"9.36\" width=\"29.12\" height=\"14\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"34.44\" y=\"20.56\" text-anchor=\"middle\">deck</text></g></g><g class=\"pele-commit pele-commit-normal\" data-id=\"chart\"><circle cx=\"88\" cy=\"88.65\" r=\"7\" fill=\"var(--pele-series-2,#f58518)\"/><g class=\"pele-commit-label\" transform=\"rotate(-45 91 105.01)\"><rect x=\"62.17\" y=\"98.01\" width=\"30.83\" height=\"14\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"77.58\" y=\"109.21\" text-anchor=\"middle\">chart</text></g></g><g class=\"pele-commit pele-commit-normal\" data-id=\"tests\"><circle cx=\"132\" cy=\"88.65\" r=\"7\" fill=\"var(--pele-series-2,#f58518)\"/><g class=\"pele-commit-label\" transform=\"rotate(-45 135 105.01)\"><rect x=\"107.45\" y=\"98.01\" width=\"29.55\" height=\"14\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"122.23\" y=\"109.21\" text-anchor=\"middle\">tests</text></g><g class=\"pele-tag\"><path d=\"M112.44,66.65L119.44,57.65H151.56V75.65H119.44Z\" fill=\"var(--_s)\" stroke=\"var(--_b)\" stroke-linejoin=\"round\"/><circle cx=\"119.44\" cy=\"66.65\" r=\"1.5\" fill=\"var(--_b)\"/><text fill=\"var(--_fg)\" x=\"134.5\" y=\"70.85\" text-anchor=\"middle\">v0.2</text></g></g><g class=\"pele-commit pele-commit-normal\" data-id=\"docs\"><circle cx=\"176\" cy=\"0\" r=\"7\" fill=\"var(--pele-series-1,#4c78a8)\"/><g class=\"pele-commit-label\" transform=\"rotate(-45 179 16.36)\"><rect x=\"151.96\" y=\"9.36\" width=\"29.04\" height=\"14\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"166.48\" y=\"20.56\" text-anchor=\"middle\">docs</text></g></g><g class=\"pele-commit pele-commit-merge\" data-id=\"merge\"><circle cx=\"220\" cy=\"0\" r=\"6\" fill=\"var(--_bg)\" stroke=\"var(--pele-series-1,#4c78a8)\" stroke-width=\"2\"/><circle cx=\"220\" cy=\"0\" r=\"2.5\" fill=\"var(--pele-series-1,#4c78a8)\"/><g class=\"pele-commit-label\" transform=\"rotate(-45 223 16.36)\"><rect x=\"187.17\" y=\"9.36\" width=\"37.83\" height=\"14\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"206.09\" y=\"20.56\" text-anchor=\"middle\">merge</text></g></g></g></g></svg>",
+ "type": "gitGraph",
+ "model": {
+  "type": "gitGraph",
+  "direction": "LR",
+  "commits": {
+   "init": {
+    "id": "init",
+    "message": "",
+    "seq": 0,
+    "type": 0,
+    "tags": [],
+    "parents": [],
+    "branch": "main"
+   },
+   "deck": {
+    "id": "deck",
+    "message": "",
+    "seq": 1,
+    "type": 0,
+    "tags": [],
+    "parents": [
+     "init"
+    ],
+    "branch": "main"
+   },
+   "chart": {
+    "id": "chart",
+    "message": "",
+    "seq": 2,
+    "type": 0,
+    "tags": [],
+    "parents": [
+     "deck"
+    ],
+    "branch": "feature"
+   },
+   "tests": {
+    "id": "tests",
+    "message": "",
+    "seq": 3,
+    "type": 0,
+    "tags": [
+     "v0.2"
+    ],
+    "parents": [
+     "chart"
+    ],
+    "branch": "feature"
+   },
+   "docs": {
+    "id": "docs",
+    "message": "",
+    "seq": 4,
+    "type": 0,
+    "tags": [],
+    "parents": [
+     "deck"
+    ],
+    "branch": "main"
+   },
+   "merge": {
+    "id": "merge",
+    "message": "merged branch feature into main",
+    "seq": 5,
+    "parents": [
+     "docs",
+     "tests"
+    ],
+    "branch": "main",
+    "type": 3,
+    "customId": true,
+    "tags": []
+   }
+  },
+  "branches": {
+   "main": "merge",
+   "feature": "tests"
+  },
+  "lanes": [
+   "main",
+   "feature"
+  ],
+  "currentBranch": "main",
+  "head": {
+   "id": "merge",
+   "message": "merged branch feature into main",
+   "seq": 5,
+   "parents": [
+    "docs",
+    "tests"
+   ],
+   "branch": "main",
+   "type": 3,
+   "customId": true,
+   "tags": []
+  },
+  "warnings": [],
+  "mermaidType": "gitGraph"
+ }
+}

@@ -260,6 +260,18 @@ A use case diagram names a relationship by its two ends. A system boundary is a 
 | A relationship | The two ends and the arrow: `->` for `-->`, `<-` for `<--`, and `--` for `---` and `--` | `Presenter->Talk` |
 | A second relationship between the same ends with the same arrow | The name of the first relationship, then `:2` | `Presenter->Talk:2` |
 
+A git graph names each line by the parent commit and the commit. A line has no head, so its
+arrow is `--`:
+
+| Element of a git graph | Name | Example |
+| --- | --- | --- |
+| A branch, with its lane and its label | Its name. Each commit on it has it as its parent. | `feature` |
+| A commit | Its id, or the id of Mermaid for a commit without an `id` | `deck` for `commit id: "deck"` |
+| The line from a parent to a commit | The parent, `--` and the commit | `deck--chart` |
+
+Give each commit an `id`. Mermaid makes a random id for a commit without one, so a part
+cannot name that commit.
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.
