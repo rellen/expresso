@@ -124,10 +124,10 @@ defmodule Expresso.Element.Diagram.Pele do
   def name(%{"svg" => svg, "type" => type, "model" => model}) do
     plan = plan(type, model || %{})
 
-    {tree, {names, _seen, _marked}} =
+    {tree, {names, _seen, _marked, _counts}} =
       svg
       |> Floki.parse_fragment!()
-      |> walk(plan, {[], MapSet.new(), MapSet.new()})
+      |> walk(plan, {[], MapSet.new(), MapSet.new(), %{}})
 
     {Floki.raw_html(tree), Enum.reverse(names)}
   end
@@ -135,6 +135,7 @@ defmodule Expresso.Element.Diagram.Pele do
   # The plan of each type that this module names. `Expresso.Element.Diagram.Pele.Plan`
   # gives the contract of a plan.
   @plans %{
+    "architecture" => Expresso.Element.Diagram.Pele.Architecture,
     "c4" => Expresso.Element.Diagram.Pele.C4,
     "class" => Expresso.Element.Diagram.Pele.Class,
     "er" => Expresso.Element.Diagram.Pele.Er,
@@ -173,21 +174,28 @@ defmodule Expresso.Element.Diagram.Pele do
   # Each element gets its name. The first element of a name whose plan gives
   # marks gets them, so a lifeline or a label before its part does not take
   # the marks of the part.
-  defp give_name(attrs, data_id, plan, {names, seen, marked}) do
-    classes =
+  defp give_name(attrs, data_id, plan, {names, seen, marked, counts}) do
+    class =
       case List.keyfind(attrs, "class", 0) do
-        {"class", class} -> String.split(class)
-        nil -> []
+        {"class", class} -> class
+        nil -> ""
       end
 
-    {name, marks} = plan.(data_id, classes)
+    count = Map.get(counts, {data_id, class}, 0)
+    counts = Map.put(counts, {data_id, class}, count + 1)
+
+    {name, marks} =
+      if is_function(plan, 3),
+        do: plan.(data_id, String.split(class), count),
+        else: plan.(data_id, String.split(class))
+
     names = if MapSet.member?(seen, name), do: names, else: [name | names]
     seen = MapSet.put(seen, name)
 
     if marks == [] or MapSet.member?(marked, name) do
-      {attrs ++ [{"id", name}], {names, seen, marked}}
+      {attrs ++ [{"id", name}], {names, seen, marked, counts}}
     else
-      {attrs ++ [{"id", name} | marks], {names, seen, MapSet.put(marked, name)}}
+      {attrs ++ [{"id", name} | marks], {names, seen, MapSet.put(marked, name), counts}}
     end
   end
 end

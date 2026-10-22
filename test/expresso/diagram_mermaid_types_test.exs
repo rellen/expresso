@@ -20,6 +20,25 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
   #   * `outline` - the label of the first item of the list for a screen
   #     reader, and the edges of that item.
   @types %{
+    "architecture" => %{
+      names: [
+        "cloud",
+        "web->api",
+        "api--hub",
+        "hub--db",
+        "db<->disk",
+        "web",
+        "api",
+        "db",
+        "disk",
+        "hub"
+      ],
+      kinds: %{"cloud" => "container", "hub" => "node", "api--hub" => "edge"},
+      ends: %{"db<->disk" => {"db", "disk"}},
+      parents: %{"web" => "cloud", "hub" => "cloud", "disk" => nil},
+      follow: {[{"api", 2}, {"hub", 3}], "api--hub", "3"},
+      outline: {"Cloud", []}
+    },
     "c4" => %{
       names: ["shop", "customer->web", "web->db", "web<->pay", "customer", "pay", "web", "db"],
       kinds: %{"shop" => "container", "customer" => "node", "web->db" => "edge"},
@@ -149,6 +168,23 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
     assert Pele.planned() == @types |> Map.keys() |> Enum.sort()
 
     for type <- Pele.planned(), do: assert(File.exists?("test/fixtures/mermaid/#{type}.json"))
+  end
+
+  test "the edges of an architecture diagram with one data-id get their names in the order of the model" do
+    svg = """
+    <svg><g class="pele-edge" data-id="a-b"></g><g class="pele-edge" data-id="a-b"></g>
+    <g class="pele-edge" data-id="a-b"></g><g class="pele-edge-label" data-id="a-b"></g></svg>
+    """
+
+    edge = fn into, title ->
+      %{"lhsId" => "a", "rhsId" => "b", "lhsInto" => false, "rhsInto" => into, "title" => title}
+    end
+
+    model = %{"edges" => [edge.(true, nil), edge.(true, nil), edge.(false, "calls")]}
+
+    {named, names} = Pele.name(%{"svg" => svg, "type" => "architecture", "model" => model})
+    assert names == ["a->b", "a->b:2", "a--b"]
+    assert named =~ ~s(class="pele-edge-label" data-id="a-b" id="a--b")
   end
 
   test "a state of a concurrent region has the composite state as its parent" do

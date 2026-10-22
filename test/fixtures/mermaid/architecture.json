@@ -1,0 +1,100 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-architecture\" viewBox=\"0 0 396 264\" width=\"396\" height=\"264\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"architecture\"><g transform=\"translate(8,8)\"><g class=\"pele-clusters\"><g class=\"pele-cluster\" data-id=\"cloud\"><rect x=\"0\" y=\"0\" width=\"284\" height=\"248\" fill=\"var(--_a)\" fill-opacity=\"0.5\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><svg class=\"pele-icon\" data-icon=\"cloud\" x=\"10\" y=\"8\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M7 18a4 4 0 0 1-.5-7.97A6 6 0 0 1 18 9.5a4.25 4.25 0 0 1-.5 8.5z\" stroke=\"var(--_fg)\" stroke-width=\"1.5\"/></svg><text class=\"pele-cluster-label\" fill=\"var(--_m)\" x=\"56.38\" y=\"23.6\" text-anchor=\"middle\">Cloud</text></g></g><g class=\"pele-edges\" fill=\"none\" stroke=\"var(--_l)\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><g class=\"pele-edge\" data-id=\"web-api\"><path d=\"M68,60L101,60\"/><path class=\"pele-marker\" d=\"M108,60L100,63.36L100,56.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge\" data-id=\"api-hub\"><path d=\"M132,114L132,176\"/></g><g class=\"pele-edge\" data-id=\"hub-db\"><path d=\"M132,176L206,176\"/></g><g class=\"pele-edge\" data-id=\"db-disk\"><path d=\"M261,176L321,176\"/><path class=\"pele-marker\" d=\"M254,176L262,172.64L262,179.36Z\" fill=\"var(--_l)\" stroke=\"none\"/><path class=\"pele-marker\" d=\"M328,176L320,179.36L320,172.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g></g><g class=\"pele-nodes\"><g class=\"pele-node pele-service\" data-id=\"web\" transform=\"translate(44,36)\"><rect x=\"-24\" width=\"48\" height=\"48\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><svg class=\"pele-icon\" data-icon=\"internet\" x=\"-12\" y=\"12\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0M3 12h18M12 3a13 13 0 0 0 0 18M12 3a13 13 0 0 1 0 18\" stroke=\"var(--_fg)\" stroke-width=\"1.5\"/></svg><text class=\"pele-label\" x=\"0\" y=\"69.6\" text-anchor=\"middle\">Web</text></g><g class=\"pele-node pele-service\" data-id=\"api\" transform=\"translate(132,36)\"><rect x=\"-24\" width=\"48\" height=\"48\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><svg class=\"pele-icon\" data-icon=\"server\" x=\"-12\" y=\"12\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 4h18v7H3zM3 13h18v7H3zM7 7.5h.01M7 16.5h.01M11 7.5h6M11 16.5h6\" stroke=\"var(--_fg)\" stroke-width=\"1.5\"/></svg><text class=\"pele-label\" x=\"0\" y=\"69.6\" text-anchor=\"middle\">API</text></g><g class=\"pele-node pele-service\" data-id=\"db\" transform=\"translate(230,152)\"><rect x=\"-24\" width=\"48\" height=\"48\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><svg class=\"pele-icon\" data-icon=\"database\" x=\"-12\" y=\"12\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 6a8 3 0 1 0 16 0a8 3 0 1 0-16 0M4 6v12a8 3 0 0 0 16 0V6M4 12a8 3 0 0 0 16 0\" stroke=\"var(--_fg)\" stroke-width=\"1.5\"/></svg><text class=\"pele-label\" x=\"0\" y=\"69.6\" text-anchor=\"middle\">Database</text></g><g class=\"pele-node pele-service\" data-id=\"disk\" transform=\"translate(352,152)\"><rect x=\"-24\" width=\"48\" height=\"48\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><svg class=\"pele-icon\" data-icon=\"disk\" x=\"-12\" y=\"12\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 3h14v18H5zM12 6.5a4 4 0 1 0 0 8a4 4 0 1 0 0-8M12 10.5h.01M8 18h3\" stroke=\"var(--_fg)\" stroke-width=\"1.5\"/></svg><text class=\"pele-label\" x=\"0\" y=\"69.6\" text-anchor=\"middle\">Storage</text></g><g class=\"pele-node pele-junction\" data-id=\"hub\" transform=\"translate(132,152)\"><circle cy=\"24\" r=\"3\" fill=\"var(--_l)\"/></g></g></g></svg>",
+ "type": "architecture",
+ "model": {
+  "type": "architecture",
+  "nodes": {
+   "web": {
+    "id": "web",
+    "type": "service",
+    "icon": "internet",
+    "title": "Web",
+    "in": "cloud"
+   },
+   "api": {
+    "id": "api",
+    "type": "service",
+    "icon": "server",
+    "title": "API",
+    "in": "cloud"
+   },
+   "db": {
+    "id": "db",
+    "type": "service",
+    "icon": "database",
+    "title": "Database",
+    "in": "cloud"
+   },
+   "disk": {
+    "id": "disk",
+    "type": "service",
+    "icon": "disk",
+    "title": "Storage"
+   },
+   "hub": {
+    "id": "hub",
+    "type": "junction",
+    "in": "cloud"
+   }
+  },
+  "groups": {
+   "cloud": {
+    "id": "cloud",
+    "icon": "cloud",
+    "title": "Cloud"
+   }
+  },
+  "edges": [
+   {
+    "lhsId": "web",
+    "lhsDir": "R",
+    "lhsInto": false,
+    "lhsGroup": false,
+    "rhsId": "api",
+    "rhsDir": "L",
+    "rhsInto": true,
+    "rhsGroup": false
+   },
+   {
+    "lhsId": "api",
+    "lhsDir": "B",
+    "lhsInto": false,
+    "lhsGroup": false,
+    "rhsId": "hub",
+    "rhsDir": "T",
+    "rhsInto": false,
+    "rhsGroup": false
+   },
+   {
+    "lhsId": "hub",
+    "lhsDir": "R",
+    "lhsInto": false,
+    "lhsGroup": false,
+    "rhsId": "db",
+    "rhsDir": "L",
+    "rhsInto": false,
+    "rhsGroup": false
+   },
+   {
+    "lhsId": "db",
+    "lhsDir": "R",
+    "lhsInto": true,
+    "lhsGroup": false,
+    "rhsId": "disk",
+    "rhsDir": "L",
+    "rhsInto": true,
+    "rhsGroup": false
+   }
+  ],
+  "layoutHints": [],
+  "registered": {
+   "cloud": "group",
+   "web": "node",
+   "api": "node",
+   "db": "node",
+   "disk": "node",
+   "hub": "node"
+  },
+  "mermaidType": "architecture"
+ }
+}

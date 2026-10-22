@@ -217,6 +217,15 @@ A C4 diagram names a relationship by its two ends. A boundary is a container:
 Mermaid keeps one relationship for two ends in the same order, so the last relationship of
 the source replaces the others.
 
+An architecture diagram names an edge by its two ends. A group is a container:
+
+| Element of an architecture diagram | Name | Example |
+| --- | --- | --- |
+| A service or a junction | Its id | `api` |
+| A group | Its id. Each service, junction or group in it has it as its parent. | `cloud` |
+| An edge | The two ends and the arrow: `->` for a head at the second end, `<-` for a head at the first end, `<->` for a head at each end, and `--` for no head | `web->api` for `web:R --> L:api` |
+| A second edge between the same ends with the same arrow | The name of the first edge, then `:2` | `web->api:2` |
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.

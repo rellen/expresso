@@ -8,6 +8,11 @@ defmodule Expresso.Element.Diagram.Pele.Plan do
   `Expresso.Element.Diagram.Pele.name/1` gives the first element of each name
   its marks, and each later element of the name only its `id`.
 
+  Some types give more than one part the same `data-id`, such as two edges
+  of an architecture diagram between the same services. The function of such
+  a plan takes a third argument: the number of earlier elements with the same
+  `data-id` and the same classes.
+
   The functions of this module make the marks:
 
   | Function | Marks |
@@ -20,8 +25,14 @@ defmodule Expresso.Element.Diagram.Pele.Plan do
   @typedoc "The name of an element and its marks"
   @type part :: {String.t(), [{String.t(), String.t()}]}
 
-  @typedoc "The function of a plan: the `data-id` and the classes of an element give its part"
-  @type t :: (String.t(), [String.t()] -> part())
+  @typedoc """
+  The function of a plan: the `data-id` and the classes of an element give its
+  part. A function with three arguments takes the number of earlier elements
+  with the same `data-id` and the same classes too.
+  """
+  @type t ::
+          (String.t(), [String.t()] -> part())
+          | (String.t(), [String.t()], non_neg_integer() -> part())
 
   @typedoc """
   An edge of a model: its key, which is its `data-id` in the SVG, its two ends,
