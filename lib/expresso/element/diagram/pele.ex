@@ -141,6 +141,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "class" => Expresso.Element.Diagram.Pele.Class,
     "er" => Expresso.Element.Diagram.Pele.Er,
     "flowchart" => Expresso.Element.Diagram.Pele.Flowchart,
+    "gitGraph" => Expresso.Element.Diagram.Pele.Git,
     "mindmap" => Expresso.Element.Diagram.Pele.Mindmap,
     "requirement" => Expresso.Element.Diagram.Pele.Requirement,
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
@@ -215,8 +216,11 @@ defmodule Expresso.Element.Diagram.Pele do
         nil -> ""
       end
 
-    count = Map.get(counts, {data_id, class}, 0)
-    counts = Map.put(counts, {data_id, class}, count + 1)
+    # The edges with no `data-id` have one count, whatever their classes, such
+    # as a merge of a git graph.
+    key = if data_id, do: {data_id, class}, else: nil
+    count = Map.get(counts, key, 0)
+    counts = Map.put(counts, key, count + 1)
 
     case call(plan, data_id, String.split(class), count) do
       {nil, _marks} ->

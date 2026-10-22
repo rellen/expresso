@@ -115,6 +115,29 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"api", 2}, {"db", 3}], "api->db", "3"},
       outline: {"App", []}
     },
+    "gitGraph" => %{
+      names: [
+        "main",
+        "feature",
+        "deck--chart",
+        "tests--merge",
+        "init--deck",
+        "chart--tests",
+        "deck--docs",
+        "docs--merge",
+        "init",
+        "deck",
+        "chart",
+        "tests",
+        "docs",
+        "merge"
+      ],
+      kinds: %{"main" => "container", "chart" => "node", "docs--merge" => "edge"},
+      ends: %{"tests--merge" => {"tests", "merge"}, "deck--chart" => {"deck", "chart"}},
+      parents: %{"chart" => "feature", "merge" => "main", "main" => nil},
+      follow: {[{"chart", 2}, {"tests", 3}], "chart--tests", "3"},
+      outline: {"main", []}
+    },
     "mindmap" => %{
       names: [
         "root--Elements",
@@ -279,6 +302,30 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
 
     assert {_svg, ["a--b", "a<->b"]} =
              Pele.name(%{"svg" => svg, "type" => "block", "model" => model})
+  end
+
+  test "each line of a git graph goes from the commit of its parent to its commit" do
+    {svg, _names} = "gitGraph" |> result() |> Pele.name()
+    tree = Floki.parse_fragment!(svg)
+
+    centers =
+      for {_tag, attrs, [{"circle", circle, _} | _]} <- Floki.find(tree, "g.pele-commit"),
+          attrs = Map.new(attrs),
+          circle = Map.new(circle),
+          into: %{},
+          do: {attrs["id"], "#{circle["cx"]},#{circle["cy"]}"}
+
+    lines = Floki.find(tree, ~s(g[data-graph-kind="edge"]))
+    assert length(lines) == 6
+
+    for {"g", attrs, [{"path", path, _}]} <- lines do
+      attrs = Map.new(attrs)
+      points = Regex.scan(~r/-?[\d.]+,-?[\d.]+/, Map.new(path)["d"]) |> List.flatten()
+
+      assert {hd(points), List.last(points)} ==
+               {centers[attrs["data-graph-from"]], centers[attrs["data-graph-to"]]},
+             attrs["id"]
+    end
   end
 
   test "a state of a concurrent region has the composite state as its parent" do
