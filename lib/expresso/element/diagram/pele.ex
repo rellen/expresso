@@ -140,6 +140,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "c4" => Expresso.Element.Diagram.Pele.C4,
     "class" => Expresso.Element.Diagram.Pele.Class,
     "er" => Expresso.Element.Diagram.Pele.Er,
+    "eventmodeling" => Expresso.Element.Diagram.Pele.Eventmodeling,
     "flowchart" => Expresso.Element.Diagram.Pele.Flowchart,
     "gantt" => Expresso.Element.Diagram.Pele.Gantt,
     "gitGraph" => Expresso.Element.Diagram.Pele.Git,

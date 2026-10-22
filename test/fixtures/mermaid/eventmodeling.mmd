@@ -1,0 +1,13 @@
+eventmodeling
+
+timeframe 01 ui DeckEditor
+timeframe 02 command AddSlide [[AddSlide01]]
+timeframe 03 event SlideAdded [[SlideAdded]]
+
+data AddSlide01 {
+  title: 'Intro'
+}
+
+data SlideAdded {
+  title: string
+}

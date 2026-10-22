@@ -1,0 +1,125 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-eventmodeling\" viewBox=\"0 0 420 273\" width=\"420\" height=\"273\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_hw:var(--pele-heading-weight,bold);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"eventmodeling\"><g class=\"pele-cluster pele-em-lane\" data-id=\"UI/Automation\"><rect x=\"8\" y=\"8\" width=\"403.97\" height=\"65\" fill=\"var(--_s)\" style=\"rx:var(--_r)\"/><text class=\"pele-cluster-label\" font-size=\"13\" font-weight=\"var(--_hw)\" fill=\"var(--_m)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"65.84\" y=\"45.05\">UI/Automation</tspan></text></g><g class=\"pele-cluster pele-em-lane\" data-id=\"Command/Read Model\"><rect x=\"8\" y=\"81\" width=\"403.97\" height=\"88\" fill=\"var(--_s)\" style=\"rx:var(--_r)\"/><text class=\"pele-cluster-label\" font-size=\"13\" font-weight=\"var(--_hw)\" fill=\"var(--_m)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"89.95\" y=\"129.55\">Command/Read Model</tspan></text></g><g class=\"pele-cluster pele-em-lane\" data-id=\"Events\"><rect x=\"8\" y=\"177\" width=\"403.97\" height=\"88\" fill=\"var(--_s)\" style=\"rx:var(--_r)\"/><text class=\"pele-cluster-label\" font-size=\"13\" font-weight=\"var(--_hw)\" fill=\"var(--_m)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"40.52\" y=\"225.55\">Events</tspan></text></g><g class=\"pele-edge\" data-id=\"01-02\"><path d=\"M244.01,61V86\" fill=\"none\" stroke=\"var(--_l)\"/><path class=\"pele-marker\" d=\"M244.01,93L240.65,85L247.37,85Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge\" data-id=\"02-03\"><path d=\"M313.57,157V182\" fill=\"none\" stroke=\"var(--_l)\"/><path class=\"pele-marker\" d=\"M313.57,189L310.21,181L316.93,181Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-node pele-em-ui\" data-id=\"01\"><rect x=\"171.89\" y=\"20\" width=\"96.16\" height=\"41\" fill=\"var(--_bg)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" font-size=\"14\" font-weight=\"var(--_hw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"219.97\" y=\"45.4\">DeckEditor</tspan></text></g><g class=\"pele-node pele-em-command\" data-id=\"02\"><rect x=\"219.97\" y=\"93\" width=\"124.8\" height=\"64\" fill=\"var(--_bg)\" style=\"rx:var(--_r)\"/><rect x=\"219.97\" y=\"93\" width=\"124.8\" height=\"64\" fill=\"var(--pele-series-1,#4c78a8)\" fill-opacity=\"0.22\" stroke=\"var(--pele-series-1,#4c78a8)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" font-size=\"14\" font-weight=\"var(--_hw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"282.37\" y=\"118.4\">AddSlide</tspan></text><text class=\"pele-em-data\" font-family=\"var(--_fm)\" font-size=\"12\" xml:space=\"preserve\"><tspan x=\"231.97\" y=\"142.7\">title: 'Intro'</tspan></text></g><g class=\"pele-node pele-em-event\" data-id=\"03\"><rect x=\"282.37\" y=\"189\" width=\"117.6\" height=\"64\" fill=\"var(--_bg)\" style=\"rx:var(--_r)\"/><rect x=\"282.37\" y=\"189\" width=\"117.6\" height=\"64\" fill=\"var(--pele-series-2,#f58518)\" fill-opacity=\"0.22\" stroke=\"var(--pele-series-2,#f58518)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" font-size=\"14\" font-weight=\"var(--_hw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"341.17\" y=\"214.4\">SlideAdded</tspan></text><text class=\"pele-em-data\" font-family=\"var(--_fm)\" font-size=\"12\" xml:space=\"preserve\"><tspan x=\"294.37\" y=\"238.7\">title: string</tspan></text></g></svg>",
+ "type": "eventmodeling",
+ "model": {
+  "type": "eventmodeling",
+  "boxes": [
+   {
+    "id": "01",
+    "kind": "ui",
+    "entity": "DeckEditor",
+    "name": "DeckEditor",
+    "reset": false,
+    "lane": {
+     "index": 0,
+     "label": "UI/Automation",
+     "group": "trigger"
+    }
+   },
+   {
+    "id": "02",
+    "kind": "command",
+    "entity": "AddSlide",
+    "name": "AddSlide",
+    "reset": false,
+    "lane": {
+     "index": 100,
+     "label": "Command/Read Model",
+     "group": "state"
+    },
+    "data": "title: 'Intro'"
+   },
+   {
+    "id": "03",
+    "kind": "event",
+    "entity": "SlideAdded",
+    "name": "SlideAdded",
+    "reset": false,
+    "lane": {
+     "index": 200,
+     "label": "Events",
+     "group": "stream"
+    },
+    "data": "title: string"
+   }
+  ],
+  "lanes": [
+   {
+    "index": 0,
+    "label": "UI/Automation",
+    "group": "trigger"
+   },
+   {
+    "index": 100,
+    "label": "Command/Read Model",
+    "group": "state"
+   },
+   {
+    "index": 200,
+    "label": "Events",
+    "group": "stream"
+   }
+  ],
+  "relations": [
+   {
+    "source": {
+     "id": "01",
+     "kind": "ui",
+     "entity": "DeckEditor",
+     "name": "DeckEditor",
+     "reset": false,
+     "lane": {
+      "index": 0,
+      "label": "UI/Automation",
+      "group": "trigger"
+     }
+    },
+    "target": {
+     "id": "02",
+     "kind": "command",
+     "entity": "AddSlide",
+     "name": "AddSlide",
+     "reset": false,
+     "lane": {
+      "index": 100,
+      "label": "Command/Read Model",
+      "group": "state"
+     },
+     "data": "title: 'Intro'"
+    }
+   },
+   {
+    "source": {
+     "id": "02",
+     "kind": "command",
+     "entity": "AddSlide",
+     "name": "AddSlide",
+     "reset": false,
+     "lane": {
+      "index": 100,
+      "label": "Command/Read Model",
+      "group": "state"
+     },
+     "data": "title: 'Intro'"
+    },
+    "target": {
+     "id": "03",
+     "kind": "event",
+     "entity": "SlideAdded",
+     "name": "SlideAdded",
+     "reset": false,
+     "lane": {
+      "index": 200,
+      "label": "Events",
+      "group": "stream"
+     },
+     "data": "title: string"
+    }
+   }
+  ],
+  "notes": [],
+  "specifications": [],
+  "entities": [],
+  "mermaidType": "eventmodeling"
+ }
+}
