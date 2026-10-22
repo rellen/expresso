@@ -1,0 +1,58 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-kanban\" viewBox=\"0 0 640 154\" width=\"640\" height=\"154\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_hw:var(--pele-heading-weight,bold);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"kanban\"><g class=\"pele-cluster pele-column\" data-id=\"todo\" transform=\"translate(8,8)\"><rect width=\"200\" height=\"138\" fill=\"var(--_s)\" style=\"rx:var(--_r)\"/><text class=\"pele-cluster-label\" font-weight=\"var(--_hw)\" x=\"12\" y=\"25.6\">To do</text><text class=\"pele-count\" x=\"188\" y=\"24.9\" text-anchor=\"end\" font-size=\"14\" fill=\"var(--_m)\">2</text><g class=\"pele-node pele-card pele-priority-high\" data-id=\"charts\" transform=\"translate(8,40)\" font-size=\"14\"><rect width=\"184\" height=\"41\" fill=\"var(--_bg)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><path class=\"pele-priority\" d=\"M2.5,5V36\" fill=\"none\" stroke=\"var(--pele-critical,#e45756)\" opacity=\"0.5\" stroke-width=\"3\" stroke-linecap=\"round\"/><text class=\"pele-label\" x=\"10\" y=\"25.4\">Add the charts</text></g><g class=\"pele-node pele-card\" data-id=\"Write the guide\" transform=\"translate(8,89)\" font-size=\"14\"><rect width=\"184\" height=\"41\" fill=\"var(--_bg)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"10\" y=\"25.4\">Write the guide</text></g></g><g class=\"pele-cluster pele-column\" data-id=\"doing\" transform=\"translate(220,8)\"><rect width=\"200\" height=\"138\" fill=\"var(--_s)\" style=\"rx:var(--_r)\"/><text class=\"pele-cluster-label\" font-weight=\"var(--_hw)\" x=\"12\" y=\"25.6\">In progress</text><text class=\"pele-count\" x=\"188\" y=\"24.9\" text-anchor=\"end\" font-size=\"14\" fill=\"var(--_m)\">1</text><g class=\"pele-node pele-card\" data-id=\"mermaid\" transform=\"translate(8,40)\" font-size=\"14\"><rect width=\"184\" height=\"41\" fill=\"var(--_bg)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"10\" y=\"25.4\">Draw Mermaid</text></g></g><g class=\"pele-cluster pele-column\" data-id=\"done\" transform=\"translate(432,8)\"><rect width=\"200\" height=\"138\" fill=\"var(--_s)\" style=\"rx:var(--_r)\"/><text class=\"pele-cluster-label\" font-weight=\"var(--_hw)\" x=\"12\" y=\"25.6\">Done</text><text class=\"pele-count\" x=\"188\" y=\"24.9\" text-anchor=\"end\" font-size=\"14\" fill=\"var(--_m)\">1</text><g class=\"pele-node pele-card\" data-id=\"trees\" transform=\"translate(8,40)\" font-size=\"14\"><rect width=\"184\" height=\"41\" fill=\"var(--_bg)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"10\" y=\"25.4\">Draw the trees</text></g></g></svg>",
+ "type": "kanban",
+ "model": {
+  "type": "kanban",
+  "sections": [
+   {
+    "id": "todo",
+    "level": 2,
+    "label": "To do",
+    "items": [
+     {
+      "id": "charts",
+      "level": 4,
+      "label": "Add the charts",
+      "priority": "High"
+     },
+     {
+      "id": "Write the guide",
+      "level": 4,
+      "label": "Write the guide"
+     }
+    ]
+   },
+   {
+    "id": "doing",
+    "level": 2,
+    "label": "In progress",
+    "items": [
+     {
+      "id": "mermaid",
+      "level": 4,
+      "label": "Draw Mermaid"
+     }
+    ]
+   },
+   {
+    "id": "done",
+    "level": 2,
+    "label": "Done",
+    "items": [
+     {
+      "id": "trees",
+      "level": 4,
+      "label": "Draw the trees"
+     }
+    ]
+   }
+  ],
+  "last": {
+   "id": "trees",
+   "level": 4,
+   "label": "Draw the trees"
+  },
+  "sectionLevel": 2,
+  "mermaidType": "kanban"
+ }
+}
