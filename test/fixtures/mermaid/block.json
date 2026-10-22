@@ -1,0 +1,217 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-block\" viewBox=\"0 0 283 204\" width=\"283\" height=\"204\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"block\"><g class=\"pele-clusters\"><g class=\"pele-cluster\" data-id=\"store\"><rect x=\"8\" y=\"108\" width=\"266.16\" height=\"88\" fill=\"var(--_a)\" fill-opacity=\"0.5\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/></g></g><g class=\"pele-edges\" fill=\"none\" stroke=\"var(--_l)\" stroke-linecap=\"round\"><g class=\"pele-edge\" data-id=\"1-client-server\"><path d=\"M88.72,52L186.44,52\"/><path class=\"pele-marker\" d=\"M193.44,52L185.44,55.36L185.44,48.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge\" data-id=\"1-server-db\"><path d=\"M193.44,77.83L133.44,116.23\"/><path class=\"pele-marker\" d=\"M127.54,120L132.47,112.86L136.09,118.52Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge\" data-id=\"1-server-cache\"><path d=\"M227.8,96L227.8,113\"/><path class=\"pele-marker\" d=\"M227.8,120L224.44,112L231.16,112Z\" fill=\"var(--_l)\" stroke=\"none\"/></g></g><g class=\"pele-nodes\"><g class=\"pele-node pele-shape-rect\" data-id=\"client\" transform=\"translate(48.36,52)\"><rect x=\"-40.36\" y=\"-44\" width=\"80.72\" height=\"88\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Client</text></g><g class=\"pele-node pele-shape-rect\" data-id=\"server\" transform=\"translate(233.8,52)\"><rect x=\"-40.36\" y=\"-44\" width=\"80.72\" height=\"88\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Server</text></g><g class=\"pele-node pele-shape-cyl\" data-id=\"db\" transform=\"translate(77.54,152)\"><path d=\"M-57.54,-23.78A57.54,8.22 0 0 1 57.54,-23.78V23.78A57.54,8.22 0 0 1 -57.54,23.78Z\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><path d=\"M-57.54,-23.78A57.54,8.22 0 0 0 57.54,-23.78\" fill=\"none\" stroke=\"var(--_b)\"/><text class=\"pele-label\" x=\"0\" y=\"9.71\" text-anchor=\"middle\">Orders</text></g><g class=\"pele-node pele-shape-rect\" data-id=\"cache\" transform=\"translate(204.62,152)\"><rect x=\"-57.54\" y=\"-32\" width=\"115.08\" height=\"64\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Cache</text></g></g><g class=\"pele-edge-labels\" font-size=\"14\"><g class=\"pele-edge-label\" data-id=\"1-server-db\"><rect x=\"139.41\" y=\"88.41\" width=\"42.16\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"160.49\" y=\"103.81\" text-anchor=\"middle\">reads</text></g></g></svg>",
+ "type": "block",
+ "model": {
+  "type": "block",
+  "root": {
+   "id": "root",
+   "type": "composite",
+   "children": [
+    {
+     "id": "client",
+     "label": "Client",
+     "type": "square",
+     "widthInColumns": 1,
+     "children": []
+    },
+    {
+     "id": "id-1-0",
+     "type": "space",
+     "label": "id-1",
+     "width": 1,
+     "children": []
+    },
+    {
+     "id": "server",
+     "label": "Server",
+     "type": "square",
+     "widthInColumns": 1,
+     "children": []
+    },
+    {
+     "id": "store",
+     "label": "",
+     "type": "composite",
+     "widthInColumns": 3,
+     "children": [
+      {
+       "id": "db",
+       "label": "Orders",
+       "type": "cylinder",
+       "widthInColumns": 1,
+       "children": []
+      },
+      {
+       "id": "cache",
+       "label": "Cache",
+       "type": "square",
+       "widthInColumns": 1,
+       "children": []
+      }
+     ],
+     "colorIndex": 0
+    }
+   ],
+   "columns": 3
+  },
+  "blocks": [
+   {
+    "id": "client",
+    "label": "Client",
+    "type": "square",
+    "widthInColumns": 1,
+    "children": []
+   },
+   {
+    "id": "id-1-0",
+    "type": "space",
+    "label": "id-1",
+    "width": 1,
+    "children": []
+   },
+   {
+    "id": "server",
+    "label": "Server",
+    "type": "square",
+    "widthInColumns": 1,
+    "children": []
+   },
+   {
+    "id": "store",
+    "label": "",
+    "type": "composite",
+    "widthInColumns": 3,
+    "children": [
+     {
+      "id": "db",
+      "label": "Orders",
+      "type": "cylinder",
+      "widthInColumns": 1,
+      "children": []
+     },
+     {
+      "id": "cache",
+      "label": "Cache",
+      "type": "square",
+      "widthInColumns": 1,
+      "children": []
+     }
+    ],
+    "colorIndex": 0
+   }
+  ],
+  "edges": [
+   {
+    "id": "1-client-server",
+    "start": "client",
+    "end": "server",
+    "label": "",
+    "type": "edge",
+    "thickness": "normal",
+    "pattern": "solid",
+    "arrowTypeEnd": "arrow_point",
+    "arrowTypeStart": "arrow_open"
+   },
+   {
+    "id": "1-server-db",
+    "start": "server",
+    "end": "db",
+    "label": "reads",
+    "type": "edge",
+    "thickness": "normal",
+    "pattern": "solid",
+    "arrowTypeEnd": "arrow_point",
+    "arrowTypeStart": "arrow_open"
+   },
+   {
+    "id": "1-server-cache",
+    "start": "server",
+    "end": "cache",
+    "label": "",
+    "type": "edge",
+    "thickness": "normal",
+    "pattern": "solid",
+    "arrowTypeEnd": "arrow_point",
+    "arrowTypeStart": "arrow_open"
+   }
+  ],
+  "classes": {},
+  "byId": {
+   "client": {
+    "id": "client",
+    "label": "Client",
+    "type": "square",
+    "widthInColumns": 1,
+    "children": []
+   },
+   "id-1": {
+    "id": "id-1",
+    "type": "space",
+    "label": "id-1",
+    "width": 1,
+    "children": []
+   },
+   "id-1-0": {
+    "id": "id-1-0",
+    "type": "space",
+    "label": "id-1",
+    "width": 1,
+    "children": []
+   },
+   "server": {
+    "id": "server",
+    "label": "Server",
+    "type": "square",
+    "widthInColumns": 1,
+    "children": []
+   },
+   "store": {
+    "id": "store",
+    "label": "",
+    "type": "composite",
+    "widthInColumns": 3,
+    "children": [
+     {
+      "id": "db",
+      "label": "Orders",
+      "type": "cylinder",
+      "widthInColumns": 1,
+      "children": []
+     },
+     {
+      "id": "cache",
+      "label": "Cache",
+      "type": "square",
+      "widthInColumns": 1,
+      "children": []
+     }
+    ],
+    "colorIndex": 0
+   },
+   "db": {
+    "id": "db",
+    "label": "Orders",
+    "type": "cylinder",
+    "widthInColumns": 1,
+    "children": []
+   },
+   "cache": {
+    "id": "cache",
+    "label": "Cache",
+    "type": "square",
+    "widthInColumns": 1,
+    "children": []
+   }
+  },
+  "pending": [],
+  "edgeCount": {
+   "client-server": 1,
+   "server-db": 1,
+   "server-cache": 1
+  },
+  "ids": 2,
+  "colors": 1,
+  "spaces": 1,
+  "mermaidType": "block"
+ }
+}

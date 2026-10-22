@@ -39,6 +39,23 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"api", 2}, {"hub", 3}], "api--hub", "3"},
       outline: {"Cloud", []}
     },
+    "block" => %{
+      names: [
+        "store",
+        "client->server",
+        "server->db",
+        "server->cache",
+        "client",
+        "server",
+        "db",
+        "cache"
+      ],
+      kinds: %{"store" => "container", "db" => "node", "server->db" => "edge"},
+      ends: %{"server->cache" => {"server", "cache"}},
+      parents: %{"db" => "store", "cache" => "store", "client" => nil},
+      follow: {[{"server", 2}, {"db", 3}], "server->db", "3"},
+      outline: {"store", []}
+    },
     "c4" => %{
       names: ["shop", "customer->web", "web->db", "web<->pay", "customer", "pay", "web", "db"],
       kinds: %{"shop" => "container", "customer" => "node", "web->db" => "edge"},
@@ -185,6 +202,33 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
     {named, names} = Pele.name(%{"svg" => svg, "type" => "architecture", "model" => model})
     assert names == ["a->b", "a->b:2", "a--b"]
     assert named =~ ~s(class="pele-edge-label" data-id="a-b" id="a--b")
+  end
+
+  test "an edge of a block diagram without a head has the arrow --" do
+    svg =
+      ~s(<svg><g class="pele-edge" data-id="1-a-b"></g><g class="pele-edge" data-id="2-a-b"></g></svg>)
+
+    model = %{
+      "edges" => [
+        %{
+          "id" => "1-a-b",
+          "start" => "a",
+          "end" => "b",
+          "arrowTypeStart" => "arrow_open",
+          "arrowTypeEnd" => ""
+        },
+        %{
+          "id" => "2-a-b",
+          "start" => "a",
+          "end" => "b",
+          "arrowTypeStart" => "arrow_point",
+          "arrowTypeEnd" => "arrow_cross"
+        }
+      ]
+    }
+
+    assert {_svg, ["a--b", "a<->b"]} =
+             Pele.name(%{"svg" => svg, "type" => "block", "model" => model})
   end
 
   test "a state of a concurrent region has the composite state as its parent" do

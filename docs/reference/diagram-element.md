@@ -226,6 +226,15 @@ An architecture diagram names an edge by its two ends. A group is a container:
 | An edge | The two ends and the arrow: `->` for a head at the second end, `<-` for a head at the first end, `<->` for a head at each end, and `--` for no head | `web->api` for `web:R --> L:api` |
 | A second edge between the same ends with the same arrow | The name of the first edge, then `:2` | `web->api:2` |
 
+A block diagram names an edge by its two ends. A composite block is a container:
+
+| Element of a block diagram | Name | Example |
+| --- | --- | --- |
+| A block | Its id | `server` |
+| A composite block | Its id. Each block in it has it as its parent. | `store` for `block:store` |
+| An edge | The two ends and the arrow: `->` for a head at the end, `<-` for a head at the start, `<->` for a head at each end, and `--` for no head | `server->db` |
+| A second edge between the same ends with the same arrow | The name of the first edge, then `:2` | `server->db:2` |
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.
