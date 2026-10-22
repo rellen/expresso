@@ -20,6 +20,32 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
   #   * `outline` - the label of the first item of the list for a screen
   #     reader, and the edges of that item.
   @types %{
+    "class" => %{
+      names: [
+        "Reef",
+        "note0--Turtle",
+        "Animal<-Turtle",
+        "Animal<-Shark",
+        "Turtle->Shark",
+        "Animal<-Whale",
+        "Turtle",
+        "Shark",
+        "Animal",
+        "Whale",
+        "note0"
+      ],
+      kinds: %{
+        "Reef" => "container",
+        "Turtle" => "node",
+        "Animal<-Turtle" => "edge",
+        "note0--Turtle" => "edge",
+        "note0" => "node"
+      },
+      ends: %{"Animal<-Shark" => {"Animal", "Shark"}, "note0--Turtle" => {"note0", "Turtle"}},
+      parents: %{"Turtle" => "Reef", "Shark" => "Reef", "Animal" => nil},
+      follow: {[{"Animal", 2}, {"Turtle", 3}], "Animal<-Turtle", "3"},
+      outline: {"Reef", []}
+    },
     "flowchart" => %{
       names: ["app", "web->api", "api->db", "api->db:2", "cache->db", "web", "api", "db", "cache"],
       kinds: %{"app" => "container", "web" => "node", "web->api" => "edge"},
