@@ -1,0 +1,67 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-venn\" viewBox=\"0 0 363 381\" width=\"363\" height=\"381\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_tw:var(--pele-title-weight,bold);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"venn\"><text class=\"pele-title\" font-weight=\"var(--_tw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"181.5\" y=\"25.6\">A good feature</tspan></text><g class=\"pele-venn-sets\"><circle class=\"pele-venn-set\" data-id=\"Desirable\" cx=\"114.13\" cy=\"150.13\" r=\"106.13\" fill=\"var(--pele-series-1,#4c78a8)\" fill-opacity=\"0.2\" stroke=\"var(--pele-series-1,#4c78a8)\"/><circle class=\"pele-venn-set\" data-id=\"Feasible\" cx=\"248.84\" cy=\"150.13\" r=\"106.13\" fill=\"var(--pele-series-2,#f58518)\" fill-opacity=\"0.2\" stroke=\"var(--pele-series-2,#f58518)\"/><circle class=\"pele-venn-set\" data-id=\"Viable\" cx=\"181.48\" cy=\"266.79\" r=\"106.13\" fill=\"var(--pele-series-3,#54a24b)\" fill-opacity=\"0.2\" stroke=\"var(--pele-series-3,#54a24b)\"/></g><g class=\"pele-venn-labels\"><g class=\"pele-venn-region\" data-id=\"Desirable\"><text class=\"pele-label\" x=\"78.71\" y=\"125.28\" text-anchor=\"middle\">Desirable</text><text class=\"pele-venn-text\" data-id=\"D1\" font-size=\"13\" fill=\"var(--_m)\" x=\"78.71\" y=\"146.23\" text-anchor=\"middle\">Users ask</text></g><g class=\"pele-venn-region\" data-id=\"Feasible\"><text class=\"pele-label\" x=\"284.26\" y=\"135.28\" text-anchor=\"middle\">Feasible</text></g><g class=\"pele-venn-region\" data-id=\"Viable\"><text class=\"pele-label\" x=\"181.48\" y=\"313.29\" text-anchor=\"middle\">Viable</text></g><g class=\"pele-venn-region\" data-id=\"Desirable|Feasible\"><text class=\"pele-label\" font-size=\"14\" x=\"181.48\" y=\"130.97\" text-anchor=\"middle\">Buildable</text></g><g class=\"pele-venn-region\" data-id=\"Desirable|Feasible|Viable\"><text class=\"pele-label\" font-size=\"14\" x=\"181.48\" y=\"193.91\" text-anchor=\"middle\">Ship it</text></g></g></svg>",
+ "type": "venn",
+ "model": {
+  "type": "venn",
+  "title": "A good feature",
+  "subsets": [
+   {
+    "sets": [
+     "Desirable"
+    ],
+    "size": 10
+   },
+   {
+    "sets": [
+     "Feasible"
+    ],
+    "size": 10
+   },
+   {
+    "sets": [
+     "Viable"
+    ],
+    "size": 10
+   },
+   {
+    "sets": [
+     "Desirable",
+     "Feasible"
+    ],
+    "size": 2.5,
+    "label": "Buildable"
+   },
+   {
+    "sets": [
+     "Desirable",
+     "Feasible",
+     "Viable"
+    ],
+    "size": 1.1111111111111112,
+    "label": "Ship it"
+   }
+  ],
+  "textNodes": [
+   {
+    "sets": [
+     "Desirable"
+    ],
+    "id": "D1",
+    "label": "Users ask"
+   }
+  ],
+  "styles": [],
+  "known": [
+   "Desirable",
+   "Feasible",
+   "Viable"
+  ],
+  "current": [
+   "Desirable",
+   "Feasible",
+   "Viable"
+  ],
+  "indent": true,
+  "mermaidType": "venn"
+ }
+}

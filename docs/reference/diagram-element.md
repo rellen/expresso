@@ -368,6 +368,16 @@ A packet diagram has no edges. Each field is a node:
 The name is the range of bits, because two fields can have the same label, such as
 `Reserved`.
 
+A Venn diagram has no edges. A set, an intersection and a text are nodes:
+
+| Element of a Venn diagram | Name | Example |
+| --- | --- | --- |
+| A set, with its circle and its label | Its name | `Desirable` |
+| The label of an intersection | The sets, with `\|` between them | `Desirable\|Feasible` for `union Desirable,Feasible["Buildable"]` |
+| A text in a set | Its id | `D1` for `text D1["Users ask"]` |
+
+An intersection has no shape of its own, so its part shows its label.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |
