@@ -150,6 +150,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "quadrantChart" => Expresso.Element.Diagram.Pele.Quadrant,
     "radar" => Expresso.Element.Diagram.Pele.Radar,
     "requirement" => Expresso.Element.Diagram.Pele.Requirement,
+    "sankey" => Expresso.Element.Diagram.Pele.Sankey,
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
     "state" => Expresso.Element.Diagram.Pele.State,
     "timeline" => Expresso.Element.Diagram.Pele.Timeline,
