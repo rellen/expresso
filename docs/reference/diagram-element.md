@@ -184,6 +184,19 @@ end with a marker, such as the triangle of `<|--`:
 | A note | `note` and its number from 0, in the order of the source | `note0` |
 | The line from a note to its class | The note, `--` and the class | `note0--Turtle` |
 
+A state diagram names a transition by its two states. A composite state is a container:
+
+| Element of a state diagram | Name | Example |
+| --- | --- | --- |
+| A state | Its id | `Draft` |
+| A composite state | Its id. Each state in it, and in each of its concurrent regions, has it as its parent. | `Review` |
+| The start and the end of the diagram | `root_start` and `root_end` | `root_start` |
+| The start and the end in a composite state | The composite state, then `_start` or `_end` | `Review_start` |
+| A transition | The two states and `->` | `Draft->Submitted` |
+| A second transition between the same states in the same direction | The name of the first transition, then `:2` | `Draft->Submitted:2` |
+| A note | `note` and its number, in the order of the source | `note1` |
+| The line from a note to its state | The note, `--` and the state | `note1--Draft` |
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.

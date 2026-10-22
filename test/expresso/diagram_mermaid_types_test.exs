@@ -70,6 +70,41 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       parents: %{"Web" => nil},
       follow: {[{"Web", 2}, {"API", 3}], "Web->API", "3"},
       outline: {"One order", []}
+    },
+    "state" => %{
+      names: [
+        "Review",
+        "root_start->Draft",
+        "Draft->Submitted",
+        "Review_start->Screening",
+        "Screening->Decision",
+        "Submitted->Review",
+        "Review->Published",
+        "Review->Draft",
+        "Published->root_end",
+        "note1--Draft",
+        "root_start",
+        "Submitted",
+        "Published",
+        "root_end",
+        "Review_start",
+        "Screening",
+        "Decision",
+        "Draft",
+        "note1"
+      ],
+      kinds: %{
+        "Review" => "container",
+        "Draft" => "node",
+        "root_start" => "node",
+        "Review->Published" => "edge",
+        "note1" => "node",
+        "note1--Draft" => "edge"
+      },
+      ends: %{"Review->Draft" => {"Review", "Draft"}, "note1--Draft" => {"note1", "Draft"}},
+      parents: %{"Screening" => "Review", "Review_start" => "Review", "Draft" => nil},
+      follow: {[{"Submitted", 2}, {"Review", 3}], "Submitted->Review", "3"},
+      outline: {"Review", ["to Published (approved)", "to Draft (rejected)"]}
     }
   }
 
@@ -89,6 +124,23 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
     assert Pele.planned() == @types |> Map.keys() |> Enum.sort()
 
     for type <- Pele.planned(), do: assert(File.exists?("test/fixtures/mermaid/#{type}.json"))
+  end
+
+  test "a state of a concurrent region has the composite state as its parent" do
+    svg =
+      ~s(<svg><g class="pele-cluster" data-id="Active"></g><g class="pele-node" data-id="A"></g></svg>)
+
+    region = %{
+      "stmt" => "state",
+      "id" => "divider-id-1",
+      "type" => "divider",
+      "doc" => [%{"stmt" => "state", "id" => "A"}]
+    }
+
+    model = %{"rootDoc" => [%{"stmt" => "state", "id" => "Active", "doc" => [region]}]}
+
+    {named, _names} = Pele.name(%{"svg" => svg, "type" => "state", "model" => model})
+    assert named =~ ~s(data-id="A" id="A" data-graph-kind="node" data-graph-parent="Active")
   end
 
   for {type, expected} <- @types do

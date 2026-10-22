@@ -1,0 +1,472 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-state\" viewBox=\"0 0 324 708\" width=\"324\" height=\"708\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"state\"><g class=\"pele-clusters\"><g class=\"pele-cluster pele-state-composite\" data-id=\"Review\"><rect x=\"48.86\" y=\"267\" width=\"135.1\" height=\"258\" rx=\"10\" fill=\"var(--_a)\" fill-opacity=\"0.5\" stroke=\"var(--_b)\"/><path d=\"M48.86,303H183.96\" fill=\"none\" stroke=\"var(--_b)\"/><text class=\"pele-cluster-label\" x=\"116.41\" y=\"290.6\" text-anchor=\"middle\">Review</text></g></g><g class=\"pele-edges\" fill=\"none\" stroke=\"var(--_l)\" stroke-linecap=\"round\"><g class=\"pele-edge pele-transition\" data-id=\"edge0\"><path d=\"M116.41,22L116.41,59\"/><path class=\"pele-marker\" d=\"M116.41,66L113.05,58L119.77,58Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge pele-transition\" data-id=\"edge1\"><path d=\"M116.41,110L116.41,153.5C116.41,160.44 60.54,160.44 60.54,167.38L60.54,172\"/><path class=\"pele-marker\" d=\"M60.54,179L57.18,171L63.9,171Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge pele-transition\" data-id=\"edge2\"><path d=\"M116.41,333L116.41,370\"/><path class=\"pele-marker\" d=\"M116.41,377L113.05,369L119.77,369Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge pele-transition\" data-id=\"edge3\"><path d=\"M116.41,421L116.41,458\"/><path class=\"pele-marker\" d=\"M116.41,465L113.05,457L119.77,457Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge pele-transition\" data-id=\"edge4\"><path d=\"M60.54,223C60.54,238.5 116.41,238.5 116.41,254L116.41,260\"/><path class=\"pele-marker\" d=\"M116.41,267L113.05,259L119.77,259Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge pele-transition\" data-id=\"edge5\"><path d=\"M116.41,525L116.41,587\"/><path class=\"pele-marker\" d=\"M116.41,594L113.05,586L119.77,586Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge pele-transition\" data-id=\"edge6\"><path d=\"M116.41,267L116.41,254C116.41,238.5 172.28,238.5 172.28,223L172.28,134.75C172.28,128.09 116.41,128.09 116.41,121.44L116.41,117\"/><path class=\"pele-marker\" d=\"M116.41,110L119.77,118L113.05,118Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge pele-transition\" data-id=\"edge7\"><path d=\"M116.41,638L116.41,675\"/><path class=\"pele-marker\" d=\"M116.41,682L113.05,674L119.77,674Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge pele-note-edge\" stroke=\"var(--_b)\" stroke-dasharray=\"3 4\" data-id=\"Draft-Draft----note-8\"><path d=\"M149.8,88L193.8,88\"/></g></g><g class=\"pele-edge-labels\" font-size=\"14\"><g class=\"pele-edge-label\" data-id=\"edge1\"><rect x=\"91.3\" y=\"130.5\" width=\"50.22\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"116.41\" y=\"145.9\" text-anchor=\"middle\">submit</text></g><g class=\"pele-edge-label\" data-id=\"edge5\"><rect x=\"83.75\" y=\"545.5\" width=\"65.32\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"116.41\" y=\"560.9\" text-anchor=\"middle\">approved</text></g><g class=\"pele-edge-label\" data-id=\"edge6\"><rect x=\"143.09\" y=\"190.5\" width=\"58.39\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"172.28\" y=\"205.9\" text-anchor=\"middle\">rejected</text></g></g><g class=\"pele-nodes\"><g class=\"pele-node pele-state-start\" data-id=\"root_start\" transform=\"translate(116.41,15)\"><circle r=\"7\" fill=\"var(--_l)\"/></g><g class=\"pele-node pele-state\" data-id=\"Submitted\" transform=\"translate(60.54,201)\"><rect x=\"-52.54\" y=\"-22\" width=\"105.09\" height=\"44\" rx=\"10\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Submitted</text></g><g class=\"pele-node pele-state\" data-id=\"Published\" transform=\"translate(116.41,616)\"><rect x=\"-50.72\" y=\"-22\" width=\"101.44\" height=\"44\" rx=\"10\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Published</text></g><g class=\"pele-node pele-state-end\" data-id=\"root_end\" transform=\"translate(116.41,691)\"><circle r=\"8.5\" fill=\"var(--_bg)\" stroke=\"var(--_l)\"/><circle r=\"5\" fill=\"var(--_l)\"/></g><g class=\"pele-node pele-state-start\" data-id=\"Review_start\" transform=\"translate(116.41,326)\"><circle r=\"7\" fill=\"var(--_l)\"/></g><g class=\"pele-node pele-state\" data-id=\"Screening\" transform=\"translate(116.41,399)\"><rect x=\"-51.55\" y=\"-22\" width=\"103.1\" height=\"44\" rx=\"10\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Screening</text></g><g class=\"pele-node pele-state\" data-id=\"Decision\" transform=\"translate(116.41,487)\"><rect x=\"-46.7\" y=\"-22\" width=\"93.39\" height=\"44\" rx=\"10\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Decision</text></g><g class=\"pele-node pele-state\" data-id=\"Draft\" transform=\"translate(116.41,88)\"><rect x=\"-33.39\" y=\"-22\" width=\"66.78\" height=\"44\" rx=\"10\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Draft</text></g><g class=\"pele-note\" data-id=\"Draft----note-8\" transform=\"translate(254.59,88)\"><path d=\"M-60.78,-18.5H52.78L60.78,-10.5V18.5H-60.78Z\" fill=\"var(--_bg)\" stroke=\"var(--_b)\"/><path d=\"M52.78,-18.5V-10.5H60.78\" fill=\"none\" stroke=\"var(--_b)\"/><text class=\"pele-label\" font-size=\"14\" fill=\"var(--_m)\" x=\"0\" y=\"4.9\" text-anchor=\"middle\">the author edits</text></g></g></svg>",
+ "type": "state",
+ "model": {
+  "type": "state",
+  "rootDoc": [
+   {
+    "stmt": "relation",
+    "state1": {
+     "stmt": "state",
+     "id": "root_start",
+     "type": "default",
+     "description": "",
+     "start": true
+    },
+    "state2": {
+     "stmt": "state",
+     "id": "Draft",
+     "type": "default",
+     "description": ""
+    }
+   },
+   {
+    "stmt": "relation",
+    "state1": {
+     "stmt": "state",
+     "id": "Draft",
+     "type": "default",
+     "description": ""
+    },
+    "state2": {
+     "stmt": "state",
+     "id": "Submitted",
+     "type": "default",
+     "description": ""
+    },
+    "description": "submit"
+   },
+   {
+    "stmt": "state",
+    "id": "Review",
+    "type": "default",
+    "description": "",
+    "doc": [
+     {
+      "stmt": "relation",
+      "state1": {
+       "stmt": "state",
+       "id": "Review_start",
+       "type": "default",
+       "description": "",
+       "start": true
+      },
+      "state2": {
+       "stmt": "state",
+       "id": "Screening",
+       "type": "default",
+       "description": ""
+      }
+     },
+     {
+      "stmt": "relation",
+      "state1": {
+       "stmt": "state",
+       "id": "Screening",
+       "type": "default",
+       "description": ""
+      },
+      "state2": {
+       "stmt": "state",
+       "id": "Decision",
+       "type": "default",
+       "description": ""
+      }
+     }
+    ]
+   },
+   {
+    "stmt": "relation",
+    "state1": {
+     "stmt": "state",
+     "id": "Submitted",
+     "type": "default",
+     "description": ""
+    },
+    "state2": {
+     "stmt": "state",
+     "id": "Review",
+     "type": "default",
+     "description": ""
+    }
+   },
+   {
+    "stmt": "relation",
+    "state1": {
+     "stmt": "state",
+     "id": "Review",
+     "type": "default",
+     "description": ""
+    },
+    "state2": {
+     "stmt": "state",
+     "id": "Published",
+     "type": "default",
+     "description": ""
+    },
+    "description": "approved"
+   },
+   {
+    "stmt": "relation",
+    "state1": {
+     "stmt": "state",
+     "id": "Review",
+     "type": "default",
+     "description": ""
+    },
+    "state2": {
+     "stmt": "state",
+     "id": "Draft",
+     "type": "default",
+     "description": ""
+    },
+    "description": "rejected"
+   },
+   {
+    "stmt": "relation",
+    "state1": {
+     "stmt": "state",
+     "id": "Published",
+     "type": "default",
+     "description": ""
+    },
+    "state2": {
+     "stmt": "state",
+     "id": "root_end",
+     "type": "default",
+     "description": "",
+     "start": false
+    }
+   },
+   {
+    "stmt": "state",
+    "id": "Draft",
+    "note": {
+     "position": "right of",
+     "text": "the author edits"
+    }
+   }
+  ],
+  "states": {
+   "root_start": {
+    "stmt": "state",
+    "id": "root_start",
+    "descriptions": [],
+    "type": "default",
+    "classes": [],
+    "styles": [],
+    "textStyles": []
+   },
+   "Draft": {
+    "stmt": "state",
+    "id": "Draft",
+    "descriptions": [],
+    "type": "default",
+    "note": {
+     "position": "right of",
+     "text": "the author edits"
+    },
+    "classes": [],
+    "styles": [],
+    "textStyles": []
+   },
+   "Submitted": {
+    "stmt": "state",
+    "id": "Submitted",
+    "descriptions": [],
+    "type": "default",
+    "classes": [],
+    "styles": [],
+    "textStyles": []
+   },
+   "Review": {
+    "stmt": "state",
+    "id": "Review",
+    "descriptions": [],
+    "type": "default",
+    "doc": [
+     {
+      "stmt": "relation",
+      "state1": {
+       "stmt": "state",
+       "id": "Review_start",
+       "type": "default",
+       "description": "",
+       "start": true
+      },
+      "state2": {
+       "stmt": "state",
+       "id": "Screening",
+       "type": "default",
+       "description": ""
+      }
+     },
+     {
+      "stmt": "relation",
+      "state1": {
+       "stmt": "state",
+       "id": "Screening",
+       "type": "default",
+       "description": ""
+      },
+      "state2": {
+       "stmt": "state",
+       "id": "Decision",
+       "type": "default",
+       "description": ""
+      }
+     }
+    ],
+    "classes": [],
+    "styles": [],
+    "textStyles": []
+   },
+   "Published": {
+    "stmt": "state",
+    "id": "Published",
+    "descriptions": [],
+    "type": "default",
+    "classes": [],
+    "styles": [],
+    "textStyles": []
+   },
+   "root_end": {
+    "stmt": "state",
+    "id": "root_end",
+    "descriptions": [],
+    "type": "default",
+    "classes": [],
+    "styles": [],
+    "textStyles": []
+   }
+  },
+  "relations": [
+   {
+    "id1": "root_start",
+    "id2": "Draft",
+    "relationTitle": ""
+   },
+   {
+    "id1": "Draft",
+    "id2": "Submitted",
+    "relationTitle": "submit"
+   },
+   {
+    "id1": "Submitted",
+    "id2": "Review",
+    "relationTitle": ""
+   },
+   {
+    "id1": "Review",
+    "id2": "Published",
+    "relationTitle": "approved"
+   },
+   {
+    "id1": "Review",
+    "id2": "Draft",
+    "relationTitle": "rejected"
+   },
+   {
+    "id1": "Published",
+    "id2": "root_end",
+    "relationTitle": ""
+   }
+  ],
+  "classes": {},
+  "links": {},
+  "graph": {
+   "nodes": [
+    {
+     "id": "root_start",
+     "shape": "stateStart",
+     "label": "root_start",
+     "description": [],
+     "cssClasses": " statediagram-state",
+     "cssCompiledStyles": [],
+     "cssStyles": [],
+     "isGroup": false
+    },
+    {
+     "id": "Draft",
+     "shape": "rect",
+     "label": "Draft",
+     "description": [],
+     "cssClasses": " statediagram-state",
+     "cssCompiledStyles": [],
+     "cssStyles": [],
+     "isGroup": false
+    },
+    {
+     "id": "Submitted",
+     "shape": "rect",
+     "label": "Submitted",
+     "description": [],
+     "cssClasses": " statediagram-state",
+     "cssCompiledStyles": [],
+     "cssStyles": [],
+     "isGroup": false
+    },
+    {
+     "id": "Review",
+     "shape": "roundedWithTitle",
+     "label": "Review",
+     "description": [],
+     "cssClasses": " statediagram-state statediagram-cluster statediagram-cluster-alt",
+     "cssCompiledStyles": [],
+     "cssStyles": [],
+     "type": "group",
+     "isGroup": true,
+     "dir": "TB",
+     "colorIndex": 0
+    },
+    {
+     "id": "Review_start",
+     "shape": "stateStart",
+     "label": "Review_start",
+     "description": [],
+     "cssClasses": " statediagram-state",
+     "cssCompiledStyles": [],
+     "cssStyles": [],
+     "isGroup": false,
+     "parentId": "Review"
+    },
+    {
+     "id": "Screening",
+     "shape": "rect",
+     "label": "Screening",
+     "description": [],
+     "cssClasses": " statediagram-state",
+     "cssCompiledStyles": [],
+     "cssStyles": [],
+     "isGroup": false,
+     "parentId": "Review"
+    },
+    {
+     "id": "Decision",
+     "shape": "rect",
+     "label": "Decision",
+     "description": [],
+     "cssClasses": " statediagram-state",
+     "cssCompiledStyles": [],
+     "cssStyles": [],
+     "isGroup": false,
+     "parentId": "Review"
+    },
+    {
+     "id": "Published",
+     "shape": "rect",
+     "label": "Published",
+     "description": [],
+     "cssClasses": " statediagram-state",
+     "cssCompiledStyles": [],
+     "cssStyles": [],
+     "isGroup": false
+    },
+    {
+     "id": "root_end",
+     "shape": "stateEnd",
+     "label": "root_end",
+     "description": [],
+     "cssClasses": " statediagram-state",
+     "cssCompiledStyles": [],
+     "cssStyles": [],
+     "isGroup": false
+    },
+    {
+     "id": "Draft----parent",
+     "shape": "noteGroup",
+     "label": "the author edits",
+     "description": [],
+     "cssClasses": " statediagram-state",
+     "cssCompiledStyles": [],
+     "cssStyles": [],
+     "type": "group",
+     "isGroup": true,
+     "position": "right of"
+    },
+    {
+     "id": "Draft----note-8",
+     "shape": "note",
+     "label": "the author edits",
+     "description": [],
+     "cssClasses": "statediagram-note",
+     "cssCompiledStyles": [],
+     "cssStyles": [],
+     "type": "node",
+     "isGroup": false,
+     "position": "right of",
+     "parentId": "Draft----parent",
+     "noteFor": "Draft"
+    }
+   ],
+   "edges": [
+    {
+     "id": "edge0",
+     "start": "root_start",
+     "end": "Draft",
+     "label": "",
+     "classes": "transition"
+    },
+    {
+     "id": "edge1",
+     "start": "Draft",
+     "end": "Submitted",
+     "label": "submit",
+     "classes": "transition"
+    },
+    {
+     "id": "edge2",
+     "start": "Review_start",
+     "end": "Screening",
+     "label": "",
+     "classes": "transition"
+    },
+    {
+     "id": "edge3",
+     "start": "Screening",
+     "end": "Decision",
+     "label": "",
+     "classes": "transition"
+    },
+    {
+     "id": "edge4",
+     "start": "Submitted",
+     "end": "Review",
+     "label": "",
+     "classes": "transition"
+    },
+    {
+     "id": "edge5",
+     "start": "Review",
+     "end": "Published",
+     "label": "approved",
+     "classes": "transition"
+    },
+    {
+     "id": "edge6",
+     "start": "Review",
+     "end": "Draft",
+     "label": "rejected",
+     "classes": "transition"
+    },
+    {
+     "id": "edge7",
+     "start": "Published",
+     "end": "root_end",
+     "label": "",
+     "classes": "transition"
+    },
+    {
+     "id": "Draft-Draft----note-8",
+     "start": "Draft",
+     "end": "Draft----note-8",
+     "label": "",
+     "classes": "transition note-edge",
+     "pattern": "dashed"
+    }
+   ]
+  },
+  "dividerCount": 0,
+  "mermaidType": "stateDiagram"
+ }
+}
