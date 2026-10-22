@@ -1,0 +1,148 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-swimlane\" viewBox=\"0 0 588 208\" width=\"588\" height=\"208\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"swimlane\"><g class=\"pele-clusters\"><g class=\"pele-cluster pele-lane\" data-id=\"Reviewer\"><rect x=\"8\" y=\"104\" width=\"571.98\" height=\"96\" fill=\"none\" stroke=\"var(--_b)\"/><rect x=\"8\" y=\"104\" width=\"40\" height=\"96\" fill=\"var(--_a)\" stroke=\"var(--_b)\"/><g transform=\"rotate(-90 28 152)\"><text class=\"pele-cluster-label\" fill=\"var(--_m)\" x=\"28\" y=\"157.6\" text-anchor=\"middle\">Reviewer</text></g></g><g class=\"pele-cluster pele-lane\" data-id=\"Presenter\"><rect x=\"8\" y=\"8\" width=\"571.98\" height=\"96\" fill=\"none\" stroke=\"var(--_b)\"/><rect x=\"8\" y=\"8\" width=\"40\" height=\"96\" fill=\"var(--_a)\" stroke=\"var(--_b)\"/><g transform=\"rotate(-90 28 56)\"><text class=\"pele-cluster-label\" fill=\"var(--_m)\" x=\"28\" y=\"61.6\" text-anchor=\"middle\">Presenter</text></g></g></g><g class=\"pele-edges\" fill=\"none\" stroke=\"var(--_l)\" stroke-linecap=\"round\"><g class=\"pele-edge\" data-id=\"L_write_review_0\"><path d=\"M141.06,80L141.06,132C141.06,144.4 148.66,152 161.06,152L219.13,152\"/><path class=\"pele-marker\" d=\"M226.13,152L218.13,155.36L218.13,148.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge\" data-id=\"L_review_give_0\"><path d=\"M304.93,128L304.93,76C304.93,63.6 312.53,56 324.93,56L424.73,56\"/><path class=\"pele-marker\" d=\"M431.73,56L423.73,59.36L423.73,52.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g></g><g class=\"pele-edge-labels\" font-size=\"14\"><g class=\"pele-edge-label\" data-id=\"L_review_give_0\"><rect x=\"334.97\" y=\"45.5\" width=\"66.72\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"368.33\" y=\"60.9\" text-anchor=\"middle\">Approved</text></g></g><g class=\"pele-nodes\"><g class=\"pele-node pele-shape-rect\" data-id=\"write\" transform=\"translate(141.06,56)\"><rect x=\"-69.06\" y=\"-24\" width=\"138.13\" height=\"48\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Write the deck</text></g><g class=\"pele-node pele-shape-rect\" data-id=\"give\" transform=\"translate(493.86,56)\"><rect x=\"-62.13\" y=\"-24\" width=\"124.26\" height=\"48\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Give the talk</text></g><g class=\"pele-node pele-shape-rect\" data-id=\"review\" transform=\"translate(304.93,152)\"><rect x=\"-78.8\" y=\"-24\" width=\"157.6\" height=\"48\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Review the slides</text></g></g></svg>",
+ "type": "swimlane",
+ "model": {
+  "type": "flowchart",
+  "direction": "LR",
+  "nodes": {
+   "write": {
+    "id": "write",
+    "labelType": "text",
+    "styles": [],
+    "classes": [],
+    "text": "Write the deck",
+    "type": "square",
+    "props": {}
+   },
+   "give": {
+    "id": "give",
+    "labelType": "text",
+    "styles": [],
+    "classes": [],
+    "text": "Give the talk",
+    "type": "square",
+    "props": {}
+   },
+   "review": {
+    "id": "review",
+    "labelType": "text",
+    "styles": [],
+    "classes": [],
+    "text": "Review the slides",
+    "type": "square",
+    "props": {}
+   }
+  },
+  "edges": [
+   {
+    "start": "write",
+    "end": "review",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "id": "L_write_review_0"
+   },
+   {
+    "start": "review",
+    "end": "give",
+    "type": "arrow_point",
+    "text": "Approved",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "id": "L_review_give_0"
+   }
+  ],
+  "subgraphs": [
+   {
+    "id": "Presenter",
+    "nodes": [
+     "write",
+     "give"
+    ],
+    "title": "Presenter",
+    "classes": [],
+    "labelType": "text"
+   },
+   {
+    "id": "Reviewer",
+    "nodes": [
+     "review"
+    ],
+    "title": "Reviewer",
+    "classes": [],
+    "labelType": "text"
+   }
+  ],
+  "classes": {},
+  "tooltips": {},
+  "subgraphLookup": {
+   "Presenter": {
+    "id": "Presenter",
+    "nodes": [
+     "write",
+     "give"
+    ],
+    "title": "Presenter",
+    "classes": [],
+    "labelType": "text"
+   },
+   "Reviewer": {
+    "id": "Reviewer",
+    "nodes": [
+     "review"
+    ],
+    "title": "Reviewer",
+    "classes": [],
+    "labelType": "text"
+   }
+  },
+  "members": [
+   "write",
+   "give",
+   "review"
+  ],
+  "edgeById": {
+   "L_write_review_0": {
+    "start": "write",
+    "end": "review",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "id": "L_write_review_0"
+   },
+   "L_review_give_0": {
+    "start": "review",
+    "end": "give",
+    "type": "arrow_point",
+    "text": "Approved",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "id": "L_review_give_0"
+   }
+  },
+  "pairCount": {
+   "write\u0000review": 1,
+   "review\u0000give": 1
+  },
+  "subCount": 2,
+  "options": {
+   "inheritDir": false,
+   "maxEdges": 5000
+  },
+  "mermaidType": "swimlane"
+ }
+}

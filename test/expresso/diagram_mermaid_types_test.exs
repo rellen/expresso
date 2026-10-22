@@ -318,6 +318,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"Submitted", 2}, {"Review", 3}], "Submitted->Review", "3"},
       outline: {"Review", ["to Published (approved)", "to Draft (rejected)"]}
     },
+    "swimlane" => %{
+      names: ["Reviewer", "Presenter", "write->review", "review->give", "write", "give", "review"],
+      kinds: %{"Reviewer" => "container", "write" => "node", "review->give" => "edge"},
+      ends: %{"write->review" => {"write", "review"}},
+      parents: %{"write" => "Presenter", "review" => "Reviewer", "Presenter" => nil},
+      follow: {[{"write", 2}, {"review", 3}], "write->review", "3"},
+      outline: {"Reviewer", []}
+    },
     "timeline" => %{
       names: ["Early", "2024", "2024/1", "2025", "2025/1", "2025/2", "Late", "2026", "2026/1"],
       kinds: %{"Early" => "container", "2025" => "container", "2025/2" => "node"},

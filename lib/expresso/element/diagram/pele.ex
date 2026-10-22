@@ -155,6 +155,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "sankey" => Expresso.Element.Diagram.Pele.Sankey,
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
     "state" => Expresso.Element.Diagram.Pele.State,
+    "swimlane" => Expresso.Element.Diagram.Pele.Flowchart,
     "timeline" => Expresso.Element.Diagram.Pele.Timeline,
     "treemap" => Expresso.Element.Diagram.Pele.Treemap,
     "treeView" => Expresso.Element.Diagram.Pele.TreeView,

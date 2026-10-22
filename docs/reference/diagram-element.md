@@ -161,6 +161,9 @@ end
 
 The label of an edge shows at the steps of its edge.
 
+A swimlane diagram names its parts as a flowchart does, and each lane is a container, such
+as `Presenter` for `subgraph Presenter`.
+
 A sequence diagram names its parts in the same way. A message is an edge from one actor to
 the other, so a message without its own part shows from the step where both of its actors
 show:
