@@ -1,0 +1,10 @@
+swimlane-beta LR
+  subgraph Presenter
+    write[Write the deck]
+    give[Give the talk]
+  end
+  subgraph Reviewer
+    review[Review the slides]
+  end
+  write --> review
+  review -->|Approved| give

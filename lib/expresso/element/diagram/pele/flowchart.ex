@@ -15,6 +15,9 @@ defmodule Expresso.Element.Diagram.Pele.Flowchart do
   arrow is `<->` for an edge with a head at each end, `--` for an edge with no
   head, and `->` for each other edge. The group of the label of an edge has
   the class `pele-edge-label`, so it takes the name of its edge and no marks.
+
+  A swimlane diagram has the model of a flowchart, and each lane is a
+  subgraph, so this plan names its parts too.
   """
 
   @behaviour Expresso.Element.Diagram.Pele.Plan
