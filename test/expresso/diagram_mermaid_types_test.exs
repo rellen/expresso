@@ -310,6 +310,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: nil,
       outline: {"Early 2024 The first slide 2025 Charts Diagrams", []}
     },
+    "treemap" => %{
+      names: ["Code", "Docs", "Assets", "Elixir", "Guides", "TypeScript", "CSS"],
+      kinds: %{"Code" => "container", "Assets" => "container", "CSS" => "node"},
+      ends: %{},
+      parents: %{"Assets" => "Code", "CSS" => "Assets", "Guides" => "Docs", "Code" => nil},
+      follow: nil,
+      outline: {"Code 100", []}
+    },
     "usecase" => %{
       names: [
         "Expresso",
