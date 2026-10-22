@@ -135,6 +135,7 @@ defmodule Expresso.Element.Diagram.Pele do
   # The plan of each type that this module names. `Expresso.Element.Diagram.Pele.Plan`
   # gives the contract of a plan.
   @plans %{
+    "agentflow" => Expresso.Element.Diagram.Pele.Flowchart,
     "architecture" => Expresso.Element.Diagram.Pele.Architecture,
     "block" => Expresso.Element.Diagram.Pele.Block,
     "c4" => Expresso.Element.Diagram.Pele.C4,

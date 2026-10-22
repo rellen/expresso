@@ -1,0 +1,611 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-agentflow\" viewBox=\"0 0 248 454\" width=\"248\" height=\"454\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"agentflow\"><g class=\"pele-clusters\"><g class=\"pele-cluster pele-flow\" data-id=\"output\"><rect x=\"14\" y=\"318\" width=\"220\" height=\"128\" fill=\"var(--pele-series-8,#9d755d)\" fill-opacity=\"0.06\" stroke=\"var(--pele-series-8,#9d755d)\" style=\"rx:var(--_r)\"/><text class=\"pele-cluster-label\" fill=\"var(--_m)\" x=\"52.1\" y=\"343.6\" text-anchor=\"middle\">Output</text></g><g class=\"pele-cluster pele-flow\" data-id=\"intake\"><rect x=\"8\" y=\"8\" width=\"232\" height=\"152\" fill=\"var(--pele-series-8,#9d755d)\" fill-opacity=\"0.06\" stroke=\"var(--pele-series-8,#9d755d)\" style=\"rx:var(--_r)\"/><text class=\"pele-cluster-label\" fill=\"var(--_m)\" x=\"44.71\" y=\"33.6\" text-anchor=\"middle\">Intake</text></g></g><g class=\"pele-edges\" fill=\"none\" stroke=\"var(--_l)\" stroke-linecap=\"round\"><g class=\"pele-edge pele-edge-sequence\" data-id=\"L_receive_check_0\"><path d=\"M124,120L124,201\"/><path class=\"pele-marker\" d=\"M124,208L120.64,200L127.36,200Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge pele-edge-sequence\" data-id=\"L_render_publish_0\"><path d=\"M124,270L124,371\"/><path class=\"pele-marker\" d=\"M124,378L120.64,370L127.36,370Z\" fill=\"var(--_l)\" stroke=\"none\"/></g></g><g class=\"pele-nodes\"><g class=\"pele-node pele-shape-collapsed\" data-id=\"processing\" transform=\"translate(124,239)\"><rect x=\"-78\" y=\"-31\" width=\"156\" height=\"62\" fill=\"var(--pele-series-8,#9d755d)\" fill-opacity=\"0.06\" stroke=\"var(--pele-series-8,#9d755d)\" style=\"rx:var(--_r)\"/><path d=\"M-68,15H68\" fill=\"none\" stroke=\"var(--pele-series-8,#9d755d)\" stroke-dasharray=\"3 3\"/><path class=\"pele-collapsed-mark\" d=\"M-10.75,23a1.75,1.75 0 1 0 3.5,0a1.75,1.75 0 1 0 -3.5,0ZM-1.75,23a1.75,1.75 0 1 0 3.5,0a1.75,1.75 0 1 0 -3.5,0ZM7.25,23a1.75,1.75 0 1 0 3.5,0a1.75,1.75 0 1 0 -3.5,0Z\" fill=\"var(--pele-series-8,#9d755d)\" stroke=\"none\"/><text class=\"pele-label\" x=\"0\" y=\"-1.4\" text-anchor=\"middle\">Processing</text></g><g class=\"pele-node pele-shape-lean-r pele-kind-input\" data-id=\"receive\" transform=\"translate(124,84)\"><polygon points=\"-78,-36 96,-36 78,36 -96,36\" fill=\"var(--pele-series-4,#e45756)\" fill-opacity=\"0.14\" stroke=\"var(--pele-series-4,#e45756)\"/><text class=\"pele-label\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"0\" y=\"-6.4\">Receive the</tspan><tspan x=\"0\" y=\"17.6\">deck</tspan></text></g><g class=\"pele-node pele-shape-hex pele-kind-action\" data-id=\"publish\" transform=\"translate(124,402)\"><polygon points=\"-78,-24 78,-24 90,0 78,24 -78,24 -90,0\" fill=\"var(--pele-series-7,#b279a2)\" fill-opacity=\"0.14\" stroke=\"var(--pele-series-7,#b279a2)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Publish</text></g></g></svg>",
+ "type": "agentflow",
+ "model": {
+  "type": "agentflow",
+  "direction": "TB",
+  "nodes": {
+   "receive": {
+    "id": "receive",
+    "labelType": "string",
+    "styles": [],
+    "classes": [],
+    "text": "Receive the deck",
+    "type": "lean-right",
+    "props": {},
+    "metadata": {
+     "shape": "lean-right"
+    }
+   },
+   "check": {
+    "id": "check",
+    "labelType": "string",
+    "styles": [],
+    "classes": [],
+    "text": "Check",
+    "type": "roundedRect",
+    "props": {},
+    "metadata": {
+     "shape": "roundedRect"
+    }
+   },
+   "render": {
+    "id": "render",
+    "labelType": "string",
+    "styles": [],
+    "classes": [],
+    "text": "Render",
+    "type": "roundedRect",
+    "props": {},
+    "metadata": {
+     "shape": "roundedRect"
+    }
+   },
+   "processing": {
+    "id": "processing",
+    "labelType": "text",
+    "styles": [],
+    "classes": [],
+    "text": "processing",
+    "props": {}
+   },
+   "publish": {
+    "id": "publish",
+    "labelType": "string",
+    "styles": [],
+    "classes": [],
+    "text": "Publish",
+    "type": "hexagon",
+    "props": {},
+    "metadata": {
+     "shape": "hexagon"
+    }
+   }
+  },
+  "edges": [
+   {
+    "start": "check",
+    "end": "render",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "edgeSemantic": "sequence",
+    "id": "L_check_render_0"
+   },
+   {
+    "start": "receive",
+    "end": "check",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "edgeSemantic": "sequence",
+    "id": "L_receive_check_0"
+   },
+   {
+    "start": "render",
+    "end": "publish",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "edgeSemantic": "sequence",
+    "id": "L_render_publish_0"
+   }
+  ],
+  "subgraphs": [
+   {
+    "id": "intake",
+    "nodes": [
+     "receive"
+    ],
+    "title": "Intake",
+    "classes": [],
+    "labelType": "string",
+    "type": "flow"
+   },
+   {
+    "id": "processing",
+    "nodes": [
+     "check",
+     "render"
+    ],
+    "title": "Processing",
+    "classes": [],
+    "labelType": "string",
+    "type": "flow",
+    "metadata": {
+     "view": "collapsed"
+    }
+   },
+   {
+    "id": "output",
+    "nodes": [
+     "publish"
+    ],
+    "title": "Output",
+    "classes": [],
+    "labelType": "string",
+    "type": "flow"
+   }
+  ],
+  "connectors": {},
+  "classes": {},
+  "tooltips": {},
+  "mappings": [
+   {
+    "id": "receive",
+    "type": "vertex",
+    "position": {
+     "startLine": 3,
+     "startColumn": 4,
+     "endLine": 3,
+     "endColumn": 47,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "intake",
+    "type": "subgraph",
+    "position": {
+     "startLine": 2,
+     "startColumn": 2,
+     "endLine": 4,
+     "endColumn": 5,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "check",
+    "type": "vertex",
+    "position": {
+     "startLine": 7,
+     "startColumn": 4,
+     "endLine": 7,
+     "endColumn": 33,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "render",
+    "type": "vertex",
+    "position": {
+     "startLine": 8,
+     "startColumn": 4,
+     "endLine": 8,
+     "endColumn": 35,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "check",
+    "type": "vertex",
+    "position": {
+     "startLine": 9,
+     "startColumn": 4,
+     "endLine": 9,
+     "endColumn": 9,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "render",
+    "type": "vertex",
+    "position": {
+     "startLine": 9,
+     "startColumn": 14,
+     "endLine": 9,
+     "endColumn": 20,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "render",
+    "type": "edge",
+    "position": {
+     "startLine": 9,
+     "startColumn": 4,
+     "endLine": 9,
+     "endColumn": 20,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "processing",
+    "type": "subgraph",
+    "position": {
+     "startLine": 6,
+     "startColumn": 2,
+     "endLine": 10,
+     "endColumn": 5,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "processing",
+    "type": "attachment",
+    "position": {
+     "startLine": 11,
+     "startColumn": 2,
+     "endLine": 11,
+     "endColumn": 33,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "publish",
+    "type": "vertex",
+    "position": {
+     "startLine": 14,
+     "startColumn": 4,
+     "endLine": 14,
+     "endColumn": 39,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "output",
+    "type": "subgraph",
+    "position": {
+     "startLine": 13,
+     "startColumn": 2,
+     "endLine": 15,
+     "endColumn": 5,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "receive",
+    "type": "vertex",
+    "position": {
+     "startLine": 17,
+     "startColumn": 2,
+     "endLine": 17,
+     "endColumn": 9,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "check",
+    "type": "vertex",
+    "position": {
+     "startLine": 17,
+     "startColumn": 14,
+     "endLine": 17,
+     "endColumn": 19,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "check",
+    "type": "edge",
+    "position": {
+     "startLine": 17,
+     "startColumn": 2,
+     "endLine": 17,
+     "endColumn": 19,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "render",
+    "type": "vertex",
+    "position": {
+     "startLine": 18,
+     "startColumn": 2,
+     "endLine": 18,
+     "endColumn": 8,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "publish",
+    "type": "vertex",
+    "position": {
+     "startLine": 18,
+     "startColumn": 13,
+     "endLine": 18,
+     "endColumn": 20,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "publish",
+    "type": "edge",
+    "position": {
+     "startLine": 18,
+     "startColumn": 2,
+     "endLine": 18,
+     "endColumn": 20,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   }
+  ],
+  "diagnostics": [],
+  "lineOffset": 0,
+  "subgraphLookup": {
+   "intake": {
+    "id": "intake",
+    "nodes": [
+     "receive"
+    ],
+    "title": "Intake",
+    "classes": [],
+    "labelType": "string",
+    "type": "flow"
+   },
+   "processing": {
+    "id": "processing",
+    "nodes": [
+     "check",
+     "render"
+    ],
+    "title": "Processing",
+    "classes": [],
+    "labelType": "string",
+    "type": "flow",
+    "metadata": {
+     "view": "collapsed"
+    }
+   },
+   "output": {
+    "id": "output",
+    "nodes": [
+     "publish"
+    ],
+    "title": "Output",
+    "classes": [],
+    "labelType": "string",
+    "type": "flow"
+   }
+  },
+  "globalNodes": [],
+  "members": [
+   "receive",
+   "check",
+   "render",
+   "publish"
+  ],
+  "edgeById": {
+   "L_check_render_0": {
+    "start": "check",
+    "end": "render",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "edgeSemantic": "sequence",
+    "id": "L_check_render_0"
+   },
+   "L_receive_check_0": {
+    "start": "receive",
+    "end": "check",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "edgeSemantic": "sequence",
+    "id": "L_receive_check_0"
+   },
+   "L_render_publish_0": {
+    "start": "render",
+    "end": "publish",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "edgeSemantic": "sequence",
+    "id": "L_render_publish_0"
+   }
+  },
+  "pairCount": {
+   "check\u0000render": 1,
+   "receive\u0000check": 1,
+   "render\u0000publish": 1
+  },
+  "subCount": 3,
+  "bareMappings": [
+   {
+    "id": "check",
+    "type": "vertex",
+    "position": {
+     "startLine": 9,
+     "startColumn": 4,
+     "endLine": 9,
+     "endColumn": 9,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "render",
+    "type": "vertex",
+    "position": {
+     "startLine": 9,
+     "startColumn": 14,
+     "endLine": 9,
+     "endColumn": 20,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "receive",
+    "type": "vertex",
+    "position": {
+     "startLine": 17,
+     "startColumn": 2,
+     "endLine": 17,
+     "endColumn": 9,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "check",
+    "type": "vertex",
+    "position": {
+     "startLine": 17,
+     "startColumn": 14,
+     "endLine": 17,
+     "endColumn": 19,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "render",
+    "type": "vertex",
+    "position": {
+     "startLine": 18,
+     "startColumn": 2,
+     "endLine": 18,
+     "endColumn": 8,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   {
+    "id": "publish",
+    "type": "vertex",
+    "position": {
+     "startLine": 18,
+     "startColumn": 13,
+     "endLine": 18,
+     "endColumn": 20,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   }
+  ],
+  "firstMapping": {
+   "receive": {
+    "id": "receive",
+    "type": "vertex",
+    "position": {
+     "startLine": 3,
+     "startColumn": 4,
+     "endLine": 3,
+     "endColumn": 47,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   "intake": {
+    "id": "intake",
+    "type": "subgraph",
+    "position": {
+     "startLine": 2,
+     "startColumn": 2,
+     "endLine": 4,
+     "endColumn": 5,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   "check": {
+    "id": "check",
+    "type": "vertex",
+    "position": {
+     "startLine": 7,
+     "startColumn": 4,
+     "endLine": 7,
+     "endColumn": 33,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   "render": {
+    "id": "render",
+    "type": "vertex",
+    "position": {
+     "startLine": 8,
+     "startColumn": 4,
+     "endLine": 8,
+     "endColumn": 35,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   "processing": {
+    "id": "processing",
+    "type": "subgraph",
+    "position": {
+     "startLine": 6,
+     "startColumn": 2,
+     "endLine": 10,
+     "endColumn": 5,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   "publish": {
+    "id": "publish",
+    "type": "vertex",
+    "position": {
+     "startLine": 14,
+     "startColumn": 4,
+     "endLine": 14,
+     "endColumn": 39,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   },
+   "output": {
+    "id": "output",
+    "type": "subgraph",
+    "position": {
+     "startLine": 13,
+     "startColumn": 2,
+     "endLine": 15,
+     "endColumn": 5,
+     "startIndex": 0,
+     "endIndex": 0
+    }
+   }
+  },
+  "reported": {},
+  "options": {
+   "inheritDir": false,
+   "lineOffset": 0,
+   "maxEdges": 5000
+  },
+  "mermaidType": "agentflow"
+ }
+}

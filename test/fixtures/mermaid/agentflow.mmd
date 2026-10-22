@@ -1,0 +1,18 @@
+agentflow-beta TB
+  flow intake["Intake"]
+    receive["Receive the deck"]@{ shape: input }
+  end
+
+  flow processing["Processing"]
+    check["Check"]@{ shape: task }
+    render["Render"]@{ shape: task }
+    check --> render
+  end
+  processing@{ view: "collapsed" }
+
+  flow output["Output"]
+    publish["Publish"]@{ shape: action }
+  end
+
+  receive --> check
+  render --> publish
