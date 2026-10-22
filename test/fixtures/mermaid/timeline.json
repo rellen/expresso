@@ -1,0 +1,42 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-timeline\" viewBox=\"0 0 604 266\" width=\"604\" height=\"266\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_tw:var(--pele-title-weight,bold);--_hw:var(--pele-heading-weight,bold);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"timeline\"><text class=\"pele-title\" font-weight=\"var(--_tw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"302\" y=\"25.6\">The history of the deck</tspan></text><path class=\"pele-axis\" d=\"M8,156H589\" fill=\"none\" stroke=\"var(--_l)\"/><path class=\"pele-marker\" d=\"M596,156L588,159.36L588,152.64Z\" fill=\"var(--_l)\" stroke=\"none\"/><g class=\"pele-cluster pele-section\" data-id=\"Early\"><rect x=\"8\" y=\"48\" width=\"372\" height=\"40\" fill=\"var(--pele-series-1,#4c78a8)\" style=\"rx:var(--_r)\"/><text font-weight=\"var(--_hw)\" fill=\"var(--_bg)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"194\" y=\"73.6\">Early</tspan></text><g class=\"pele-node pele-period\" data-id=\"2024\"><rect x=\"8\" y=\"96\" width=\"176\" height=\"40\" fill=\"var(--pele-series-1,#4c78a8)\" style=\"rx:var(--_r)\"/><text fill=\"var(--_bg)\" x=\"96\" y=\"121.6\" text-anchor=\"middle\">2024</text><path class=\"pele-edge\" d=\"M96,136V176\" fill=\"none\" stroke=\"var(--_b)\"/><circle class=\"pele-dot\" cx=\"96\" cy=\"156\" r=\"4\" fill=\"var(--pele-series-1,#4c78a8)\" stroke=\"var(--_bg)\" stroke-width=\"2\"/><g class=\"pele-node pele-event\"><rect x=\"8\" y=\"176\" width=\"176\" height=\"37\" fill=\"var(--pele-series-1,#4c78a8)\" fill-opacity=\"0.16\" style=\"rx:var(--_r)\"/><text font-size=\"14\" x=\"96\" y=\"199.4\" text-anchor=\"middle\">The first slide</text></g></g><g class=\"pele-node pele-period\" data-id=\"2025\"><rect x=\"204\" y=\"96\" width=\"176\" height=\"40\" fill=\"var(--pele-series-1,#4c78a8)\" style=\"rx:var(--_r)\"/><text fill=\"var(--_bg)\" x=\"292\" y=\"121.6\" text-anchor=\"middle\">2025</text><path class=\"pele-edge\" d=\"M292,136V176M292,213V221\" fill=\"none\" stroke=\"var(--_b)\"/><circle class=\"pele-dot\" cx=\"292\" cy=\"156\" r=\"4\" fill=\"var(--pele-series-1,#4c78a8)\" stroke=\"var(--_bg)\" stroke-width=\"2\"/><g class=\"pele-node pele-event\"><rect x=\"204\" y=\"176\" width=\"176\" height=\"37\" fill=\"var(--pele-series-1,#4c78a8)\" fill-opacity=\"0.16\" style=\"rx:var(--_r)\"/><text font-size=\"14\" x=\"292\" y=\"199.4\" text-anchor=\"middle\">Charts</text></g><g class=\"pele-node pele-event\"><rect x=\"204\" y=\"221\" width=\"176\" height=\"37\" fill=\"var(--pele-series-1,#4c78a8)\" fill-opacity=\"0.16\" style=\"rx:var(--_r)\"/><text font-size=\"14\" x=\"292\" y=\"244.4\" text-anchor=\"middle\">Diagrams</text></g></g></g><g class=\"pele-cluster pele-section\" data-id=\"Late\"><rect x=\"400\" y=\"48\" width=\"176\" height=\"40\" fill=\"var(--pele-series-2,#f58518)\" style=\"rx:var(--_r)\"/><text font-weight=\"var(--_hw)\" fill=\"var(--_bg)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"488\" y=\"73.6\">Late</tspan></text><g class=\"pele-node pele-period\" data-id=\"2026\"><rect x=\"400\" y=\"96\" width=\"176\" height=\"40\" fill=\"var(--pele-series-2,#f58518)\" style=\"rx:var(--_r)\"/><text fill=\"var(--_bg)\" x=\"488\" y=\"121.6\" text-anchor=\"middle\">2026</text><path class=\"pele-edge\" d=\"M488,136V176\" fill=\"none\" stroke=\"var(--_b)\"/><circle class=\"pele-dot\" cx=\"488\" cy=\"156\" r=\"4\" fill=\"var(--pele-series-2,#f58518)\" stroke=\"var(--_bg)\" stroke-width=\"2\"/><g class=\"pele-node pele-event\"><rect x=\"400\" y=\"176\" width=\"176\" height=\"37\" fill=\"var(--pele-series-2,#f58518)\" fill-opacity=\"0.16\" style=\"rx:var(--_r)\"/><text font-size=\"14\" x=\"488\" y=\"199.4\" text-anchor=\"middle\">Mermaid</text></g></g></g></svg>",
+ "type": "timeline",
+ "model": {
+  "type": "timeline",
+  "title": "The history of the deck",
+  "direction": "LR",
+  "sections": [
+   "Early",
+   "Late"
+  ],
+  "periods": [
+   {
+    "text": "2024 ",
+    "events": [
+     "The first slide"
+    ],
+    "section": "Early",
+    "sectionIndex": 0
+   },
+   {
+    "text": "2025 ",
+    "events": [
+     "Charts ",
+     "Diagrams"
+    ],
+    "section": "Early",
+    "sectionIndex": 0
+   },
+   {
+    "text": "2026 ",
+    "events": [
+     "Mermaid"
+    ],
+    "section": "Late",
+    "sectionIndex": 1
+   }
+  ],
+  "currentSection": "Late",
+  "mermaidType": "timeline"
+ }
+}

@@ -229,6 +229,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"Submitted", 2}, {"Review", 3}], "Submitted->Review", "3"},
       outline: {"Review", ["to Published (approved)", "to Draft (rejected)"]}
     },
+    "timeline" => %{
+      names: ["Early", "2024", "2024/1", "2025", "2025/1", "2025/2", "Late", "2026", "2026/1"],
+      kinds: %{"Early" => "container", "2025" => "container", "2025/2" => "node"},
+      ends: %{},
+      parents: %{"2025" => "Early", "2025/2" => "2025", "2026/1" => "2026", "Late" => nil},
+      follow: nil,
+      outline: {"Early 2024 The first slide 2025 Charts Diagrams", []}
+    },
     "usecase" => %{
       names: [
         "Expresso",

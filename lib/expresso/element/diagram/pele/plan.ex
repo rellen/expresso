@@ -13,10 +13,11 @@ defmodule Expresso.Element.Diagram.Pele.Plan do
   a plan takes a third argument: the number of earlier elements with the same
   `data-id` and the same classes.
 
-  A plan with three arguments also gets each edge that has no `data-id`, such
-  as a line of a mindmap, with `nil` as its `data-id`. The count of such an
-  edge is the number of earlier edges with no `data-id`, whatever their
-  classes. The plan returns the name `nil` for an element that keeps no name.
+  A plan with three arguments also gets each node and each edge that has no
+  `data-id`, such as a line of a mindmap, with `nil` as its `data-id`. The
+  count of such an edge is the number of earlier edges with no `data-id`,
+  whatever their other classes, and the same is true for a node. The plan
+  returns the name `nil` for an element that keeps no name.
 
   The functions of this module make the marks:
 
