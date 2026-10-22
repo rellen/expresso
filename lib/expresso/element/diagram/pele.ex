@@ -151,7 +151,8 @@ defmodule Expresso.Element.Diagram.Pele do
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
     "state" => Expresso.Element.Diagram.Pele.State,
     "timeline" => Expresso.Element.Diagram.Pele.Timeline,
-    "usecase" => Expresso.Element.Diagram.Pele.Usecase
+    "usecase" => Expresso.Element.Diagram.Pele.Usecase,
+    "xychart" => Expresso.Element.Diagram.Pele.Xychart
   }
 
   @doc "The types of Pele that have a plan, with the names and the marks of their parts"
@@ -199,9 +200,9 @@ defmodule Expresso.Element.Diagram.Pele do
     end
   end
 
-  # Some types draw a part with no `data-id`, such as the line of a mindmap
-  # or an event of a timeline. A plan with three arguments gets such a node or
-  # edge with the `data-id` `nil`.
+  # Some types draw a part with no `data-id`, such as the line of a mindmap,
+  # an event of a timeline or a series of an XY chart. A plan with three
+  # arguments gets such a node, edge or series with the `data-id` `nil`.
   defp unnamed?(attrs, plan) do
     case List.keyfind(attrs, "class", 0) do
       {"class", class} -> is_function(plan, 3) and kind(String.split(class)) != nil
@@ -213,6 +214,7 @@ defmodule Expresso.Element.Diagram.Pele do
     cond do
       "pele-edge" in classes -> :edge
       "pele-node" in classes -> :node
+      "pele-series" in classes -> :series
       true -> nil
     end
   end
@@ -228,7 +230,8 @@ defmodule Expresso.Element.Diagram.Pele do
       end
 
     # The edges with no `data-id` have one count, whatever their other
-    # classes, such as a merge of a git graph, and the nodes have another.
+    # classes, such as a merge of a git graph. The nodes and the series have
+    # their own counts.
     key = if data_id, do: {data_id, class}, else: kind(String.split(class))
     count = Map.get(counts, key, 0)
     counts = Map.put(counts, key, count + 1)

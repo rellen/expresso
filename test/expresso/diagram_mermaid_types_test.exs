@@ -294,6 +294,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       parents: %{"Talk" => "Expresso", "Presenter" => nil},
       follow: {[{"Presenter", 2}, {"Talk", 3}], "Presenter->Talk", "3"},
       outline: {"Expresso", []}
+    },
+    "xychart" => %{
+      names: ["Shop", "bar2", "line1"],
+      kinds: %{"Shop" => "node", "bar2" => "node", "line1" => "node"},
+      ends: %{},
+      parents: %{"line1" => nil},
+      follow: nil,
+      outline: {"Shop", []}
     }
   }
 
@@ -381,6 +389,21 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
                {centers[attrs["data-graph-from"]], centers[attrs["data-graph-to"]]},
              attrs["id"]
     end
+  end
+
+  test "Pele draws each bar series of an XY chart before each line series, and each name follows its series" do
+    {svg, _names} = "xychart" |> result() |> Pele.name()
+
+    types =
+      for {"g", attrs, _} <- svg |> Floki.parse_fragment!() |> Floki.find(".pele-series"),
+          attrs = Map.new(attrs),
+          do: {attrs["id"], attrs["class"]}
+
+    assert types == [
+             {"Shop", "pele-series pele-bars"},
+             {"bar2", "pele-series pele-bars"},
+             {"line1", "pele-series pele-line"}
+           ]
   end
 
   test "a state of a concurrent region has the composite state as its parent" do
