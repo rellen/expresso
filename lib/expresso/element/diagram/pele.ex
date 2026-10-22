@@ -137,7 +137,8 @@ defmodule Expresso.Element.Diagram.Pele do
   @plans %{
     "class" => Expresso.Element.Diagram.Pele.Class,
     "flowchart" => Expresso.Element.Diagram.Pele.Flowchart,
-    "sequence" => Expresso.Element.Diagram.Pele.Sequence
+    "sequence" => Expresso.Element.Diagram.Pele.Sequence,
+    "state" => Expresso.Element.Diagram.Pele.State
   }
 
   @doc "The types of Pele that have a plan, with the names and the marks of their parts"
