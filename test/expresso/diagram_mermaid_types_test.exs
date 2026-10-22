@@ -46,6 +46,23 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"Animal", 2}, {"Turtle", 3}], "Animal<-Turtle", "3"},
       outline: {"Reef", []}
     },
+    "er" => %{
+      names: [
+        "CUSTOMER--ORDER",
+        "ORDER--LINE-ITEM",
+        "PRODUCT--LINE-ITEM",
+        "CUSTOMER",
+        "ORDER",
+        "LINE-ITEM",
+        "PRODUCT"
+      ],
+      kinds: %{"CUSTOMER" => "node", "ORDER--LINE-ITEM" => "edge"},
+      ends: %{"PRODUCT--LINE-ITEM" => {"PRODUCT", "LINE-ITEM"}},
+      parents: %{"ORDER" => nil},
+      follow: {[{"ORDER", 2}, {"LINE-ITEM", 3}], "ORDER--LINE-ITEM", "3"},
+      outline:
+        {"CUSTOMER string name string email", ["with ORDER int id PK date placed (places)"]}
+    },
     "flowchart" => %{
       names: ["app", "web->api", "api->db", "api->db:2", "cache->db", "web", "api", "db", "cache"],
       kinds: %{"app" => "container", "web" => "node", "web->api" => "edge"},

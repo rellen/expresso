@@ -197,6 +197,15 @@ A state diagram names a transition by its two states. A composite state is a con
 | A note | `note` and its number, in the order of the source | `note1` |
 | The line from a note to its state | The note, `--` and the state | `note1--Draft` |
 
+An entity relationship diagram names a relationship by its two entities. A relationship has
+no direction, so its arrow is `--`:
+
+| Element of an entity relationship diagram | Name | Example |
+| --- | --- | --- |
+| An entity | Its name in the source | `CUSTOMER` |
+| A relationship | The two entities, in the order of the source, and `--` | `CUSTOMER--ORDER` |
+| A second relationship between the same entities | The name of the first relationship, then `:2` | `CUSTOMER--ORDER:2` |
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.

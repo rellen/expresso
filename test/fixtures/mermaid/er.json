@@ -1,0 +1,107 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-er\" viewBox=\"0 0 312 446\" width=\"312\" height=\"446\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"er\"><g class=\"pele-edges\" fill=\"none\" stroke=\"var(--_l)\" stroke-linecap=\"round\"><g class=\"pele-edge pele-er-identifying\" data-id=\"id_entity-CUSTOMER-0_entity-ORDER-1_0\"><path d=\"M77.58,110L77.58,199\"/><path class=\"pele-marker\" d=\"M72.58,116L82.58,116M72.58,120L82.58,120\"/><path class=\"pele-marker\" d=\"M83.58,199L77.58,189L71.58,199\"/><circle class=\"pele-marker\" cx=\"77.58\" cy=\"185\" r=\"3.5\" fill=\"var(--_bg)\"/></g><g class=\"pele-edge pele-er-identifying\" data-id=\"id_entity-ORDER-1_entity-LINE-ITEM-2_1\"><path d=\"M77.58,301L77.58,319L77.58,358C77.58,363.25 154.46,363.25 154.46,368.5L154.46,372L154.46,390\"/><path class=\"pele-marker\" d=\"M72.58,307L82.58,307M72.58,311L82.58,311\"/><path class=\"pele-marker\" d=\"M160.46,390L154.46,380L148.46,390M159.46,376.5L149.46,376.5\"/></g><g class=\"pele-edge pele-er-identifying\" data-id=\"id_entity-PRODUCT-3_entity-LINE-ITEM-2_2\"><path d=\"M249.34,274L249.34,292L249.34,358C249.34,363.25 172.46,363.25 172.46,368.5L172.46,372L172.46,390\"/><path class=\"pele-marker\" d=\"M244.34,280L254.34,280M244.34,284L254.34,284\"/><path class=\"pele-marker\" d=\"M178.46,390L172.46,380L166.46,390\"/><circle class=\"pele-marker\" cx=\"172.46\" cy=\"376\" r=\"3.5\" fill=\"var(--_bg)\"/></g></g><g class=\"pele-edge-labels\" font-size=\"14\"><g class=\"pele-edge-label\" data-id=\"id_entity-CUSTOMER-0_entity-ORDER-1_0\"><rect x=\"53.69\" y=\"144\" width=\"47.77\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"77.58\" y=\"159.4\" text-anchor=\"middle\">places</text></g><g class=\"pele-edge-label\" data-id=\"id_entity-ORDER-1_entity-LINE-ITEM-2_1\"><rect x=\"47.38\" y=\"335\" width=\"60.4\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"77.58\" y=\"350.4\" text-anchor=\"middle\">contains</text></g><g class=\"pele-edge-label\" data-id=\"id_entity-PRODUCT-3_entity-LINE-ITEM-2_2\"><rect x=\"212.87\" y=\"335\" width=\"72.93\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"249.34\" y=\"350.4\" text-anchor=\"middle\">appears in</text></g></g><g class=\"pele-nodes\"><g class=\"pele-node pele-entity\" data-id=\"CUSTOMER\" transform=\"translate(77.58,59)\"><rect x=\"-59.86\" y=\"-51\" width=\"119.71\" height=\"102\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><g class=\"pele-er-stripes\" fill=\"var(--_bg)\"><rect x=\"-59.86\" width=\"119.71\" y=\"-9\" height=\"30\"/></g><path class=\"pele-er-divider\" d=\"M-59.86,-9H59.86\" stroke=\"var(--_b)\"/><rect x=\"-59.86\" y=\"-51\" width=\"119.71\" height=\"102\" fill=\"none\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"-24.4\" text-anchor=\"middle\">CUSTOMER</text><g class=\"pele-er-attributes\" font-size=\"14\"><text class=\"pele-er-type\" fill=\"var(--_m)\" x=\"-47.86\" y=\"10.9\">string</text><text class=\"pele-er-name\" x=\"8.47\" y=\"10.9\">name</text><text class=\"pele-er-type\" fill=\"var(--_m)\" x=\"-47.86\" y=\"40.9\">string</text><text class=\"pele-er-name\" x=\"8.47\" y=\"40.9\">email</text></g></g><g class=\"pele-node pele-entity\" data-id=\"ORDER\" transform=\"translate(77.58,250)\"><rect x=\"-69.58\" y=\"-51\" width=\"139.15\" height=\"102\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><g class=\"pele-er-stripes\" fill=\"var(--_bg)\"><rect x=\"-69.58\" width=\"139.15\" y=\"-9\" height=\"30\"/></g><path class=\"pele-er-divider\" d=\"M-69.58,-9H69.58\" stroke=\"var(--_b)\"/><rect x=\"-69.58\" y=\"-51\" width=\"139.15\" height=\"102\" fill=\"none\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"-24.4\" text-anchor=\"middle\">ORDER</text><g class=\"pele-er-attributes\" font-size=\"14\"><text class=\"pele-er-type\" fill=\"var(--_m)\" x=\"-57.58\" y=\"10.9\">int</text><text class=\"pele-er-name\" x=\"-14.23\" y=\"10.9\">id</text><text class=\"pele-er-keys\" font-size=\"12\" fill=\"var(--_m)\" x=\"42.84\" y=\"10.9\">PK</text><text class=\"pele-er-type\" fill=\"var(--_m)\" x=\"-57.58\" y=\"40.9\">date</text><text class=\"pele-er-name\" x=\"-14.23\" y=\"40.9\">placed</text></g></g><g class=\"pele-node pele-entity\" data-id=\"LINE-ITEM\" transform=\"translate(163.46,414)\"><rect x=\"-57.49\" y=\"-24\" width=\"114.98\" height=\"48\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">LINE-ITEM</text></g><g class=\"pele-node pele-entity\" data-id=\"PRODUCT\" transform=\"translate(249.34,250)\"><rect x=\"-54.18\" y=\"-24\" width=\"108.37\" height=\"48\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">PRODUCT</text></g></g></svg>",
+ "type": "er",
+ "model": {
+  "type": "er",
+  "direction": "TB",
+  "entities": {
+   "CUSTOMER": {
+    "id": "entity-CUSTOMER-0",
+    "label": "CUSTOMER",
+    "alias": "",
+    "attributes": [
+     {
+      "type": "string",
+      "name": "name",
+      "keys": [],
+      "comment": ""
+     },
+     {
+      "type": "string",
+      "name": "email",
+      "keys": [],
+      "comment": ""
+     }
+    ],
+    "cssClasses": "default",
+    "cssStyles": []
+   },
+   "ORDER": {
+    "id": "entity-ORDER-1",
+    "label": "ORDER",
+    "alias": "",
+    "attributes": [
+     {
+      "type": "int",
+      "name": "id",
+      "keys": [
+       "PK"
+      ],
+      "comment": ""
+     },
+     {
+      "type": "date",
+      "name": "placed",
+      "keys": [],
+      "comment": ""
+     }
+    ],
+    "cssClasses": "default",
+    "cssStyles": []
+   },
+   "LINE-ITEM": {
+    "id": "entity-LINE-ITEM-2",
+    "label": "LINE-ITEM",
+    "alias": "",
+    "attributes": [],
+    "cssClasses": "default",
+    "cssStyles": []
+   },
+   "PRODUCT": {
+    "id": "entity-PRODUCT-3",
+    "label": "PRODUCT",
+    "alias": "",
+    "attributes": [],
+    "cssClasses": "default",
+    "cssStyles": []
+   }
+  },
+  "relationships": [
+   {
+    "entityA": "entity-CUSTOMER-0",
+    "roleA": "places",
+    "entityB": "entity-ORDER-1",
+    "relSpec": {
+     "cardA": "ZERO_OR_MORE",
+     "relType": "IDENTIFYING",
+     "cardB": "ONLY_ONE"
+    }
+   },
+   {
+    "entityA": "entity-ORDER-1",
+    "roleA": "contains",
+    "entityB": "entity-LINE-ITEM-2",
+    "relSpec": {
+     "cardA": "ONE_OR_MORE",
+     "relType": "IDENTIFYING",
+     "cardB": "ONLY_ONE"
+    }
+   },
+   {
+    "entityA": "entity-PRODUCT-3",
+    "roleA": "appears in",
+    "entityB": "entity-LINE-ITEM-2",
+    "relSpec": {
+     "cardA": "ZERO_OR_MORE",
+     "relType": "IDENTIFYING",
+     "cardB": "ONLY_ONE"
+    }
+   }
+  ],
+  "classes": {},
+  "subgraphs": [],
+  "subgraphLookup": {},
+  "claimed": [],
+  "mermaidType": "er"
+ }
+}
