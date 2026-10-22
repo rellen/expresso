@@ -232,6 +232,24 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
         []
       }
     },
+    "sankey" => %{
+      names: [
+        "Sales->Revenue",
+        "Services->Revenue",
+        "Revenue->Costs",
+        "Revenue->Profit",
+        "Sales",
+        "Revenue",
+        "Services",
+        "Costs",
+        "Profit"
+      ],
+      kinds: %{"Revenue" => "node", "Revenue->Costs" => "edge"},
+      ends: %{"Services->Revenue" => {"Services", "Revenue"}},
+      parents: %{"Costs" => nil},
+      follow: {[{"Revenue", 2}, {"Profit", 3}], "Revenue->Profit", "3"},
+      outline: {"Sales", ["to Revenue (60)"]}
+    },
     "sequence" => %{
       names: [
         "Customer",

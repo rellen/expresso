@@ -333,6 +333,13 @@ A radar chart has no edges. Each curve and the label of each axis is a node:
 
 The grid and the lines of the axes show at each step.
 
+A sankey diagram names a link by its source and its target:
+
+| Element of a sankey diagram | Name | Example |
+| --- | --- | --- |
+| A node, with its label | Its name | `Revenue` |
+| A link | The source, `->` and the target. The value of the link is its label. | `Sales->Revenue` for `Sales,Revenue,60` |
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |
