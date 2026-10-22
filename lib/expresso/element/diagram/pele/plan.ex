@@ -13,6 +13,10 @@ defmodule Expresso.Element.Diagram.Pele.Plan do
   a plan takes a third argument: the number of earlier elements with the same
   `data-id` and the same classes.
 
+  A plan with three arguments also gets each edge that has no `data-id`, such
+  as a line of a mindmap, with `nil` as its `data-id`. The plan returns the
+  name `nil` for an element that keeps no name.
+
   The functions of this module make the marks:
 
   | Function | Marks |
@@ -23,7 +27,7 @@ defmodule Expresso.Element.Diagram.Pele.Plan do
   """
 
   @typedoc "The name of an element and its marks"
-  @type part :: {String.t(), [{String.t(), String.t()}]}
+  @type part :: {String.t() | nil, [{String.t(), String.t()}]}
 
   @typedoc """
   The function of a plan: the `data-id` and the classes of an element give its
@@ -32,7 +36,7 @@ defmodule Expresso.Element.Diagram.Pele.Plan do
   """
   @type t ::
           (String.t(), [String.t()] -> part())
-          | (String.t(), [String.t()], non_neg_integer() -> part())
+          | (String.t() | nil, [String.t()], non_neg_integer() -> part())
 
   @typedoc """
   An edge of a model: its key, which is its `data-id` in the SVG, its two ends,
