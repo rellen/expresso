@@ -251,6 +251,15 @@ A requirement diagram names a relationship by its source and its destination:
 | A relationship | The source, `->` and the destination. The type of the relationship is its label. | `bundle->fast` for `bundle - satisfies -> fast` and for `fast <- satisfies - bundle` |
 | A second relationship between the same ends in the same direction | The name of the first relationship, then `:2` | `bundle->fast:2` |
 
+A use case diagram names a relationship by its two ends. A system boundary is a container:
+
+| Element of a use case diagram | Name | Example |
+| --- | --- | --- |
+| An actor or a use case | Its id | `Talk` for `Talk("Give the talk")` |
+| A system boundary | Its id. Each use case in it has it as its parent. | `Expresso` |
+| A relationship | The two ends and the arrow: `->` for `-->`, `<-` for `<--`, and `--` for `---` and `--` | `Presenter->Talk` |
+| A second relationship between the same ends with the same arrow | The name of the first relationship, then `:2` | `Presenter->Talk:2` |
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.

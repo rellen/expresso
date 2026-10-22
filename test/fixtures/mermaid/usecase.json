@@ -1,0 +1,499 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-usecase\" viewBox=\"0 0 673 228\" width=\"673\" height=\"228\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"usecase\"><g class=\"pele-clusters\"><g class=\"pele-cluster pele-boundary system-boundary system-boundary-rect\" data-id=\"Expresso\"><rect x=\"147.82\" y=\"8\" width=\"517.04\" height=\"212\" fill=\"var(--_a)\" fill-opacity=\"0.5\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-cluster-label\" fill=\"var(--_m)\" x=\"406.34\" y=\"33.6\" text-anchor=\"middle\">Expresso</text></g></g><g class=\"pele-edges\" fill=\"none\" stroke=\"var(--_l)\" stroke-linecap=\"round\"><g class=\"pele-edge pele-association\" data-id=\"edge-0\"><path d=\"M64.91,31C106.37,31 106.37,74 147.82,74L195.22,74\"/><path class=\"pele-marker\" d=\"M202.22,74L194.22,77.36L194.22,70.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge pele-association\" data-id=\"edge-1\"><path d=\"M64.91,45C106.37,45 106.37,124 147.82,124L440.09,124C462.18,124 462.18,106 484.27,106L490.27,106\"/><path class=\"pele-marker\" d=\"M497.27,106L489.27,109.36L489.27,102.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge pele-association\" data-id=\"edge-2\"><path d=\"M64.91,160C106.37,160 106.37,174 147.82,174L180.82,174\"/><path class=\"pele-marker\" d=\"M187.82,174L179.82,177.36L179.82,170.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge pele-include\" data-id=\"edge-3\"><path d=\"M334.47,74L458.49,74C471.38,74 471.38,92 484.27,92L490.27,92\" stroke-dasharray=\"5 4\"/><path class=\"pele-marker\" d=\"M497.27,92L489.27,95.36L489.27,88.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g></g><g class=\"pele-edge-labels\" font-size=\"14\"><g class=\"pele-edge-label\" data-id=\"edge-3\"><rect x=\"386.86\" y=\"63.5\" width=\"69.63\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text fill=\"var(--_m)\" x=\"421.68\" y=\"78.9\" text-anchor=\"middle\">«include»</text></g></g><g class=\"pele-nodes\"><g class=\"pele-node pele-actor usecase-actor usecase-actor-normal\" data-id=\"Presenter\" transform=\"translate(41.91,53)\"><g class=\"pele-actor-figure\" transform=\"translate(0,-15)\"><circle cy=\"-21\" r=\"9\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><path d=\"M0,-12V10M-14,-3H14M0,10L-12,30M0,10L12,30\" fill=\"none\" stroke=\"var(--_b)\"/></g><text class=\"pele-label\" x=\"0\" y=\"38.6\" text-anchor=\"middle\">Presenter</text></g><g class=\"pele-node pele-actor usecase-actor usecase-actor-normal\" data-id=\"Audience\" transform=\"translate(41.91,175)\"><g class=\"pele-actor-figure\" transform=\"translate(0,-15)\"><circle cy=\"-21\" r=\"9\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><path d=\"M0,-12V10M-14,-3H14M0,10L-12,30M0,10L12,30\" fill=\"none\" stroke=\"var(--_b)\"/></g><text class=\"pele-label\" x=\"0\" y=\"38.6\" text-anchor=\"middle\">Audience</text></g><g class=\"pele-node pele-usecase usecase-element usecase-ellipse\" data-id=\"Talk\" transform=\"translate(268.34,74)\"><ellipse rx=\"66.13\" ry=\"26\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Give the talk</text></g><g class=\"pele-node pele-usecase usecase-element usecase-ellipse\" data-id=\"Follow\" transform=\"translate(268.34,174)\"><ellipse rx=\"80.52\" ry=\"26\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Follow the slides</text></g><g class=\"pele-node pele-usecase usecase-element usecase-ellipse\" data-id=\"Notes\" transform=\"translate(569.68,99)\"><ellipse rx=\"75.18\" ry=\"26\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Read the notes</text></g></g></svg>",
+ "type": "usecase",
+ "model": {
+  "type": "usecase",
+  "actors": {
+   "Presenter": {
+    "id": "Presenter",
+    "label": "Presenter",
+    "labelType": "text",
+    "business": false,
+    "classes": [],
+    "type": "normal",
+    "styles": []
+   },
+   "Audience": {
+    "id": "Audience",
+    "label": "Audience",
+    "labelType": "text",
+    "business": false,
+    "classes": [],
+    "type": "normal",
+    "styles": []
+   }
+  },
+  "useCases": {
+   "Talk": {
+    "id": "Talk",
+    "label": "Give the talk",
+    "labelType": "text",
+    "business": false,
+    "classes": [],
+    "shape": "ellipse",
+    "styles": [],
+    "parentId": "Expresso"
+   },
+   "Follow": {
+    "id": "Follow",
+    "label": "Follow the slides",
+    "labelType": "text",
+    "business": false,
+    "classes": [],
+    "shape": "ellipse",
+    "styles": [],
+    "parentId": "Expresso"
+   },
+   "Notes": {
+    "id": "Notes",
+    "label": "Read the notes",
+    "labelType": "text",
+    "business": false,
+    "classes": [],
+    "shape": "ellipse",
+    "styles": [],
+    "parentId": "Expresso"
+   }
+  },
+  "systemBoundaries": {
+   "Expresso": {
+    "id": "Expresso",
+    "label": "Expresso",
+    "labelType": "text",
+    "type": "rect",
+    "members": [
+     "Talk",
+     "Follow",
+     "Notes"
+    ],
+    "classes": [],
+    "styles": []
+   }
+  },
+  "relationships": [
+   {
+    "id": "edge-0",
+    "explicitId": false,
+    "source": "Presenter",
+    "target": "Talk",
+    "type": "association",
+    "arrowType": 0,
+    "minlen": 1,
+    "classes": [],
+    "styles": [],
+    "animate": false
+   },
+   {
+    "id": "edge-1",
+    "explicitId": false,
+    "source": "Presenter",
+    "target": "Notes",
+    "type": "association",
+    "arrowType": 0,
+    "minlen": 1,
+    "classes": [],
+    "styles": [],
+    "animate": false
+   },
+   {
+    "id": "edge-2",
+    "explicitId": false,
+    "source": "Audience",
+    "target": "Follow",
+    "type": "association",
+    "arrowType": 0,
+    "minlen": 1,
+    "classes": [],
+    "styles": [],
+    "animate": false
+   },
+   {
+    "id": "edge-3",
+    "explicitId": false,
+    "source": "Talk",
+    "target": "Notes",
+    "type": "include",
+    "arrowType": 0,
+    "minlen": 1,
+    "classes": [],
+    "styles": [],
+    "animate": false,
+    "label": "include",
+    "labelType": "text"
+   }
+  ],
+  "notes": {},
+  "jsonNodes": {},
+  "classDefs": {},
+  "direction": "LR",
+  "accTitle": "",
+  "accDescr": "",
+  "accDescription": "",
+  "source": "usecase-beta\ndirection LR\nactor Presenter\nactor Audience\nsystemBoundary Expresso\n  Talk(\"Give the talk\")\n  Follow(\"Follow the slides\")\n  Notes(\"Read the notes\")\nend\nPresenter --> Talk\nPresenter --> Notes\nAudience --> Follow\nTalk ..> : include Notes\n\n",
+  "headerSpan": [
+   0,
+   12
+  ],
+  "statements": [
+   {
+    "kind": "direction",
+    "span": [
+     13,
+     25
+    ]
+   },
+   {
+    "kind": "node",
+    "span": [
+     26,
+     41
+    ],
+    "nodes": [
+     {
+      "id": "Presenter",
+      "span": [
+       32,
+       41
+      ],
+      "idSpan": [
+       32,
+       41
+      ],
+      "labelSpan": [
+       32,
+       41
+      ],
+      "defines": true
+     }
+    ]
+   },
+   {
+    "kind": "node",
+    "span": [
+     42,
+     56
+    ],
+    "nodes": [
+     {
+      "id": "Audience",
+      "span": [
+       48,
+       56
+      ],
+      "idSpan": [
+       48,
+       56
+      ],
+      "labelSpan": [
+       48,
+       56
+      ],
+      "defines": true
+     }
+    ]
+   },
+   {
+    "kind": "group",
+    "span": [
+     57,
+     164
+    ],
+    "group": "Expresso",
+    "idSpan": [
+     72,
+     80
+    ],
+    "titleSpan": [
+     72,
+     80
+    ],
+    "endSpan": [
+     161,
+     164
+    ],
+    "classSpans": [],
+    "children": [
+     {
+      "kind": "node",
+      "span": [
+       83,
+       104
+      ],
+      "nodes": [
+       {
+        "id": "Talk",
+        "span": [
+         83,
+         104
+        ],
+        "idSpan": [
+         83,
+         87
+        ],
+        "labelSpan": [
+         89,
+         102
+        ],
+        "defines": true
+       }
+      ]
+     },
+     {
+      "kind": "node",
+      "span": [
+       107,
+       134
+      ],
+      "nodes": [
+       {
+        "id": "Follow",
+        "span": [
+         107,
+         134
+        ],
+        "idSpan": [
+         107,
+         113
+        ],
+        "labelSpan": [
+         115,
+         132
+        ],
+        "defines": true
+       }
+      ]
+     },
+     {
+      "kind": "node",
+      "span": [
+       137,
+       160
+      ],
+      "nodes": [
+       {
+        "id": "Notes",
+        "span": [
+         137,
+         160
+        ],
+        "idSpan": [
+         137,
+         142
+        ],
+        "labelSpan": [
+         144,
+         158
+        ],
+        "defines": true
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "edge",
+    "span": [
+     165,
+     183
+    ],
+    "nodes": [
+     {
+      "id": "Presenter",
+      "span": [
+       165,
+       174
+      ],
+      "idSpan": [
+       165,
+       174
+      ],
+      "labelSpan": [
+       165,
+       174
+      ]
+     },
+     {
+      "id": "Talk",
+      "span": [
+       179,
+       183
+      ],
+      "idSpan": [
+       179,
+       183
+      ],
+      "labelSpan": [
+       179,
+       183
+      ]
+     }
+    ],
+    "edges": [
+     {
+      "id": "edge-0",
+      "span": [
+       165,
+       183
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "edge",
+    "span": [
+     184,
+     203
+    ],
+    "nodes": [
+     {
+      "id": "Presenter",
+      "span": [
+       184,
+       193
+      ],
+      "idSpan": [
+       184,
+       193
+      ],
+      "labelSpan": [
+       184,
+       193
+      ]
+     },
+     {
+      "id": "Notes",
+      "span": [
+       198,
+       203
+      ],
+      "idSpan": [
+       198,
+       203
+      ],
+      "labelSpan": [
+       198,
+       203
+      ]
+     }
+    ],
+    "edges": [
+     {
+      "id": "edge-1",
+      "span": [
+       184,
+       203
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "edge",
+    "span": [
+     204,
+     223
+    ],
+    "nodes": [
+     {
+      "id": "Audience",
+      "span": [
+       204,
+       212
+      ],
+      "idSpan": [
+       204,
+       212
+      ],
+      "labelSpan": [
+       204,
+       212
+      ]
+     },
+     {
+      "id": "Follow",
+      "span": [
+       217,
+       223
+      ],
+      "idSpan": [
+       217,
+       223
+      ],
+      "labelSpan": [
+       217,
+       223
+      ]
+     }
+    ],
+    "edges": [
+     {
+      "id": "edge-2",
+      "span": [
+       204,
+       223
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "edge",
+    "span": [
+     224,
+     248
+    ],
+    "nodes": [
+     {
+      "id": "Talk",
+      "span": [
+       224,
+       228
+      ],
+      "idSpan": [
+       224,
+       228
+      ],
+      "labelSpan": [
+       224,
+       228
+      ]
+     },
+     {
+      "id": "Notes",
+      "span": [
+       243,
+       248
+      ],
+      "idSpan": [
+       243,
+       248
+      ],
+      "labelSpan": [
+       243,
+       248
+      ]
+     }
+    ],
+    "edges": [
+     {
+      "id": "edge-3",
+      "span": [
+       224,
+       248
+      ],
+      "labelSpan": [
+       235,
+       242
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "blank",
+    "span": [
+     249,
+     250
+    ]
+   }
+  ],
+  "mermaidType": "usecase"
+ }
+}

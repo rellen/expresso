@@ -197,6 +197,25 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       parents: %{"Screening" => "Review", "Review_start" => "Review", "Draft" => nil},
       follow: {[{"Submitted", 2}, {"Review", 3}], "Submitted->Review", "3"},
       outline: {"Review", ["to Published (approved)", "to Draft (rejected)"]}
+    },
+    "usecase" => %{
+      names: [
+        "Expresso",
+        "Presenter->Talk",
+        "Presenter->Notes",
+        "Audience->Follow",
+        "Talk->Notes",
+        "Presenter",
+        "Audience",
+        "Talk",
+        "Follow",
+        "Notes"
+      ],
+      kinds: %{"Expresso" => "container", "Presenter" => "node", "Talk->Notes" => "edge"},
+      ends: %{"Audience->Follow" => {"Audience", "Follow"}},
+      parents: %{"Talk" => "Expresso", "Presenter" => nil},
+      follow: {[{"Presenter", 2}, {"Talk", 3}], "Presenter->Talk", "3"},
+      outline: {"Expresso", []}
     }
   }
 

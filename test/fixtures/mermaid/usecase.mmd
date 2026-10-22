@@ -1,0 +1,13 @@
+usecase-beta
+direction LR
+actor Presenter
+actor Audience
+systemBoundary Expresso
+  Talk("Give the talk")
+  Follow("Follow the slides")
+  Notes("Read the notes")
+end
+Presenter --> Talk
+Presenter --> Notes
+Audience --> Follow
+Talk ..> : include Notes
