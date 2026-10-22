@@ -142,6 +142,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "er" => Expresso.Element.Diagram.Pele.Er,
     "flowchart" => Expresso.Element.Diagram.Pele.Flowchart,
     "mindmap" => Expresso.Element.Diagram.Pele.Mindmap,
+    "requirement" => Expresso.Element.Diagram.Pele.Requirement,
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
     "state" => Expresso.Element.Diagram.Pele.State
   }

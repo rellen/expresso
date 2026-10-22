@@ -135,6 +135,17 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"Elements", 2}, {"Code", 3}], "Elements--Code", "3"},
       outline: {"Elements", ["with Code", "with Diagram"]}
     },
+    "requirement" => %{
+      names: ["bundle->fast", "bundle->offline", "offline->fast", "fast", "offline", "bundle"],
+      kinds: %{"fast" => "node", "bundle" => "node", "offline->fast" => "edge"},
+      ends: %{"bundle->offline" => {"bundle", "offline"}},
+      parents: %{"fast" => nil},
+      follow: {[{"offline", 2}, {"fast", 3}], "offline->fast", "3"},
+      outline: {
+        "«Requirement» fast ID 1 Text The page loads in one second Risk High Verification Test",
+        []
+      }
+    },
     "sequence" => %{
       names: [
         "Customer",

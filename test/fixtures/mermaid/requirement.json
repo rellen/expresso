@@ -1,0 +1,71 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-requirement\" viewBox=\"0 0 431 634\" width=\"431\" height=\"634\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_hw:var(--pele-heading-weight,bold);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"requirement\"><g class=\"pele-edges\" fill=\"none\" stroke=\"var(--_l)\" stroke-linecap=\"round\"><g class=\"pele-edge pele-relationship-arrow\" data-id=\"bundle-fast-0\"><path d=\"M144.8,114C144.8,154.5 48.08,154.5 48.08,195L48.08,370C48.08,410.5 144.8,410.5 144.8,451\" stroke-dasharray=\"5 4\"/><path class=\"pele-marker\" d=\"M140.3,442L144.8,451L149.3,442\" stroke-linejoin=\"round\"/></g><g class=\"pele-edge pele-relationship-arrow\" data-id=\"bundle-offline-1\"><path d=\"M172.8,114C172.8,128 269.51,128 269.51,142L269.51,195\" stroke-dasharray=\"5 4\"/><path class=\"pele-marker\" d=\"M265.01,186L269.51,195L274.01,186\" stroke-linejoin=\"round\"/></g><g class=\"pele-edge pele-relationship-arrow\" data-id=\"offline-fast-2\"><path d=\"M269.51,370L269.51,423C269.51,437 172.8,437 172.8,451\" stroke-dasharray=\"5 4\"/><path class=\"pele-marker\" d=\"M168.3,442L172.8,451L177.3,442\" stroke-linejoin=\"round\"/></g></g><g class=\"pele-edge-labels\" font-size=\"14\" fill=\"var(--_m)\"><g class=\"pele-edge-label\" data-id=\"bundle-fast-0\"><rect x=\"10\" y=\"272\" width=\"76.17\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"48.08\" y=\"287.4\" text-anchor=\"middle\">«satisfies»</text></g><g class=\"pele-edge-label\" data-id=\"bundle-offline-1\"><rect x=\"231.43\" y=\"144\" width=\"76.17\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"269.51\" y=\"159.4\" text-anchor=\"middle\">«satisfies»</text></g><g class=\"pele-edge-label\" data-id=\"offline-fast-2\"><rect x=\"234.9\" y=\"400\" width=\"69.21\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"269.51\" y=\"415.4\" text-anchor=\"middle\">«derives»</text></g></g><g class=\"pele-nodes\"><g class=\"pele-node pele-requirement\" data-id=\"fast\" transform=\"translate(158.8,538.5)\"><rect x=\"-147.96\" y=\"-87.5\" width=\"295.92\" height=\"175\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-stereotype\" font-size=\"14\" fill=\"var(--_m)\" x=\"0\" y=\"-62.1\" text-anchor=\"middle\">«Requirement»</text><text class=\"pele-label\" font-size=\"16\" font-weight=\"var(--_hw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"0\" y=\"-38.9\">fast</tspan></text><path class=\"pele-divider\" d=\"M-147.96,-22.5H147.96\" stroke=\"var(--_b)\"/><g class=\"pele-fields\" font-size=\"14\"><text class=\"pele-field\" fill=\"var(--_m)\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-133.96\" y=\"2.9\">ID</tspan></text><text class=\"pele-value\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-51.11\" y=\"2.9\">1</tspan></text><text class=\"pele-field\" fill=\"var(--_m)\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-133.96\" y=\"25.9\">Text</tspan></text><text class=\"pele-value\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-51.11\" y=\"25.9\">The page loads in one second</tspan></text><text class=\"pele-field\" fill=\"var(--_m)\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-133.96\" y=\"48.9\">Risk</tspan></text><text class=\"pele-value\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-51.11\" y=\"48.9\">High</tspan></text><text class=\"pele-field\" fill=\"var(--_m)\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-133.96\" y=\"71.9\">Verification</tspan></text><text class=\"pele-value\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-51.11\" y=\"71.9\">Test</tspan></text></g></g><g class=\"pele-node pele-requirement\" data-id=\"offline\" transform=\"translate(269.51,282.5)\"><rect x=\"-153.34\" y=\"-87.5\" width=\"306.69\" height=\"175\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-stereotype\" font-size=\"14\" fill=\"var(--_m)\" x=\"0\" y=\"-62.1\" text-anchor=\"middle\">«Functional Requirement»</text><text class=\"pele-label\" font-size=\"16\" font-weight=\"var(--_hw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"0\" y=\"-38.9\">offline</tspan></text><path class=\"pele-divider\" d=\"M-153.34,-22.5H153.34\" stroke=\"var(--_b)\"/><g class=\"pele-fields\" font-size=\"14\"><text class=\"pele-field\" fill=\"var(--_m)\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-139.34\" y=\"2.9\">ID</tspan></text><text class=\"pele-value\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-56.49\" y=\"2.9\">2</tspan></text><text class=\"pele-field\" fill=\"var(--_m)\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-139.34\" y=\"25.9\">Text</tspan></text><text class=\"pele-value\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-56.49\" y=\"25.9\">The deck works with no network</tspan></text><text class=\"pele-field\" fill=\"var(--_m)\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-139.34\" y=\"48.9\">Risk</tspan></text><text class=\"pele-value\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-56.49\" y=\"48.9\">Medium</tspan></text><text class=\"pele-field\" fill=\"var(--_m)\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-139.34\" y=\"71.9\">Verification</tspan></text><text class=\"pele-value\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-56.49\" y=\"71.9\">Demonstration</tspan></text></g></g><g class=\"pele-node pele-element\" data-id=\"bundle\" transform=\"translate(158.8,61)\"><rect x=\"-60\" y=\"-53\" width=\"120\" height=\"106\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-stereotype\" font-size=\"14\" fill=\"var(--_m)\" x=\"0\" y=\"-27.6\" text-anchor=\"middle\">«Element»</text><text class=\"pele-label\" font-size=\"16\" font-weight=\"var(--_hw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"0\" y=\"-4.4\">bundle</tspan></text><path class=\"pele-divider\" d=\"M-60,12H60\" stroke=\"var(--_b)\"/><g class=\"pele-fields\" font-size=\"14\"><text class=\"pele-field\" fill=\"var(--_m)\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-46\" y=\"37.4\">Type</tspan></text><text class=\"pele-value\" text-anchor=\"start\" xml:space=\"preserve\"><tspan x=\"-4.71\" y=\"37.4\">html file</tspan></text></g></g></g></svg>",
+ "type": "requirement",
+ "model": {
+  "type": "requirement",
+  "direction": "TB",
+  "requirements": {
+   "fast": {
+    "name": "fast",
+    "type": "Requirement",
+    "requirementId": "1",
+    "text": "The page loads in one second",
+    "risk": "High",
+    "verifyMethod": "Test",
+    "cssStyles": [],
+    "classes": [
+     "default"
+    ]
+   },
+   "offline": {
+    "name": "offline",
+    "type": "Functional Requirement",
+    "requirementId": "2",
+    "text": "The deck works with no network",
+    "risk": "Medium",
+    "verifyMethod": "Demonstration",
+    "cssStyles": [],
+    "classes": [
+     "default"
+    ]
+   }
+  },
+  "elements": {
+   "bundle": {
+    "name": "bundle",
+    "type": "html file",
+    "docRef": "",
+    "cssStyles": [],
+    "classes": [
+     "default"
+    ]
+   }
+  },
+  "relations": [
+   {
+    "type": "satisfies",
+    "src": "bundle",
+    "dst": "fast"
+   },
+   {
+    "type": "satisfies",
+    "src": "bundle",
+    "dst": "offline"
+   },
+   {
+    "type": "derives",
+    "src": "offline",
+    "dst": "fast"
+   }
+  ],
+  "classes": {},
+  "newId": "",
+  "newText": "",
+  "newRisk": "",
+  "newVerifyMethod": "",
+  "newElementType": "",
+  "newDocRef": "",
+  "styleCopies": 0,
+  "mermaidType": "requirement"
+ }
+}

@@ -1,0 +1,19 @@
+requirementDiagram
+  requirement fast {
+    id: 1
+    text: The page loads in one second
+    risk: high
+    verifymethod: test
+  }
+  functionalRequirement offline {
+    id: 2
+    text: The deck works with no network
+    risk: medium
+    verifymethod: demonstration
+  }
+  element bundle {
+    type: html file
+  }
+  bundle - satisfies -> fast
+  bundle - satisfies -> offline
+  offline - derives -> fast
