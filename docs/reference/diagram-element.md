@@ -306,6 +306,15 @@ A pie has no edges. Each slice is a node:
 
 The labels of the percentages show at each step.
 
+An XY chart has no edges. Each series is a node, with its bars or its line and points:
+
+| Element of an XY chart | Name | Example |
+| --- | --- | --- |
+| A series with a title | Its title | `Shop` for `bar "Shop" [30, 60, 80]` |
+| A series without a title | Its type and its number among the series of that type, from 1 | `line1` for the first `line`, `bar2` for the second `bar` |
+
+The axes and the grid show at each step.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |
