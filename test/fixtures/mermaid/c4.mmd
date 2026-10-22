@@ -1,0 +1,11 @@
+C4Context
+  title A shop
+  Person(customer, "Customer", "A buyer")
+  Enterprise_Boundary(shop, "Shop") {
+    System(web, "Web store", "Sells goods")
+    SystemDb(db, "Orders", "Holds the orders")
+  }
+  System_Ext(pay, "Payments", "Takes the money")
+  Rel(customer, web, "Buys from")
+  Rel(web, db, "Reads and writes")
+  BiRel(web, pay, "Charges")

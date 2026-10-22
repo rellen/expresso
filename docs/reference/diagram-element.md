@@ -206,6 +206,17 @@ no direction, so its arrow is `--`:
 | A relationship | The two entities, in the order of the source, and `--` | `CUSTOMER--ORDER` |
 | A second relationship between the same entities | The name of the first relationship, then `:2` | `CUSTOMER--ORDER:2` |
 
+A C4 diagram names a relationship by its two ends. A boundary is a container:
+
+| Element of a C4 diagram | Name | Example |
+| --- | --- | --- |
+| A person, a system, a container or a component | Its alias | `web` for `System(web, "Web store")` |
+| A boundary or a deployment node | Its alias. Each shape in it has it as its parent. | `shop` |
+| A relationship | The two ends and the arrow: `<-` for `Rel_Back`, `<->` for `BiRel`, else `->` | `customer->web` |
+
+Mermaid keeps one relationship for two ends in the same order, so the last relationship of
+the source replaces the others.
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.
