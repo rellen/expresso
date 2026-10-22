@@ -775,7 +775,7 @@ defmodule Expresso.Extension do
   @diagram %Spark.Dsl.Entity{
     name: :diagram,
     target: Expresso.Element.Diagram,
-    args: [:src],
+    args: [{:optional, :src}],
     entities: [elements: [@part], on: [@on]],
     transform: {Expresso.Element.Diagram, :check, []},
     schema:
@@ -784,9 +784,18 @@ defmodule Expresso.Extension do
         [
           src: [
             type: :string,
-            required: true,
             doc:
-              "The path of the SVG file, or of the source of a graph such as a .dot file, from the root option of the deck or from the working directory of the command."
+              "The path of the SVG file, or of the source of a graph such as a .dot, a .d2 or a .mmd file, from the root option of the deck or from the working directory of the command. Give this argument or the source option."
+          ],
+          source: [
+            type: :string,
+            doc:
+              "The text of a graph in the deck, in place of a file, such as \"flowchart LR\\n  a --> b\". It needs the lang option. See docs/reference/diagram-element.md."
+          ],
+          lang: [
+            type: {:in, [:mermaid]},
+            doc:
+              "The language of the source option: :mermaid. A file gives its language with its extension."
           ],
           width: [
             type: :string,

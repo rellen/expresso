@@ -210,7 +210,11 @@ jobs:
         with:
           version: ${{ env.ZIG_VERSION }}
           cache: test
-      - run: mix test --only graphviz --only d2
+      # Pele draws a Mermaid diagram in Node, so the job also needs Node.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: mix test --only graphviz --only d2 --only mermaid
 
   # The test of `test/dependency/` makes a project that takes Expresso as a dev
   # dependency, and it fetches the dependencies of that project from Hex and

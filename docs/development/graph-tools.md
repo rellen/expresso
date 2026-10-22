@@ -2,7 +2,8 @@
 
 This page tells you how to install the tools that draw a graph, and how to run their
 tests. A `diagram` with a `.dot` or a `.gv` file runs Graphviz, and a `diagram` with a
-`.d2` file runs D2. `docs/graph-diagrams.md` gives the design.
+`.d2` file runs D2. A `diagram` with a `.mmd` file, or with a Mermaid source in the deck,
+runs Pele in Node. `docs/graph-diagrams.md` and `docs/mermaid-diagrams.md` give the design.
 
 ## The tests
 
@@ -13,18 +14,30 @@ excludes the browser tests.
 | --- | --- | --- |
 | `:graphviz` | Graphviz | `dot` |
 | `:d2` | D2 | `d2` |
+| `:mermaid` | Pele in Node | `node` |
 
 ```sh
-mix test --only graphviz --only d2   # the tests of each graph tool
+mix test --only graphviz --only d2 --only mermaid   # the tests of each graph tool
 ```
 
 The other tests of a graph use an SVG that the tool wrote, in `test/fixtures/graphviz/` and
-`test/fixtures/d2/`. A test with the tag makes sure that the tool still gives the names of
+`test/fixtures/d2/`, or the JSON that the script of Pele wrote, in `test/fixtures/mermaid/`. A test with the tag makes sure that the tool still gives the names of
 that fixture. After a change of a source, write its SVG again:
 
 ```sh
 dot -Tsvg test/fixtures/graphviz/flow.dot -o test/fixtures/graphviz/flow.svg
 d2 --layout elk --omit-version --pad 0 test/fixtures/d2/flow.d2 test/fixtures/d2/flow.svg
+```
+
+The script of Pele reads a directory with `source.mmd` and `options.json`, and it writes
+`graph.json` into it:
+
+```sh
+dir="$(mktemp -d)"
+cp test/fixtures/mermaid/flow.mmd "$dir/source.mmd"
+echo '{"fontFamily":"Atkinson Hyperlegible"}' > "$dir/options.json"
+node priv/pele/render.mjs "$dir"
+python3 -c 'import json,sys; json.dump(json.load(open(sys.argv[1])), open(sys.argv[2], "w"), indent=1, sort_keys=True)' "$dir/graph.json" test/fixtures/mermaid/flow.json
 ```
 
 `mix check` runs the tests with the tags in the tool `graph`, and the job `graph` of the
@@ -57,3 +70,21 @@ package `graphviz` of Ubuntu, of Homebrew and of Nix has it.
 
 The render finds `dot` and `d2` on the `PATH`. The variables `EXPRESSO_DOT` and
 `EXPRESSO_D2` give a different path.
+
+## Pele
+
+Pele is a library in JavaScript, so it has no program of its own to install.
+`priv/pele/` holds a copy of `pele.js`, its license, and the script `render.mjs`, and the
+render runs the script with Node. Node is in `.tool-versions` for the checks, and the
+variable `EXPRESSO_NODE` gives a different path. The binary of Burrito holds no Node, so a
+deck with Mermaid needs Node on the `PATH` of the computer that renders it.
+
+`package.json` names the same version of Pele, so Dependabot proposes a new version. To
+take a new version:
+
+1. Change the version in `package.json`, and run `npm install`.
+2. Copy `node_modules/pele/dist/pele.js` and `node_modules/pele/LICENSE` to `priv/pele/`.
+3. Change `@version` in `Expresso.Element.Diagram.Pele`. A test compares it with
+   `package.json`.
+4. Write the fixtures of `test/fixtures/mermaid/` again, and run
+   `mix test --only mermaid`.

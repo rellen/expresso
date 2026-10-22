@@ -10,7 +10,7 @@ Read these documents before you change the code:
 
 - `docs/architecture.md` — the two input paths, the render pipeline, the templates, the
   elements, the DSL, the presenter and the build. Its section "Open work" gives the next
-  items in the order of their value. It has no item at this time.
+  items in the order of their value. Its one item is the stack of `docs/mermaid-diagrams.md`.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide. The
   code contains each part of the design. The document ends with six decisions, and
   each is settled.
@@ -30,6 +30,9 @@ Read these documents before you change the code:
   language of Graphviz or of D2. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during
   the work.
+- `docs/mermaid-diagrams.md` — the plan for a `diagram` from the source of Mermaid, drawn by
+  Pele in Node. The document records ten decisions, and each is settled. Its section "The
+  progress" tells which pull requests of the stack are done.
 
 ## Build and test
 
@@ -52,7 +55,7 @@ npm run lint
 npm run format:check
 npm test
 mix test --only e2e
-mix test --only graphviz --only d2
+mix test --only graphviz --only d2 --only mermaid
 mix test --only dependency
 BURRITO_TARGET=linux_x86 MIX_ENV=prod mix release expresso_cli_app --overwrite
 EXPRESSO_BINARY=burrito_out/expresso_cli_app_linux_x86 mix test --only release
@@ -71,8 +74,9 @@ driver of `package.json` and Chromium. `mix test` excludes them. In a remote ses
 hook sets `EXPRESSO_CHROMIUM` to the Chromium of the container.
 `docs/development/browser-tests.md` gives the details.
 
-`mix test --only graphviz --only d2` runs the tests that run a tool that draws a graph.
-They need Graphviz and D2, and the hook installs both. `mix test` excludes them.
+`mix test --only graphviz --only d2 --only mermaid` runs the tests that run a tool that
+draws a graph. They need Graphviz, D2 and Node. The hook installs Graphviz and D2, and
+Node draws a Mermaid diagram with the copy of Pele in `priv/pele/`. `mix test` excludes them.
 `docs/development/graph-tools.md` gives the details.
 
 `mix test --only dependency` runs the test of `test/dependency/`. It makes a project that

@@ -77,18 +77,23 @@ defmodule Expresso.Element.Diagram.Tool do
 
   `command` is a function that takes the private directory of the run and
   returns the arguments of the program and its variables of the environment.
-  The tool writes the SVG to `graph.svg` in that directory. `files` go into the
+  The tool writes its result to `output` in that directory, `graph.svg` by
+  default, and the function returns the text of that file. `files` go into the
   directory before the run, such as the files of a font. The function raises an
   `ArgumentError` for a tool that is not present and for a tool that fails.
   """
-  @spec run!(t(), Path.t(), (Path.t() -> {[String.t()], [{String.t(), String.t()}]}), [
-          {String.t(), binary()}
-        ]) :: String.t()
+  @spec run!(
+          t(),
+          Path.t(),
+          (Path.t() -> {[String.t()], [{String.t(), String.t()}]}),
+          [{String.t(), binary()}],
+          String.t()
+        ) :: String.t()
   # The program comes from the `PATH` or from the variable of the tool, and
   # System.cmd/3 starts no shell, so no shell reads the arguments. Each file is
   # in a private directory of this run.
   # sobelow_skip ["CI.System", "Traversal"]
-  def run!(tool, src, command, files \\ []) do
+  def run!(tool, src, command, files \\ [], output \\ "graph.svg") do
     program =
       case find(tool, src) do
         {:ok, program} -> program
@@ -103,7 +108,7 @@ defmodule Expresso.Element.Diagram.Tool do
 
       case System.cmd(program, args, stderr_to_stdout: true, env: env) do
         {_output, 0} ->
-          File.read!(Path.join(private_dir.path, "graph.svg"))
+          File.read!(Path.join(private_dir.path, output))
 
         {message, status} ->
           raise ArgumentError,

@@ -39,6 +39,7 @@ defmodule Expresso.ElementPagesTest do
     File.cp!("test/fixtures/tree.csv", Path.join(root, "team.csv"))
     File.cp!("test/fixtures/graphviz/flow.dot", Path.join(root, "system.dot"))
     File.cp!("test/fixtures/d2/flow.d2", Path.join(root, "system.d2"))
+    File.cp!("test/fixtures/mermaid/flow.mmd", Path.join(root, "system.mmd"))
     File.mkdir_p!(Path.join(root, "fonts/inter"))
 
     for path <- Path.wildcard("assets/fonts/*.ttf"),
@@ -57,6 +58,7 @@ defmodule Expresso.ElementPagesTest do
     cond do
       block =~ ~r/"[^"]+\.(dot|gv)"/ -> :graphviz
       block =~ ~r/"[^"]+\.d2"/ -> :d2
+      block =~ ~r/"[^"]+\.mmd"|lang: :mermaid/ -> :mermaid
       true -> nil
     end
   end
@@ -97,7 +99,7 @@ defmodule Expresso.ElementPagesTest do
     end
   end
 
-  for tool <- [:graphviz, :d2] do
+  for tool <- [:graphviz, :d2, :mermaid] do
     @tag :tmp_dir
     @tag tool
     test "each code block of the page of the diagram element with a graph of #{tool} renders", %{

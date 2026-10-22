@@ -1,0 +1,7 @@
+flowchart LR
+  subgraph app [App]
+    web[Web] --> api[API]
+  end
+  api -- reads --> db[(DB)]
+  api --> db
+  cache[Cache] -.-> db

@@ -2039,6 +2039,32 @@ body[data-view="handout"] .chart-frames {
 .diagram-graphviz text:not([fill]) {
   fill: currentColor;
 }
+/*
+ * Pele writes each color of a Mermaid diagram as a custom property with a
+ * fallback color, such as `var(--pele-fg, …)`. The class `diagram-pele` sets
+ * the properties from the roles of the theme, as `diagram-graph` does for D2.
+ * The series of a chart, such as a pie, take the colors of the charts.
+ */
+.diagram-pele {
+  --pele-bg: var(--background);
+  --pele-fg: var(--text);
+  --pele-muted: var(--muted);
+  --pele-line: var(--text);
+  --pele-surface: color-mix(in srgb, var(--accent) 10%, var(--background));
+  --pele-surface-alt: color-mix(in srgb, var(--muted) 12%, var(--background));
+  --pele-border: var(--accent);
+  --pele-accent: var(--accent);
+  --pele-critical: var(--danger);
+  --pele-error: var(--danger);
+  --pele-series-1: var(--chart-1);
+  --pele-series-2: var(--chart-2);
+  --pele-series-3: var(--chart-3);
+  --pele-series-4: var(--chart-4);
+  --pele-series-5: var(--chart-5);
+  --pele-series-6: var(--chart-6);
+  --pele-series-7: var(--chart-7);
+  --pele-series-8: var(--chart-8);
+}
 .text-box,
 .text-area,
 .image,

@@ -52,6 +52,12 @@ defmodule Expresso.Element.Diagram do
   default, `draw/1` gives each edge without its own part the steps where both
   of its ends show. `docs/graph-diagrams.md` gives the plan.
 
+  A `.mmd` file is the source of a diagram in the language of Mermaid, and
+  `Expresso.Element.Diagram.Pele` draws it with Pele in Node. The `source`
+  option gives the text of a diagram in the deck in place of a file, and the
+  `lang` option names its language, such as `:mermaid`. A diagram takes `src`
+  or `source`, and not both. `docs/mermaid-diagrams.md` gives the plan.
+
   `Expresso.Deck.render/1` writes the document with Floki, which writes each
   name of the SVG in lowercase. A browser reads `viewbox` as `viewBox` and
   `lineargradient` as `linearGradient` inside an `svg` element, so the
@@ -60,7 +66,7 @@ defmodule Expresso.Element.Diagram do
 
   use Expresso.Element
 
-  alias Expresso.Element.Diagram.{Cache, Tool}
+  alias Expresso.Element.Diagram.{Cache, Pele, Tool}
 
   @typedoc "The struct of a diagram"
   @type t :: %__MODULE__{}
@@ -68,6 +74,8 @@ defmodule Expresso.Element.Diagram do
   defstruct [
               :class,
               :src,
+              :source,
+              :lang,
               :width,
               :alt,
               :layout,
@@ -149,21 +157,21 @@ defmodule Expresso.Element.Diagram do
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
   def get_assigns(diagram) do
-    %__MODULE__{src: src, width: width, alt: alt, colors: colors} = diagram
+    %__MODULE__{width: width, alt: alt, colors: colors} = diagram
     diagram = draw_one(diagram)
 
     # A graph gets a list for a screen reader, and its SVG is then hidden from
     # the screen reader. With the `alt` option, the diagram is one image with
     # that name, and it gets no list.
     outline =
-      if tool(src) && alt == nil,
+      if tool(diagram) && alt == nil,
         do: Expresso.Element.Diagram.Outline.items(diagram.svg),
         else: []
 
     %{
       svg: svg(diagram, outline != []),
       outline: outline,
-      kind: kind(tool(src), colors),
+      kind: kind(tool(diagram), colors),
       overlay: Expresso.Overlay.Render.attributes(diagram) ++ width(width) ++ alt(alt)
     }
   end
@@ -178,6 +186,7 @@ defmodule Expresso.Element.Diagram do
     do: "diagram diagram-graph diagram-graphviz"
 
   defp kind(Expresso.Element.Diagram.D2, _colors), do: "diagram diagram-graph diagram-d2"
+  defp kind(Pele, _colors), do: "diagram diagram-graph diagram-pele"
 
   # A diagram with a text is one image for a screen reader, and the text of
   # the SVG is then not read. Without a text, a screen reader reads the text
@@ -191,14 +200,15 @@ defmodule Expresso.Element.Diagram do
     [{"style", "--diagram-width: #{Expresso.Element.viewport_unit(width)}"}]
   end
 
-  defp svg(%__MODULE__{src: src, elements: parts} = diagram, hidden?) do
+  defp svg(%__MODULE__{elements: parts} = diagram, hidden?) do
     tree = diagram |> parse() |> hide(hidden?)
 
     parts
     |> Enum.reduce(tree, fn %Expresso.Element.Part{id: id} = part, tree ->
       if not has_id?(tree, id) do
         raise ArgumentError,
-              "the diagram \"#{src}\" has no element with the id \"#{id}\"" <> names(diagram)
+              "the diagram \"#{label(diagram)}\" has no element with the id \"#{id}\"" <>
+                names(diagram)
       end
 
       mark(tree, id, part_attributes(part), nil)
@@ -309,7 +319,7 @@ defmodule Expresso.Element.Diagram do
   def text(%__MODULE__{svg: svg}) when is_binary(svg), do: svg
 
   def text(%__MODULE__{src: src} = diagram),
-    do: if(tool(src), do: draw_one(diagram).svg, else: read(src))
+    do: if(tool(diagram), do: draw_one(diagram).svg, else: read(src))
 
   defp read(src), do: Expresso.DeckFile.read_text!(src, "diagram")
 
@@ -351,22 +361,22 @@ defmodule Expresso.Element.Diagram do
   defp both(from, to), do: Enum.filter(from, &(&1 in to))
 
   defp draw_one(%__MODULE__{svg: nil, src: src, layout: layout} = diagram) do
-    case tool(src) do
+    case tool(diagram) do
       nil ->
         diagram
 
       tool ->
         # The read records the source for the watch mode, and it stops the
         # render for a file that it cannot read.
-        source = read(src)
-        layout = layout || hd(tool.layouts())
+        source = diagram.source || read(src)
+        layout = layout || List.first(tool.layouts())
         font = font(diagram.font)
 
         # The watch mode keeps the SVG of each graph from one render to the
         # next. A new version of the tool, a different layout, a different
         # font or a change to the source gives a new key.
-        key = {tool, Tool.identity(tool.tool(), src), layout, font, source}
-        {svg, names} = Cache.fetch(key, fn -> tool.draw!(src, layout, font) end)
+        key = {tool, Tool.identity(tool.tool(), label(diagram)), layout, font, source}
+        {svg, names} = Cache.fetch(key, fn -> run(tool, diagram, source, layout, font) end)
         svg = if diagram.colors == :tool, do: svg, else: tool.theme(svg)
         %__MODULE__{diagram | svg: svg, names: names}
     end
@@ -374,36 +384,88 @@ defmodule Expresso.Element.Diagram do
 
   defp draw_one(element), do: element
 
+  # Pele reads the text of the source, so the source can come from the deck.
+  # Graphviz and D2 read the file.
+  defp run(Pele, diagram, source, _layout, font), do: Pele.draw!(source, label(diagram), font)
+  defp run(tool, %__MODULE__{src: src}, _source, layout, font), do: tool.draw!(src, layout, font)
+
+  # The name of a diagram in a message: the path of its file, or the language
+  # of its source in the deck.
+  defp label(%__MODULE__{src: src}) when is_binary(src), do: src
+  defp label(%__MODULE__{lang: lang}), do: "#{lang} source"
+
   defp font(nil), do: Expresso.Element.Diagram.Font.builtin()
   defp font(dir), do: Expresso.Element.Diagram.Font.read!(dir)
 
-  # The tool of a source, from the extension of its file. An SVG file has no
-  # tool.
-  defp tool(src) do
+  # The tool of a diagram: from the `lang` option of a source in the deck, or
+  # from the extension of its file. An SVG file has no tool.
+  defp tool(%__MODULE__{source: source, lang: :mermaid}) when is_binary(source), do: Pele
+  defp tool(%__MODULE__{src: src}) when is_binary(src), do: tool_of(src)
+  defp tool(_diagram), do: nil
+
+  defp tool_of(src) do
     case src |> Path.extname() |> String.downcase() do
       ext when ext in [".dot", ".gv"] -> Expresso.Element.Diagram.Graphviz
       ".d2" -> Expresso.Element.Diagram.D2
+      ".mmd" -> Pele
       _other -> nil
     end
   end
 
   @doc """
-  Refuse the options of a graph for an SVG file, and a layout of a different tool
+  Refuse a diagram without one source, the options of a graph for an SVG file,
+  and a layout of a different tool
 
-  The entity of the DSL and `Expresso.Builder` call this function.
+  A diagram takes the `src` argument or the `source` option, and not both. The
+  `source` option needs the `lang` option, and a file takes no `lang` option,
+  because its extension gives its language. The entity of the DSL and
+  `Expresso.Builder` call this function.
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
-  def check(%__MODULE__{src: src, layout: layout} = diagram) do
-    tool = tool(src)
+  def check(%__MODULE__{} = diagram) do
+    with :ok <- one_source(diagram), do: options(diagram)
+  end
+
+  defp one_source(%__MODULE__{src: nil, source: nil}),
+    do: {:error, "a diagram takes the path of a file, or the source option with the lang option"}
+
+  defp one_source(%__MODULE__{src: src, source: source})
+       when is_binary(src) and is_binary(source),
+       do: {:error, "the diagram \"#{src}\" takes a file or the source option, and not both"}
+
+  defp one_source(%__MODULE__{source: source, lang: nil}) when is_binary(source),
+    do: {:error, "the source option of a diagram needs the lang option, such as lang: :mermaid"}
+
+  defp one_source(%__MODULE__{src: src, lang: lang}) when is_binary(src) and lang != nil,
+    do:
+      {:error,
+       "the lang option applies to the source option, so the diagram \"#{src}\" takes no " <>
+         "lang option. The extension of the file gives its language"}
+
+  defp one_source(_diagram), do: :ok
+
+  defp options(%__MODULE__{layout: layout} = diagram) do
+    tool = tool(diagram)
+    label = label(diagram)
     given = Enum.find([:layout, :edges, :colors, :font], &(Map.fetch!(diagram, &1) != nil))
 
     cond do
-      tool == nil and given != nil ->
-        {:error, graph_option(given, src)}
+      tool == nil and given != nil -> {:error, graph_option(given, label)}
+      tool != nil and layout != nil -> layout(tool, layout, label, diagram)
+      true -> {:ok, diagram}
+    end
+  end
 
-      tool != nil and layout != nil and layout not in tool.layouts() ->
+  defp layout(tool, layout, label, diagram) do
+    cond do
+      tool.layouts() == [] ->
         {:error,
-         "the layout of the diagram \"#{src}\" is one of " <>
+         "Pele draws the diagram \"#{label}\" with its one layout, so the diagram takes " <>
+           "no layout option"}
+
+      layout not in tool.layouts() ->
+        {:error,
+         "the layout of the diagram \"#{label}\" is one of " <>
            Enum.map_join(tool.layouts(), ", ", &inspect/1) <> ", and not #{inspect(layout)}"}
 
       true ->
@@ -413,8 +475,8 @@ defmodule Expresso.Element.Diagram do
 
   defp graph_option(option, src),
     do:
-      "the #{option} option applies to the source of a graph, such as a .dot or a .d2 file, " <>
-        "so the diagram \"#{src}\" takes no #{option} option"
+      "the #{option} option applies to the source of a graph, such as a .dot, a .d2 or a " <>
+        ".mmd file, so the diagram \"#{src}\" takes no #{option} option"
 
   @doc """
   Make the HTML of a diagram

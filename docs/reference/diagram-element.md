@@ -25,12 +25,14 @@ end
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | The path of an `.svg` file, or of a `.dot`, a `.gv` or a `.d2` file | The diagram, or the source of a graph. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. See [A graph from Graphviz](#a-graph-from-graphviz) and [A graph from D2](#a-graph-from-d2). |
+| The first argument | The path of an `.svg` file, or of a `.dot`, a `.gv`, a `.d2` or a `.mmd` file | The diagram, or the source of a graph. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. See [A graph from Graphviz](#a-graph-from-graphviz), [A graph from D2](#a-graph-from-d2) and [A diagram from Mermaid](#a-diagram-from-mermaid). |
+| `source` | A string | The source of a graph in the deck, in place of a file. It needs `lang`. A diagram takes the first argument or `source`, and not both. |
+| `lang` | `:mermaid` | The language of `source`. A file gives its language with its extension, so a file takes no `lang`. |
 | `width` | A CSS width, such as `"900px"` or `"60%"` | The width of the diagram. A percentage is a part of the width of the slide. The default is the width that the file gives. |
 | `alt` | A string | The text of the diagram for a screen reader. The diagram then has the role `img`, and a screen reader reads this text in the place of the text of the SVG. Without it, a screen reader reads the text of the SVG, or the list of a graph. See [A graph and a screen reader](#a-graph-and-a-screen-reader). |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
-| `layout` | For Graphviz, `:dot`, `:neato`, `:fdp`, `:sfdp`, `:circo` or `:twopi`. For D2, `:elk` or `:dagre`. | The layout engine of the tool. The default is `:dot` for Graphviz and `:elk` for D2. |
+| `layout` | For Graphviz, `:dot`, `:neato`, `:fdp`, `:sfdp`, `:circo` or `:twopi`. For D2, `:elk` or `:dagre`. | The layout engine of the tool. The default is `:dot` for Graphviz and `:elk` for D2. Pele has one layout, so a Mermaid diagram takes no `layout`. |
 | `edges` | `:follow` or `:own` | When an edge of a graph without its own part shows. The default is `:follow`. See [The edges of a graph](#the-edges-of-a-graph). |
 | `colors` | `:theme` or `:tool` | The colors of a graph. The default is `:theme`. See [The colors and the font of a graph](#the-colors-and-the-font-of-a-graph). |
 | `font` | The path of a directory with TTF files | The font of the text of a graph. The default is the font of the built-in theme. A path is relative to the root option of the deck. |
@@ -127,6 +129,44 @@ but ELK takes only some seconds for a graph of a slide.
 The render finds the program `d2` on the `PATH`. The variable `EXPRESSO_D2` gives a
 different path. D2 holds the font in the SVG.
 
+## A diagram from Mermaid
+
+A `.mmd` file is the source of a diagram in the language of Mermaid. The `source` option with
+`lang: :mermaid` gives the same source in the deck. The render draws it with
+[Pele](https://pele.run) in Node. A part names a node, a subgraph or an edge of a flowchart
+by its id in the source:
+
+```elixir
+slide "the system" do
+  diagram "system.mmd" do
+    part "web"
+    part "web->api", at: [from: 2]
+    part "api", at: [from: 2]
+    part "db", at: [from: 3]
+  end
+end
+
+slide "a small flow" do
+  diagram source: "flowchart LR\n  a --> b", lang: :mermaid
+end
+```
+
+| Element of a flowchart | Name | Example |
+| --- | --- | --- |
+| A node | Its id | `web` for `web[Web]` |
+| A subgraph | Its id | `app` for `subgraph app [App]` |
+| An edge | The ids of the two ends and the arrow: `->`, `<->`, or `--` for an edge with no head | `web->api` |
+| A second edge between the same ends | The name of the first edge, then `:2` | `api->db:2` |
+| An edge with an id in the source | That id | `e1` for `web e1@--> api` |
+
+The label of an edge shows at the steps of its edge. Pele draws each diagram type of
+Mermaid 12.1, such as a sequence diagram or a pie. A type other than a flowchart keeps the
+`data-id` of Pele as the name of each part, and each part can take steps.
+
+Pele is a library in JavaScript, and Expresso holds a copy of it. The render runs it with
+the program `node` on the `PATH`, and the variable `EXPRESSO_NODE` gives a different path.
+A deck without a Mermaid diagram needs no Node.
+
 ## The colors and the font of a graph
 
 A graph gets the colors of the theme, so it changes with the theme and with the dark variant
@@ -137,6 +177,7 @@ graph with colors that have a meaning.
 | --- | --- |
 | Graphviz | The lines and the text take the color `--text`, and the white background goes away. A color that the source gives, such as `color=red`, stays. |
 | D2 | Each class of the palette of D2 takes a custom property, such as `--graph-B4` for the fill of a shape. The table below gives the default of each property. The background goes away. |
+| Pele | Pele writes each color as a custom property, such as `--pele-fg`, and the theme sets each one: the text and the lines take `--text`, the shapes take a tint of `--accent` with a border of `--accent`, and the series of a chart take `--chart-1` to `--chart-8`. |
 
 | Properties | D2 uses them for | Default |
 | --- | --- | --- |
