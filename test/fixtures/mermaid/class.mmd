@@ -1,0 +1,17 @@
+classDiagram
+    namespace Reef {
+        class Turtle {
+            +String shellColor
+            +swim()
+        }
+        class Shark {
+            -int sizeInFeet
+        }
+    }
+    Animal <|-- Turtle
+    Animal <|-- Shark
+    Animal : +int age
+    Animal: +migrate()
+    Turtle --> Shark : avoids
+    Animal <|-- Whale
+    note for Turtle "can swim"

@@ -172,6 +172,18 @@ show:
 | A second message between the same actors in the same direction | The name of the first message, then `:2` | `Web->Customer:2` |
 | A note | `note` and its number, in the order of the source | `note1` |
 
+A class diagram names a relation by its two classes and its arrow. The arrow points to the
+end with a marker, such as the triangle of `<|--`:
+
+| Element of a class diagram | Name | Example |
+| --- | --- | --- |
+| A class | Its id | `Turtle` |
+| A namespace | Its id. Each class in it has the namespace as its parent. | `Reef` |
+| A relation | The two classes, in the order of the source, and the arrow: `->` for a marker at the second class, `<-` for a marker at the first class, `<->` for a marker at each end, and `--` for no marker | `Animal<-Turtle` for `Animal <\|-- Turtle` |
+| A second relation between the same classes in the same direction | The name of the first relation, then `:2` | `Animal<-Turtle:2` |
+| A note | `note` and its number from 0, in the order of the source | `note0` |
+| The line from a note to its class | The note, `--` and the class | `note0--Turtle` |
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.
