@@ -166,6 +166,25 @@ defmodule Expresso.Presenter.InterpreterTest do
       end
     end
 
+    test "w shows a white screen in each window, and the next key shows the slide again" do
+      for view <- [:present, :speaker] do
+        white = key(at(2, 2, view), "w")
+        assert white == %{at(2, 2, view) | blank: true, white: true}
+
+        for key <- ["w", "b", "j", "s"] do
+          assert effects(white, key) == {at(2, 2, view), [], true}, key
+        end
+      end
+    end
+
+    test "b gives a black screen after a white screen that a fragment removed" do
+      white = key(at(1, 1), "w")
+      shown = run(@three, white, {:hash, "#2"})
+
+      assert shown == at(2, 1)
+      assert key(shown, "b") == %{at(2, 1) | blank: true}
+    end
+
     test "? opens the list of keys in each view, and removes the digits" do
       for view <- [:present, :handout, :speaker] do
         assert key(at(2, 2, view), "?") == %{at(2, 2, view) | help: true}, inspect(view)
@@ -279,7 +298,16 @@ defmodule Expresso.Presenter.InterpreterTest do
 
   describe "the messages" do
     defp message(slide, step, blank \\ false, undim \\ false),
-      do: {:message, %{slide: slide, step: step, fields: %{blank: blank, undim: undim}}}
+      do:
+        {:message,
+         %{slide: slide, step: step, fields: %{blank: blank, white: false, undim: undim}}}
+
+    test "a message gives the white screen of the other window" do
+      event = {:message, %{slide: 3, step: 2, fields: %{blank: true, white: true, undim: false}}}
+
+      assert run(@three, at(1, 1, :speaker), event) ==
+               %{at(3, 2, :speaker) | blank: true, white: true}
+    end
 
     test "a message moves to its position, with its black screen" do
       assert run(@three, at(1, 1, :speaker), message(3, 2, true)) ==

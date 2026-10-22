@@ -2440,6 +2440,9 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   body[data-view="present"][data-blank="true"] {
     background-color: #000;
   }
+  body[data-view="present"][data-blank="true"][data-white="true"] {
+    background-color: #fff;
+  }
   /* The reveal rule of a step sets `visibility: visible` on an element, and a
      child with `visible` shows inside a parent with `hidden`. A child cannot
      undo the opacity of its parent, so the screen also gets `opacity: 0`, and

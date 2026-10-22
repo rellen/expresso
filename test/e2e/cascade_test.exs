@@ -189,6 +189,20 @@ defmodule Expresso.E2E.CascadeTest do
            )
   end
 
+  test "the white screen shows no element of the slide on a white page, and the next key shows the slide",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = page |> open(render(BlankDeck, tmp_dir, "white")) |> press("j") |> press("w")
+
+    assert style(page, "body", "backgroundColor") == "rgb(255, 255, 255)"
+    assert style(page, ".screen", "opacity") == "0"
+    assert style(page, ".screen", "pointerEvents") == "none"
+
+    page |> press("w")
+    assert position(page) == "1.2"
+    assert style(page, ".screen", "opacity") == "1"
+    refute style(page, "body", "backgroundColor") == "rgb(255, 255, 255)"
+  end
+
   test "an icon with an on entity keeps the color of its role, and dims to the dimmed color of its role",
        %{page: page} do
     success = theme_color(page, "--success")

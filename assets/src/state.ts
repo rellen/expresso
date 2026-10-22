@@ -28,7 +28,7 @@ import type {
 //
 // `index` is the index of the current step in the `steps` of the deck. The
 // first step of the first slide has the index 0. `blank` is true while the
-// present view shows a black screen. `digits` holds the digits of a slide
+// present view shows a black screen, and `white` makes that screen white. `digits` holds the digits of a slide
 // number that the presenter types before `Enter`.
 // `help` is true while the view shows the list of its keys. `progress` is
 // true while the present view shows the progress bar. `every` is true while

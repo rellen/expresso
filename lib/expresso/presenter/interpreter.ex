@@ -71,13 +71,15 @@ defmodule Expresso.Presenter.Interpreter do
   def run(program, state, {:hash, fragment}) do
     case Regex.run(~r/^#(\d+)(?:\.(\d+))?$/, fragment) do
       [_all, slide] ->
-        {position(program, state, number(slide), 1, %{blank: false}), []}
+        {position(program, state, number(slide), 1, %{blank: false, white: false}), []}
 
       [_all, slide, step] ->
         slide = number(slide)
 
-        {position(program, state, slide, in_slide(program, slide, number(step)), %{blank: false}),
-         []}
+        {position(program, state, slide, in_slide(program, slide, number(step)), %{
+           blank: false,
+           white: false
+         }), []}
 
       nil ->
         {state, []}

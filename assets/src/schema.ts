@@ -30,13 +30,13 @@ export const VIEWS: readonly View[] = ["present", "handout", "speaker"];
 export const decodeView: Decoder<View> = /* @__PURE__ */ oneOf(VIEWS);
 
 // A field of the state.
-export type Field = "index" | "view" | "blank" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim" | "menu" | "cursor";
-export const FIELDS: readonly Field[] = ["index", "view", "blank", "digits", "help", "progress", "every", "overview", "selected", "undim", "menu", "cursor"];
+export type Field = "index" | "view" | "blank" | "white" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim" | "menu" | "cursor";
+export const FIELDS: readonly Field[] = ["index", "view", "blank", "white", "digits", "help", "progress", "every", "overview", "selected", "undim", "menu", "cursor"];
 export const decodeField: Decoder<Field> = /* @__PURE__ */ oneOf(FIELDS);
 
 // A field of the state that holds true or false.
-export type BooleanField = "blank" | "help" | "progress" | "every" | "overview" | "undim" | "menu";
-export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "help", "progress", "every", "overview", "undim", "menu"];
+export type BooleanField = "blank" | "white" | "help" | "progress" | "every" | "overview" | "undim" | "menu";
+export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "white", "help", "progress", "every", "overview", "undim", "menu"];
 export const decodeBooleanField: Decoder<BooleanField> = /* @__PURE__ */ oneOf(BOOLEAN_FIELDS);
 
 // A field of the state that holds a number.
@@ -54,6 +54,7 @@ export type State = Readonly<{
   index: number;
   view: View;
   blank: boolean;
+  white: boolean;
   digits: string;
   help: boolean;
   progress: boolean;
@@ -68,6 +69,7 @@ export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   index: /* @__PURE__ */ integer(0),
   view: decodeView,
   blank: boolean,
+  white: boolean,
   digits: /* @__PURE__ */ string(/^[0-9]*$/),
   help: boolean,
   progress: boolean,
@@ -100,6 +102,7 @@ export type Command =
   | readonly ["set", "index", number]
   | readonly ["set", "view", View]
   | readonly ["set", "blank", boolean]
+  | readonly ["set", "white", boolean]
   | readonly ["set", "digits", string]
   | readonly ["set", "help", boolean]
   | readonly ["set", "progress", boolean]
@@ -128,6 +131,7 @@ export const decodeCommand: Decoder<Command> = /* @__PURE__ */ union(
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("index"), /* @__PURE__ */ integer(0)),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("view"), decodeView),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("blank"), boolean),
+  /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("white"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("digits"), /* @__PURE__ */ string(/^[0-9]*$/)),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("help"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("progress"), boolean),
@@ -165,6 +169,7 @@ export type WrittenMode = Readonly<{
     index?: number;
     view?: View;
     blank?: boolean;
+    white?: boolean;
     digits?: string;
     help?: boolean;
     progress?: boolean;
@@ -188,6 +193,7 @@ export const decodeWrittenMode: Decoder<WrittenMode> = /* @__PURE__ */ object({
     index: /* @__PURE__ */ integer(0),
     view: decodeView,
     blank: boolean,
+    white: boolean,
     digits: /* @__PURE__ */ string(/^[0-9]*$/),
     help: boolean,
     progress: boolean,
@@ -379,6 +385,7 @@ export type Message = Readonly<{
     index?: number;
     view?: View;
     blank?: boolean;
+    white?: boolean;
     digits?: string;
     help?: boolean;
     progress?: boolean;
@@ -400,6 +407,7 @@ export const decodeMessage: Decoder<Message> = /* @__PURE__ */ openObject({
     index: /* @__PURE__ */ integer(0),
     view: decodeView,
     blank: boolean,
+    white: boolean,
     digits: /* @__PURE__ */ string(/^[0-9]*$/),
     help: boolean,
     progress: boolean,

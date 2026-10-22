@@ -127,6 +127,7 @@ test("the state decoder takes exactly the fields of the state", () => {
     index: 0,
     view: "present",
     blank: false,
+    white: false,
     digits: "",
     help: false,
     progress: true,

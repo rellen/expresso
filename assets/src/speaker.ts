@@ -61,12 +61,16 @@ export function left(elapsed: number, total: number): string {
 }
 
 // The position text of the speaker view: the position of the entry, such as
-// `Slide 4 of 13, step 2 of 3`, and a part for a black screen. A deck with no
-// slide has no entry.
-export function position(entry: Entry | undefined, blank: boolean): string {
+// `Slide 4 of 13, step 2 of 3`, and a part for a black or a white screen. A
+// deck with no slide has no entry.
+export function position(
+  entry: Entry | undefined,
+  blank: boolean,
+  white = false,
+): string {
   const parts = entry === undefined ? [] : [entry.position];
   if (blank) {
-    parts.push("black screen");
+    parts.push(white ? "white screen" : "black screen");
   }
   return parts.join(", ");
 }

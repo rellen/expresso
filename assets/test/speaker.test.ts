@@ -45,6 +45,14 @@ test("position tells about a black screen", () => {
   );
 });
 
+test("position tells about a white screen", () => {
+  assert.equal(
+    position(nth(three.steps, 0), true, true),
+    "Slide 1 of 3, white screen",
+  );
+  assert.equal(position(nth(three.steps, 0), false, true), "Slide 1 of 3");
+});
+
 test("position gives only the black screen for a deck with no slide", () => {
   assert.equal(position(undefined, false), "");
   assert.equal(position(undefined, true), "black screen");

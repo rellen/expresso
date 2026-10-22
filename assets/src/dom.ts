@@ -312,7 +312,10 @@ function speaker(state: State, deck: Deck): void {
     (each) => Number(each.dataset.index) === state.index,
   );
   text("speaker-notes", page?.querySelector(".notes")?.textContent ?? "");
-  text("speaker-position", position(current(state, deck), state.blank));
+  text(
+    "speaker-position",
+    position(current(state, deck), state.blank, state.white),
+  );
 }
 
 // Open the list of keys at the section of a mode, or close it with no mode.

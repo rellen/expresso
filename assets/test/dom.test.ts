@@ -154,6 +154,18 @@ test("apply writes data-blank for a black screen, and removes it after", () => {
   assert.equal("blank" in doc.body.dataset, false);
 });
 
+test("apply writes data-white with data-blank for a white screen", () => {
+  const doc = fakeDocument([1]);
+  const list = deck();
+
+  apply({ ...at(list, 1, 1), blank: true, white: true }, list, program);
+  assert.equal(doc.body.dataset.blank, "true");
+  assert.equal(doc.body.dataset.white, "true");
+
+  apply(at(list, 1, 1), list, program);
+  assert.equal("white" in doc.body.dataset, false);
+});
+
 test("apply writes the flags of the state only while they are true", () => {
   const doc = fakeDocument([1]);
   const list = deck();

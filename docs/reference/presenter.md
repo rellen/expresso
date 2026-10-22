@@ -34,6 +34,7 @@ The present view knows these keys:
 | `o` | Overview of the slides. Only this window shows it. |
 | `m` | Menu of the slides and their steps. Only this window shows it. |
 | `b` | Black screen. The next key shows the slide again. |
+| `w` | White screen. The next key shows the slide again. |
 | `d` | Code and charts in full color until the next step, in the two windows |
 | `t` | Light or dark variant of the theme, in the two windows |
 | `g` | Progress bar on or off |
@@ -113,7 +114,9 @@ the menu. The menu knows these keys:
 The speaker view shows the current step, the next step, the notes of the slide, the
 position and a timer. The position ends with the label of the step, when the slide gives
 one. The keys operate in either window, and the two windows show the same step. `b` in the
-speaker view gives a black screen to the audience. The speaker view knows these keys:
+speaker view gives a black screen to the audience, and `w` gives a white screen. A white
+screen follows each rule of a black screen: it pauses a video and a sound, and the next key
+or click closes it. The speaker view knows these keys:
 
 <!-- keys speaker -->
 
@@ -128,6 +131,7 @@ speaker view gives a black screen to the audience. The speaker view knows these 
 | `o` | Overview of the slides. Only this window shows it. |
 | `m` | Menu of the slides and their steps. Only this window shows it. |
 | `b` | Black screen. The next key shows the slide again. |
+| `w` | White screen. The next key shows the slide again. |
 | `d` | Code and charts in full color until the next step, in the two windows |
 | `t` | Light or dark variant of the theme, in the two windows |
 | `f` | Full screen on or off |

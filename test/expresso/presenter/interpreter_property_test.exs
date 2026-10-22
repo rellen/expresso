@@ -82,10 +82,11 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
     gen(all program <- decks(), state <- state_in(program), do: {program, state})
   end
 
-  # A reachable state with no black screen, no list of keys and no menu.
+  # A reachable state with no black or white screen, no list of keys and no
+  # menu.
   defp shown do
     map(reachable(), fn {program, state} ->
-      {program, %{state | blank: false, help: false, menu: false}}
+      {program, %{state | blank: false, white: false, help: false, menu: false}}
     end)
   end
 

@@ -23,8 +23,8 @@ The speaker view shows the current step, the next step, the notes of the slide a
 3. Put the first window on the projector, and press `f` in it.
 
 The keys operate in either window, and the two windows show the same step. Press `b` in
-the speaker view to give a black screen to the audience. The next key shows the slide
-again.
+the speaker view to give a black screen to the audience, or `w` to give a white screen in
+a light room. The next key shows the slide again.
 
 ![The speaker view: the current step, the next step, the notes, the position, the timer and the time left](https://raw.githubusercontent.com/rellen/expresso/media/present-speaker.png)
 
