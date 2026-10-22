@@ -116,3 +116,4 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | 15. Timeline | Done. A section and a period are containers, and an event is a node such as `2025/2`. Pele draws an event with no `data-id`, so a plan with three arguments now gets each node with no `data-id` too, with a count of its own. A group with no `data-id` takes its name and its marks itself. |
 | 16. User journey | Done. A section is a container, and a task is a node with its section as its parent. The line of the scores is one path, and the faces have no `data-id`, so they show at each step. |
 | 17. Kanban | Done. A column is a container, and a card is a node with its column as its parent. |
+| 18. Pie | Done. A slice is a node with its label as its name, and its item of the legend gets the same name. Pele draws a slice as a `path`, so `Pele.name/1` now puts each element with marks that is not a group into a group with its name and its marks. |

@@ -298,6 +298,14 @@ A user journey has no edges. A section is a container:
 
 The line of the scores and the faces on it show at each step.
 
+A pie has no edges. Each slice is a node:
+
+| Element of a pie | Name | Example |
+| --- | --- | --- |
+| A slice, with its item of the legend | Its label | `Slides` for `"Slides" : 40` |
+
+The labels of the percentages show at each step.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |

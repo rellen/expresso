@@ -197,6 +197,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"Elements", 2}, {"Code", 3}], "Elements--Code", "3"},
       outline: {"Elements", ["with Code", "with Diagram"]}
     },
+    "pie" => %{
+      names: ["Slides", "Demo", "Questions"],
+      kinds: %{"Slides" => "node", "Questions" => "node"},
+      ends: %{},
+      parents: %{"Demo" => nil},
+      follow: nil,
+      outline: {"Slides", []}
+    },
     "requirement" => %{
       names: ["bundle->fast", "bundle->offline", "offline->fast", "fast", "offline", "bundle"],
       kinds: %{"fast" => "node", "bundle" => "node", "offline->fast" => "edge"},
@@ -415,12 +423,11 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
             do: assert(marked[name]["data-graph-parent"] == parent, name)
       end
 
-      test "gives each element with a data-id an id" do
-        {svg, _names} = @type_name |> result() |> Pele.name()
+      test "gives each element with a data-id an id, or a group with the id around it" do
+        tree = @type_name |> result() |> Pele.name() |> elem(0) |> Floki.parse_fragment!()
 
-        for {_tag, attrs, _} <- svg |> Floki.parse_fragment!() |> Floki.find("[data-id]") do
-          assert List.keymember?(attrs, "id", 0), inspect(attrs)
-        end
+        assert Floki.find(tree, "[data-id]:not([id])") ==
+                 Floki.find(tree, "g[id][data-graph-kind] > [data-id]:not([id])")
       end
 
       if @expected.follow do
