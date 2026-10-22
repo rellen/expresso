@@ -127,3 +127,4 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | 26. Venn | Done. A set is a node with its circle and its label. The label of an intersection is a node such as `Desirable\|Feasible`, and a text keeps its id. |
 | 27. Ishikawa | Done. The head and each category are nodes with their text, and the causes of a category show with it. |
 | 28. Swimlane | Done. A swimlane diagram has the model of a flowchart, so the plan of a flowchart names its parts, and each lane is a container. |
+| 29. Event model | Done. A box is a node with the id of its time frame as its name and its lane as its parent, and a relation is an edge such as `01->02`. |

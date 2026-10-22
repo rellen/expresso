@@ -390,6 +390,15 @@ An Ishikawa diagram has no edges. The head and each category are nodes:
 
 A cause has no part of its own, so it shows with its category. The spine shows at each step.
 
+An event model names a box by the id of its time frame, because two time frames can show
+the same entity. A lane is a container:
+
+| Element of an event model | Name | Example |
+| --- | --- | --- |
+| A lane | Its label | `Events`, `UI/Automation` |
+| A box of a time frame | The id of its time frame. It has its lane as its parent. | `02` for `timeframe 02 command AddSlide` |
+| A relation | The source, `->` and the target | `01->02` |
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |

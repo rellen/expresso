@@ -107,6 +107,23 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       outline:
         {"CUSTOMER string name string email", ["with ORDER int id PK date placed (places)"]}
     },
+    "eventmodeling" => %{
+      names: [
+        "UI/Automation",
+        "Command/Read Model",
+        "Events",
+        "01->02",
+        "02->03",
+        "01",
+        "02",
+        "03"
+      ],
+      kinds: %{"Events" => "container", "02" => "node", "01->02" => "edge"},
+      ends: %{"02->03" => {"02", "03"}},
+      parents: %{"01" => "UI/Automation", "03" => "Events", "Events" => nil},
+      follow: {[{"01", 2}, {"02", 3}], "01->02", "3"},
+      outline: {"UI/Automation", []}
+    },
     "flowchart" => %{
       names: ["app", "web->api", "api->db", "api->db:2", "cache->db", "web", "api", "db", "cache"],
       kinds: %{"app" => "container", "web" => "node", "web->api" => "edge"},
