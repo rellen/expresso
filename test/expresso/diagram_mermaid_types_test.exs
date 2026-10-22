@@ -146,6 +146,19 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"chart", 2}, {"tests", 3}], "chart--tests", "3"},
       outline: {"main", []}
     },
+    "kanban" => %{
+      names: ["todo", "charts", "Write the guide", "doing", "mermaid", "done", "trees"],
+      kinds: %{"todo" => "container", "charts" => "node", "Write the guide" => "node"},
+      ends: %{},
+      parents: %{
+        "charts" => "todo",
+        "Write the guide" => "todo",
+        "trees" => "done",
+        "todo" => nil
+      },
+      follow: nil,
+      outline: {"To do 2 Add the charts Write the guide", []}
+    },
     "mindmap" => %{
       names: [
         "root--Elements",

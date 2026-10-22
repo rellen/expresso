@@ -288,6 +288,13 @@ its events too:
 | A period, with its line and its dot | Its text. It has its section as its parent. | `2025` |
 | An event | The period, `/` and the number of the event in the period, from 1 | `2025/2` for `Diagrams` in `2025 : Charts : Diagrams` |
 
+A kanban board has no edges. A column is a container:
+
+| Element of a kanban board | Name | Example |
+| --- | --- | --- |
+| A column | Its id | `todo` for `todo[To do]` |
+| A card | Its id, or its text for a card without an id. It has its column as its parent. | `charts` for `charts[Add the charts]` |
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.
