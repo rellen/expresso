@@ -11,29 +11,25 @@ defmodule Expresso.Element.Diagram.Pele do
 
   The script writes the SVG of Pele and the model of its `parse()`. Pele gives
   each part of a diagram the attribute `data-id`, and the model gives the
-  ends of each edge and the members of each subgraph. `name/1` gives each part
-  an `id` and the marks of `Expresso.Element.Diagram.Outline`:
-
-  | Part of a flowchart | `data-id` | Name |
-  | --- | --- | --- |
-  | A node | `web` | `web` |
-  | A subgraph | `app` | `app` |
-  | An edge | `L_web_api_0` | `web->api` |
-  | A second edge between the same ends | `L_web_api_1` | `web->api:2` |
-  | An edge with an id in the source, such as `web e1@--> api` | `e1` | `e1` |
+  ends of each edge and the members of each group. `name/1` gives each part
+  an `id` and the marks of `Expresso.Element.Diagram.Outline`, with the plan
+  of its type, such as `Expresso.Element.Diagram.Pele.Flowchart`.
+  `Expresso.Element.Diagram.Pele.Plan` gives the contract of a plan.
 
   The name of an edge has its two ends and its arrow, as for Graphviz and D2,
-  so a part names an edge as the source names its ends. An edge with a label
-  has a second group, for its label, with the same `data-id`. That group gets
-  the same `id`, so a part shows the edge and its label at the same steps.
-  Only the first element of a name gets the marks, so the list for a screen
-  reader holds each part one time.
+  so a part names an edge as the source names its ends. Some parts have more
+  than one element with the same `data-id`, such as an edge and its label, or
+  an actor of a sequence diagram at the top and at the bottom. Each element
+  gets the same `id`, so a part shows them at the same steps. Only the first
+  element whose plan gives marks gets them, so the list for a screen reader
+  holds each part one time.
 
-  A diagram of a type that this module does not name yet keeps the `data-id`
-  of Pele as the name of each part, with no marks.
+  A diagram of a type without a plan keeps the `data-id` of Pele as the name
+  of each part, with no marks.
   """
 
   alias Expresso.Element.Diagram.{Font, Tool}
+  alias Expresso.Element.Diagram.Pele.Plan
 
   @tool %{
     name: "Node",
@@ -80,7 +76,17 @@ defmodule Expresso.Element.Diagram.Pele do
   source, with the message of Pele.
   """
   @spec draw!(String.t(), String.t(), Font.t()) :: {String.t(), [String.t()]}
-  def draw!(source, label, font \\ Font.builtin()) do
+  def draw!(source, label, font \\ Font.builtin()),
+    do: source |> json!(label, font) |> JSON.decode!() |> name()
+
+  @doc """
+  Run the script on a source, and return the text of its JSON
+
+  The JSON holds the SVG, the type of the diagram and the model of `parse()`.
+  `draw!/3` reads it, and the fixtures of the tests hold it as it is.
+  """
+  @spec json!(String.t(), String.t(), Font.t()) :: String.t()
+  def json!(source, label, font \\ Font.builtin()) do
     files = [
       {"source.mmd", source},
       {"options.json",
@@ -90,10 +96,7 @@ defmodule Expresso.Element.Diagram.Pele do
        })}
     ]
 
-    @tool
-    |> Tool.run!(label, fn dir -> {[script(), dir], []} end, files, "graph.json")
-    |> JSON.decode!()
-    |> name()
+    Tool.run!(@tool, label, fn dir -> {[script(), dir], []} end, files, "graph.json")
   end
 
   @doc """
@@ -121,82 +124,31 @@ defmodule Expresso.Element.Diagram.Pele do
   def name(%{"svg" => svg, "type" => type, "model" => model}) do
     plan = plan(type, model || %{})
 
-    {tree, {names, _seen}} =
+    {tree, {names, _seen, _marked}} =
       svg
       |> Floki.parse_fragment!()
-      |> walk(plan, {[], MapSet.new()})
+      |> walk(plan, {[], MapSet.new(), MapSet.new()})
 
     {Floki.raw_html(tree), Enum.reverse(names)}
   end
 
-  # The plan of a type: a function that takes the `data-id` and the classes
-  # of an element, and returns its name and its marks.
-  defp plan("flowchart", model) do
-    subgraphs = model["subgraphs"] || []
+  # The plan of each type that this module names. `Expresso.Element.Diagram.Pele.Plan`
+  # gives the contract of a plan.
+  @plans %{
+    "flowchart" => Expresso.Element.Diagram.Pele.Flowchart,
+    "sequence" => Expresso.Element.Diagram.Pele.Sequence
+  }
 
-    parents =
-      for subgraph <- subgraphs, child <- subgraph["nodes"] || [], into: %{} do
-        {child, subgraph["id"]}
-      end
+  @doc "The types of Pele that have a plan, with the names and the marks of their parts"
+  @spec planned() :: [String.t()]
+  def planned, do: @plans |> Map.keys() |> Enum.sort()
 
-    edges = edges(model["edges"] || [])
-    fn data_id, classes -> flowchart_part(data_id, classes, parents, edges) end
-  end
-
-  defp plan(_type, _model), do: fn data_id, _classes -> {data_id, []} end
-
-  # A part of a flowchart. The group of the label of an edge has the class
-  # `pele-edge-label`, so it takes the name of its edge and no marks.
-  defp flowchart_part(data_id, classes, parents, edges) do
-    parent = for parent <- List.wrap(parents[data_id]), do: {"data-graph-parent", parent}
-
-    cond do
-      "pele-edge" in classes and Map.has_key?(edges, data_id) -> edges[data_id]
-      "pele-cluster" in classes -> {data_id, [{"data-graph-kind", "container"} | parent]}
-      "pele-node" in classes -> {data_id, [{"data-graph-kind", "node"} | parent]}
-      true -> {edges |> Map.get(data_id, {data_id, []}) |> elem(0), []}
+  defp plan(type, model) do
+    case @plans[type] do
+      nil -> Plan.plain()
+      module -> module.plan(model)
     end
   end
-
-  # The name and the marks of each edge, by its `data-id`. A second edge
-  # between the same ends gets `:2` after its name, as for Graphviz.
-  defp edges(edges) do
-    {named, _counts} =
-      Enum.map_reduce(edges, %{}, fn edge, counts ->
-        arrow = arrow(edge["type"])
-        {from, to} = {edge["start"], edge["end"]}
-
-        {name, counts} =
-          if edge["isUserDefinedId"] do
-            {edge["id"], counts}
-          else
-            base = from <> arrow <> to
-            count = Map.get(counts, base, 0) + 1
-            {if(count == 1, do: base, else: "#{base}:#{count}"), Map.put(counts, base, count)}
-          end
-
-        marks =
-          [
-            {"data-graph-kind", "edge"},
-            {"data-graph-from", from},
-            {"data-graph-to", to},
-            {"data-graph-arrow", arrow}
-          ] ++ label(edge["text"])
-
-        {{edge["id"], {name, marks}}, counts}
-      end)
-
-    Map.new(named)
-  end
-
-  defp label(text) when is_binary(text) and text != "", do: [{"data-graph-label", text}]
-  defp label(_text), do: []
-
-  # The arrow of an edge for its name: `<->` for an edge with a head at each
-  # end, `--` for an edge with no head, and `->` for each other edge.
-  defp arrow("double_" <> _rest), do: "<->"
-  defp arrow("arrow_open"), do: "--"
-  defp arrow(_type), do: "->"
 
   defp walk(nodes, plan, acc) when is_list(nodes),
     do: Enum.map_reduce(nodes, acc, &walk(&1, plan, &2))
@@ -214,7 +166,10 @@ defmodule Expresso.Element.Diagram.Pele do
 
   defp walk(node, _plan, acc), do: {node, acc}
 
-  defp give_name(attrs, data_id, plan, {names, seen}) do
+  # Each element gets its name. The first element of a name whose plan gives
+  # marks gets them, so a lifeline or a label before its part does not take
+  # the marks of the part.
+  defp give_name(attrs, data_id, plan, {names, seen, marked}) do
     classes =
       case List.keyfind(attrs, "class", 0) do
         {"class", class} -> String.split(class)
@@ -222,11 +177,13 @@ defmodule Expresso.Element.Diagram.Pele do
       end
 
     {name, marks} = plan.(data_id, classes)
+    names = if MapSet.member?(seen, name), do: names, else: [name | names]
+    seen = MapSet.put(seen, name)
 
-    if MapSet.member?(seen, name) do
-      {attrs ++ [{"id", name}], {names, seen}}
+    if marks == [] or MapSet.member?(marked, name) do
+      {attrs ++ [{"id", name}], {names, seen, marked}}
     else
-      {attrs ++ [{"id", name} | marks], {[name | names], MapSet.put(seen, name)}}
+      {attrs ++ [{"id", name} | marks], {names, seen, MapSet.put(marked, name)}}
     end
   end
 end

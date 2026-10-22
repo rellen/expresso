@@ -159,9 +159,22 @@ end
 | A second edge between the same ends | The name of the first edge, then `:2` | `api->db:2` |
 | An edge with an id in the source | That id | `e1` for `web e1@--> api` |
 
-The label of an edge shows at the steps of its edge. Pele draws each diagram type of
-Mermaid 12.1, such as a sequence diagram or a pie. A type other than a flowchart keeps the
-`data-id` of Pele as the name of each part, and each part can take steps.
+The label of an edge shows at the steps of its edge.
+
+A sequence diagram names its parts in the same way. A message is an edge from one actor to
+the other, so a message without its own part shows from the step where both of its actors
+show:
+
+| Element of a sequence diagram | Name | Example |
+| --- | --- | --- |
+| An actor or a participant, with its lifeline and its activations | Its id | `Web` for `participant Web as Web app` |
+| A message | The two actors and the arrow: `<->` for a message with a head at each end, else `->` | `Customer->Web` |
+| A second message between the same actors in the same direction | The name of the first message, then `:2` | `Web->Customer:2` |
+| A note | `note` and its number, in the order of the source | `note1` |
+
+Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
+no table on this page keeps the `data-id` of Pele as the name of each part, and each part
+can take steps.
 
 Pele is a library in JavaScript, and Expresso holds a copy of it. The render runs it with
 the program `node` on the `PATH`, and the variable `EXPRESSO_NODE` gives a different path.

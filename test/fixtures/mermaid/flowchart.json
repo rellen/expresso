@@ -1,0 +1,187 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-flowchart\" viewBox=\"0 0 405 212\" width=\"405\" height=\"212\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"flowchart\"><g class=\"pele-clusters\"><g class=\"pele-cluster\" data-id=\"app\"><rect x=\"8\" y=\"8\" width=\"237.38\" height=\"108\" fill=\"var(--_a)\" fill-opacity=\"0.5\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-cluster-label\" fill=\"var(--_m)\" x=\"36.06\" y=\"33.6\" text-anchor=\"middle\">App</text></g></g><g class=\"pele-edges\" fill=\"none\" stroke=\"var(--_l)\" stroke-linecap=\"round\"><g class=\"pele-edge\" data-id=\"L_web_api_0\"><path d=\"M95.12,72L136.12,72\"/><path class=\"pele-marker\" d=\"M143.12,72L135.12,75.36L135.12,68.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge\" data-id=\"L_api_db_0\"><path d=\"M205.38,64L312.04,64C319.72,64 319.72,110 327.41,110L332.54,110\"/><path class=\"pele-marker\" d=\"M339.54,110L331.54,113.36L331.54,106.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge\" data-id=\"L_api_db_2\"><path d=\"M205.38,80L245.38,80C261.4,80 261.4,122 277.42,122L332.54,122\"/><path class=\"pele-marker\" d=\"M339.54,122L331.54,125.36L331.54,118.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge\" data-id=\"L_cache_db_0\"><path d=\"M245.38,180C285.96,180 285.96,134 326.54,134L332.54,134\" stroke-dasharray=\"3 4\"/><path class=\"pele-marker\" d=\"M339.54,134L331.54,137.36L331.54,130.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g></g><g class=\"pele-edge-labels\" font-size=\"14\"><g class=\"pele-edge-label\" data-id=\"L_api_db_0\"><rect x=\"267.88\" y=\"53.5\" width=\"42.16\" height=\"21\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"288.96\" y=\"68.9\" text-anchor=\"middle\">reads</text></g></g><g class=\"pele-nodes\"><g class=\"pele-node pele-shape-rect\" data-id=\"web\" transform=\"translate(61.56,72)\"><rect x=\"-33.56\" y=\"-24\" width=\"67.12\" height=\"48\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Web</text></g><g class=\"pele-node pele-shape-rect\" data-id=\"api\" transform=\"translate(174.25,72)\"><rect x=\"-31.13\" y=\"-24\" width=\"62.26\" height=\"48\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">API</text></g><g class=\"pele-node pele-shape-cyl\" data-id=\"db\" transform=\"translate(367.87,122)\"><path d=\"M-28.34,-24A28.34,6 0 0 1 28.34,-24V24A28.34,6 0 0 1 -28.34,24Z\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><path d=\"M-28.34,-24A28.34,6 0 0 0 28.34,-24\" fill=\"none\" stroke=\"var(--_b)\"/><text class=\"pele-label\" x=\"0\" y=\"8.6\" text-anchor=\"middle\">DB</text></g><g class=\"pele-node pele-shape-rect\" data-id=\"cache\" transform=\"translate(205.24,180)\"><rect x=\"-40.14\" y=\"-24\" width=\"80.27\" height=\"48\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Cache</text></g></g></svg>",
+ "type": "flowchart",
+ "model": {
+  "type": "flowchart",
+  "direction": "LR",
+  "nodes": {
+   "web": {
+    "id": "web",
+    "labelType": "text",
+    "styles": [],
+    "classes": [],
+    "text": "Web",
+    "type": "square",
+    "props": {}
+   },
+   "api": {
+    "id": "api",
+    "labelType": "text",
+    "styles": [],
+    "classes": [],
+    "text": "API",
+    "type": "square",
+    "props": {}
+   },
+   "db": {
+    "id": "db",
+    "labelType": "text",
+    "styles": [],
+    "classes": [],
+    "text": "DB",
+    "type": "cylinder",
+    "props": {}
+   },
+   "cache": {
+    "id": "cache",
+    "labelType": "text",
+    "styles": [],
+    "classes": [],
+    "text": "Cache",
+    "type": "square",
+    "props": {}
+   }
+  },
+  "edges": [
+   {
+    "start": "web",
+    "end": "api",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "id": "L_web_api_0"
+   },
+   {
+    "start": "api",
+    "end": "db",
+    "type": "arrow_point",
+    "text": "reads",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "id": "L_api_db_0"
+   },
+   {
+    "start": "api",
+    "end": "db",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "id": "L_api_db_2"
+   },
+   {
+    "start": "cache",
+    "end": "db",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "dotted",
+    "length": 1,
+    "id": "L_cache_db_0"
+   }
+  ],
+  "subgraphs": [
+   {
+    "id": "app",
+    "nodes": [
+     "api",
+     "web"
+    ],
+    "title": "App",
+    "classes": [],
+    "labelType": "text"
+   }
+  ],
+  "classes": {},
+  "tooltips": {},
+  "subgraphLookup": {
+   "app": {
+    "id": "app",
+    "nodes": [
+     "api",
+     "web"
+    ],
+    "title": "App",
+    "classes": [],
+    "labelType": "text"
+   }
+  },
+  "members": [
+   "api",
+   "web"
+  ],
+  "edgeById": {
+   "L_web_api_0": {
+    "start": "web",
+    "end": "api",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "id": "L_web_api_0"
+   },
+   "L_api_db_0": {
+    "start": "api",
+    "end": "db",
+    "type": "arrow_point",
+    "text": "reads",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "id": "L_api_db_0"
+   },
+   "L_api_db_2": {
+    "start": "api",
+    "end": "db",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "normal",
+    "length": 1,
+    "id": "L_api_db_2"
+   },
+   "L_cache_db_0": {
+    "start": "cache",
+    "end": "db",
+    "type": "arrow_point",
+    "text": "",
+    "labelType": "text",
+    "classes": [],
+    "isUserDefinedId": false,
+    "stroke": "dotted",
+    "length": 1,
+    "id": "L_cache_db_0"
+   }
+  },
+  "pairCount": {
+   "web\u0000api": 1,
+   "api\u0000db": 2,
+   "cache\u0000db": 1
+  },
+  "subCount": 1,
+  "options": {
+   "inheritDir": false,
+   "maxEdges": 5000
+  },
+  "mermaidType": "flowchart-v2"
+ }
+}

@@ -29,15 +29,12 @@ dot -Tsvg test/fixtures/graphviz/flow.dot -o test/fixtures/graphviz/flow.svg
 d2 --layout elk --omit-version --pad 0 test/fixtures/d2/flow.d2 test/fixtures/d2/flow.svg
 ```
 
-The script of Pele reads a directory with `source.mmd` and `options.json`, and it writes
-`graph.json` into it:
+Each `.mmd` file of `test/fixtures/mermaid/` has a `.json` file with the output of the
+script of Pele. A test with the tag `:mermaid` compares each one with a new run, and this
+command writes them again:
 
 ```sh
-dir="$(mktemp -d)"
-cp test/fixtures/mermaid/flow.mmd "$dir/source.mmd"
-echo '{"fontFamily":"Atkinson Hyperlegible"}' > "$dir/options.json"
-node priv/pele/render.mjs "$dir"
-python3 -c 'import json,sys; json.dump(json.load(open(sys.argv[1])), open(sys.argv[2], "w"), indent=1, sort_keys=True)' "$dir/graph.json" test/fixtures/mermaid/flow.json
+EXPRESSO_MERMAID=write mix test --only mermaid test/expresso/diagram_mermaid_fixtures_test.exs
 ```
 
 `mix check` runs the tests with the tags in the tool `graph`, and the job `graph` of the
@@ -86,5 +83,5 @@ take a new version:
 2. Copy `node_modules/pele/dist/pele.js` and `node_modules/pele/LICENSE` to `priv/pele/`.
 3. Change `@version` in `Expresso.Element.Diagram.Pele`. A test compares it with
    `package.json`.
-4. Write the fixtures of `test/fixtures/mermaid/` again, and run
+4. Write the fixtures of `test/fixtures/mermaid/` again with the command above, and run
    `mix test --only mermaid`.

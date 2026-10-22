@@ -1,0 +1,11 @@
+sequenceDiagram
+  actor Customer
+  participant Web as Web app
+  participant API
+  Customer->>Web: Place order
+  Web->>API: POST /orders
+  activate API
+  API-->>Web: 201 Created
+  deactivate API
+  Web-->>Customer: Order confirmed
+  Note over Customer,API: One order

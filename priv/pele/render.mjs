@@ -59,6 +59,7 @@ try {
     JSON.stringify(
       { svg: result.svg, type: result.type, model: parse(source) },
       plain,
+      1,
     ),
   );
 } catch (error) {
