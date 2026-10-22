@@ -279,6 +279,15 @@ A Gantt chart draws no line between two tasks, so each task is a node with no ed
 | A task or a milestone | Its id, or the id of Mermaid for a task without an id, such as `task1` | `write` for `Write the deck :write, 2026-01-05, 5d` |
 | The label of a section | The name of the section | `Build` |
 
+A timeline has no edges. A section and a period are containers, so a part of a period shows
+its events too:
+
+| Element of a timeline | Name | Example |
+| --- | --- | --- |
+| A section | Its name | `Early` |
+| A period, with its line and its dot | Its text. It has its section as its parent. | `2025` |
+| An event | The period, `/` and the number of the event in the period, from 1 | `2025/2` for `Diagrams` in `2025 : Charts : Diagrams` |
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.

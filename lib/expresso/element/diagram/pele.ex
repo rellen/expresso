@@ -147,6 +147,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "requirement" => Expresso.Element.Diagram.Pele.Requirement,
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
     "state" => Expresso.Element.Diagram.Pele.State,
+    "timeline" => Expresso.Element.Diagram.Pele.Timeline,
     "usecase" => Expresso.Element.Diagram.Pele.Usecase
   }
 
@@ -172,7 +173,7 @@ defmodule Expresso.Element.Diagram.Pele do
         {{tag, attrs, children}, acc}
 
       nil ->
-        if edge?(attrs, plan),
+        if unnamed?(attrs, plan),
           do: wrap({tag, attrs, children}, plan, acc),
           else: walk_children({tag, attrs, children}, plan, acc)
     end
@@ -185,25 +186,36 @@ defmodule Expresso.Element.Diagram.Pele do
     {{tag, attrs, children}, acc}
   end
 
-  # An edge with no `data-id` goes into a group with its name and its marks,
-  # as the group of an edge of each other type, so `Expresso.Element.Diagram`
-  # and `Expresso.Element.Diagram.Outline` find it.
+  # A named part with no `data-id` gets its name and its marks. A group takes
+  # them itself, and another element, such as a `path`, goes into a group
+  # with them, as the group of a part of each other type, so
+  # `Expresso.Element.Diagram` and `Expresso.Element.Diagram.Outline` find it.
   defp wrap({tag, attrs, children}, plan, acc) do
     {named, acc} = give_name(attrs, nil, plan, acc)
+    {children, acc} = walk(children, plan, acc)
 
-    case named -- attrs do
-      [] -> {{tag, attrs, children}, acc}
-      marks -> {{"g", marks, [{tag, attrs, children}]}, acc}
+    case {tag, named -- attrs} do
+      {_tag, []} -> {{tag, attrs, children}, acc}
+      {"g", _marks} -> {{tag, named, children}, acc}
+      {_tag, marks} -> {{"g", marks, [{tag, attrs, children}]}, acc}
     end
   end
 
-  # Some types draw an edge with no `data-id`, such as the line of a mindmap.
-  # A plan with three arguments gets such an edge with the `data-id` `nil`,
-  # and `wrap/3` puts a named edge into a group.
-  defp edge?(attrs, plan) do
+  # Some types draw a part with no `data-id`, such as the line of a mindmap
+  # or an event of a timeline. A plan with three arguments gets such a node or
+  # edge with the `data-id` `nil`.
+  defp unnamed?(attrs, plan) do
     case List.keyfind(attrs, "class", 0) do
-      {"class", class} -> is_function(plan, 3) and "pele-edge" in String.split(class)
+      {"class", class} -> is_function(plan, 3) and kind(String.split(class)) != nil
       nil -> false
+    end
+  end
+
+  defp kind(classes) do
+    cond do
+      "pele-edge" in classes -> :edge
+      "pele-node" in classes -> :node
+      true -> nil
     end
   end
 
@@ -217,9 +229,9 @@ defmodule Expresso.Element.Diagram.Pele do
         nil -> ""
       end
 
-    # The edges with no `data-id` have one count, whatever their classes, such
-    # as a merge of a git graph.
-    key = if data_id, do: {data_id, class}, else: nil
+    # The edges with no `data-id` have one count, whatever their other
+    # classes, such as a merge of a git graph, and the nodes have another.
+    key = if data_id, do: {data_id, class}, else: kind(String.split(class))
     count = Map.get(counts, key, 0)
     counts = Map.put(counts, key, count + 1)
 
