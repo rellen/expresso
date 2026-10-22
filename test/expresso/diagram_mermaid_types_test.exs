@@ -106,6 +106,29 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"Animal", 2}, {"Turtle", 3}], "Animal<-Turtle", "3"},
       outline: {"Reef", []}
     },
+    "cynefin" => %{
+      names: [
+        "complex",
+        "complicated",
+        "chaotic",
+        "clear",
+        "confusion",
+        "User research",
+        "Design the API",
+        "Write the docs",
+        "complex->complicated",
+        "complicated->clear"
+      ],
+      kinds: %{
+        "complex" => "container",
+        "User research" => "node",
+        "complicated->clear" => "edge"
+      },
+      ends: %{"complex->complicated" => {"complex", "complicated"}},
+      parents: %{"User research" => "complex", "Write the docs" => "clear", "complex" => nil},
+      follow: {[{"complex", 2}, {"complicated", 3}], "complex->complicated", "3"},
+      outline: {"complex", ["to complicated (Pattern found)"]}
+    },
     "er" => %{
       names: [
         "CUSTOMER--ORDER",

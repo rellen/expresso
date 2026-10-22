@@ -401,6 +401,16 @@ the same entity. A lane is a container:
 | A box of a time frame | The id of its time frame. It has its lane as its parent. | `02` for `timeframe 02 command AddSlide` |
 | A relation | The source, `->` and the target | `01->02` |
 
+A Cynefin diagram names a transition by its two domains. A domain is a container:
+
+| Element of a Cynefin diagram | Name | Example |
+| --- | --- | --- |
+| A domain, with its region and its label | Its name | `complex`, `confusion` |
+| An item | Its label. It has its domain as its parent. | `User research` |
+| A transition | The two domains and `->` | `complex->complicated` |
+
+Each of the five domains is a part, also a domain with no items.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |
