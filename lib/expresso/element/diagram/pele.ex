@@ -146,6 +146,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "journey" => Expresso.Element.Diagram.Pele.Journey,
     "kanban" => Expresso.Element.Diagram.Pele.Kanban,
     "mindmap" => Expresso.Element.Diagram.Pele.Mindmap,
+    "pie" => Expresso.Element.Diagram.Pele.Pie,
     "requirement" => Expresso.Element.Diagram.Pele.Requirement,
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
     "state" => Expresso.Element.Diagram.Pele.State,
@@ -168,38 +169,33 @@ defmodule Expresso.Element.Diagram.Pele do
     do: Enum.map_reduce(nodes, acc, &walk(&1, plan, &2))
 
   defp walk({tag, attrs, children}, plan, acc) when is_binary(tag) do
-    case List.keyfind(attrs, "data-id", 0) do
-      {"data-id", data_id} ->
-        {attrs, acc} = give_name(attrs, data_id, plan, acc)
-        {children, acc} = walk(children, plan, acc)
-        {{tag, attrs, children}, acc}
+    data_id =
+      case List.keyfind(attrs, "data-id", 0) do
+        {"data-id", data_id} -> data_id
+        nil -> nil
+      end
 
-      nil ->
-        if unnamed?(attrs, plan),
-          do: wrap({tag, attrs, children}, plan, acc),
-          else: walk_children({tag, attrs, children}, plan, acc)
+    if data_id || unnamed?(attrs, plan) do
+      {named, acc} = give_name(attrs, data_id, plan, acc)
+      {children, acc} = walk(children, plan, acc)
+      {place(tag, attrs, named, children), acc}
+    else
+      {children, acc} = walk(children, plan, acc)
+      {{tag, attrs, children}, acc}
     end
   end
 
   defp walk(node, _plan, acc), do: {node, acc}
 
-  defp walk_children({tag, attrs, children}, plan, acc) do
-    {children, acc} = walk(children, plan, acc)
-    {{tag, attrs, children}, acc}
-  end
-
-  # A named part with no `data-id` gets its name and its marks. A group takes
-  # them itself, and another element, such as a `path`, goes into a group
-  # with them, as the group of a part of each other type, so
+  # A group takes its name and its marks itself. Another element with marks,
+  # such as the `path` of a slice of a pie, goes into a group with its name
+  # and its marks, as the group of a part of each other type, so
   # `Expresso.Element.Diagram` and `Expresso.Element.Diagram.Outline` find it.
-  defp wrap({tag, attrs, children}, plan, acc) do
-    {named, acc} = give_name(attrs, nil, plan, acc)
-    {children, acc} = walk(children, plan, acc)
-
-    case {tag, named -- attrs} do
-      {_tag, []} -> {{tag, attrs, children}, acc}
-      {"g", _marks} -> {{tag, named, children}, acc}
-      {_tag, marks} -> {{"g", marks, [{tag, attrs, children}]}, acc}
+  defp place(tag, attrs, named, children) do
+    case named -- attrs do
+      [{"id", _name}] -> {tag, named, children}
+      [{"id", _name} | _marks] = marks when tag != "g" -> {"g", marks, [{tag, attrs, children}]}
+      _added -> {tag, named, children}
     end
   end
 
