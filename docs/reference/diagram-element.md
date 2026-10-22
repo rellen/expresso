@@ -324,6 +324,15 @@ A quadrant chart has no edges. Each quadrant and each point is a node:
 
 The axes show at each step.
 
+A radar chart has no edges. Each curve and the label of each axis is a node:
+
+| Element of a radar chart | Name | Example |
+| --- | --- | --- |
+| A curve, with its item of the legend | Its name in the source | `x` for `curve x["Expresso"]{4, 3, 5}` |
+| The label of an axis | `axis-` and the name of the axis | `axis-a` for `axis a["Speed"]` |
+
+The grid and the lines of the axes show at each step.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |
