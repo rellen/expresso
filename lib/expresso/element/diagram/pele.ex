@@ -144,7 +144,8 @@ defmodule Expresso.Element.Diagram.Pele do
     "mindmap" => Expresso.Element.Diagram.Pele.Mindmap,
     "requirement" => Expresso.Element.Diagram.Pele.Requirement,
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
-    "state" => Expresso.Element.Diagram.Pele.State
+    "state" => Expresso.Element.Diagram.Pele.State,
+    "usecase" => Expresso.Element.Diagram.Pele.Usecase
   }
 
   @doc "The types of Pele that have a plan, with the names and the marks of their parts"
