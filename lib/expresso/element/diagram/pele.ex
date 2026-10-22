@@ -146,6 +146,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "journey" => Expresso.Element.Diagram.Pele.Journey,
     "kanban" => Expresso.Element.Diagram.Pele.Kanban,
     "mindmap" => Expresso.Element.Diagram.Pele.Mindmap,
+    "packet" => Expresso.Element.Diagram.Pele.Packet,
     "pie" => Expresso.Element.Diagram.Pele.Pie,
     "quadrantChart" => Expresso.Element.Diagram.Pele.Quadrant,
     "radar" => Expresso.Element.Diagram.Pele.Radar,

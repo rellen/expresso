@@ -358,6 +358,16 @@ A tree view has no edges. A directory is a container:
 
 Two files with the same name in two directories get the same name, so a part shows both.
 
+A packet diagram has no edges. Each field is a node:
+
+| Element of a packet diagram | Name | Example |
+| --- | --- | --- |
+| A field | Its first bit, `-` and its last bit | `0-15` for `0-15: "Source Port"` |
+| A field that wraps to the next row | One name for each row | `16-31` and `32-47` for `16-47: "Data"` |
+
+The name is the range of bits, because two fields can have the same label, such as
+`Reserved`.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |
