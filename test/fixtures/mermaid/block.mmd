@@ -1,0 +1,9 @@
+block-beta
+  columns 3
+  client["Client"] space server["Server"]
+  block:store:3
+    db[("Orders")] cache["Cache"]
+  end
+  client --> server
+  server -- "reads" --> db
+  server --> cache
