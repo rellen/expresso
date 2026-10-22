@@ -315,6 +315,15 @@ An XY chart has no edges. Each series is a node, with its bars or its line and p
 
 The axes and the grid show at each step.
 
+A quadrant chart has no edges. Each quadrant and each point is a node:
+
+| Element of a quadrant chart | Name | Example |
+| --- | --- | --- |
+| A quadrant | `quadrant-` and its number, as the source names it | `quadrant-2` |
+| A point, with its label | Its text | `Charts` for `Charts: [0.3, 0.8]` |
+
+The axes show at each step.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |
