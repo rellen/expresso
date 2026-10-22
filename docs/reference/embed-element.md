@@ -26,6 +26,8 @@ end
 | `width` | A CSS width, such as `"900px"` or `"80%"` | The largest width of the page. A percentage is a part of the width of the slide. The default is `80%`. The page is narrower when the slide does not have the height for this width, so the page fits in the height that is left. |
 | `aspect` | Two numbers with a slash, such as `"16/9"` | The ratio of the width to the height. The default is `16/9`. |
 | `interactive` | `true` or `false` | Let the page take clicks and keys. The default is `false`. |
+| `window` | `:macos`, `:terminal`, `:plain` or `:none` | A frame that looks like a window. The default is the `window` option of the deck. See [the window option](window-option.md). |
+| `window_title` | A string | The text of the bar of the window. Give the address of the page, such as `"localhost:4000"`, for the look of a browser. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 

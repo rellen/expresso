@@ -1236,6 +1236,21 @@ start at two different places, and a large gap separates them. Therefore code el
 that share a parent do not grow, and their code starts at the left edge of the parent. The
 rule `.code:has(~ .code), .code ~ .code` of `assets/style.css` finds them.
 
+
+### The window
+
+The `window` option puts a code element, an image or an embed into a frame that looks like
+a window of an operating system. `Expresso.Element.Window` gives the rules:
+
+- **One step before the render.** `Expresso.Element.Window.apply/1` runs in
+  `Expresso.Renderer.render/1`. It gives each such element the `window` option of the deck
+  when the element has none, and it gives a code element with `src` the name of its file as
+  the title. The element keeps the option, so the transformers do not need the deck.
+- **A frame inside the element.** `Expresso.Element.Window.wrap/3` puts the content of the
+  element into the frame, inside the root tag. The root tag keeps its class, its overlay
+  attributes and its place, so the steps, the morph and the layout check do not change.
+- **The colors of the theme.** The dots take the roles `danger`, `warning` and `success`,
+  so each theme gives them a color with its own contrast.
 ### The columns
 
 A `columns` element puts its `column` elements side by side, and a column holds the same

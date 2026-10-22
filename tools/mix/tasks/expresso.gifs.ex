@@ -104,6 +104,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "chart-sankey-loop", deck: "chart_sankey_loop.exs", still: true},
     %{name: "chart-chord", deck: "chart_chord.exs", actions: ["j", "j", "j", "j"]},
     %{name: "chart-alluvial", deck: "chart_alluvial.exs", actions: ["j", "j"]},
+    %{name: "code-window", deck: "code_window.exs", actions: ["j", "j", "j"]},
     %{name: "tree-org", deck: "tree_org.exs", actions: ["j", "j"]},
     %{name: "tree-disk", deck: "tree_disk.exs", actions: ["j", "j"]},
     %{name: "tree-reorg", deck: "tree_reorg.exs", actions: ["j"]},

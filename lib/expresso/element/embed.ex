@@ -41,6 +41,8 @@ defmodule Expresso.Element.Embed do
               :aspect,
               :fallback,
               :index,
+              :window,
+              :window_title,
               interactive: false,
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
@@ -178,6 +180,8 @@ defmodule Expresso.Element.Embed do
       index: embed.index,
       interactive: embed.interactive,
       sandbox: sandbox(src),
+      window: embed.window,
+      window_title: embed.window_title,
       fallback: embed.fallback && Expresso.Image.data_uri!(embed.fallback),
       overlay:
         Expresso.Overlay.Render.attributes(embed) ++ Expresso.Element.box_style(width, aspect)
@@ -205,27 +209,33 @@ defmodule Expresso.Element.Embed do
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("embed", assigns[:class]), rest!: @overlay do
-        div class: "embed-box" do
-          if @fallback do
-            img class: "embed-fallback", src: @fallback, alt: @title
-          else
-            div class: "embed-fallback embed-placeholder" do
-              p do: @title
+        Expresso.Element.Window.wrap(assigns[:window], assigns[:window_title], box(assigns))
+      end
+    end
+  end
 
-              if @address do
-                p class: "embed-address", do: @address
-              end
+  defp box(assigns) do
+    temple do
+      div class: "embed-box" do
+        if @fallback do
+          img class: "embed-fallback", src: @fallback, alt: @title
+        else
+          div class: "embed-fallback embed-placeholder" do
+            p do: @title
+
+            if @address do
+              p class: "embed-address", do: @address
             end
           end
+        end
 
-          iframe class: "embed-frame",
-                 title: @title,
-                 data_embed: @index,
-                 data_interactive: @interactive,
-                 sandbox: @sandbox,
-                 referrerpolicy: "no-referrer",
-                 tabindex: if(@interactive, do: nil, else: "-1") do
-          end
+        iframe class: "embed-frame",
+               title: @title,
+               data_embed: @index,
+               data_interactive: @interactive,
+               sandbox: @sandbox,
+               referrerpolicy: "no-referrer",
+               tabindex: if(@interactive, do: nil, else: "-1") do
         end
       end
     end

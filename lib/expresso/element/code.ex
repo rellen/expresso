@@ -77,6 +77,8 @@ defmodule Expresso.Element.Code do
               :lines,
               :reveal,
               :highlight,
+              :window,
+              :window_title,
               dim: false,
               relative: false,
               trailing_comments: true,
@@ -602,6 +604,8 @@ defmodule Expresso.Element.Code do
       lines: lines,
       lang: lang,
       wrap: code.wrap,
+      window: code.window,
+      window_title: code.window_title,
       numbers: width(code.line_numbers, lines),
       overlay: Expresso.Overlay.Render.attributes(code)
     }
@@ -652,19 +656,26 @@ defmodule Expresso.Element.Code do
               assigns[:class]
             ),
           rest!: @overlay do
-        pre do
-          code class: "highlight",
-               style: @numbers && "--line-number-width: #{@numbers}ch; --has-numbers: 1" do
-            for {number, html, attributes} <- @lines do
-              span class: "line", rest!: attributes do
-                if @numbers do
-                  span class: "line-number", aria_hidden: "true" do
-                    number
-                  end
-                end
+        Expresso.Element.Window.wrap(assigns[:window], assigns[:window_title], block(assigns))
+      end
+    end
+  end
 
-                Phoenix.HTML.raw(html)
+  # sobelow_skip ["XSS.Raw"]
+  defp block(assigns) do
+    temple do
+      pre do
+        code class: "highlight",
+             style: @numbers && "--line-number-width: #{@numbers}ch; --has-numbers: 1" do
+          for {number, html, attributes} <- @lines do
+            span class: "line", rest!: attributes do
+              if @numbers do
+                span class: "line-number", aria_hidden: "true" do
+                  number
+                end
               end
+
+              Phoenix.HTML.raw(html)
             end
           end
         end
