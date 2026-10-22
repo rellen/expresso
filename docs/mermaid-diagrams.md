@@ -109,3 +109,4 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | 8. Architecture | Done. An edge is named by its two ends, such as `web->api`. Pele gives each edge between the same ends one `data-id`, so the function of a plan can take a third argument: the number of earlier elements with the same `data-id` and the same classes. |
 | 9. Block | Done. An edge is named by its two ends, such as `server->db`. A composite block is a container, and a block in it has the composite block as its parent. |
 | 10. Mindmap | Done. A line is an edge from a node to its child, such as `root--Elements`. Pele draws a line with no `data-id`, so a plan with three arguments gets such an edge with the `data-id` `nil`, and `Pele.name/1` puts a named line into a group with its marks. |
+| 11. Requirement | Done. A relationship is an edge from its source to its destination, such as `bundle->fast`, with its type as its label. |

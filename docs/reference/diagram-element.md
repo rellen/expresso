@@ -243,6 +243,14 @@ is `--`:
 | A node | Its id, or its text for a node without an id | `root` for `root((Expresso))`, `Code` for `Code` |
 | The line from a node to a child | The node, `--` and the child | `root--Elements` |
 
+A requirement diagram names a relationship by its source and its destination:
+
+| Element of a requirement diagram | Name | Example |
+| --- | --- | --- |
+| A requirement or an element | Its name | `fast` |
+| A relationship | The source, `->` and the destination. The type of the relationship is its label. | `bundle->fast` for `bundle - satisfies -> fast` and for `fast <- satisfies - bundle` |
+| A second relationship between the same ends in the same direction | The name of the first relationship, then `:2` | `bundle->fast:2` |
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.
