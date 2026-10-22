@@ -214,6 +214,23 @@ defmodule Expresso.Element.DiagramMermaidTest do
       assert count(svg, ~s(g[id^="a->b-"][data-graph-kind="edge"])) == 1
     end
 
+    test "Pele measures each text with the widths of the theme font" do
+      {svg, _names} = Pele.draw!("flowchart LR\n  a[mmmmmmmmmm] --> b[iiiiiiiiii]", "inline")
+
+      [wide, narrow] =
+        for {"rect", attrs, _} <- svg |> Floki.parse_fragment!() |> Floki.find("g.pele-node rect"),
+            do: attrs |> Map.new() |> Map.fetch!("width") |> Float.parse() |> elem(0)
+
+      # The two boxes have the same padding, so the difference of their widths
+      # is the difference of the texts in the theme font, at 16 pixels.
+      widths =
+        Expresso.Element.Diagram.Font.advances(Expresso.Element.Diagram.Font.builtin(), "mi")["0"]
+
+      expected = 10 * (widths["109"] - widths["105"]) * 16
+
+      assert_in_delta wide - narrow, expected, 1
+    end
+
     test "Pele writes the family of the font, and a syntax error stops the render with its message" do
       {svg, _names} = Pele.draw!("flowchart LR\n  a --> b", "inline")
       assert svg =~ "Atkinson Hyperlegible"

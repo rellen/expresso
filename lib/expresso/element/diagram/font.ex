@@ -104,6 +104,123 @@ defmodule Expresso.Element.Diagram.Font do
   def files(font), do: for({style, _name} <- @styles, do: {"font-#{style}.ttf", font[style]})
 
   @doc """
+  The advance width of each character of `text` in each style of a font
+
+  The width is a part of the size of the font, such as `0.55` for a character
+  that is a little more than half of an em wide. The keys of the result are
+  the styles of Pele: `0` regular, `1` bold, `2` italic and `3` bold italic.
+  Each style maps the code point of a character to its width. A character that
+  the font does not have is not in the map, and a measurer gives it a default
+  width. The widths ignore kerning.
+
+  `Expresso.Element.Diagram.Pele` gives the widths to its measurer, so Pele
+  sizes each box for the text in the font of the slide.
+  """
+  @spec advances(t(), String.t()) :: %{String.t() => %{String.t() => float()}}
+  def advances(font, text) do
+    codes = text |> String.to_charlist() |> Enum.uniq() |> Enum.sort()
+
+    for {key, style} <- [{"0", :regular}, {"1", :bold}, {"2", :italic}, {"3", :bold_italic}],
+        into: %{} do
+      {key, widths(font[style], codes)}
+    end
+  end
+
+  defp widths(ttf, codes) do
+    tables = tables(ttf)
+    <<_::binary-18, units::16, _::binary>> = tables["head"]
+    <<_::binary-34, metrics::16, _::binary>> = tables["hhea"]
+    hmtx = tables["hmtx"]
+    glyph = glyph_finder(tables["cmap"])
+
+    for code <- codes, id = glyph.(code), id != 0, into: %{} do
+      advance = u16(hmtx, min(id, metrics - 1) * 2)
+      {Integer.to_string(code), Float.round(advance / units, 4)}
+    end
+  end
+
+  defp tables(
+         <<_version::32, count::16, _rest::binary-6, records::binary-size(count * 16), _::binary>> =
+           ttf
+       ) do
+    for <<tag::binary-4, _checksum::32, offset::32, length::32 <- records>>, into: %{} do
+      {tag, binary_part(ttf, offset, length)}
+    end
+  end
+
+  # The function that gives the glyph of a code point, from the subtable of the
+  # `cmap` for Unicode: format 12 for each code point, or format 4 for the
+  # basic plane.
+  defp glyph_finder(
+         <<_version::16, count::16, records::binary-size(count * 8), _::binary>> = cmap
+       ) do
+    subtables =
+      for <<platform::16, encoding::16, offset::32 <- records>>,
+          {platform, encoding} in [{3, 10}, {0, 4}, {3, 1}, {0, 3}],
+          do: binary_part(cmap, offset, byte_size(cmap) - offset)
+
+    subtables =
+      subtables
+      |> Enum.map(&{u16(&1, 0), &1})
+      |> Enum.filter(fn {format, _subtable} -> format in [4, 12] end)
+
+    case Enum.sort_by(subtables, fn {format, _subtable} -> -format end) do
+      [{12, subtable} | _rest] -> &format12(subtable, &1)
+      [{4, subtable} | _rest] -> &format4(subtable, &1)
+      [] -> raise ArgumentError, "a TTF file has no cmap for Unicode"
+    end
+  end
+
+  defp format12(<<12::16, _::binary-10, groups::32, rest::binary>>, code) do
+    found =
+      for <<start::32, stop::32, glyph::32 <- binary_part(rest, 0, groups * 12)>>,
+          code >= start and code <= stop,
+          do: glyph + code - start
+
+    List.first(found, 0)
+  end
+
+  defp format4(
+         <<4::16, _length::16, _language::16, double::16, _::binary-6, rest::binary>> = table,
+         code
+       )
+       when code <= 0xFFFF do
+    count = div(double, 2)
+
+    <<ends::binary-size(^double), _pad::16, starts::binary-size(^double),
+      deltas::binary-size(^double), _::binary>> = rest
+
+    offsets_at = 16 + 3 * double
+
+    0..(count - 1)
+    |> Enum.find(fn index -> code <= u16(ends, index) end)
+    |> case do
+      nil ->
+        0
+
+      index ->
+        start = u16(starts, index)
+        offset = u16(binary_part(table, offsets_at, double), index)
+        format4_glyph(table, code, index, start, offset, u16(deltas, index), offsets_at)
+    end
+  end
+
+  defp format4(_table, _code), do: 0
+
+  defp format4_glyph(_table, code, _index, start, _offset, _delta, _at) when code < start, do: 0
+
+  defp format4_glyph(_table, code, _index, _start, 0, delta, _at),
+    do: rem(code + delta, 65_536)
+
+  defp format4_glyph(table, code, index, start, offset, delta, at) do
+    glyph = u16(table, div(at + index * 2 + offset + (code - start) * 2, 2))
+    if glyph == 0, do: 0, else: rem(glyph + delta, 65_536)
+  end
+
+  # The unsigned 16-bit number at the index of a table of such numbers.
+  defp u16(binary, index), do: binary |> binary_part(index * 2, 2) |> :binary.decode_unsigned()
+
+  @doc """
   The family and the style of a TTF file, from its `name` table
 
   The family is the name with the id 1, and the style is the name with the id

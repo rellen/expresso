@@ -46,6 +46,10 @@ defmodule Expresso.Element.Diagram.Pele do
   # with the version in `package.json`.
   @version "1.8.0"
 
+  # The printable characters of ASCII, and the ellipsis, for the widths of a
+  # text that Pele writes and that the source does not hold.
+  @ascii List.to_string(Enum.to_list(32..126)) <> "…"
+
   @doc "The tool, for `Expresso.Element.Diagram.Tool`"
   @spec tool() :: Tool.t()
   def tool, do: @tool
@@ -66,7 +70,12 @@ defmodule Expresso.Element.Diagram.Pele do
   Draw the source of a Mermaid diagram, and return the SVG and the names
 
   `label` names the diagram in a message, such as the path of its file. Pele
-  writes the family of `font` in the SVG. The function raises an
+  writes the family of `font` in the SVG, and it measures each text with the
+  advance widths of the characters of `font`, from
+  `Expresso.Element.Diagram.Font.advances/2`. The widths cover each character
+  of the source and each printable character of ASCII, because Pele can write
+  a text that is not in the source, such as a number on an axis. The function
+  raises an
   `ArgumentError` when Node is not present and when Pele cannot draw the
   source, with the message of Pele.
   """
@@ -74,7 +83,11 @@ defmodule Expresso.Element.Diagram.Pele do
   def draw!(source, label, font \\ Font.builtin()) do
     files = [
       {"source.mmd", source},
-      {"options.json", JSON.encode!(%{"fontFamily" => font.family})}
+      {"options.json",
+       JSON.encode!(%{
+         "fontFamily" => font.family,
+         "widths" => Font.advances(font, source <> @ascii)
+       })}
     ]
 
     @tool
