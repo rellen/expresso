@@ -1,0 +1,250 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-mindmap\" viewBox=\"0 0 574 100\" width=\"574\" height=\"100\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"mindmap\"><g transform=\"translate(274.81,49.93)\"><g class=\"pele-branch pele-section-0\"><g class=\"pele-edges\" fill=\"none\" stroke=\"var(--pele-series-1,#4c78a8)\" stroke-width=\"1.5\"><path class=\"pele-edge\" d=\"M41.93,0C67.93,0 67.93,0 93.93,0\"/><path class=\"pele-edge\" d=\"M182.98,0C200.98,0 200.98,-16 218.98,-16\"/><path class=\"pele-edge\" d=\"M182.98,0C200.98,0 200.98,16 218.98,16\"/></g><g class=\"pele-node pele-shape-branch\" data-id=\"Elements\" transform=\"translate(138.46,0)\"><rect x=\"-44.53\" y=\"-15\" width=\"89.06\" height=\"30\" rx=\"15\" fill=\"var(--pele-series-1,#4c78a8)\" fill-opacity=\"0.22\" stroke=\"var(--pele-series-1,#4c78a8)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Elements</text></g><g class=\"pele-node pele-shape-text\" data-id=\"Code\" transform=\"translate(243.47,-16)\"><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Code</text></g><g class=\"pele-node pele-shape-text\" data-id=\"Diagram\" transform=\"translate(254.94,16)\"><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Diagram</text></g></g><g class=\"pele-branch pele-section-1\"><g class=\"pele-edges\" fill=\"none\" stroke=\"var(--pele-series-2,#f58518)\" stroke-width=\"1.5\"><path class=\"pele-edge\" d=\"M-41.93,0C-67.93,0 -67.93,0 -93.93,0\"/><path class=\"pele-edge\" d=\"M-185.75,0C-203.75,0 -203.75,0 -221.75,0\"/></g><g class=\"pele-node pele-shape-branch\" data-id=\"Presenter\" transform=\"translate(-139.84,0)\"><rect x=\"-45.91\" y=\"-15\" width=\"91.82\" height=\"30\" rx=\"15\" fill=\"var(--pele-series-2,#f58518)\" fill-opacity=\"0.22\" stroke=\"var(--pele-series-2,#f58518)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Presenter</text></g><g class=\"pele-node pele-shape-text\" data-id=\"Keys\" transform=\"translate(-244.28,0)\"><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Keys</text></g></g><g class=\"pele-node pele-shape-circle pele-root\" data-id=\"root\" transform=\"translate(0,0)\"><circle r=\"41.93\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><text class=\"pele-label\" x=\"0\" y=\"5.6\" text-anchor=\"middle\">Expresso</text></g></g></svg>",
+ "type": "mindmap",
+ "model": {
+  "type": "mindmap",
+  "nodes": [
+   {
+    "id": 0,
+    "nodeId": "root",
+    "level": 0,
+    "descr": "Expresso",
+    "type": 3,
+    "children": [
+     {
+      "id": 1,
+      "nodeId": "Elements",
+      "level": 2,
+      "descr": "Elements",
+      "type": 0,
+      "children": [
+       {
+        "id": 2,
+        "nodeId": "Code",
+        "level": 4,
+        "descr": "Code",
+        "type": 0,
+        "children": [],
+        "isRoot": false,
+        "section": 0
+       },
+       {
+        "id": 3,
+        "nodeId": "Diagram",
+        "level": 4,
+        "descr": "Diagram",
+        "type": 0,
+        "children": [],
+        "isRoot": false,
+        "section": 0
+       }
+      ],
+      "isRoot": false,
+      "section": 0
+     },
+     {
+      "id": 4,
+      "nodeId": "Presenter",
+      "level": 2,
+      "descr": "Presenter",
+      "type": 0,
+      "children": [
+       {
+        "id": 5,
+        "nodeId": "Keys",
+        "level": 4,
+        "descr": "Keys",
+        "type": 0,
+        "children": [],
+        "isRoot": false,
+        "section": 1
+       }
+      ],
+      "isRoot": false,
+      "section": 1
+     }
+    ],
+    "isRoot": true
+   },
+   {
+    "id": 1,
+    "nodeId": "Elements",
+    "level": 2,
+    "descr": "Elements",
+    "type": 0,
+    "children": [
+     {
+      "id": 2,
+      "nodeId": "Code",
+      "level": 4,
+      "descr": "Code",
+      "type": 0,
+      "children": [],
+      "isRoot": false,
+      "section": 0
+     },
+     {
+      "id": 3,
+      "nodeId": "Diagram",
+      "level": 4,
+      "descr": "Diagram",
+      "type": 0,
+      "children": [],
+      "isRoot": false,
+      "section": 0
+     }
+    ],
+    "isRoot": false,
+    "section": 0
+   },
+   {
+    "id": 2,
+    "nodeId": "Code",
+    "level": 4,
+    "descr": "Code",
+    "type": 0,
+    "children": [],
+    "isRoot": false,
+    "section": 0
+   },
+   {
+    "id": 3,
+    "nodeId": "Diagram",
+    "level": 4,
+    "descr": "Diagram",
+    "type": 0,
+    "children": [],
+    "isRoot": false,
+    "section": 0
+   },
+   {
+    "id": 4,
+    "nodeId": "Presenter",
+    "level": 2,
+    "descr": "Presenter",
+    "type": 0,
+    "children": [
+     {
+      "id": 5,
+      "nodeId": "Keys",
+      "level": 4,
+      "descr": "Keys",
+      "type": 0,
+      "children": [],
+      "isRoot": false,
+      "section": 1
+     }
+    ],
+    "isRoot": false,
+    "section": 1
+   },
+   {
+    "id": 5,
+    "nodeId": "Keys",
+    "level": 4,
+    "descr": "Keys",
+    "type": 0,
+    "children": [],
+    "isRoot": false,
+    "section": 1
+   }
+  ],
+  "baseLevel": 2,
+  "open": [
+   {
+    "id": 0,
+    "nodeId": "root",
+    "level": 0,
+    "descr": "Expresso",
+    "type": 3,
+    "children": [
+     {
+      "id": 1,
+      "nodeId": "Elements",
+      "level": 2,
+      "descr": "Elements",
+      "type": 0,
+      "children": [
+       {
+        "id": 2,
+        "nodeId": "Code",
+        "level": 4,
+        "descr": "Code",
+        "type": 0,
+        "children": [],
+        "isRoot": false,
+        "section": 0
+       },
+       {
+        "id": 3,
+        "nodeId": "Diagram",
+        "level": 4,
+        "descr": "Diagram",
+        "type": 0,
+        "children": [],
+        "isRoot": false,
+        "section": 0
+       }
+      ],
+      "isRoot": false,
+      "section": 0
+     },
+     {
+      "id": 4,
+      "nodeId": "Presenter",
+      "level": 2,
+      "descr": "Presenter",
+      "type": 0,
+      "children": [
+       {
+        "id": 5,
+        "nodeId": "Keys",
+        "level": 4,
+        "descr": "Keys",
+        "type": 0,
+        "children": [],
+        "isRoot": false,
+        "section": 1
+       }
+      ],
+      "isRoot": false,
+      "section": 1
+     }
+    ],
+    "isRoot": true
+   },
+   {
+    "id": 4,
+    "nodeId": "Presenter",
+    "level": 2,
+    "descr": "Presenter",
+    "type": 0,
+    "children": [
+     {
+      "id": 5,
+      "nodeId": "Keys",
+      "level": 4,
+      "descr": "Keys",
+      "type": 0,
+      "children": [],
+      "isRoot": false,
+      "section": 1
+     }
+    ],
+    "isRoot": false,
+    "section": 1
+   },
+   {
+    "id": 5,
+    "nodeId": "Keys",
+    "level": 4,
+    "descr": "Keys",
+    "type": 0,
+    "children": [],
+    "isRoot": false,
+    "section": 1
+   }
+  ],
+  "mermaidType": "mindmap"
+ }
+}

@@ -115,6 +115,26 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"api", 2}, {"db", 3}], "api->db", "3"},
       outline: {"App", []}
     },
+    "mindmap" => %{
+      names: [
+        "root--Elements",
+        "Elements--Code",
+        "Elements--Diagram",
+        "Elements",
+        "Code",
+        "Diagram",
+        "root--Presenter",
+        "Presenter--Keys",
+        "Presenter",
+        "Keys",
+        "root"
+      ],
+      kinds: %{"root" => "node", "Code" => "node", "Elements--Code" => "edge"},
+      ends: %{"root--Presenter" => {"root", "Presenter"}},
+      parents: %{"Code" => nil},
+      follow: {[{"Elements", 2}, {"Code", 3}], "Elements--Code", "3"},
+      outline: {"Elements", ["with Code", "with Diagram"]}
+    },
     "sequence" => %{
       names: [
         "Customer",

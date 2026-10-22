@@ -141,6 +141,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "class" => Expresso.Element.Diagram.Pele.Class,
     "er" => Expresso.Element.Diagram.Pele.Er,
     "flowchart" => Expresso.Element.Diagram.Pele.Flowchart,
+    "mindmap" => Expresso.Element.Diagram.Pele.Mindmap,
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
     "state" => Expresso.Element.Diagram.Pele.State
   }
@@ -160,17 +161,47 @@ defmodule Expresso.Element.Diagram.Pele do
     do: Enum.map_reduce(nodes, acc, &walk(&1, plan, &2))
 
   defp walk({tag, attrs, children}, plan, acc) when is_binary(tag) do
-    {attrs, acc} =
-      case List.keyfind(attrs, "data-id", 0) do
-        {"data-id", data_id} -> give_name(attrs, data_id, plan, acc)
-        nil -> {attrs, acc}
-      end
+    case List.keyfind(attrs, "data-id", 0) do
+      {"data-id", data_id} ->
+        {attrs, acc} = give_name(attrs, data_id, plan, acc)
+        {children, acc} = walk(children, plan, acc)
+        {{tag, attrs, children}, acc}
 
+      nil ->
+        if edge?(attrs, plan),
+          do: wrap({tag, attrs, children}, plan, acc),
+          else: walk_children({tag, attrs, children}, plan, acc)
+    end
+  end
+
+  defp walk(node, _plan, acc), do: {node, acc}
+
+  defp walk_children({tag, attrs, children}, plan, acc) do
     {children, acc} = walk(children, plan, acc)
     {{tag, attrs, children}, acc}
   end
 
-  defp walk(node, _plan, acc), do: {node, acc}
+  # An edge with no `data-id` goes into a group with its name and its marks,
+  # as the group of an edge of each other type, so `Expresso.Element.Diagram`
+  # and `Expresso.Element.Diagram.Outline` find it.
+  defp wrap({tag, attrs, children}, plan, acc) do
+    {named, acc} = give_name(attrs, nil, plan, acc)
+
+    case named -- attrs do
+      [] -> {{tag, attrs, children}, acc}
+      marks -> {{"g", marks, [{tag, attrs, children}]}, acc}
+    end
+  end
+
+  # Some types draw an edge with no `data-id`, such as the line of a mindmap.
+  # A plan with three arguments gets such an edge with the `data-id` `nil`,
+  # and `wrap/3` puts a named edge into a group.
+  defp edge?(attrs, plan) do
+    case List.keyfind(attrs, "class", 0) do
+      {"class", class} -> is_function(plan, 3) and "pele-edge" in String.split(class)
+      nil -> false
+    end
+  end
 
   # Each element gets its name. The first element of a name whose plan gives
   # marks gets them, so a lifeline or a label before its part does not take
@@ -185,18 +216,22 @@ defmodule Expresso.Element.Diagram.Pele do
     count = Map.get(counts, {data_id, class}, 0)
     counts = Map.put(counts, {data_id, class}, count + 1)
 
-    {name, marks} =
-      if is_function(plan, 3),
-        do: plan.(data_id, String.split(class), count),
-        else: plan.(data_id, String.split(class))
+    case call(plan, data_id, String.split(class), count) do
+      {nil, _marks} ->
+        {attrs, {names, seen, marked, counts}}
 
-    names = if MapSet.member?(seen, name), do: names, else: [name | names]
-    seen = MapSet.put(seen, name)
+      {name, marks} ->
+        names = if MapSet.member?(seen, name), do: names, else: [name | names]
+        seen = MapSet.put(seen, name)
 
-    if marks == [] or MapSet.member?(marked, name) do
-      {attrs ++ [{"id", name}], {names, seen, marked, counts}}
-    else
-      {attrs ++ [{"id", name} | marks], {names, seen, MapSet.put(marked, name), counts}}
+        if marks == [] or MapSet.member?(marked, name),
+          do: {attrs ++ [{"id", name}], {names, seen, marked, counts}},
+          else: {attrs ++ [{"id", name} | marks], {names, seen, MapSet.put(marked, name), counts}}
     end
   end
+
+  defp call(plan, data_id, classes, count) when is_function(plan, 3),
+    do: plan.(data_id, classes, count)
+
+  defp call(plan, data_id, classes, _count), do: plan.(data_id, classes)
 end

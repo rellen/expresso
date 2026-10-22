@@ -235,6 +235,14 @@ A block diagram names an edge by its two ends. A composite block is a container:
 | An edge | The two ends and the arrow: `->` for a head at the end, `<-` for a head at the start, `<->` for a head at each end, and `--` for no head | `server->db` |
 | A second edge between the same ends with the same arrow | The name of the first edge, then `:2` | `server->db:2` |
 
+A mindmap names each line by the node and its child. A line has no direction, so its arrow
+is `--`:
+
+| Element of a mindmap | Name | Example |
+| --- | --- | --- |
+| A node | Its id, or its text for a node without an id | `root` for `root((Expresso))`, `Code` for `Code` |
+| The line from a node to a child | The node, `--` and the child | `root--Elements` |
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.
