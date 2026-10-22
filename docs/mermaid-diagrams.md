@@ -128,3 +128,4 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | 27. Ishikawa | Done. The head and each category are nodes with their text, and the causes of a category show with it. |
 | 28. Swimlane | Done. A swimlane diagram has the model of a flowchart, so the plan of a flowchart names its parts, and each lane is a container. |
 | 29. Event model | Done. A box is a node with the id of its time frame as its name and its lane as its parent, and a relation is an edge such as `01->02`. |
+| 30. Agent flow | Done. An agent flow has the model of a flowchart, so the plan of a flowchart names its parts. A collapsed flow is one node, and an edge to one of its members goes to the flow. The list for a screen reader puts a space between two lines of a wrapped label. |

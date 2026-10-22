@@ -89,12 +89,22 @@ defmodule Expresso.Element.Diagram.Outline do
     end
   end
 
-  # The text of the `text` elements of a group, with no `title`.
+  # The text of the `text` elements of a group, with no `title`. A `tspan`
+  # with an `x` starts a new line, such as a long label that Pele wraps, so a
+  # space goes before it.
   defp text(group) do
     group
     |> Floki.find("text")
-    |> Enum.map_join(" ", &Floki.text/1)
+    |> Enum.map_join(" ", &lines/1)
     |> String.split()
     |> Enum.join(" ")
   end
+
+  defp lines({"text", _attrs, children}), do: Enum.map_join(children, &line/1)
+
+  defp line({"tspan", attrs, _children} = tspan) do
+    if List.keymember?(attrs, "x", 0), do: " " <> Floki.text(tspan), else: Floki.text(tspan)
+  end
+
+  defp line(node), do: Floki.text([node])
 end

@@ -20,6 +20,22 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
   #   * `outline` - the label of the first item of the list for a screen
   #     reader, and the edges of that item.
   @types %{
+    "agentflow" => %{
+      names: [
+        "output",
+        "intake",
+        "receive->processing",
+        "processing->publish",
+        "processing",
+        "receive",
+        "publish"
+      ],
+      kinds: %{"intake" => "container", "processing" => "node", "processing->publish" => "edge"},
+      ends: %{"receive->processing" => {"receive", "processing"}},
+      parents: %{"receive" => "intake", "publish" => "output", "processing" => nil},
+      follow: {[{"receive", 2}, {"processing", 3}], "receive->processing", "3"},
+      outline: {"Output", []}
+    },
     "architecture" => %{
       names: [
         "cloud",
@@ -521,6 +537,12 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
            ) == [{"Charts", "Charts"}, {"Themes", "Themes"}]
 
     assert Floki.find(tree, ".pele-quadrant text[id]") == []
+  end
+
+  test "the list for a screen reader puts a space between two lines of a wrapped label" do
+    {svg, _names} = "agentflow" |> result() |> Pele.name()
+
+    assert [_output, %{children: [%{label: "Receive the deck"}]} | _rest] = Outline.items(svg)
   end
 
   test "a state of a concurrent region has the composite state as its parent" do

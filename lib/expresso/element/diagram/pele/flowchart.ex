@@ -16,8 +16,10 @@ defmodule Expresso.Element.Diagram.Pele.Flowchart do
   head, and `->` for each other edge. The group of the label of an edge has
   the class `pele-edge-label`, so it takes the name of its edge and no marks.
 
-  A swimlane diagram has the model of a flowchart, and each lane is a
-  subgraph, so this plan names its parts too.
+  A swimlane diagram and an agent flow have the model of a flowchart, and a
+  lane or a flow is a subgraph, so this plan names their parts too. Pele draws
+  a collapsed flow of an agent flow as one node, with no group for its
+  members, so an edge to a member has the flow as its end.
   """
 
   @behaviour Expresso.Element.Diagram.Pele.Plan
@@ -31,12 +33,14 @@ defmodule Expresso.Element.Diagram.Pele.Flowchart do
         {child, subgraph["id"]}
       end
 
+    collapsed = collapsed(model["subgraphs"] || [])
+
     edges =
       for edge <- model["edges"] || [] do
         %{
           key: edge["id"],
-          from: edge["start"],
-          to: edge["end"],
+          from: Map.get(collapsed, edge["start"], edge["start"]),
+          to: Map.get(collapsed, edge["end"], edge["end"]),
           arrow: arrow(edge["type"]),
           label: edge["text"],
           name: if(edge["isUserDefinedId"], do: edge["id"])
@@ -45,6 +49,15 @@ defmodule Expresso.Element.Diagram.Pele.Flowchart do
       |> Plan.edges()
 
     fn data_id, classes -> part(data_id, classes, parents, edges) end
+  end
+
+  # The members of a collapsed flow of an agent flow have no group, so an
+  # edge to a member goes to the flow.
+  defp collapsed(subgraphs) do
+    for %{"metadata" => %{"view" => "collapsed"}} = subgraph <- subgraphs,
+        child <- subgraph["nodes"] || [],
+        into: %{},
+        do: {child, subgraph["id"]}
   end
 
   defp part(data_id, classes, parents, edges) do

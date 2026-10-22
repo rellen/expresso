@@ -161,8 +161,10 @@ end
 
 The label of an edge shows at the steps of its edge.
 
-A swimlane diagram names its parts as a flowchart does, and each lane is a container, such
-as `Presenter` for `subgraph Presenter`.
+A swimlane diagram and an agent flow name their parts as a flowchart does. A lane or a flow
+is a container, such as `Presenter` for `subgraph Presenter` and `intake` for
+`flow intake["Intake"]`. A collapsed flow is one node, and an edge to one of its members
+goes to the flow, such as `receive->processing`.
 
 A sequence diagram names its parts in the same way. A message is an edge from one actor to
 the other, so a message without its own part shows from the step where both of its actors
