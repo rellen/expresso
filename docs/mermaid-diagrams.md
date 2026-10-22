@@ -112,3 +112,4 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | 11. Requirement | Done. A relationship is an edge from its source to its destination, such as `bundle->fast`, with its type as its label. |
 | 12. Use case | Done. A relationship is an edge between two ends, such as `Presenter->Talk`. A system boundary is a container, and a use case in it has the boundary as its parent. |
 | 13. Git | Done. A line is an edge from a parent commit to a commit, such as `deck--chart`, and a commit has its branch as its parent. Pele draws each line with no `data-id`: first each line between two branches, then each line on one branch. A test makes sure that each line goes from the circle of its parent to the circle of its commit. |
+| 14. Gantt | Done. A task is a node with no edges, such as `write`, and the label of a section keeps the name of the section. The types test takes `follow: nil` for a type with no edges. |

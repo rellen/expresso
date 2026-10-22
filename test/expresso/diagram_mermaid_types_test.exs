@@ -16,7 +16,7 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
   #   * `ends` - the two ends of some edges.
   #   * `parents` - the parent of some parts.
   #   * `follow` - two parts with steps, an edge, and the steps of that edge
-  #     with `edges :follow`.
+  #     with `edges :follow`, or `nil` for a type with no edges.
   #   * `outline` - the label of the first item of the list for a screen
   #     reader, and the edges of that item.
   @types %{
@@ -114,6 +114,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       parents: %{"web" => "app", "db" => nil},
       follow: {[{"api", 2}, {"db", 3}], "api->db", "3"},
       outline: {"App", []}
+    },
+    "gantt" => %{
+      names: ["write", "charts", "review", "release", "Build", "Ship"],
+      kinds: %{"write" => "node", "release" => "node"},
+      ends: %{},
+      parents: %{"write" => nil},
+      follow: nil,
+      outline: {"Write the deck", []}
     },
     "gitGraph" => %{
       names: [
@@ -376,23 +384,25 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
         end
       end
 
-      test "an edge without a part shows where both of its ends show" do
-        {parts, edge, steps} = @expected.follow
-        {svg, names} = @type_name |> result() |> Pele.name()
+      if @expected.follow do
+        test "an edge without a part shows where both of its ends show" do
+          {parts, edge, steps} = @expected.follow
+          {svg, names} = @type_name |> result() |> Pele.name()
 
-        diagram =
-          struct!(
-            Builder.diagram("#{@type_name}.mmd",
-              elements: for({name, from} <- parts, do: Builder.part(name, at: [from: from]))
-            ),
-            svg: svg,
-            names: names
-          )
+          diagram =
+            struct!(
+              Builder.diagram("#{@type_name}.mmd",
+                elements: for({name, from} <- parts, do: Builder.part(name, at: [from: from]))
+              ),
+              svg: svg,
+              names: names
+            )
 
-        rendered = [diagram] |> one_slide() |> document() |> screen(".diagram > svg")
-        query = LazyHTML.query(rendered, ~s([data-graph-kind="edge"][id^="#{edge}-"]))
+          rendered = [diagram] |> one_slide() |> document() |> screen(".diagram > svg")
+          query = LazyHTML.query(rendered, ~s([data-graph-kind="edge"][id^="#{edge}-"]))
 
-        assert LazyHTML.attribute(query, "data-on") == [steps]
+          assert LazyHTML.attribute(query, "data-on") == [steps]
+        end
       end
 
       test "gives a screen reader a list of its parts" do

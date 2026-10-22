@@ -272,6 +272,13 @@ arrow is `--`:
 Give each commit an `id`. Mermaid makes a random id for a commit without one, so a part
 cannot name that commit.
 
+A Gantt chart draws no line between two tasks, so each task is a node with no edges:
+
+| Element of a Gantt chart | Name | Example |
+| --- | --- | --- |
+| A task or a milestone | Its id, or the id of Mermaid for a task without an id, such as `task1` | `write` for `Write the deck :write, 2026-01-05, 5d` |
+| The label of a section | The name of the section | `Build` |
+
 Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
 no table on this page keeps the `data-id` of Pele as the name of each part, and each part
 can take steps.
