@@ -47,7 +47,7 @@ defmodule Expresso.Test.PresenterFixtures do
     {[1, 2, 1, 1], [:fade, :slide, :none, :zoom]}
   ]
 
-  @keys ~w(j k ArrowRight ArrowLeft ArrowUp ArrowDown PageDown PageUp Home End Enter b d m p s r f g a o ? / Escape x Tab) ++
+  @keys ~w(j k ArrowRight ArrowLeft ArrowUp ArrowDown PageDown PageUp Home End Enter b w d m p s r f g a o ? / Escape x Tab) ++
           [" "] ++ Enum.map(0..9, &Integer.to_string/1)
 
   @kinds [:none, :fade, :slide, :zoom]
@@ -218,10 +218,13 @@ defmodule Expresso.Test.PresenterFixtures do
             {{field, value}, r}
           end)
 
-        fields = Map.new(fields)
+        # The JSON object has string keys. A map with atom keys encodes them in
+        # the order that the atoms were made, and that order changes with the
+        # order in which the modules load.
+        json = Map.new(fields, fn {field, value} -> {Atom.to_string(field), value} end)
 
-        {{["message", slide, step, fields],
-          {:message, %{slide: slide, step: step, fields: fields}}}, r}
+        {{["message", slide, step, json],
+          {:message, %{slide: slide, step: step, fields: Map.new(fields)}}}, r}
     end
   end
 
