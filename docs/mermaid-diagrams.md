@@ -114,4 +114,5 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | 13. Git | Done. A line is an edge from a parent commit to a commit, such as `deck--chart`, and a commit has its branch as its parent. Pele draws each line with no `data-id`: first each line between two branches, then each line on one branch. A test makes sure that each line goes from the circle of its parent to the circle of its commit. |
 | 14. Gantt | Done. A task is a node with no edges, such as `write`, and the label of a section keeps the name of the section. The types test takes `follow: nil` for a type with no edges. |
 | 15. Timeline | Done. A section and a period are containers, and an event is a node such as `2025/2`. Pele draws an event with no `data-id`, so a plan with three arguments now gets each node with no `data-id` too, with a count of its own. A group with no `data-id` takes its name and its marks itself. |
-| 16. Kanban | Done. A column is a container, and a card is a node with its column as its parent. |
+| 16. User journey | Done. A section is a container, and a task is a node with its section as its parent. The line of the scores is one path, and the faces have no `data-id`, so they show at each step. |
+| 17. Kanban | Done. A column is a container, and a card is a node with its column as its parent. |

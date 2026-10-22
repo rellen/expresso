@@ -288,6 +288,16 @@ its events too:
 | A period, with its line and its dot | Its text. It has its section as its parent. | `2025` |
 | An event | The period, `/` and the number of the event in the period, from 1 | `2025/2` for `Diagrams` in `2025 : Charts : Diagrams` |
 
+A user journey has no edges. A section is a container:
+
+| Element of a user journey | Name | Example |
+| --- | --- | --- |
+| A section | Its name | `Before` |
+| A task | Its text. It has its section as its parent. | `Write the deck` |
+| An item of the legend of the actors | The name of the actor | `Presenter` |
+
+The line of the scores and the faces on it show at each step.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |
