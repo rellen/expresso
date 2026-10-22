@@ -197,6 +197,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"Elements", 2}, {"Code", 3}], "Elements--Code", "3"},
       outline: {"Elements", ["with Code", "with Diagram"]}
     },
+    "packet" => %{
+      names: ["0-15", "16-31", "32-47", "48-63", "64-95"],
+      kinds: %{"0-15" => "node", "64-95" => "node"},
+      ends: %{},
+      parents: %{"32-47" => nil},
+      follow: nil,
+      outline: {"Source Port", []}
+    },
     "pie" => %{
       names: ["Slides", "Demo", "Questions"],
       kinds: %{"Slides" => "node", "Questions" => "node"},

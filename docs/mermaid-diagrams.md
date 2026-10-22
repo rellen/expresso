@@ -123,3 +123,4 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | 22. Sankey | Done. A link is an edge from its source to its target, such as `Sales->Revenue`, with its value as its label, and a node keeps its name. |
 | 23. Treemap | Done. A section is a container, and a section or a leaf in it has it as its parent. |
 | 24. Tree view | Done. A directory is a container, and a directory or a file in it has it as its parent. |
+| 25. Packet | Done. A field is a node with its range of bits as its name, such as `0-15`. A field that wraps to the next row has one part for each row. |
