@@ -1,0 +1,9 @@
+gantt
+  title The release
+  dateFormat YYYY-MM-DD
+  section Build
+    Write the deck :write, 2026-01-05, 5d
+    Add the charts :charts, after write, 3d
+  section Ship
+    Review :review, after charts, 2d
+    Release :milestone, release, after review, 0d
