@@ -121,3 +121,4 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | 20. Quadrant | Done. A quadrant is a node such as `quadrant-2`, and a point is a node with its text as its name. Pele draws the label of a point with no `data-id`, so a plan with three arguments now gets each label with no `data-id` too. A label counts in its group, and the plan gets the classes of the group, such as `pele-point-labels`. |
 | 21. Radar | Done. A curve is a node with its name in the source, and the label of an axis is a node such as `axis-a`. |
 | 22. Sankey | Done. A link is an edge from its source to its target, such as `Sales->Revenue`, with its value as its label, and a node keeps its name. |
+| 23. Treemap | Done. A section is a container, and a section or a leaf in it has it as its parent. |

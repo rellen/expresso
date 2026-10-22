@@ -340,6 +340,15 @@ A sankey diagram names a link by its source and its target:
 | A node, with its label | Its name | `Revenue` |
 | A link | The source, `->` and the target. The value of the link is its label. | `Sales->Revenue` for `Sales,Revenue,60` |
 
+A treemap has no edges. A section is a container:
+
+| Element of a treemap | Name | Example |
+| --- | --- | --- |
+| A section | Its name. It has the section around it as its parent. | `Code` |
+| A leaf | Its name. It has its section as its parent. | `Elixir` for `"Elixir": 70` |
+
+Two leaves with the same name in two sections get the same name, so a part shows both.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |

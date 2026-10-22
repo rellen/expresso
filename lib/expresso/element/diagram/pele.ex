@@ -154,6 +154,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
     "state" => Expresso.Element.Diagram.Pele.State,
     "timeline" => Expresso.Element.Diagram.Pele.Timeline,
+    "treemap" => Expresso.Element.Diagram.Pele.Treemap,
     "usecase" => Expresso.Element.Diagram.Pele.Usecase,
     "xychart" => Expresso.Element.Diagram.Pele.Xychart
   }
