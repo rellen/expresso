@@ -17,6 +17,7 @@ defmodule Expresso.Element.Diagram.Outline do
   | `data-graph-parent` | The `id` of the container of a node or of a container |
   | `data-graph-from`, `data-graph-to` | The ends of an edge |
   | `data-graph-arrow` | The arrow of an edge: `->`, `<-`, `<->` or `--` |
+  | `data-graph-label` | The label of an edge, when the label is not inside the group of the edge |
 
   The label of an element is the text that it shows, or its name when it
   shows no text.
@@ -50,7 +51,7 @@ defmodule Expresso.Element.Diagram.Outline do
     edges =
       for {"g", attrs, _} = group <- Floki.find(tree, ~s(g[data-graph-kind="edge"])),
           attrs = Map.new(attrs),
-          do: edge(attrs, text(group), labels)
+          do: edge(attrs, attrs["data-graph-label"] || text(group), labels)
 
     ids = MapSet.new(shapes, & &1.id)
     tops = Enum.filter(shapes, &(&1.parent == nil or not MapSet.member?(ids, &1.parent)))

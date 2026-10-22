@@ -37,9 +37,10 @@ burrito_target =
     # processor while a browser test waits for the page.
     {:e2e, "mix test --only e2e", deps: [:ex_unit]},
 
-    # The tests that run a tool that draws a graph, such as Graphviz.
-    # `docs/development/graph-tools.md` tells how to install each tool.
-    {:graph, "mix test --only graphviz --only d2", deps: [:ex_unit]},
+    # The tests that run a tool that draws a graph: Graphviz, D2, and Pele in
+    # Node for Mermaid. `docs/development/graph-tools.md` tells how to install
+    # each tool.
+    {:graph, "mix test --only graphviz --only d2 --only mermaid", deps: [:ex_unit]},
 
     # The binary of Burrito and its tests. The release uses the build of prod.
     # The tests start after the browser tests, and only after a release that

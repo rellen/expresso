@@ -13,7 +13,8 @@ The jobs run in parallel on Linux, so the slowest of them gives their time:
 - `test`: the unit tests, in two jobs, `test (1/2)` and `test (2/2)`.
 - `e2e`: the browser tests, in three jobs, `e2e (1/3)` to `e2e (3/3)`.
 - `graph`: the tests that run a tool that draws a graph. This job, the jobs of `e2e` and
-  the job `gifs` install Graphviz and D2 with `.github/actions/setup-graph-tools`. See
+  the job `gifs` install Graphviz and D2 with `.github/actions/setup-graph-tools`. The job
+  `graph` also installs Node, because Pele draws a Mermaid diagram in Node. See
   `graph-tools.md`.
 - `dependency`: the dependency test.
 - `presenter`: `npm run check`, `npm run lint`, `npm run format:check` and `npm test`.
