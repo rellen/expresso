@@ -353,6 +353,21 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"Presenter", 2}, {"Talk", 3}], "Presenter->Talk", "3"},
       outline: {"Expresso", []}
     },
+    "venn" => %{
+      names: [
+        "Desirable",
+        "Feasible",
+        "Viable",
+        "D1",
+        "Desirable|Feasible",
+        "Desirable|Feasible|Viable"
+      ],
+      kinds: %{"Desirable" => "node", "D1" => "node", "Desirable|Feasible" => "node"},
+      ends: %{},
+      parents: %{"Viable" => nil},
+      follow: nil,
+      outline: {"Desirable", []}
+    },
     "xychart" => %{
       names: ["Shop", "bar2", "line1"],
       kinds: %{"Shop" => "node", "bar2" => "node", "line1" => "node"},
