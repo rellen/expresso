@@ -23,6 +23,8 @@ end
 | `alt` | A string | The text of the image for a screen reader. Without it, the image is decorative, and the `alt` attribute is empty. |
 | `width` | A CSS width, such as `"900px"` or `"60%"` | The width of the image. A percentage is a part of the width of the slide. The default is the natural width of the image. |
 | `goto` | A slide and a step, such as `[slide: 5]` or `[slide: "summary"]` | Makes the element a link to that slide and step. See [the goto option](goto-option.md). |
+| `window` | `:macos`, `:terminal`, `:plain` or `:none` | A frame that looks like a window. The default is the `window` option of the deck. See [the window option](window-option.md). |
+| `window_title` | A string | The text of the bar of the window. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 

@@ -45,6 +45,8 @@ defmodule Expresso.Element.Image do
               :alt,
               :width,
               :goto,
+              :window,
+              :window_title,
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 
@@ -66,6 +68,8 @@ defmodule Expresso.Element.Image do
       src: Expresso.Image.data_uri!(src),
       alt: alt || "",
       goto: goto,
+      window: image.window,
+      window_title: image.window_title,
       overlay: Expresso.Overlay.Render.attributes(image) ++ width(width)
     }
   end
@@ -87,13 +91,19 @@ defmodule Expresso.Element.Image do
   def render(assigns) do
     temple do
       div class: Expresso.Element.classes("image", assigns[:class]), rest!: @overlay do
-        if @goto do
-          a class: "goto", href: Expresso.Goto.href(@goto), data_link: @goto.index do
-            img src: @src, alt: @alt
-          end
-        else
+        Expresso.Element.Window.wrap(assigns[:window], assigns[:window_title], picture(assigns))
+      end
+    end
+  end
+
+  defp picture(assigns) do
+    temple do
+      if @goto do
+        a class: "goto", href: Expresso.Goto.href(@goto), data_link: @goto.index do
           img src: @src, alt: @alt
         end
+      else
+        img src: @src, alt: @alt
       end
     end
   end

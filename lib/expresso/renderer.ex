@@ -544,6 +544,8 @@ defmodule Expresso.Renderer do
   dims the lines of each code element with the `highlight` option with
   `Expresso.Element.Code.spotlight/1` first. It runs the tool of each graph
   with `Expresso.Element.Diagram.draw/1`, so a render runs each tool one time.
+  `Expresso.Element.Window.apply/1` gives each code element, image and embed
+  the window of the deck when it has none of its own.
   It gives each element its identity
   with `Expresso.Overlay.Render.identify/1` next. Then `Expresso.Goto.resolve/1` gives each link its number and its
   commands, and it raises for a link to a slide or a step that the deck does not have.
@@ -570,6 +572,7 @@ defmodule Expresso.Renderer do
           |> Expresso.Element.Diagram.draw()
           |> Expresso.Element.Diagram.place()
           |> Expresso.Element.Embed.number()
+          |> Expresso.Element.Window.apply()
           |> Expresso.Element.Video.number()
           |> Expresso.Element.Audio.number()
           |> Expresso.Overlay.Render.identify()

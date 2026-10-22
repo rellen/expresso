@@ -34,6 +34,8 @@ end
 | `wrap` | `true` or `false` | Break a long line with its next parts indented. See [long lines](#long-lines). The default is `false`. |
 | `relative` | `true` or `false` | Count the numbers of `reveal` and `highlight` from the first line of the excerpt. The default is `false`. |
 | `whole_first` | `true` or `false` | With `highlight`, the whole code shows in full color for one step before the first group. The default is `false`. |
+| `window` | `:macos`, `:terminal`, `:plain` or `:none` | A frame that looks like a window. The default is the `window` option of the deck. See [the window option](window-option.md). |
+| `window_title` | A string | The text of the bar of the window. Without it, a code element with `src` shows the name of its file. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 

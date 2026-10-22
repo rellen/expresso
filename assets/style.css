@@ -1795,6 +1795,106 @@ body[data-view="handout"] .chart-frames {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+/*
+ * The window option puts a code element, an image or an embed into a frame
+ * that looks like a window of an operating system. The bar has a fixed
+ * height, so an embed can keep its aspect ratio under it. The dots of
+ * :macos and :terminal take the roles danger, warning and success of the
+ * theme, as red, yellow and green. A deck can set the custom properties of
+ * the frame.
+ */
+.window {
+  --window-bar: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  border: 1px solid
+    var(--window-border, color-mix(in srgb, var(--muted) 45%, transparent));
+  border-radius: var(--window-radius, 0.35rem);
+  background: var(--window-background, var(--background));
+  box-shadow: var(--window-shadow, 0 0.25rem 0.9rem rgba(0, 0, 0, 0.4));
+}
+.code .window {
+  background: var(--window-background, var(--code-background));
+}
+.window-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.4rem;
+  box-sizing: border-box;
+  height: var(--window-bar);
+  padding: 0 0.5rem;
+  font-size: 0.45rem;
+  color: var(--muted);
+  background: var(
+    --window-bar-background,
+    color-mix(in srgb, var(--muted) 18%, var(--background))
+  );
+  border-bottom: 1px solid
+    var(--window-border, color-mix(in srgb, var(--muted) 45%, transparent));
+}
+.window-dots {
+  display: flex;
+  flex: none;
+  gap: 0.25rem;
+}
+.window-dots span {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--danger);
+}
+.window-dots span:nth-child(2) {
+  background: var(--warning);
+}
+.window-dots span:nth-child(3) {
+  background: var(--success);
+}
+.window-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The title of :macos is at the center of the bar, so the space after it
+   has the width of the dots. */
+.window-macos .window-title {
+  text-align: center;
+}
+.window-macos .window-bar::after {
+  content: "";
+  flex: none;
+  width: 1.7rem;
+}
+.window-terminal .window-bar {
+  background: var(--window-bar-background, var(--code-background));
+  border-bottom: 0;
+}
+.window-terminal .window-title {
+  font-family: monospace;
+}
+.window-plain {
+  border-radius: var(--window-radius, 0.15rem);
+}
+.window > pre {
+  padding: 0.4rem 0.6rem;
+  overflow: hidden;
+}
+.image .window img {
+  display: block;
+  min-height: 0;
+}
+.embed .window .embed-box {
+  width: min(
+    var(--embed-width, 80vw),
+    calc((100cqh - var(--window-bar)) * var(--embed-aspect, 16/9))
+  );
+}
 /* A hidden line keeps its space, and the block does not move when a group
    of lines shows. */
 .code .line {

@@ -60,6 +60,21 @@ defmodule Expresso.Extension do
     ]
   ]
 
+  # The frame of a window around a code element, an image or an embed.
+  # `Expresso.Element.Window` gives the rules.
+  @window_schema [
+    window: [
+      type: {:in, Expresso.Element.Window.styles()},
+      doc:
+        "A frame that looks like a window of an operating system: :macos, :terminal, :plain or :none. The default is the window option of the deck. See docs/reference/window-option.md."
+    ],
+    window_title: [
+      type: :string,
+      doc:
+        "The text of the bar of the window. A code element with src shows the name of its file without this option."
+    ]
+  ]
+
   # A link to a slide and a step of the deck. `Expresso.Goto` gives the rules.
   @goto_schema [
     goto: [
@@ -105,6 +120,7 @@ defmodule Expresso.Extension do
       @overlay_schema ++
         @class_schema ++
         @goto_schema ++
+        @window_schema ++
         [
           src: [
             type: :string,
@@ -128,6 +144,7 @@ defmodule Expresso.Extension do
     schema:
       @overlay_schema ++
         @class_schema ++
+        @window_schema ++
         [
           src: [
             type: {:custom, Expresso.Element.Embed, :source, []},
@@ -666,6 +683,7 @@ defmodule Expresso.Extension do
     schema:
       @overlay_schema ++
         @class_schema ++
+        @window_schema ++
         [
           lang: [
             type: :string,
@@ -1300,6 +1318,11 @@ defmodule Expresso.Extension do
         type: {:custom, Expresso.Deck, :dim_contrast, []},
         doc:
           "The minimum contrast ratio of dimmed text on its background, from 3 to 7. The default is 3. Give 4.5 to meet WCAG 2.2 criterion 1.4.3 for normal text. See docs/reference/dim-contrast-option.md."
+      ],
+      window: [
+        type: {:in, Expresso.Element.Window.styles()},
+        doc:
+          "The frame of each code element, image and embed without a window option: :macos, :terminal, :plain or :none. The default is :none. See docs/reference/window-option.md."
       ],
       icons: [
         type: :keyword_list,

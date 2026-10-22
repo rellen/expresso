@@ -305,6 +305,55 @@ Examples.CodeConfig
 
 ![The table of the server is in focus, then the table of the database](https://raw.githubusercontent.com/rellen/expresso/media/code-config.gif)
 
+## Put the code into a window
+
+Give the deck the `window` option, and each code element goes into a frame that looks like a
+window of macOS. The bar shows the name of the file of `src`. A code element can give its
+own `window` style and its own `window_title`. `:terminal` suits the output of a command:
+
+```elixir
+defmodule Examples.CodeWindow do
+  use Expresso
+
+  root __DIR__
+  window(:macos)
+
+  slide "the counter" do
+    heading "The counter"
+
+    code "elixir" do
+      src "counter.ex"
+      lines 8..15
+      highlight [[from: "def init"], [from: "def handle_call", to: :block]]
+    end
+  end
+
+  slide "the tests" do
+    heading "The tests"
+
+    code do
+      window(:terminal)
+      window_title("~/counter — zsh")
+
+      text """
+      $ mix test
+      ...
+      Finished in 0.02 seconds (0.00s async, 0.02s sync)
+      3 tests, 0 failures
+      """
+    end
+  end
+end
+
+Examples.CodeWindow
+```
+
+![Lines of a file in a window with three colored dots and the name of the file, with one function and then the next in focus, then the output of mix test in a terminal window](https://raw.githubusercontent.com/rellen/expresso/media/code-window.gif)
+
+The two windows are code elements on neighbor slides, so the window moves from one slide to
+the next. An image and an embed take the same options. See
+[the window option](../reference/window-option.md).
+
 ## Make sure that the lines fit
 
 A long line breaks on the slide, and the reader then sees two lines with one number. Open

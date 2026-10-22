@@ -99,6 +99,7 @@ defmodule Expresso.MixProject do
         "docs/reference/chart-element.md",
         "docs/reference/tree-element.md",
         "docs/reference/code-element.md",
+        "docs/reference/window-option.md",
         "docs/reference/layout-check.md",
         "docs/reference/check-option.md",
         "docs/reference/class-option.md",
