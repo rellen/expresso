@@ -318,6 +318,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: nil,
       outline: {"Code 100", []}
     },
+    "treeView" => %{
+      names: ["lib", "expresso", "diagram.ex", "expresso.ex", "mix.exs"],
+      kinds: %{"lib" => "container", "expresso" => "container", "mix.exs" => "node"},
+      ends: %{},
+      parents: %{"expresso" => "lib", "diagram.ex" => "expresso", "mix.exs" => nil},
+      follow: nil,
+      outline: {"lib", []}
+    },
     "usecase" => %{
       names: [
         "Expresso",

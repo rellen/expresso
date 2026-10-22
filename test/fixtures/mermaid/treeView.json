@@ -1,0 +1,54 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-treeView\" viewBox=\"0 0 134 156\" width=\"134\" height=\"156\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_hw:var(--pele-heading-weight,bold);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"treeView\"><g class=\"pele-tree-guides\" fill=\"none\" stroke=\"var(--_b)\" stroke-width=\"1\"><path d=\"M15,34V102Q15,106 19,106H23M15,50H23\"/><path d=\"M35,62V74Q35,78 39,78H43\"/></g><g class=\"pele-node pele-tree-dir\" data-id=\"lib\"><text class=\"pele-label\" x=\"8\" y=\"27.6\" font-weight=\"var(--_hw)\" xml:space=\"preserve\">lib</text></g><g class=\"pele-node pele-tree-dir\" data-id=\"expresso\"><text class=\"pele-label\" x=\"28\" y=\"55.6\" font-weight=\"var(--_hw)\" xml:space=\"preserve\">expresso</text></g><g class=\"pele-node pele-tree-file\" data-id=\"diagram.ex\"><text class=\"pele-label\" x=\"48\" y=\"83.6\" xml:space=\"preserve\">diagram.ex</text></g><g class=\"pele-node pele-tree-file\" data-id=\"expresso.ex\"><text class=\"pele-label\" x=\"28\" y=\"111.6\" xml:space=\"preserve\">expresso.ex</text></g><g class=\"pele-node pele-tree-file\" data-id=\"mix.exs\"><text class=\"pele-label\" x=\"8\" y=\"139.6\" xml:space=\"preserve\">mix.exs</text></g></svg>",
+ "type": "treeView",
+ "model": {
+  "type": "treeView",
+  "root": {
+   "id": 0,
+   "level": -1,
+   "name": "/",
+   "nodeType": "directory",
+   "children": [
+    {
+     "id": 1,
+     "level": 4,
+     "name": "lib",
+     "nodeType": "directory",
+     "children": [
+      {
+       "id": 2,
+       "level": 8,
+       "name": "expresso",
+       "nodeType": "directory",
+       "children": [
+        {
+         "id": 3,
+         "level": 12,
+         "name": "diagram.ex",
+         "nodeType": "file",
+         "children": []
+        }
+       ]
+      },
+      {
+       "id": 4,
+       "level": 8,
+       "name": "expresso.ex",
+       "nodeType": "file",
+       "children": []
+      }
+     ]
+    },
+    {
+     "id": 5,
+     "level": 4,
+     "name": "mix.exs",
+     "nodeType": "file",
+     "children": []
+    }
+   ]
+  },
+  "count": 6,
+  "mermaidType": "treeView"
+ }
+}

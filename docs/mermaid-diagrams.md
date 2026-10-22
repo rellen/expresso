@@ -122,3 +122,4 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | 21. Radar | Done. A curve is a node with its name in the source, and the label of an axis is a node such as `axis-a`. |
 | 22. Sankey | Done. A link is an edge from its source to its target, such as `Sales->Revenue`, with its value as its label, and a node keeps its name. |
 | 23. Treemap | Done. A section is a container, and a section or a leaf in it has it as its parent. |
+| 24. Tree view | Done. A directory is a container, and a directory or a file in it has it as its parent. |

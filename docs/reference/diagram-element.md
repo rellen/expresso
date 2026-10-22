@@ -349,6 +349,15 @@ A treemap has no edges. A section is a container:
 
 Two leaves with the same name in two sections get the same name, so a part shows both.
 
+A tree view has no edges. A directory is a container:
+
+| Element of a tree view | Name | Example |
+| --- | --- | --- |
+| A directory | Its name without the `/`. It has the directory around it as its parent. | `lib` for `lib/` |
+| A file | Its name. It has its directory as its parent. | `mix.exs` |
+
+Two files with the same name in two directories get the same name, so a part shows both.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |
