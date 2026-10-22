@@ -148,6 +148,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "mindmap" => Expresso.Element.Diagram.Pele.Mindmap,
     "pie" => Expresso.Element.Diagram.Pele.Pie,
     "quadrantChart" => Expresso.Element.Diagram.Pele.Quadrant,
+    "radar" => Expresso.Element.Diagram.Pele.Radar,
     "requirement" => Expresso.Element.Diagram.Pele.Requirement,
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
     "state" => Expresso.Element.Diagram.Pele.State,

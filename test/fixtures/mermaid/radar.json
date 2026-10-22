@@ -1,0 +1,50 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-radar\" viewBox=\"0 0 493 419\" width=\"493\" height=\"419\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_tw:var(--pele-title-weight,bold);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"radar\"><text class=\"pele-title\" font-weight=\"var(--_tw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"246.5\" y=\"25.6\">Skills</tspan></text><g transform=\"translate(184.91,235)\"><g class=\"pele-graticule\" fill=\"none\" stroke=\"var(--_a)\"><circle r=\"32\"/><circle r=\"64\"/><circle r=\"96\"/><circle r=\"128\"/><circle r=\"160\"/></g><path class=\"pele-axes\" d=\"M0,0L0,-160M0,0L138.56,80M0,0L-138.56,80\" fill=\"none\" stroke=\"var(--_b)\"/><g class=\"pele-curves\" fill-opacity=\"0.2\" stroke-width=\"1.5\" stroke-linejoin=\"round\"><path class=\"pele-curve\" data-id=\"x\" fill=\"var(--pele-series-1,#4c78a8)\" stroke=\"var(--pele-series-1,#4c78a8)\" d=\"M0,-128 C37.69,-133.44 106.69,12.64 83.14,48 C59.58,83.36 -124.43,109.92 -138.56,80 C-152.7,50.08 -37.69,-122.56 0,-128 Z\"/><path class=\"pele-curve\" data-id=\"y\" fill=\"var(--pele-series-2,#f58518)\" stroke=\"var(--pele-series-2,#f58518)\" d=\"M0,-64 C37.69,-58.56 152.7,60.96 138.56,80 C124.43,99.04 -59.58,72.48 -83.14,48 C-106.69,23.52 -37.69,-69.44 0,-64 Z\"/></g><g class=\"pele-axis-labels\" font-size=\"14\"><g class=\"pele-axis-label\" data-id=\"a\"><text x=\"0\" y=\"-179.6\" text-anchor=\"middle\">Speed</text></g><g class=\"pele-axis-label\" data-id=\"b\"><text x=\"175.34\" y=\"102.4\" text-anchor=\"middle\">Memory</text></g><g class=\"pele-axis-label\" data-id=\"c\"><text x=\"-163.8\" y=\"102.4\" text-anchor=\"middle\">Size</text></g></g><g class=\"pele-legend\" font-size=\"14\"><g class=\"pele-legend-item\" data-id=\"x\"><rect x=\"223.98\" y=\"-19\" width=\"12\" height=\"12\" rx=\"2\" fill=\"var(--pele-series-1,#4c78a8)\" fill-opacity=\"0.4\" stroke=\"var(--pele-series-1,#4c78a8)\"/><text x=\"271.75\" y=\"-8.1\" text-anchor=\"middle\">Expresso</text></g><g class=\"pele-legend-item\" data-id=\"y\"><rect x=\"223.98\" y=\"7\" width=\"12\" height=\"12\" rx=\"2\" fill=\"var(--pele-series-2,#f58518)\" fill-opacity=\"0.4\" stroke=\"var(--pele-series-2,#f58518)\"/><text x=\"261.31\" y=\"17.9\" text-anchor=\"middle\">Other</text></g></g></g></svg>",
+ "type": "radar",
+ "model": {
+  "type": "radar",
+  "title": "Skills",
+  "axes": [
+   {
+    "name": "a",
+    "label": "Speed"
+   },
+   {
+    "name": "b",
+    "label": "Memory"
+   },
+   {
+    "name": "c",
+    "label": "Size"
+   }
+  ],
+  "curves": [
+   {
+    "name": "x",
+    "label": "Expresso",
+    "entries": [
+     4,
+     3,
+     5
+    ]
+   },
+   {
+    "name": "y",
+    "label": "Other",
+    "entries": [
+     2,
+     5,
+     3
+    ]
+   }
+  ],
+  "options": {
+   "showLegend": true,
+   "ticks": 5,
+   "max": null,
+   "min": 0,
+   "graticule": "circle"
+  },
+  "mermaidType": "radar"
+ }
+}

@@ -213,6 +213,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: nil,
       outline: {"Plan", []}
     },
+    "radar" => %{
+      names: ["x", "y", "axis-a", "axis-b", "axis-c"],
+      kinds: %{"x" => "node", "axis-b" => "node"},
+      ends: %{},
+      parents: %{"y" => nil},
+      follow: nil,
+      outline: {"x", []}
+    },
     "requirement" => %{
       names: ["bundle->fast", "bundle->offline", "offline->fast", "fast", "offline", "bundle"],
       kinds: %{"fast" => "node", "bundle" => "node", "offline->fast" => "edge"},
