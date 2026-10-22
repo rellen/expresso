@@ -378,6 +378,15 @@ A Venn diagram has no edges. A set, an intersection and a text are nodes:
 
 An intersection has no shape of its own, so its part shows its label.
 
+An Ishikawa diagram has no edges. The head and each category are nodes:
+
+| Element of an Ishikawa diagram | Name | Example |
+| --- | --- | --- |
+| The head, the effect | Its text | `A slow deck` |
+| A category, with its bone and its causes | Its text | `Assets` |
+
+A cause has no part of its own, so it shows with its category. The spine shows at each step.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |

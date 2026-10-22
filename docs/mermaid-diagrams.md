@@ -125,3 +125,4 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | 24. Tree view | Done. A directory is a container, and a directory or a file in it has it as its parent. |
 | 25. Packet | Done. A field is a node with its range of bits as its name, such as `0-15`. A field that wraps to the next row has one part for each row. |
 | 26. Venn | Done. A set is a node with its circle and its label. The label of an intersection is a node such as `Desirable\|Feasible`, and a text keeps its id. |
+| 27. Ishikawa | Done. The head and each category are nodes with their text, and the causes of a category show with it. |

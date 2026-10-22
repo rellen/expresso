@@ -146,6 +146,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: {[{"chart", 2}, {"tests", 3}], "chart--tests", "3"},
       outline: {"main", []}
     },
+    "ishikawa" => %{
+      names: ["Assets", "Code", "Network", "A slow deck"],
+      kinds: %{"Assets" => "node", "A slow deck" => "node"},
+      ends: %{},
+      parents: %{"Code" => nil},
+      follow: nil,
+      outline: {"Assets Many fonts Large images", []}
+    },
     "journey" => %{
       names: [
         "Before",
