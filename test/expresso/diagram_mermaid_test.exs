@@ -9,11 +9,11 @@ defmodule Expresso.Element.DiagramMermaidTest do
 
   doctest Pele
 
-  @source "test/fixtures/mermaid/flow.mmd"
+  @source "test/fixtures/mermaid/flowchart.mmd"
 
   # The output of `priv/pele/render.mjs` for `@source`, so these tests run
   # without Node. The tests with the tag `:mermaid` run Pele.
-  @result "test/fixtures/mermaid/flow.json" |> File.read!() |> JSON.decode!()
+  @result "test/fixtures/mermaid/flowchart.json" |> File.read!() |> JSON.decode!()
 
   @names ["app", "web->api", "api->db", "api->db:2", "cache->db", "web", "api", "db", "cache"]
 

@@ -39,7 +39,7 @@ defmodule Expresso.ElementPagesTest do
     File.cp!("test/fixtures/tree.csv", Path.join(root, "team.csv"))
     File.cp!("test/fixtures/graphviz/flow.dot", Path.join(root, "system.dot"))
     File.cp!("test/fixtures/d2/flow.d2", Path.join(root, "system.d2"))
-    File.cp!("test/fixtures/mermaid/flow.mmd", Path.join(root, "system.mmd"))
+    File.cp!("test/fixtures/mermaid/flowchart.mmd", Path.join(root, "system.mmd"))
     File.mkdir_p!(Path.join(root, "fonts/inter"))
 
     for path <- Path.wildcard("assets/fonts/*.ttf"),
