@@ -20,6 +20,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
   #   * `outline` - the label of the first item of the list for a screen
   #     reader, and the edges of that item.
   @types %{
+    "c4" => %{
+      names: ["shop", "customer->web", "web->db", "web<->pay", "customer", "pay", "web", "db"],
+      kinds: %{"shop" => "container", "customer" => "node", "web->db" => "edge"},
+      ends: %{"web<->pay" => {"web", "pay"}},
+      parents: %{"web" => "shop", "db" => "shop", "pay" => nil, "shop" => nil},
+      follow: {[{"web", 2}, {"db", 3}], "web->db", "3"},
+      outline: {"Shop [ENTERPRISE]", []}
+    },
     "class" => %{
       names: [
         "Reef",

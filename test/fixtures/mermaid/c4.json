@@ -1,0 +1,215 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-c4\" viewBox=\"0 0 604 438\" width=\"604\" height=\"438\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_tw:var(--pele-title-weight,bold);--_hw:var(--pele-heading-weight,bold);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"c4\"><text class=\"pele-title\" font-weight=\"var(--_tw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"302\" y=\"25.6\">A shop</tspan></text><g transform=\"translate(8,44)\"><g class=\"pele-clusters\"><g class=\"pele-cluster pele-c4-boundary\" data-id=\"shop\"><rect x=\"0\" y=\"164\" width=\"588\" height=\"222\" fill=\"none\" stroke=\"var(--_b)\" stroke-dasharray=\"6 4\" style=\"rx:var(--_r)\"/><text class=\"pele-cluster-label\" font-weight=\"var(--_hw)\" x=\"16\" y=\"191.6\" text-anchor=\"start\" xml:space=\"preserve\">Shop</text><text class=\"pele-c4-type\" font-size=\"13\" fill=\"var(--_m)\" x=\"16\" y=\"212.55\" text-anchor=\"start\" xml:space=\"preserve\">[ENTERPRISE]</text></g></g><g class=\"pele-edges\" fill=\"none\" stroke=\"var(--_l)\" stroke-linecap=\"round\"><g class=\"pele-edge\" data-id=\"customer-web\"><path d=\"M122,116L122,237\"/><path class=\"pele-marker\" d=\"M122,244L118.64,236L125.36,236Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge\" data-id=\"web-db\"><path d=\"M244,301L337,301\"/><path class=\"pele-marker\" d=\"M344,301L336,304.36L336,297.64Z\" fill=\"var(--_l)\" stroke=\"none\"/></g><g class=\"pele-edge\" data-id=\"web-pay\"><path d=\"M208.91,239.49L349.91,120.51\"/><path class=\"pele-marker\" d=\"M203.56,244L207.5,236.27L211.84,241.41Z\" fill=\"var(--_l)\" stroke=\"none\"/><path class=\"pele-marker\" d=\"M355.26,116L351.31,123.73L346.98,118.59Z\" fill=\"var(--_l)\" stroke=\"none\"/></g></g><g class=\"pele-nodes\"><g class=\"pele-node pele-shape-person pele-c4-person\" data-id=\"customer\" transform=\"translate(108,58)\"><rect x=\"-108\" y=\"-32\" width=\"216\" height=\"90\" rx=\"12\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><circle cy=\"-44\" r=\"13\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><text class=\"pele-c4-type\" font-size=\"12\" fill=\"var(--_m)\" x=\"0\" y=\"-6.8\" text-anchor=\"middle\">«person»</text><text class=\"pele-label\" font-weight=\"var(--_hw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"0\" y=\"15.6\">Customer</tspan></text><text class=\"pele-c4-descr\" font-size=\"13\" x=\"0\" y=\"40.55\" text-anchor=\"middle\">A buyer</text></g><g class=\"pele-node pele-shape-rect pele-c4-external_system pele-c4-external\" data-id=\"pay\" transform=\"translate(424,58)\"><rect x=\"-108\" y=\"-58\" width=\"216\" height=\"116\" fill=\"var(--_bg)\" stroke=\"var(--_b)\" stroke-dasharray=\"4 3\" style=\"rx:var(--_r)\"/><text class=\"pele-c4-type\" font-size=\"12\" fill=\"var(--_m)\" x=\"0\" y=\"-19.8\" text-anchor=\"middle\">«external system»</text><text class=\"pele-label\" font-weight=\"var(--_hw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"0\" y=\"2.6\">Payments</tspan></text><text class=\"pele-c4-descr\" font-size=\"13\" x=\"0\" y=\"27.55\" text-anchor=\"middle\">Takes the money</text></g><g class=\"pele-node pele-shape-rect pele-c4-system\" data-id=\"web\" transform=\"translate(136,301)\"><rect x=\"-108\" y=\"-57\" width=\"216\" height=\"114\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-c4-type\" font-size=\"12\" fill=\"var(--_m)\" x=\"0\" y=\"-19.8\" text-anchor=\"middle\">«system»</text><text class=\"pele-label\" font-weight=\"var(--_hw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"0\" y=\"2.6\">Web store</tspan></text><text class=\"pele-c4-descr\" font-size=\"13\" x=\"0\" y=\"27.55\" text-anchor=\"middle\">Sells goods</text></g><g class=\"pele-node pele-shape-cyl pele-c4-system_db\" data-id=\"db\" transform=\"translate(452,301)\"><path d=\"M-108,-45A108,12 0 0 1 108,-45V45A108,12 0 0 1 -108,45Z\" fill=\"var(--_s)\" stroke=\"var(--_b)\"/><path d=\"M-108,-45A108,12 0 0 0 108,-45\" fill=\"none\" stroke=\"var(--_b)\"/><text class=\"pele-c4-type\" font-size=\"12\" fill=\"var(--_m)\" x=\"0\" y=\"-13.8\" text-anchor=\"middle\">«system db»</text><text class=\"pele-label\" font-weight=\"var(--_hw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"0\" y=\"8.6\">Orders</tspan></text><text class=\"pele-c4-descr\" font-size=\"13\" x=\"0\" y=\"33.55\" text-anchor=\"middle\">Holds the orders</text></g></g><g class=\"pele-edge-labels\" font-size=\"13\"><g class=\"pele-edge-label\" data-id=\"customer-web\"><rect x=\"89.54\" y=\"144.4\" width=\"64.93\" height=\"20\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"122\" y=\"158.95\" text-anchor=\"middle\">Buys from</text></g><g class=\"pele-edge-label\" data-id=\"web-db\"><rect x=\"259.88\" y=\"281\" width=\"68.24\" height=\"40\" rx=\"3\" fill=\"var(--_bg)\"/><text text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"294\" y=\"295.55\">Reads and</tspan><tspan x=\"294\" y=\"315.55\">writes</tspan></text></g><g class=\"pele-edge-label\" data-id=\"web-pay\"><rect x=\"251.76\" y=\"170\" width=\"55.29\" height=\"20\" rx=\"3\" fill=\"var(--_bg)\"/><text x=\"279.41\" y=\"184.55\" text-anchor=\"middle\">Charges</text></g></g></g></svg>",
+ "type": "c4",
+ "model": {
+  "type": "c4",
+  "c4Type": "C4Context",
+  "title": "A shop",
+  "shapes": [
+   {
+    "alias": "customer",
+    "label": "Customer",
+    "parent": {
+     "alias": "global",
+     "label": "global",
+     "type": "global"
+    },
+    "descr": "A buyer",
+    "kind": "person"
+   },
+   {
+    "alias": "web",
+    "label": "Web store",
+    "parent": {
+     "alias": "shop",
+     "label": "Shop",
+     "parent": {
+      "alias": "global",
+      "label": "global",
+      "type": "global"
+     },
+     "type": "ENTERPRISE"
+    },
+    "descr": "Sells goods",
+    "kind": "system"
+   },
+   {
+    "alias": "db",
+    "label": "Orders",
+    "parent": {
+     "alias": "shop",
+     "label": "Shop",
+     "parent": {
+      "alias": "global",
+      "label": "global",
+      "type": "global"
+     },
+     "type": "ENTERPRISE"
+    },
+    "descr": "Holds the orders",
+    "kind": "system_db"
+   },
+   {
+    "alias": "pay",
+    "label": "Payments",
+    "parent": {
+     "alias": "global",
+     "label": "global",
+     "type": "global"
+    },
+    "descr": "Takes the money",
+    "kind": "external_system"
+   }
+  ],
+  "boundaries": [
+   {
+    "alias": "global",
+    "label": "global",
+    "type": "global"
+   },
+   {
+    "alias": "shop",
+    "label": "Shop",
+    "parent": {
+     "alias": "global",
+     "label": "global",
+     "type": "global"
+    },
+    "type": "ENTERPRISE"
+   }
+  ],
+  "rels": [
+   {
+    "type": "rel",
+    "from": "customer",
+    "to": "web",
+    "label": "Buys from",
+    "techn": "",
+    "descr": ""
+   },
+   {
+    "type": "rel",
+    "from": "web",
+    "to": "db",
+    "label": "Reads and writes",
+    "techn": "",
+    "descr": ""
+   },
+   {
+    "type": "birel",
+    "from": "web",
+    "to": "pay",
+    "label": "Charges",
+    "techn": "",
+    "descr": ""
+   }
+  ],
+  "shapeInRow": 4,
+  "boundaryInRow": 2,
+  "shapeIndex": {
+   "customer": {
+    "alias": "customer",
+    "label": "Customer",
+    "parent": {
+     "alias": "global",
+     "label": "global",
+     "type": "global"
+    },
+    "descr": "A buyer",
+    "kind": "person"
+   },
+   "web": {
+    "alias": "web",
+    "label": "Web store",
+    "parent": {
+     "alias": "shop",
+     "label": "Shop",
+     "parent": {
+      "alias": "global",
+      "label": "global",
+      "type": "global"
+     },
+     "type": "ENTERPRISE"
+    },
+    "descr": "Sells goods",
+    "kind": "system"
+   },
+   "db": {
+    "alias": "db",
+    "label": "Orders",
+    "parent": {
+     "alias": "shop",
+     "label": "Shop",
+     "parent": {
+      "alias": "global",
+      "label": "global",
+      "type": "global"
+     },
+     "type": "ENTERPRISE"
+    },
+    "descr": "Holds the orders",
+    "kind": "system_db"
+   },
+   "pay": {
+    "alias": "pay",
+    "label": "Payments",
+    "parent": {
+     "alias": "global",
+     "label": "global",
+     "type": "global"
+    },
+    "descr": "Takes the money",
+    "kind": "external_system"
+   }
+  },
+  "boundaryIndex": {
+   "shop": {
+    "alias": "shop",
+    "label": "Shop",
+    "parent": {
+     "alias": "global",
+     "label": "global",
+     "type": "global"
+    },
+    "type": "ENTERPRISE"
+   }
+  },
+  "relIndex": {
+   "customer": {
+    "web": {
+     "type": "rel",
+     "from": "customer",
+     "to": "web",
+     "label": "Buys from",
+     "techn": "",
+     "descr": ""
+    }
+   },
+   "web": {
+    "db": {
+     "type": "rel",
+     "from": "web",
+     "to": "db",
+     "label": "Reads and writes",
+     "techn": "",
+     "descr": ""
+    },
+    "pay": {
+     "type": "birel",
+     "from": "web",
+     "to": "pay",
+     "label": "Charges",
+     "techn": "",
+     "descr": ""
+    }
+   }
+  },
+  "current": {
+   "alias": "global",
+   "label": "global",
+   "type": "global"
+  },
+  "stack": [],
+  "mermaidType": "c4"
+ }
+}
