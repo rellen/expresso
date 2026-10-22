@@ -27,6 +27,7 @@ defmodule Expresso.Presenter.Default do
   state index: 0,
         view: :present,
         blank: false,
+        white: false,
         help: false,
         digits: "",
         overview: false,
@@ -37,12 +38,13 @@ defmodule Expresso.Presenter.Default do
         menu: false,
         cursor: 0
 
-  sync [:blank, :undim]
+  sync [:blank, :white, :undim]
   reset [:undim]
 
   # The attributes of the `body`. The style sheet reads them.
   attribute :view, "data-view"
   attribute :blank, "data-blank", flag: true
+  attribute :white, "data-white", flag: true
   attribute :progress, "data-progress"
   attribute :every, "data-every"
   attribute :overview, "data-overview", flag: true
@@ -65,9 +67,10 @@ defmodule Expresso.Presenter.Default do
   mark "data-cursor", ".menu-step[data-index]", :index, [{"", :cursor, 0}], scroll: true
   mark "data-current", ".menu-step[data-index]", :index, [{"", :index, 0}]
 
-  # A black screen or the list of keys closes at the next event, and the event
-  # does no more.
-  mode :blank, match: [blank: true], any: set(:blank, false)
+  # A black screen, a white screen or the list of keys closes at the next
+  # event, and the event does no more. A white screen is a black screen with
+  # the field `white`, so each rule of the black screen applies to it.
+  mode :blank, match: [blank: true], any: [set(:blank, false), set(:white, false)]
   mode :help, match: [help: true], any: set(:help, false)
 
   mode :overview do
@@ -138,8 +141,15 @@ defmodule Expresso.Presenter.Default do
         "Menu of the slides and their steps. Only this window shows it.",
         group: @find
 
-    key "b", set(:blank, true), "Black screen. The next key shows the slide again.",
-      group: @screen
+    key "b",
+        [set(:blank, true), set(:white, false)],
+        "Black screen. The next key shows the slide again.",
+        group: @screen
+
+    key "w",
+        [set(:blank, true), set(:white, true)],
+        "White screen. The next key shows the slide again.",
+        group: @screen
 
     key "d",
         toggle(:undim),
@@ -204,8 +214,15 @@ defmodule Expresso.Presenter.Default do
         "Menu of the slides and their steps. Only this window shows it.",
         group: @find
 
-    key "b", set(:blank, true), "Black screen. The next key shows the slide again.",
-      group: @screen
+    key "b",
+        [set(:blank, true), set(:white, false)],
+        "Black screen. The next key shows the slide again.",
+        group: @screen
+
+    key "w",
+        [set(:blank, true), set(:white, true)],
+        "White screen. The next key shows the slide again.",
+        group: @screen
 
     key "d",
         toggle(:undim),

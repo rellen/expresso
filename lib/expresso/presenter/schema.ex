@@ -88,6 +88,7 @@ defmodule Expresso.Presenter.Schema do
     index: :index,
     view: :view,
     blank: :boolean,
+    white: :boolean,
     digits: :digits,
     help: :boolean,
     progress: :boolean,

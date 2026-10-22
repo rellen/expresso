@@ -56,7 +56,8 @@ defmodule Expresso.Steps do
       A step with a label gets the label after a colon, such as
       `"Slide 4 of 13, step 2 of 3: The restart"`.
 
-  The presenter adds ", black screen" to the position while the screen is black.
+  The presenter adds ", black screen" or ", white screen" to the position
+  while the screen is black or white.
   """
   @spec entries(Deck.t()) :: [entry()]
   def entries(%Deck{slides: slides}) do
