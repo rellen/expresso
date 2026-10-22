@@ -1,0 +1,105 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-ishikawa\" viewBox=\"0 0 456 209\" width=\"456\" height=\"209\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_r:var(--pele-radius,4px);--_hw:var(--pele-heading-weight,bold);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"ishikawa\"><g transform=\"translate(308.29,118)\"><path class=\"pele-ishikawa-spine\" d=\"M-233.69,0H-7\" fill=\"none\" stroke=\"var(--_l)\"/><path class=\"pele-marker\" d=\"M0,0L-8,3.36L-8,-3.36Z\" fill=\"var(--_l)\" stroke=\"none\"/><g class=\"pele-ishikawa-category\" data-id=\"Assets\"><path class=\"pele-ishikawa-bones\" d=\"M-37.13,-6.26L-72,-76M-47.75,-27.5H-65.75M-61.25,-54.5H-79.25\" fill=\"none\" stroke=\"var(--_l)\"/><path class=\"pele-marker\" d=\"M-34,0L-40.58,-5.65L-34.57,-8.66Z\" fill=\"var(--_l)\" stroke=\"none\"/><rect x=\"-105.22\" y=\"-110\" width=\"66.43\" height=\"34\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"-72\" y=\"-87.4\" text-anchor=\"middle\">Assets</text><g class=\"pele-ishikawa-causes\" font-size=\"14\"><text x=\"-104.38\" y=\"-22.6\" text-anchor=\"middle\">Many fonts</text><text x=\"-126.24\" y=\"-49.6\" text-anchor=\"middle\">Large images</text></g></g><g class=\"pele-ishikawa-category\" data-id=\"Code\"><path class=\"pele-ishikawa-bones\" d=\"M-37.13,6.26L-58.5,49M-47.75,27.5H-65.75\" fill=\"none\" stroke=\"var(--_l)\"/><path class=\"pele-marker\" d=\"M-34,0L-34.57,8.66L-40.58,5.65Z\" fill=\"var(--_l)\" stroke=\"none\"/><rect x=\"-86.99\" y=\"49\" width=\"56.98\" height=\"34\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"-58.5\" y=\"71.6\" text-anchor=\"middle\">Code</text><g class=\"pele-ishikawa-causes\" font-size=\"14\"><text x=\"-104.35\" y=\"32.4\" text-anchor=\"middle\">Slow script</text></g></g><g class=\"pele-ishikawa-category\" data-id=\"Network\"><path class=\"pele-ishikawa-bones\" d=\"M-208.82,-6.26L-230.19,-49M-219.44,-27.5H-237.44\" fill=\"none\" stroke=\"var(--_l)\"/><path class=\"pele-marker\" d=\"M-205.69,0L-212.27,-5.65L-206.26,-8.66Z\" fill=\"var(--_l)\" stroke=\"none\"/><rect x=\"-268.89\" y=\"-83\" width=\"77.41\" height=\"34\" fill=\"var(--_s)\" stroke=\"var(--_b)\" style=\"rx:var(--_r)\"/><text class=\"pele-label\" x=\"-230.19\" y=\"-60.4\" text-anchor=\"middle\">Network</text><g class=\"pele-ishikawa-causes\" font-size=\"14\"><text x=\"-271.36\" y=\"-22.6\" text-anchor=\"middle\">No cache</text></g></g><g class=\"pele-ishikawa-head\" data-id=\"A slow deck\"><path d=\"M0,-24H115.57A24,24 0 0 1 115.57,24H0Z\" fill=\"var(--_s)\" stroke=\"var(--_b)\" stroke-linejoin=\"round\"/><text class=\"pele-label\" font-weight=\"var(--_hw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"57.78\" y=\"5.6\">A slow deck</tspan></text></g></g></svg>",
+ "type": "ishikawa",
+ "model": {
+  "type": "ishikawa",
+  "root": {
+   "text": "A slow deck",
+   "children": [
+    {
+     "text": "Assets",
+     "children": [
+      {
+       "text": "Large images",
+       "children": []
+      },
+      {
+       "text": "Many fonts",
+       "children": []
+      }
+     ]
+    },
+    {
+     "text": "Code",
+     "children": [
+      {
+       "text": "Slow script",
+       "children": []
+      }
+     ]
+    },
+    {
+     "text": "Network",
+     "children": [
+      {
+       "text": "No cache",
+       "children": []
+      }
+     ]
+    }
+   ]
+  },
+  "stack": [
+   {
+    "level": 0,
+    "node": {
+     "text": "A slow deck",
+     "children": [
+      {
+       "text": "Assets",
+       "children": [
+        {
+         "text": "Large images",
+         "children": []
+        },
+        {
+         "text": "Many fonts",
+         "children": []
+        }
+       ]
+      },
+      {
+       "text": "Code",
+       "children": [
+        {
+         "text": "Slow script",
+         "children": []
+        }
+       ]
+      },
+      {
+       "text": "Network",
+       "children": [
+        {
+         "text": "No cache",
+         "children": []
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "level": 1,
+    "node": {
+     "text": "Network",
+     "children": [
+      {
+       "text": "No cache",
+       "children": []
+      }
+     ]
+    }
+   },
+   {
+    "level": 5,
+    "node": {
+     "text": "No cache",
+     "children": []
+    }
+   }
+  ],
+  "baseLevel": 4,
+  "mermaidType": "ishikawa"
+ }
+}

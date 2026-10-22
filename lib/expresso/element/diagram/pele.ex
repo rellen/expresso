@@ -143,6 +143,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "flowchart" => Expresso.Element.Diagram.Pele.Flowchart,
     "gantt" => Expresso.Element.Diagram.Pele.Gantt,
     "gitGraph" => Expresso.Element.Diagram.Pele.Git,
+    "ishikawa" => Expresso.Element.Diagram.Pele.Ishikawa,
     "journey" => Expresso.Element.Diagram.Pele.Journey,
     "kanban" => Expresso.Element.Diagram.Pele.Kanban,
     "mindmap" => Expresso.Element.Diagram.Pele.Mindmap,
