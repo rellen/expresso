@@ -205,6 +205,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: nil,
       outline: {"Slides", []}
     },
+    "quadrantChart" => %{
+      names: ["quadrant-1", "quadrant-2", "quadrant-3", "quadrant-4", "Themes", "Charts"],
+      kinds: %{"quadrant-1" => "node", "Charts" => "node"},
+      ends: %{},
+      parents: %{"Charts" => nil},
+      follow: nil,
+      outline: {"Plan", []}
+    },
     "requirement" => %{
       names: ["bundle->fast", "bundle->offline", "offline->fast", "fast", "offline", "bundle"],
       kinds: %{"fast" => "node", "bundle" => "node", "offline->fast" => "edge"},
@@ -404,6 +412,17 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
              {"bar2", "pele-series pele-bars"},
              {"line1", "pele-series pele-line"}
            ]
+  end
+
+  test "the label of a point of a quadrant chart gets the name of its point, and a label of a quadrant does not" do
+    tree = "quadrantChart" |> result() |> Pele.name() |> elem(0) |> Floki.parse_fragment!()
+
+    assert for(
+             {"text", attrs, [text]} <- Floki.find(tree, ".pele-point-labels text"),
+             do: {Map.new(attrs)["id"], text}
+           ) == [{"Charts", "Charts"}, {"Themes", "Themes"}]
+
+    assert Floki.find(tree, ".pele-quadrant text[id]") == []
   end
 
   test "a state of a concurrent region has the composite state as its parent" do

@@ -13,12 +13,15 @@ defmodule Expresso.Element.Diagram.Pele.Plan do
   a plan takes a third argument: the number of earlier elements with the same
   `data-id` and the same classes.
 
-  A plan with three arguments also gets each node, each edge and each series
+  A plan with three arguments also gets each node, edge, series and label
   that has no `data-id`, such as a line of a mindmap, with `nil` as its
-  `data-id`. The count of such an edge is the number of earlier edges with no
-  `data-id`, whatever their other classes, and the same is true for a node
-  and a series. The plan returns the name `nil` for an element that keeps no
-  name.
+  `data-id`. The classes `pele-node`, `pele-edge`, `pele-series` and
+  `pele-label` give these four kinds. The count of such an element is the
+  number of earlier elements of its kind with no `data-id`, whatever their
+  other classes. A label is different: its count is the number of earlier
+  labels in a group with the same classes, and the plan gets the classes of
+  that group after the classes of the label, such as `pele-point-labels`. The
+  plan returns the name `nil` for an element that keeps no name.
 
   The functions of this module make the marks:
 

@@ -127,7 +127,7 @@ defmodule Expresso.Element.Diagram.Pele do
     {tree, {names, _seen, _marked, _counts}} =
       svg
       |> Floki.parse_fragment!()
-      |> walk(plan, {[], MapSet.new(), MapSet.new(), %{}})
+      |> walk(plan, {[], MapSet.new(), MapSet.new(), %{}}, "")
 
     {Floki.raw_html(tree), Enum.reverse(names)}
   end
@@ -147,6 +147,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "kanban" => Expresso.Element.Diagram.Pele.Kanban,
     "mindmap" => Expresso.Element.Diagram.Pele.Mindmap,
     "pie" => Expresso.Element.Diagram.Pele.Pie,
+    "quadrantChart" => Expresso.Element.Diagram.Pele.Quadrant,
     "requirement" => Expresso.Element.Diagram.Pele.Requirement,
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
     "state" => Expresso.Element.Diagram.Pele.State,
@@ -166,10 +167,11 @@ defmodule Expresso.Element.Diagram.Pele do
     end
   end
 
-  defp walk(nodes, plan, acc) when is_list(nodes),
-    do: Enum.map_reduce(nodes, acc, &walk(&1, plan, &2))
+  # `group` holds the classes of the parent of the nodes.
+  defp walk(nodes, plan, acc, group) when is_list(nodes),
+    do: Enum.map_reduce(nodes, acc, &walk(&1, plan, &2, group))
 
-  defp walk({tag, attrs, children}, plan, acc) when is_binary(tag) do
+  defp walk({tag, attrs, children}, plan, acc, group) when is_binary(tag) do
     data_id =
       case List.keyfind(attrs, "data-id", 0) do
         {"data-id", data_id} -> data_id
@@ -177,16 +179,23 @@ defmodule Expresso.Element.Diagram.Pele do
       end
 
     if data_id || unnamed?(attrs, plan) do
-      {named, acc} = give_name(attrs, data_id, plan, acc)
-      {children, acc} = walk(children, plan, acc)
+      {named, acc} = give_name(attrs, data_id, plan, acc, group)
+      {children, acc} = walk(children, plan, acc, class(attrs))
       {place(tag, attrs, named, children), acc}
     else
-      {children, acc} = walk(children, plan, acc)
+      {children, acc} = walk(children, plan, acc, class(attrs))
       {{tag, attrs, children}, acc}
     end
   end
 
-  defp walk(node, _plan, acc), do: {node, acc}
+  defp walk(node, _plan, acc, _group), do: {node, acc}
+
+  defp class(attrs) do
+    case List.keyfind(attrs, "class", 0) do
+      {"class", class} -> class
+      nil -> ""
+    end
+  end
 
   # A group takes its name and its marks itself. Another element with marks,
   # such as the `path` of a slice of a pie, goes into a group with its name
@@ -201,8 +210,9 @@ defmodule Expresso.Element.Diagram.Pele do
   end
 
   # Some types draw a part with no `data-id`, such as the line of a mindmap,
-  # an event of a timeline or a series of an XY chart. A plan with three
-  # arguments gets such a node, edge or series with the `data-id` `nil`.
+  # an event of a timeline, a series of an XY chart or the label of a point.
+  # A plan with three arguments gets such a node, edge, series or label with
+  # the `data-id` `nil`.
   defp unnamed?(attrs, plan) do
     case List.keyfind(attrs, "class", 0) do
       {"class", class} -> is_function(plan, 3) and kind(String.split(class)) != nil
@@ -215,6 +225,7 @@ defmodule Expresso.Element.Diagram.Pele do
       "pele-edge" in classes -> :edge
       "pele-node" in classes -> :node
       "pele-series" in classes -> :series
+      "pele-label" in classes -> :label
       true -> nil
     end
   end
@@ -222,21 +233,13 @@ defmodule Expresso.Element.Diagram.Pele do
   # Each element gets its name. The first element of a name whose plan gives
   # marks gets them, so a lifeline or a label before its part does not take
   # the marks of the part.
-  defp give_name(attrs, data_id, plan, {names, seen, marked, counts}) do
-    class =
-      case List.keyfind(attrs, "class", 0) do
-        {"class", class} -> class
-        nil -> ""
-      end
-
-    # The edges with no `data-id` have one count, whatever their other
-    # classes, such as a merge of a git graph. The nodes and the series have
-    # their own counts.
-    key = if data_id, do: {data_id, class}, else: kind(String.split(class))
+  defp give_name(attrs, data_id, plan, {names, seen, marked, counts}, group) do
+    classes = attrs |> class() |> String.split()
+    {key, classes} = count_key(data_id, classes, group)
     count = Map.get(counts, key, 0)
     counts = Map.put(counts, key, count + 1)
 
-    case call(plan, data_id, String.split(class), count) do
+    case call(plan, data_id, classes, count) do
       {nil, _marks} ->
         {attrs, {names, seen, marked, counts}}
 
@@ -249,6 +252,21 @@ defmodule Expresso.Element.Diagram.Pele do
           else: {attrs ++ [{"id", name} | marks], {names, seen, MapSet.put(marked, name), counts}}
     end
   end
+
+  # An element with a `data-id` counts with the elements of the same
+  # `data-id` and classes. The edges with no `data-id` have one count,
+  # whatever their other classes, such as a merge of a git graph, and the
+  # nodes and the series have their own counts. A label with no `data-id`
+  # counts in its group, and the plan gets the classes of the group too, such
+  # as `pele-point-labels`.
+  defp count_key(nil, classes, group) do
+    case kind(classes) do
+      :label -> {{:label, group}, classes ++ String.split(group)}
+      kind -> {kind, classes}
+    end
+  end
+
+  defp count_key(data_id, classes, _group), do: {{data_id, classes}, classes}
 
   defp call(plan, data_id, classes, count) when is_function(plan, 3),
     do: plan.(data_id, classes, count)

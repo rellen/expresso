@@ -31,8 +31,11 @@ defmodule Expresso.Element.Diagram.Pele.Mindmap do
       |> Plan.edges()
 
     fn
-      nil, _classes, count -> edges["#{count}"] || {nil, []}
-      data_id, classes, _count -> part(data_id, classes)
+      nil, classes, count ->
+        if "pele-edge" in classes, do: edges["#{count}"] || {nil, []}, else: {nil, []}
+
+      data_id, classes, _count ->
+        part(data_id, classes)
     end
   end
 
