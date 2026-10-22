@@ -100,3 +100,4 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | Pull request | State |
 | --- | --- |
 | 1. The tool and the flowchart | Done |
+| 2. The measurer of the theme font | Done. `Font.advances/2` reads the `cmap` (format 4 or 12), `hmtx`, `hhea` and `head` tables of each style. The script gives Pele a measurer that adds the advance widths, with no kerning. A monospace text and a character that the font does not have take 0.6 of the size for each character. |

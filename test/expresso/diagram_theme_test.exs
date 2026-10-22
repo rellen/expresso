@@ -102,6 +102,44 @@ defmodule Expresso.Element.DiagramThemeTest do
       end
     end
 
+    test "advances/2 gives the width of each character in each style, as a part of an em" do
+      widths = Font.advances(Font.builtin(), "W l漢")
+
+      assert Map.keys(widths) == ["0", "1", "2", "3"]
+      assert widths["0"]["87"] == 0.84
+      assert widths["0"]["32"] == 0.28
+      assert widths["0"]["108"] < widths["0"]["87"]
+      assert widths["1"]["87"] != widths["0"]["87"]
+
+      # The font has no glyph for 漢, so a measurer gives it the default width.
+      refute Map.has_key?(widths["0"], "28450")
+    end
+
+    test "advances/2 reads a cmap of the format 12" do
+      # A font with three glyphs, an em of 1000 units, and a cmap of the format
+      # 12 that maps U+1F600 to glyph 1 and U+0041 to glyph 2.
+      head = <<0::size(18)-unit(8), 1000::16, 0::size(34)-unit(8)>>
+      hhea = <<0::size(34)-unit(8), 3::16>>
+      hmtx = <<500::16, 0::16, 700::16, 0::16, 300::16, 0::16>>
+      groups = <<0x41::32, 0x41::32, 2::32, 0x1F600::32, 0x1F600::32, 1::32>>
+      subtable = <<12::16, 0::16, 16 + 24::32, 0::32, 2::32>> <> groups
+      cmap = <<0::16, 1::16, 3::16, 10::16, 12::32>> <> subtable
+
+      tables = [{"cmap", cmap}, {"head", head}, {"hhea", hhea}, {"hmtx", hmtx}]
+      offset = 12 + 16 * length(tables)
+
+      {records, data, _offset} =
+        Enum.reduce(tables, {<<>>, <<>>, offset}, fn {tag, bytes}, {records, data, at} ->
+          {records <> <<tag::binary, 0::32, at::32, byte_size(bytes)::32>>, data <> bytes,
+           at + byte_size(bytes)}
+        end)
+
+      ttf = <<0x00010000::32, length(tables)::16, 0::48>> <> records <> data
+      font = %{family: "Test", regular: ttf, bold: ttf, italic: ttf, bold_italic: ttf}
+
+      assert Font.advances(font, "A😀b")["0"] == %{"65" => 0.3, "128512" => 0.7}
+    end
+
     test "files/1 names a file for each style" do
       assert Font.builtin() |> Font.files() |> Enum.map(&elem(&1, 0)) ==
                ["font-regular.ttf", "font-bold.ttf", "font-italic.ttf", "font-bold_italic.ttf"]

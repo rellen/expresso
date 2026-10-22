@@ -208,7 +208,10 @@ end
 
 The directory holds a TTF file for each style: regular, bold, italic and bold italic. The
 render reads the family and the style from each file. A style without a file takes the
-regular file. In Graphviz, a `fontname` of the source still applies to its element.
+regular file. In Graphviz, a `fontname` of the source still applies to its element. For
+Mermaid, the render reads the advance width of each character from the files, and Pele
+sizes each box from those widths. A monospace text in a Mermaid diagram takes a fixed width
+of 0.6 of the size for each character.
 
 ## A graph and a screen reader
 
