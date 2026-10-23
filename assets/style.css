@@ -1042,6 +1042,14 @@ body[data-view="handout"] .tree-frames {
   fill: var(--series);
   vector-effect: non-scaling-stroke;
 }
+.chart-point-label {
+  font-size: 16px;
+  fill: color-mix(
+    in srgb,
+    var(--text-dim) calc(var(--chart-dim) * 100%),
+    var(--text)
+  );
+}
 .chart-size {
   fill: none;
   stroke: var(--muted);

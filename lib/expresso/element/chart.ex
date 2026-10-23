@@ -114,6 +114,7 @@ defmodule Expresso.Element.Chart do
               :symbol,
               :color,
               :size,
+              labels: :none,
               x_scale: :linear,
               y_scale: :linear,
               separator: "/",
@@ -434,7 +435,8 @@ defmodule Expresso.Element.Chart do
 
   defp options(%__MODULE__{kind: kind} = chart) do
     case Enum.find(@scatter_options, &(Map.fetch!(chart, &1) != nil)) ||
-           Enum.find([:x_scale, :y_scale], &(Map.fetch!(chart, &1) != :linear)) do
+           Enum.find([:x_scale, :y_scale], &(Map.fetch!(chart, &1) != :linear)) ||
+           if(chart.labels != :none, do: :labels) do
       nil ->
         {:ok, chart}
 

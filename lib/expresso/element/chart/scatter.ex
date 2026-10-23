@@ -27,7 +27,7 @@ defmodule Expresso.Element.Chart.Scatter do
   alias Expresso.Element.Chart
   alias Expresso.Element.Chart.{Encoding, Motion, Plot, Scale}
   alias Expresso.Element.Chart.Csv
-  alias Expresso.Element.Chart.Scatter.{Data, Legend}
+  alias Expresso.Element.Chart.Scatter.{Data, Labels, Legend}
   alias Expresso.Element.{Point, Series}
 
   # The box of the chart in the units of the SVG.
@@ -106,6 +106,7 @@ defmodule Expresso.Element.Chart.Scatter do
          :ok <- axis(points, :x, chart.x_range, chart.x_scale),
          :ok <- axis(points, :y, chart.y_range, chart.y_scale),
          :ok <- encodings(chart, points),
+         :ok <- labeled(chart, points),
          do: {:ok, %Chart{chart | elements: groups(chart, points)}}
   end
 
@@ -257,6 +258,21 @@ defmodule Expresso.Element.Chart.Scatter do
     end
   end
 
+  # Each name of the labels option names a point.
+  defp labeled(%Chart{labels: names}, points) when is_list(names) do
+    known = MapSet.new(points, & &1.name)
+
+    case Enum.reject(names, &MapSet.member?(known, &1)) do
+      [] ->
+        :ok
+
+      [name | _rest] ->
+        {:error, "the labels option names \"#{name}\", and the chart has no point with that name"}
+    end
+  end
+
+  defp labeled(_chart, _points), do: :ok
+
   # The checks of the symbol, the color and the size.
   defp encodings(%Chart{kind: kind}, points) do
     sized = Enum.filter(points, &(&1.size != nil))
@@ -386,6 +402,7 @@ defmodule Expresso.Element.Chart.Scatter do
       color_label: chart.color_label,
       size_label: chart.size_label,
       opacity: chart.opacity,
+      labels: chart.labels,
       largest: @largest[chart.kind],
       frames: [%{label: nil, points: values(chart.elements)}],
       frame_label: chart.frame_label,
@@ -459,7 +476,11 @@ defmodule Expresso.Element.Chart.Scatter do
   @doc """
   Return the places of the marks of each frame, and the channels that hold them
   """
-  @spec scene(map()) :: %{marks: %{pos_integer() => map()}, channels: [{String.t(), [number()]}]}
+  @spec scene(map()) :: %{
+          marks: %{pos_integer() => map()},
+          channels: [{String.t(), [number()]}],
+          labels: %{pos_integer() => map()}
+        }
   def scene(assigns) do
     count = assigns.frames |> hd() |> Map.fetch!(:points) |> length()
 
@@ -480,7 +501,21 @@ defmodule Expresso.Element.Chart.Scatter do
         [{"x#{index}", mark.xs}, {"y#{index}", mark.ys}, {"r#{index}", mark.rs}]
       end)
 
-    %{marks: marks, channels: channels}
+    %{marks: marks, channels: channels, labels: labels(assigns, marks)}
+  end
+
+  # The places of the labels, from the marks of the first frame. A label
+  # moves with its mark in a later frame, and it keeps its place beside it.
+  defp labels(%{labels: :none}, _marks), do: %{}
+
+  defp labels(assigns, marks) do
+    for group <- assigns.groups,
+        point <- group.points,
+        assigns.labels == :all or point.name in assigns.labels,
+        mark = marks[point.index] do
+      %{index: point.index, name: point.name, x: hd(mark.xs), y: hd(mark.ys), r: hd(mark.rs)}
+    end
+    |> Labels.place(assigns.box)
   end
 
   # The radius of a mark from its size. A chart without sizes has marks of
@@ -515,6 +550,10 @@ defmodule Expresso.Element.Chart.Scatter do
 
           for point <- Enum.sort_by(group.points, &(-hd(@scene.marks[&1.index].rs))) do
             c(&mark/1, point: point, mark: @scene.marks[point.index], opacity: @opacity)
+          end
+
+          for point <- group.points, place = @scene.labels[point.index] do
+            c(&label/1, point: point, mark: @scene.marks[point.index], place: place)
           end
         end
       end
@@ -557,6 +596,30 @@ defmodule Expresso.Element.Chart.Scatter do
       path class: Expresso.Element.classes("chart-point chart-mark", @point.class),
            d: Encoding.path(@point.symbol),
            style: @style
+    end
+  end
+
+  # The label of a point. It moves with its mark, and its offset gives its
+  # place beside the mark.
+  defp label(assigns) do
+    %{point: point, mark: mark} = assigns
+
+    style =
+      Motion.style([
+        {"--chart-u", Motion.ref("x#{point.index}", mark.xs)},
+        {"--chart-v", Motion.ref("y#{point.index}", mark.ys)}
+      ])
+
+    assigns = Map.put(assigns, :style, style)
+
+    temple do
+      text class: "chart-point-label chart-mark",
+           x: Plot.f(@place.dx),
+           y: Plot.f(@place.dy),
+           text_anchor: @place.anchor,
+           style: @style do
+        @point.name
+      end
     end
   end
 

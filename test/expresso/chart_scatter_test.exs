@@ -5,12 +5,13 @@ defmodule Expresso.ChartScatterTest do
 
   alias Expresso.Builder
   alias Expresso.Element.Chart.{Encoding, Scale}
-  alias Expresso.Element.Chart.Scatter.{Data, Legend}
+  alias Expresso.Element.Chart.Scatter.{Data, Labels, Legend}
 
   doctest Scale
   doctest Encoding
   doctest Legend
   doctest Data
+  doctest Labels
 
   defp services(opts \\ [], points \\ nil) do
     points =
@@ -303,6 +304,49 @@ defmodule Expresso.ChartScatterTest do
           elements: [Builder.series("S", [1], color: :accent)]
         )
       end
+    end
+  end
+
+  describe "the labels" do
+    test "labels :all gives each point a label that moves with its mark" do
+      figure = figure(services(labels: :all))
+
+      assert texts(figure, "text.chart-point-label") == ["api", "web", "jobs"]
+
+      [style | _rest] =
+        figure |> LazyHTML.query("text.chart-point-label") |> LazyHTML.attribute("style")
+
+      [mark | _rest] =
+        figure |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("style")
+
+      # The label and the mark of a point read the same place.
+      place = &Regex.run(~r/--chart-u: [^;]+; --chart-v: [^;]+;/, &1)
+      assert place.(style) == place.(mark)
+    end
+
+    test "a list of names gives a label to those points, and the default is no label" do
+      assert texts(figure(services(labels: ["web"])), "text.chart-point-label") == ["web"]
+      assert count(figure(services()), "text.chart-point-label") == 0
+    end
+
+    test "two close points put their labels on two sides, so the labels do not cover each other" do
+      points = [Builder.point("alpha", x: 10, y: 10), Builder.point("beta", x: 10.3, y: 10)]
+
+      anchors =
+        services([labels: :all, x_range: {0, 20}, y_range: {0, 20}], points)
+        |> figure()
+        |> LazyHTML.query("text.chart-point-label")
+        |> LazyHTML.attribute("text-anchor")
+
+      assert anchors == ["end", "start"]
+    end
+
+    test "a name of the labels option that is not a point" do
+      assert_raise ArgumentError,
+                   ~r/the labels option names "db", and the chart has no point/,
+                   fn ->
+                     services(labels: ["db"])
+                   end
     end
   end
 
