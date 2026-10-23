@@ -1819,6 +1819,16 @@ the layout, the marks and the table to `Expresso.Element.Chart.Waterfall`.
   each end, also in a chart with one state.
 - The axis holds zero, or it has the ends of `value_range`. An axis without zero has a
   break mark at its base and at the base of each total.
+- With `reveal true`, the check puts the columns into groups. The start and the totals of
+  `totals :grow` stay outside the groups, so they show with the chart and do not dim. Each
+  change is a group, a copy of the series with the indexes of its columns in `columns`, and
+  it is a child of the chart. `Chart.lead/1` gives the chart one step before the first
+  change.
+- A state is one set of values of the channels: one state for each group that shows. A
+  total of `totals :grow` holds the running total of the changes that show, and
+  `Waterfall.rules/1` writes each state at the steps of its group, with
+  `Expresso.Element.Chart.Motion.rules/3`. The value of a total counts as the `count` option
+  of a chart with frames does.
 
 ### The table of a chart
 

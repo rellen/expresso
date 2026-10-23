@@ -238,6 +238,116 @@ defmodule Expresso.ChartWaterfallTest do
     assert texts(figure, ".chart-value") == ["50", "90"]
   end
 
+  describe "the steps" do
+    # The text of the style block of the document of a chart.
+    defp style(chart) do
+      chart |> one_slide() |> document() |> LazyHTML.query("style") |> LazyHTML.text()
+    end
+
+    test "reveal gives each change its own step, and the totals show with the chart" do
+      groups = cash(reveal: true) |> figure() |> LazyHTML.query("g.chart-series")
+
+      # The first group holds the start and the totals, and it has no steps of
+      # its own, so it shows with the chart. Each change is a group with its
+      # own step.
+      assert LazyHTML.attribute(groups, "data-on") ==
+               ["2 3 4 5 6", "3 4 5 6", "4 5 6", "5 6", "6"]
+
+      [base | changes] = Enum.to_list(groups)
+      assert count(base, "rect.chart-waterfall-total") == 3
+      assert Enum.map(changes, &count(&1, "rect.chart-waterfall-bar")) == [1, 1, 1, 1, 1]
+    end
+
+    test "each later total grows at the step of each change before it" do
+      text = style(cash(reveal: true))
+
+      # The total "Mid year" is column 3 and "End" is column 7. Their numbers
+      # count to the running total at each step.
+      for {step, middle, last} <- [{2, 90, 90}, {3, 120, 120}, {4, 120, 130}, {6, 120, 100}] do
+        assert text =~
+                 ~r/section\[data-step="#{step}"\] \[data-el="[^"]+"\] \{[^}]*--n3: #{middle};[^}]*--n7: #{last};/
+      end
+
+      # The first state is in the style attribute of each number.
+      figure = figure(cash(reveal: true))
+      assert texts(figure, ".chart-value") == ["50", "50", "50"]
+      assert count(figure, "tspan.chart-count") == 2
+    end
+
+    test "totals :complete shows a total at the step of the change before it" do
+      groups =
+        cash(reveal: true, totals: :complete) |> figure() |> LazyHTML.query("g.chart-series")
+
+      counts = Enum.map(groups, &count(&1, "rect.chart-waterfall-total"))
+
+      # The start is in the first group, "Mid year" goes with "Services", and
+      # "End" goes with "Costs".
+      assert counts == [1, 0, 1, 0, 0, 1]
+
+      assert texts(figure(cash(reveal: true, totals: :complete)), ".chart-value") ==
+               ~w(50 120 100)
+
+      refute style(cash(reveal: true, totals: :complete)) =~ "--n3:"
+    end
+
+    test "a connector shows with the later of its two columns" do
+      [base | changes] =
+        cash(reveal: true) |> figure() |> LazyHTML.query("g.chart-series") |> Enum.to_list()
+
+      # The connectors at the left of "Sales" and of "Services" go with them,
+      # and so do the connectors at the right of each change into a total.
+      assert count(base, "line.chart-waterfall-line") == 0
+      assert Enum.map(changes, &count(&1, "line.chart-waterfall-line")) == [1, 2, 1, 1, 2]
+    end
+
+    test "dim dims each change when a later change shows, and not the totals" do
+      groups =
+        cash(reveal: true, dim: true) |> one_slide() |> document() |> screen("g.chart-series")
+
+      assert Enum.count(LazyHTML.attribute(groups, "data-el")) == 4
+    end
+
+    test "the effect :grow grows each column from its base" do
+      styles =
+        cash(reveal: true, effect: :grow)
+        |> figure()
+        |> LazyHTML.query("rect.chart-waterfall-up")
+        |> LazyHTML.attribute("style")
+
+      assert Enum.all?(
+               styles,
+               &(&1 =~ ~r/--chart-h: calc\(0 \+ \([\d.]+ - 0\) \* var\(--chart-shown, 1\)\);/)
+             )
+    end
+
+    test "the overview shows the last state" do
+      assert style(cash(reveal: true)) =~
+               ~r/\.menu-thumb[^{]*\{[^}]*--n3: 120;[^}]*--n7: 100;/
+    end
+
+    test "the compiler refuses totals without reveal, and a series with steps of its own" do
+      assert error(fn -> cash(totals: :complete) end) =~ "so totals :complete needs reveal true"
+
+      assert error(fn ->
+               Builder.chart(:waterfall,
+                 title: "Cash",
+                 categories: @categories,
+                 reveal: true,
+                 elements: [Builder.series("Cash", @values, at: 2)]
+               )
+             end) =~ "so the series takes no at option and no on entity"
+
+      assert error(fn ->
+               Builder.chart(:bar,
+                 title: "Bar",
+                 categories: ~w(a),
+                 elements: [Builder.series("A", [1])],
+                 totals: :complete
+               )
+             end) =~ "the totals option is for a waterfall chart"
+    end
+  end
+
   describe "a CSV file" do
     @moduletag :tmp_dir
 

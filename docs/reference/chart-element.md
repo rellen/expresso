@@ -47,6 +47,7 @@ end
 | `x_label`, `y_label` | A string | The name of the x axis or of the y axis of a scatter plot. See [a scatter plot](#a-scatter-plot). |
 | `x_range`, `y_range` | Two numbers, such as `{0, 100}` | The low end and the high end of an axis of a scatter plot. The default comes from the points. |
 | `x_scale`, `y_scale` | `:linear` or `:log` | The scale of an axis of a scatter plot. The default is `:linear`. |
+| `totals` | `:grow` or `:complete` | How a total of a waterfall chart with `reveal` shows. The default is `:grow`. See [the steps of a waterfall chart](#the-steps-of-a-waterfall-chart). |
 | `value_range` | Two numbers, such as `{900, 1050}` | The low end and the high end of the value axis of a waterfall chart. The default holds zero and each column. See [a cut axis](#a-cut-axis). |
 | `symbol_label`, `color_label`, `size_label` | A string | The title of a legend of a scatter plot, and the header of its column in the table. See [the symbol, the color and the size](#the-symbol-the-color-and-the-size). |
 | `labels` | `:all`, `:none` or a list of names of points | The points of a scatter plot with a label. The default is `:none`. See [the labels of the points](#the-labels-of-the-points). |
@@ -872,6 +873,48 @@ removes the labels.
 A dashed line joins the end of each column to the start of the next column, at the running
 total.
 
+### The steps of a waterfall chart
+
+With `reveal true`, the start and the totals show alone at the first step, and each change
+shows at its own step after it:
+
+```elixir
+slide "cash" do
+  chart :waterfall do
+    title "Cash in 2025"
+    categories ["Start", "Sales", "Services", "Mid year", "Grants", "Interest", "Costs", "End"]
+    series "Cash", [50, 40, 30, :total, 10, 20, -50, :total]
+    reveal true
+  end
+end
+```
+
+| Step | Shows | Mid year | End |
+| --- | --- | --- | --- |
+| 1 | Start (50) and each total | 50 | 50 |
+| 2 | Sales (+40) | grows to 90 | grows to 90 |
+| 3 | Services (+30) | grows to 120 | grows to 120 |
+| 4 | Grants (+10) | 120 | grows to 130 |
+| 5 | Interest (+20) | 120 | grows to 150 |
+| 6 | Costs (-50) | 120 | shrinks to 100 |
+
+The `totals` option gives the story of a total:
+
+| `totals` | A total |
+| --- | --- |
+| `:grow` | The total shows at the first step, at the running total of the changes that show. It grows or shrinks at the step of each change before it, and its value counts. This is the default. |
+| `:complete` | The total shows at the step of the column before it, at its final value. |
+
+These options work with the steps:
+
+- `dim true` dims each change when a later change shows. The start and the totals of
+  `totals :grow` do not dim. A total of `totals :complete` dims with the change before it.
+- `effect :grow` grows each change from its base when it shows, and the start and the totals
+  grow from the base of the axis when the chart shows.
+- A connector shows with the later of its two columns.
+
+The overview, the menu of the slides, the handout view and paper show the last step.
+
 ### A cut axis
 
 The value axis holds zero and each column. `value_range` gives the two ends of the axis,
@@ -1057,6 +1100,8 @@ The compiler gives an error for these:
 - a total with a value that does not agree with the sum before it;
 - a cell of the file of a waterfall chart that is not a number, `total`, or `total` and a
   number;
+- `totals :complete` without `reveal`, a series of a waterfall chart with `reveal` and an
+  `at` option or an `on` entity, and `totals` on the other kinds;
 - a waterfall chart with frames, `value_range` with its low end at or above its high end, a
   column that goes past an end of `value_range`, and `value_range` or `:total` on the other
   kinds.
