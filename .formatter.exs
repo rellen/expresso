@@ -201,6 +201,7 @@ spark_locals_without_parens = [
   value: 1,
   value_format: 1,
   value_label: 1,
+  value_range: 1,
   values: 1,
   video: 1,
   video: 2,

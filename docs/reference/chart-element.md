@@ -23,7 +23,7 @@ end
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst`, `:voronoi`, `:sankey`, `:alluvial`, `:parallel_sets`, `:chord`, `:scatter` or `:bubble` | The kind of the chart. |
+| The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst`, `:voronoi`, `:sankey`, `:alluvial`, `:parallel_sets`, `:chord`, `:scatter`, `:bubble` or `:waterfall` | The kind of the chart. |
 | `title` | A string, required | The name of the chart for a screen reader, and the caption of its table. |
 | `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels. A category of a chart of flows is a path of nodes. |
 | `category_label` | A string | The name of the categories, such as `"Year"`. See [the names of the axes](#the-names-of-the-axes). A chart with `src` takes the first heading of its file. |
@@ -47,6 +47,7 @@ end
 | `x_label`, `y_label` | A string | The name of the x axis or of the y axis of a scatter plot. See [a scatter plot](#a-scatter-plot). |
 | `x_range`, `y_range` | Two numbers, such as `{0, 100}` | The low end and the high end of an axis of a scatter plot. The default comes from the points. |
 | `x_scale`, `y_scale` | `:linear` or `:log` | The scale of an axis of a scatter plot. The default is `:linear`. |
+| `value_range` | Two numbers, such as `{900, 1050}` | The low end and the high end of the value axis of a waterfall chart. The default holds zero and each column. See [a cut axis](#a-cut-axis). |
 | `symbol_label`, `color_label`, `size_label` | A string | The title of a legend of a scatter plot, and the header of its column in the table. See [the symbol, the color and the size](#the-symbol-the-color-and-the-size). |
 | `labels` | `:all`, `:none` or a list of names of points | The points of a scatter plot with a label. The default is `:none`. See [the labels of the points](#the-labels-of-the-points). |
 | `color_scale` | `:sequential`, `:diverging` or two roles, such as `{:chart_1, :chart_4}` | The scale of a color from a number in a scatter plot. The default is `:sequential`. See [a color from a number](#a-color-from-a-number). |
@@ -66,7 +67,7 @@ The chart also takes the overlay options, such as `at`, `effect` and the `on` en
 | Option | Value | Effect |
 | --- | --- | --- |
 | The first argument | A string | The name of the series. |
-| The second argument | A list of numbers | One value for each category, in the order of the categories. A series of a scatter plot holds `point` entities in place of values. |
+| The second argument | A list of numbers | One value for each category, in the order of the categories. A series of a scatter plot holds `point` entities in place of values. A series of a waterfall chart also takes `:total` and `{:total, value}`. See [a waterfall chart](#a-waterfall-chart). |
 | `symbol` | `:circle`, `:square`, `:triangle`, `:diamond`, `:cross` or `:star` | The symbol of each point of a series of a scatter plot. See [the series of points](#the-series-of-points). |
 | `color` | A role, such as `:chart_3` or `:accent` | The color of each point of a series of a scatter plot. |
 | `class` | CSS class names | See [the class option](class-option.md). |
@@ -257,6 +258,7 @@ tick has a label in the same form.
 | `:chord` | Exactly one. Each category is a path of nodes, as in a sankey, and each link is a chord between two arcs of a ring. | The name and the total of each node, outside its arc. See [a chord chart](#a-chord-chart). |
 | `:scatter` | None. Each `point` entity is one mark, at its x value and its y value. | The ticks of the two axes, and a legend at the right. See [a scatter plot](#a-scatter-plot). |
 | `:bubble` | None. A scatter plot with a `size` for each point. | As a scatter plot. |
+| `:waterfall` | Exactly one. The first value is the start, each other number is a change, and `:total` marks a total column. | The value of each total, and the change and the running total of each change. See [a waterfall chart](#a-waterfall-chart). |
 
 A bar chart and a line chart have one axis, which starts at zero and holds each value, with
 approximately five round ticks. The axis stays the same at each step, so it does not move
@@ -834,6 +836,79 @@ The table for a screen reader has one row for each point, with its name, its x v
 its y value. The headers of the columns are `x_label` and `y_label`, or `x` and `y`. A chart
 with categories or sizes has a column for the category and a column for the size.
 
+## A waterfall chart
+
+A waterfall chart shows how a start value changes through increases and decreases, with
+total columns between them. The chart has one series. Its first value is the start, and it
+draws as a total. Each other number is a change, and the atom `:total` marks a total column:
+
+```elixir
+slide "cash" do
+  chart :waterfall do
+    title "Cash in 2025"
+    categories ["Start", "Sales", "Services", "Mid year", "Grants", "Interest", "Costs", "End"]
+    series "Cash", [50, 40, 30, :total, 10, 20, -50, {:total, 100}]
+  end
+end
+```
+
+| Value | The column |
+| --- | --- |
+| The first value, a number | The start. It goes from zero to the value, as a total. |
+| A number | A change. It starts at the running total before it, and it goes up for a number of zero or more and down for a negative number. |
+| `:total` | A total. It goes from zero to the running total, and the render calculates the value. |
+| `{:total, value}` | A total, as `:total`. The compiler refuses the chart when the sum before it does not agree with `value`. |
+
+The sum agrees with the value when the two are equal at the most decimals of the numbers of
+the series. Thus `[0.1, 0.2, {:total, 0.3}]` agrees, and `[119.5, {:total, 120}]` does not.
+
+### The labels of a waterfall chart
+
+A total shows its value over its column. A change shows its value with its sign, such as
+`+40` or `-50`, in its column, and its running total over the column in `--muted`. The text
+of a change goes over the column when the column is too short to hold it. `values false`
+removes the labels.
+
+A dashed line joins the end of each column to the start of the next column, at the running
+total.
+
+### A cut axis
+
+The value axis holds zero and each column. `value_range` gives the two ends of the axis,
+such as `{800, 1000}`, so a small change on a large total shows clearly. A total then stands
+on the low end of the axis. An axis that does not hold zero has a break mark, a zigzag, at its
+base and at the base of each total column, so the reader can see that the columns do not
+start at zero.
+
+```elixir
+slide "budget" do
+  chart :waterfall do
+    title "Budget"
+    categories ["Plan", "Hiring", "Travel", "Cloud", "Actual"]
+    series "Budget", [900, 60, -30, 4, :total]
+    value_range {800, 1000}
+  end
+end
+```
+
+The compiler refuses a column that goes past an end of `value_range`.
+
+### The colors of a waterfall chart
+
+| Column | Custom property | The default |
+| --- | --- | --- |
+| A total | `--waterfall-total` | `--accent` |
+| An increase | `--waterfall-up` | `--success` |
+| A decrease | `--waterfall-down` | `--danger` |
+
+A deck can change the three properties with [the css option](css-option.md), such as
+`.chart-waterfall { --waterfall-total: var(--chart-3); }`. The text of a change in its column
+has the color of the background. A role of the theme has its contrast with the background, so
+the text has the same contrast with the column.
+
+The table for a screen reader has one row for each column, with its category, its change and
+the running total after it.
+
 ## The CSV file
 
 The first row holds a heading for the categories, then the name of each series. Each other
@@ -962,7 +1037,14 @@ The compiler gives an error for these:
   without a number as a color, and `color_mid` without `color_scale :diverging`;
 - a size of zero or less, a point without a size in a chart with sizes or in a bubble chart,
   more than 6 categories of the symbol, more than 8 categories of the color, an `opacity`
-  outside 0 to 1, and a `jitter` outside 0 to 0.2.
+  outside 0 to 1, and a `jitter` outside 0 to 0.2;
+- a waterfall chart with no series or with more than one series, a series without one value
+  for each category, a first value that is not a number, and a value that is not a number,
+  `:total` or `{:total, value}`;
+- a total with a value that does not agree with the sum before it;
+- a waterfall chart with frames, `value_range` with its low end at or above its high end, a
+  column that goes past an end of `value_range`, and `value_range` or `:total` on the other
+  kinds.
 
 The compiler gives an error for a file that it cannot read or that is not UTF-8, for a
 quote with no closing quote, for text after a closing quote, and for a row with a cell that
@@ -987,7 +1069,8 @@ heading, the name of the deck and the other elements. Thus a chart fits in a sma
 
 The document writes a `figure` element with the classes `chart` and `chart-bar`,
 `chart-line`, `chart-pie`, `chart-treemap`, `chart-sunburst`, `chart-sankey`,
-`chart-alluvial`, `chart-parallel-sets`, `chart-chord`, `chart-scatter` or `chart-bubble`. It
+`chart-alluvial`, `chart-parallel-sets`, `chart-chord`, `chart-scatter`, `chart-bubble` or
+`chart-waterfall`. It
 holds an `svg` element with `role="img"` and the `title` as its `aria-label`. It also holds a `table`
 with the class `chart-table` that holds each value. The style sheet hides the table from the
 eye and not from a screen reader. The table has a column header for each series and a row
@@ -1001,6 +1084,15 @@ properties `--chart-u`, `--chart-v` and `--chart-w`. `--series` gives its color.
 a legend is a `path` with the class `chart-key`, a label of a point is a `text` with the class
 `chart-point-label`, a trend line is a `line` with the class `chart-trend`, and a size of a legend is a `circle` with
 the class `chart-size`.
+
+A waterfall chart holds its columns in one `g` element with the class `chart-series`. Each
+column is a `rect` of one unit with the class `chart-waterfall-bar`, and its style moves it
+to its place and gives it its size with `--chart-u`, `--chart-v`, `--chart-w` and
+`--chart-h`. A total also has the class `chart-waterfall-total`, an increase
+`chart-waterfall-up` and a decrease `chart-waterfall-down`. A connector is a `line` with the
+class `chart-waterfall-line`, a break mark is a `path` with the class `chart-break`, the text
+of a change in its column has the class `chart-waterfall-change`, and a running total has the
+class `chart-running`.
 
 A chart of flows writes these elements:
 

@@ -1,8 +1,8 @@
 defmodule Expresso.Element.Chart do
   @moduledoc """
   An element that draws a bar chart, a line chart, a pie chart, a treemap, a
-  sunburst, a sankey, an alluvial chart, a parallel sets chart, a chord chart
-  or a scatter plot
+  sunburst, a sankey, an alluvial chart, a parallel sets chart, a chord chart,
+  a scatter plot or a waterfall chart
 
   The `chart` entity takes the kind as its first argument: `:bar`, `:line`,
   `:pie`, `:treemap`, `:sunburst`, `:sankey`, `:alluvial`, `:parallel_sets` or
@@ -48,6 +48,11 @@ defmodule Expresso.Element.Chart do
   A scatter plot holds `point` entities in place of categories and series.
   `Expresso.Element.Chart.Scatter` checks it and draws it, and
   `docs/scatter-plots.md` gives its design.
+
+  A waterfall chart has one series. Its first value is the start, each other
+  number is a change, and the atom `:total` marks a total column.
+  `Expresso.Element.Chart.Waterfall` checks it and draws it, and
+  `docs/waterfall-charts.md` gives its design.
   """
 
   use Expresso.Element
@@ -64,7 +69,8 @@ defmodule Expresso.Element.Chart do
     Plot,
     Sankey,
     Scatter,
-    Table
+    Table,
+    Waterfall
   }
 
   alias Expresso.Element.{Flow, Focus, Frame, Node, Point, Series}
@@ -82,6 +88,10 @@ defmodule Expresso.Element.Chart do
   @scatter_options [:x_label, :y_label, :x_range, :y_range, :symbol_label, :color_label] ++
                      [:size_label, :opacity, :label, :x, :y, :symbol, :color, :size] ++
                      [:trend, :jitter, :color_scale, :color_mid]
+
+  # The options of a waterfall chart with no default, which the other kinds
+  # refuse.
+  @waterfall_options [:value_range]
 
   # The box of the chart in the units of the SVG.
   @width 800
@@ -119,6 +129,7 @@ defmodule Expresso.Element.Chart do
               :jitter,
               :color_scale,
               :color_mid,
+              :value_range,
               labels: :none,
               x_scale: :linear,
               y_scale: :linear,
@@ -438,7 +449,21 @@ defmodule Expresso.Element.Chart do
          {:error,
           "the thumbnail option names frame #{thumbnail}, and the chart has #{length(timeline)} frames"}
 
-  defp options(%__MODULE__{kind: kind} = chart) do
+  defp options(%__MODULE__{kind: kind} = chart) when not is_waterfall(kind) do
+    case Enum.find(@waterfall_options, &(Map.fetch!(chart, &1) != nil)) do
+      nil ->
+        scatter_options(chart)
+
+      option ->
+        {:error,
+         "the #{option} option is for a waterfall chart, so a #{kind} chart takes no " <>
+           "#{option} option"}
+    end
+  end
+
+  defp options(%__MODULE__{} = chart), do: scatter_options(chart)
+
+  defp scatter_options(%__MODULE__{kind: kind} = chart) do
     case Enum.find(@scatter_options, &(Map.fetch!(chart, &1) != nil)) ||
            Enum.find([:x_scale, :y_scale], &(Map.fetch!(chart, &1) != :linear)) ||
            if(chart.labels != :none, do: :labels) do
@@ -667,6 +692,10 @@ defmodule Expresso.Element.Chart do
   defp series(%__MODULE__{elements: [], kind: kind}),
     do: {:error, "a chart #{inspect(kind)} needs a series"}
 
+  # `Expresso.Element.Chart.Waterfall.check/1` checks the series of a
+  # waterfall chart, because its values can mark a total.
+  defp series(%__MODULE__{kind: kind}) when is_waterfall(kind), do: :ok
+
   defp series(%__MODULE__{elements: elements}) when length(elements) > @colors,
     do:
       {:error,
@@ -686,6 +715,8 @@ defmodule Expresso.Element.Chart do
 
   defp values?(values, count),
     do: is_list(values) and length(values) == count and Enum.all?(values, &is_number/1)
+
+  defp single(%__MODULE__{kind: kind} = chart) when is_waterfall(kind), do: Waterfall.check(chart)
 
   defp single(%__MODULE__{kind: :voronoi, elements: [%Series{effect: :grow} | _]}),
     do: {:error, "a voronoi chart takes no effect :grow and no count option"}
@@ -958,7 +989,12 @@ defmodule Expresso.Element.Chart do
   @impl Expresso.Element
   def get_assigns(%__MODULE__{kind: kind} = chart) when is_point(kind), do: Scatter.assigns(chart)
 
-  def get_assigns(%__MODULE__{} = chart) do
+  def get_assigns(%__MODULE__{kind: kind} = chart) when is_waterfall(kind),
+    do: chart |> axis_assigns() |> Map.merge(Waterfall.assigns(chart))
+
+  def get_assigns(%__MODULE__{} = chart), do: axis_assigns(chart)
+
+  defp axis_assigns(%__MODULE__{} = chart) do
     series =
       chart.elements
       |> Enum.with_index(1)
@@ -1173,6 +1209,7 @@ defmodule Expresso.Element.Chart do
   end
 
   defp rows(%{kind: kind} = assigns) when is_point(kind), do: Scatter.table(assigns)
+  defp rows(%{kind: kind} = assigns) when is_waterfall(kind), do: Waterfall.table(assigns)
   defp rows(%{kind: :parallel_sets} = assigns), do: ParallelSets.table(assigns)
   defp rows(%{kind: kind} = assigns) when is_flow(kind), do: Sankey.table(assigns)
 
@@ -1203,6 +1240,7 @@ defmodule Expresso.Element.Chart do
 
   # The kinds of a chart. Each one writes the content of the SVG.
   defp plot(%{kind: kind} = assigns) when is_point(kind), do: Scatter.render(assigns)
+  defp plot(%{kind: kind} = assigns) when is_waterfall(kind), do: Waterfall.render(assigns)
   defp plot(%{kind: :parallel_sets} = assigns), do: ParallelSets.render(assigns)
   defp plot(%{kind: :chord} = assigns), do: Chord.render(assigns)
   defp plot(%{kind: kind} = assigns) when is_flow(kind), do: Sankey.render(assigns)
@@ -1218,6 +1256,7 @@ defmodule Expresso.Element.Chart do
   # axis.
   defp layout(%{kind: :pie} = assigns), do: assigns
   defp layout(%{kind: kind} = assigns) when is_point(kind), do: Scatter.layout(assigns)
+  defp layout(%{kind: kind} = assigns) when is_waterfall(kind), do: Waterfall.layout(assigns)
   defp layout(%{kind: :sunburst} = assigns), do: assigns
 
   # A sankey fills the SVG. The label of the frame takes a row at the top.

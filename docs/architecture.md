@@ -1616,6 +1616,7 @@ family, and the family decides which code draws it:
 | `:parts` | `:treemap`, `:sunburst`, `:voronoi` | `Expresso.Element.Chart.Hierarchy`, with the layout of `Expresso.Element.Chart.Voronoi` for `:voronoi` |
 | `:flows` | `:sankey`, `:alluvial`, `:parallel_sets`, `:chord` | `Expresso.Element.Chart.Sankey`, `ParallelSets` and `Chord` |
 | `:points` | `:scatter`, `:bubble` | `Expresso.Element.Chart.Scatter` |
+| `:waterfall` | `:waterfall` | `Expresso.Element.Chart.Waterfall` |
 
 The module makes each group of kinds from the table, and it gives a guard for each group,
 such as `is_flow/1` and `is_part/1`. `Expresso.Element.Chart`, `Motion` and `Sankey` use
@@ -1802,6 +1803,23 @@ file, the assigns, the layout, the marks, the rules of the frames and the table.
   `Scatter.Trend` give the legends, the places of the labels, the points of a CSV file
   and the trend lines.
 
+### The waterfall chart
+
+A waterfall chart has one series. Its first value is the start, each other number is a
+change, and `:total` or `{:total, value}` marks a total column. `Expresso.Element.Chart`
+checks the categories as for a bar chart, and it sends the check of the series, the assigns,
+the layout, the marks and the table to `Expresso.Element.Chart.Waterfall`.
+`docs/waterfall-charts.md` gives the design and its decisions.
+
+- `Waterfall.columns/1` calculates the base, the end and the running total of each column
+  from the values. The check, the layout and the table use it, so the author writes no total
+  two times.
+- A column is a `rect` of one unit. Its channels `u`, `v`, `w` and `h` of
+  `Expresso.Element.Chart.Motion` give its place and its size, so the column can move at
+  each end, also in a chart with one state.
+- The axis holds zero, or it has the ends of `value_range`. An axis without zero has a
+  break mark at its base and at the base of each total.
+
 ### The table of a chart
 
 Each chart writes a table of its values for a screen reader, because the SVG has
@@ -1814,6 +1832,7 @@ returns its headers and its rows as text, so a test can read them without HTML:
 | An axis chart, a pie, a treemap, a sunburst | `rows/1` of `Expresso.Element.Chart` | A category, then the value of each series in each frame. |
 | A sankey, an alluvial chart, a chord chart | `Sankey.table/1` | The source, the target, then the value in each frame. |
 | A parallel sets chart | `ParallelSets.table/1` | The node in each column, then the value in each frame. |
+| A waterfall chart | `Waterfall.table/1` | The category, the change with its sign, then the running total. |
 
 The first cell of each row is the header of the row. The first header of the columns can be
 `nil`: the corner then names nothing, so it is a `td` cell. A header with no text has no

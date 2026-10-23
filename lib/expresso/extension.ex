@@ -350,9 +350,11 @@ defmodule Expresso.Extension do
         [
           name: [type: :string, required: true, doc: "The name of the series."],
           values: [
-            type: {:list, {:or, [:integer, :float]}},
+            type:
+              {:list,
+               {:or, [:integer, :float, {:in, [:total]}, {:tuple, [{:in, [:total]}, @number]}]}},
             doc:
-              "One number for each category of the chart, in the order of the categories. A series of a scatter plot holds point entities in place of values."
+              "One number for each category of the chart, in the order of the categories. A series of a scatter plot holds point entities in place of values. A series of a waterfall chart marks a total column with :total, or with {:total, value} to give the value that the sum must agree with."
           ],
           symbol: [
             type: {:in, Expresso.Element.Chart.Encoding.symbols()},
@@ -619,6 +621,11 @@ defmodule Expresso.Extension do
             type: {:tuple, [@number, @number]},
             doc:
               "The low end and the high end of the y axis of a scatter plot, such as {0, 100}. The default comes from the points."
+          ],
+          value_range: [
+            type: {:tuple, [@number, @number]},
+            doc:
+              "The low end and the high end of the value axis of a waterfall chart, such as {900, 1050}. An axis that does not hold zero gets a break mark at its base. The default holds zero and each column."
           ],
           label: [
             type: :string,
