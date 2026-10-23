@@ -3008,12 +3008,12 @@ The commands are:
 
 ## Open work
 
-1. **Diagrams from Mermaid.** `docs/mermaid-diagrams.md` gives the plan and its progress:
-   Pele draws a Mermaid diagram in Node, and each diagram type gets the names and the marks
-   of its parts in its own pull request. Issue #409 holds the same plan.
+There is no item at this time. Issue #397 to issue #407, issue #411 and issue #426 propose
+features, and each one needs a decision before the work starts.
 
-The item before it, the diagrams from Graphviz and D2 of `docs/graph-diagrams.md`, let a
-`diagram` take the source of a graph. Issue #386 holds that plan.
+The item before it, the diagrams from Mermaid of `docs/mermaid-diagrams.md`, let a `diagram`
+take the source of a Mermaid diagram of each of the 32 types of Pele. Issue #409 holds that
+plan.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on

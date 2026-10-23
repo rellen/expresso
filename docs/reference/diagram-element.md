@@ -133,8 +133,9 @@ different path. D2 holds the font in the SVG.
 
 A `.mmd` file is the source of a diagram in the language of Mermaid. The `source` option with
 `lang: :mermaid` gives the same source in the deck. The render draws it with
-[Pele](https://pele.run) in Node. A part names a node, a subgraph or an edge of a flowchart
-by its id in the source:
+[Pele](https://pele.run) in Node. [Draw a diagram from
+Mermaid](../how-to/draw-a-diagram-from-mermaid.md) gives the steps. A part names a node, a
+subgraph or an edge of a flowchart by its id in the source:
 
 ```elixir
 slide "the system" do

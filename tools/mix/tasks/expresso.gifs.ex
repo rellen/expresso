@@ -141,6 +141,8 @@ defmodule Mix.Tasks.Expresso.Gifs do
     },
     %{name: "graph-graphviz", deck: "graph_graphviz.exs", actions: ["j", "j", "j"]},
     %{name: "graph-d2", deck: "graph_d2.exs", actions: ["j", "j", "j"]},
+    %{name: "mermaid-flowchart", deck: "mermaid_flowchart.exs", actions: ["j", "j", "j"]},
+    %{name: "mermaid-sequence", deck: "mermaid_sequence.exs", actions: ["j", "j", "j"]},
     %{
       name: "chart-parallel-sets",
       deck: "chart_parallel_sets.exs",
