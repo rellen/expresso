@@ -489,6 +489,75 @@ defmodule Expresso.ChartWaterfallTest do
     end
   end
 
+  describe "the frames" do
+    defp years(opts \\ [], later \\ [60, 50, -40, :total]) do
+      Builder.chart(
+        :waterfall,
+        [
+          title: "Cash",
+          categories: ~w(Start Sales Costs End),
+          elements: [],
+          timeline: [
+            Builder.frame("2024", elements: [Builder.series("Cash", [50, 40, -30, :total])]),
+            Builder.frame("2025", elements: [Builder.series("Cash", later)])
+          ]
+        ] ++ opts
+      )
+    end
+
+    test "each frame moves the columns to its values, and the totals count" do
+      text = style(years())
+
+      # The total "End" is column 3: 60 in 2024 and 70 in 2025.
+      assert text =~ ~r/section\[data-step="2"\] \[data-el="[^"]+"\] \{[^}]*--n3: 70;/
+
+      figure = figure(years())
+      assert texts(figure, ".chart-frame") == ["2024", "2025"]
+      assert count(figure, "tspan.chart-count") >= 2
+    end
+
+    test "the text of a change has one copy for each frame" do
+      figure = figure(years())
+      assert texts(figure, "figure.chart > svg .chart-waterfall-change") == ~w(+40 +50 -30 -40)
+    end
+
+    test "the table has a change and a total for each frame" do
+      figure = figure(years())
+
+      assert texts(figure, "table.chart-table thead th") ==
+               ["Change 2024", "Total 2024", "Change 2025", "Total 2025"]
+
+      rows =
+        for row <- LazyHTML.query(figure, "table.chart-table tbody tr"), do: texts(row, "th, td")
+
+      assert hd(rows) == ["Start", "", "50", "", "60"]
+    end
+
+    test "paper and the handout view show each frame as a small chart" do
+      figure = figure(years())
+      assert count(figure, ".chart-frames figure.chart-copy") == 2
+      assert count(figure, ".chart-frames rect.chart-waterfall-bar") == 8
+    end
+
+    test "with reveal, the changes of the first frame show first, then each later frame" do
+      text = style(years(reveal: true))
+
+      # Step 1 holds the start and the totals, steps 2 and 3 the changes, and
+      # step 4 the frame 2025.
+      assert text =~ ~r/section\[data-step="3"\] \[data-el="[^"]+"\] \{[^}]*--n3: 60;/
+      assert text =~ ~r/section\[data-step="4"\] \[data-el="[^"]+"\] \{[^}]*--n3: 70;/
+    end
+
+    test "the overview shows the frame of the thumbnail option" do
+      assert style(years(thumbnail: :last)) =~ ~r/\.menu-thumb[^{]*\{[^}]*--n3: 70;/
+    end
+
+    test "a later frame has its totals at the places of the first frame" do
+      assert error(fn -> years([], [60, :total, -40, :total]) end) =~
+               "has its totals at the places of the totals of the first frame"
+    end
+  end
+
   describe "a CSV file" do
     @moduletag :tmp_dir
 
@@ -534,6 +603,27 @@ defmodule Expresso.ChartWaterfallTest do
       assert_raise Spark.Error.DslError,
                    ~r/the total "End" of the series "Cash" is 90, and the sum of the values before it is 100/,
                    fn -> one_slide(from_file(tmp_dir, wrong)) end
+    end
+
+    test "the frames option names the column of the frame of each row", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "years.csv")
+
+      File.write!(path, """
+      year,Quarter,Cash
+      2024,Start,50
+      2024,Sales,40
+      2024,End,total
+      2025,Start,60
+      2025,Sales,-20
+      2025,End,total 40
+      """)
+
+      figure = figure(Builder.chart(:waterfall, title: "Cash", src: path, frames: "year"))
+
+      assert texts(figure, ".chart-frame") == ["2024", "2025"]
+
+      assert texts(figure, "table.chart-table thead th") |> Enum.take(3) ==
+               ["Quarter", "Change 2024", "Total 2024"]
     end
 
     test "a file with two columns of values gives two series, and the chart refuses them",
