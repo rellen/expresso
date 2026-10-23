@@ -28,7 +28,7 @@ defmodule Expresso.Element.Chart.Scatter do
   alias Expresso.Element.Chart.{Encoding, Motion, Plot, Scale}
   alias Expresso.Element.Chart.Csv
   alias Expresso.Element.Chart.Scatter.{Data, Labels, Legend}
-  alias Expresso.Element.{Point, Series}
+  alias Expresso.Element.{Focus, Point, Series}
 
   # The box of the chart in the units of the SVG.
   @width 800
@@ -54,9 +54,7 @@ defmodule Expresso.Element.Chart.Scatter do
     shape: "only a voronoi chart takes it",
     sort: "a scatter plot has no bars",
     count: "a scatter plot shows no numbers that count",
-    frames: "the points come from point entities",
-    highlight: "the marks show no focus",
-    whole_first: "the marks show no focus"
+    frames: "the points come from point entities"
   ]
 
   # The options that name a column of the CSV file.
@@ -107,8 +105,137 @@ defmodule Expresso.Element.Chart.Scatter do
          :ok <- axis(points, :y, chart.y_range, chart.y_scale),
          :ok <- encodings(chart, points),
          :ok <- labeled(chart, points),
-         do: {:ok, %Chart{chart | elements: groups(chart, points)}}
+         do: focus(%Chart{chart | elements: groups(chart, points)})
   end
+
+  # The groups of the highlight option. Each item of the option names points,
+  # categories of the color or of the symbol, or series, and it becomes one
+  # group of keys with the specification `:next`, as for the other kinds.
+  defp focus(%Chart{highlight: nil, whole_first: true}),
+    do: {:error, "the whole_first option of a chart needs the highlight option"}
+
+  defp focus(%Chart{highlight: nil} = chart), do: {:ok, chart}
+
+  defp focus(%Chart{highlight: highlight} = chart) do
+    with :ok <- focus_options(chart),
+         {:ok, groups} <-
+           highlight |> Enum.map(&focus_group(chart, &1)) |> Shoddy.Result.collect(),
+         do: {:ok, %Chart{chart | focus: groups}}
+  end
+
+  defp focus_options(%Chart{highlight: []}),
+    do: {:error, "the highlight option needs one group or more"}
+
+  defp focus_options(%Chart{reveal: true}),
+    do: {:error, "a chart takes the reveal option or the highlight option, and not both"}
+
+  defp focus_options(%Chart{dim: true}),
+    do:
+      {:error,
+       "the highlight option dims the other points itself, so the chart takes no dim option"}
+
+  defp focus_options(%Chart{elements: groups}) do
+    shown = groups ++ Enum.flat_map(groups, & &1.elements)
+
+    if Enum.any?(shown, &(&1.at != nil or &1.on != [])),
+      do:
+        {:error,
+         "the highlight option shows each point at each step, so a series or a point of the " <>
+           "chart takes no at option and no on entity"},
+      else: :ok
+  end
+
+  defp focus_group(_chart, []),
+    do: {:error, "a group of the highlight option needs one name or more"}
+
+  defp focus_group(%Chart{elements: groups}, item) do
+    {:ok, next} = Expresso.Overlay.new(:next)
+    names = names_keys(groups)
+
+    case Enum.find(List.wrap(item), &(not Map.has_key?(names, &1))) do
+      nil ->
+        {:ok,
+         %Focus{at: next, keys: item |> List.wrap() |> Enum.flat_map(&names[&1]) |> Enum.uniq()}}
+
+      name ->
+        {:error,
+         "the highlight option names #{inspect(name)}, and the chart has no point, category " <>
+           "or series with that name. The names are " <>
+           "#{names |> Map.keys() |> Enum.sort() |> Enum.map_join(", ", &inspect/1)}."}
+    end
+  end
+
+  # The keys of each name that the highlight option can give: a point, a
+  # category of the color or of the symbol, and a series.
+  defp names_keys(groups) do
+    for {point, keys} <- point_keys(groups), reduce: %{} do
+      names ->
+        names
+        |> Map.update(point.name, [hd(keys)], &(&1 ++ [hd(keys)]))
+        |> add_category(point.color, keys, "c")
+        |> add_category(point.symbol, keys, "s")
+    end
+    |> then(fn names ->
+      Enum.reduce(Enum.with_index(groups, 1), names, fn
+        {%Series{color: color, name: name}, place}, names when color != nil ->
+          Map.update(names, name, ["g#{place}"], &(&1 ++ ["g#{place}"]))
+
+        _group, names ->
+          names
+      end)
+    end)
+  end
+
+  defp add_category(names, category, keys, prefix) when is_binary(category) do
+    key = Enum.find(keys, &String.starts_with?(&1, prefix))
+    Map.update(names, category, [key], &Enum.uniq(&1 ++ [key]))
+  end
+
+  defp add_category(names, _category, _keys, _prefix), do: names
+
+  @doc """
+  Return each point of the groups with its keys, in the order of the numbers
+  of the points
+
+  The keys are `p<n>` for point `n`, `c<n>` for category `n` of the color,
+  `s<n>` for category `n` of the symbol, and `g<n>` for series `n`. A group
+  of the `highlight` option names keys, and a mark with a `data-keys`
+  attribute that holds none of them dims.
+  """
+  @spec point_keys([Series.t()]) :: [{Point.t(), [String.t()]}]
+  def point_keys(groups) do
+    points = Enum.flat_map(groups, & &1.elements)
+    symbols = points |> Enum.map(& &1.symbol) |> Encoding.categories()
+    colors = points |> Enum.map(& &1.color) |> Encoding.categories()
+
+    {pairs, _next} =
+      groups
+      |> Enum.with_index(1)
+      |> Enum.flat_map_reduce(1, fn {%Series{} = group, place}, next ->
+        series = if group.color != nil, do: ["g#{place}"], else: []
+
+        pairs =
+          Enum.map(Enum.with_index(group.elements, next), &keys(&1, series, colors, symbols))
+
+        {pairs, next + length(group.elements)}
+      end)
+
+    pairs
+  end
+
+  defp keys({point, index}, series, colors, symbols) do
+    keys =
+      ["p#{index}"] ++
+        series ++
+        category_key(point.color, colors, "c") ++ category_key(point.symbol, symbols, "s")
+
+    {point, keys}
+  end
+
+  defp category_key(value, categories, prefix) when is_binary(value),
+    do: ["#{prefix}#{Enum.find_index(categories, &(&1 == value)) + 1}"]
+
+  defp category_key(_value, _categories, _prefix), do: []
 
   defp options(%Chart{kind: kind} = chart) do
     given =
@@ -123,9 +250,6 @@ defmodule Expresso.Element.Chart.Scatter do
 
       chart.timeline != [] ->
         {:error, "a #{kind} chart takes no frames"}
-
-      chart.reveal or chart.dim or chart.effect == :grow ->
-        {:error, "a #{kind} chart takes no reveal option, no dim option and no effect :grow"}
 
       true ->
         file_options(chart)
@@ -317,7 +441,8 @@ defmodule Expresso.Element.Chart.Scatter do
   # The groups of the points. Each series is a group, and it gives its symbol
   # and its color to each point without one. Without series, each category of
   # the color is a group, in the order of its first point, and the points
-  # without a category are one group.
+  # without a category are one group. With `reveal` and without categories of
+  # the color, each point is a group, so each point takes its own step.
   defp groups(%Chart{elements: [%Series{} | _] = series}, _points) do
     for {%Series{} = one, place} <- Enum.with_index(series, 1) do
       symbol = one.symbol || :circle
@@ -331,7 +456,15 @@ defmodule Expresso.Element.Chart.Scatter do
     end
   end
 
-  defp groups(%Chart{title: title}, points) do
+  defp groups(%Chart{reveal: true, title: title}, points) do
+    if Enum.any?(points, &is_binary(&1.color)),
+      do: color_groups(points, title),
+      else: Enum.map(points, &%Series{name: &1.name, elements: [&1]})
+  end
+
+  defp groups(%Chart{title: title}, points), do: color_groups(points, title)
+
+  defp color_groups(points, title) do
     points
     |> Enum.group_by(&if(is_binary(&1.color), do: &1.color))
     |> then(fn groups ->
@@ -353,6 +486,13 @@ defmodule Expresso.Element.Chart.Scatter do
     symbols = all |> Enum.map(& &1.symbol) |> Encoding.categories()
     colors = all |> Enum.map(& &1.color) |> Encoding.categories()
     default = if colors == [], do: @plain, else: @other
+    keyed = chart.focus != []
+
+    keys =
+      chart.elements
+      |> point_keys()
+      |> Enum.with_index(1)
+      |> Map.new(fn {{_point, keys}, index} -> {index, Enum.join(keys, " ")} end)
 
     {groups, _next} =
       Enum.map_reduce(chart.elements, 1, fn %Series{} = group, next ->
@@ -368,6 +508,7 @@ defmodule Expresso.Element.Chart.Scatter do
               color: Encoding.color(point.color, colors, default),
               symbol_value: point.symbol,
               color_value: point.color,
+              keys: if(keyed, do: keys[index]),
               overlay: Expresso.Overlay.Render.attributes(point)
             }
           end)
@@ -403,6 +544,8 @@ defmodule Expresso.Element.Chart.Scatter do
       size_label: chart.size_label,
       opacity: chart.opacity,
       labels: chart.labels,
+      keyed: keyed,
+      grow: Chart.moves?(chart),
       largest: @largest[chart.kind],
       frames: [%{label: nil, points: values(chart.elements)}],
       frame_label: chart.frame_label,
@@ -549,10 +692,16 @@ defmodule Expresso.Element.Chart.Scatter do
           end
 
           for point <- Enum.sort_by(group.points, &(-hd(@scene.marks[&1.index].rs))) do
-            c(&mark/1, point: point, mark: @scene.marks[point.index], opacity: @opacity)
+            c(&mark/1,
+              point: point,
+              mark: @scene.marks[point.index],
+              opacity: @opacity,
+              grow: @grow,
+              place: @scene.labels[point.index]
+            )
           end
 
-          for point <- group.points, place = @scene.labels[point.index] do
+          for point <- group.points, point.overlay == [], place = @scene.labels[point.index] do
             c(&label/1, point: point, mark: @scene.marks[point.index], place: place)
           end
         end
@@ -570,7 +719,7 @@ defmodule Expresso.Element.Chart.Scatter do
         [
           {"--chart-u", Motion.ref("x#{point.index}", mark.xs)},
           {"--chart-v", Motion.ref("y#{point.index}", mark.ys)},
-          {"--chart-w", Motion.ref("r#{point.index}", mark.rs)},
+          {"--chart-w", radius_style(assigns.grow, point, mark)},
           {"--series", point.color}
         ] ++ if(assigns.opacity, do: [{"opacity", assigns.opacity}], else: [])
       )
@@ -581,21 +730,31 @@ defmodule Expresso.Element.Chart.Scatter do
       if @point.overlay == [] do
         c(&shape/1, point: @point, style: @style)
       else
-        g rest!: @point.overlay do
+        g class: "chart-point-group", rest!: @point.overlay do
           c(&shape/1, point: @point, style: @style)
+
+          if @place do
+            c(&label/1, point: @point, mark: @mark, place: @place)
+          end
         end
       end
     end
   end
 
+  # The radius of a mark. The effect `:grow` multiplies it by
+  # `--chart-shown`, so the mark grows from the size 0.
+  defp radius_style(true, point, mark), do: Motion.grow(Motion.ref("r#{point.index}", mark.rs), 0)
+  defp radius_style(false, point, mark), do: Motion.ref("r#{point.index}", mark.rs)
+
   # The path of a mark. A point with an overlay has a group around its path
-  # for the overlay, because the transitions of an element with `data-on`
-  # replace the transitions of the channels.
+  # and its label for the overlay, because the transitions of an element with
+  # `data-on` replace the transitions of the channels.
   defp shape(assigns) do
     temple do
       path class: Expresso.Element.classes("chart-point chart-mark", @point.class),
            d: Encoding.path(@point.symbol),
-           style: @style
+           style: @style,
+           data_keys: @point.keys
     end
   end
 
@@ -617,7 +776,8 @@ defmodule Expresso.Element.Chart.Scatter do
            x: Plot.f(@place.dx),
            y: Plot.f(@place.dy),
            text_anchor: @place.anchor,
-           style: @style do
+           style: @style,
+           data_keys: @point.keys do
         @point.name
       end
     end

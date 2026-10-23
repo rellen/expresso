@@ -307,6 +307,91 @@ defmodule Expresso.ChartScatterTest do
     end
   end
 
+  describe "the steps" do
+    test "reveal without a category gives each point its own step" do
+      groups = services(reveal: true) |> figure() |> LazyHTML.query("g.chart-series")
+      assert LazyHTML.attribute(groups, "data-on") == ["1 2 3", "2 3", "3"]
+    end
+
+    test "reveal gives each category of the color its own step, and dim dims the earlier one" do
+      groups =
+        regions(reveal: true, dim: true) |> one_slide() |> document() |> screen("g.chart-series")
+
+      assert LazyHTML.attribute(groups, "data-on") == ["1 2", "2"]
+      assert Enum.count(LazyHTML.attribute(groups, "data-el")) == 1
+    end
+
+    test "the effect :grow grows each mark from the size 0" do
+      styles =
+        services(reveal: true, effect: :grow)
+        |> figure()
+        |> LazyHTML.query("path.chart-point")
+        |> LazyHTML.attribute("style")
+
+      assert Enum.all?(styles, &(&1 =~ "--chart-w: calc(0 + (7 - 0) * var(--chart-shown, 1));"))
+    end
+
+    test "a point with an at option shows at its own step, with its label" do
+      points = [Builder.point("a", x: 1, y: 1, at: 2), Builder.point("b", x: 2, y: 2)]
+      figure = figure(services([labels: :all], points))
+
+      [group] = figure |> LazyHTML.query("g.chart-point-group") |> Enum.to_list()
+      assert LazyHTML.attribute(group, "data-on") == ["2"]
+      assert texts(group, ".chart-point-label") == ["a"]
+    end
+
+    test "highlight names points, categories and series, and the marks carry their keys" do
+      html = regions(highlight: ["web", "EU", ["api", "US"]]) |> one_slide() |> document()
+
+      keys = html |> screen("path.chart-point") |> LazyHTML.attribute("data-keys")
+      assert keys == ["p1 c1 s1", "p2 c1 s1", "p3 c2 s2"]
+
+      rules = html |> LazyHTML.query("style") |> Enum.map_join(&LazyHTML.text/1)
+      assert rules =~ ~S|[data-keys]:not([data-keys~="p3"]) { --chart-dim: 1; }|
+
+      assert rules =~
+               ~S|[data-keys]:not([data-keys~="c1"]):not([data-keys~="s1"]) { --chart-dim: 1; }|
+
+      assert rules =~
+               ~S|[data-keys]:not([data-keys~="p1"]):not([data-keys~="c2"]):not([data-keys~="s2"])|
+    end
+
+    test "highlight names a series" do
+      chart =
+        services([highlight: ["Edge"]], [
+          Builder.series("Core", elements: [Builder.point("api", x: 1, y: 2)]),
+          Builder.series("Edge", elements: [Builder.point("cdn", x: 3, y: 1)])
+        ])
+
+      keys =
+        chart |> figure() |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("data-keys")
+
+      assert keys == ["p1 g1", "p2 g2"]
+    end
+
+    test "the errors of highlight" do
+      assert_raise ArgumentError,
+                   ~r/the highlight option names "db", and the chart has no point/,
+                   fn ->
+                     services(highlight: ["db"])
+                   end
+
+      assert_raise ArgumentError, ~r/takes the reveal option or the highlight option/, fn ->
+        services(highlight: ["api"], reveal: true)
+      end
+
+      assert_raise ArgumentError, ~r/a series or a point of the chart takes no at option/, fn ->
+        services([highlight: ["a"]], [Builder.point("a", x: 1, y: 1, at: 2)])
+      end
+
+      assert_raise ArgumentError,
+                   ~r/the whole_first option of a chart needs the highlight option/,
+                   fn ->
+                     services(whole_first: true)
+                   end
+    end
+  end
+
   describe "the labels" do
     test "labels :all gives each point a label that moves with its mark" do
       figure = figure(services(labels: :all))

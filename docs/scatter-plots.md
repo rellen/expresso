@@ -99,7 +99,7 @@ steps.
 | 4. The series of points | Done. The `values` of a series are optional. `Expresso.Builder` takes a list as the keyword list only when it is empty or starts with a tuple, so `series("Orders", [1, 2])` keeps its values. A point of a series takes no category, because the series is its category. |
 | 5. The CSV file | Done. `Expresso.Element.Chart.Scatter.Data` reads the points from the rows of `Expresso.Element.Chart.Csv.rows/3`. The check of the points runs without the options of the file, and the chart keeps them. |
 | 6. The labels | Done. `Expresso.Element.Chart.Scatter.Labels` tries eight places for each label, in the order of the points, and takes the first place that covers no label and no mark inside the plot. A label reads the channels of its mark, so it moves with the mark. |
-| 7. The steps | To do |
+| 7. The steps | Done. With `reveal` and without categories of the color, each point is a group. Each mark has `data-keys` with the keys of its point, its categories and its series, so the rules of the highlight of a chart dim the other marks. A point with an overlay has a group around its mark and its label. A browser test makes sure of the visibility at each step of `reveal`, and of the dimmed marks at each step of `highlight`. The list of the formatter now holds the options of the stack. |
 | 8. The frames | To do |
 | 9. The trend lines and `jitter` | To do |
 | 10. The color from a number | To do |
