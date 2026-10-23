@@ -61,6 +61,20 @@ defmodule Expresso.Element.Chart.Encoding do
   def opacity(_value), do: {:error, "the opacity of a mark is a number from 0 to 1, such as 0.6"}
 
   @doc """
+  Check the `jitter` option: a number from 0 to 0.2
+
+      iex> Expresso.Element.Chart.Encoding.jitter(0.02)
+      {:ok, 0.02}
+      iex> Expresso.Element.Chart.Encoding.jitter(0.5)
+      {:error, "the jitter is a part of the range of an axis from 0 to 0.2, such as 0.02"}
+  """
+  @spec jitter(term()) :: {:ok, number()} | {:error, String.t()}
+  def jitter(value) when is_number(value) and value >= 0 and value <= 0.2, do: {:ok, value}
+
+  def jitter(_value),
+    do: {:error, "the jitter is a part of the range of an axis from 0 to 0.2, such as 0.02"}
+
+  @doc """
   Return the path of a symbol of radius 1 at the origin
 
       iex> Expresso.Element.Chart.Encoding.path(:diamond)

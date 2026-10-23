@@ -5,13 +5,14 @@ defmodule Expresso.ChartScatterTest do
 
   alias Expresso.Builder
   alias Expresso.Element.Chart.{Encoding, Scale}
-  alias Expresso.Element.Chart.Scatter.{Data, Labels, Legend}
+  alias Expresso.Element.Chart.Scatter.{Data, Labels, Legend, Trend}
 
   doctest Scale
   doctest Encoding
   doctest Legend
   doctest Data
   doctest Labels
+  doctest Trend
 
   defp services(opts \\ [], points \\ nil) do
     points =
@@ -509,6 +510,104 @@ defmodule Expresso.ChartScatterTest do
       assert_raise ArgumentError, ~r/so a chart with frames takes no highlight option/, fn ->
         years(highlight: ["Japan"])
       end
+    end
+  end
+
+  describe "the trend lines and the jitter" do
+    # The value of a property in a style.
+    defp property(style, name) do
+      [value] = Regex.run(~r/#{name}: ([-\d.]+);/, style, capture: :all_but_first)
+      elem(Float.parse(value), 0)
+    end
+
+    test "a trend line goes from the first to the last point of a group on a line" do
+      # The three points are on the line y = x + 1, so the trend line goes
+      # from the mark of the first point to the mark of the last point.
+      points = [
+        Builder.point("a", x: 2, y: 3),
+        Builder.point("b", x: 4, y: 5),
+        Builder.point("c", x: 6, y: 7)
+      ]
+
+      figure = figure(services([trend: :linear, x_range: {0, 10}, y_range: {0, 10}], points))
+
+      [a, _b, c] = figure |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("style")
+      [line] = figure |> LazyHTML.query("line.chart-trend") |> LazyHTML.attribute("style")
+
+      assert_in_delta property(line, "--chart-u"), property(a, "--chart-u"), 0.1
+      assert_in_delta property(line, "--chart-v"), property(a, "--chart-v"), 0.1
+
+      assert_in_delta property(line, "--chart-w"),
+                      property(c, "--chart-u") - property(a, "--chart-u"),
+                      0.2
+
+      assert_in_delta property(line, "--chart-h"),
+                      property(c, "--chart-v") - property(a, "--chart-v"),
+                      0.2
+
+      assert line =~ "--series: var(--muted);"
+    end
+
+    test "each category of the color has its own trend line, in its color" do
+      points = [
+        Builder.point("a", x: 1, y: 1, color: "EU"),
+        Builder.point("b", x: 2, y: 3, color: "EU"),
+        Builder.point("c", x: 1, y: 4, color: "US"),
+        Builder.point("d", x: 3, y: 2, color: "US"),
+        Builder.point("e", x: 2, y: 2, color: "APAC")
+      ]
+
+      styles =
+        services([trend: :linear], points)
+        |> figure()
+        |> LazyHTML.query("line.chart-trend")
+        |> LazyHTML.attribute("style")
+
+      # The category APAC has one point, so it has no line.
+      assert Enum.map(styles, &(Regex.run(~r/--series: ([^;]+);/, &1) |> List.last())) ==
+               ["var(--chart-1)", "var(--chart-2)"]
+    end
+
+    test "a trend line shows at the step of the last point of its group" do
+      points = [
+        Builder.point("a", x: 1, y: 1, color: "EU"),
+        Builder.point("b", x: 2, y: 3, color: "EU", at: 3),
+        Builder.point("c", x: 1, y: 4, color: "US"),
+        Builder.point("d", x: 3, y: 2, color: "US")
+      ]
+
+      groups =
+        services([trend: :linear, reveal: true], points)
+        |> figure()
+        |> LazyHTML.query("g.chart-trends > g")
+
+      # The group EU shows at step 1 and its point b at step 3. The group US
+      # shows at step 2.
+      assert LazyHTML.attribute(groups, "data-on") == ["3", "2 3"]
+    end
+
+    test "the jitter moves each mark a little, in the same way in each render" do
+      plain = services(x_range: {0, 2000}, y_range: {0, 3000}) |> figure()
+      moved = services(x_range: {0, 2000}, y_range: {0, 3000}, jitter: 0.02) |> figure()
+      again = services(x_range: {0, 2000}, y_range: {0, 3000}, jitter: 0.02) |> figure()
+
+      styles = &(&1 |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("style"))
+      assert styles.(moved) == styles.(again)
+      assert styles.(moved) != styles.(plain)
+
+      # A move is at most 2 percent of the width of the plot, which is less
+      # than 800 units.
+      for {one, other} <- Enum.zip(styles.(plain), styles.(moved)) do
+        assert abs(property(one, "--chart-u") - property(other, "--chart-u")) <= 16
+      end
+    end
+
+    test "a jitter outside 0 to 0.2" do
+      assert_raise ArgumentError,
+                   ~r/the jitter is a part of the range of an axis from 0 to 0.2/,
+                   fn ->
+                     services(jitter: 0.5)
+                   end
     end
   end
 

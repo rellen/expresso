@@ -49,6 +49,8 @@ end
 | `x_scale`, `y_scale` | `:linear` or `:log` | The scale of an axis of a scatter plot. The default is `:linear`. |
 | `symbol_label`, `color_label`, `size_label` | A string | The title of a legend of a scatter plot, and the header of its column in the table. See [the symbol, the color and the size](#the-symbol-the-color-and-the-size). |
 | `labels` | `:all`, `:none` or a list of names of points | The points of a scatter plot with a label. The default is `:none`. See [the labels of the points](#the-labels-of-the-points). |
+| `trend` | `:linear` | Draw the least-squares line of each group of a scatter plot. See [the trend lines](#the-trend-lines). |
+| `jitter` | A number from 0 to 0.2, such as `0.02` | Move each mark of a scatter plot by at most this part of the range of each axis. See [many marks in one place](#many-marks-in-one-place). |
 | `opacity` | A number from 0 to 1, such as `0.6` | The opacity of each mark of a scatter plot. An area with many marks then looks darker. |
 | `width` | A CSS width, such as `"900px"` or `"70%"` | The width of the chart. A percentage is a part of the width of the slide. The default is `80%`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
@@ -646,6 +648,30 @@ series of each point.
 
 A chart holds points or series of points, and not both.
 
+### The trend lines
+
+`trend :linear` draws the least-squares line of each group of points: each series, or each
+category of the color, in the color of the group. A chart without series and without
+categories of the color has one line for all its points, in the color `--muted`. A group with
+fewer than two different x values has no line.
+
+The line goes from the lowest x to the highest x of its group, and the plot cuts it at the
+bottom and at the top. On a logarithmic axis, the line fits the logarithms of the values, so
+it is straight on the plot. The line shows at the step of the last point of its group, and
+`highlight` puts it in focus with its category or its series. In a chart with frames, the
+line of each frame fits the points of that frame, and the line moves from one frame to the
+next.
+
+### Many marks in one place
+
+Three options help when marks cover each other:
+
+- `opacity 0.6` gives each mark that opacity, so an area with many marks looks darker.
+- `jitter 0.02` moves each mark by at most 2 percent of the range of each axis. The move
+  comes from a hash of the name of the point, so each render gives the same chart. A mark
+  stays inside the plot, and a trend line fits the values without the move.
+- The larger marks come first in each group, so a large mark does not hide a small mark.
+
 ### The labels of the points
 
 The `labels` option gives a label to the points of a scatter plot: `:all` to each point, or a
@@ -899,8 +925,8 @@ The compiler gives an error for these:
   8 series, two series of one name, a point of a series with a category, and a `symbol` or a
   `color` on a series of the other kinds;
 - a size of zero or less, a point without a size in a chart with sizes or in a bubble chart,
-  more than 6 categories of the symbol, more than 8 categories of the color, and an
-  `opacity` outside 0 to 1.
+  more than 6 categories of the symbol, more than 8 categories of the color, an `opacity`
+  outside 0 to 1, and a `jitter` outside 0 to 0.2.
 
 The compiler gives an error for a file that it cannot read or that is not UTF-8, for a
 quote with no closing quote, for text after a closing quote, and for a row with a cell that
@@ -937,7 +963,7 @@ Each mark is a `path` with the class `chart-point`. The path is a symbol of radi
 origin, and its style moves it to its place and scales it to its radius, with the custom
 properties `--chart-u`, `--chart-v` and `--chart-w`. `--series` gives its color. A symbol of
 a legend is a `path` with the class `chart-key`, a label of a point is a `text` with the class
-`chart-point-label`, and a size of a legend is a `circle` with
+`chart-point-label`, a trend line is a `line` with the class `chart-trend`, and a size of a legend is a `circle` with
 the class `chart-size`.
 
 A chart of flows writes these elements:
