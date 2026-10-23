@@ -194,6 +194,7 @@ spark_locals_without_parens = [
   to: 1,
   toc: 0,
   toc: 1,
+  totals: 1,
   trailing_comments: 1,
   transition: 1,
   tree: 0,

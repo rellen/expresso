@@ -130,6 +130,7 @@ defmodule Expresso.Element.Chart do
               :color_scale,
               :color_mid,
               :value_range,
+              totals: :grow,
               labels: :none,
               x_scale: :linear,
               y_scale: :linear,
@@ -453,7 +454,8 @@ defmodule Expresso.Element.Chart do
           "the thumbnail option names frame #{thumbnail}, and the chart has #{length(timeline)} frames"}
 
   defp options(%__MODULE__{kind: kind} = chart) when not is_waterfall(kind) do
-    case Enum.find(@waterfall_options, &(Map.fetch!(chart, &1) != nil)) do
+    case Enum.find(@waterfall_options, &(Map.fetch!(chart, &1) != nil)) ||
+           if(chart.totals != :grow, do: :totals) do
       nil ->
         scatter_options(chart)
 
@@ -663,11 +665,13 @@ defmodule Expresso.Element.Chart do
   `highlight` option
 
   The `whole_first` option gives the chart one step with no group in focus,
-  as a `pause` in front of the chart does. `Expresso.Overlay.Expand` reads
-  this number.
+  as a `pause` in front of the chart does. A waterfall chart with `reveal`
+  takes one step for its start and its totals before its first change.
+  `Expresso.Overlay.Expand` reads this number.
   """
   @spec lead(t()) :: 0 | 1
   def lead(%__MODULE__{whole_first: true}), do: 1
+  def lead(%__MODULE__{kind: kind} = chart) when is_waterfall(kind), do: Waterfall.lead(chart)
   def lead(%__MODULE__{}), do: 0
 
   defp categories(%__MODULE__{kind: kind, categories: [_ | _] = categories}) do
@@ -1091,6 +1095,7 @@ defmodule Expresso.Element.Chart do
   def moves?(%__MODULE__{timeline: [_, _ | _]}), do: true
 
   def moves?(%__MODULE__{kind: kind} = chart) when is_point(kind), do: Scatter.grow?(chart)
+  def moves?(%__MODULE__{kind: kind} = chart) when is_waterfall(kind), do: Waterfall.moves?(chart)
 
   def moves?(%__MODULE__{effect: effect, elements: elements}),
     do: effect == :grow or Enum.any?(elements, &(&1.effect == :grow))
@@ -1109,6 +1114,9 @@ defmodule Expresso.Element.Chart do
   """
   @spec rules(t()) :: [String.t()]
   def rules(%__MODULE__{} = chart), do: frame_rules(chart) ++ focus_rules(chart)
+
+  defp frame_rules(%__MODULE__{kind: kind} = chart) when is_waterfall(kind),
+    do: Waterfall.rules(chart)
 
   defp frame_rules(%__MODULE__{timeline: [_, _ | _] = timeline, el: el} = chart)
        when is_binary(el) do

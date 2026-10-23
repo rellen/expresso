@@ -622,6 +622,12 @@ defmodule Expresso.Extension do
             doc:
               "The low end and the high end of the y axis of a scatter plot, such as {0, 100}. The default comes from the points."
           ],
+          totals: [
+            type: {:in, [:grow, :complete]},
+            default: :grow,
+            doc:
+              "The story of a total of a waterfall chart with reveal: :grow, the total shows from the first step and grows or shrinks with each change that shows; or :complete, the total shows at the step of the change before it, with its final value. The default is :grow."
+          ],
           value_range: [
             type: {:tuple, [@number, @number]},
             doc:

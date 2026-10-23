@@ -14,6 +14,20 @@ defmodule Expresso.Element.Chart.Waterfall do
   `columns/1` calculates the base, the end and the running total of each
   column.
 
+  With `reveal true`, the check puts the columns into groups:
+  `members/2` gives the group of each column. Group 0 holds the start and the
+  totals of `totals :grow`, and the chart draws it outside the groups, so it
+  shows with the chart and does not dim. Each change is a group, and a total
+  of `totals :complete` goes into the group of the column before it. Each
+  group is a copy of the series with the indexes of its columns in `columns`,
+  and it is a child of the chart, so it takes its step from `reveal`.
+
+  A state is one set of values of the channels: one state for each group
+  that shows, from group 0. A total of `totals :grow` holds in each state
+  the running total of the changes that show, so it grows or shrinks at the
+  step of each change, and its value counts. `rules/1` writes the channels of
+  each state at its steps.
+
   Each column has its place in the channels of
   `Expresso.Element.Chart.Motion`: `--u<i>` and `--v<i>` for the corner at the
   top left of column `i`, and `--w<i>` and `--h<i>` for its size. The style
@@ -66,17 +80,87 @@ defmodule Expresso.Element.Chart.Waterfall do
   """
   @spec check(Chart.t()) :: {:ok, Chart.t()} | {:error, String.t()}
   def check(%Chart{} = chart) do
+    chart = whole(chart)
+
     with :ok <- options(chart),
          {:ok, series} <- one_series(chart),
          :ok <- values(series, chart.categories),
          :ok <- totals(series, chart.categories),
-         :ok <- range(chart, columns(series.values)) do
-      {:ok, chart}
+         :ok <- range(chart, columns(series.values)),
+         :ok <- revealed(chart, series) do
+      {:ok, %Chart{chart | elements: groups(chart, series)}}
     end
+  end
+
+  # A chart that the check put into groups holds the whole series in each
+  # group, so a second check starts from the first group.
+  defp whole(%Chart{elements: [%Series{columns: [_ | _]} = group | _]} = chart),
+    do: %Chart{chart | elements: [%Series{group | columns: nil}]}
+
+  defp whole(chart), do: chart
+
+  # With `reveal`, each group takes its steps from the chart.
+  defp revealed(%Chart{reveal: true}, %Series{} = series)
+       when series.at != nil or series.on != [],
+       do:
+         {:error,
+          "the reveal option gives each change of a waterfall chart its own step, so the " <>
+            "series takes no at option and no on entity"}
+
+  defp revealed(_chart, _series), do: :ok
+
+  # The groups of `reveal`: one copy of the series for each group after group
+  # 0, with the indexes of its columns. A chart without `reveal`, or without
+  # a change, keeps its series.
+  defp groups(%Chart{reveal: true, totals: totals}, %Series{values: values} = series) do
+    members = members(values, totals)
+
+    case Enum.max(members) do
+      0 ->
+        [series]
+
+      count ->
+        indexed = Enum.with_index(members)
+        for group <- 1..count, do: %Series{series | columns: for({^group, i} <- indexed, do: i)}
+    end
+  end
+
+  defp groups(_chart, series), do: [series]
+
+  @doc """
+  Return the group of each column of a waterfall chart with `reveal`
+
+  The start is in group 0, and each change starts a new group. A total is in
+  group 0 with `totals :grow`, and in the group of the column before it with
+  `totals :complete`.
+
+      iex> Expresso.Element.Chart.Waterfall.members([50, 40, 30, :total, 10, :total], :grow)
+      [0, 1, 2, 0, 3, 0]
+      iex> Expresso.Element.Chart.Waterfall.members([50, 40, 30, :total, 10, :total], :complete)
+      [0, 1, 2, 2, 3, 3]
+  """
+  @spec members([value()], :grow | :complete) :: [non_neg_integer()]
+  def members([_start | rest], totals) do
+    {groups, _state} =
+      Enum.map_reduce(rest, {0, 0}, fn
+        value, {count, _last} when is_number(value) ->
+          {count + 1, {count + 1, count + 1}}
+
+        _total, {count, last} ->
+          {if(totals == :complete, do: last, else: 0), {count, last}}
+      end)
+
+    [0 | groups]
   end
 
   defp options(%Chart{} = chart) when chart.frames != nil or chart.timeline != [],
     do: {:error, "a waterfall chart takes no frames"}
+
+  defp options(%Chart{totals: :complete, reveal: false}),
+    do:
+      {:error,
+       "the totals option tells how a total shows at the steps of reveal, so totals " <>
+         ":complete needs reveal true"}
 
   defp options(%Chart{value_range: {low, high}}) when low >= high,
     do:
@@ -253,7 +337,61 @@ defmodule Expresso.Element.Chart.Waterfall do
   chart with an axis.
   """
   @spec assigns(Chart.t()) :: map()
-  def assigns(%Chart{} = chart), do: %{value_range: chart.value_range}
+  def assigns(%Chart{elements: [%Series{values: values} | _] = groups} = chart) do
+    members =
+      for i <- 0..(length(values) - 1) do
+        case Enum.find_index(groups, &(&1.columns == nil or i in &1.columns)) do
+          nil -> 0
+          index -> index + 1
+        end
+      end
+
+    %{
+      value_range: chart.value_range,
+      totals: chart.totals,
+      members: members,
+      revealed: match?([%Series{columns: [_ | _]} | _], groups),
+      frames: [%{label: nil, values: [values]}],
+      grow: grow?(chart)
+    }
+  end
+
+  @doc """
+  Tell whether the columns of a waterfall chart move: with the steps of
+  `reveal`, or with the effect `:grow`
+  """
+  @spec moves?(Chart.t()) :: boolean()
+  def moves?(%Chart{elements: groups} = chart),
+    do: match?([%Series{columns: [_ | _]} | _], groups) or grow?(chart)
+
+  @doc """
+  Return the steps that a waterfall chart takes before its first change: 1
+  with the groups of `reveal`, so the start and the totals show alone at the
+  first step, else 0
+  """
+  @spec lead(Chart.t()) :: 0 | 1
+  def lead(%Chart{elements: [%Series{columns: [_ | _]} | _]}), do: 1
+  def lead(%Chart{}), do: 0
+
+  defp grow?(%Chart{effect: effect, elements: groups}),
+    do: effect == :grow or Enum.any?(groups, &(&1.effect == :grow))
+
+  @doc """
+  Return the CSS rules of the states of a waterfall chart with `reveal`
+
+  The state of group `k` holds at the steps of group `k` at which group
+  `k + 1` does not show. The first state is the value of each channel in the
+  style attribute, so it needs no rule.
+  """
+  @spec rules(Chart.t()) :: [String.t()]
+  def rules(%Chart{el: el, elements: [%Series{columns: [_ | _]} | _] = groups} = chart)
+      when is_binary(el) do
+    assigns = chart |> Chart.get_assigns() |> layout()
+    steps = Enum.map(groups, &(&1.steps || []))
+    Motion.rules(assigns, el, Enum.zip_with(steps, tl(steps) ++ [[]], &(&1 -- &2)))
+  end
+
+  def rules(%Chart{}), do: []
 
   @doc """
   Add the layout of a waterfall chart to its assigns: the axis, the box of the
@@ -265,19 +403,49 @@ defmodule Expresso.Element.Chart.Waterfall do
   """
   @spec layout(map()) :: map()
   def layout(assigns) do
-    states = Enum.map(assigns.frames, fn %{values: [values]} -> columns(values) end)
+    %{values: [values]} = hd(assigns.frames)
+    final = columns(values)
+    states = states(assigns, final)
     axis = axis(states, assigns.value_range)
     box = box(assigns, axis)
     y = &(box.bottom - Scale.fraction(axis, &1) * (box.bottom - box.top))
 
     Map.merge(assigns, %{
       states: states,
+      finals: Enum.map(states, fn _state -> final end),
+      thumbnail: length(states),
       axis: axis,
       box: box,
       y: y,
       base: axis_base(axis),
       band: (box.right - box.left) / length(assigns.categories)
     })
+  end
+
+  # The columns of each state: one state for each group of `reveal`, from
+  # group 0. A total of `totals :grow` holds the running total of the changes
+  # of the groups that show. A change keeps its place, because it shows at
+  # its place.
+  defp states(%{revealed: true, totals: :grow, members: members}, final) do
+    for k <- 0..Enum.max(members), do: partial(final, members, k)
+  end
+
+  defp states(%{revealed: true, members: members}, final),
+    do: List.duplicate(final, Enum.max(members) + 1)
+
+  defp states(_assigns, final), do: [final]
+
+  defp partial([start | rest], [_group | members], k) do
+    {columns, _sum} =
+      rest
+      |> Enum.zip(members)
+      |> Enum.map_reduce(start.total, fn
+        {%{type: :total} = column, _group}, sum -> {%{column | to: sum, total: sum}, sum}
+        {column, group}, sum when group <= k -> {column, Plot.number(sum + column.change)}
+        {column, _group}, sum -> {column, sum}
+      end)
+
+    [start | columns]
   end
 
   # The axis: from the ends of each column and zero, or from `value_range`.
@@ -337,12 +505,14 @@ defmodule Expresso.Element.Chart.Waterfall do
         %{
           index: i,
           type: hd(columns).type,
+          group: Enum.at(assigns.members, i),
+          join_group: max(Enum.at(assigns.members, i), Enum.at(assigns.members, max(i - 1, 0))),
           columns: columns,
           places: places,
           inside: inside,
           labels: Enum.map(places, &label_y(&1, hd(columns), inside)),
           changes: Enum.map(places, &change_y(&1, inside)),
-          joins: Enum.map(assigns.states, &join_y(assigns, &1, i))
+          joins: Enum.map(assigns.finals, &join_y(assigns, &1, i))
         }
       end
 
@@ -378,7 +548,8 @@ defmodule Expresso.Element.Chart.Waterfall do
       v: top,
       w: width,
       h: max(bottom - top, 1),
-      up: column.to >= from
+      up: column.to >= from,
+      anchor: assigns.y.(from)
     }
   end
 
@@ -417,12 +588,30 @@ defmodule Expresso.Element.Chart.Waterfall do
       c(&axis/1, rest!: assigns)
       c(&titles/1, rest!: assigns)
 
-      for series <- @series do
-        g class: Expresso.Element.classes("chart-series", series.class), rest!: series.overlay do
-          for mark <- @scene.marks do
-            c(&column/1, rest!: Map.put(assigns, :mark, mark))
-          end
+      if Enum.any?(@scene.marks, &(&1.group == 0)) do
+        g class: "chart-series" do
+          c(&group/1, rest!: Map.put(assigns, :group, 0))
         end
+      end
+
+      for {series, k} <- Enum.with_index(@series, 1) do
+        g class: Expresso.Element.classes("chart-series", series.class), rest!: series.overlay do
+          c(&group/1, rest!: Map.put(assigns, :group, k))
+        end
+      end
+    end
+  end
+
+  # The connectors and the columns of one group. A connector shows with the
+  # later of its two columns.
+  defp group(assigns) do
+    temple do
+      for mark <- @scene.marks, mark.index > 0, mark.join_group == @group do
+        c(&join/1, rest!: Map.merge(assigns, %{mark: mark, key: Chart.key(assigns, mark.index)}))
+      end
+
+      for mark <- @scene.marks, mark.group == @group do
+        c(&column/1, rest!: Map.put(assigns, :mark, mark))
       end
     end
   end
@@ -432,21 +621,19 @@ defmodule Expresso.Element.Chart.Waterfall do
     %{mark: mark} = assigns
     i = mark.index
 
+    anchor = hd(mark.places).anchor
+
     style =
       Motion.style([
         {"--chart-u", Motion.ref("u#{i}", Enum.map(mark.places, & &1.u))},
-        {"--chart-v", Motion.ref("v#{i}", Enum.map(mark.places, & &1.v))},
+        {"--chart-v", grow(assigns, Motion.ref("v#{i}", Enum.map(mark.places, & &1.v)), anchor)},
         {"--chart-w", Motion.ref("w#{i}", Enum.map(mark.places, & &1.w))},
-        {"--chart-h", Motion.ref("h#{i}", Enum.map(mark.places, & &1.h))}
+        {"--chart-h", grow(assigns, Motion.ref("h#{i}", Enum.map(mark.places, & &1.h)), 0)}
       ])
 
     assigns = Map.merge(assigns, %{style: style, key: Chart.key(assigns, i)})
 
     temple do
-      if @mark.index > 0 do
-        c(&join/1, rest!: assigns)
-      end
-
       rect class: "chart-waterfall-bar chart-waterfall-#{@mark.type}",
            x: 0,
            y: 0,
@@ -464,6 +651,10 @@ defmodule Expresso.Element.Chart.Waterfall do
       end
     end
   end
+
+  # A place that the effect `:grow` moves from `from`, or the place alone.
+  defp grow(%{grow: true}, value, from), do: Motion.grow(value, from)
+  defp grow(_assigns, value, _from), do: value
 
   # The dashed line from the end of the column before to the start of this
   # column.
@@ -513,14 +704,17 @@ defmodule Expresso.Element.Chart.Waterfall do
     totals = Enum.map(mark.columns, & &1.total)
 
     label =
-      Motion.style([{"--chart-u", x}, {"--chart-v", Motion.ref("l#{i}", mark.labels)}])
+      Motion.style([
+        {"--chart-u", x},
+        {"--chart-v", grow(assigns, Motion.ref("l#{i}", mark.labels), place.anchor - 8)}
+      ])
 
     assigns =
       Map.merge(assigns, %{
         label: label,
-        total: Motion.text_assigns(Enum.map(totals, &Plot.label/1), totals, "n#{i}", []),
+        total: Motion.text_assigns(Enum.map(totals, &Plot.label/1), totals, "n#{i}", count: true),
         change: if(mark.type != :total, do: signed(hd(mark.columns).change)),
-        change_style: change_style(mark, x)
+        change_style: change_style(assigns, mark, x)
       })
 
     temple do
@@ -548,11 +742,12 @@ defmodule Expresso.Element.Chart.Waterfall do
     end
   end
 
-  defp change_style(%{type: :total}, _x), do: nil
+  defp change_style(_assigns, %{type: :total}, _x), do: nil
 
-  defp change_style(mark, x),
-    do:
-      Motion.style([{"--chart-u", x}, {"--chart-v", Motion.ref("m#{mark.index}", mark.changes)}])
+  defp change_style(assigns, mark, x) do
+    value = Motion.ref("m#{mark.index}", mark.changes)
+    Motion.style([{"--chart-u", x}, {"--chart-v", grow(assigns, value, hd(mark.places).anchor)}])
+  end
 
   # The grid, the ticks, the base line at zero, the categories, and the break
   # mark of a cut axis.

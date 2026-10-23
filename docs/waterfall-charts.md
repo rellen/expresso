@@ -130,7 +130,7 @@ With `reveal true`, the chart takes these steps:
 | 1. This document | Done |
 | 2. The columns | Done. A column is a `rect` of one unit, as a box of a treemap, so its channels move each of its ends. The text of a change goes into its column when the column is 22 units high or more, else over the column. The other kinds refuse `value_range` and `:total`. |
 | 3. The CSV file | Done. The reader of `Expresso.Element.Chart.Csv` takes the option `cell`, a function that reads one cell, and a waterfall chart gives a function that also reads `total` and `total 120`. The error of a bad cell names the values that a cell can hold. |
-| 4. The steps | Not started |
+| 4. The steps | Done. The start and the totals of `totals :grow` stay outside the groups, so `dim` does not dim them. `Expresso.Element.Chart.lead/1` gives a chart with `reveal` one step before its first change, so the first step shows the start and the totals alone, as the table of the example shows. A browser test makes sure of the height and the count of a total at each step, and of the steps of `totals :complete`. |
 | 5. The highlight | Not started |
 | 6. The spans | Not started |
 | 7. The direction | Not started |
