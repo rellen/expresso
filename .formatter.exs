@@ -49,6 +49,7 @@ spark_locals_without_parens = [
   diagram: 2,
   dim: 1,
   dim_contrast: 1,
+  direction: 1,
   duration: 1,
   each: 1,
   easing: 1,

@@ -47,6 +47,7 @@ end
 | `x_label`, `y_label` | A string | The name of the x axis or of the y axis of a scatter plot. See [a scatter plot](#a-scatter-plot). |
 | `x_range`, `y_range` | Two numbers, such as `{0, 100}` | The low end and the high end of an axis of a scatter plot. The default comes from the points. |
 | `x_scale`, `y_scale` | `:linear` or `:log` | The scale of an axis of a scatter plot. The default is `:linear`. |
+| `direction` | `:vertical` or `:horizontal` | The direction of the columns of a waterfall chart. The default is `:vertical`. See [the direction](#the-direction). |
 | `spans` | `true` or `false` | Draw an arrow over the columns of a waterfall chart from each total to the next total, with the sum of the changes between them. The default is `false`. See [the spans](#the-spans). |
 | `totals` | `:grow` or `:complete` | How a total of a waterfall chart with `reveal` shows. The default is `:grow`. See [the steps of a waterfall chart](#the-steps-of-a-waterfall-chart). |
 | `value_range` | Two numbers, such as `{900, 1050}` | The low end and the high end of the value axis of a waterfall chart. The default holds zero and each column. See [a cut axis](#a-cut-axis). |
@@ -895,6 +896,28 @@ end
 With `reveal true`, a span shows with the last column before the total at its end, so it
 shows when that total is complete.
 
+### The direction
+
+`direction :vertical`, the default, draws columns from the bottom up, with the categories
+under them. `direction :horizontal` draws bars from left to right, with the categories down
+the left side, so a long name of a category has room:
+
+```elixir
+slide "year" do
+  chart :waterfall do
+    title "Cash in 2025"
+    categories ["Start of the year", "Sales", "Costs", "End of the year"]
+    series "Cash", [50, 40, -30, :total]
+    direction :horizontal
+  end
+end
+```
+
+The chart turns with its bars. The value axis goes along the bottom, with `value_label` under
+it, and `category_label` goes beside the categories. The labels go at the end of each bar, a
+connector goes down from one bar to the next bar, and a span goes down at the right of the
+bars.
+
 ### The steps of a waterfall chart
 
 With `reveal true`, the start and the totals show alone at the first step, and each change
@@ -1142,7 +1165,7 @@ The compiler gives an error for these:
 - a cell of the file of a waterfall chart that is not a number, `total`, or `total` and a
   number;
 - `totals :complete` without `reveal`, a series of a waterfall chart with `reveal` and an
-  `at` option or an `on` entity, and `totals` or `spans` on the other kinds;
+  `at` option or an `on` entity, and `totals`, `spans` or `direction` on the other kinds;
 - a waterfall chart with frames, `value_range` with its low end at or above its high end, a
   column that goes past an end of `value_range`, and `value_range` or `:total` on the other
   kinds.

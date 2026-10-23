@@ -622,6 +622,12 @@ defmodule Expresso.Extension do
             doc:
               "The low end and the high end of the y axis of a scatter plot, such as {0, 100}. The default comes from the points."
           ],
+          direction: [
+            type: {:in, [:vertical, :horizontal]},
+            default: :vertical,
+            doc:
+              "The direction of the columns of a waterfall chart: :vertical, columns from the bottom up, or :horizontal, bars from left to right with the categories down the left side, for long names. The default is :vertical."
+          ],
           spans: [
             type: :boolean,
             default: false,

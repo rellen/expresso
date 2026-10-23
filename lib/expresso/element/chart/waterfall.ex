@@ -49,7 +49,8 @@ defmodule Expresso.Element.Chart.Waterfall do
   # The part of the band of a category that its column takes.
   @column 0.7
 
-  # The least height of a column that holds the text of its change.
+  # The least height of a vertical column that holds the text of its change.
+  # A horizontal bar holds the text when it is as wide as the text.
   @inside 22
 
   @typedoc """
@@ -350,6 +351,7 @@ defmodule Expresso.Element.Chart.Waterfall do
       value_range: chart.value_range,
       totals: chart.totals,
       spans: chart.spans,
+      direction: chart.direction,
       members: members,
       revealed: match?([%Series{columns: [_ | _]} | _], groups),
       frames: [%{label: nil, values: [values]}],
@@ -396,11 +398,13 @@ defmodule Expresso.Element.Chart.Waterfall do
 
   @doc """
   Add the layout of a waterfall chart to its assigns: the axis, the box of the
-  plot, the function `y` from a value to a coordinate, and the columns of
-  each state
+  plot, the function `pos` from a value to a coordinate on the value axis,
+  and the columns of each state
 
   A state is one set of values of the channels. A chart without steps has one
-  state. The axis holds zero, or it has the ends of `value_range`.
+  state. The axis holds zero, or it has the ends of `value_range`. The value
+  axis goes up the left side of a vertical chart, and along the bottom of a
+  horizontal chart.
   """
   @spec layout(map()) :: map()
   def layout(assigns) do
@@ -408,8 +412,19 @@ defmodule Expresso.Element.Chart.Waterfall do
     final = columns(values)
     states = states(assigns, final)
     axis = axis(states, assigns.value_range)
-    box = box(assigns, axis)
-    y = &(box.bottom - Scale.fraction(axis, &1) * (box.bottom - box.top))
+    box = box(assigns, axis, states)
+    count = length(assigns.categories)
+
+    {pos, band} =
+      case assigns.direction do
+        :vertical ->
+          {&(box.bottom - Scale.fraction(axis, &1) * (box.bottom - box.top)),
+           (box.right - box.left) / count}
+
+        :horizontal ->
+          {&(box.left + Scale.fraction(axis, &1) * (box.right - box.left)),
+           (box.bottom - box.top) / count}
+      end
 
     Map.merge(assigns, %{
       states: states,
@@ -417,9 +432,9 @@ defmodule Expresso.Element.Chart.Waterfall do
       thumbnail: length(states),
       axis: axis,
       box: box,
-      y: y,
+      pos: pos,
       base: axis_base(axis),
-      band: (box.right - box.left) / length(assigns.categories)
+      band: band
     })
   end
 
@@ -470,15 +485,35 @@ defmodule Expresso.Element.Chart.Waterfall do
   @spec cut?(map()) :: boolean()
   def cut?(%{axis: %Scale{low: low, high: high}}), do: low > 0 or high < 0
 
-  # The box of the plot inside the SVG: the left edge holds the ticks of the
-  # axis and its title, and the bottom edge holds the categories and their
-  # title.
-  defp box(assigns, axis) do
+  # The box of the plot inside the SVG. A vertical chart has the ticks of the
+  # axis and its title at the left edge, and the categories and their title
+  # at the bottom edge. A horizontal chart has the categories and their title
+  # at the left edge, the ticks and their title at the bottom edge, and the
+  # labels at the ends of the bars at the right edge. The spans take room at
+  # the top of a vertical chart and at the right of a horizontal chart.
+  defp box(%{direction: :vertical} = assigns, axis, _states) do
     widest = axis.ticks |> Enum.map(&String.length(Plot.label(&1))) |> Enum.max()
     left = 24 + widest * 10 + if(assigns[:value_label], do: 32, else: 0)
     top = if(label?(assigns), do: 64, else: 28) + if(assigns.spans, do: 44, else: 0)
     bottom = @height - 40 - if(assigns[:category_label], do: 30, else: 0)
     %{left: left, top: top, right: @width - 16, bottom: bottom}
+  end
+
+  defp box(%{direction: :horizontal} = assigns, _axis, states) do
+    widest = assigns.categories |> Enum.map(&String.length/1) |> Enum.max()
+    left = min(24 + widest * 10, 280) + if(assigns[:category_label], do: 32, else: 0)
+
+    # The widest labels at the end of a bar: a change and its running total.
+    labels =
+      states
+      |> List.flatten()
+      |> Enum.map(&(String.length(Plot.label(&1.total)) + if(&1.change, do: 8, else: 0)))
+      |> Enum.max()
+
+    right = @width - 16 - labels * 10 - if(assigns.spans, do: 64, else: 0)
+    top = if label?(assigns), do: 64, else: 28
+    bottom = @height - 40 - if(assigns[:value_label], do: 30, else: 0)
+    %{left: left, top: top, right: right, bottom: bottom}
   end
 
   defp label?(%{frames: [_, _ | _], frame_label: place}), do: place != :none
@@ -489,9 +524,11 @@ defmodule Expresso.Element.Chart.Waterfall do
   each state, and the channels that hold them
 
   A column has the channels `u`, `v`, `w` and `h`, its label of the total or
-  of the running total has `l`, its number `n`, and the connector at its left
-  has `j`. `Expresso.Element.Chart.Motion` leaves out a channel that has the
-  same value in each state.
+  of the running total has `l`, its number `n`, the signed change has `m`,
+  and the connector at its left has `j`. A label and a connector have their
+  place on the value axis in the channel, and their place on the axis of the
+  categories in their style. `Expresso.Element.Chart.Motion` leaves out a
+  channel that has the same value in each state.
   """
   @spec scene(map()) :: %{
           marks: [map()],
@@ -505,19 +542,20 @@ defmodule Expresso.Element.Chart.Waterfall do
       for i <- 0..(count - 1) do
         columns = Enum.map(assigns.states, &Enum.at(&1, i))
         places = Enum.map(columns, &place(assigns, i, &1))
-        inside = assigns.values and hd(columns).type != :total and inside?(places)
+        first = hd(columns)
+        inside = assigns.values and first.type != :total and inside?(assigns, places, first)
 
         %{
           index: i,
-          type: hd(columns).type,
+          type: first.type,
           group: Enum.at(assigns.members, i),
           join_group: max(Enum.at(assigns.members, i), Enum.at(assigns.members, max(i - 1, 0))),
           columns: columns,
           places: places,
           inside: inside,
-          labels: Enum.map(places, &label_y(&1, hd(columns), inside)),
-          changes: Enum.map(places, &change_y(&1, inside)),
-          joins: Enum.map(assigns.finals, &join_y(assigns, &1, i))
+          labels: Enum.map(places, &label_at(assigns.direction, &1, first, inside)),
+          changes: Enum.map(places, &change_at(assigns.direction, &1, inside)),
+          joins: Enum.map(assigns.finals, &join_at(assigns, &1, i))
         }
       end
 
@@ -549,9 +587,10 @@ defmodule Expresso.Element.Chart.Waterfall do
 
   # The spans of `spans true`: one from each total to the next total with a
   # change between them. A span has the sum of the changes between its two
-  # totals, and its line goes over the highest column between them in each
-  # state. It shows with the last column before the total at its end, so it
-  # shows when that total is complete.
+  # totals, and its line goes past the labels of the furthest column between
+  # them in each state: over them in a vertical chart, and at their right in
+  # a horizontal chart. It shows with the last column before the total at its
+  # end, so it shows when that total is complete.
   defp spans(%{spans: false}, _marks), do: []
 
   defp spans(assigns, marks) do
@@ -562,13 +601,8 @@ defmodule Expresso.Element.Chart.Waterfall do
     |> Enum.with_index(1)
     |> Enum.map(fn {[from, to], number} ->
       between = Enum.slice(marks, from.index..to.index)
-
-      top =
-        between
-        |> Enum.flat_map(fn mark -> Enum.map(mark.places, &min(&1.v, label_top(mark, &1))) end)
-        |> Enum.min()
-
       value = Plot.number(List.last(to.columns).total - List.last(from.columns).total)
+      line = span_line(assigns, between)
 
       %{
         number: number,
@@ -576,55 +610,121 @@ defmodule Expresso.Element.Chart.Waterfall do
         to: to,
         group: between |> Enum.drop(1) |> Enum.map(& &1.group) |> Enum.max(),
         values: Enum.map(to.columns, fn _state -> value end),
-        ys: Enum.map(to.columns, fn _state -> max(top - 22, assigns.box.top - 36) end)
+        ys: Enum.map(to.columns, fn _state -> line end)
       }
     end)
   end
 
-  # The top of the labels over a column.
+  # The place of the line of a span on the value axis.
+  defp span_line(%{direction: :vertical} = assigns, between) do
+    top =
+      between
+      |> Enum.flat_map(fn mark -> Enum.map(mark.places, &min(&1.v, label_top(mark, &1))) end)
+      |> Enum.min()
+
+    max(top - 22, assigns.box.top - 36)
+  end
+
+  defp span_line(%{direction: :horizontal} = assigns, between) do
+    right =
+      between
+      |> Enum.flat_map(fn mark -> Enum.map(mark.places, &label_right(mark, &1)) end)
+      |> Enum.max()
+
+    min(right + 22, assigns.box.right + 40)
+  end
+
+  # The top of the labels over a column, and the right end of the labels at
+  # the end of a bar.
   defp label_top(%{type: :total}, place), do: place.v - 26
   defp label_top(%{inside: true}, place), do: place.v - 26
   defp label_top(_mark, place), do: place.v - 48
 
-  # The corner at the top left of a column and its size. A column of the
-  # change zero is a line of one unit.
-  defp place(assigns, i, column) do
-    from = if column.type == :total, do: assigns.base, else: column.from
-    top = assigns.y.(max(from, column.to))
-    bottom = assigns.y.(min(from, column.to))
-    width = assigns.band * @column
-
-    %{
-      u: assigns.box.left + assigns.band * i + (assigns.band - width) / 2,
-      v: top,
-      w: width,
-      h: max(bottom - top, 1),
-      up: column.to >= from,
-      anchor: assigns.y.(from)
-    }
+  defp label_right(mark, place) do
+    text = mark.columns |> hd() |> label_text(mark.inside)
+    place.u + place.w + 8 + String.length(text) * 10
   end
 
-  defp inside?(places), do: Enum.all?(places, &(&1.h >= @inside))
+  defp label_text(%{change: nil, total: total}, _inside), do: Plot.label(total)
+  defp label_text(%{total: total}, true), do: Plot.label(total)
+  defp label_text(%{change: change, total: total}, false), do: "#{signed(change)}  #{total}"
 
-  # The base line of the label over a column, or under a column that goes
-  # down from zero. A change with its text outside the column has two lines
-  # of text over it.
-  defp label_y(place, %{type: :total}, _inside) do
+  # The corner at the top left of a column and its size, and `anchor`, the
+  # place of its base on the value axis. A column of the change zero is a
+  # line of one unit.
+  defp place(assigns, i, column) do
+    from = if column.type == :total, do: assigns.base, else: column.from
+    a = assigns.pos.(from)
+    b = assigns.pos.(column.to)
+    thickness = assigns.band * @column
+    across = assigns.band * i + (assigns.band - thickness) / 2
+
+    case assigns.direction do
+      :vertical ->
+        %{
+          u: assigns.box.left + across,
+          v: min(a, b),
+          w: thickness,
+          h: max(abs(a - b), 1),
+          up: column.to >= from,
+          anchor: a
+        }
+
+      :horizontal ->
+        %{
+          u: min(a, b),
+          v: assigns.box.top + across,
+          w: max(abs(a - b), 1),
+          h: thickness,
+          up: column.to >= from,
+          anchor: a
+        }
+    end
+  end
+
+  # A column holds the text of its change when it is long enough: 22 units
+  # high, or as wide as the text.
+  defp inside?(%{direction: :vertical}, places, _column),
+    do: Enum.all?(places, &(&1.h >= @inside))
+
+  defp inside?(%{direction: :horizontal}, places, column) do
+    width = String.length(signed(column.change)) * 10 + 12
+    Enum.all?(places, &(&1.w >= width))
+  end
+
+  # The place on the value axis of the label of the total or of the running
+  # total. In a vertical chart, it is the base line of the text over the
+  # column, or under a column that goes down from zero. A change with its
+  # text outside the column has two lines of text over it. In a horizontal
+  # chart, it is the start of the text at the right of the bar, or the end of
+  # the text at the left of a bar that goes left from zero.
+  defp label_at(:vertical, place, %{type: :total}, _inside) do
     if place.up, do: place.v - 8, else: place.v + place.h + 20
   end
 
-  defp label_y(place, _column, true), do: place.v - 8
-  defp label_y(place, _column, false), do: place.v - 30
+  defp label_at(:vertical, place, _column, true), do: place.v - 8
+  defp label_at(:vertical, place, _column, false), do: place.v - 30
 
-  # The base line of the signed change: at the middle of a column that holds
-  # it, else under the running total over the column.
-  defp change_y(place, true), do: place.v + place.h / 2 + 6
-  defp change_y(place, false), do: place.v - 8
+  defp label_at(:horizontal, place, %{type: :total}, _inside) do
+    if place.up, do: place.u + place.w + 8, else: place.u - 8
+  end
+
+  defp label_at(:horizontal, place, _column, true), do: place.u + place.w + 8
+
+  defp label_at(:horizontal, place, column, false),
+    do: place.u + place.w + 20 + String.length(signed(column.change)) * 10
+
+  # The place on the value axis of the signed change: at the middle of a
+  # column that holds it, else beside the column.
+  defp change_at(:vertical, place, true), do: place.v + place.h / 2 + 6
+  defp change_at(:vertical, place, false), do: place.v - 8
+  defp change_at(:horizontal, place, true), do: place.u + place.w / 2
+  defp change_at(:horizontal, place, false), do: place.u + place.w + 8
 
   # The connector at the left of column `i`: at the running total after the
   # column before it.
-  defp join_y(_assigns, _columns, 0), do: 0
-  defp join_y(assigns, columns, i), do: assigns.y.(Enum.at(columns, i - 1).total)
+  defp join_at(_assigns, _columns, 0), do: 0
+  defp join_at(assigns, columns, i), do: assigns.pos.(Enum.at(columns, i - 1).total)
 
   @doc """
   Draw the content of the SVG of a waterfall chart: the axis, the columns,
@@ -672,14 +772,12 @@ defmodule Expresso.Element.Chart.Waterfall do
   end
 
   # A span: a line with an arrow from the middle of one total to the middle of
-  # the next total, with a short tick down at each end, and the sum of the
-  # changes between them over its middle.
+  # the next total, with a short tick at each end toward the columns, and the
+  # sum of the changes between them beside its middle.
   defp span(assigns) do
     %{span: span} = assigns
     from = hd(span.from.places)
     to = hd(span.to.places)
-    x = from.u + from.w / 2
-    length = to.u + to.w / 2 - x
     n = span.number
 
     keys =
@@ -688,20 +786,19 @@ defmodule Expresso.Element.Chart.Waterfall do
         {first, last} -> "#{first} #{last}"
       end
 
+    {style, d, value} = span_shape(assigns.direction, span, from, to)
+
     assigns =
       Map.merge(assigns, %{
-        style:
-          Motion.style([{"--chart-u", Plot.f(x)}, {"--chart-v", Motion.ref("sy#{n}", span.ys)}]),
-        d:
-          "M0 8V0H#{Plot.f(length)}V8M#{Plot.f(length - 6)} -4L#{Plot.f(length)} 0" <>
-            "L#{Plot.f(length - 6)} 4",
+        style: style,
+        d: d,
         keys: keys,
         value:
-          Motion.text_assigns(Enum.map(span.values, &signed/1), [], "sn#{n}",
-            x: Plot.f(length / 2),
-            y: -8,
-            class: "chart-span-value",
-            keys: keys
+          Motion.text_assigns(
+            Enum.map(span.values, &signed/1),
+            [],
+            "sn#{n}",
+            [class: "chart-span-value", keys: keys] ++ value
           )
       })
 
@@ -713,22 +810,62 @@ defmodule Expresso.Element.Chart.Waterfall do
     end
   end
 
-  # One column with its connector, its break mark and its labels.
+  # The style, the path and the place of the text of a span. A vertical
+  # chart has a line from left to right over the columns, and a horizontal
+  # chart has a line from top to bottom at the right of the bars.
+  defp span_shape(:vertical, span, from, to) do
+    x = from.u + from.w / 2
+    length = to.u + to.w / 2 - x
+
+    {Motion.style([
+       {"--chart-u", Plot.f(x)},
+       {"--chart-v", Motion.ref("sy#{span.number}", span.ys)}
+     ]),
+     "M0 8V0H#{Plot.f(length)}V8M#{Plot.f(length - 6)} -4L#{Plot.f(length)} 0" <>
+       "L#{Plot.f(length - 6)} 4", [x: Plot.f(length / 2), y: -8]}
+  end
+
+  defp span_shape(:horizontal, span, from, to) do
+    y = from.v + from.h / 2
+    length = to.v + to.h / 2 - y
+
+    {Motion.style([
+       {"--chart-u", Motion.ref("sy#{span.number}", span.ys)},
+       {"--chart-v", Plot.f(y)}
+     ]),
+     "M-8 0H0V#{Plot.f(length)}H-8M-4 #{Plot.f(length - 6)}L0 #{Plot.f(length)}" <>
+       "L4 #{Plot.f(length - 6)}", [x: 8, y: Plot.f(length / 2 + 6), anchor: "start"]}
+  end
+
+  # One column with its break mark and its labels. The effect `:grow` grows
+  # a column from its base: up or down in a vertical chart, and to the right
+  # or to the left in a horizontal chart.
   defp column(assigns) do
     %{mark: mark} = assigns
     i = mark.index
-
     anchor = hd(mark.places).anchor
+    channel = &Motion.ref("#{&1}#{i}", Enum.map(mark.places, fn place -> place[&1] end))
 
     style =
-      Motion.style([
-        {"--chart-u", Motion.ref("u#{i}", Enum.map(mark.places, & &1.u))},
-        {"--chart-v", grow(assigns, Motion.ref("v#{i}", Enum.map(mark.places, & &1.v)), anchor)},
-        {"--chart-w", Motion.ref("w#{i}", Enum.map(mark.places, & &1.w))},
-        {"--chart-h", grow(assigns, Motion.ref("h#{i}", Enum.map(mark.places, & &1.h)), 0)}
-      ])
+      case assigns.direction do
+        :vertical ->
+          [
+            {"--chart-u", channel.(:u)},
+            {"--chart-v", grow(assigns, channel.(:v), anchor)},
+            {"--chart-w", channel.(:w)},
+            {"--chart-h", grow(assigns, channel.(:h), 0)}
+          ]
 
-    assigns = Map.merge(assigns, %{style: style, key: Chart.key(assigns, i)})
+        :horizontal ->
+          [
+            {"--chart-u", grow(assigns, channel.(:u), anchor)},
+            {"--chart-v", channel.(:v)},
+            {"--chart-w", grow(assigns, channel.(:w), 0)},
+            {"--chart-h", channel.(:h)}
+          ]
+      end
+
+    assigns = Map.merge(assigns, %{style: Motion.style(style), key: Chart.key(assigns, i)})
 
     temple do
       rect class: "chart-waterfall-bar chart-waterfall-#{@mark.type}",
@@ -754,28 +891,32 @@ defmodule Expresso.Element.Chart.Waterfall do
   defp grow(_assigns, value, _from), do: value
 
   # The dashed line from the end of the column before to the start of this
-  # column.
+  # column: across the gap between two columns, at the running total.
   defp join(assigns) do
     %{mark: mark, scene: scene} = assigns
-    before = Enum.at(scene.marks, mark.index - 1)
-    from = hd(before.places)
+    from = hd(Enum.at(scene.marks, mark.index - 1).places)
     to = hd(mark.places)
-    x = from.u + from.w
+    at = Motion.ref("j#{mark.index}", mark.joins)
 
-    style =
-      Motion.style([
-        {"--chart-u", Plot.f(x)},
-        {"--chart-v", Motion.ref("j#{mark.index}", mark.joins)}
-      ])
+    {style, x2, y2} =
+      case assigns.direction do
+        :vertical ->
+          start = from.u + from.w
+          {[{"--chart-u", Plot.f(start)}, {"--chart-v", at}], Plot.f(to.u - start), 0}
 
-    assigns = Map.merge(assigns, %{length: to.u - x, join_style: style})
+        :horizontal ->
+          start = from.v + from.h
+          {[{"--chart-u", at}, {"--chart-v", Plot.f(start)}], 0, Plot.f(to.v - start)}
+      end
+
+    assigns = Map.merge(assigns, %{join_style: Motion.style(style), x2: x2, y2: y2})
 
     temple do
       line class: "chart-waterfall-line chart-mark",
            x1: 0,
            y1: 0,
-           x2: Plot.f(@length),
-           y2: 0,
+           x2: @x2,
+           y2: @y2,
            style: @join_style,
            data_keys: @key
     end
@@ -784,7 +925,14 @@ defmodule Expresso.Element.Chart.Waterfall do
   # The break mark at the base of a total column of a cut axis.
   defp column_break(assigns) do
     place = hd(assigns.mark.places)
-    assigns = Map.put(assigns, :d, zigzag(place.u, place.u + place.w, assigns.box.bottom - 6))
+
+    d =
+      case assigns.direction do
+        :vertical -> zigzag({place.u, place.u + place.w}, assigns.box.bottom - 6)
+        :horizontal -> zigzag(assigns.box.left + 6, {place.v, place.v + place.h})
+      end
+
+    assigns = Map.put(assigns, :d, d)
 
     temple do
       path class: "chart-break", d: @d
@@ -797,21 +945,23 @@ defmodule Expresso.Element.Chart.Waterfall do
     %{mark: mark} = assigns
     i = mark.index
     place = hd(mark.places)
-    x = Plot.f(place.u + place.w / 2)
     totals = Enum.map(mark.columns, & &1.total)
 
-    label =
-      Motion.style([
-        {"--chart-u", x},
-        {"--chart-v", grow(assigns, Motion.ref("l#{i}", mark.labels), place.anchor - 8)}
-      ])
+    {label, anchor} =
+      label_style(assigns, mark, Motion.ref("l#{i}", mark.labels), place)
 
     assigns =
       Map.merge(assigns, %{
         label: label,
-        total: Motion.text_assigns(Enum.map(totals, &Plot.label/1), totals, "n#{i}", count: true),
+        total:
+          Motion.text_assigns(Enum.map(totals, &Plot.label/1), totals, "n#{i}",
+            count: true,
+            anchor: anchor
+          ),
         change: if(mark.type != :total, do: signed(hd(mark.columns).change)),
-        change_style: change_style(assigns, mark, x)
+        change_style: change_style(assigns, mark, place),
+        change_anchor:
+          if(assigns.direction == :horizontal and not mark.inside, do: "start", else: "middle")
       })
 
     temple do
@@ -829,7 +979,7 @@ defmodule Expresso.Element.Chart.Waterfall do
         g class: "chart-mark", style: @change_style, data_keys: @key do
           text x: 0,
                y: 0,
-               text_anchor: "middle",
+               text_anchor: @change_anchor,
                class: if(@mark.inside, do: "chart-waterfall-change", else: "chart-value"),
                data_keys: @key do
             @change
@@ -839,27 +989,51 @@ defmodule Expresso.Element.Chart.Waterfall do
     end
   end
 
-  defp change_style(_assigns, %{type: :total}, _x), do: nil
+  # The style of the label of the total or of the running total, and the
+  # anchor of its text.
+  defp label_style(%{direction: :vertical} = assigns, _mark, value, place) do
+    x = Plot.f(place.u + place.w / 2)
 
-  defp change_style(assigns, mark, x) do
+    {Motion.style([{"--chart-u", x}, {"--chart-v", grow(assigns, value, place.anchor - 8)}]),
+     "middle"}
+  end
+
+  defp label_style(%{direction: :horizontal} = assigns, mark, value, place) do
+    y = Plot.f(place.v + place.h / 2 + 6)
+    anchor = if mark.type == :total and not place.up, do: "end", else: "start"
+
+    {Motion.style([{"--chart-u", grow(assigns, value, place.anchor + 8)}, {"--chart-v", y}]),
+     anchor}
+  end
+
+  defp change_style(_assigns, %{type: :total}, _place), do: nil
+
+  defp change_style(%{direction: :vertical} = assigns, mark, place) do
     value = Motion.ref("m#{mark.index}", mark.changes)
-    Motion.style([{"--chart-u", x}, {"--chart-v", grow(assigns, value, hd(mark.places).anchor)}])
+    x = Plot.f(place.u + place.w / 2)
+    Motion.style([{"--chart-u", x}, {"--chart-v", grow(assigns, value, place.anchor)}])
+  end
+
+  defp change_style(%{direction: :horizontal} = assigns, mark, place) do
+    value = Motion.ref("m#{mark.index}", mark.changes)
+    y = Plot.f(place.v + place.h / 2 + 6)
+    Motion.style([{"--chart-u", grow(assigns, value, place.anchor)}, {"--chart-v", y}])
   end
 
   # The grid, the ticks, the base line at zero, the categories, and the break
   # mark of a cut axis.
-  defp axis(assigns) do
+  defp axis(%{direction: :vertical} = assigns) do
     temple do
       g class: "chart-axis" do
         for tick <- @axis.ticks do
           line class: if(tick == 0, do: "chart-base", else: "chart-grid"),
                x1: @box.left,
                x2: @box.right,
-               y1: Plot.f(@y.(tick)),
-               y2: Plot.f(@y.(tick))
+               y1: Plot.f(@pos.(tick)),
+               y2: Plot.f(@pos.(tick))
 
           text x: @box.left - 10,
-               y: Plot.f(@y.(tick) + 5),
+               y: Plot.f(@pos.(tick) + 5),
                text_anchor: "end",
                class: "chart-tick" do
             Plot.label(tick)
@@ -877,45 +1051,97 @@ defmodule Expresso.Element.Chart.Waterfall do
         end
 
         if @cut do
-          path class: "chart-break", d: zigzag(@box.left + 2, @box.left + 18, @box.bottom - 8)
+          path class: "chart-break", d: zigzag({@box.left + 2, @box.left + 18}, @box.bottom - 8)
         end
       end
     end
   end
 
-  # A zigzag across a line from `left` to `right`, at the height `y`.
-  defp zigzag(left, right, y) do
-    teeth = max(round((right - left) / 6), 2)
-    step = (right - left) / teeth
+  defp axis(%{direction: :horizontal} = assigns) do
+    temple do
+      g class: "chart-axis" do
+        for tick <- @axis.ticks do
+          line class: if(tick == 0, do: "chart-base", else: "chart-grid"),
+               x1: Plot.f(@pos.(tick)),
+               x2: Plot.f(@pos.(tick)),
+               y1: @box.top,
+               y2: @box.bottom
 
-    points =
-      for n <- 0..teeth do
-        "#{Plot.f(left + n * step)} #{Plot.f(if rem(n, 2) == 0, do: y + 3, else: y - 3)}"
+          text x: Plot.f(@pos.(tick)),
+               y: @box.bottom + 28,
+               text_anchor: "middle",
+               class: "chart-tick" do
+            Plot.label(tick)
+          end
+        end
+
+        for {category, i} <- Enum.with_index(@categories) do
+          text x: @box.left - 10,
+               y: Plot.f(@box.top + @band * (i + 0.5) + 6),
+               text_anchor: "end",
+               class: "chart-category",
+               data_keys: Chart.key(assigns, i) do
+            category
+          end
+        end
+
+        if @cut do
+          path class: "chart-break", d: zigzag(@box.left + 8, {@box.bottom - 18, @box.bottom - 2})
+        end
       end
+    end
+  end
+
+  # A zigzag across a line: from `left` to `right` at the height `y`, or from
+  # `top` to `bottom` at the place `x`.
+  defp zigzag({left, right}, y) do
+    points =
+      teeth(left, right, fn place, side -> "#{Plot.f(place)} #{Plot.f(y + side * 3)}" end)
 
     "M" <> Enum.join(points, "L")
   end
 
-  # The name of the categories under them, and the name of the values beside
-  # the axis, turned to read from the bottom up.
+  defp zigzag(x, {top, bottom}) do
+    points =
+      teeth(top, bottom, fn place, side -> "#{Plot.f(x + side * 3)} #{Plot.f(place)}" end)
+
+    "M" <> Enum.join(points, "L")
+  end
+
+  defp teeth(from, to, point) do
+    count = max(round((to - from) / 6), 2)
+    step = (to - from) / count
+    for n <- 0..count, do: point.(from + n * step, if(rem(n, 2) == 0, do: 1, else: -1))
+  end
+
+  # The names of the two axes: the name under the axis along the bottom, and
+  # the name beside the axis at the left, turned to read from the bottom up.
   defp titles(assigns) do
+    {bottom, left} =
+      case assigns.direction do
+        :vertical -> {assigns[:category_label], assigns[:value_label]}
+        :horizontal -> {assigns[:value_label], assigns[:category_label]}
+      end
+
+    assigns = Map.merge(assigns, %{bottom_title: bottom, left_title: left})
+
     temple do
-      if @category_label do
+      if @bottom_title do
         text x: Plot.f((@box.left + @box.right) / 2),
              y: @box.bottom + 62,
              text_anchor: "middle",
              class: "chart-axis-title" do
-          @category_label
+          @bottom_title
         end
       end
 
-      if @value_label do
+      if @left_title do
         text x: 0,
              y: 0,
              transform: "translate(22 #{Plot.f((@box.top + @box.bottom) / 2)}) rotate(-90)",
              text_anchor: "middle",
              class: "chart-axis-title" do
-          @value_label
+          @left_title
         end
       end
     end
