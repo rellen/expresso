@@ -47,6 +47,7 @@ end
 | `x_label`, `y_label` | A string | The name of the x axis or of the y axis of a scatter plot. See [a scatter plot](#a-scatter-plot). |
 | `x_range`, `y_range` | Two numbers, such as `{0, 100}` | The low end and the high end of an axis of a scatter plot. The default comes from the points. |
 | `x_scale`, `y_scale` | `:linear` or `:log` | The scale of an axis of a scatter plot. The default is `:linear`. |
+| `spans` | `true` or `false` | Draw an arrow over the columns of a waterfall chart from each total to the next total, with the sum of the changes between them. The default is `false`. See [the spans](#the-spans). |
 | `totals` | `:grow` or `:complete` | How a total of a waterfall chart with `reveal` shows. The default is `:grow`. See [the steps of a waterfall chart](#the-steps-of-a-waterfall-chart). |
 | `value_range` | Two numbers, such as `{900, 1050}` | The low end and the high end of the value axis of a waterfall chart. The default holds zero and each column. See [a cut axis](#a-cut-axis). |
 | `symbol_label`, `color_label`, `size_label` | A string | The title of a legend of a scatter plot, and the header of its column in the table. See [the symbol, the color and the size](#the-symbol-the-color-and-the-size). |
@@ -873,6 +874,27 @@ removes the labels.
 A dashed line joins the end of each column to the start of the next column, at the running
 total.
 
+### The spans
+
+With `spans true`, an arrow goes over the columns from each total to the next total, and the
+sum of the changes between them, such as `+70`, goes over the middle of the arrow. The arrow
+goes over the labels of the highest column between the two totals. Two totals with no change
+between them have no span. The chart takes more room at its top for the arrows.
+
+```elixir
+slide "halves" do
+  chart :waterfall do
+    title "Cash in 2025"
+    categories ["Start", "Sales", "Services", "Mid year", "Grants", "Interest", "Costs", "End"]
+    series "Cash", [50, 40, 30, :total, 10, 20, -50, :total]
+    spans true
+  end
+end
+```
+
+With `reveal true`, a span shows with the last column before the total at its end, so it
+shows when that total is complete.
+
 ### The steps of a waterfall chart
 
 With `reveal true`, the start and the totals show alone at the first step, and each change
@@ -1120,7 +1142,7 @@ The compiler gives an error for these:
 - a cell of the file of a waterfall chart that is not a number, `total`, or `total` and a
   number;
 - `totals :complete` without `reveal`, a series of a waterfall chart with `reveal` and an
-  `at` option or an `on` entity, and `totals` on the other kinds;
+  `at` option or an `on` entity, and `totals` or `spans` on the other kinds;
 - a waterfall chart with frames, `value_range` with its low end at or above its high end, a
   column that goes past an end of `value_range`, and `value_range` or `:total` on the other
   kinds.
@@ -1169,7 +1191,8 @@ column is a `rect` of one unit with the class `chart-waterfall-bar`, and its sty
 to its place and gives it its size with `--chart-u`, `--chart-v`, `--chart-w` and
 `--chart-h`. A total also has the class `chart-waterfall-total`, an increase
 `chart-waterfall-up` and a decrease `chart-waterfall-down`. A connector is a `line` with the
-class `chart-waterfall-line`, a break mark is a `path` with the class `chart-break`, the text
+class `chart-waterfall-line`, a span is a `path` with the class `chart-waterfall-span` and a
+`text` with the class `chart-span-value`, a break mark is a `path` with the class `chart-break`, the text
 of a change in its column has the class `chart-waterfall-change`, and a running total has the
 class `chart-running`.
 

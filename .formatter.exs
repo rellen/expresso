@@ -167,6 +167,7 @@ spark_locals_without_parens = [
   source: 1,
   spacer: 0,
   spacer: 1,
+  spans: 1,
   speed: 1,
   sr_heading: 1,
   src: 1,

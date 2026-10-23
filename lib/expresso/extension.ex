@@ -622,6 +622,12 @@ defmodule Expresso.Extension do
             doc:
               "The low end and the high end of the y axis of a scatter plot, such as {0, 100}. The default comes from the points."
           ],
+          spans: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Draw an arrow over the columns of a waterfall chart from each total to the next total, with the sum of the changes between them. The default is false."
+          ],
           totals: [
             type: {:in, [:grow, :complete]},
             default: :grow,
