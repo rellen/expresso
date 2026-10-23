@@ -49,6 +49,8 @@ end
 | `x_scale`, `y_scale` | `:linear` or `:log` | The scale of an axis of a scatter plot. The default is `:linear`. |
 | `symbol_label`, `color_label`, `size_label` | A string | The title of a legend of a scatter plot, and the header of its column in the table. See [the symbol, the color and the size](#the-symbol-the-color-and-the-size). |
 | `labels` | `:all`, `:none` or a list of names of points | The points of a scatter plot with a label. The default is `:none`. See [the labels of the points](#the-labels-of-the-points). |
+| `color_scale` | `:sequential`, `:diverging` or two roles, such as `{:chart_1, :chart_4}` | The scale of a color from a number in a scatter plot. The default is `:sequential`. See [a color from a number](#a-color-from-a-number). |
+| `color_mid` | A number | The value at the neutral middle of `color_scale :diverging`. The default is `0`. |
 | `trend` | `:linear` | Draw the least-squares line of each group of a scatter plot. See [the trend lines](#the-trend-lines). |
 | `jitter` | A number from 0 to 0.2, such as `0.02` | Move each mark of a scatter plot by at most this part of the range of each axis. See [many marks in one place](#many-marks-in-one-place). |
 | `opacity` | A number from 0 to 1, such as `0.6` | The opacity of each mark of a scatter plot. An area with many marks then looks darker. |
@@ -554,7 +556,7 @@ end
 | `x` | A number, required | The value of the point on the x axis. |
 | `y` | A number, required | The value of the point on the y axis. |
 | `symbol` | A string, or `:circle`, `:square`, `:triangle`, `:diamond`, `:cross` or `:star` | A category of the symbol, such as `"EU"`, or a symbol. The default is `:circle`. |
-| `color` | A string, or a role such as `:chart_3` or `:accent` | A category of the color, such as `"EU"`, or a role of the theme: `:chart_1` to `:chart_8`, `:text`, `:muted`, `:accent`, `:success`, `:emphasis`, `:warning` or `:danger`. |
+| `color` | A string, a number, or a role such as `:chart_3` or `:accent` | A category of the color, such as `"EU"`, a number on the scale of `color_scale`, or a role of the theme: `:chart_1` to `:chart_8`, `:text`, `:muted`, `:accent`, `:success`, `:emphasis`, `:warning` or `:danger`. |
 | `size` | A number more than zero | The size of the mark. The area of the mark grows in proportion to it. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
@@ -609,6 +611,38 @@ a point names, such as `:star` or `:danger`, is in no legend.
 
 Each category of the color is one group of marks. Inside a group, the larger marks come
 first, so a large mark does not hide a small mark.
+
+### A color from a number
+
+A number as the color of each point gives a color from a scale, such as the growth of each
+service:
+
+```elixir
+slide "growth" do
+  chart :scatter do
+    title "Cost, load and growth of each service"
+    color_label "Growth (%)"
+    color_scale :diverging
+    labels :all
+
+    point "api", x: 1200, y: 840, color: -8
+    point "web", x: 400, y: 2100, color: 0
+    point "jobs", x: 900, y: 150, color: 12
+  end
+end
+```
+
+| `color_scale` | The colors |
+| --- | --- |
+| `:sequential`, the default | From a light mix of `--accent` at the lowest value to `--accent` at the highest value. |
+| `:diverging` | From `--danger` through a neutral middle to `--success`. The middle is at `0`, or at `color_mid`. Each side reaches its full color at the value furthest from the middle, so the two sides compare. |
+| Two roles, such as `{:chart_1, :chart_4}` | From the first role at the lowest value to the second role at the highest value. |
+
+A legend shows the scale as a column of cells, with the highest value at the top and the
+lowest value at the bottom, under the title `color_label`. In a chart with frames, the color
+of a mark changes with its number from one frame to the next. A chart takes a number as the
+color of each point or of no point. A CSV file with a number in each cell of its color column
+gives a color from a number.
 
 ### The series of points
 
@@ -924,6 +958,8 @@ The compiler gives an error for these:
 - a scatter plot with points and series, a series with values or with no point, more than
   8 series, two series of one name, a point of a series with a category, and a `symbol` or a
   `color` on a series of the other kinds;
+- a number as the color of some points and not of the others, `color_scale` or `color_mid`
+  without a number as a color, and `color_mid` without `color_scale :diverging`;
 - a size of zero or less, a point without a size in a chart with sizes or in a bubble chart,
   more than 6 categories of the symbol, more than 8 categories of the color, an `opacity`
   outside 0 to 1, and a `jitter` outside 0 to 0.2.

@@ -2,12 +2,14 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
   @moduledoc """
   The legends of a scatter plot, in a column at the right of the plot
 
-  A scatter plot has up to three legends, from the top:
+  A scatter plot has up to four legends, from the top:
 
   - The series, with the symbol and the color of each one.
   - The colors: each category of the color, with its color. When the symbol
     and the color of each point take the same category, the item also shows
     the symbol, and the chart has no legend of the symbols.
+  - The scale of a color from a number, with its highest and its lowest
+    value.
   - The symbols: each category of the symbol, with its symbol.
   - The sizes: three marks of round sizes, with their values.
 
@@ -25,6 +27,10 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
   @row 28
   @symbol 7
 
+  # The number and the height of the cells of the scale of a color.
+  @cells 10
+  @cell 12
+
   # The width of the SVG, and the most width of the legends.
   @width 800
   @most 280
@@ -41,7 +47,7 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
     same = Scatter.same?(assigns)
 
     rows =
-      [colors(assigns, same), symbols(assigns, same), sizes(assigns)]
+      [colors(assigns, same), shades(assigns), symbols(assigns, same), sizes(assigns)]
       |> Enum.reject(&(&1 == []))
       |> Enum.intersperse([%{type: :gap, height: 12}])
       |> List.flatten()
@@ -112,6 +118,31 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
     title(assigns.symbol_label) ++ items
   end
 
+  # The scale of a color from a number: a column of cells from the highest
+  # value at the top to the lowest value at the bottom.
+  defp shades(%{shades: nil}), do: []
+
+  defp shades(%{shades: {low, high}} = assigns) do
+    cells =
+      for n <- (@cells - 1)..0//-1 do
+        value = low + (high - low) * n / (@cells - 1)
+        Encoding.scale_place(value, {low, high}, assigns.color_scale, assigns.color_mid)
+      end
+
+    title(assigns.color_label) ++
+      [
+        %{
+          type: :scale,
+          category: nil,
+          cells: cells,
+          color: Encoding.scale(assigns.color_scale),
+          name: Plot.label(high),
+          low: Plot.label(low),
+          height: @cells * @cell + 8
+        }
+      ]
+  end
+
   defp sizes(%{most: nil}), do: []
 
   defp sizes(assigns) do
@@ -145,8 +176,14 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
     rows
     |> Enum.reject(&(&1.type == :gap))
     |> Enum.map(fn
-      %{type: :title, name: name} -> String.length(name) * 11
-      %{name: name} -> mark + 10 + String.length(name) * 11
+      %{type: :title, name: name} ->
+        String.length(name) * 11
+
+      %{type: :scale, name: name, low: low} ->
+        mark + 10 + max(String.length(name), String.length(low)) * 11
+
+      %{name: name} ->
+        mark + 10 + String.length(name) * 11
     end)
     |> Enum.max(fn -> 0 end)
     |> min(@most)
@@ -222,6 +259,34 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
            class: "chart-name",
            data_keys: if(@keyed, do: @row.key) do
         @row.name
+      end
+    end
+  end
+
+  defp row(%{row: %{type: :scale}} = assigns) do
+    assigns = Map.merge(assigns, %{cell: @cell, size: @symbol})
+
+    temple do
+      for {place, n} <- Enum.with_index(@row.cells) do
+        rect class: "chart-key",
+             x: Plot.f(@legend.text_x - 10 - 2 * @size),
+             y: Plot.f(@legend.top + @row.dy + 4 + n * @cell),
+             width: 2 * @size,
+             height: @cell,
+             style:
+               "--chart-h: #{Plot.label(Float.round(place / 1, 2))}; --series: #{@row.color};"
+      end
+
+      text x: Plot.f(@legend.text_x),
+           y: Plot.f(@legend.top + @row.dy + 16),
+           class: "chart-name" do
+        @row.name
+      end
+
+      text x: Plot.f(@legend.text_x),
+           y: Plot.f(@legend.top + @row.dy + 4 + length(@row.cells) * @cell),
+           class: "chart-name" do
+        @row.low
       end
     end
   end

@@ -611,6 +611,104 @@ defmodule Expresso.ChartScatterTest do
     end
   end
 
+  describe "a color from a number" do
+    defp growth(opts \\ []) do
+      services(opts, [
+        Builder.point("a", x: 1, y: 2, color: -8),
+        Builder.point("b", x: 2, y: 3, color: 0),
+        Builder.point("c", x: 3, y: 1, color: 4),
+        Builder.point("d", x: 4, y: 4, color: 12)
+      ])
+    end
+
+    # The place of each mark on the scale, from its style.
+    defp shades(figure) do
+      for style <- figure |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("style") do
+        [h] = Regex.run(~r/--chart-h: ([-\d.]+);/, style, capture: :all_but_first)
+        elem(Float.parse(h), 0)
+      end
+    end
+
+    test "the sequential scale goes from the lowest to the highest value, in the colors of --accent" do
+      figure = figure(growth())
+
+      assert shades(figure) == [0.0, 0.4, 0.6, 1.0]
+
+      [style | _rest] =
+        figure |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("style")
+
+      assert style =~ "--series: #{Encoding.scale(:sequential)};"
+      assert style =~ "var(--accent)"
+    end
+
+    test "the diverging scale has its middle at 0 or at color_mid" do
+      assert shades(figure(growth(color_scale: :diverging))) == [-0.7, 0.0, 0.3, 1.0]
+
+      assert shades(figure(growth(color_scale: :diverging, color_mid: 4))) == [
+               -1.0,
+               -0.3,
+               0.0,
+               0.7
+             ]
+
+      [style | _rest] =
+        growth(color_scale: :diverging)
+        |> figure()
+        |> LazyHTML.query("path.chart-point")
+        |> LazyHTML.attribute("style")
+
+      assert style =~ "var(--danger)" and style =~ "var(--success)"
+    end
+
+    test "a scale of two roles goes from the first role to the second" do
+      [style | _rest] =
+        growth(color_scale: {:chart_1, :chart_4})
+        |> figure()
+        |> LazyHTML.query("path.chart-point")
+        |> LazyHTML.attribute("style")
+
+      assert style =~ "--series: #{Encoding.scale({:chart_1, :chart_4})};"
+    end
+
+    test "the legend shows the scale with its highest and its lowest value" do
+      figure = figure(growth(color_label: "Growth (%)"))
+
+      assert texts(figure, ".chart-axis-title") == ["Growth (%)"]
+      assert texts(figure, ".chart-name") == ["12", "-8"]
+      assert count(figure, "rect.chart-key") == 10
+      assert texts(figure, "table.chart-table thead th") == ["x", "y", "Growth (%)"]
+    end
+
+    test "a column of numbers in a CSV file gives each point a color from a number", %{} do
+      dir = Path.join(System.tmp_dir!(), "scatter-color-#{System.unique_integer([:positive])}")
+      File.mkdir_p!(dir)
+      path = Path.join(dir, "growth.csv")
+      File.write!(path, "name,x,y,growth\na,1,2,-8\nb,2,3,12\n")
+
+      [%{elements: [chart]}] = one_slide(services([src: path, color: "growth"], [])).slides
+      assert chart.elements |> Enum.flat_map(& &1.elements) |> Enum.map(& &1.color) == [-8, 12]
+    end
+
+    test "the errors of a color from a number" do
+      assert_raise ArgumentError, ~r/the point "b" has no number as its color/, fn ->
+        services([], [
+          Builder.point("a", x: 1, y: 1, color: 3),
+          Builder.point("b", x: 2, y: 2, color: "EU")
+        ])
+      end
+
+      assert_raise ArgumentError, ~r/so they need a point with a number as its color/, fn ->
+        services(color_scale: :diverging)
+      end
+
+      assert_raise ArgumentError,
+                   ~r/the color_mid option gives the middle of color_scale :diverging/,
+                   fn ->
+                     growth(color_mid: 2)
+                   end
+    end
+  end
+
   describe "the labels" do
     test "labels :all gives each point a label that moves with its mark" do
       figure = figure(services(labels: :all))
