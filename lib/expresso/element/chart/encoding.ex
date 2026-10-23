@@ -13,6 +13,10 @@ defmodule Expresso.Element.Chart.Encoding do
   approximately the area of a circle of radius 1, so a mark of one size looks
   as large with each symbol. The size of a point gives the area of its mark,
   so a size two times larger gives two times the area.
+
+  A number as the color takes a place on the scale of the `color_scale`
+  option: `scale/1` gives the color of the scale, and `scale_place/4` the
+  place of a number on it.
   """
 
   alias Expresso.Element.Chart.Plot
@@ -139,6 +143,54 @@ defmodule Expresso.Element.Chart.Encoding do
   """
   @spec role(atom()) :: String.t()
   def role(role), do: "var(--#{String.replace(Atom.to_string(role), "_", "-")})"
+
+  @doc """
+  Return the CSS color of a scale of the `color_scale` option
+
+  The color reads `--chart-h`, the place of the value of a mark on the scale.
+  A sequential scale and a scale of two roles go from 0 to 1, and a
+  diverging scale goes from -1 through 0 to 1.
+
+      iex> Expresso.Element.Chart.Encoding.scale({:chart_1, :chart_4})
+      "color-mix(in oklab, var(--chart-4) calc(var(--chart-h) * 100%), var(--chart-1))"
+  """
+  @spec scale(:sequential | :diverging | {atom(), atom()}) :: String.t()
+  def scale(:sequential),
+    do:
+      "color-mix(in oklab, var(--accent) calc(var(--chart-h) * 100%), " <>
+        "color-mix(in oklab, var(--accent) 15%, var(--background)))"
+
+  def scale(:diverging),
+    do:
+      "color-mix(in oklab, var(--success) calc(max(var(--chart-h), 0) * 100%), " <>
+        "color-mix(in oklab, var(--danger) calc(max(var(--chart-h) * -1, 0) * 100%), " <>
+        "color-mix(in oklab, var(--muted) 35%, var(--background))))"
+
+  def scale({from, to}),
+    do: "color-mix(in oklab, #{role(to)} calc(var(--chart-h) * 100%), #{role(from)})"
+
+  @doc """
+  Return the place of a value on a scale of colors, from the lowest and the
+  highest value of the chart
+
+  The place goes from 0 to 1, or from -1 to 1 on a diverging scale. The
+  middle of a diverging scale is 0 at `mid`, and each side reaches 1 at the
+  value furthest from `mid`, so the colors of the two sides compare.
+
+      iex> Expresso.Element.Chart.Encoding.scale_place(15, {10, 30}, :sequential, nil)
+      0.25
+      iex> Expresso.Element.Chart.Encoding.scale_place(-5, {-10, 20}, :diverging, 0)
+      -0.25
+  """
+  @spec scale_place(number(), {number(), number()}, atom() | tuple(), number() | nil) :: float()
+  def scale_place(value, {low, high}, :diverging, mid) do
+    mid = mid || 0
+    reach = max(abs(high - mid), abs(mid - low))
+    if reach == 0, do: 0.0, else: (value - mid) / reach
+  end
+
+  def scale_place(_value, {low, low}, _scale, _mid), do: 1.0
+  def scale_place(value, {low, high}, _scale, _mid), do: (value - low) / (high - low)
 
   @doc """
   Return the radius of a mark from its size, the largest size of the chart

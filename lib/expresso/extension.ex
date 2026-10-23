@@ -327,9 +327,9 @@ defmodule Expresso.Extension do
               "The symbol of the mark: a category, such as \"EU\", or a symbol, such as :square. The categories take :circle, :square, :triangle, :diamond, :cross and :star, in this order. The default is :circle."
           ],
           color: [
-            type: {:or, [:string, {:in, Expresso.Element.Chart.Encoding.roles()}]},
+            type: {:or, [:string, @number, {:in, Expresso.Element.Chart.Encoding.roles()}]},
             doc:
-              "The color of the mark: a category, such as \"EU\", or a role of the theme, such as :chart_3 or :accent. The categories take the colors of the series in order."
+              "The color of the mark: a category, such as \"EU\", a number on the scale of the color_scale option, or a role of the theme, such as :chart_3 or :accent. The categories take the colors of the series in order."
           ],
           size: [
             type: @number,
@@ -680,6 +680,24 @@ defmodule Expresso.Extension do
             type: {:custom, Expresso.Element.Chart.Encoding, :jitter, []},
             doc:
               "Move each mark of a scatter plot by at most this part of the range of each axis, such as 0.02, so marks with the same values do not hide each other. The move comes from the name of the point, so each render gives the same chart."
+          ],
+          color_scale: [
+            type:
+              {:or,
+               [
+                 {:in, [:sequential, :diverging]},
+                 {:tuple,
+                  [
+                    {:in, Expresso.Element.Chart.Encoding.roles()},
+                    {:in, Expresso.Element.Chart.Encoding.roles()}
+                  ]}
+               ]},
+            doc:
+              "The scale of a color from a number in a scatter plot: :sequential, from a light mix of --accent to --accent; :diverging, from --danger through a neutral middle to --success; or two roles of the theme, such as {:chart_1, :chart_4}. The default is :sequential."
+          ],
+          color_mid: [
+            type: @number,
+            doc: "The value at the neutral middle of color_scale :diverging. The default is 0."
           ],
           opacity: [
             type: {:custom, Expresso.Element.Chart.Encoding, :opacity, []},

@@ -81,7 +81,7 @@ defmodule Expresso.Element.Chart do
   # refuse.
   @scatter_options [:x_label, :y_label, :x_range, :y_range, :symbol_label, :color_label] ++
                      [:size_label, :opacity, :label, :x, :y, :symbol, :color, :size] ++
-                     [:trend, :jitter]
+                     [:trend, :jitter, :color_scale, :color_mid]
 
   # The box of the chart in the units of the SVG.
   @width 800
@@ -117,6 +117,8 @@ defmodule Expresso.Element.Chart do
               :size,
               :trend,
               :jitter,
+              :color_scale,
+              :color_mid,
               labels: :none,
               x_scale: :linear,
               y_scale: :linear,

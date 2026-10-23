@@ -128,6 +128,7 @@ defmodule Expresso.Element.Chart.Scatter do
          :ok <- axis(points, :x, chart.x_range, chart.x_scale),
          :ok <- axis(points, :y, chart.y_range, chart.y_scale),
          :ok <- encodings(chart, points),
+         :ok <- color_numbers(chart, points),
          :ok <- labeled(chart, points),
          do: focus(%Chart{chart | elements: groups(chart, points)})
   end
@@ -202,7 +203,7 @@ defmodule Expresso.Element.Chart.Scatter do
     {first, first_series} = known[point.name]
 
     series == first_series and point.symbol in [nil, first.symbol] and
-      point.color in [nil, first.color]
+      (point.color in [nil, first.color] or (is_number(point.color) and is_number(first.color)))
   end
 
   # True for a point or a series with a value in a field of
@@ -544,6 +545,32 @@ defmodule Expresso.Element.Chart.Scatter do
     end
   end
 
+  # The checks of a color from a number: no point of the chart has a category
+  # of the color, and a chart without such a color takes no scale.
+  defp color_numbers(%Chart{} = chart, points) do
+    numbers = Enum.filter(points, &is_number(&1.color))
+
+    cond do
+      numbers != [] and Enum.any?(points, &(not is_number(&1.color))) ->
+        other = Enum.find(points, &(not is_number(&1.color)))
+
+        {:error,
+         "the color of a point is a number or not, for each point, and the point " <>
+           "\"#{other.name}\" has no number as its color"}
+
+      numbers == [] and (chart.color_scale != nil or chart.color_mid != nil) ->
+        {:error,
+         "the color_scale and color_mid options give the colors of numbers, so they need a " <>
+           "point with a number as its color"}
+
+      chart.color_mid != nil and chart.color_scale != :diverging ->
+        {:error, "the color_mid option gives the middle of color_scale :diverging"}
+
+      true ->
+        :ok
+    end
+  end
+
   # The groups of the points. Each series is a group, and it gives its symbol
   # and its color to each point without one. Without series, each category of
   # the color is a group, in the order of its first point, and the points
@@ -611,7 +638,7 @@ defmodule Expresso.Element.Chart.Scatter do
               index: index,
               class: point.class,
               symbol: Encoding.symbol(point.symbol, symbols),
-              color: Encoding.color(point.color, colors, default),
+              color: color(point.color, colors, default, chart),
               symbol_value: point.symbol,
               color_value: point.color,
               keys: if(keyed, do: keys[index]),
@@ -654,6 +681,8 @@ defmodule Expresso.Element.Chart.Scatter do
       labels: chart.labels,
       keyed: keyed,
       jitter: chart.jitter,
+      color_scale: chart.color_scale || :sequential,
+      color_mid: chart.color_mid,
       trends: trends(chart, keyed),
       grow: grow?(chart),
       largest: @largest[chart.kind],
@@ -675,6 +704,13 @@ defmodule Expresso.Element.Chart.Scatter do
       point -> point.color
     end
   end
+
+  # The CSS color of a mark: the scale of the chart for a number, else the
+  # color of its category or its role.
+  defp color(value, _colors, _default, chart) when is_number(value),
+    do: Encoding.scale(chart.color_scale || :sequential)
+
+  defp color(value, colors, default, _chart), do: Encoding.color(value, colors, default)
 
   # The groups of the trend lines: each series, or each category of the
   # color, or each point of a chart without them. Each trend has the numbers
@@ -767,7 +803,13 @@ defmodule Expresso.Element.Chart.Scatter do
   defp points_of(%Series{elements: points}), do: points
   defp points_of(%Point{} = point), do: [point]
 
-  defp values(%Point{} = point), do: %{x: point.x, y: point.y, size: point.size}
+  defp values(%Point{} = point),
+    do: %{
+      x: point.x,
+      y: point.y,
+      size: point.size,
+      color: if(is_number(point.color), do: point.color)
+    }
 
   @doc """
   Add the layout of a scatter plot to its assigns: the axes, the box of the
@@ -782,7 +824,14 @@ defmodule Expresso.Element.Chart.Scatter do
     x_axis = Scale.new(Enum.map(points, & &1.x), assigns.x_range, assigns.x_scale)
     y_axis = Scale.new(Enum.map(points, & &1.y), assigns.y_range, assigns.y_scale)
     sizes = points |> Enum.map(& &1.size) |> Enum.reject(&is_nil/1)
-    assigns = Map.put(assigns, :most, Enum.max(sizes, fn -> nil end))
+    shades = points |> Enum.map(& &1.color) |> Enum.reject(&is_nil/1)
+
+    assigns =
+      Map.merge(assigns, %{
+        most: Enum.max(sizes, fn -> nil end),
+        shades: if(shades == [], do: nil, else: {Enum.min(shades), Enum.max(shades)})
+      })
+
     legend = Legend.layout(assigns)
     box = box(assigns, x_axis, y_axis, legend)
 
@@ -835,7 +884,8 @@ defmodule Expresso.Element.Chart.Scatter do
          %{
            xs: Enum.map(points, &place_x(assigns, Scale.fraction(assigns.x_axis, &1.x) + dx)),
            ys: Enum.map(points, &place_y(assigns, Scale.fraction(assigns.y_axis, &1.y) + dy)),
-           rs: Enum.map(points, &radius(assigns, &1.size))
+           rs: Enum.map(points, &radius(assigns, &1.size)),
+           hs: Enum.map(points, &shade(assigns, &1.color))
          }}
       end)
 
@@ -843,7 +893,8 @@ defmodule Expresso.Element.Chart.Scatter do
 
     channels =
       Enum.flat_map(marks, fn {index, mark} ->
-        [{"x#{index}", mark.xs}, {"y#{index}", mark.ys}, {"r#{index}", mark.rs}]
+        [{"x#{index}", mark.xs}, {"y#{index}", mark.ys}, {"r#{index}", mark.rs}] ++
+          if(assigns.shades, do: [{"h#{index}", mark.hs}], else: [])
       end) ++
         Enum.flat_map(trends, fn trend ->
           n = trend.number
@@ -852,6 +903,13 @@ defmodule Expresso.Element.Chart.Scatter do
 
     %{marks: marks, channels: channels, labels: labels(assigns, marks), trends: trends}
   end
+
+  # The place of the color of a mark on the scale of the chart. A chart
+  # without colors from numbers has no place.
+  defp shade(%{shades: nil}, _color), do: nil
+
+  defp shade(assigns, color),
+    do: Encoding.scale_place(color, assigns.shades, assigns.color_scale, assigns.color_mid)
 
   # The coordinate of a fraction of an axis. A mark that the jitter moves
   # past an end of the axis stays at the end.
@@ -1029,7 +1087,9 @@ defmodule Expresso.Element.Chart.Scatter do
           {"--chart-v", Motion.ref("y#{point.index}", mark.ys)},
           {"--chart-w", radius_style(assigns.grow, point, mark)},
           {"--series", point.color}
-        ] ++ if(assigns.opacity, do: [{"opacity", assigns.opacity}], else: [])
+        ] ++
+          if(hd(mark.hs), do: [{"--chart-h", Motion.ref("h#{point.index}", mark.hs)}], else: []) ++
+          if(assigns.opacity, do: [{"opacity", assigns.opacity}], else: [])
       )
 
     assigns = Map.put(assigns, :style, style)
@@ -1170,33 +1230,33 @@ defmodule Expresso.Element.Chart.Scatter do
     points =
       for group <- assigns.groups, point <- group.points, do: Map.put(point, :group, group.name)
 
-    sized = Enum.any?(hd(assigns.frames).points, &(&1.size != nil))
+    first = hd(assigns.frames).points
+    extras = Enum.filter([:size, :color], fn key -> Enum.any?(first, &(&1[key] != nil)) end)
     columns = columns(assigns)
 
     rows =
       for {point, index} <- Enum.with_index(points) do
-        values = Enum.flat_map(assigns.frames, &cells(Enum.at(&1.points, index), sized))
+        values = Enum.flat_map(assigns.frames, &cells(Enum.at(&1.points, index), extras))
 
         [point.name | values] ++ Enum.map(columns, fn {_header, cell} -> cell.(point) end)
       end
 
     %{
-      headers: [nil | value_headers(assigns, sized)] ++ Enum.map(columns, &elem(&1, 0)),
+      headers: [nil | value_headers(assigns, extras)] ++ Enum.map(columns, &elem(&1, 0)),
       rows: rows
     }
   end
 
-  # The cells of the values of a point in one frame.
-  defp cells(values, sized),
-    do:
-      [Plot.label(values.x), Plot.label(values.y)] ++
-        if(sized, do: [Plot.label(values.size)], else: [])
+  # The cells of the values of a point in one frame: x, y, and the size and
+  # the color of a number of a chart with them.
+  defp cells(values, extras),
+    do: [Plot.label(values.x), Plot.label(values.y)] ++ Enum.map(extras, &Plot.label(values[&1]))
 
-  # The headers of the values of each frame: x, y and the size, with the
-  # label of the frame in a chart with frames.
-  defp value_headers(assigns, sized) do
-    names = [assigns.x_label || "x", assigns.y_label || "y"]
-    names = if sized, do: names ++ [assigns.size_label || "Size"], else: names
+  # The headers of the values of each frame, with the label of the frame in a
+  # chart with frames.
+  defp value_headers(assigns, extras) do
+    extra = %{size: assigns.size_label || "Size", color: assigns.color_label || "Color"}
+    names = [assigns.x_label || "x", assigns.y_label || "y"] ++ Enum.map(extras, &extra[&1])
 
     case assigns.frames do
       [_one] -> names

@@ -17,7 +17,10 @@ defmodule Expresso.Element.Chart.Scatter.Data do
   | `size` | The size, a number more than zero | No size |
   | `frames` | The label of the frame of the row | No frames |
 
-  An empty cell of the symbol or of the color gives the point no category.
+  An empty cell of the symbol or of the color gives the point no category. A
+  column of the color with a number in each cell that is not empty gives
+  each point a color from a number, on the scale of the `color_scale`
+  option.
   With `frames`, each row is a point in one frame, and the function returns
   each point with the label of its frame.
   """
@@ -52,10 +55,9 @@ defmodule Expresso.Element.Chart.Scatter.Data do
       frames: columns[:frames]
     ]
 
-    with {:ok, places} <- places(named, headings, src) do
-      data
-      |> Enum.map(&point(&1, places, src))
-      |> Shoddy.Result.collect()
+    with {:ok, places} <- places(named, headings, src),
+         {:ok, points} <- data |> Enum.map(&point(&1, places, src)) |> Shoddy.Result.collect() do
+      {:ok, shades(points)}
     end
   end
 
@@ -99,6 +101,23 @@ defmodule Expresso.Element.Chart.Scatter.Data do
       {:ok, if(places[:frames], do: {cell.(:frames), point}, else: point)}
     end
   end
+
+  # A column of the color with a number in each cell that is not empty gives
+  # each point a color from a number.
+  defp shades(points) do
+    colors = points |> Enum.map(&color_of/1) |> Enum.reject(&is_nil/1)
+
+    if colors != [] and Enum.all?(colors, &(Csv.number(&1) != nil)),
+      do: Enum.map(points, &shade/1),
+      else: points
+  end
+
+  defp color_of({_frame, %Point{color: color}}), do: color
+  defp color_of(%Point{color: color}), do: color
+
+  defp shade({frame, point}), do: {frame, shade(point)}
+  defp shade(%Point{color: nil} = point), do: point
+  defp shade(%Point{color: color} = point), do: %Point{point | color: Csv.number(color)}
 
   defp number(text, key, line, src) do
     case Csv.number(text) do
