@@ -237,4 +237,61 @@ defmodule Expresso.ChartWaterfallTest do
     assert count(figure, "rect.chart-waterfall-total") == 2
     assert texts(figure, ".chart-value") == ["50", "90"]
   end
+
+  describe "a CSV file" do
+    @moduletag :tmp_dir
+
+    @cash """
+    Quarter,Cash
+    Start,50
+    Sales,40
+    Services,30
+    Mid year,total
+    Grants,10
+    Interest,20
+    Costs,-50
+    End,total 100
+    """
+
+    defp from_file(tmp_dir, text) do
+      path = Path.join(tmp_dir, "cash.csv")
+      File.write!(path, text)
+      Builder.chart(:waterfall, title: "Cash", src: path)
+    end
+
+    test "a cell total marks a total column, and total 100 gives its value",
+         %{tmp_dir: tmp_dir} do
+      from_csv = figure(from_file(tmp_dir, @cash))
+      from_dsl = figure(cash(category_label: "Quarter"))
+
+      assert boxes(from_csv) == boxes(from_dsl)
+      assert texts(from_csv, ".chart-value") == ["50", "120", "100"]
+      assert texts(from_csv, ".chart-axis-title") == ["Quarter"]
+      assert texts(from_csv, "table.chart-table th") == texts(from_dsl, "table.chart-table th")
+    end
+
+    test "the compiler refuses a cell that is not a value, and a total that does not agree",
+         %{tmp_dir: tmp_dir} do
+      bad = String.replace(@cash, "Grants,10", "Grants,ten")
+
+      assert_raise Spark.Error.DslError,
+                   ~r/line 6 of the chart file ".*cash.csv" needs 1 values, and a value is a number, total, or total and a number/,
+                   fn -> one_slide(from_file(tmp_dir, bad)) end
+
+      wrong = String.replace(@cash, "total 100", "total 90")
+
+      assert_raise Spark.Error.DslError,
+                   ~r/the total "End" of the series "Cash" is 90, and the sum of the values before it is 100/,
+                   fn -> one_slide(from_file(tmp_dir, wrong)) end
+    end
+
+    test "a file with two columns of values gives two series, and the chart refuses them",
+         %{tmp_dir: tmp_dir} do
+      assert_raise Spark.Error.DslError,
+                   ~r/a waterfall chart has one series, and this chart has 2/,
+                   fn ->
+                     one_slide(from_file(tmp_dir, "Quarter,A,B\nStart,1,2\n"))
+                   end
+    end
+  end
 end

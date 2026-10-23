@@ -343,6 +343,9 @@ defmodule Expresso.Element.Chart do
       else: {:error, "the delimiter option is one character, and not a quote or a line break"}
   end
 
+  defp reader(%__MODULE__{kind: kind} = chart) when is_waterfall(kind),
+    do: [levels: chart.levels, delimiter: delimiter(chart)] ++ Waterfall.reader()
+
   defp reader(chart), do: [levels: chart.levels, delimiter: delimiter(chart)]
 
   # The delimiter option, else a tab for a file that ends in .tsv, else a

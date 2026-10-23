@@ -936,6 +936,19 @@ These rules apply to each file:
 The categories of a treemap and of a sunburst hold the separator in the same column, such as
 `Production/Press,62`. A file needs no other change.
 
+The file of a waterfall chart has one column of values. A cell holds a change, the word
+`total` for a total column, or the word `total` and a number for a total with the value that
+the sum must agree with. The case of the word does not count:
+
+```
+Quarter,Cash
+Start,50
+Sales,40
+Mid year,total
+Costs,-50
+End,total 40
+```
+
 With the `levels` option, the columns with these headings hold the levels of each category,
 from the top level down. The other columns keep their order, and each one holds a series.
 An empty cell at the end of a row ends the category at a higher level. An empty cell before
@@ -1042,6 +1055,8 @@ The compiler gives an error for these:
   for each category, a first value that is not a number, and a value that is not a number,
   `:total` or `{:total, value}`;
 - a total with a value that does not agree with the sum before it;
+- a cell of the file of a waterfall chart that is not a number, `total`, or `total` and a
+  number;
 - a waterfall chart with frames, `value_range` with its low end at or above its high end, a
   column that goes past an end of `value_range`, and `value_range` or `:total` on the other
   kinds.
