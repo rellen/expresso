@@ -915,6 +915,25 @@ These options work with the steps:
 
 The overview, the menu of the slides, the handout view and paper show the last step.
 
+### The highlight of a waterfall chart
+
+The `highlight` option takes the names of categories, and each group of names is in focus at
+its own step. A column, its labels, the connector at its left and its category are in focus
+together, and the other columns dim:
+
+```elixir
+slide "costs" do
+  chart :waterfall do
+    title "Cash in 2025"
+    categories ["Start", "Sales", "Costs", "End"]
+    series "Cash", [50, 40, -30, :total]
+    highlight ["Costs", ["Start", "End"]]
+  end
+end
+```
+
+A chart takes `highlight` or `reveal`, and not both.
+
 ### A cut axis
 
 The value axis holds zero and each column. `value_range` gives the two ends of the axis,

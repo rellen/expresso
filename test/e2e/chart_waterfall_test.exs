@@ -54,6 +54,27 @@ defmodule Expresso.E2E.ChartWaterfallTest do
     end
   end
 
+  # The change "Costs" is in focus at step 1, and the three totals at step 2.
+  defmodule HighlightDeck do
+    use Expresso
+
+    slide "cash" do
+      chart :waterfall do
+        title "Cash"
+        categories ["Start", "Sales", "Costs", "End"]
+        series "Cash", [50, 40, -30, :total]
+        highlight ["Costs", ["Start", "End"]]
+      end
+    end
+  end
+
+  # The fill opacity of each column of the present view, in the order of the
+  # document.
+  @opacities """
+  Array.from(document.querySelectorAll(".screen .chart .chart-waterfall-bar"))
+    .map((column) => getComputedStyle(column).fillOpacity).join(" ")
+  """
+
   # The text of the total "End" in the present view, and its height in the
   # units of the start, which is 50.
   @last """
@@ -96,5 +117,13 @@ defmodule Expresso.E2E.ChartWaterfallTest do
       for _step <- 1..steps, do: press(page, "ArrowRight")
       wait_for(page, "(#{@shown}) === '#{shown}'")
     end
+  end
+
+  test "each group of highlight dims the other columns", %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(HighlightDeck, tmp_dir))
+
+    wait_for(page, "(#{@opacities}) === '0.3 0.3 1 0.3'")
+    press(page, "ArrowRight")
+    wait_for(page, "(#{@opacities}) === '1 0.3 0.3 1'")
   end
 end
