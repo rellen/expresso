@@ -1034,6 +1034,20 @@ body[data-view="handout"] .tree-frames {
   transform: translate(calc(var(--chart-u) * 1px), calc(var(--chart-v) * 1px))
     scale(var(--chart-w));
 }
+/*
+ * The legends of a scatter plot: a symbol in the color of its category, and
+ * a circle with no fill for each size.
+ */
+.chart-key {
+  fill: var(--series);
+  vector-effect: non-scaling-stroke;
+}
+.chart-size {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
 .chart-segment {
   transform: matrix(
     var(--chart-dx),

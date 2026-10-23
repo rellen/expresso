@@ -10,7 +10,7 @@ defmodule Expresso.Element.Chart.Kinds do
   | `:pie` | `:pie` | One series as the slices of a circle |
   | `:parts` | `:treemap`, `:sunburst`, `:voronoi` | One series as the parts of a whole, in groups |
   | `:flows` | `:sankey`, `:alluvial`, `:parallel_sets`, `:chord` | The flows between nodes |
-  | `:points` | `:scatter` | One mark for each point, at its x value and its y value |
+  | `:points` | `:scatter`, `:bubble` | One mark for each point, at its x value and its y value |
 
   A kind can also have these properties:
 
@@ -39,7 +39,8 @@ defmodule Expresso.Element.Chart.Kinds do
     alluvial: [family: :flows, titles: true],
     parallel_sets: [family: :flows, titles: true],
     chord: [family: :flows],
-    scatter: [family: :points]
+    scatter: [family: :points],
+    bubble: [family: :points]
   ]
 
   @all Keyword.keys(@table)
@@ -55,7 +56,7 @@ defmodule Expresso.Element.Chart.Kinds do
   Return each kind of a chart, in the order of the table
 
       iex> Expresso.Element.Chart.Kinds.all()
-      [:bar, :line, :pie, :treemap, :sunburst, :voronoi, :sankey, :alluvial, :parallel_sets, :chord, :scatter]
+      [:bar, :line, :pie, :treemap, :sunburst, :voronoi, :sankey, :alluvial, :parallel_sets, :chord, :scatter, :bubble]
   """
   @spec all() :: [atom()]
   def all, do: @all
@@ -81,7 +82,10 @@ defmodule Expresso.Element.Chart.Kinds do
   @doc "Return true for a kind that shows the flows between nodes, such as a sankey"
   defguard is_flow(kind) when kind in @flows
 
-  @doc "Return true for a kind that shows one mark for each point: a scatter plot"
+  @doc """
+  Return true for a kind that shows one mark for each point: a scatter plot or
+  a bubble chart
+  """
   defguard is_point(kind) when kind in @points
 
   @doc "Return true for a kind with one series: a pie, or a kind of the family `:parts`"

@@ -338,7 +338,22 @@ defmodule Expresso.Extension do
             doc: "The name of the point. It names the mark, and the table holds it."
           ],
           x: [type: @number, required: true, doc: "The value of the point on the x axis."],
-          y: [type: @number, required: true, doc: "The value of the point on the y axis."]
+          y: [type: @number, required: true, doc: "The value of the point on the y axis."],
+          symbol: [
+            type: {:or, [:string, {:in, Expresso.Element.Chart.Encoding.symbols()}]},
+            doc:
+              "The symbol of the mark: a category, such as \"EU\", or a symbol, such as :square. The categories take :circle, :square, :triangle, :diamond, :cross and :star, in this order. The default is :circle."
+          ],
+          color: [
+            type: {:or, [:string, {:in, Expresso.Element.Chart.Encoding.roles()}]},
+            doc:
+              "The color of the mark: a category, such as \"EU\", or a role of the theme, such as :chart_3 or :accent. The categories take the colors of the series in order."
+          ],
+          size: [
+            type: @number,
+            doc:
+              "A number more than zero. The area of the mark grows in proportion to it. A bubble chart needs a size for each point."
+          ]
         ]
   }
 
@@ -594,6 +609,26 @@ defmodule Expresso.Extension do
             type: {:tuple, [@number, @number]},
             doc:
               "The low end and the high end of the y axis of a scatter plot, such as {0, 100}. The default comes from the points."
+          ],
+          symbol_label: [
+            type: :string,
+            doc:
+              "The title of the legend of the symbols of a scatter plot, such as \"Region\", and the header of its column in the table."
+          ],
+          color_label: [
+            type: :string,
+            doc:
+              "The title of the legend of the colors of a scatter plot, and the header of its column in the table."
+          ],
+          size_label: [
+            type: :string,
+            doc:
+              "The title of the legend of the sizes of a scatter plot, such as \"Users\", and the header of its column in the table."
+          ],
+          opacity: [
+            type: {:custom, Expresso.Element.Chart.Encoding, :opacity, []},
+            doc:
+              "The opacity of each mark of a scatter plot, from 0 to 1, such as 0.6. An area with many marks then looks darker."
           ],
           x_scale: [
             type: {:in, [:linear, :log]},

@@ -23,7 +23,7 @@ end
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst`, `:voronoi`, `:sankey`, `:alluvial`, `:parallel_sets`, `:chord` or `:scatter` | The kind of the chart. |
+| The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst`, `:voronoi`, `:sankey`, `:alluvial`, `:parallel_sets`, `:chord`, `:scatter` or `:bubble` | The kind of the chart. |
 | `title` | A string, required | The name of the chart for a screen reader, and the caption of its table. |
 | `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels. A category of a chart of flows is a path of nodes. |
 | `category_label` | A string | The name of the categories, such as `"Year"`. See [the names of the axes](#the-names-of-the-axes). A chart with `src` takes the first heading of its file. |
@@ -46,6 +46,8 @@ end
 | `x_label`, `y_label` | A string | The name of the x axis or of the y axis of a scatter plot. See [a scatter plot](#a-scatter-plot). |
 | `x_range`, `y_range` | Two numbers, such as `{0, 100}` | The low end and the high end of an axis of a scatter plot. The default comes from the points. |
 | `x_scale`, `y_scale` | `:linear` or `:log` | The scale of an axis of a scatter plot. The default is `:linear`. |
+| `symbol_label`, `color_label`, `size_label` | A string | The title of a legend of a scatter plot, and the header of its column in the table. See [the symbol, the color and the size](#the-symbol-the-color-and-the-size). |
+| `opacity` | A number from 0 to 1, such as `0.6` | The opacity of each mark of a scatter plot. An area with many marks then looks darker. |
 | `width` | A CSS width, such as `"900px"` or `"70%"` | The width of the chart. A percentage is a part of the width of the slide. The default is `80%`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
@@ -245,7 +247,8 @@ tick has a label in the same form.
 | `:alluvial` | Exactly one. Each category is a path with one name for each column. | As a sankey, and a title over each column. See [an alluvial chart](#an-alluvial-chart). |
 | `:parallel_sets` | Exactly one. Each category is a path with one name for each column, and it is one ribbon through the columns. | As an alluvial chart. See [a parallel sets chart](#a-parallel-sets-chart). |
 | `:chord` | Exactly one. Each category is a path of nodes, as in a sankey, and each link is a chord between two arcs of a ring. | The name and the total of each node, outside its arc. See [a chord chart](#a-chord-chart). |
-| `:scatter` | None. Each `point` entity is one mark, at its x value and its y value. | The ticks of the two axes. See [a scatter plot](#a-scatter-plot). |
+| `:scatter` | None. Each `point` entity is one mark, at its x value and its y value. | The ticks of the two axes, and a legend at the right. See [a scatter plot](#a-scatter-plot). |
+| `:bubble` | None. A scatter plot with a `size` for each point. | As a scatter plot. |
 
 A bar chart and a line chart have one axis, which starts at zero and holds each value, with
 approximately five round ticks. The axis stays the same at each step, so it does not move
@@ -544,6 +547,9 @@ end
 | The first argument | A string | The name of the point. The table for a screen reader holds it. |
 | `x` | A number, required | The value of the point on the x axis. |
 | `y` | A number, required | The value of the point on the y axis. |
+| `symbol` | A string, or `:circle`, `:square`, `:triangle`, `:diamond`, `:cross` or `:star` | A category of the symbol, such as `"EU"`, or a symbol. The default is `:circle`. |
+| `color` | A string, or a role such as `:chart_3` or `:accent` | A category of the color, such as `"EU"`, or a role of the theme: `:chart_1` to `:chart_8`, `:text`, `:muted`, `:accent`, `:success`, `:emphasis`, `:warning` or `:danger`. |
+| `size` | A number more than zero | The size of the mark. The area of the mark grows in proportion to it. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
@@ -555,8 +561,52 @@ such as `{0, 100}`, and the ticks are the round numbers between the ends. `x_sca
 and `y_scale :log` give a logarithmic axis, with a tick at each power of ten. An axis of
 two powers of ten or less also has a tick at 2 and at 5 times each power.
 
+The axis adds a margin of 5 percent of the range of the values at each end, so a mark is not
+on the edge of the plot. The margin does not go past zero.
+
+### The symbol, the color and the size
+
+The symbol, the color and the size of a mark show three more values of a point:
+
+```elixir
+slide "regions" do
+  chart :scatter do
+    title "Cost, load and users of each service"
+    x_label "Cost per month (USD)"
+    y_label "Requests per second"
+    symbol_label "Region"
+    size_label "Users"
+
+    point "api", x: 1200, y: 840, symbol: "EU", color: "EU", size: 30_000
+    point "web", x: 400, y: 2100, symbol: "US", color: "US", size: 120_000
+    point "jobs", x: 900, y: 150, symbol: "EU", color: "EU", size: 2_000
+  end
+end
+```
+
+- A category of the symbol takes a circle, a square, a triangle, a diamond, a cross and a
+  star, in the order of its first point. A chart takes at most 6 categories of the symbol.
+- A category of the color takes `--chart-1` to `--chart-8`, in the order of its first
+  point. A chart takes at most 8 categories of the color. A point without a color takes
+  `--chart-1` in a chart without categories of the color, and `--muted` in a chart with
+  them.
+- The area of a mark grows in proportion to its size, so a size two times larger gives two
+  times the area. The largest mark has a radius of 24 units, or 40 units in a bubble chart.
+  The other marks have a radius of 7 units. A chart takes a size for each point or for no
+  point, and a bubble chart needs a size for each point.
+
+A legend at the right of the plot shows each category of the color, then each category of
+the symbol, then three round sizes. When the symbol and the color of each point take the
+same category, as in the example, the legend of the colors also shows the symbols, so a
+reader who cannot tell the colors apart can tell the groups apart. A symbol or a color that
+a point names, such as `:star` or `:danger`, is in no legend.
+
+Each category of the color is one group of marks. Inside a group, the larger marks come
+first, so a large mark does not hide a small mark.
+
 The table for a screen reader has one row for each point, with its name, its x value and
-its y value. The headers of the columns are `x_label` and `y_label`, or `x` and `y`.
+its y value. The headers of the columns are `x_label` and `y_label`, or `x` and `y`. A chart
+with categories or sizes has a column for the category and a column for the size.
 
 ## The CSV file
 
@@ -670,7 +720,10 @@ The compiler gives an error for these:
 - a scatter plot with no point, with a `series`, with two points of one name, or with an
   option of the other kinds, such as `categories`, `src`, `reveal` or frames;
 - a point without `x` or `y`, a range with its low end at or above its high end, a value
-  outside its range, and a value or a range of zero or less on a logarithmic axis.
+  outside its range, and a value or a range of zero or less on a logarithmic axis;
+- a size of zero or less, a point without a size in a chart with sizes or in a bubble chart,
+  more than 6 categories of the symbol, more than 8 categories of the color, and an
+  `opacity` outside 0 to 1.
 
 The compiler gives an error for a file that it cannot read or that is not UTF-8, for a
 quote with no closing quote, for text after a closing quote, and for a row with a cell that
@@ -695,17 +748,19 @@ heading, the name of the deck and the other elements. Thus a chart fits in a sma
 
 The document writes a `figure` element with the classes `chart` and `chart-bar`,
 `chart-line`, `chart-pie`, `chart-treemap`, `chart-sunburst`, `chart-sankey`,
-`chart-alluvial`, `chart-parallel-sets`, `chart-chord` or `chart-scatter`. It holds an
-`svg` element with `role="img"` and the `title` as its `aria-label`. It also holds a `table`
+`chart-alluvial`, `chart-parallel-sets`, `chart-chord`, `chart-scatter` or `chart-bubble`. It
+holds an `svg` element with `role="img"` and the `title` as its `aria-label`. It also holds a `table`
 with the class `chart-table` that holds each value. The style sheet hides the table from the
 eye and not from a screen reader. The table has a column header for each series and a row
 header for each category. Its top left corner is a `td` cell, because it names nothing. Each
 series is a `g` element with the class `chart-series`.
 
-A scatter plot holds its points in one `g` element with the class `chart-series`. Each mark
-is a `path` with the class `chart-point`. The path is a symbol of radius 1 at the origin,
-and its style moves it to its place and scales it to its radius, with the custom properties
-`--chart-u`, `--chart-v` and `--chart-w`.
+A scatter plot holds each group of points in a `g` element with the class `chart-series`.
+Each mark is a `path` with the class `chart-point`. The path is a symbol of radius 1 at the
+origin, and its style moves it to its place and scales it to its radius, with the custom
+properties `--chart-u`, `--chart-v` and `--chart-w`. `--series` gives its color. A symbol of
+a legend is a `path` with the class `chart-key`, and a size of a legend is a `circle` with
+the class `chart-size`.
 
 A chart of flows writes these elements:
 

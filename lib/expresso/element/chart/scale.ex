@@ -3,7 +3,9 @@ defmodule Expresso.Element.Chart.Scale do
   An axis of a scatter plot: its range, its ticks, and the place of a value on it
 
   A linear axis has round ticks, as `Expresso.Element.Chart.Plot.ticks/1`
-  gives, but it does not need zero. A logarithmic axis has a tick at each
+  gives, but it does not need zero. The axis adds a margin of 5 percent of
+  the range of the values at each end, so a mark is not on the edge of the
+  plot. The margin does not go past zero. A logarithmic axis has a tick at each
   power of ten, and also at 2 and 5 times each power when the axis holds two
   powers of ten or less. A range from the deck, such as `{0, 100}`, gives the
   ends of the axis, and the ticks are the round numbers between the ends.
@@ -32,6 +34,9 @@ defmodule Expresso.Element.Chart.Scale do
       iex> Expresso.Element.Chart.Scale.new([12, 47], nil, :linear)
       %Expresso.Element.Chart.Scale{type: :linear, low: 10, high: 50, ticks: [10, 20, 30, 40, 50]}
 
+      iex> Expresso.Element.Chart.Scale.new([10, 50], nil, :linear).ticks
+      [0, 10, 20, 30, 40, 50, 60]
+
       iex> Expresso.Element.Chart.Scale.new([12, 47], {0, 60}, :linear).ticks
       [0, 20, 40, 60]
 
@@ -43,7 +48,7 @@ defmodule Expresso.Element.Chart.Scale do
   """
   @spec new([number(), ...], {number(), number()} | nil, :linear | :log) :: t()
   def new(values, nil, :linear) do
-    {low, high} = spread(Enum.min(values), Enum.max(values))
+    {low, high} = values |> Enum.min() |> spread(Enum.max(values)) |> margin()
     step = Plot.step((high - low) / 5)
     first = trunc(Float.floor(low / step))
     last = trunc(Float.ceil(high / step))
@@ -73,6 +78,13 @@ defmodule Expresso.Element.Chart.Scale do
   defp spread(value, value) when value == 0, do: {-1, 1}
   defp spread(value, value), do: {value - abs(value) / 10, value + abs(value) / 10}
   defp spread(low, high), do: {low, high}
+
+  defp margin({low, high}) do
+    pad = (high - low) * 0.05
+
+    {if(low >= 0, do: max(low - pad, 0), else: low - pad),
+     if(high <= 0, do: min(high + pad, 0), else: high + pad)}
+  end
 
   defp power(exponent), do: Plot.number(:math.pow(10, exponent))
 
