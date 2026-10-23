@@ -10,6 +10,10 @@ defmodule Expresso.Element.Chart.Csv do
   row. Each function returns the text of an error for a file that it cannot
   read, and `Expresso.Element.Chart` gives that error to the author.
 
+  The `cell` option gives the function that reads a cell of a value. The
+  default is `number/1`, and a waterfall chart also reads the mark of a
+  total.
+
   For a treemap or a sunburst, the `levels` option can name the columns that
   hold the levels of a category, from the top level down. The category of a
   row is then the list of its levels, and an empty cell at the end of the
@@ -24,9 +28,17 @@ defmodule Expresso.Element.Chart.Csv do
 
   @typedoc """
   The options of a reader: `levels`, the headings of the columns that hold
-  the levels of a category, and `delimiter`, the character between two cells.
+  the levels of a category, `delimiter`, the character between two cells,
+  `cell`, the function that reads a cell of a value and returns `nil` for a
+  cell that is not a value, and `needs`, the words after the number of values
+  in the error of a row with a bad cell.
   """
-  @type opts :: [levels: [String.t()] | nil, delimiter: String.t()]
+  @type opts :: [
+          levels: [String.t()] | nil,
+          delimiter: String.t(),
+          cell: (String.t() -> term() | nil),
+          needs: String.t()
+        ]
 
   @doc """
   Read a CSV file of categories and series
@@ -50,7 +62,7 @@ defmodule Expresso.Element.Chart.Csv do
     with {:ok, rows} <- rows(text, src, opts),
          {:ok, rows} <- levels(rows, opts[:levels], src),
          [{_number, [_heading | names]} | data] when names != [] and data != [] <- rows,
-         {:ok, columns} <- columns(data, length(names), src) do
+         {:ok, columns} <- columns(data, length(names), src, opts) do
       categories = Enum.map(data, fn {_number, [category | _values]} -> category end)
       {:ok, categories, series(names, columns)}
     else
@@ -111,7 +123,7 @@ defmodule Expresso.Element.Chart.Csv do
          data = Enum.map(data, fn {number, cells} -> {number, cells, index} end),
          {:ok, groups} <- groups(data, src),
          {:ok, categories} <- categories(groups, src),
-         {:ok, timeline} <- timeline(groups, categories, names, src) do
+         {:ok, timeline} <- timeline(groups, categories, names, src, opts) do
       {:ok, categories, timeline}
     else
       {:error, message} ->
@@ -249,7 +261,7 @@ defmodule Expresso.Element.Chart.Csv do
 
   defp names(rows), do: Enum.map(rows, fn {_number, [category | _values]} -> category end)
 
-  defp timeline(groups, categories, names, src) do
+  defp timeline(groups, categories, names, src, opts) do
     groups
     |> Enum.reduce_while({:ok, []}, fn {label, rows}, {:ok, frames} ->
       ordered =
@@ -257,7 +269,7 @@ defmodule Expresso.Element.Chart.Csv do
           Enum.find_index(categories, &(&1 == category))
         end)
 
-      case columns(ordered, length(names), src) do
+      case columns(ordered, length(names), src, opts) do
         {:ok, columns} ->
           {:cont, {:ok, [%Frame{label: label, elements: series(names, columns)} | frames]}}
 
@@ -404,15 +416,18 @@ defmodule Expresso.Element.Chart.Csv do
 
   defp skip_spaces(text, _delimiter), do: text
 
-  defp columns(data, count, src) do
+  defp columns(data, count, src, opts) do
+    cell = Keyword.get(opts, :cell, &number/1)
+    needs = Keyword.get(opts, :needs, "numbers")
+
     data
     |> Enum.reduce_while({:ok, []}, fn {number, [_category | cells]}, {:ok, rows} ->
-      case numbers(cells, count) do
+      case numbers(cells, count, cell) do
         {:ok, values} ->
           {:cont, {:ok, [values | rows]}}
 
         :error ->
-          {:halt, {:error, "line #{number} of the chart file \"#{src}\" needs #{count} numbers"}}
+          {:halt, {:error, "line #{number} of the chart file \"#{src}\" needs #{count} #{needs}"}}
       end
     end)
     |> case do
@@ -421,12 +436,12 @@ defmodule Expresso.Element.Chart.Csv do
     end
   end
 
-  defp numbers(cells, count) when length(cells) == count do
-    values = Enum.map(cells, &number/1)
-    if Enum.all?(values, &is_number/1), do: {:ok, values}, else: :error
+  defp numbers(cells, count, cell) when length(cells) == count do
+    values = Enum.map(cells, cell)
+    if Enum.all?(values, &(&1 != nil)), do: {:ok, values}, else: :error
   end
 
-  defp numbers(_cells, _count), do: :error
+  defp numbers(_cells, _count, _cell), do: :error
 
   @doc """
   Read the number of a cell, or return `nil` for a cell that is not a number

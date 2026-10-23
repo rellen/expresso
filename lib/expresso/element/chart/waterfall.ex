@@ -25,7 +25,7 @@ defmodule Expresso.Element.Chart.Waterfall do
   use Temple.Component
 
   alias Expresso.Element.Chart
-  alias Expresso.Element.Chart.{Motion, Plot, Scale}
+  alias Expresso.Element.Chart.{Csv, Motion, Plot, Scale}
   alias Expresso.Element.Series
 
   # The box of the chart in the units of the SVG.
@@ -196,6 +196,43 @@ defmodule Expresso.Element.Chart.Waterfall do
 
     [first | rest]
   end
+
+  @doc """
+  Read a cell of a value from the CSV file of a waterfall chart
+
+  A cell holds a number, the word `total`, or the word `total` and the value
+  that the author expects. The function returns `nil` for another cell.
+
+      iex> Expresso.Element.Chart.Waterfall.cell("40")
+      40
+      iex> Expresso.Element.Chart.Waterfall.cell("total")
+      :total
+      iex> Expresso.Element.Chart.Waterfall.cell(" Total 1,250 ")
+      {:total, 1250}
+      iex> Expresso.Element.Chart.Waterfall.cell("many")
+      nil
+  """
+  @spec cell(String.t()) :: value() | nil
+  def cell(text) do
+    case String.split(text) do
+      [word] -> if total?(word), do: :total, else: Csv.number(text)
+      [word, number] -> if total?(word), do: total_cell(Csv.number(number))
+      _other -> nil
+    end
+  end
+
+  defp total?(word), do: String.downcase(word) == "total"
+
+  defp total_cell(nil), do: nil
+  defp total_cell(number), do: {:total, number}
+
+  @doc """
+  Return the options of `Expresso.Element.Chart.Csv` for the file of a
+  waterfall chart: the reader of a cell, and the words of its error
+  """
+  @spec reader() :: keyword()
+  def reader,
+    do: [cell: &cell/1, needs: "values, and a value is a number, total, or total and a number"]
 
   @doc """
   Write a change with its sign
