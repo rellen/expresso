@@ -45,6 +45,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/show-a-hierarchy-as-a-tree.md",
         "docs/how-to/animate-a-supervision-tree.md",
         "docs/how-to/draw-a-graph-from-graphviz-or-d2.md",
+        "docs/how-to/draw-a-diagram-from-mermaid.md",
         "docs/how-to/show-code.md",
         "docs/how-to/check-the-layout.md",
         "docs/how-to/check-a-deck.md",

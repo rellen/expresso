@@ -1,6 +1,6 @@
 # Diagrams from Mermaid
 
-This document gives the plan for a `diagram` that takes the source of a diagram in the
+This document gives the design for a `diagram` that takes the source of a diagram in the
 language of Mermaid, and the record of its progress. [Pele](https://pele.run) draws the
 diagram in Node, and the deck animates its parts with the parts of the `diagram` element,
 as for a graph from Graphviz or D2. The document records ten decisions, and each is
@@ -132,3 +132,37 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | 31. Cynefin | Done. A domain is a container with its region and its label, an item is a node in its domain, and a transition is an edge such as `complex->complicated`. |
 | 32. Railroad | Done. A rule is a container, and a reference to a rule is a node such as `heading/2`, because Pele gives a reference the name of its rule as its `data-id`. A test makes sure that each reference is in the group of its parent rule. |
 | 33. Wardley | Done. An anchor or a component is a node with the arrow of its evolution, and a link is an edge such as `Deck->Renderer`. Each type of Pele now has a plan. |
+| 34. The guide, the example decks and their GIFs | Done. `docs/how-to/draw-a-diagram-from-mermaid.md` shows a flowchart from a `.mmd` file and a sequence diagram from the `source` option, with their GIFs. |
+
+## The result
+
+The stack of pull requests #410 to #445 and the pull request of the guide holds the code.
+These parts are different from the plan:
+
+- **One plan module for each type.** `Expresso.Element.Diagram.Pele.Plan` gives the
+  contract, and each type has a module, such as `Expresso.Element.Diagram.Pele.State`. A
+  swimlane diagram and an agent flow have the model of a flowchart, so they use the plan of
+  a flowchart.
+- **Fixtures in place of Node.** `test/fixtures/mermaid/` holds the output of the script for
+  each type. The tests of the names read the fixtures, so `mix test` needs no Node. A test
+  with the tag `:mermaid` makes sure that each fixture agrees with Pele.
+- **A count for a shared `data-id`.** Pele gives some parts the same `data-id`, such as two
+  edges of an architecture diagram between the same services, or a rule of a railroad
+  diagram and each reference to it. The function of a plan can take the number of earlier
+  elements with the same `data-id` and the same classes.
+- **Parts with no `data-id`.** Pele draws some parts with no `data-id`, such as the lines of
+  a mindmap and of a git graph, the events of a timeline, a series of an XY chart without a
+  title, and the label of a point of a quadrant chart. A plan gets each node, edge, series
+  and label with no `data-id`, with a count of its kind, and it names the part by the order
+  of `pele.js`. A test makes sure of that order for the git graph, the XY chart and the
+  railroad diagram.
+- **A group around a shape.** The edges and the list for a screen reader read groups. Pele
+  draws some parts as a `path`, a `rect` or a `circle`, such as a slice of a pie, so
+  `Pele.name/1` puts such a part into a group with its name and its marks.
+- **A wrapped label.** Pele wraps a long label on two lines. The list for a screen reader now
+  puts a space between the lines.
+- **A collapsed flow.** An agent flow can draw a flow as one node. An edge to a member of
+  that flow goes to the flow.
+- **Disk space.** Each run of the release leaves two directories of Burrito in `/tmp`, of
+  approximately 120 MB each. After many runs in one session, the disk was full, and the
+  release failed. Delete `/tmp/burrito_build_*` and `/tmp/unpacked_erts_*` after a run.

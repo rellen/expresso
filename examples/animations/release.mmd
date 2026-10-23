@@ -1,0 +1,7 @@
+flowchart LR
+  subgraph ci [CI]
+    build[Build] --> test[Test]
+  end
+  test --> release[Release]
+  release --> hex[(Hex)]
+  release --> docs[Docs]

@@ -10,7 +10,7 @@ Read these documents before you change the code:
 
 - `docs/architecture.md` — the two input paths, the render pipeline, the templates, the
   elements, the DSL, the presenter and the build. Its section "Open work" gives the next
-  items in the order of their value. Its one item is the stack of `docs/mermaid-diagrams.md`.
+  items in the order of their value. It has no item at this time.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide. The
   code contains each part of the design. The document ends with six decisions, and
   each is settled.
@@ -30,9 +30,9 @@ Read these documents before you change the code:
   language of Graphviz or of D2. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during
   the work.
-- `docs/mermaid-diagrams.md` — the plan for a `diagram` from the source of Mermaid, drawn by
-  Pele in Node. The document records ten decisions, and each is settled. Its section "The
-  progress" tells which pull requests of the stack are done.
+- `docs/mermaid-diagrams.md` — the design for a `diagram` from the source of Mermaid, drawn by
+  Pele in Node. The code contains this design. The document records ten decisions, and each
+  is settled. Its last section, "The result", tells what changed during the work.
 
 ## Build and test
 
