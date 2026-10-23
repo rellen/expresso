@@ -165,6 +165,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "treeView" => Expresso.Element.Diagram.Pele.TreeView,
     "usecase" => Expresso.Element.Diagram.Pele.Usecase,
     "venn" => Expresso.Element.Diagram.Pele.Venn,
+    "wardley" => Expresso.Element.Diagram.Pele.Wardley,
     "xychart" => Expresso.Element.Diagram.Pele.Xychart
   }
 

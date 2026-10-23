@@ -1,0 +1,13 @@
+wardley-beta
+title A deck tool
+
+anchor Presenter [0.95, 0.60]
+component Deck [0.75, 0.55]
+component Renderer [0.50, 0.40]
+component Browser [0.20, 0.85]
+
+Presenter -> Deck
+Deck -> Renderer
+Renderer -> Browser
+
+evolve Renderer 0.70

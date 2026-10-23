@@ -420,6 +420,15 @@ A railroad diagram has no edges. A rule is a container:
 
 A terminal, such as `"#"`, shows with its rule.
 
+A Wardley map names a link by its source and its target:
+
+| Element of a Wardley map | Name | Example |
+| --- | --- | --- |
+| An anchor or a component, with the arrow of its evolution | Its name | `Renderer` for `component Renderer [0.50, 0.40]` |
+| A link | The source, `->` and the target | `Deck->Renderer` for `Deck -> Renderer` |
+
+The frame, the stages and the notes show at each step.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |
@@ -427,9 +436,9 @@ A kanban board has no edges. A column is a container:
 | A column | Its id | `todo` for `todo[To do]` |
 | A card | Its id, or its text for a card without an id. It has its column as its parent. | `charts` for `charts[Add the charts]` |
 
-Pele draws each diagram type of Mermaid 12.1, such as a pie or a Gantt chart. A type with
-no table on this page keeps the `data-id` of Pele as the name of each part, and each part
-can take steps.
+Pele draws each of the 32 diagram types of Mermaid 12.1, and each type has a table on this
+page. A type that a later version of Pele adds keeps the `data-id` of Pele as the name of
+each part, with no marks, and each part can take steps.
 
 Pele is a library in JavaScript, and Expresso holds a copy of it. The render runs it with
 the program `node` on the `PATH`, and the variable `EXPRESSO_NODE` gives a different path.
