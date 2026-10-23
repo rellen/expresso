@@ -650,6 +650,12 @@ defmodule Expresso.Extension do
             doc:
               "The heading of the column of the CSV file of a scatter plot with the size of each point. Requires the src option."
           ],
+          labels: [
+            type: {:or, [{:in, [:all, :none]}, {:list, :string}]},
+            default: :none,
+            doc:
+              "The points of a scatter plot with a label: :all, :none, or a list of the names of points, such as [\"api\", \"web\"]. A label goes next to its mark and does not cover another label. The default is :none."
+          ],
           symbol_label: [
             type: :string,
             doc:

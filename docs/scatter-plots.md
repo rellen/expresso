@@ -98,7 +98,7 @@ steps.
 | 3. The symbol, the color and the size | Done. `Expresso.Element.Chart.Encoding` gives the symbols, the colors and the radii, and `Expresso.Element.Chart.Scatter.Legend` draws the legends in a column at the right. Each category of the color is one group. A mark takes its color as an inline `--series`, so a category and a role use one rule. A linear axis now has a margin of 5 percent at each end. |
 | 4. The series of points | Done. The `values` of a series are optional. `Expresso.Builder` takes a list as the keyword list only when it is empty or starts with a tuple, so `series("Orders", [1, 2])` keeps its values. A point of a series takes no category, because the series is its category. |
 | 5. The CSV file | Done. `Expresso.Element.Chart.Scatter.Data` reads the points from the rows of `Expresso.Element.Chart.Csv.rows/3`. The check of the points runs without the options of the file, and the chart keeps them. |
-| 6. The labels | To do |
+| 6. The labels | Done. `Expresso.Element.Chart.Scatter.Labels` tries eight places for each label, in the order of the points, and takes the first place that covers no label and no mark inside the plot. A label reads the channels of its mark, so it moves with the mark. |
 | 7. The steps | To do |
 | 8. The frames | To do |
 | 9. The trend lines and `jitter` | To do |

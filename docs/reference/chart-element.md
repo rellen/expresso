@@ -48,6 +48,7 @@ end
 | `x_range`, `y_range` | Two numbers, such as `{0, 100}` | The low end and the high end of an axis of a scatter plot. The default comes from the points. |
 | `x_scale`, `y_scale` | `:linear` or `:log` | The scale of an axis of a scatter plot. The default is `:linear`. |
 | `symbol_label`, `color_label`, `size_label` | A string | The title of a legend of a scatter plot, and the header of its column in the table. See [the symbol, the color and the size](#the-symbol-the-color-and-the-size). |
+| `labels` | `:all`, `:none` or a list of names of points | The points of a scatter plot with a label. The default is `:none`. See [the labels of the points](#the-labels-of-the-points). |
 | `opacity` | A number from 0 to 1, such as `0.6` | The opacity of each mark of a scatter plot. An area with many marks then looks darker. |
 | `width` | A CSS width, such as `"900px"` or `"70%"` | The width of the chart. A percentage is a part of the width of the slide. The default is `80%`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
@@ -645,6 +646,18 @@ series of each point.
 
 A chart holds points or series of points, and not both.
 
+### The labels of the points
+
+The `labels` option gives a label to the points of a scatter plot: `:all` to each point, or a
+list of names, such as `labels ["api", "web"]`, to those points. The default is `:none`. A label
+holds the name of its point.
+
+A label goes next to its mark. The chart tries eight places in order: right, left, above,
+below, and the four corners. It takes the first place where the label covers no other label
+and no other mark, and stays inside the plot. When no place is free, the label takes the
+place that covers the least of the other labels, then of the marks. An earlier point gets the
+better place. The width of a label is an estimate from its number of characters.
+
 ### The points of a CSV file
 
 The `src` option gives a CSV file with one row for each point. The first row holds the
@@ -804,6 +817,7 @@ The compiler gives an error for these:
   option of the other kinds, such as `categories`, `reveal` or frames;
 - a point without `x` or `y`, a range with its low end at or above its high end, a value
   outside its range, and a value or a range of zero or less on a logarithmic axis;
+- a name in `labels` that no point has;
 - a scatter plot with `src` and points, a column option such as `x` without `src`, a column
   that the file does not have, and a cell of `x`, `y` or `size` that is not a number;
 - a scatter plot with points and series, a series with values or with no point, more than
@@ -847,7 +861,8 @@ A scatter plot holds each group of points in a `g` element with the class `chart
 Each mark is a `path` with the class `chart-point`. The path is a symbol of radius 1 at the
 origin, and its style moves it to its place and scales it to its radius, with the custom
 properties `--chart-u`, `--chart-v` and `--chart-w`. `--series` gives its color. A symbol of
-a legend is a `path` with the class `chart-key`, and a size of a legend is a `circle` with
+a legend is a `path` with the class `chart-key`, a label of a point is a `text` with the class
+`chart-point-label`, and a size of a legend is a `circle` with
 the class `chart-size`.
 
 A chart of flows writes these elements:
