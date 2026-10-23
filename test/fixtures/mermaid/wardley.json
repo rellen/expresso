@@ -1,0 +1,72 @@
+{
+ "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" class=\"pele pele-wardley\" viewBox=\"0 0 846 610\" width=\"846\" height=\"610\" style=\"--_bg:var(--pele-bg,#fff);--_fg:var(--pele-fg,#1f1f1f);--_m:var(--pele-muted,#6e6e6e);--_l:var(--pele-line,#1f1f1f);--_s:var(--pele-surface,#f3f3f3);--_a:var(--pele-surface-alt,#e6e6e6);--_b:var(--pele-border,#8a8a8a);--_c:var(--pele-accent,#5b7bd5);color:var(--_fg);--_tw:var(--pele-title-weight,bold);--_hw:var(--pele-heading-weight,bold);--_fm:var(--pele-font-mono,monospace);font:16px sans-serif;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;font-family:var(--pele-font,Atkinson Hyperlegible)\" fill=\"var(--_fg)\" role=\"graphics-document document\" aria-roledescription=\"wardley\"><text class=\"pele-title\" font-weight=\"var(--_tw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"436\" y=\"25.6\">A deck tool</tspan></text><g transform=\"translate(34,44)\"><g class=\"pele-wardley-frame\" fill=\"none\"><path class=\"pele-wardley-stage\" d=\"M201,0V504\" stroke=\"var(--_b)\" stroke-dasharray=\"4 4\"/><path class=\"pele-wardley-stage\" d=\"M402,0V504\" stroke=\"var(--_b)\" stroke-dasharray=\"4 4\"/><path class=\"pele-wardley-stage\" d=\"M603,0V504\" stroke=\"var(--_b)\" stroke-dasharray=\"4 4\"/><path class=\"pele-wardley-axis\" d=\"M0,0V504H804\" stroke=\"var(--_l)\"/></g><text class=\"pele-wardley-stage-label\" font-size=\"13\" fill=\"var(--_m)\" x=\"100.5\" y=\"526.55\" text-anchor=\"middle\">Genesis</text><text class=\"pele-wardley-stage-label\" font-size=\"13\" fill=\"var(--_m)\" x=\"301.5\" y=\"526.55\" text-anchor=\"middle\">Custom Built</text><text class=\"pele-wardley-stage-label\" font-size=\"13\" fill=\"var(--_m)\" x=\"502.5\" y=\"526.55\" text-anchor=\"middle\">Product</text><text class=\"pele-wardley-stage-label\" font-size=\"13\" fill=\"var(--_m)\" x=\"703.5\" y=\"526.55\" text-anchor=\"middle\">Commodity</text><text class=\"pele-wardley-axis-label\" font-size=\"13\" font-weight=\"var(--_hw)\" x=\"402\" y=\"552.55\" text-anchor=\"middle\">Evolution</text><text class=\"pele-wardley-axis-label\" font-size=\"13\" font-weight=\"var(--_hw)\" transform=\"rotate(-90 -16 252)\" x=\"-16\" y=\"256.55\" text-anchor=\"middle\">Visibility</text><g class=\"pele-edges\" fill=\"none\"><g class=\"pele-edge\" data-id=\"Presenter-Deck\"><path d=\"M478.28,35.53L444.42,120.43\" stroke=\"var(--_l)\"/></g><g class=\"pele-edge\" data-id=\"Deck-Renderer\"><path d=\"M438.05,130.33L325.75,247.67\" stroke=\"var(--_l)\"/></g><g class=\"pele-edge\" data-id=\"Renderer-Browser\"><path d=\"M327.14,254.31L677.86,400.89\" stroke=\"var(--_l)\"/></g></g><g class=\"pele-wardley-trends\" fill=\"none\"><g class=\"pele-wardley-trend\" data-id=\"Renderer\"><path d=\"M327.6,252L547.8,252\" stroke=\"var(--_c)\" stroke-dasharray=\"4 4\"/><path class=\"pele-marker\" d=\"M554.8,252L546.8,255.36L546.8,248.64Z\" fill=\"var(--_c)\" stroke=\"none\"/><circle cx=\"562.8\" cy=\"252\" r=\"6\" fill=\"var(--_bg)\" stroke=\"var(--_c)\"/></g></g><g class=\"pele-node pele-wardley-anchor\" data-id=\"Presenter\"><text class=\"pele-label\" font-size=\"13\" font-weight=\"var(--_hw)\" text-anchor=\"middle\" xml:space=\"preserve\"><tspan x=\"482.4\" y=\"26.75\">Presenter</tspan></text></g><g class=\"pele-node pele-wardley-component\" data-id=\"Deck\"><circle cx=\"442.2\" cy=\"126\" r=\"6\" fill=\"var(--_bg)\" stroke=\"var(--_l)\"/><text class=\"pele-label\" font-size=\"13\" xml:space=\"preserve\"><tspan x=\"450.2\" y=\"143.75\">Deck</tspan></text></g><g class=\"pele-node pele-wardley-component\" data-id=\"Renderer\"><circle cx=\"321.6\" cy=\"252\" r=\"6\" fill=\"var(--_bg)\" stroke=\"var(--_l)\"/><text class=\"pele-label\" font-size=\"13\" xml:space=\"preserve\"><tspan x=\"261.28\" y=\"244\">Renderer</tspan></text></g><g class=\"pele-node pele-wardley-component\" data-id=\"Browser\"><circle cx=\"683.4\" cy=\"403.2\" r=\"6\" fill=\"var(--_bg)\" stroke=\"var(--_l)\"/><text class=\"pele-label\" font-size=\"13\" xml:space=\"preserve\"><tspan x=\"691.4\" y=\"395.2\">Browser</tspan></text></g></g></svg>",
+ "type": "wardley",
+ "model": {
+  "type": "wardley",
+  "title": "A deck tool",
+  "nodes": [
+   {
+    "id": "Presenter",
+    "label": "Presenter",
+    "x": 60,
+    "y": 95,
+    "className": "anchor"
+   },
+   {
+    "id": "Deck",
+    "label": "Deck",
+    "x": 55.00000000000001,
+    "y": 75,
+    "className": "component",
+    "inertia": false
+   },
+   {
+    "id": "Renderer",
+    "label": "Renderer",
+    "x": 40,
+    "y": 50,
+    "className": "component",
+    "inertia": false
+   },
+   {
+    "id": "Browser",
+    "label": "Browser",
+    "x": 85,
+    "y": 20,
+    "className": "component",
+    "inertia": false
+   }
+  ],
+  "links": [
+   {
+    "source": "Presenter",
+    "target": "Deck",
+    "dashed": false
+   },
+   {
+    "source": "Deck",
+    "target": "Renderer",
+    "dashed": false
+   },
+   {
+    "source": "Renderer",
+    "target": "Browser",
+    "dashed": false
+   }
+  ],
+  "trends": [
+   {
+    "nodeId": "Renderer",
+    "targetX": 70,
+    "targetY": 50
+   }
+  ],
+  "pipelines": [],
+  "annotations": [],
+  "notes": [],
+  "accelerators": [],
+  "deaccelerators": [],
+  "axes": {},
+  "mermaidType": "wardley"
+ }
+}

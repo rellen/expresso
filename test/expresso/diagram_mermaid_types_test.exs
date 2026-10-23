@@ -448,6 +448,22 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: nil,
       outline: {"Desirable", []}
     },
+    "wardley" => %{
+      names: [
+        "Presenter->Deck",
+        "Deck->Renderer",
+        "Renderer->Browser",
+        "Renderer",
+        "Presenter",
+        "Deck",
+        "Browser"
+      ],
+      kinds: %{"Presenter" => "node", "Renderer" => "node", "Deck->Renderer" => "edge"},
+      ends: %{"Renderer->Browser" => {"Renderer", "Browser"}},
+      parents: %{"Deck" => nil},
+      follow: {[{"Deck", 2}, {"Renderer", 3}], "Deck->Renderer", "3"},
+      outline: {"Presenter", ["to Deck"]}
+    },
     "xychart" => %{
       names: ["Shop", "bar2", "line1"],
       kinds: %{"Shop" => "node", "bar2" => "node", "line1" => "node"},
