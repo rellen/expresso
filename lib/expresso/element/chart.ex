@@ -1039,11 +1039,20 @@ defmodule Expresso.Element.Chart do
   Tell whether the marks of a chart move
 
   The marks move in a chart with two or more frames, and in a chart with the
-  effect `:grow` on the chart or on a series. `Expresso.Element.Chart.Motion`
+  effect `:grow` on the chart or on a series, or on a point of a scatter
+  plot. `Expresso.Element.Chart.Motion`
   then draws them.
   """
   @spec moves?(t()) :: boolean()
   def moves?(%__MODULE__{timeline: [_, _ | _]}), do: true
+
+  def moves?(%__MODULE__{kind: kind, effect: effect, elements: groups}) when is_point(kind) do
+    effect == :grow or
+      Enum.any?(
+        groups,
+        &(&1.effect == :grow or Enum.any?(&1.elements, fn point -> point.effect == :grow end))
+      )
+  end
 
   def moves?(%__MODULE__{effect: effect, elements: elements}),
     do: effect == :grow or Enum.any?(elements, &(&1.effect == :grow))

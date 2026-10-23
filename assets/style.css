@@ -1043,6 +1043,7 @@ body[data-view="handout"] .tree-frames {
   vector-effect: non-scaling-stroke;
 }
 .chart-point-label {
+  opacity: var(--chart-shown, 1);
   font-size: 16px;
   fill: color-mix(
     in srgb,
@@ -1212,7 +1213,7 @@ body[data-view="handout"] .tree-frames {
   font-size: 22px;
   font-weight: bold;
 }
-:is(.chart, .chart-series)[data-effect="grow"] {
+:is(.chart, .chart-series, .chart-point-group)[data-effect="grow"] {
   --enter-scale: 1;
   --chart-shown: var(--shown);
 }

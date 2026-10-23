@@ -54,9 +54,10 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
 
   defp colors(%{series: [_ | _] = series} = assigns, _same) do
     items =
-      for one <- series do
+      for {one, place} <- Enum.with_index(series, 1) do
         %{
           type: :item,
+          key: "g#{place}",
           category: one.name,
           symbol: one.symbol,
           color: one.color,
@@ -74,11 +75,12 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
     title = if same, do: assigns.color_label || assigns.symbol_label, else: assigns.color_label
 
     items =
-      for category <- assigns.colors do
+      for {category, n} <- Enum.with_index(assigns.colors, 1) do
         symbol = if same, do: Encoding.symbol(category, assigns.symbols), else: :circle
 
         %{
           type: :item,
+          key: "c#{n}",
           category: category,
           symbol: symbol,
           color: Encoding.color(category, assigns.colors, nil),
@@ -95,9 +97,10 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
 
   defp symbols(assigns, false) do
     items =
-      for category <- assigns.symbols do
+      for {category, n} <- Enum.with_index(assigns.symbols, 1) do
         %{
           type: :item,
+          key: "s#{n}",
           category: nil,
           symbol: Encoding.symbol(category, assigns.symbols),
           color: "var(--muted)",
@@ -187,7 +190,7 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
 
     temple do
       for row <- @rows do
-        c(&row/1, row: row, legend: @legend)
+        c(&row/1, row: row, legend: @legend, keyed: @keyed)
       end
     end
   end
@@ -207,6 +210,7 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
 
     temple do
       path class: "chart-key",
+           data_keys: if(@keyed, do: @row.key),
            d: Encoding.path(@row.symbol),
            style: "--series: #{@row.color};",
            transform:
@@ -215,7 +219,8 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
 
       text x: Plot.f(@legend.text_x),
            y: Plot.f(@legend.top + @row.dy + 18),
-           class: "chart-name" do
+           class: "chart-name",
+           data_keys: if(@keyed, do: @row.key) do
         @row.name
       end
     end

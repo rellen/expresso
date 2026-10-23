@@ -33,7 +33,7 @@ end
 | `values` | `true` or `false` | Show the value of each bar. The default is `true`. |
 | `reveal` | `true` or `false` | Show each series at its own step. A chart of flows has its own steps, which [reveal](#reveal) gives. The default is `false`. A pie takes no `reveal`. |
 | `dim` | `true` or `false` | Dim each series when a later series shows. The default is `false`. See [a dimmed series](#a-dimmed-series). |
-| `highlight` | A list of groups, such as `["Returns", ["Orders", "Repairs"], "2024"]` | Each series shows at each step. Each group of series or of categories is in focus at its own step, and the rest of the chart dims. A chart of flows takes the names of nodes in place of categories. Each kind of chart takes it. See [the highlight option](#the-highlight-option). |
+| `highlight` | A list of groups, such as `["Returns", ["Orders", "Repairs"], "2024"]` | Each series shows at each step. Each group of series or of categories is in focus at its own step, and the rest of the chart dims. A chart of flows takes the names of nodes in place of categories, and a scatter plot takes the names of points, categories and series. Each kind of chart takes it. See [the highlight option](#the-highlight-option). |
 | `whole_first` | `true` or `false` | With `highlight`, the whole chart shows in full color for one step before the first group. The default is `false`. |
 | `separator` | A string | The text between two levels of a category of a treemap, a sunburst or a Voronoi treemap. The default is `"/"`. |
 | `shape` | `:rectangle`, `:circle`, `:hexagon` or a list of points | The container of a Voronoi treemap. The default is `:rectangle`. See [a Voronoi treemap](#a-voronoi-treemap). |
@@ -658,6 +658,38 @@ and no other mark, and stays inside the plot. When no place is free, the label t
 place that covers the least of the other labels, then of the marks. An earlier point gets the
 better place. The width of a label is an estimate from its number of characters.
 
+### The steps of a scatter plot
+
+The steps of a scatter plot show groups of points:
+
+- `reveal true` shows each group at its own step. A series is a group, and each category of
+  the color is a group. A chart without series and without categories of the color shows
+  each point at its own step.
+- `dim true` dims each group when a later group shows.
+- The effect `:grow` grows each mark from the size 0 when it shows. The label of the point
+  fades in with it.
+- A point and a series take the overlay options, so a point can show at its own step, such
+  as `point "api", x: 1200, y: 840, at: 3`. Its label shows with it.
+- `highlight` puts one group of points in focus at each step, and the other marks, their
+  labels and the items of their legends dim. A name of a group is the name of a point, a
+  category of the color or of the symbol, or the name of a series:
+
+```elixir
+slide "focus" do
+  chart :scatter do
+    title "Cost and load of each service"
+    labels :all
+    highlight ["web", "EU"]
+
+    point "api", x: 1200, y: 840, color: "EU"
+    point "web", x: 400, y: 2100, color: "US"
+    point "jobs", x: 900, y: 150, color: "EU"
+  end
+end
+```
+
+The rules of [the highlight option](#the-highlight-option) apply, such as `whole_first`.
+
 ### The points of a CSV file
 
 The `src` option gives a CSV file with one row for each point. The first row holds the
@@ -814,10 +846,12 @@ The compiler gives an error for these:
 - a `point` in a chart that is not a scatter plot, and `x_label`, `y_label`, `x_range`,
   `y_range`, `x_scale` or `y_scale` on such a chart;
 - a scatter plot with no point, with two points of one name, or with an
-  option of the other kinds, such as `categories`, `reveal` or frames;
+  option of the other kinds, such as `categories`, `sort` or frames;
 - a point without `x` or `y`, a range with its low end at or above its high end, a value
   outside its range, and a value or a range of zero or less on a logarithmic axis;
 - a name in `labels` that no point has;
+- a name in `highlight` that is not a point, a category or a series, and `highlight` with a
+  point or a series that has an overlay option;
 - a scatter plot with `src` and points, a column option such as `x` without `src`, a column
   that the file does not have, and a cell of `x`, `y` or `size` that is not a number;
 - a scatter plot with points and series, a series with values or with no point, more than
