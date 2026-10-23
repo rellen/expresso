@@ -2,9 +2,9 @@
 
 This document gives the design for the chart kind `:waterfall`, and the record of its
 progress. A waterfall chart shows how a start value changes through a list of increases and
-decreases, with total columns between them. The document records ten decisions, and each is
-settled. Its section "The progress" tells the state of each pull request of the stack. Issue
-#411 holds the same plan.
+decreases, with total columns between them. The code contains this design. The document
+records ten decisions, and each is settled. Its last section, "The result", tells what
+changed during the work. Issue #411 holds the same plan.
 
 ## The problem
 
@@ -135,4 +135,39 @@ With `reveal true`, the chart takes these steps:
 | 6. The spans | Done. A span shows with the last column before the total at its end, at its final value, and it does not count. The text of a number that counts has no sign, so a span that counts would lose the sign of a positive sum, and a span of 0 at the first step tells nothing. |
 | 7. The direction | Done. The layout has the function `pos` from a value to its place on the value axis, and each function that places a mark has a clause for each direction. The right edge of a horizontal chart holds the labels at the ends of the bars and the spans. |
 | 8. The frames | Done. The states hold the states of `reveal` in the first frame, then one state for each later frame, so one list of rules moves the totals at the steps of the changes and the columns at the steps of the frames. The channels `--k<n>` of the texts that fade count states, not frames. Each later frame has its totals at the categories of the totals of the first frame. |
-| 9. The guide, the example decks and their GIFs | Not started |
+| 9. The guide, the example decks and their GIFs | Done. `docs/how-to/show-how-a-total-changes-in-a-waterfall-chart.md` shows three example decks: the cash of a year with reveal and spans, a budget with a cut axis, horizontal bars and highlight, and two years from a CSV file with frames. |
+
+## The result
+
+The nine pull requests of the stack contain the plan. These parts are different from the
+plan, or the plan did not tell them:
+
+- **A lead step.** With `reveal true`, the first change of a chart would show at the step at
+  which the chart shows. `Expresso.Element.Chart.lead/1` gives a waterfall chart one step
+  before its first change, so the first step shows the start and the totals alone, as the
+  table of the example tells.
+- **The groups.** The start and the totals of `totals :grow` stay outside the groups of
+  `reveal`, so `dim true` dims only the changes. Each group is a copy of the series with the
+  indexes of its columns in the new field `columns` of `Expresso.Element.Series`.
+- **The spans.** A span shows with the last column before the total at its end, at its final
+  value, and it does not count. A number that counts has no sign, so a span that counts would
+  lose the `+` of a positive sum, and a span of 0 at the first step tells nothing.
+- **The agreement of a total.** The compiler rounds the sum to the most decimals of the
+  numbers of the series. The words of decision 9 changed to tell this rule.
+- **The text of a change.** The text of a change goes into its column when the column is 22
+  units high, or as wide as the text in a horizontal chart. Else the text goes beside the
+  column, in the color of text.
+- **The CSV file.** The reader of `Expresso.Element.Chart.Csv` takes the options `cell` and
+  `needs`, so a waterfall chart reads `total` and `total 120` with the reader of the other
+  kinds.
+- **The states.** One list of states holds the states of `reveal` in the first frame, then one
+  state for each later frame. The rules, the copies of the texts that fade, the label of the
+  frame and the thumbnail all count states, so one code path handles `reveal`, frames and the
+  two together.
+- **The highlight.** The columns had the `data-keys` of their categories from the second pull
+  request, so the fifth pull request added tests and documents and no code.
+- **The checks.** `mix check` found three problems that the tests did not find: a call of
+  `Scale.new/3` with an empty list for Dialyzer, a test of the families of the kinds, and a
+  code block of the reference that was not a whole slide. The fix of each one went into the
+  pull request of its code.
+

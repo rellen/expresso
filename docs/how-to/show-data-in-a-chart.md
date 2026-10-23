@@ -205,3 +205,6 @@ To show how an amount goes from sources to targets, see
 
 To compare many items on two measures, with a symbol, a color and a size for each item, see
 [Show points in a scatter plot](show-points-in-a-scatter-plot.md).
+
+To show how a start value becomes a total through increases and decreases, see
+[Show how a total changes in a waterfall chart](show-how-a-total-changes-in-a-waterfall-chart.md).

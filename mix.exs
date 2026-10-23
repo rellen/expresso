@@ -43,6 +43,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/show-parts-of-a-whole-in-a-treemap-or-a-sunburst.md",
         "docs/how-to/show-flows-between-nodes-in-a-chart.md",
         "docs/how-to/show-points-in-a-scatter-plot.md",
+        "docs/how-to/show-how-a-total-changes-in-a-waterfall-chart.md",
         "docs/how-to/show-a-hierarchy-as-a-tree.md",
         "docs/how-to/animate-a-supervision-tree.md",
         "docs/how-to/draw-a-graph-from-graphviz-or-d2.md",
