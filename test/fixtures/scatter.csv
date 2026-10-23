@@ -1,0 +1,4 @@
+service,cost,load,region,users
+api,1200,840,EU,"30,000"
+web,400,2100,US,"120,000"
+jobs,900,150,EU,"2,000"

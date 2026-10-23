@@ -5,11 +5,12 @@ defmodule Expresso.ChartScatterTest do
 
   alias Expresso.Builder
   alias Expresso.Element.Chart.{Encoding, Scale}
-  alias Expresso.Element.Chart.Scatter.Legend
+  alias Expresso.Element.Chart.Scatter.{Data, Legend}
 
   doctest Scale
   doctest Encoding
   doctest Legend
+  doctest Data
 
   defp services(opts \\ [], points \\ nil) do
     points =
@@ -301,6 +302,80 @@ defmodule Expresso.ChartScatterTest do
           categories: ["a"],
           elements: [Builder.series("S", [1], color: :accent)]
         )
+      end
+    end
+  end
+
+  describe "a CSV file" do
+    @moduletag :tmp_dir
+
+    @services """
+    service,cost,load,region,users
+    api,1200,840,EU,"30,000"
+    web,400,2100,US,"120,000"
+    jobs,900,150,,"2,000"
+    """
+
+    defp from_file(tmp_dir, opts, text \\ @services) do
+      path = Path.join(tmp_dir, "services.csv")
+      File.write!(path, text)
+      [%{elements: [chart]}] = one_slide(services([src: path] ++ opts, [])).slides
+      chart
+    end
+
+    test "the options name the columns, and each row is a point", %{tmp_dir: tmp_dir} do
+      chart = from_file(tmp_dir, x: "cost", y: "load", color: "region", size: "users")
+
+      points = Enum.flat_map(chart.elements, & &1.elements)
+
+      # Each category of the color is a group, and the point without a
+      # category is in the last group.
+      assert Enum.map(points, &{&1.name, &1.x, &1.y, &1.color, &1.size}) == [
+               {"api", 1200, 840, "EU", 30_000},
+               {"web", 400, 2100, "US", 120_000},
+               {"jobs", 900, 150, nil, 2_000}
+             ]
+    end
+
+    test "the chart of a file draws a mark for each row", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "services.csv")
+      File.write!(path, @services)
+
+      figure =
+        services([src: path, x: "cost", y: "load", symbol: "region", label: "service"], [])
+        |> figure()
+
+      assert count(figure, "path.chart-point") == 3
+      assert texts(figure, ".chart-name") == ["EU", "US"]
+    end
+
+    test "a column that the file does not have", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "services.csv")
+      File.write!(path, @services)
+
+      assert_raise Spark.Error.DslError,
+                   ~r/has no column "price" for the x option. The columns are "service", "cost"/,
+                   fn -> services([src: path, x: "price", y: "load"], []) |> one_slide() end
+    end
+
+    test "a cell that is not a number", %{tmp_dir: tmp_dir} do
+      path = Path.join(tmp_dir, "services.csv")
+      File.write!(path, "name,x,y\napi,cheap,3\n")
+
+      assert_raise Spark.Error.DslError,
+                   ~r/line 2 of the chart file .* has "cheap" as its x, and the x is a number/,
+                   fn -> services([src: path], []) |> one_slide() end
+    end
+
+    test "a column option without src, and src with points" do
+      assert_raise ArgumentError,
+                   ~r/the x option names a column of a CSV file, so it needs the src option/,
+                   fn ->
+                     services(x: "cost")
+                   end
+
+      assert_raise ArgumentError, ~r/takes the src option or points, and not both/, fn ->
+        services(src: "a.csv")
       end
     end
   end

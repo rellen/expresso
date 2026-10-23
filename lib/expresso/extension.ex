@@ -620,6 +620,36 @@ defmodule Expresso.Extension do
             doc:
               "The low end and the high end of the y axis of a scatter plot, such as {0, 100}. The default comes from the points."
           ],
+          label: [
+            type: :string,
+            doc:
+              "The heading of the column of the CSV file of a scatter plot that names each point. The default is the first column. Requires the src option."
+          ],
+          x: [
+            type: :string,
+            doc:
+              "The heading of the column of the CSV file of a scatter plot with the x values. The default is \"x\". Requires the src option."
+          ],
+          y: [
+            type: :string,
+            doc:
+              "The heading of the column of the CSV file of a scatter plot with the y values. The default is \"y\". Requires the src option."
+          ],
+          symbol: [
+            type: :string,
+            doc:
+              "The heading of the column of the CSV file of a scatter plot with the category of the symbol. Requires the src option."
+          ],
+          color: [
+            type: :string,
+            doc:
+              "The heading of the column of the CSV file of a scatter plot with the category of the color. Requires the src option."
+          ],
+          size: [
+            type: :string,
+            doc:
+              "The heading of the column of the CSV file of a scatter plot with the size of each point. Requires the src option."
+          ],
           symbol_label: [
             type: :string,
             doc:

@@ -97,7 +97,7 @@ steps.
 | 2. The points and the axes | Done. `Expresso.Element.Chart.Scale` gives the ticks of a linear axis without zero and of a logarithmic axis. `Plot.step/1` is public, so the two kinds of axis use the same round steps. |
 | 3. The symbol, the color and the size | Done. `Expresso.Element.Chart.Encoding` gives the symbols, the colors and the radii, and `Expresso.Element.Chart.Scatter.Legend` draws the legends in a column at the right. Each category of the color is one group. A mark takes its color as an inline `--series`, so a category and a role use one rule. A linear axis now has a margin of 5 percent at each end. |
 | 4. The series of points | Done. The `values` of a series are optional. `Expresso.Builder` takes a list as the keyword list only when it is empty or starts with a tuple, so `series("Orders", [1, 2])` keeps its values. A point of a series takes no category, because the series is its category. |
-| 5. The CSV file | To do |
+| 5. The CSV file | Done. `Expresso.Element.Chart.Scatter.Data` reads the points from the rows of `Expresso.Element.Chart.Csv.rows/3`. The check of the points runs without the options of the file, and the chart keeps them. |
 | 6. The labels | To do |
 | 7. The steps | To do |
 | 8. The frames | To do |
