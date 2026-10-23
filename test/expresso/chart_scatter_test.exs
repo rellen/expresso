@@ -208,6 +208,103 @@ defmodule Expresso.ChartScatterTest do
     end
   end
 
+  describe "the series" do
+    defp teams(opts \\ []) do
+      services(opts, [
+        Builder.series("Core",
+          symbol: :square,
+          elements: [
+            Builder.point("api", x: 1, y: 2),
+            Builder.point("db", x: 2, y: 3, color: :danger)
+          ]
+        ),
+        Builder.series("Edge", elements: [Builder.point("cdn", x: 3, y: 1, symbol: :star)])
+      ])
+    end
+
+    test "a series is a group, and it gives its symbol and its color to its points" do
+      figure = figure(teams(color_label: "Team"))
+      [core, edge] = figure |> LazyHTML.query("g.chart-series") |> Enum.to_list()
+
+      assert core |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("d") ==
+               [Encoding.path(:square), Encoding.path(:square)]
+
+      styles = core |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("style")
+
+      assert Enum.map(styles, &(Regex.run(~r/--series: ([^;]+);/, &1) |> List.last())) ==
+               ["var(--chart-1)", "var(--danger)"]
+
+      [path] = edge |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("d")
+      assert path == Encoding.path(:star)
+      [style] = edge |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("style")
+      assert style =~ "--series: var(--chart-2);"
+
+      # The legend shows each series by its name, with its symbol and its color.
+      assert texts(core, ".chart-name") == ["Core"]
+      assert texts(edge, ".chart-name") == ["Edge"]
+      assert texts(figure, ".chart-axis-title") == ["Team"]
+
+      assert texts(figure, "table.chart-table thead th") == ["x", "y", "Team"]
+    end
+
+    test "a series takes the symbol and the color of a role" do
+      figure =
+        services([], [
+          Builder.series("Core", color: :accent, elements: [Builder.point("a", x: 1, y: 1)])
+        ])
+        |> figure()
+
+      [style] = figure |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("style")
+      assert style =~ "--series: var(--accent);"
+    end
+
+    test "the errors of a series" do
+      assert_raise ArgumentError,
+                   ~r/holds point entities or series of points, and not both/,
+                   fn ->
+                     services([], [
+                       Builder.point("a", x: 1, y: 1),
+                       Builder.series("S", elements: [Builder.point("b", x: 1, y: 1)])
+                     ])
+                   end
+
+      assert_raise ArgumentError,
+                   ~r/the series "S" of a scatter chart holds point entities, and no values/,
+                   fn ->
+                     services([], [Builder.series("S", [1, 2])])
+                   end
+
+      assert_raise ArgumentError, ~r/the series "S" of a scatter chart needs a point/, fn ->
+        services([], [Builder.series("S")])
+      end
+
+      assert_raise ArgumentError,
+                   ~r/the point "a" is in a series, and the series is its category/,
+                   fn ->
+                     services([], [
+                       Builder.series("S",
+                         elements: [Builder.point("a", x: 1, y: 1, color: "EU")]
+                       )
+                     ])
+                   end
+
+      assert_raise ArgumentError, ~r/two points have the name "a"/, fn ->
+        services([], [
+          Builder.series("S", elements: [Builder.point("a", x: 1, y: 1)]),
+          Builder.series("T", elements: [Builder.point("a", x: 2, y: 2)])
+        ])
+      end
+
+      assert_raise ArgumentError, ~r/so the series "S" of a bar chart takes neither/, fn ->
+        Builder.chart(:bar,
+          title: "Orders",
+          categories: ["a"],
+          elements: [Builder.series("S", [1], color: :accent)]
+        )
+      end
+    end
+  end
+
   describe "the errors" do
     test "a point of a bubble chart without a size" do
       assert_raise ArgumentError,

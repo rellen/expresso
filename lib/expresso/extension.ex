@@ -303,24 +303,6 @@ defmodule Expresso.Extension do
         ]
   }
 
-  @series %Spark.Dsl.Entity{
-    name: :series,
-    target: Expresso.Element.Series,
-    args: [:name, :values],
-    entities: [on: [@on]],
-    schema:
-      @overlay_schema ++
-        @class_schema ++
-        [
-          name: [type: :string, required: true, doc: "The name of the series."],
-          values: [
-            type: {:list, {:or, [:integer, :float]}},
-            required: true,
-            doc: "One number for each category of the chart, in the order of the categories."
-          ]
-        ]
-  }
-
   @number {:or, [:integer, :float]}
 
   @point %Spark.Dsl.Entity{
@@ -353,6 +335,34 @@ defmodule Expresso.Extension do
             type: @number,
             doc:
               "A number more than zero. The area of the mark grows in proportion to it. A bubble chart needs a size for each point."
+          ]
+        ]
+  }
+
+  @series %Spark.Dsl.Entity{
+    name: :series,
+    target: Expresso.Element.Series,
+    args: [:name, {:optional, :values}],
+    entities: [elements: [@point], on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          name: [type: :string, required: true, doc: "The name of the series."],
+          values: [
+            type: {:list, {:or, [:integer, :float]}},
+            doc:
+              "One number for each category of the chart, in the order of the categories. A series of a scatter plot holds point entities in place of values."
+          ],
+          symbol: [
+            type: {:in, Expresso.Element.Chart.Encoding.symbols()},
+            doc:
+              "The symbol of each point of a series of a scatter plot, such as :square. A point can replace it. The default is :circle."
+          ],
+          color: [
+            type: {:in, Expresso.Element.Chart.Encoding.roles()},
+            doc:
+              "The color of each point of a series of a scatter plot: a role of the theme, such as :chart_3 or :accent. A point can replace it. The default is the color of the place of the series, from :chart_1."
           ]
         ]
   }

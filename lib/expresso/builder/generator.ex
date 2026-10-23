@@ -134,7 +134,9 @@ defmodule Expresso.Builder.Generator do
 
   # The functions of one entity, with one arity for each count of the given
   # optional arguments. The keyword list and the next optional argument can
-  # have the same position, and a list in that position is the keyword list.
+  # have the same position. An empty list or a list that starts with a tuple
+  # in that position is the keyword list, so an optional argument can be a
+  # list of numbers, such as the values of a series.
   # Only the arity with each argument has documentation.
   defp functions(name, entity) do
     required = for arg <- entity.args, is_atom(arg), do: arg
@@ -167,7 +169,8 @@ defmodule Expresso.Builder.Generator do
         Enum.map(Enum.drop(names, length(required_vars)), &Macro.var(&1, __MODULE__))
 
     quote do
-      def unquote(name)(unquote_splicing(vars), opts) when is_list(opts) do
+      def unquote(name)(unquote_splicing(vars), opts)
+          when opts == [] or (is_list(opts) and is_tuple(hd(opts))) do
         Expresso.Builder.Generator.build(
           entity(unquote(name)),
           Enum.zip(unquote(names), unquote(vars)) ++ opts,

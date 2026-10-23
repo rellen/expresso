@@ -141,10 +141,21 @@ defmodule Expresso.Element.Chart do
   defp no_points(%__MODULE__{kind: kind}) when is_point(kind), do: :ok
 
   defp no_points(%__MODULE__{elements: elements, kind: kind}) do
-    if Enum.any?(elements, &is_struct(&1, Point)),
-      do:
-        {:error, "a point is a mark of a scatter plot, so a #{kind} chart takes no point entity"},
-      else: :ok
+    cond do
+      Enum.any?(
+        elements,
+        &(is_struct(&1, Point) or (is_struct(&1, Series) and &1.elements != []))
+      ) ->
+        {:error, "a point is a mark of a scatter plot, so a #{kind} chart takes no point entity"}
+
+      series = Enum.find(elements, &(is_struct(&1, Series) and (&1.symbol || &1.color))) ->
+        {:error,
+         "the symbol and the color of a series are for a scatter plot, so the series " <>
+           "\"#{series.name}\" of a #{kind} chart takes neither"}
+
+      true ->
+        :ok
+    end
   end
 
   # The flows and the nodes of a sankey. The flows of the chart and of its
