@@ -94,7 +94,7 @@ steps.
 | Pull request | State |
 | --- | --- |
 | 1. This document | Done |
-| 2. The points and the axes | To do |
+| 2. The points and the axes | Done. `Expresso.Element.Chart.Scale` gives the ticks of a linear axis without zero and of a logarithmic axis. `Plot.step/1` is public, so the two kinds of axis use the same round steps. |
 | 3. The symbol, the color and the size | To do |
 | 4. The series of points | To do |
 | 5. The CSV file | To do |

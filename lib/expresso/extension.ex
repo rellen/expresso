@@ -321,6 +321,27 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @number {:or, [:integer, :float]}
+
+  @point %Spark.Dsl.Entity{
+    name: :point,
+    target: Expresso.Element.Point,
+    args: [:name],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        @class_schema ++
+        [
+          name: [
+            type: :string,
+            required: true,
+            doc: "The name of the point. It names the mark, and the table holds it."
+          ],
+          x: [type: @number, required: true, doc: "The value of the point on the x axis."],
+          y: [type: @number, required: true, doc: "The value of the point on the y axis."]
+        ]
+  }
+
   @flow %Spark.Dsl.Entity{
     name: :flow,
     target: Expresso.Element.Flow,
@@ -433,7 +454,7 @@ defmodule Expresso.Extension do
     target: Expresso.Element.Chart,
     args: [:kind],
     entities: [
-      elements: [@series],
+      elements: [@series, @point],
       timeline: [@frame],
       flows: [@flow, @node],
       on: [@on]
@@ -553,6 +574,36 @@ defmodule Expresso.Extension do
             default: :first,
             doc:
               "The frame that the overview and the menu of the slides show: :first, :last or the number of a frame."
+          ],
+          x_label: [
+            type: :string,
+            doc:
+              "The name of the x axis of a scatter plot, such as \"Cost per month\". It goes under the axis and into the header of the table."
+          ],
+          y_label: [
+            type: :string,
+            doc:
+              "The name of the y axis of a scatter plot, such as \"Requests per second\". It goes beside the axis and into the header of the table."
+          ],
+          x_range: [
+            type: {:tuple, [@number, @number]},
+            doc:
+              "The low end and the high end of the x axis of a scatter plot, such as {0, 100}. The default comes from the points."
+          ],
+          y_range: [
+            type: {:tuple, [@number, @number]},
+            doc:
+              "The low end and the high end of the y axis of a scatter plot, such as {0, 100}. The default comes from the points."
+          ],
+          x_scale: [
+            type: {:in, [:linear, :log]},
+            default: :linear,
+            doc: "The scale of the x axis of a scatter plot: :linear or :log."
+          ],
+          y_scale: [
+            type: {:in, [:linear, :log]},
+            default: :linear,
+            doc: "The scale of the y axis of a scatter plot: :linear or :log."
           ]
         ]
   }

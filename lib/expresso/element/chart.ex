@@ -1,7 +1,8 @@
 defmodule Expresso.Element.Chart do
   @moduledoc """
   An element that draws a bar chart, a line chart, a pie chart, a treemap, a
-  sunburst, a sankey, an alluvial chart, a parallel sets chart or a chord chart
+  sunburst, a sankey, an alluvial chart, a parallel sets chart, a chord chart
+  or a scatter plot
 
   The `chart` entity takes the kind as its first argument: `:bar`, `:line`,
   `:pie`, `:treemap`, `:sunburst`, `:sankey`, `:alluvial`, `:parallel_sets` or
@@ -43,6 +44,10 @@ defmodule Expresso.Element.Chart do
   each of its categories as one ribbon through the columns. A chord chart
   takes the flows of a sankey. `Expresso.Element.Chart.Chord` draws its
   nodes as arcs of a ring.
+
+  A scatter plot holds `point` entities in place of categories and series.
+  `Expresso.Element.Chart.Scatter` checks it and draws it, and
+  `docs/scatter-plots.md` gives its design.
   """
 
   use Expresso.Element
@@ -58,10 +63,11 @@ defmodule Expresso.Element.Chart do
     ParallelSets,
     Plot,
     Sankey,
+    Scatter,
     Table
   }
 
-  alias Expresso.Element.{Flow, Focus, Frame, Node, Series}
+  alias Expresso.Element.{Flow, Focus, Frame, Node, Point, Series}
   alias Expresso.Placement
   alias Shoddy.Result
 
@@ -89,6 +95,12 @@ defmodule Expresso.Element.Chart do
               :delimiter,
               :highlight,
               :shape,
+              :x_label,
+              :y_label,
+              :x_range,
+              :y_range,
+              x_scale: :linear,
+              y_scale: :linear,
               separator: "/",
               values: true,
               reveal: false,
@@ -118,7 +130,17 @@ defmodule Expresso.Element.Chart do
       do:
         {:error,
          "a frame of a chart holds series or flows. Put a node of a chart of flows in the chart, outside the frames"},
-      else: with({:ok, chart} <- flows(chart), do: data(chart))
+      else: with(:ok <- no_points(chart), {:ok, chart} <- flows(chart), do: data(chart))
+  end
+
+  # A point is a mark of a scatter plot, so only a scatter plot holds it.
+  defp no_points(%__MODULE__{kind: kind}) when is_point(kind), do: :ok
+
+  defp no_points(%__MODULE__{elements: elements, kind: kind}) do
+    if Enum.any?(elements, &is_struct(&1, Point)),
+      do:
+        {:error, "a point is a mark of a scatter plot, so a #{kind} chart takes no point entity"},
+      else: :ok
   end
 
   # The flows and the nodes of a sankey. The flows of the chart and of its
@@ -186,6 +208,8 @@ defmodule Expresso.Element.Chart do
          }}
     end
   end
+
+  defp data(%__MODULE__{kind: kind} = chart) when is_point(kind), do: Scatter.check(chart)
 
   defp data(%__MODULE__{src: src} = chart) when is_binary(src) do
     if chart.categories != nil or chart.elements != [] or chart.timeline != [],
@@ -377,7 +401,18 @@ defmodule Expresso.Element.Chart do
          {:error,
           "the thumbnail option names frame #{thumbnail}, and the chart has #{length(timeline)} frames"}
 
-  defp options(chart), do: {:ok, chart}
+  defp options(%__MODULE__{kind: kind} = chart) do
+    case Enum.find([:x_label, :y_label, :x_range, :y_range], &(Map.fetch!(chart, &1) != nil)) ||
+           Enum.find([:x_scale, :y_scale], &(Map.fetch!(chart, &1) != :linear)) do
+      nil ->
+        {:ok, chart}
+
+      option ->
+        {:error,
+         "the #{option} option gives an axis of a scatter plot, so a #{kind} chart takes no " <>
+           "#{option} option"}
+    end
+  end
 
   # The checks of each frame after the first. Each one holds the series of the
   # first frame, with the same names in the same order, and only the series
@@ -883,6 +918,8 @@ defmodule Expresso.Element.Chart do
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
+  def get_assigns(%__MODULE__{kind: kind} = chart) when is_point(kind), do: Scatter.assigns(chart)
+
   def get_assigns(%__MODULE__{} = chart) do
     series =
       chart.elements
@@ -896,11 +933,6 @@ defmodule Expresso.Element.Chart do
           overlay: Expresso.Overlay.Render.attributes(series) ++ series_key(chart, color)
         }
       end)
-
-    width =
-      if chart.width,
-        do: [{"style", "--chart-width: #{Expresso.Element.viewport_unit(chart.width)}"}],
-        else: []
 
     %{
       kind: chart.kind,
@@ -922,9 +954,21 @@ defmodule Expresso.Element.Chart do
       thumbnail: chart.thumbnail,
       node_settings: Map.new(chart.flows, &{&1.name, &1}),
       keys: Enum.any?(chart.focus, &(&1.keys != [])),
-      overlay: Expresso.Overlay.Render.attributes(chart) ++ width
+      overlay: Expresso.Overlay.Render.attributes(chart) ++ width(chart)
     }
   end
+
+  @doc """
+  Return the `style` attribute of the `width` option of a chart, as a list of
+  attributes
+
+  A chart without the option returns an empty list.
+  """
+  @spec width(t()) :: [{String.t(), String.t()}]
+  def width(%__MODULE__{width: nil}), do: []
+
+  def width(%__MODULE__{width: width}),
+    do: [{"style", "--chart-width: #{Expresso.Element.viewport_unit(width)}"}]
 
   @doc """
   Return the `data-keys` attribute of a mark of a category
@@ -1074,9 +1118,10 @@ defmodule Expresso.Element.Chart do
   defp table(assigns) do
     assigns
     |> rows()
-    |> Map.put(:caption, Table.caption(assigns.title, assigns.value_label))
+    |> Map.put(:caption, Table.caption(assigns.title, assigns[:value_label]))
   end
 
+  defp rows(%{kind: kind} = assigns) when is_point(kind), do: Scatter.table(assigns)
   defp rows(%{kind: :parallel_sets} = assigns), do: ParallelSets.table(assigns)
   defp rows(%{kind: kind} = assigns) when is_flow(kind), do: Sankey.table(assigns)
 
@@ -1106,6 +1151,7 @@ defmodule Expresso.Element.Chart do
   end
 
   # The kinds of a chart. Each one writes the content of the SVG.
+  defp plot(%{kind: kind} = assigns) when is_point(kind), do: Scatter.render(assigns)
   defp plot(%{kind: :parallel_sets} = assigns), do: ParallelSets.render(assigns)
   defp plot(%{kind: :chord} = assigns), do: Chord.render(assigns)
   defp plot(%{kind: kind} = assigns) when is_flow(kind), do: Sankey.render(assigns)
@@ -1120,6 +1166,7 @@ defmodule Expresso.Element.Chart do
   # the function from a value to its coordinate, and the legend. A pie has no
   # axis.
   defp layout(%{kind: :pie} = assigns), do: assigns
+  defp layout(%{kind: kind} = assigns) when is_point(kind), do: Scatter.layout(assigns)
   defp layout(%{kind: :sunburst} = assigns), do: assigns
 
   # A sankey fills the SVG. The label of the frame takes a row at the top.

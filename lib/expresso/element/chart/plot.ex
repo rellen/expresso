@@ -40,7 +40,19 @@ defmodule Expresso.Element.Chart.Plot do
     end
   end
 
-  defp step(rough) do
+  @doc """
+  Return a round step between two ticks of an axis, from a rough step
+
+  The step is 1, 2, 2.5 or 5 times a power of ten, and it is the smallest of
+  these that is not less than the rough step.
+
+      iex> Expresso.Element.Chart.Plot.step(7)
+      10.0
+      iex> Expresso.Element.Chart.Plot.step(0.3)
+      0.5
+  """
+  @spec step(number()) :: float()
+  def step(rough) do
     power = :math.pow(10, Float.floor(:math.log10(rough)))
 
     factor =
