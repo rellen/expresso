@@ -37,6 +37,7 @@ defmodule Expresso.ElementPagesTest do
     File.cp!("examples/animations/chime.ogg", Path.join(root, "chime.ogg"))
     File.cp!("examples/animations/visitors.csv", Path.join(root, "visitors.csv"))
     File.cp!("test/fixtures/tree.csv", Path.join(root, "team.csv"))
+    File.cp!("test/fixtures/scatter.csv", Path.join(root, "services.csv"))
     File.cp!("test/fixtures/graphviz/flow.dot", Path.join(root, "system.dot"))
     File.cp!("test/fixtures/d2/flow.d2", Path.join(root, "system.d2"))
     File.cp!("test/fixtures/mermaid/flowchart.mmd", Path.join(root, "system.mmd"))

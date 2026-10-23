@@ -77,6 +77,11 @@ defmodule Expresso.Element.Chart do
   # The colors of a palette for the series, so the most series of a chart.
   @colors 8
 
+  # The options of a scatter plot with no default, which the other kinds
+  # refuse.
+  @scatter_options [:x_label, :y_label, :x_range, :y_range, :symbol_label, :color_label] ++
+                     [:size_label, :opacity, :label, :x, :y, :symbol, :color, :size]
+
   # The box of the chart in the units of the SVG.
   @width 800
   @height 450
@@ -103,6 +108,12 @@ defmodule Expresso.Element.Chart do
               :color_label,
               :size_label,
               :opacity,
+              :label,
+              :x,
+              :y,
+              :symbol,
+              :color,
+              :size,
               x_scale: :linear,
               y_scale: :linear,
               separator: "/",
@@ -224,7 +235,8 @@ defmodule Expresso.Element.Chart do
     end
   end
 
-  defp data(%__MODULE__{kind: kind} = chart) when is_point(kind), do: Scatter.check(chart)
+  defp data(%__MODULE__{kind: kind} = chart) when is_point(kind),
+    do: with(:ok <- delimiter_option(chart.delimiter), do: Scatter.check(chart))
 
   defp data(%__MODULE__{src: src} = chart) when is_binary(src) do
     if chart.categories != nil or chart.elements != [] or chart.timeline != [],
@@ -277,6 +289,10 @@ defmodule Expresso.Element.Chart do
   renders the deck again after a change to the file.
   """
   @spec build(t()) :: {:ok, t()} | {:error, String.t()}
+  def build(%__MODULE__{src: src, kind: kind} = chart) when is_binary(src) and is_point(kind) do
+    with {:ok, text} <- read(src), do: Scatter.build(chart, text, delimiter(chart))
+  end
+
   def build(%__MODULE__{src: src, frames: nil} = chart) when is_binary(src) do
     with {:ok, text} <- read(src),
          {:ok, categories, series} <- Csv.table(text, src, reader(chart)) do
@@ -417,19 +433,7 @@ defmodule Expresso.Element.Chart do
           "the thumbnail option names frame #{thumbnail}, and the chart has #{length(timeline)} frames"}
 
   defp options(%__MODULE__{kind: kind} = chart) do
-    case Enum.find(
-           [
-             :x_label,
-             :y_label,
-             :x_range,
-             :y_range,
-             :symbol_label,
-             :color_label,
-             :size_label,
-             :opacity
-           ],
-           &(Map.fetch!(chart, &1) != nil)
-         ) ||
+    case Enum.find(@scatter_options, &(Map.fetch!(chart, &1) != nil)) ||
            Enum.find([:x_scale, :y_scale], &(Map.fetch!(chart, &1) != :linear)) do
       nil ->
         {:ok, chart}

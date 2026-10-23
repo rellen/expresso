@@ -26,7 +26,8 @@ defmodule Expresso.Element.Chart.Scatter do
 
   alias Expresso.Element.Chart
   alias Expresso.Element.Chart.{Encoding, Motion, Plot, Scale}
-  alias Expresso.Element.Chart.Scatter.Legend
+  alias Expresso.Element.Chart.Csv
+  alias Expresso.Element.Chart.Scatter.{Data, Legend}
   alias Expresso.Element.{Point, Series}
 
   # The box of the chart in the units of the SVG.
@@ -53,11 +54,33 @@ defmodule Expresso.Element.Chart.Scatter do
     shape: "only a voronoi chart takes it",
     sort: "a scatter plot has no bars",
     count: "a scatter plot shows no numbers that count",
-    src: "the points come from point entities",
     frames: "the points come from point entities",
     highlight: "the marks show no focus",
     whole_first: "the marks show no focus"
   ]
+
+  # The options that name a column of the CSV file.
+  @columns [:label, :x, :y, :symbol, :color, :size]
+
+  @doc """
+  Read the points of a scatter plot from the text of its CSV file, and check
+  them
+
+  `Expresso.Element.Chart.build/1` reads the file and calls this function.
+  `Expresso.Element.Chart.Scatter.Data` gives the rules of the columns. The
+  check of the points runs without the options of the file, and the chart
+  keeps them.
+  """
+  @spec build(Chart.t(), String.t(), String.t()) :: {:ok, Chart.t()} | {:error, String.t()}
+  def build(%Chart{src: src} = chart, text, delimiter) do
+    columns = Enum.map(@columns, &{&1, Map.fetch!(chart, &1)})
+
+    with {:ok, rows} <- Csv.rows(text, src, delimiter: delimiter),
+         {:ok, points} <- Data.points(rows, src, columns),
+         file = [:src, :delimiter | @columns],
+         {:ok, checked} <- check(struct(chart, [elements: points] ++ Enum.map(file, &{&1, nil}))),
+         do: {:ok, struct(checked, Map.take(chart, file))}
+  end
 
   @doc """
   Check the options and the points of a scatter plot, and put the points into
@@ -68,6 +91,14 @@ defmodule Expresso.Element.Chart.Scatter do
   category of the color goes into a group of such points.
   """
   @spec check(Chart.t()) :: {:ok, Chart.t()} | {:error, String.t()}
+  def check(%Chart{src: src, kind: kind} = chart) when is_binary(src) do
+    with :ok <- options(chart) do
+      if chart.elements == [],
+        do: {:ok, chart},
+        else: {:error, "a #{kind} chart takes the src option or points, and not both"}
+    end
+  end
+
   def check(%Chart{} = chart) do
     with :ok <- options(chart),
          {:ok, points} <- points(chart),
@@ -96,9 +127,26 @@ defmodule Expresso.Element.Chart.Scatter do
         {:error, "a #{kind} chart takes no reveal option, no dim option and no effect :grow"}
 
       true ->
-        :ok
+        file_options(chart)
     end
   end
+
+  # The options of the CSV file need the src option.
+  defp file_options(%Chart{src: nil} = chart) do
+    case Enum.find(@columns, &(Map.fetch!(chart, &1) != nil)) do
+      nil when chart.delimiter != nil ->
+        {:error,
+         "the delimiter option gives the character between two cells of a chart file, so it needs the src option"}
+
+      nil ->
+        :ok
+
+      column ->
+        {:error, "the #{column} option names a column of a CSV file, so it needs the src option"}
+    end
+  end
+
+  defp file_options(_chart), do: :ok
 
   defp points(%Chart{elements: [], kind: kind}),
     do: {:error, "a #{kind} chart needs a point"}

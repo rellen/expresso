@@ -28,7 +28,7 @@ end
 | `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels. A category of a chart of flows is a path of nodes. |
 | `category_label` | A string | The name of the categories, such as `"Year"`. See [the names of the axes](#the-names-of-the-axes). A chart with `src` takes the first heading of its file. |
 | `value_label` | A string | The name of the values, such as `"Widgets an hour"`. See [the names of the axes](#the-names-of-the-axes). |
-| `src` | The path of a CSV file or a TSV file | The categories and the series, in place of `categories` and `series`. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. |
+| `src` | The path of a CSV file or a TSV file | The categories and the series, in place of `categories` and `series`, or the points of a scatter plot. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. |
 | `delimiter` | One character, such as `";"` | The character between two cells of the `src` file. The default is a tab for a file that ends in `.tsv`, and a comma for each other file. Requires `src`. |
 | `values` | `true` or `false` | Show the value of each bar. The default is `true`. |
 | `reveal` | `true` or `false` | Show each series at its own step. A chart of flows has its own steps, which [reveal](#reveal) gives. The default is `false`. A pie takes no `reveal`. |
@@ -43,6 +43,7 @@ end
 | `sort` | `true` or `false` | Put the categories of a bar chart in order of their totals, from the largest, in each frame. A bar chart without frames, and each copy in the handout view and on paper, also uses this order. The default is `false`. |
 | `count` | `true` or `false` | Count each number from the value of one frame to the value of the next. The default is `false`, and the numbers fade. |
 | `thumbnail` | `:first`, `:last` or the number of a frame | The frame that the overview and the menu of the slides show. The default is `:first`. |
+| `label`, `x`, `y`, `symbol`, `color`, `size` | A string | The heading of a column of the `src` file of a scatter plot. See [the points of a CSV file](#the-points-of-a-csv-file). |
 | `x_label`, `y_label` | A string | The name of the x axis or of the y axis of a scatter plot. See [a scatter plot](#a-scatter-plot). |
 | `x_range`, `y_range` | Two numbers, such as `{0, 100}` | The low end and the high end of an axis of a scatter plot. The default comes from the points. |
 | `x_scale`, `y_scale` | `:linear` or `:log` | The scale of an axis of a scatter plot. The default is `:linear`. |
@@ -644,6 +645,48 @@ series of each point.
 
 A chart holds points or series of points, and not both.
 
+### The points of a CSV file
+
+The `src` option gives a CSV file with one row for each point. The first row holds the
+headings, and the options `label`, `x`, `y`, `symbol`, `color` and `size` name the column of
+each value. So a deck can show different columns of one file:
+
+```csv
+service,cost,load,region,users
+api,1200,840,EU,"30,000"
+web,400,2100,US,"120,000"
+jobs,900,150,EU,"2,000"
+```
+
+```elixir
+slide "services" do
+  chart :scatter do
+    title "Cost and load of each service"
+    src "services.csv"
+    x "cost"
+    y "load"
+    symbol "region"
+    color "region"
+    size "users"
+    x_label "Cost per month (USD)"
+    y_label "Requests per second"
+  end
+end
+```
+
+| Option | The column | The default |
+| --- | --- | --- |
+| `label` | The name of each point | The first column |
+| `x` | The x value, a number | `"x"` |
+| `y` | The y value, a number | `"y"` |
+| `symbol` | A category of the symbol | No symbol |
+| `color` | A category of the color | No color |
+| `size` | The size, a number more than zero | No size |
+
+An empty cell of the symbol or of the color gives the point no category. A number can have a
+comma between each group of three digits, as for the other kinds. The `delimiter` option and
+the rules of [the CSV file](#the-csv-file) apply.
+
 The table for a screen reader has one row for each point, with its name, its x value and
 its y value. The headers of the columns are `x_label` and `y_label`, or `x` and `y`. A chart
 with categories or sizes has a column for the category and a column for the size.
@@ -758,9 +801,11 @@ The compiler gives an error for these:
 - a `point` in a chart that is not a scatter plot, and `x_label`, `y_label`, `x_range`,
   `y_range`, `x_scale` or `y_scale` on such a chart;
 - a scatter plot with no point, with two points of one name, or with an
-  option of the other kinds, such as `categories`, `src`, `reveal` or frames;
+  option of the other kinds, such as `categories`, `reveal` or frames;
 - a point without `x` or `y`, a range with its low end at or above its high end, a value
   outside its range, and a value or a range of zero or less on a logarithmic axis;
+- a scatter plot with `src` and points, a column option such as `x` without `src`, a column
+  that the file does not have, and a cell of `x`, `y` or `size` that is not a number;
 - a scatter plot with points and series, a series with values or with no point, more than
   8 series, two series of one name, a point of a series with a category, and a `symbol` or a
   `color` on a series of the other kinds;
