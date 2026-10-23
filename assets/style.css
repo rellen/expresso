@@ -1042,8 +1042,8 @@ body[data-view="handout"] .tree-frames {
  * rule. The text of a change inside its column takes the color of the
  * background, and a role of the theme has its contrast with the background.
  * A dashed line joins the end of a column to the start of the next column,
- * and a zigzag in the color of the background marks the base of an axis that
- * does not hold zero.
+ * a span is a line with an arrow in `--muted`, and a zigzag in the color of
+ * the background marks the base of an axis that does not hold zero.
  */
 .chart-waterfall {
   --waterfall-total: var(--accent);
@@ -1080,6 +1080,20 @@ body[data-view="handout"] .tree-frames {
   stroke-width: 1.5px;
   stroke-dasharray: 4 3;
   vector-effect: non-scaling-stroke;
+}
+.chart-waterfall-span {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+.chart-span-value {
+  font-size: 16px;
+  fill: color-mix(
+    in srgb,
+    var(--text-dim) calc(var(--chart-dim) * 100%),
+    var(--text)
+  );
 }
 .chart-break {
   fill: none;

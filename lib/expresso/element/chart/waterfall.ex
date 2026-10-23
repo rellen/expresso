@@ -349,6 +349,7 @@ defmodule Expresso.Element.Chart.Waterfall do
     %{
       value_range: chart.value_range,
       totals: chart.totals,
+      spans: chart.spans,
       members: members,
       revealed: match?([%Series{columns: [_ | _]} | _], groups),
       frames: [%{label: nil, values: [values]}],
@@ -475,7 +476,7 @@ defmodule Expresso.Element.Chart.Waterfall do
   defp box(assigns, axis) do
     widest = axis.ticks |> Enum.map(&String.length(Plot.label(&1))) |> Enum.max()
     left = 24 + widest * 10 + if(assigns[:value_label], do: 32, else: 0)
-    top = if label?(assigns), do: 64, else: 28
+    top = if(label?(assigns), do: 64, else: 28) + if(assigns.spans, do: 44, else: 0)
     bottom = @height - 40 - if(assigns[:category_label], do: 30, else: 0)
     %{left: left, top: top, right: @width - 16, bottom: bottom}
   end
@@ -492,7 +493,11 @@ defmodule Expresso.Element.Chart.Waterfall do
   has `j`. `Expresso.Element.Chart.Motion` leaves out a channel that has the
   same value in each state.
   """
-  @spec scene(map()) :: %{marks: [map()], channels: [{String.t(), [number()]}]}
+  @spec scene(map()) :: %{
+          marks: [map()],
+          spans: [map()],
+          channels: [{String.t(), [number()]}]
+        }
   def scene(assigns) do
     count = length(assigns.categories)
 
@@ -532,8 +537,54 @@ defmodule Expresso.Element.Chart.Waterfall do
           if(i > 0, do: [{"j#{i}", mark.joins}], else: [])
       end) ++ Motion.flags(assigns.frames)
 
-    %{marks: marks, channels: channels}
+    spans = spans(assigns, marks)
+
+    span_channels =
+      Enum.flat_map(spans, fn span ->
+        [{"sy#{span.number}", span.ys}, {"sn#{span.number}", span.values}]
+      end)
+
+    %{marks: marks, spans: spans, channels: channels ++ span_channels}
   end
+
+  # The spans of `spans true`: one from each total to the next total with a
+  # change between them. A span has the sum of the changes between its two
+  # totals, and its line goes over the highest column between them in each
+  # state. It shows with the last column before the total at its end, so it
+  # shows when that total is complete.
+  defp spans(%{spans: false}, _marks), do: []
+
+  defp spans(assigns, marks) do
+    marks
+    |> Enum.filter(&(&1.type == :total))
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.filter(fn [from, to] -> to.index - from.index > 1 end)
+    |> Enum.with_index(1)
+    |> Enum.map(fn {[from, to], number} ->
+      between = Enum.slice(marks, from.index..to.index)
+
+      top =
+        between
+        |> Enum.flat_map(fn mark -> Enum.map(mark.places, &min(&1.v, label_top(mark, &1))) end)
+        |> Enum.min()
+
+      value = Plot.number(List.last(to.columns).total - List.last(from.columns).total)
+
+      %{
+        number: number,
+        from: from,
+        to: to,
+        group: between |> Enum.drop(1) |> Enum.map(& &1.group) |> Enum.max(),
+        values: Enum.map(to.columns, fn _state -> value end),
+        ys: Enum.map(to.columns, fn _state -> max(top - 22, assigns.box.top - 36) end)
+      }
+    end)
+  end
+
+  # The top of the labels over a column.
+  defp label_top(%{type: :total}, place), do: place.v - 26
+  defp label_top(%{inside: true}, place), do: place.v - 26
+  defp label_top(_mark, place), do: place.v - 48
 
   # The corner at the top left of a column and its size. A column of the
   # change zero is a line of one unit.
@@ -612,6 +663,52 @@ defmodule Expresso.Element.Chart.Waterfall do
 
       for mark <- @scene.marks, mark.group == @group do
         c(&column/1, rest!: Map.put(assigns, :mark, mark))
+      end
+
+      for span <- @scene.spans, span.group == @group do
+        c(&span/1, rest!: Map.put(assigns, :span, span))
+      end
+    end
+  end
+
+  # A span: a line with an arrow from the middle of one total to the middle of
+  # the next total, with a short tick down at each end, and the sum of the
+  # changes between them over its middle.
+  defp span(assigns) do
+    %{span: span} = assigns
+    from = hd(span.from.places)
+    to = hd(span.to.places)
+    x = from.u + from.w / 2
+    length = to.u + to.w / 2 - x
+    n = span.number
+
+    keys =
+      case {Chart.key(assigns, span.from.index), Chart.key(assigns, span.to.index)} do
+        {nil, nil} -> nil
+        {first, last} -> "#{first} #{last}"
+      end
+
+    assigns =
+      Map.merge(assigns, %{
+        style:
+          Motion.style([{"--chart-u", Plot.f(x)}, {"--chart-v", Motion.ref("sy#{n}", span.ys)}]),
+        d:
+          "M0 8V0H#{Plot.f(length)}V8M#{Plot.f(length - 6)} -4L#{Plot.f(length)} 0" <>
+            "L#{Plot.f(length - 6)} 4",
+        keys: keys,
+        value:
+          Motion.text_assigns(Enum.map(span.values, &signed/1), [], "sn#{n}",
+            x: Plot.f(length / 2),
+            y: -8,
+            class: "chart-span-value",
+            keys: keys
+          )
+      })
+
+    temple do
+      g class: "chart-mark", style: @style, data_keys: @keys do
+        path class: "chart-waterfall-span", d: @d, data_keys: @keys
+        c(&Motion.changing/1, rest!: @value)
       end
     end
   end

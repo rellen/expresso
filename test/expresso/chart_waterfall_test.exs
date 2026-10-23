@@ -251,6 +251,58 @@ defmodule Expresso.ChartWaterfallTest do
     assert texts(figure, ".chart-value") == ["50", "90"]
   end
 
+  describe "the spans" do
+    test "spans true draws an arrow from each total to the next, with the sum between" do
+      figure = figure(cash(spans: true))
+
+      assert count(figure, "path.chart-waterfall-span") == 2
+      assert texts(figure, ".chart-span-value") == ["+70", "-20"]
+    end
+
+    test "a span leaves out two totals with no change between them" do
+      figure = figure(cash([spans: true], [50, :total, 10, :total], ~w(a b c d)))
+      assert texts(figure, ".chart-span-value") == ["+10"]
+    end
+
+    test "a span shows with the last change before the total at its end" do
+      [_base | changes] =
+        cash(spans: true, reveal: true)
+        |> figure()
+        |> LazyHTML.query("g.chart-series")
+        |> Enum.to_list()
+
+      assert Enum.map(changes, &texts(&1, ".chart-span-value")) == [[], ["+70"], [], [], ["-20"]]
+    end
+
+    test "a span goes over the labels of the highest column between its totals" do
+      figure = figure(cash(spans: true))
+
+      [first, second] =
+        for style <-
+              figure
+              |> LazyHTML.query("g:has(> path.chart-waterfall-span)")
+              |> LazyHTML.attribute("style") do
+          [v] = Regex.run(~r/--chart-v: ([-\d.]+);/, style, capture: :all_but_first)
+          elem(Float.parse(v), 0)
+        end
+
+      [_start, _sales, services, _middle, _grants, interest | _rest] = boxes(figure)
+      assert first < services.v - 26
+      assert second < interest.v - 26
+    end
+
+    test "the other kinds refuse spans" do
+      assert error(fn ->
+               Builder.chart(:bar,
+                 title: "Bar",
+                 categories: ~w(a),
+                 elements: [Builder.series("A", [1])],
+                 spans: true
+               )
+             end) =~ "the spans option is for a waterfall chart"
+    end
+  end
+
   describe "the steps" do
     # The text of the style block of the document of a chart.
     defp style(chart) do
