@@ -1046,13 +1046,7 @@ defmodule Expresso.Element.Chart do
   @spec moves?(t()) :: boolean()
   def moves?(%__MODULE__{timeline: [_, _ | _]}), do: true
 
-  def moves?(%__MODULE__{kind: kind, effect: effect, elements: groups}) when is_point(kind) do
-    effect == :grow or
-      Enum.any?(
-        groups,
-        &(&1.effect == :grow or Enum.any?(&1.elements, fn point -> point.effect == :grow end))
-      )
-  end
+  def moves?(%__MODULE__{kind: kind} = chart) when is_point(kind), do: Scatter.grow?(chart)
 
   def moves?(%__MODULE__{effect: effect, elements: elements}),
     do: effect == :grow or Enum.any?(elements, &(&1.effect == :grow))
@@ -1145,6 +1139,16 @@ defmodule Expresso.Element.Chart do
   # the layout of the frame `layer`, so the copy has the columns, the colors
   # and the scale of the present view. A copy has no morph key, because the
   # morph between two slides pairs a key only when it occurs one time.
+  defp copy(%{kind: kind} = assigns, frame, _layer) when is_point(kind) do
+    groups =
+      for group <- assigns.groups do
+        points = for point <- group.points, do: %{point | overlay: Layers.no_morph(point.overlay)}
+        %{group | points: points, overlay: Layers.no_morph(group.overlay)}
+      end
+
+    Map.merge(assigns, %{groups: groups, grow: false, frames: [frame]})
+  end
+
   defp copy(assigns, frame, layer) do
     series =
       for {series, values} <- Enum.zip(assigns.series, frame.values),

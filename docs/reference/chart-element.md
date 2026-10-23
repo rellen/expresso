@@ -690,6 +690,43 @@ end
 
 The rules of [the highlight option](#the-highlight-option) apply, such as `whole_first`.
 
+### The frames of a scatter plot
+
+Each `frame` holds the points of one point in time. Each mark moves to its new place and
+size from one frame to the next, so a point keeps its mark and does not fade:
+
+```elixir
+slide "income" do
+  chart :scatter do
+    title "Income and life expectancy"
+    x_label "Income per person (thousand USD)"
+    y_label "Life expectancy (years)"
+    size_label "People (million)"
+    labels :all
+
+    frame "2000" do
+      point "Japan", x: 30, y: 81, size: 127, color: "Asia"
+      point "Chile", x: 10, y: 77, size: 15, color: "Americas"
+    end
+
+    frame "2020" do
+      point "Japan", x: 40, y: 84, size: 126
+      point "Chile", x: 15, y: 80, size: 19
+    end
+  end
+end
+```
+
+Each frame after the first takes one step, as in [the frames](#the-frames). Each later frame
+holds the points of the first frame by name, in each order. A point keeps its symbol, its
+color and its series from the first frame, so a later frame can leave them out. The axes
+hold the values of each frame, and a label moves with its mark. A label keeps its place
+beside the mark from the first frame. With the `src` option, the `frames` option names the
+column of the frame of each row.
+
+The table for a screen reader has the x, the y and the size of each frame. Paper and the
+handout view show each frame as a small chart.
+
 ### The points of a CSV file
 
 The `src` option gives a CSV file with one row for each point. The first row holds the
@@ -727,6 +764,7 @@ end
 | `symbol` | A category of the symbol | No symbol |
 | `color` | A category of the color | No color |
 | `size` | The size, a number more than zero | No size |
+| `frames` | The label of the frame of each row. See [the frames of a scatter plot](#the-frames-of-a-scatter-plot). | No frames |
 
 An empty cell of the symbol or of the color gives the point no category. A number can have a
 comma between each group of three digits, as for the other kinds. The `delimiter` option and
@@ -846,10 +884,13 @@ The compiler gives an error for these:
 - a `point` in a chart that is not a scatter plot, and `x_label`, `y_label`, `x_range`,
   `y_range`, `x_scale` or `y_scale` on such a chart;
 - a scatter plot with no point, with two points of one name, or with an
-  option of the other kinds, such as `categories`, `sort` or frames;
+  option of the other kinds, such as `categories` or `sort`;
 - a point without `x` or `y`, a range with its low end at or above its high end, a value
   outside its range, and a value or a range of zero or less on a logarithmic axis;
 - a name in `labels` that no point has;
+- a scatter plot with frames and points of its own, or with `highlight`, and a later frame
+  without the points of the first frame, with a point of a different symbol, color or
+  series, or with an overlay option or a class;
 - a name in `highlight` that is not a point, a category or a series, and `highlight` with a
   point or a series that has an overlay option;
 - a scatter plot with `src` and points, a column option such as `x` without `src`, a column

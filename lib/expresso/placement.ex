@@ -89,7 +89,7 @@ defmodule Expresso.Placement do
     Table => [elements: [Row]],
     Diagram => [elements: [Part]],
     Chart => [elements: [Series, Point], timeline: [Frame], flows: [Flow, Node]],
-    Frame => [elements: [Series, Node], flows: [Flow]],
+    Frame => [elements: [Series, Node, Point], flows: [Flow]],
     Series => [elements: [Point]],
     Hierarchy => [elements: [Node], timeline: [Frame]],
     Node => [elements: [Node]],
