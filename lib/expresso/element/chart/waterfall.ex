@@ -25,8 +25,9 @@ defmodule Expresso.Element.Chart.Waterfall do
   A state is one set of values of the channels: one state for each group
   that shows, from group 0. A total of `totals :grow` holds in each state
   the running total of the changes that show, so it grows or shrinks at the
-  step of each change, and its value counts. `rules/1` writes the channels of
-  each state at its steps.
+  step of each change, and its value counts. A chart with frames has one
+  more state for each later frame, after the states of `reveal` in the first
+  frame. `rules/1` writes the channels of each state at its steps.
 
   Each column has its place in the channels of
   `Expresso.Element.Chart.Motion`: `--u<i>` and `--v<i>` for the corner at the
@@ -40,7 +41,7 @@ defmodule Expresso.Element.Chart.Waterfall do
 
   alias Expresso.Element.Chart
   alias Expresso.Element.Chart.{Csv, Motion, Plot, Scale}
-  alias Expresso.Element.Series
+  alias Expresso.Element.{Frame, Series}
 
   # The box of the chart in the units of the SVG.
   @width 800
@@ -88,6 +89,7 @@ defmodule Expresso.Element.Chart.Waterfall do
          :ok <- values(series, chart.categories),
          :ok <- totals(series, chart.categories),
          :ok <- range(chart, columns(series.values)),
+         :ok <- same_totals(chart, series),
          :ok <- revealed(chart, series) do
       {:ok, %Chart{chart | elements: groups(chart, series)}}
     end
@@ -99,6 +101,23 @@ defmodule Expresso.Element.Chart.Waterfall do
     do: %Chart{chart | elements: [%Series{group | columns: nil}]}
 
   defp whole(chart), do: chart
+
+  # Each frame of a chart with frames has its totals at the places of the
+  # totals of the first frame, so each column keeps its type.
+  defp same_totals(%Chart{timeline: [%Frame{elements: [first | _]} | _]}, %Series{} = series) do
+    if marks(first.values) == marks(series.values),
+      do: :ok,
+      else:
+        {:error,
+         "each frame of a waterfall chart has its totals at the places of the totals of " <>
+           "the first frame, so the series \"#{series.name}\" of a later frame marks the " <>
+           "same categories as totals"}
+  end
+
+  defp same_totals(_chart, _series), do: :ok
+
+  defp marks(values) when is_list(values), do: Enum.map(values, &is_number/1)
+  defp marks(_values), do: []
 
   # With `reveal`, each group takes its steps from the chart.
   defp revealed(%Chart{reveal: true}, %Series{} = series)
@@ -153,9 +172,6 @@ defmodule Expresso.Element.Chart.Waterfall do
 
     [0 | groups]
   end
-
-  defp options(%Chart{} = chart) when chart.frames != nil or chart.timeline != [],
-    do: {:error, "a waterfall chart takes no frames"}
 
   defp options(%Chart{totals: :complete, reveal: false}),
     do:
@@ -354,18 +370,28 @@ defmodule Expresso.Element.Chart.Waterfall do
       direction: chart.direction,
       members: members,
       revealed: match?([%Series{columns: [_ | _]} | _], groups),
-      frames: [%{label: nil, values: [values]}],
+      frames: frames(chart, values),
+      frame_thumbnail: chart.thumbnail,
       grow: grow?(chart)
     }
   end
+
+  # The values of each frame. The first frame holds the values of the series
+  # of the chart.
+  defp frames(%Chart{timeline: [_ | _] = timeline}, values) do
+    for {%Frame{label: label, elements: [series | _]}, index} <- Enum.with_index(timeline),
+        do: %{label: label, values: [if(index == 0, do: values, else: series.values)]}
+  end
+
+  defp frames(_chart, values), do: [%{label: nil, values: [values]}]
 
   @doc """
   Tell whether the columns of a waterfall chart move: with the steps of
   `reveal`, or with the effect `:grow`
   """
   @spec moves?(Chart.t()) :: boolean()
-  def moves?(%Chart{elements: groups} = chart),
-    do: match?([%Series{columns: [_ | _]} | _], groups) or grow?(chart)
+  def moves?(%Chart{elements: groups, timeline: timeline} = chart),
+    do: match?([%Series{columns: [_ | _]} | _], groups) or length(timeline) > 1 or grow?(chart)
 
   @doc """
   Return the steps that a waterfall chart takes before its first change: 1
@@ -380,18 +406,30 @@ defmodule Expresso.Element.Chart.Waterfall do
     do: effect == :grow or Enum.any?(groups, &(&1.effect == :grow))
 
   @doc """
-  Return the CSS rules of the states of a waterfall chart with `reveal`
+  Return the CSS rules of the states of a waterfall chart with `reveal` or
+  with frames
 
   The state of group `k` holds at the steps of group `k` at which group
-  `k + 1` does not show. The first state is the value of each channel in the
-  style attribute, so it needs no rule.
+  `k + 1` and the later frames do not show, and the state of a later frame
+  holds at the steps of that frame. The first state is the value of each
+  channel in the style attribute, so it needs no rule.
   """
   @spec rules(Chart.t()) :: [String.t()]
-  def rules(%Chart{el: el, elements: [%Series{columns: [_ | _]} | _] = groups} = chart)
-      when is_binary(el) do
-    assigns = chart |> Chart.get_assigns() |> layout()
-    steps = Enum.map(groups, &(&1.steps || []))
-    Motion.rules(assigns, el, Enum.zip_with(steps, tl(steps) ++ [[]], &(&1 -- &2)))
+  def rules(%Chart{el: el} = chart) when is_binary(el) do
+    frames = chart.timeline |> Enum.drop(1) |> Enum.map(&(&1.steps || []))
+
+    groups =
+      case chart.elements do
+        [%Series{columns: [_ | _]} | _] = groups -> Enum.map(groups, &(&1.steps || []))
+        _groups -> []
+      end
+
+    later = Enum.drop(groups, 1) ++ [List.flatten(frames)]
+    steps = Enum.zip_with(groups, later, &(&1 -- &2)) ++ frames
+
+    if steps == [],
+      do: [],
+      else: Motion.rules(chart |> Chart.get_assigns() |> layout(), el, steps)
   end
 
   def rules(%Chart{}), do: []
@@ -408,9 +446,10 @@ defmodule Expresso.Element.Chart.Waterfall do
   """
   @spec layout(map()) :: map()
   def layout(assigns) do
-    %{values: [values]} = hd(assigns.frames)
-    final = columns(values)
-    states = states(assigns, final)
+    [first | later] = Enum.map(assigns.frames, fn %{values: [values]} -> columns(values) end)
+    revealed = states(assigns, first)
+    states = revealed ++ later
+    finals = List.duplicate(first, length(revealed)) ++ later
     axis = axis(states, assigns.value_range)
     box = box(assigns, axis, states)
     count = length(assigns.categories)
@@ -428,8 +467,9 @@ defmodule Expresso.Element.Chart.Waterfall do
 
     Map.merge(assigns, %{
       states: states,
-      finals: Enum.map(states, fn _state -> final end),
-      thumbnail: length(states),
+      finals: finals,
+      labels: label_states(assigns.frames, length(revealed)),
+      thumbnail: thumbnail(assigns[:frame_thumbnail], length(revealed), length(later)),
       axis: axis,
       box: box,
       pos: pos,
@@ -437,6 +477,21 @@ defmodule Expresso.Element.Chart.Waterfall do
       band: band
     })
   end
+
+  # The label of the frame of each state: the first frame for each state of
+  # `reveal`, then each later frame.
+  defp label_states([first | later], count),
+    do: List.duplicate(%{label: first.label}, count) ++ Enum.map(later, &%{label: &1.label})
+
+  # The number of the state that the overview and the menu of the slides
+  # show, from 1: the last state of the frame of the `thumbnail` option. The
+  # first frame ends at the last state of `reveal`.
+  defp thumbnail(:last, revealed, later), do: revealed + later
+
+  defp thumbnail(frame, revealed, _later) when is_integer(frame) and frame > 1,
+    do: revealed + frame - 1
+
+  defp thumbnail(_first, revealed, _later), do: revealed
 
   # The columns of each state: one state for each group of `reveal`, from
   # group 0. A total of `totals :grow` holds the running total of the changes
@@ -573,7 +628,7 @@ defmodule Expresso.Element.Chart.Waterfall do
         ] ++
           if(mark.type != :total, do: [{"m#{i}", mark.changes}], else: []) ++
           if(i > 0, do: [{"j#{i}", mark.joins}], else: [])
-      end) ++ Motion.flags(assigns.frames)
+      end) ++ Motion.flags(assigns.states)
 
     spans = spans(assigns, marks)
 
@@ -587,7 +642,7 @@ defmodule Expresso.Element.Chart.Waterfall do
 
   # The spans of `spans true`: one from each total to the next total with a
   # change between them. A span has the sum of the changes between its two
-  # totals, and its line goes past the labels of the furthest column between
+  # totals in the frame of each state, and its line goes past the labels of the furthest column between
   # them in each state: over them in a vertical chart, and at their right in
   # a horizontal chart. It shows with the last column before the total at its
   # end, so it shows when that total is complete.
@@ -601,7 +656,6 @@ defmodule Expresso.Element.Chart.Waterfall do
     |> Enum.with_index(1)
     |> Enum.map(fn {[from, to], number} ->
       between = Enum.slice(marks, from.index..to.index)
-      value = Plot.number(List.last(to.columns).total - List.last(from.columns).total)
       line = span_line(assigns, between)
 
       %{
@@ -609,8 +663,11 @@ defmodule Expresso.Element.Chart.Waterfall do
         from: from,
         to: to,
         group: between |> Enum.drop(1) |> Enum.map(& &1.group) |> Enum.max(),
-        values: Enum.map(to.columns, fn _state -> value end),
-        ys: Enum.map(to.columns, fn _state -> line end)
+        values:
+          Enum.map(assigns.finals, fn final ->
+            Plot.number(Enum.at(final, to.index).total - Enum.at(final, from.index).total)
+          end),
+        ys: Enum.map(assigns.finals, fn _state -> line end)
       }
     end)
   end
@@ -735,7 +792,7 @@ defmodule Expresso.Element.Chart.Waterfall do
     assigns = Map.merge(assigns, %{scene: scene(assigns), cut: cut?(assigns)})
 
     temple do
-      c(&Motion.frame_label/1, rest!: assigns)
+      c(&frame_label/1, rest!: assigns)
       c(&axis/1, rest!: assigns)
       c(&titles/1, rest!: assigns)
 
@@ -752,6 +809,12 @@ defmodule Expresso.Element.Chart.Waterfall do
       end
     end
   end
+
+  # The label of the frame of each state, at the top of a chart with frames.
+  defp frame_label(%{frames: [_, _ | _]} = assigns),
+    do: Motion.frame_label(Map.put(assigns, :frames, assigns.labels))
+
+  defp frame_label(_assigns), do: Phoenix.HTML.raw("")
 
   # The connectors and the columns of one group. A connector shows with the
   # later of its two columns.
@@ -958,10 +1021,8 @@ defmodule Expresso.Element.Chart.Waterfall do
             count: true,
             anchor: anchor
           ),
-        change: if(mark.type != :total, do: signed(hd(mark.columns).change)),
-        change_style: change_style(assigns, mark, place),
-        change_anchor:
-          if(assigns.direction == :horizontal and not mark.inside, do: "start", else: "middle")
+        change: change_text(assigns, mark),
+        change_style: change_style(assigns, mark, place)
       })
 
     temple do
@@ -977,16 +1038,25 @@ defmodule Expresso.Element.Chart.Waterfall do
 
       if @change do
         g class: "chart-mark", style: @change_style, data_keys: @key do
-          text x: 0,
-               y: 0,
-               text_anchor: @change_anchor,
-               class: if(@mark.inside, do: "chart-waterfall-change", else: "chart-value"),
-               data_keys: @key do
-            @change
-          end
+          c(&Motion.changing/1, rest!: @change)
         end
       end
     end
+  end
+
+  # The text of the signed change in the frame of each state. A change of a
+  # chart with frames has one copy of its text for each state, and the copy
+  # of the state that shows has the opacity 1.
+  defp change_text(_assigns, %{type: :total}), do: nil
+
+  defp change_text(assigns, mark) do
+    anchor = if assigns.direction == :horizontal and not mark.inside, do: "start", else: "middle"
+
+    Motion.text_assigns(Enum.map(mark.columns, &signed(&1.change)), [], "",
+      anchor: anchor,
+      class: if(mark.inside, do: "chart-waterfall-change", else: "chart-value"),
+      keys: Chart.key(assigns, mark.index)
+    )
   end
 
   # The style of the label of the total or of the running total, and the
@@ -1155,14 +1225,31 @@ defmodule Expresso.Element.Chart.Waterfall do
   """
   @spec table(map()) :: %{headers: [String.t() | nil], rows: [[String.t()]]}
   def table(assigns) do
-    [values] = hd(assigns.frames).values
+    frames =
+      Enum.map(assigns.frames, fn %{values: [values]} = frame -> {frame, columns(values)} end)
 
     rows =
-      for {category, column} <- Enum.zip(assigns.categories, columns(values)) do
-        change = if column.change, do: signed(column.change), else: ""
-        [category, change, Plot.label(column.total)]
+      for {category, i} <- Enum.with_index(assigns.categories) do
+        cells =
+          Enum.flat_map(frames, fn {_frame, columns} ->
+            column = Enum.at(columns, i)
+            [if(column.change, do: signed(column.change), else: ""), Plot.label(column.total)]
+          end)
+
+        [category | cells]
       end
 
-    %{headers: [assigns.category_label, "Change", "Total"], rows: rows}
+    headers =
+      case frames do
+        [_one] ->
+          ["Change", "Total"]
+
+        _frames ->
+          for {frame, _columns} <- frames,
+              name <- ["Change", "Total"],
+              do: "#{name} #{frame.label}"
+      end
+
+    %{headers: [assigns.category_label | headers], rows: rows}
   end
 end

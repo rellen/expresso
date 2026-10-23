@@ -134,5 +134,5 @@ With `reveal true`, the chart takes these steps:
 | 5. The highlight | Done. The columns of the second pull request already had the `data-keys` of their categories, so the rules of the highlight of a chart dim the other columns with no new code. A browser test makes sure of the opacity of each column at each step. |
 | 6. The spans | Done. A span shows with the last column before the total at its end, at its final value, and it does not count. The text of a number that counts has no sign, so a span that counts would lose the sign of a positive sum, and a span of 0 at the first step tells nothing. |
 | 7. The direction | Done. The layout has the function `pos` from a value to its place on the value axis, and each function that places a mark has a clause for each direction. The right edge of a horizontal chart holds the labels at the ends of the bars and the spans. |
-| 8. The frames | Not started |
+| 8. The frames | Done. The states hold the states of `reveal` in the first frame, then one state for each later frame, so one list of rules moves the totals at the steps of the changes and the columns at the steps of the frames. The channels `--k<n>` of the texts that fade count states, not frames. Each later frame has its totals at the categories of the totals of the first frame. |
 | 9. The guide, the example decks and their GIFs | Not started |

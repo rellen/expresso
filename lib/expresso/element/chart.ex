@@ -1204,6 +1204,19 @@ defmodule Expresso.Element.Chart do
     Map.merge(assigns, %{groups: groups, grow: false, frames: [frame]})
   end
 
+  defp copy(%{kind: kind} = assigns, frame, _layer) when is_waterfall(kind) do
+    series =
+      for series <- assigns.series, do: %{series | overlay: Layers.no_morph(series.overlay)}
+
+    Map.merge(assigns, %{
+      series: series,
+      frames: [frame],
+      revealed: false,
+      grow: false,
+      frame_thumbnail: :first
+    })
+  end
+
   defp copy(assigns, frame, layer) do
     series =
       for {series, values} <- Enum.zip(assigns.series, frame.values),

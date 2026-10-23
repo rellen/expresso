@@ -68,11 +68,44 @@ defmodule Expresso.E2E.ChartWaterfallTest do
     end
   end
 
+  # The total "End" grows from 60 in 2024 to 70 in 2025 at step 2.
+  defmodule FramesDeck do
+    use Expresso
+
+    slide "cash" do
+      chart :waterfall do
+        title "Cash"
+        categories ["Start", "Sales", "Costs", "End"]
+
+        frame "2024" do
+          series "Cash", [50, 40, -30, :total]
+        end
+
+        frame "2025" do
+          series "Cash", [60, 50, -40, :total]
+        end
+      end
+    end
+  end
+
   # The fill opacity of each column of the present view, in the order of the
   # document.
   @opacities """
   Array.from(document.querySelectorAll(".screen .chart .chart-waterfall-bar"))
     .map((column) => getComputedStyle(column).fillOpacity).join(" ")
+  """
+
+  # The text of the total "End" of the frames deck, and its value from its
+  # height and the height and the text of the start.
+  @frame_end """
+  (() => {
+    const totals = document.querySelectorAll(".screen .chart > svg .chart-waterfall-total");
+    const labels = document.querySelectorAll(".screen .chart > svg .chart-value");
+    const height = (rect) => rect.getBoundingClientRect().height;
+    const start = Number(labels[0].textContent);
+    return labels[labels.length - 1].textContent + " " +
+      Math.round((height(totals[1]) / height(totals[0])) * start);
+  })()
   """
 
   # The text of the total "End" in the present view, and its height in the
@@ -125,5 +158,17 @@ defmodule Expresso.E2E.ChartWaterfallTest do
     wait_for(page, "(#{@opacities}) === '0.3 0.3 1 0.3'")
     press(page, "ArrowRight")
     wait_for(page, "(#{@opacities}) === '1 0.3 0.3 1'")
+  end
+
+  test "each frame moves the columns, and the totals count to the next frame", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(FramesDeck, tmp_dir))
+
+    # The total "End" is the second total, and the start is the first.
+    wait_for(page, "(#{@frame_end}) === '60 60'")
+    press(page, "ArrowRight")
+    wait_for(page, "(#{@frame_end}) === '70 70'")
   end
 end

@@ -1831,6 +1831,9 @@ the layout, the marks and the table to `Expresso.Element.Chart.Waterfall`.
   `Waterfall.rules/1` writes each state at the steps of its group, with
   `Expresso.Element.Chart.Motion.rules/3`. The value of a total counts as the `count` option
   of a chart with frames does.
+- With frames, the states are the states of `reveal` in the first frame, then one state
+  for each later frame. A text that changes, such as the signed change, has one copy for
+  each state, and the label of the frame has the label of the frame of each state.
 
 ### The table of a chart
 

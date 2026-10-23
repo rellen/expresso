@@ -960,6 +960,36 @@ These options work with the steps:
 
 The overview, the menu of the slides, the handout view and paper show the last step.
 
+### The frames of a waterfall chart
+
+A waterfall chart takes `frame` entities, as a bar chart does. Each frame holds the series,
+and each later frame takes one step. At the step of a frame, each column moves to its place
+in that frame, the labels of the totals and of the running totals count to their new
+values, and the text of each change and of each span fades to its new text:
+
+```elixir
+slide "years" do
+  chart :waterfall do
+    title "Cash"
+    categories ["Start", "Sales", "Costs", "End"]
+
+    frame "2024" do
+      series "Cash", [50, 40, -30, :total]
+    end
+
+    frame "2025" do
+      series "Cash", [60, 50, -40, :total]
+    end
+  end
+end
+```
+
+Each frame has its totals at the same categories as the first frame. With `reveal true`, the
+changes of the first frame show one step each, as [the steps](#the-steps-of-a-waterfall-chart)
+tell, and each later frame then takes one step. The `frames` option of a CSV file gives the
+frames, as for a bar chart. The `thumbnail` option names the frame that the overview shows,
+and paper and the handout view show each frame as a small chart.
+
 ### The highlight of a waterfall chart
 
 The `highlight` option takes the names of categories, and each group of names is in focus at
@@ -977,7 +1007,8 @@ slide "costs" do
 end
 ```
 
-A chart takes `highlight` or `reveal`, and not both.
+A chart takes `highlight` or `reveal`, and not both, and a chart with frames takes no
+`highlight`.
 
 ### A cut axis
 
@@ -1166,9 +1197,10 @@ The compiler gives an error for these:
   number;
 - `totals :complete` without `reveal`, a series of a waterfall chart with `reveal` and an
   `at` option or an `on` entity, and `totals`, `spans` or `direction` on the other kinds;
-- a waterfall chart with frames, `value_range` with its low end at or above its high end, a
-  column that goes past an end of `value_range`, and `value_range` or `:total` on the other
-  kinds.
+- `value_range` with its low end at or above its high end, a column that goes past an end of
+  `value_range`, and `value_range` or `:total` on the other kinds;
+- a later frame of a waterfall chart with a total at a category that is not a total in the
+  first frame.
 
 The compiler gives an error for a file that it cannot read or that is not UTF-8, for a
 quote with no closing quote, for text after a closing quote, and for a row with a cell that
