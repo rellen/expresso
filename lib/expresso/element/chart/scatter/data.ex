@@ -15,8 +15,11 @@ defmodule Expresso.Element.Chart.Scatter.Data do
   | `symbol` | A category of the symbol | No symbol |
   | `color` | A category of the color | No color |
   | `size` | The size, a number more than zero | No size |
+  | `frames` | The label of the frame of the row | No frames |
 
   An empty cell of the symbol or of the color gives the point no category.
+  With `frames`, each row is a point in one frame, and the function returns
+  each point with the label of its frame.
   """
 
   alias Expresso.Element.Chart.Csv
@@ -35,7 +38,7 @@ defmodule Expresso.Element.Chart.Scatter.Data do
       {"api", 1200, 840}
   """
   @spec points([{pos_integer(), [String.t()]}], String.t(), keyword()) ::
-          {:ok, [Point.t()]} | {:error, String.t()}
+          {:ok, [Point.t() | {String.t(), Point.t()}]} | {:error, String.t()}
   def points([{_line, headings} | data], src, columns) do
     headings = Enum.map(headings, &String.trim/1)
 
@@ -45,7 +48,8 @@ defmodule Expresso.Element.Chart.Scatter.Data do
       y: columns[:y] || "y",
       symbol: columns[:symbol],
       color: columns[:color],
-      size: columns[:size]
+      size: columns[:size],
+      frames: columns[:frames]
     ]
 
     with {:ok, places} <- places(named, headings, src) do
@@ -83,15 +87,16 @@ defmodule Expresso.Element.Chart.Scatter.Data do
     with {:ok, x} <- number(cell.(:x), :x, line, src),
          {:ok, y} <- number(cell.(:y), :y, line, src),
          {:ok, size} <- size(cell.(:size), line, src) do
-      {:ok,
-       %Point{
-         name: cell.(:label),
-         x: x,
-         y: y,
-         symbol: category(cell.(:symbol)),
-         color: category(cell.(:color)),
-         size: size
-       }}
+      point = %Point{
+        name: cell.(:label),
+        x: x,
+        y: y,
+        symbol: category(cell.(:symbol)),
+        color: category(cell.(:color)),
+        size: size
+      }
+
+      {:ok, if(places[:frames], do: {cell.(:frames), point}, else: point)}
     end
   end
 

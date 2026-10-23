@@ -28,7 +28,7 @@ defmodule Expresso.Element.Chart.Scatter do
   alias Expresso.Element.Chart.{Encoding, Motion, Plot, Scale}
   alias Expresso.Element.Chart.Csv
   alias Expresso.Element.Chart.Scatter.{Data, Labels, Legend}
-  alias Expresso.Element.{Focus, Point, Series}
+  alias Expresso.Element.{Focus, Frame, Point, Series}
 
   # The box of the chart in the units of the SVG.
   @width 800
@@ -53,12 +53,11 @@ defmodule Expresso.Element.Chart.Scatter do
     levels: "a scatter plot has no groups of categories",
     shape: "only a voronoi chart takes it",
     sort: "a scatter plot has no bars",
-    count: "a scatter plot shows no numbers that count",
-    frames: "the points come from point entities"
+    count: "a scatter plot shows no numbers that count"
   ]
 
   # The options that name a column of the CSV file.
-  @columns [:label, :x, :y, :symbol, :color, :size]
+  @columns [:label, :x, :y, :symbol, :color, :size, :frames]
 
   @doc """
   Read the points of a scatter plot from the text of its CSV file, and check
@@ -76,8 +75,19 @@ defmodule Expresso.Element.Chart.Scatter do
     with {:ok, rows} <- Csv.rows(text, src, delimiter: delimiter),
          {:ok, points} <- Data.points(rows, src, columns),
          file = [:src, :delimiter | @columns],
-         {:ok, checked} <- check(struct(chart, [elements: points] ++ Enum.map(file, &{&1, nil}))),
+         {:ok, checked} <-
+           check(struct(chart, data(points, chart.frames) ++ Enum.map(file, &{&1, nil}))),
          do: {:ok, struct(checked, Map.take(chart, file))}
+  end
+
+  # The points of a file, or the frames of a file with the frames option. A
+  # frame holds the rows with its label, in the order of its first row.
+  defp data(points, nil), do: [elements: points]
+
+  defp data(points, _frames) do
+    labels = points |> Enum.map(&elem(&1, 0)) |> Enum.uniq()
+    grouped = Enum.group_by(points, &elem(&1, 0), &elem(&1, 1))
+    [elements: [], timeline: Enum.map(labels, &%Frame{label: &1, elements: grouped[&1]})]
   end
 
   @doc """
@@ -97,6 +107,20 @@ defmodule Expresso.Element.Chart.Scatter do
     end
   end
 
+  def check(%Chart{timeline: [_ | _]} = chart) do
+    cond do
+      chart.elements != [] ->
+        {:error, "a chart with frames holds its points in each frame, and not in the chart"}
+
+      chart.highlight != nil ->
+        {:error,
+         "each frame of a chart takes a step, so a chart with frames takes no highlight option"}
+
+      true ->
+        frames(chart)
+    end
+  end
+
   def check(%Chart{} = chart) do
     with :ok <- options(chart),
          {:ok, points} <- points(chart),
@@ -106,6 +130,88 @@ defmodule Expresso.Element.Chart.Scatter do
          :ok <- encodings(chart, points),
          :ok <- labeled(chart, points),
          do: focus(%Chart{chart | elements: groups(chart, points)})
+  end
+
+  # The checks of a chart with frames. The first frame gives the groups and
+  # the categories, as a chart without frames. Each later frame holds the
+  # points of the first frame by name, with the same symbol, color and series,
+  # and its values pass the checks of the axes and of the size.
+  defp frames(%Chart{timeline: [%Frame{} = first | rest]} = chart) do
+    with {:ok, checked} <- check(%Chart{chart | timeline: [], elements: first.elements}) do
+      known =
+        for group <- checked.elements, point <- group.elements, into: %{} do
+          {point.name, {point, if(group.color, do: group.name)}}
+        end
+
+      rest
+      |> Enum.map(&frame(chart, &1, known))
+      |> Shoddy.Result.collect()
+      |> case do
+        {:ok, later} ->
+          first = %Frame{first | elements: checked.elements}
+          {:ok, %Chart{checked | timeline: [first | later]}}
+
+        error ->
+          error
+      end
+    end
+  end
+
+  defp frame(chart, %Frame{label: label, elements: elements} = frame, known) do
+    pairs = frame_points(elements)
+    points = Enum.map(pairs, &elem(&1, 0))
+    series = Enum.filter(elements, &is_struct(&1, Series))
+    names = known |> Map.keys() |> Enum.sort()
+
+    cond do
+      points |> Enum.map(& &1.name) |> Enum.sort() != names ->
+        {:error,
+         "the frame \"#{label}\" needs the points of the first frame, each one time: " <>
+           Enum.map_join(names, ", ", &inspect/1)}
+
+      Enum.any?(points ++ series, &(overlay?(&1) or &1.class != nil)) ->
+        {:error,
+         "the frame \"#{label}\" gives a point or a series an overlay option or a class. " <>
+           "Give them to the points and the series of the first frame."}
+
+      moved = Enum.find(pairs, &(not same_place?(&1, known))) ->
+        {:error,
+         "the point \"#{elem(moved, 0).name}\" of the frame \"#{label}\" has a different " <>
+           "symbol, color or series than in the first frame"}
+
+      true ->
+        with :ok <- axis(points, :x, chart.x_range, chart.x_scale),
+             :ok <- axis(points, :y, chart.y_range, chart.y_scale),
+             :ok <- encodings(chart, points),
+             do: {:ok, %Frame{frame | elements: points}}
+    end
+  end
+
+  # Each point of a frame with the name of its series, or `nil`.
+  defp frame_points(elements) do
+    Enum.flat_map(elements, fn
+      %Series{name: name, elements: points} -> Enum.map(points, &{&1, name})
+      %Point{} = point -> [{point, nil}]
+    end)
+  end
+
+  # A point of a later frame keeps its series, and a symbol or a color that
+  # it gives is the one of the first frame. A point of a series in the first
+  # frame has the symbol and the color of its series.
+  defp same_place?({point, series}, known) do
+    {first, first_series} = known[point.name]
+
+    series == first_series and point.symbol in [nil, first.symbol] and
+      point.color in [nil, first.color]
+  end
+
+  # True for a point or a series with a value in a field of
+  # `Expresso.Overlay.fields/0` that is not the default.
+  defp overlay?(element) do
+    Enum.any?(Expresso.Overlay.fields(), fn
+      {field, default} -> Map.fetch!(element, field) != default
+      field -> Map.fetch!(element, field) != nil
+    end)
   end
 
   # The groups of the highlight option. Each item of the option names points,
@@ -545,9 +651,9 @@ defmodule Expresso.Element.Chart.Scatter do
       opacity: chart.opacity,
       labels: chart.labels,
       keyed: keyed,
-      grow: Chart.moves?(chart),
+      grow: grow?(chart),
       largest: @largest[chart.kind],
-      frames: [%{label: nil, points: values(chart.elements)}],
+      frames: frames_values(chart),
       frame_label: chart.frame_label,
       thumbnail: chart.thumbnail,
       el: chart.el,
@@ -566,12 +672,37 @@ defmodule Expresso.Element.Chart.Scatter do
     end
   end
 
-  # The values of each point of a frame, in the order of their numbers.
-  defp values(groups) do
-    for %Series{elements: points} <- groups,
-        %Point{} = point <- points,
-        do: %{x: point.x, y: point.y, size: point.size}
+  @doc """
+  Tell whether a scatter plot has the effect `:grow` on the chart, on a group
+  or on a point
+  """
+  @spec grow?(Chart.t()) :: boolean()
+  def grow?(%Chart{effect: effect, elements: groups}) do
+    effect == :grow or
+      Enum.any?(
+        groups,
+        &(&1.effect == :grow or Enum.any?(&1.elements, fn point -> point.effect == :grow end))
+      )
   end
+
+  # The values of each point in each frame, in the order of the numbers of
+  # the points. A later frame holds its points by name.
+  defp frames_values(%Chart{elements: groups, timeline: [_ | _] = timeline}) do
+    names = for group <- groups, point <- group.elements, do: point.name
+
+    for %Frame{label: label, elements: points} <- timeline do
+      by_name = Map.new(Enum.flat_map(points, &points_of/1), &{&1.name, &1})
+      %{label: label, points: Enum.map(names, &values(by_name[&1]))}
+    end
+  end
+
+  defp frames_values(%Chart{elements: groups}),
+    do: [%{label: nil, points: groups |> Enum.flat_map(& &1.elements) |> Enum.map(&values/1)}]
+
+  defp points_of(%Series{elements: points}), do: points
+  defp points_of(%Point{} = point), do: [point]
+
+  defp values(%Point{} = point), do: %{x: point.x, y: point.y, size: point.size}
 
   @doc """
   Add the layout of a scatter plot to its assigns: the axes, the box of the
@@ -642,13 +773,14 @@ defmodule Expresso.Element.Chart.Scatter do
     channels =
       Enum.flat_map(marks, fn {index, mark} ->
         [{"x#{index}", mark.xs}, {"y#{index}", mark.ys}, {"r#{index}", mark.rs}]
-      end)
+      end) ++ Motion.flags(assigns.frames)
 
     %{marks: marks, channels: channels, labels: labels(assigns, marks)}
   end
 
-  # The places of the labels, from the marks of the first frame. A label
-  # moves with its mark in a later frame, and it keeps its place beside it.
+  # The places of the labels, from the marks of the first frame and the
+  # largest radius of each mark. A label moves with its mark in a later
+  # frame, and it keeps its place beside it.
   defp labels(%{labels: :none}, _marks), do: %{}
 
   defp labels(assigns, marks) do
@@ -656,7 +788,13 @@ defmodule Expresso.Element.Chart.Scatter do
         point <- group.points,
         assigns.labels == :all or point.name in assigns.labels,
         mark = marks[point.index] do
-      %{index: point.index, name: point.name, x: hd(mark.xs), y: hd(mark.ys), r: hd(mark.rs)}
+      %{
+        index: point.index,
+        name: point.name,
+        x: hd(mark.xs),
+        y: hd(mark.ys),
+        r: Enum.max(mark.rs)
+      }
     end
     |> Labels.place(assigns.box)
   end
@@ -852,49 +990,64 @@ defmodule Expresso.Element.Chart.Scatter do
   Return the headers and the rows of the table of a scatter plot
 
   The table has one row for each point, with its name, its x value and its y
-  value. A chart with series, with a category of the symbol or of the color,
-  or with sizes, has a column for each of them. A symbol or a color that is not a
-  category has no text.
+  value, and its size in a chart with sizes. A chart with frames has these
+  columns for each frame, with the label of the frame. A chart with series,
+  or with a category of the symbol or of the color, has a column for each of
+  them. A symbol or a color that is not a category has no text.
   """
   @spec table(map()) :: %{headers: [String.t() | nil], rows: [[String.t()]]}
   def table(assigns) do
     points =
       for group <- assigns.groups, point <- group.points, do: Map.put(point, :group, group.name)
 
-    [frame] = assigns.frames
-    columns = columns(assigns, frame)
+    sized = Enum.any?(hd(assigns.frames).points, &(&1.size != nil))
+    columns = columns(assigns)
 
     rows =
-      for {point, values} <- Enum.zip(points, frame.points) do
-        cells =
-          Enum.map(columns, fn {_shown, _header, cell} ->
-            cell.(%{point: point, values: values})
-          end)
+      for {point, index} <- Enum.with_index(points) do
+        values = Enum.flat_map(assigns.frames, &cells(Enum.at(&1.points, index), sized))
 
-        [point.name, Plot.label(values.x), Plot.label(values.y) | cells]
+        [point.name | values] ++ Enum.map(columns, fn {_header, cell} -> cell.(point) end)
       end
 
-    headers =
-      [nil, assigns.x_label || "x", assigns.y_label || "y"] ++ Enum.map(columns, &elem(&1, 1))
-
-    %{headers: headers, rows: rows}
+    %{
+      headers: [nil | value_headers(assigns, sized)] ++ Enum.map(columns, &elem(&1, 0)),
+      rows: rows
+    }
   end
 
-  # The columns of the table after the x and the y: a header and a function
+  # The cells of the values of a point in one frame.
+  defp cells(values, sized),
+    do:
+      [Plot.label(values.x), Plot.label(values.y)] ++
+        if(sized, do: [Plot.label(values.size)], else: [])
+
+  # The headers of the values of each frame: x, y and the size, with the
+  # label of the frame in a chart with frames.
+  defp value_headers(assigns, sized) do
+    names = [assigns.x_label || "x", assigns.y_label || "y"]
+    names = if sized, do: names ++ [assigns.size_label || "Size"], else: names
+
+    case assigns.frames do
+      [_one] -> names
+      frames -> for frame <- frames, name <- names, do: "#{name} #{frame.label}"
+    end
+  end
+
+  # The columns of the categories after the values: a header and a function
   # that writes the cell of a point.
-  defp columns(assigns, frame) do
+  defp columns(assigns) do
     same = same?(assigns)
 
     [
-      {assigns.series != [], assigns.color_label || "Series", & &1.point.group},
+      {assigns.series != [], assigns.color_label || "Series", & &1.group},
       {assigns.symbols != [] and not same, assigns.symbol_label || "Symbol",
-       &text(&1.point.symbol_value)},
+       &text(&1.symbol_value)},
       {assigns.colors != [], assigns.color_label || assigns.symbol_label || "Color",
-       &text(&1.point.color_value)},
-      {Enum.any?(frame.points, &(&1.size != nil)), assigns.size_label || "Size",
-       &Plot.label(&1.values.size)}
+       &text(&1.color_value)}
     ]
     |> Enum.filter(&elem(&1, 0))
+    |> Enum.map(fn {_shown, header, cell} -> {header, cell} end)
   end
 
   defp text(value) when is_binary(value), do: value

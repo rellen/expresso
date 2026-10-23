@@ -464,7 +464,7 @@ defmodule Expresso.Extension do
     name: :frame,
     target: Expresso.Element.Frame,
     args: [:label],
-    entities: [elements: [@series, @node], flows: [@flow]],
+    entities: [elements: [@series, @node, @point], flows: [@flow]],
     schema: [
       label: [
         type: :string,

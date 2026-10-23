@@ -186,12 +186,12 @@ defmodule Expresso.ChartScatterTest do
     test "the table has a column for the category and for the size" do
       figure = figure(regions(symbol_label: "Region", size_label: "Users"))
 
-      assert texts(figure, "table.chart-table thead th") == ["x", "y", "Region", "Users"]
+      assert texts(figure, "table.chart-table thead th") == ["x", "y", "Users", "Region"]
 
       rows =
         for row <- LazyHTML.query(figure, "table.chart-table tbody tr"), do: texts(row, "th, td")
 
-      assert hd(rows) == ["api", "1200", "840", "EU", "30000"]
+      assert hd(rows) == ["api", "1200", "840", "30000", "EU"]
     end
 
     test "a bubble chart draws the points with their sizes" do
@@ -392,6 +392,126 @@ defmodule Expresso.ChartScatterTest do
     end
   end
 
+  describe "the frames" do
+    defp years(opts \\ []) do
+      Builder.chart(
+        :scatter,
+        [
+          title: "Income and life",
+          labels: :all,
+          timeline: [
+            Builder.frame("2000",
+              elements: [
+                Builder.point("Japan", x: 30, y: 81, size: 127, color: "Asia"),
+                Builder.point("Chile", x: 10, y: 77, size: 15, color: "Americas")
+              ]
+            ),
+            Builder.frame("2020",
+              elements: [
+                Builder.point("Chile", x: 15, y: 80, size: 19),
+                Builder.point("Japan", x: 40, y: 84, size: 126)
+              ]
+            )
+          ]
+        ] ++ opts
+      )
+    end
+
+    test "each mark reads its place and its radius from the channels of its frames" do
+      html = years() |> one_slide() |> document()
+
+      [japan | _rest] = html |> screen("path.chart-point") |> LazyHTML.attribute("style")
+      assert japan =~ ~r/--chart-u: var\(--x1, [\d.]+\);/
+      assert japan =~ ~r/--chart-w: var\(--r1, [\d.]+\);/
+
+      [label | _rest] = html |> screen("text.chart-point-label") |> LazyHTML.attribute("style")
+      assert label =~ ~r/--chart-u: var\(--x1, [\d.]+\);/
+
+      rules = html |> LazyHTML.query("style") |> Enum.map_join(&LazyHTML.text/1)
+      assert rules =~ ~r/section\[data-step="2"\] \[data-el="s1-e1"\] \{ [^}]*--x1: [\d.]+;/
+
+      # The label of the frame changes at step 2.
+      assert rules =~ ~r/section\[data-step="2"\] \[data-el="s1-e1"\] \{ [^}]*--k2: 1;/
+      assert texts(html |> screen("figure.chart > svg"), ".chart-frame") == ["2000", "2020"]
+    end
+
+    test "the table holds the values of each frame, and paper shows each frame" do
+      html = years(x_label: "Income") |> one_slide() |> document()
+      [figure] = html |> screen("figure.chart") |> Enum.to_list()
+
+      assert texts(figure, "table.chart-table thead th") ==
+               [
+                 "Income 2000",
+                 "y 2000",
+                 "Size 2000",
+                 "Income 2020",
+                 "y 2020",
+                 "Size 2020",
+                 "Color"
+               ]
+
+      rows =
+        for row <- LazyHTML.query(figure, "table.chart-table tbody tr"), do: texts(row, "th, td")
+
+      assert hd(rows) == ["Japan", "30", "81", "127", "40", "84", "126", "Asia"]
+
+      assert texts(figure, ".chart-frames figcaption") == ["2000", "2020"]
+      assert count(figure, ".chart-frames path.chart-point") == 4
+    end
+
+    test "the errors of the frames" do
+      frame = fn label, points -> Builder.frame(label, elements: points) end
+
+      assert_raise ArgumentError, ~r/the frame "2020" needs the points of the first frame/, fn ->
+        services(
+          [
+            timeline: [
+              frame.("2000", [Builder.point("a", x: 1, y: 1)]),
+              frame.("2020", [Builder.point("b", x: 1, y: 1)])
+            ]
+          ],
+          []
+        )
+      end
+
+      assert_raise ArgumentError,
+                   ~r/the point "a" of the frame "2020" has a different symbol, color or series/,
+                   fn ->
+                     services(
+                       [
+                         timeline: [
+                           frame.("2000", [Builder.point("a", x: 1, y: 1, color: "EU")]),
+                           frame.("2020", [Builder.point("a", x: 1, y: 1, color: "US")])
+                         ]
+                       ],
+                       []
+                     )
+                   end
+
+      assert_raise ArgumentError,
+                   ~r/gives a point or a series an overlay option or a class/,
+                   fn ->
+                     services(
+                       [
+                         timeline: [
+                           frame.("2000", [Builder.point("a", x: 1, y: 1)]),
+                           frame.("2020", [Builder.point("a", x: 1, y: 1, at: 2)])
+                         ]
+                       ],
+                       []
+                     )
+                   end
+
+      assert_raise ArgumentError, ~r/holds its points in each frame, and not in the chart/, fn ->
+        services(timeline: [frame.("2000", [Builder.point("a", x: 1, y: 1)])])
+      end
+
+      assert_raise ArgumentError, ~r/so a chart with frames takes no highlight option/, fn ->
+        years(highlight: ["Japan"])
+      end
+    end
+  end
+
   describe "the labels" do
     test "labels :all gives each point a label that moves with its mark" do
       figure = figure(services(labels: :all))
@@ -476,6 +596,25 @@ defmodule Expresso.ChartScatterTest do
 
       assert count(figure, "path.chart-point") == 3
       assert texts(figure, ".chart-name") == ["EU", "US"]
+    end
+
+    test "the frames option names the column of the frame of each row", %{tmp_dir: tmp_dir} do
+      text = """
+      country,year,income,life
+      Japan,2000,30,81
+      Chile,2000,10,77
+      Japan,2020,40,84
+      Chile,2020,15,80
+      """
+
+      chart = from_file(tmp_dir, [x: "income", y: "life", frames: "year"], text)
+
+      assert Enum.map(chart.timeline, & &1.label) == ["2000", "2020"]
+
+      assert chart.timeline |> List.last() |> Map.fetch!(:elements) |> Enum.map(& &1.x) == [
+               40,
+               15
+             ]
     end
 
     test "a column that the file does not have", %{tmp_dir: tmp_dir} do
