@@ -3064,17 +3064,12 @@ The commands are:
 
 ## Open work
 
-1. The waterfall charts of `docs/waterfall-charts.md`: the chart kind `:waterfall`, which
-   shows how a start value changes through increases, decreases and totals. Issue #411 holds
-   the plan, and its decisions are settled. The work comes in a stack of nine pull requests,
-   and the document records the state of each one.
+There is no item at this time. Issue #397 to issue #407 propose features, and each one needs
+a decision before the work starts.
 
-Issue #397 to issue #407 propose features, and each one needs a decision before the work
-starts.
-
-The item before it, the scatter plots of `docs/scatter-plots.md`, added the chart kinds
-`:scatter` and `:bubble`. They show each item as one mark with an x position, a y position, a
-symbol, a color and a size. Issue #426 holds that plan.
+The item before it, the waterfall charts of `docs/waterfall-charts.md`, added the chart kind
+`:waterfall`. It shows how a start value changes through increases, decreases and totals.
+Issue #411 holds that plan.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on

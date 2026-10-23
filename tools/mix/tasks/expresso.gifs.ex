@@ -146,6 +146,9 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "scatter-services", deck: "scatter_services.exs", actions: ["j", "j"]},
     %{name: "scatter-trend", deck: "scatter_trend.exs", actions: ["j", "j"]},
     %{name: "scatter-frames", deck: "scatter_frames.exs", actions: ["j", "j"]},
+    %{name: "waterfall-cash", deck: "waterfall_cash.exs", actions: ["j", "j", "j", "j", "j"]},
+    %{name: "waterfall-budget", deck: "waterfall_budget.exs", actions: ["j"]},
+    %{name: "waterfall-years", deck: "waterfall_years.exs", actions: ["j"]},
     %{
       name: "chart-parallel-sets",
       deck: "chart_parallel_sets.exs",
