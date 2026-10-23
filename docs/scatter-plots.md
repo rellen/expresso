@@ -1,0 +1,106 @@
+# Scatter plots
+
+This document gives the design for the chart kinds `:scatter` and `:bubble`, and the record
+of their progress. A scatter plot shows each item as one mark, and the mark shows up to five
+values of the item: its x position, its y position, its symbol, its color and its size. The
+document records ten decisions, and each is settled. Issue #426 holds the same plan.
+
+## The problem
+
+A talk often compares many items on two or more measures, such as the cost and the speed of
+each service, or the income and the life expectancy of each country. A bar chart and a line
+chart put each value on a category, so they cannot show two numbers for one item. The author
+must draw the plot in another tool and import it as an image, and then the plot cannot take
+steps.
+
+## The constraints
+
+- The output stays one HTML file. The compiler calculates each place, and the presenter
+  script calculates no layout.
+- A scatter plot obeys the overlay contract: `at`, `on`, `effect`, `reveal`, `dim`, `class`
+  and `morph`. See `docs/overlays.md`.
+- The handout view and paper show each step that the present view can show.
+- A screen reader gets each point with each of its values.
+- The theme gives each color, so each theme and its dark variant work.
+
+## The encodings
+
+| Encoding | The data | The scale |
+| --- | --- | --- |
+| x position | A number | A linear axis from the data, or the `x_range` option. `x_scale :log` gives a logarithmic axis. |
+| y position | A number | A linear axis from the data, or the `y_range` option. `y_scale :log` gives a logarithmic axis. |
+| Symbol | A category, such as `"EU"` | A circle, a square, a triangle, a diamond, a cross and a star, in this order |
+| Color | A category, or a number | A category takes `--chart-1` to `--chart-8` of the theme. A number takes the scale of the `color_scale` option. |
+| Size | A number more than zero | The area of the mark grows in proportion to the number |
+
+## The decisions
+
+| Number | Question | Decision |
+| --- | --- | --- |
+| 1 | The name of the entity | Both: a `point` entity, and a `series` entity that groups points and gives them a default symbol and color. |
+| 2 | A trend line | `trend :linear`, one least-squares line for each group. |
+| 3 | A bubble chart | `:scatter` with `size`, and the kind `:bubble` too. `:bubble` needs a `size` for each point. |
+| 4 | Overlap | Each of the three: `opacity`, a seeded `jitter`, and the larger marks drawn first. |
+| 5 | A color from a number | An option for each scale: `color_scale :sequential` (the default), `:diverging`, or two roles of the theme. |
+| 6 | The code | A new family `:points` in `Expresso.Element.Chart.Kinds`, and a new module `Expresso.Element.Chart.Scatter`. `Expresso.Element.Chart` sends each function of a scatter plot to that module, so the code of the other kinds does not change. |
+| 7 | The marks | Each mark has its place in the channels of `Expresso.Element.Chart.Motion`, also in a chart with one frame. One code path then draws a chart without frames, a chart with frames and a chart with the effect `:grow`. |
+| 8 | The groups of the steps | The check puts the points into groups, and each group is a child of the chart. A `series` is one group. Without series, each color category is one group. Without series and color categories, `reveal true` gives each point its own group, and a chart without `reveal` has one group. |
+| 9 | A symbol and a color that are not a category | A point and a series take a symbol by its name, such as `:square`, and a color by its role, such as `:chart_3` or `:accent`. Such a mark is in no legend of the categories. |
+| 10 | The order of the marks | Inside a group, the larger marks come first in the SVG. The groups keep the order of the data, because a group holds the steps of its marks. |
+
+## The design
+
+- `point "api", x: 1200, y: 840, symbol: "EU", color: "EU", size: 30_000` gives one point.
+  The name is the label of the mark, and the `highlight` option uses it.
+- `Expresso.Element.Point` is the struct of a point. A point takes the overlay options, so a
+  point can show at its own step.
+- `Expresso.Element.Series` gets the keys `elements`, `symbol` and `color`. A series of a
+  scatter plot holds its points in `elements`, and a series of the other kinds keeps its
+  `values`.
+- `Expresso.Element.Chart.Scatter` checks the points, makes the groups, calculates the
+  scales, the legends, the labels and the trend lines, and draws the marks. It uses `ref/2`,
+  `grow/2`, `style/1` and `frame_label/1` of `Expresso.Element.Chart.Motion`.
+- A mark is a group with the class `chart-mark` at the origin of the SVG. The channels
+  `--x<n>` and `--y<n>` give its place, `--r<n>` its scale, and `--h<n>` the place of its
+  color on the scale of a number. A frame changes the channels at its steps, and the
+  registered properties of the theme move the mark.
+- Each mark has a `data-keys` attribute with the key of its point, of its color category, of
+  its symbol category and of its series. A group of the `highlight` option names these keys,
+  so the rules of the highlight of a chart dim the other marks.
+- A trend line is a line from 0 to 1 that a matrix moves to its two ends, as a segment of a
+  line chart. It shows at the steps of the last point of its group.
+- The table for a screen reader has one row for each point, with its name and each value.
+- `docs/reference/chart-element.md` gives the options. A how-to guide gives the tasks, with
+  example decks and their GIFs.
+
+## The stack
+
+1. This document.
+2. The kind `:scatter`, the `point` entity, the axes, `x_range`, `y_range`, `x_scale`,
+   `y_scale`, the table, and the errors of a point.
+3. The symbol, the color of a category, the size, the kind `:bubble`, the legends, `opacity`,
+   and the order of the marks.
+4. The `series` of points.
+5. The CSV file.
+6. The labels.
+7. The steps: `reveal`, `dim`, the effect `:grow` and `highlight`.
+8. The frames.
+9. The trend lines and `jitter`.
+10. The color from a number and `color_scale`.
+11. The guide, the example decks and their GIFs.
+
+## The progress
+
+| Pull request | State |
+| --- | --- |
+| 1. This document | Done |
+| 2. The points and the axes | To do |
+| 3. The symbol, the color and the size | To do |
+| 4. The series of points | To do |
+| 5. The CSV file | To do |
+| 6. The labels | To do |
+| 7. The steps | To do |
+| 8. The frames | To do |
+| 9. The trend lines and `jitter` | To do |
+| 10. The color from a number | To do |
+| 11. The guide, the example decks and their GIFs | To do |
