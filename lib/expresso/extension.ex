@@ -671,6 +671,16 @@ defmodule Expresso.Extension do
             doc:
               "The title of the legend of the sizes of a scatter plot, such as \"Users\", and the header of its column in the table."
           ],
+          trend: [
+            type: {:in, [:linear]},
+            doc:
+              "Draw the least-squares line of each group of a scatter plot: :linear. A series and a category of the color are groups. A line shows at the step of the last point of its group."
+          ],
+          jitter: [
+            type: {:custom, Expresso.Element.Chart.Encoding, :jitter, []},
+            doc:
+              "Move each mark of a scatter plot by at most this part of the range of each axis, such as 0.02, so marks with the same values do not hide each other. The move comes from the name of the point, so each render gives the same chart."
+          ],
           opacity: [
             type: {:custom, Expresso.Element.Chart.Encoding, :opacity, []},
             doc:

@@ -27,7 +27,7 @@ defmodule Expresso.Element.Chart.Scatter do
   alias Expresso.Element.Chart
   alias Expresso.Element.Chart.{Encoding, Motion, Plot, Scale}
   alias Expresso.Element.Chart.Csv
-  alias Expresso.Element.Chart.Scatter.{Data, Labels, Legend}
+  alias Expresso.Element.Chart.Scatter.{Data, Labels, Legend, Trend}
   alias Expresso.Element.{Focus, Frame, Point, Series}
 
   # The box of the chart in the units of the SVG.
@@ -615,6 +615,7 @@ defmodule Expresso.Element.Chart.Scatter do
               symbol_value: point.symbol,
               color_value: point.color,
               keys: if(keyed, do: keys[index]),
+              steps: point.steps,
               overlay: Expresso.Overlay.Render.attributes(point)
             }
           end)
@@ -622,6 +623,7 @@ defmodule Expresso.Element.Chart.Scatter do
         {%{
            name: group.name,
            category: category(group),
+           steps: group.steps,
            class: group.class,
            overlay: Expresso.Overlay.Render.attributes(group),
            points: points
@@ -651,6 +653,8 @@ defmodule Expresso.Element.Chart.Scatter do
       opacity: chart.opacity,
       labels: chart.labels,
       keyed: keyed,
+      jitter: chart.jitter,
+      trends: trends(chart, keyed),
       grow: grow?(chart),
       largest: @largest[chart.kind],
       frames: frames_values(chart),
@@ -670,6 +674,67 @@ defmodule Expresso.Element.Chart.Scatter do
       nil -> nil
       point -> point.color
     end
+  end
+
+  # The groups of the trend lines: each series, or each category of the
+  # color, or each point of a chart without them. Each trend has the numbers
+  # of its points, its color, its keys for the highlight option, and the
+  # steps of the point that shows last, so the line shows with its last
+  # point.
+  defp trends(%Chart{trend: nil}, _keyed), do: []
+
+  defp trends(%Chart{elements: groups}, keyed) do
+    numbered =
+      groups
+      |> Enum.flat_map(fn group -> Enum.map(group.elements, &{group, &1}) end)
+      |> Enum.with_index(1)
+
+    sets = trend_sets(groups, numbered)
+
+    for {{key, color, members}, number} <- Enum.with_index(sets, 1) do
+      %{
+        number: number,
+        color: color,
+        keys: if(key && keyed, do: key),
+        indexes: Enum.map(members, &elem(&1, 1)),
+        steps: last_steps(members)
+      }
+    end
+  end
+
+  # The members of each trend line, with the key and the color of the line:
+  # each series, else each category of the color, else each point.
+  defp trend_sets(groups, numbered) do
+    colors = numbered |> Enum.map(fn {{_group, point}, _index} -> point.color end)
+
+    cond do
+      Enum.any?(groups, &(&1.color != nil)) ->
+        for {group, place} <- Enum.with_index(groups, 1),
+            do: {"g#{place}", Encoding.role(group.color), members(numbered, &(&1 == group), nil)}
+
+      Enum.any?(colors, &is_binary/1) ->
+        for {category, n} <- Enum.with_index(Encoding.categories(colors), 1),
+            do: {"c#{n}", "var(--chart-#{n})", members(numbered, nil, category)}
+
+      true ->
+        [{nil, "var(--muted)", numbered}]
+    end
+  end
+
+  # The numbered points of a group, or of a category of the color.
+  defp members(numbered, group?, nil),
+    do: Enum.filter(numbered, fn {{group, _point}, _index} -> group?.(group) end)
+
+  defp members(numbered, nil, category),
+    do: Enum.filter(numbered, fn {{_group, point}, _index} -> point.color == category end)
+
+  # The steps of the point of a trend that shows last: the steps of the point,
+  # or of its group. A trend of points that show at each step has no steps.
+  defp last_steps(members) do
+    members
+    |> Enum.map(fn {{group, point}, _index} -> point.steps || group.steps end)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.max_by(&hd/1, fn -> nil end)
   end
 
   @doc """
@@ -753,29 +818,85 @@ defmodule Expresso.Element.Chart.Scatter do
   @spec scene(map()) :: %{
           marks: %{pos_integer() => map()},
           channels: [{String.t(), [number()]}],
-          labels: %{pos_integer() => map()}
+          labels: %{pos_integer() => map()},
+          trends: [map()]
         }
   def scene(assigns) do
-    count = assigns.frames |> hd() |> Map.fetch!(:points) |> length()
+    names =
+      for group <- assigns.groups, point <- group.points, into: %{}, do: {point.index, point.name}
 
     marks =
-      Map.new(1..count//1, fn index ->
+      Map.new(names, fn {index, name} ->
         points = Enum.map(assigns.frames, &Enum.at(&1.points, index - 1))
+        dx = Trend.jitter(name, :x, assigns.jitter)
+        dy = Trend.jitter(name, :y, assigns.jitter)
 
         {index,
          %{
-           xs: Enum.map(points, &assigns.x.(&1.x)),
-           ys: Enum.map(points, &assigns.y.(&1.y)),
+           xs: Enum.map(points, &place_x(assigns, Scale.fraction(assigns.x_axis, &1.x) + dx)),
+           ys: Enum.map(points, &place_y(assigns, Scale.fraction(assigns.y_axis, &1.y) + dy)),
            rs: Enum.map(points, &radius(assigns, &1.size))
          }}
       end)
 
+    trends = trend_places(assigns)
+
     channels =
       Enum.flat_map(marks, fn {index, mark} ->
         [{"x#{index}", mark.xs}, {"y#{index}", mark.ys}, {"r#{index}", mark.rs}]
-      end) ++ Motion.flags(assigns.frames)
+      end) ++
+        Enum.flat_map(trends, fn trend ->
+          n = trend.number
+          [{"tu#{n}", trend.us}, {"tv#{n}", trend.vs}, {"tw#{n}", trend.ws}, {"th#{n}", trend.hs}]
+        end) ++ Motion.flags(assigns.frames)
 
-    %{marks: marks, channels: channels, labels: labels(assigns, marks)}
+    %{marks: marks, channels: channels, labels: labels(assigns, marks), trends: trends}
+  end
+
+  # The coordinate of a fraction of an axis. A mark that the jitter moves
+  # past an end of the axis stays at the end.
+  defp place_x(%{box: box}, fraction),
+    do: box.left + min(max(fraction, 0), 1) * (box.right - box.left)
+
+  defp place_y(%{box: box}, fraction),
+    do: box.bottom - min(max(fraction, 0), 1) * (box.bottom - box.top)
+
+  # The trend line of each group in each frame: the place of its start in
+  # `us` and `vs`, and the distance to its end in `ws` and `hs`. A frame in
+  # which the group gives no line has a line of length 0 at the middle of the
+  # plot. A group with no line in its first frame has no trend line.
+  defp trend_places(%{trends: trends} = assigns) do
+    for trend <- trends,
+        ends = Enum.map(assigns.frames, &trend_ends(assigns, trend, &1)),
+        hd(ends) != nil do
+      ends = Enum.map(ends, &(&1 || {{0.5, 0.5}, {0.5, 0.5}}))
+      starts = Enum.map(ends, fn {{x, y}, _end} -> {place_x(assigns, x), place_y(assigns, y)} end)
+
+      stops =
+        Enum.map(ends, fn {_start, {x, y}} -> {place_x(assigns, x), place_y(assigns, y)} end)
+
+      Map.merge(trend, %{
+        us: Enum.map(starts, &elem(&1, 0)),
+        vs: Enum.map(starts, &elem(&1, 1)),
+        ws: Enum.zip_with(stops, starts, &(elem(&1, 0) - elem(&2, 0))),
+        hs: Enum.zip_with(stops, starts, &(elem(&1, 1) - elem(&2, 1)))
+      })
+    end
+  end
+
+  defp trend_ends(assigns, trend, frame) do
+    places =
+      for index <- trend.indexes do
+        values = Enum.at(frame.points, index - 1)
+        {Scale.fraction(assigns.x_axis, values.x), Scale.fraction(assigns.y_axis, values.y)}
+      end
+
+    xs = Enum.map(places, &elem(&1, 0))
+
+    case Trend.fit(places) do
+      nil -> nil
+      line -> Trend.ends(line, Enum.min(xs), Enum.max(xs))
+    end
   end
 
   # The places of the labels, from the marks of the first frame and the
@@ -843,6 +964,55 @@ defmodule Expresso.Element.Chart.Scatter do
             c(&label/1, point: point, mark: @scene.marks[point.index], place: place)
           end
         end
+      end
+
+      if @scene.trends != [] do
+        g class: "chart-series chart-trends" do
+          for trend <- @scene.trends do
+            c(&trend/1, trend: trend)
+          end
+        end
+      end
+    end
+  end
+
+  # A trend line: a line from 0 to 1 that a matrix moves to its two ends, as
+  # a segment of a line chart. A trend with steps has a group with the steps
+  # around it.
+  defp trend(assigns) do
+    %{trend: trend} = assigns
+    n = trend.number
+
+    style =
+      Motion.style([
+        {"--chart-u", Motion.ref("tu#{n}", trend.us)},
+        {"--chart-v", Motion.ref("tv#{n}", trend.vs)},
+        {"--chart-w", Motion.ref("tw#{n}", trend.ws)},
+        {"--chart-h", Motion.ref("th#{n}", trend.hs)},
+        {"--series", trend.color}
+      ])
+
+    assigns = Map.put(assigns, :style, style)
+
+    temple do
+      if @trend.steps do
+        g data_on: Enum.join(@trend.steps, " ") do
+          line class: "chart-trend",
+               x1: 0,
+               y1: 0,
+               x2: 1,
+               y2: 0,
+               style: @style,
+               data_keys: @trend.keys
+        end
+      else
+        line class: "chart-trend",
+             x1: 0,
+             y1: 0,
+             x2: 1,
+             y2: 0,
+             style: @style,
+             data_keys: @trend.keys
       end
     end
   end

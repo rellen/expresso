@@ -1051,6 +1051,32 @@ body[data-view="handout"] .tree-frames {
     var(--text)
   );
 }
+/*
+ * A trend line of a scatter plot: a line from 0 to 1 that a matrix moves to
+ * its two ends, as a segment of a line chart. The four channels move it from
+ * one frame to the next.
+ */
+.chart-trend {
+  fill: none;
+  stroke: var(--series);
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  transform: matrix(
+    var(--chart-w),
+    var(--chart-h),
+    0,
+    1,
+    var(--chart-u),
+    var(--chart-v)
+  );
+  transition:
+    --chart-u var(--dur) var(--ease),
+    --chart-v var(--dur) var(--ease),
+    --chart-w var(--dur) var(--ease),
+    --chart-h var(--dur) var(--ease),
+    --chart-dim var(--dur) var(--ease);
+}
 .chart-size {
   fill: none;
   stroke: var(--muted);
