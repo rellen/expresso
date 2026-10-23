@@ -8,6 +8,11 @@
 # version of the input, which must agree with `D2_VERSION` in
 # `.claude/hooks/session-start.sh`. `docs/development/graph-tools.md` gives the
 # details.
+#
+# Each download has a limit of time and a number of attempts, so a mirror that
+# does not answer fails the step in minutes. A run of a pull request once
+# stopped in `apt-get update` for more than two hours. The job also has its own
+# `timeout-minutes`.
 
 name: Set up the graph tools
 description: Install Graphviz with apt-get, and D2 from its release on GitHub.
@@ -22,14 +27,18 @@ runs:
   steps:
     - name: Install Graphviz
       shell: bash
-      run: sudo apt-get update -qq && sudo apt-get install -y -qq graphviz
+      run: |
+        apt_options=(-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30)
+        sudo timeout 300 apt-get "${apt_options[@]}" update -qq
+        sudo timeout 300 apt-get "${apt_options[@]}" install -y -qq graphviz
     - name: Install D2
       shell: bash
       env:
         D2_VERSION: ${{ inputs.d2-version }}
       run: |
         tmp_dir="$(mktemp -d)"
-        curl -sSfL -o "${tmp_dir}/d2.tar.gz" \
+        curl -sSfL --retry 3 --retry-all-errors --connect-timeout 20 --max-time 300 \
+          -o "${tmp_dir}/d2.tar.gz" \
           "https://github.com/terrastruct/d2/releases/download/v${D2_VERSION}/d2-v${D2_VERSION}-linux-amd64.tar.gz"
         tar -xzf "${tmp_dir}/d2.tar.gz" -C "${tmp_dir}"
         mkdir -p "${HOME}/d2"

@@ -119,6 +119,18 @@ necessary. The first `mix dialyzer` builds a PLT of approximately 570 modules, a
 operation takes approximately two minutes. The PLT stays in `_build`, so each
 `mix dialyzer` after the first takes a few seconds. Dialyzer reports no error at this time.
 
+## The time limits
+
+Each job of `.github/workflows/check.yml` has `timeout-minutes`, so a job that hangs fails in
+minutes. Without a limit, GitHub stops a job after six hours. On 2026-10-23, the job `gifs` of
+pull request #467 stopped in `apt-get update` of `.github/actions/setup-graph-tools` for more
+than two hours. With a warm cache, each job takes less than four minutes. The limits leave
+room for a cold cache, which builds the PLT of Dialyzer and compiles Zig.
+
+Each download of `setup-graph-tools` also has a limit of time and three attempts: `apt-get`
+runs in `timeout 300`, and `curl` has `--max-time 300`. The download of Zig already has its
+own limits in `.github/actions/setup-zig/install.sh`.
+
 ## Zig in the workflow
 
 The jobs `lint`, `test`, `e2e`, `dependency`, `gifs` and `binary` get Zig from
