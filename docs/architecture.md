@@ -1816,7 +1816,9 @@ the layout, the marks and the table to `Expresso.Element.Chart.Waterfall`.
   two times.
 - A column is a `rect` of one unit. Its channels `u`, `v`, `w` and `h` of
   `Expresso.Element.Chart.Motion` give its place and its size, so the column can move at
-  each end, also in a chart with one state.
+  each end, also in a chart with one state. The function `pos` of the layout gives the place
+  of a value on the value axis, and the functions that place a mark have a clause for each
+  `direction`, so a horizontal chart uses the same channels.
 - The axis holds zero, or it has the ends of `value_range`. An axis without zero has a
   break mark at its base and at the base of each total.
 - With `reveal true`, the check puts the columns into groups. The start and the totals of

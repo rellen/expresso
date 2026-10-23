@@ -132,6 +132,7 @@ defmodule Expresso.Element.Chart do
               :value_range,
               totals: :grow,
               spans: false,
+              direction: :vertical,
               labels: :none,
               x_scale: :linear,
               y_scale: :linear,
@@ -456,7 +457,8 @@ defmodule Expresso.Element.Chart do
 
   defp options(%__MODULE__{kind: kind} = chart) when not is_waterfall(kind) do
     case Enum.find(@waterfall_options, &(Map.fetch!(chart, &1) != nil)) ||
-           if(chart.totals != :grow, do: :totals) || if(chart.spans, do: :spans) do
+           if(chart.totals != :grow, do: :totals) || if(chart.spans, do: :spans) ||
+           if(chart.direction != :vertical, do: :direction) do
       nil ->
         scatter_options(chart)
 

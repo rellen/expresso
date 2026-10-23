@@ -251,6 +251,82 @@ defmodule Expresso.ChartWaterfallTest do
     assert texts(figure, ".chart-value") == ["50", "90"]
   end
 
+  describe "the direction :horizontal" do
+    test "a bar starts at the running total before it, and its length is its change" do
+      [start, sales, services, middle, _grants, interest, costs, last] =
+        boxes(figure(cash(direction: :horizontal)))
+
+      left = start.u
+
+      # The start and each total stand on zero at the left edge of the plot.
+      assert_in_delta middle.u, left, 0.2
+      assert_in_delta last.u, left, 0.2
+
+      # A change starts at the end of the bar before it.
+      assert_in_delta sales.u, start.u + start.w, 0.2
+      assert_in_delta services.u, sales.u + sales.w, 0.2
+      assert_in_delta middle.u + middle.w, services.u + services.w, 0.2
+
+      # A decrease ends at the running total after it.
+      assert_in_delta costs.u + costs.w, interest.u + interest.w, 0.2
+      assert_in_delta last.u + last.w, costs.u, 0.2
+
+      # The length of a bar is in proportion to its change, and the bars go
+      # down the plot with one thickness.
+      assert_in_delta sales.w / start.w, 40 / 50, 0.01
+      assert_in_delta costs.w / start.w, 50 / 50, 0.01
+      assert start.v < sales.v and sales.v < last.v
+      assert Enum.uniq(Enum.map([start, sales, last], & &1.h)) |> length() == 1
+    end
+
+    test "the categories go down the left side, and the ticks along the bottom" do
+      figure =
+        figure(cash(direction: :horizontal, category_label: "Quarter", value_label: "Cash"))
+
+      assert figure
+             |> LazyHTML.query(".chart-category")
+             |> LazyHTML.attribute("text-anchor")
+             |> Enum.uniq() == ["end"]
+
+      assert texts(figure, ".chart-axis-title") == ["Cash", "Quarter"]
+
+      # A connector goes down from one bar to the next bar.
+      assert figure
+             |> LazyHTML.query("line.chart-waterfall-line")
+             |> LazyHTML.attribute("x2")
+             |> Enum.uniq() == ["0"]
+    end
+
+    test "the labels go at the end of each bar" do
+      figure = figure(cash(direction: :horizontal))
+
+      assert texts(figure, ".chart-value") == ["50", "120", "+10", "100"]
+      assert texts(figure, ".chart-waterfall-change") == ~w(+40 +30 +20 -50)
+      assert texts(figure, ".chart-running") == ~w(90 120 130 150 100)
+    end
+
+    test "a span goes down at the right of the bars" do
+      figure = figure(cash(direction: :horizontal, spans: true))
+
+      [path | _rest] =
+        figure |> LazyHTML.query("path.chart-waterfall-span") |> LazyHTML.attribute("d")
+
+      assert path =~ ~r/^M-8 0H0V[\d.]+H-8/
+      assert texts(figure, ".chart-span-value") == ["+70", "-20"]
+    end
+
+    test "the other kinds refuse direction" do
+      assert error(fn ->
+               Builder.chart(:bar,
+                 title: "Bar",
+                 categories: ~w(a),
+                 elements: [Builder.series("A", [1])],
+                 direction: :horizontal
+               )
+             end) =~ "the direction option is for a waterfall chart"
+    end
+  end
+
   describe "the spans" do
     test "spans true draws an arrow from each total to the next, with the sum between" do
       figure = figure(cash(spans: true))
