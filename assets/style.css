@@ -1035,6 +1035,63 @@ body[data-view="handout"] .tree-frames {
     scale(var(--chart-w));
 }
 /*
+ * A waterfall chart. A column is a square of one unit, and a transform moves
+ * it to its place and gives it its size, as a box of a treemap. A total takes
+ * `--waterfall-total`, an increase `--waterfall-up` and a decrease
+ * `--waterfall-down`. A deck can change the three properties with its own
+ * rule. The text of a change inside its column takes the color of the
+ * background, and a role of the theme has its contrast with the background.
+ * A dashed line joins the end of a column to the start of the next column,
+ * and a zigzag in the color of the background marks the base of an axis that
+ * does not hold zero.
+ */
+.chart-waterfall {
+  --waterfall-total: var(--accent);
+  --waterfall-up: var(--success);
+  --waterfall-down: var(--danger);
+}
+.chart-waterfall-bar {
+  transform: translate(calc(var(--chart-u) * 1px), calc(var(--chart-v) * 1px))
+    scale(var(--chart-w), var(--chart-h));
+}
+.chart-waterfall-total {
+  fill: var(--waterfall-total);
+}
+.chart-waterfall-up {
+  fill: var(--waterfall-up);
+}
+.chart-waterfall-down {
+  fill: var(--waterfall-down);
+}
+.chart-waterfall-change {
+  font-size: 18px;
+  fill: var(--background);
+}
+.chart-running {
+  font-size: 16px;
+  fill: color-mix(
+    in srgb,
+    var(--muted-dim) calc(var(--chart-dim) * 100%),
+    var(--muted)
+  );
+}
+.chart-waterfall-line {
+  stroke: var(--muted);
+  stroke-width: 1.5px;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+}
+.chart-break {
+  fill: none;
+  stroke: var(--background);
+  stroke-width: 4px;
+  vector-effect: non-scaling-stroke;
+}
+.chart-axis .chart-break {
+  stroke: var(--muted);
+  stroke-width: 1.5px;
+}
+/*
  * The legends of a scatter plot: a symbol in the color of its category, and
  * a circle with no fill for each size.
  */

@@ -139,6 +139,7 @@ defmodule Expresso.Element.Chart.Motion do
   defp scene(%{kind: :line} = assigns), do: line_scene(assigns)
   defp scene(%{kind: :bar} = assigns), do: bar_scene(assigns)
   defp scene(%{kind: kind} = assigns) when is_point(kind), do: Chart.Scatter.scene(assigns)
+  defp scene(%{kind: kind} = assigns) when is_waterfall(kind), do: Chart.Waterfall.scene(assigns)
 
   # The value of series `s` in category `i` in each frame.
   defp values(frames, s, i), do: Enum.map(frames, &(&1.values |> Enum.at(s) |> Enum.at(i)))

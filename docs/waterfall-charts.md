@@ -66,7 +66,7 @@ With `reveal true`, the chart takes these steps:
 | 6 | The base of the value axis | The axis holds zero by default. The option `value_range` cuts the axis, such as `value_range {900, 1050}`. |
 | 7 | A cut axis | A break mark, a small zigzag, goes on the value axis and at the base of each total column. |
 | 8 | The value that the author expects | `{:total, 120}` in the series, and the cell `total 120` in a CSV file. The compiler refuses a total that does not agree with the sum. |
-| 9 | The agreement of a total | The compiler compares the two values as the labels write them, so `119.999999` agrees with `120`, and `119.5` does not. |
+| 9 | The agreement of a total | The compiler rounds the sum to the most decimals of the numbers of the series, so the sum of `0.1` and `0.2` agrees with `0.3`, and `119.5` does not agree with `120`. |
 | 10 | The code | A new family `:waterfall` in `Expresso.Element.Chart.Kinds`, and a new module `Expresso.Element.Chart.Waterfall`. `Expresso.Element.Chart` sends each function of a waterfall to that module, so the code of the other kinds does not change. |
 
 ## The design
@@ -128,7 +128,7 @@ With `reveal true`, the chart takes these steps:
 | Pull request | State |
 | --- | --- |
 | 1. This document | Done |
-| 2. The columns | Not started |
+| 2. The columns | Done. A column is a `rect` of one unit, as a box of a treemap, so its channels move each of its ends. The text of a change goes into its column when the column is 22 units high or more, else over the column. The other kinds refuse `value_range` and `:total`. |
 | 3. The CSV file | Not started |
 | 4. The steps | Not started |
 | 5. The highlight | Not started |
