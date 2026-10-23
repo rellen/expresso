@@ -17,9 +17,9 @@ defmodule Expresso.ChartKindsTest do
     )
   end
 
-  test "each kind has one of the four families" do
+  test "each kind has one of the five families" do
     for kind <- Kinds.all() do
-      assert Kinds.family(kind) in [:axis, :pie, :parts, :flows], inspect(kind)
+      assert Kinds.family(kind) in [:axis, :pie, :parts, :flows, :points], inspect(kind)
     end
   end
 
@@ -30,13 +30,16 @@ defmodule Expresso.ChartKindsTest do
       assert is_axis(kind) == (family == :axis), inspect(kind)
       assert is_part(kind) == (family == :parts), inspect(kind)
       assert is_flow(kind) == (family == :flows), inspect(kind)
+      assert is_point(kind) == (family == :points), inspect(kind)
       assert is_single(kind) == family in [:pie, :parts], inspect(kind)
       assert is_path(kind) == family in [:parts, :flows], inspect(kind)
     end
 
     assert Enum.filter(Kinds.all(), &is_round/1) == [:pie, :sunburst]
     assert Enum.filter(Kinds.all(), &is_titled/1) == [:alluvial, :parallel_sets]
-    refute is_axis(:funnel) or is_part(:funnel) or is_flow(:funnel) or is_single(:funnel)
+
+    refute is_axis(:funnel) or is_part(:funnel) or is_flow(:funnel) or is_point(:funnel) or
+             is_single(:funnel)
   end
 
   test "the DSL takes each kind of the table, and no other kind" do

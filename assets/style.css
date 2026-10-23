@@ -1021,6 +1021,19 @@ body[data-view="handout"] .tree-frames {
 .chart-mark {
   transform: translate(calc(var(--chart-u) * 1px), calc(var(--chart-v) * 1px));
 }
+/*
+ * A mark of a scatter plot. Its path is a symbol of radius 1 at the origin,
+ * and the transform moves it to `--chart-u` and `--chart-v` and scales it to
+ * the radius `--chart-w`. The edge keeps its width when the mark scales.
+ */
+.chart-point {
+  fill: var(--series);
+  stroke: var(--background);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+  transform: translate(calc(var(--chart-u) * 1px), calc(var(--chart-v) * 1px))
+    scale(var(--chart-w));
+}
 .chart-segment {
   transform: matrix(
     var(--chart-dx),

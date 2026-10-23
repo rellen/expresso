@@ -23,7 +23,7 @@ end
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst`, `:voronoi`, `:sankey`, `:alluvial`, `:parallel_sets` or `:chord` | The kind of the chart. |
+| The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst`, `:voronoi`, `:sankey`, `:alluvial`, `:parallel_sets`, `:chord` or `:scatter` | The kind of the chart. |
 | `title` | A string, required | The name of the chart for a screen reader, and the caption of its table. |
 | `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels. A category of a chart of flows is a path of nodes. |
 | `category_label` | A string | The name of the categories, such as `"Year"`. See [the names of the axes](#the-names-of-the-axes). A chart with `src` takes the first heading of its file. |
@@ -43,6 +43,9 @@ end
 | `sort` | `true` or `false` | Put the categories of a bar chart in order of their totals, from the largest, in each frame. A bar chart without frames, and each copy in the handout view and on paper, also uses this order. The default is `false`. |
 | `count` | `true` or `false` | Count each number from the value of one frame to the value of the next. The default is `false`, and the numbers fade. |
 | `thumbnail` | `:first`, `:last` or the number of a frame | The frame that the overview and the menu of the slides show. The default is `:first`. |
+| `x_label`, `y_label` | A string | The name of the x axis or of the y axis of a scatter plot. See [a scatter plot](#a-scatter-plot). |
+| `x_range`, `y_range` | Two numbers, such as `{0, 100}` | The low end and the high end of an axis of a scatter plot. The default comes from the points. |
+| `x_scale`, `y_scale` | `:linear` or `:log` | The scale of an axis of a scatter plot. The default is `:linear`. |
 | `width` | A CSS width, such as `"900px"` or `"70%"` | The width of the chart. A percentage is a part of the width of the slide. The default is `80%`. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
@@ -242,6 +245,7 @@ tick has a label in the same form.
 | `:alluvial` | Exactly one. Each category is a path with one name for each column. | As a sankey, and a title over each column. See [an alluvial chart](#an-alluvial-chart). |
 | `:parallel_sets` | Exactly one. Each category is a path with one name for each column, and it is one ribbon through the columns. | As an alluvial chart. See [a parallel sets chart](#a-parallel-sets-chart). |
 | `:chord` | Exactly one. Each category is a path of nodes, as in a sankey, and each link is a chord between two arcs of a ring. | The name and the total of each node, outside its arc. See [a chord chart](#a-chord-chart). |
+| `:scatter` | None. Each `point` entity is one mark, at its x value and its y value. | The ticks of the two axes. See [a scatter plot](#a-scatter-plot). |
 
 A bar chart and a line chart have one axis, which starts at zero and holds each value, with
 approximately five round ticks. The axis stays the same at each step, so it does not move
@@ -516,6 +520,44 @@ column show at their own step.
 With `reveal true`, a chord chart has one series for each source. The arcs and their labels
 show with the chart. Then the chords of each source show at their own step.
 
+## A scatter plot
+
+A scatter plot shows each item as one mark. A `point` entity gives the name of the item and
+its two values, and the chart takes no `categories` and no `series`:
+
+```elixir
+slide "services" do
+  chart :scatter do
+    title "Cost and load of each service"
+    x_label "Cost per month (USD)"
+    y_label "Requests per second"
+
+    point "api", x: 1200, y: 840
+    point "web", x: 400, y: 2100
+    point "jobs", x: 900, y: 150
+  end
+end
+```
+
+| Option of a point | Value | Effect |
+| --- | --- | --- |
+| The first argument | A string | The name of the point. The table for a screen reader holds it. |
+| `x` | A number, required | The value of the point on the x axis. |
+| `y` | A number, required | The value of the point on the y axis. |
+| `class` | CSS class names | See [the class option](class-option.md). |
+| `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
+
+A point also takes the overlay options, so a point can show at its own step.
+
+Each axis has approximately five round ticks and a grid line at each tick. The axis holds
+each value, and it does not need zero. `x_range` and `y_range` give the ends of an axis,
+such as `{0, 100}`, and the ticks are the round numbers between the ends. `x_scale :log`
+and `y_scale :log` give a logarithmic axis, with a tick at each power of ten. An axis of
+two powers of ten or less also has a tick at 2 and at 5 times each power.
+
+The table for a screen reader has one row for each point, with its name, its x value and
+its y value. The headers of the columns are `x_label` and `y_label`, or `x` and `y`.
+
 ## The CSV file
 
 The first row holds a heading for the categories, then the name of each series. Each other
@@ -622,7 +664,13 @@ The compiler gives an error for these:
   for a treemap or a sunburst, the message gives each part and each group, and for a
   chart of flows, each node;
 - `whole_first` without `highlight`;
-- a group of `highlight` at a step at which the chart does not show.
+- a group of `highlight` at a step at which the chart does not show;
+- a `point` in a chart that is not a scatter plot, and `x_label`, `y_label`, `x_range`,
+  `y_range`, `x_scale` or `y_scale` on such a chart;
+- a scatter plot with no point, with a `series`, with two points of one name, or with an
+  option of the other kinds, such as `categories`, `src`, `reveal` or frames;
+- a point without `x` or `y`, a range with its low end at or above its high end, a value
+  outside its range, and a value or a range of zero or less on a logarithmic axis.
 
 The compiler gives an error for a file that it cannot read or that is not UTF-8, for a
 quote with no closing quote, for text after a closing quote, and for a row with a cell that
@@ -647,12 +695,17 @@ heading, the name of the deck and the other elements. Thus a chart fits in a sma
 
 The document writes a `figure` element with the classes `chart` and `chart-bar`,
 `chart-line`, `chart-pie`, `chart-treemap`, `chart-sunburst`, `chart-sankey`,
-`chart-alluvial`, `chart-parallel-sets` or `chart-chord`. It holds an
+`chart-alluvial`, `chart-parallel-sets`, `chart-chord` or `chart-scatter`. It holds an
 `svg` element with `role="img"` and the `title` as its `aria-label`. It also holds a `table`
 with the class `chart-table` that holds each value. The style sheet hides the table from the
 eye and not from a screen reader. The table has a column header for each series and a row
 header for each category. Its top left corner is a `td` cell, because it names nothing. Each
 series is a `g` element with the class `chart-series`.
+
+A scatter plot holds its points in one `g` element with the class `chart-series`. Each mark
+is a `path` with the class `chart-point`. The path is a symbol of radius 1 at the origin,
+and its style moves it to its place and scales it to its radius, with the custom properties
+`--chart-u`, `--chart-v` and `--chart-w`.
 
 A chart of flows writes these elements:
 

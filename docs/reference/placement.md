@@ -16,7 +16,7 @@ element in a place that this page does not give.
 | `item` | `list` |
 | `table` | `row` |
 | `diagram` | `part` |
-| `chart` | `series`, `flow` and `node`, and `frame` in `timeline` |
+| `chart` | `series`, `point`, `flow` and `node`, and `frame` in `timeline` |
 | `frame` | `series` and `flow` |
 | `tree` | one `node` |
 | `node` in a `tree` | `node` |
