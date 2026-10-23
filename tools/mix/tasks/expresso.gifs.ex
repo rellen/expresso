@@ -143,6 +143,9 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "graph-d2", deck: "graph_d2.exs", actions: ["j", "j", "j"]},
     %{name: "mermaid-flowchart", deck: "mermaid_flowchart.exs", actions: ["j", "j", "j"]},
     %{name: "mermaid-sequence", deck: "mermaid_sequence.exs", actions: ["j", "j", "j"]},
+    %{name: "scatter-services", deck: "scatter_services.exs", actions: ["j", "j"]},
+    %{name: "scatter-trend", deck: "scatter_trend.exs", actions: ["j", "j"]},
+    %{name: "scatter-frames", deck: "scatter_frames.exs", actions: ["j", "j"]},
     %{
       name: "chart-parallel-sets",
       deck: "chart_parallel_sets.exs",

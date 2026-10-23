@@ -3,7 +3,8 @@
 This document gives the design for the chart kinds `:scatter` and `:bubble`, and the record
 of their progress. A scatter plot shows each item as one mark, and the mark shows up to five
 values of the item: its x position, its y position, its symbol, its color and its size. The
-document records ten decisions, and each is settled. Issue #426 holds the same plan.
+code contains this design. The document records ten decisions, and each is settled. Its last
+section, "The result", tells what changed during the work. Issue #426 holds the same plan.
 
 ## The problem
 
@@ -103,4 +104,43 @@ steps.
 | 8. The frames | Done. A later frame holds the points of the first frame by name. The marks and the labels read the channels of each frame, and `Expresso.Element.Chart.Motion.rules/3` writes the rules of the frames, as for the other kinds. The `frames` option names a column of the CSV file. A browser test makes sure that a mark moves to its place in the next frame. |
 | 9. The trend lines and `jitter` | Done. `Expresso.Element.Chart.Scatter.Trend` fits the line in the fractions of the axes, cuts it at the ends of the plot, and gives the move of the jitter from `:erlang.phash2/2`. A line has four channels, so it moves between frames. A chart without groups has one line, in `--muted`. A test makes sure that the ends of a line of points on a line are the marks of the first and the last point. |
 | 10. The color from a number | Done. A mark has the channel `--h<n>` with the place of its number on the scale, and `--series` mixes the colors of the scale with `color-mix()` from `--chart-h`. The registered property moves the color from one frame to the next. The legend draws ten cells of the scale. |
-| 11. The guide, the example decks and their GIFs | To do |
+| 11. The guide, the example decks and their GIFs | Done. `docs/how-to/show-points-in-a-scatter-plot.md` shows three example decks: the services of a team with reveal, two series with trend lines and highlight, and six countries that move through three frames of a CSV file. |
+
+## The result
+
+The eleven pull requests of the stack contain the plan. These parts are different from the
+plan, or the plan did not tell them:
+
+- **More modules.** `Expresso.Element.Chart.Scatter` checks and draws the chart, and five
+  modules hold the parts that the tests can call alone: `Encoding` for the symbols, the
+  colors, the radii and the scales of a color, `Scatter.Legend`, `Scatter.Labels`,
+  `Scatter.Data` for the CSV file, and `Scatter.Trend` for the trend lines and the jitter.
+  `Expresso.Element.Chart.Scale` gives the axes.
+- **The values of a series.** The values of a `series` are now an optional argument, so a
+  series can hold points. `Expresso.Builder` takes a list as the keyword list only when it
+  is empty or starts with a tuple. In the DSL, a series of points takes its options in its
+  block, such as `symbol :square`, because Spark takes a keyword list after the name as the
+  values.
+- **The color of a mark.** A mark takes its color as an inline `--series`, so a category, a
+  role and a scale of a color use one rule of the style sheet. A color from a number mixes
+  the colors of its scale with `color-mix()` from the registered property `--chart-h`, so the
+  color also moves between frames.
+- **The axes.** A linear axis has a margin of 5 percent of the range at each end, so a mark
+  is not on the edge of the plot.
+- **A point with an overlay.** A point with its own steps has a group around its mark and its
+  label, because the transitions of an element with `data-on` replace the transitions of the
+  channels.
+- **The labels in frames.** A label keeps its place beside its mark from the first frame, and
+  the place uses the largest radius of the mark in each frame.
+- **The trend lines.** A chart without series and without categories of the color has one
+  trend line for all its points, in `--muted`. The line fits the fractions of the axes, so it
+  is straight on a logarithmic axis.
+- **The diverging scale.** Each side of the scale reaches its full color at the value
+  furthest from the middle, so the colors of the two sides compare.
+- **The formatter.** The list of the formatter in `.formatter.exs` now holds each option of
+  the DSL, also the options of the diagrams from Mermaid that the list did not hold.
+- **The checks.** `mix check` found five problems that the tests did not find: an atom from
+  interpolation for Sobelow, three functions that Credo found too complex or nested too
+  deep, and two specs for Dialyzer. The fix of each one went into the pull request of its
+  code.
+

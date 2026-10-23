@@ -202,3 +202,6 @@ To show the parts of a whole in groups, see
 
 To show how an amount goes from sources to targets, see
 [Show flows between nodes in a chart](show-flows-between-nodes-in-a-chart.md).
+
+To compare many items on two measures, with a symbol, a color and a size for each item, see
+[Show points in a scatter plot](show-points-in-a-scatter-plot.md).
