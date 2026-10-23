@@ -1615,6 +1615,7 @@ family, and the family decides which code draws it:
 | `:pie` | `:pie` | `Expresso.Element.Chart` |
 | `:parts` | `:treemap`, `:sunburst`, `:voronoi` | `Expresso.Element.Chart.Hierarchy`, with the layout of `Expresso.Element.Chart.Voronoi` for `:voronoi` |
 | `:flows` | `:sankey`, `:alluvial`, `:parallel_sets`, `:chord` | `Expresso.Element.Chart.Sankey`, `ParallelSets` and `Chord` |
+| `:points` | `:scatter`, `:bubble` | `Expresso.Element.Chart.Scatter` |
 
 The module makes each group of kinds from the table, and it gives a guard for each group,
 such as `is_flow/1` and `is_part/1`. `Expresso.Element.Chart`, `Motion` and `Sankey` use
@@ -1779,6 +1780,27 @@ has one drawing with no layer around it. `Layers` also holds these functions:
 `Layers` holds plain functions, and not a macro with `defoverridable`. A macro would hide
 private functions in each module, and Credo, Dialyzer and the coverage would point at the
 macro.
+
+### The scatter plot
+
+A scatter plot holds `point` entities, or `series` that hold points, in place of
+categories and series of values. `Expresso.Element.Chart` sends each of its functions for
+the family `:points` to `Expresso.Element.Chart.Scatter`: the check, the build of a CSV
+file, the assigns, the layout, the marks, the rules of the frames and the table.
+`docs/scatter-plots.md` gives the design and its decisions.
+
+- The check puts the points into groups, and each group is an `Expresso.Element.Series`
+  with its points in `elements`. A group is a child of the chart, so `reveal`, `dim` and
+  the overlay options work on it, and a point is a child of its group.
+- Each mark has its place in the channels of `Expresso.Element.Chart.Motion`, also in a
+  chart with one frame. One code path then draws a chart without frames, a chart with
+  frames and a chart with the effect `:grow`.
+- Each mark has `data-keys` with the keys of its point, its categories and its series, so
+  the rules of the `highlight` option of a chart dim the other marks.
+- `Expresso.Element.Chart.Scale` gives the axes, `Encoding` the symbols, the colors and
+  the radii, and the modules `Scatter.Legend`, `Scatter.Labels`, `Scatter.Data` and
+  `Scatter.Trend` give the legends, the places of the labels, the points of a CSV file
+  and the trend lines.
 
 ### The table of a chart
 
@@ -3008,17 +3030,12 @@ The commands are:
 
 ## Open work
 
-1. The scatter plots of `docs/scatter-plots.md`: the chart kinds `:scatter` and `:bubble`,
-   which show each item as one mark with an x position, a y position, a symbol, a color and a
-   size. Issue #426 holds the plan, and its decisions are settled. The work comes in a stack
-   of eleven pull requests, and the document records the state of each one.
+There is no item at this time. Issue #397 to issue #407 and issue #411 propose features, and
+each one needs a decision before the work starts.
 
-Issue #397 to issue #407 and issue #411 propose features, and each one needs a decision
-before the work starts.
-
-The item before it, the diagrams from Mermaid of `docs/mermaid-diagrams.md`, let a `diagram`
-take the source of a Mermaid diagram of each of the 32 types of Pele. Issue #409 holds that
-plan.
+The item before it, the scatter plots of `docs/scatter-plots.md`, added the chart kinds
+`:scatter` and `:bubble`. They show each item as one mark with an x position, a y position, a
+symbol, a color and a size. Issue #426 holds that plan.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on

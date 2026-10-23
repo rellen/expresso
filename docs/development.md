@@ -39,4 +39,4 @@ GitHub.
 - `docs/dim-state.md` — the design for a dim state with a color for each role.
 - `docs/tree.md` — the design for the element `tree`, and its result.
 - `docs/graph-diagrams.md` — the design for a diagram from Graphviz or D2, and its result.
-- `docs/scatter-plots.md` — the design for a scatter plot, and its progress.
+- `docs/scatter-plots.md` — the design for a scatter plot, and its result.
