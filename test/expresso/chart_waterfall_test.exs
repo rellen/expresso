@@ -166,11 +166,24 @@ defmodule Expresso.ChartWaterfallTest do
     assert texts(figure, ".chart-tick") |> hd() == "-20"
   end
 
-  test "a highlight puts a group of columns in focus" do
-    chart = cash(highlight: ["Costs"])
-    figure = figure(chart)
+  test "a highlight puts a group of columns in focus, with their labels and connectors" do
+    figure = figure(cash(highlight: ["Costs", ["Mid year", "End"]]))
+    costs = LazyHTML.query(figure, "[data-keys=\"c7\"]")
 
-    assert figure |> LazyHTML.query("rect[data-keys=\"c7\"]") |> Enum.count() == 1
+    # The column, its connector, its two labels and its category.
+    assert count(costs, "rect.chart-waterfall-down") == 1
+    assert count(costs, "line.chart-waterfall-line") == 1
+    assert texts(costs, "text") |> Enum.sort() == Enum.sort(["-50", "100", "Costs"])
+
+    style = cash(highlight: ["Costs"]) |> one_slide() |> document() |> LazyHTML.query("style")
+    assert LazyHTML.text(style) =~ "[data-keys]:not([data-keys~=\"c7\"]) { --chart-dim: 1; }"
+  end
+
+  test "highlight takes no reveal and no dim" do
+    assert error(fn -> cash(highlight: ["Costs"], reveal: true) end) =~
+             "takes the reveal option or the highlight option"
+
+    assert error(fn -> cash(highlight: ["Costs"], dim: true) end) =~ "takes no dim option"
   end
 
   test "the compiler refuses a waterfall chart with an error in its data" do
