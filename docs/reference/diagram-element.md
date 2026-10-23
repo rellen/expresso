@@ -411,6 +411,15 @@ A Cynefin diagram names a transition by its two domains. A domain is a container
 
 Each of the five domains is a part, also a domain with no items.
 
+A railroad diagram has no edges. A rule is a container:
+
+| Element of a railroad diagram | Name | Example |
+| --- | --- | --- |
+| A rule, with its track | Its name | `heading` for `heading = "#" "words" ;` |
+| A reference to a rule | The name of the rule, `/` and the number of the reference, from 1, in the order of the rules and of their definitions. It has its rule as its parent. | `heading/2` |
+
+A terminal, such as `"#"`, shows with its rule.
+
 A kanban board has no edges. A column is a container:
 
 | Element of a kanban board | Name | Example |

@@ -293,6 +293,14 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
       follow: nil,
       outline: {"x", []}
     },
+    "railroad" => %{
+      names: ["slide", "heading/1", "element/1", "element", "heading/2", "heading"],
+      kinds: %{"slide" => "container", "heading/2" => "node"},
+      ends: %{},
+      parents: %{"heading/1" => "slide", "element/1" => "slide", "heading/2" => "element"},
+      follow: nil,
+      outline: {"slide heading element", []}
+    },
     "requirement" => %{
       names: ["bundle->fast", "bundle->offline", "offline->fast", "fast", "offline", "bundle"],
       kinds: %{"fast" => "node", "bundle" => "node", "offline->fast" => "edge"},
@@ -566,6 +574,17 @@ defmodule Expresso.Element.DiagramMermaidTypesTest do
     {svg, _names} = "agentflow" |> result() |> Pele.name()
 
     assert [_output, %{children: [%{label: "Receive the deck"}]} | _rest] = Outline.items(svg)
+  end
+
+  test "each reference of a railroad diagram is in the group of its rule" do
+    tree = "railroad" |> result() |> Pele.name() |> elem(0) |> Floki.parse_fragment!()
+
+    for {"g", attrs, _} = rule <- Floki.find(tree, "g.pele-rule") do
+      rule_id = Map.new(attrs)["id"]
+
+      for {"g", attrs, _} <- Floki.find(rule, "g.pele-nonterminal"),
+          do: assert(Map.new(attrs)["data-graph-parent"] == rule_id)
+    end
   end
 
   test "a state of a concurrent region has the composite state as its parent" do

@@ -154,6 +154,7 @@ defmodule Expresso.Element.Diagram.Pele do
     "pie" => Expresso.Element.Diagram.Pele.Pie,
     "quadrantChart" => Expresso.Element.Diagram.Pele.Quadrant,
     "radar" => Expresso.Element.Diagram.Pele.Radar,
+    "railroad" => Expresso.Element.Diagram.Pele.Railroad,
     "requirement" => Expresso.Element.Diagram.Pele.Requirement,
     "sankey" => Expresso.Element.Diagram.Pele.Sankey,
     "sequence" => Expresso.Element.Diagram.Pele.Sequence,
