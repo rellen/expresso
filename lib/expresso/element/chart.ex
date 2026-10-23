@@ -99,6 +99,10 @@ defmodule Expresso.Element.Chart do
               :y_label,
               :x_range,
               :y_range,
+              :symbol_label,
+              :color_label,
+              :size_label,
+              :opacity,
               x_scale: :linear,
               y_scale: :linear,
               separator: "/",
@@ -402,14 +406,26 @@ defmodule Expresso.Element.Chart do
           "the thumbnail option names frame #{thumbnail}, and the chart has #{length(timeline)} frames"}
 
   defp options(%__MODULE__{kind: kind} = chart) do
-    case Enum.find([:x_label, :y_label, :x_range, :y_range], &(Map.fetch!(chart, &1) != nil)) ||
+    case Enum.find(
+           [
+             :x_label,
+             :y_label,
+             :x_range,
+             :y_range,
+             :symbol_label,
+             :color_label,
+             :size_label,
+             :opacity
+           ],
+           &(Map.fetch!(chart, &1) != nil)
+         ) ||
            Enum.find([:x_scale, :y_scale], &(Map.fetch!(chart, &1) != :linear)) do
       nil ->
         {:ok, chart}
 
       option ->
         {:error,
-         "the #{option} option gives an axis of a scatter plot, so a #{kind} chart takes no " <>
+         "the #{option} option is for a scatter plot, so a #{kind} chart takes no " <>
            "#{option} option"}
     end
   end

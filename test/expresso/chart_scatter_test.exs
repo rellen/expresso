@@ -4,9 +4,12 @@ defmodule Expresso.ChartScatterTest do
   import Expresso.Test.HTML
 
   alias Expresso.Builder
-  alias Expresso.Element.Chart.Scale
+  alias Expresso.Element.Chart.{Encoding, Scale}
+  alias Expresso.Element.Chart.Scatter.Legend
 
   doctest Scale
+  doctest Encoding
+  doctest Legend
 
   defp services(opts \\ [], points \\ nil) do
     points =
@@ -43,7 +46,7 @@ defmodule Expresso.ChartScatterTest do
     assert texts(figure, ".chart-axis-title") == ["Cost", "Requests"]
 
     assert texts(figure, ".chart-tick") ==
-             ~w(400 600 800 1000 1200 0 500 1000 1500 2000 2500)
+             ~w(200 400 600 800 1000 1200 1400 0 500 1000 1500 2000 2500)
 
     assert texts(figure, "table.chart-table thead th") == ["Cost", "Requests"]
 
@@ -84,7 +87,172 @@ defmodule Expresso.ChartScatterTest do
     assert figure |> LazyHTML.query("g[data-on='2'] path.chart-point.core") |> Enum.count() == 1
   end
 
+  # The points of the example of issue #426: a region for the symbol and the
+  # color, and the users for the size.
+  defp regions(opts \\ []) do
+    services(opts, [
+      Builder.point("api", x: 1200, y: 840, symbol: "EU", color: "EU", size: 30_000),
+      Builder.point("web", x: 400, y: 2100, symbol: "US", color: "US", size: 120_000),
+      Builder.point("jobs", x: 900, y: 150, symbol: "EU", color: "EU", size: 2_000)
+    ])
+  end
+
+  # The scale of each mark from its style, in the order of the SVG.
+  defp radii(figure) do
+    for style <- figure |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("style") do
+      [w] = Regex.run(~r/--chart-w: ([-\d.]+);/, style, capture: :all_but_first)
+      elem(Float.parse(w), 0)
+    end
+  end
+
+  describe "the symbol, the color and the size" do
+    test "each category of the color is a group, with its color and its item of the legend" do
+      figure = figure(regions(symbol_label: "Region", size_label: "Users"))
+
+      [eu, us] = figure |> LazyHTML.query("g.chart-series") |> Enum.to_list()
+      assert count(eu, "path.chart-point") == 2
+      assert texts(eu, ".chart-name") == ["EU"]
+      assert texts(us, ".chart-name") == ["US"]
+
+      [style | _rest] = eu |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("style")
+      assert style =~ "--series: var(--chart-1);"
+      [style] = us |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("style")
+      assert style =~ "--series: var(--chart-2);"
+
+      # The symbol and the color take one field, so the chart has one legend
+      # of the categories, with the title of the symbol, and a legend of the
+      # sizes.
+      assert texts(figure, ".chart-axis-title") == ["Region", "Users"]
+      assert texts(figure, ".chart-name") == ["100000", "20000", "5000", "EU", "US"]
+      assert count(figure, "circle.chart-size") == 3
+    end
+
+    test "a category of the symbol takes the symbols in order, and a point can name a symbol" do
+      points = [
+        Builder.point("a", x: 1, y: 1, symbol: "gold"),
+        Builder.point("b", x: 2, y: 2, symbol: "silver"),
+        Builder.point("c", x: 3, y: 3, symbol: :star)
+      ]
+
+      figure = figure(services([symbol_label: "Tier"], points))
+      paths = figure |> LazyHTML.query("path.chart-point") |> LazyHTML.attribute("d")
+
+      assert paths ==
+               [Encoding.path(:circle), Encoding.path(:square), Encoding.path(:star)]
+
+      assert texts(figure, ".chart-name") == ["gold", "silver"]
+      assert texts(figure, ".chart-axis-title") == ["Tier"]
+    end
+
+    test "a color of a role, and a point without a color in a chart with categories" do
+      points = [
+        Builder.point("a", x: 1, y: 1, color: "core"),
+        Builder.point("b", x: 2, y: 2, color: :danger),
+        Builder.point("c", x: 3, y: 3)
+      ]
+
+      styles =
+        figure(services([], points))
+        |> LazyHTML.query("path.chart-point")
+        |> LazyHTML.attribute("style")
+
+      assert Enum.map(styles, &(Regex.run(~r/--series: ([^;]+);/, &1) |> List.last())) ==
+               ["var(--chart-1)", "var(--danger)", "var(--muted)"]
+    end
+
+    test "the area of a mark grows in proportion to its size, and the larger marks come first" do
+      radii = regions() |> figure() |> radii()
+
+      # The order of the SVG: the group EU with api, then jobs, and the group
+      # US with web.
+      [api, jobs, web] = radii
+      assert api > jobs
+      assert_in_delta api * api / (web * web), 30_000 / 120_000, 0.01
+      assert_in_delta jobs * jobs / (web * web), 2_000 / 120_000, 0.01
+    end
+
+    test "opacity gives each mark its opacity" do
+      styles =
+        regions(opacity: 0.6)
+        |> figure()
+        |> LazyHTML.query("path.chart-point")
+        |> LazyHTML.attribute("style")
+
+      assert Enum.all?(styles, &(&1 =~ "opacity: 0.6;"))
+    end
+
+    test "the table has a column for the category and for the size" do
+      figure = figure(regions(symbol_label: "Region", size_label: "Users"))
+
+      assert texts(figure, "table.chart-table thead th") == ["x", "y", "Region", "Users"]
+
+      rows =
+        for row <- LazyHTML.query(figure, "table.chart-table tbody tr"), do: texts(row, "th, td")
+
+      assert hd(rows) == ["api", "1200", "840", "EU", "30000"]
+    end
+
+    test "a bubble chart draws the points with their sizes" do
+      figure =
+        Builder.chart(:bubble,
+          title: "Users",
+          elements: [
+            Builder.point("a", x: 1, y: 1, size: 4),
+            Builder.point("b", x: 2, y: 2, size: 1)
+          ]
+        )
+        |> figure()
+
+      assert LazyHTML.attribute(figure, "class") == ["chart chart-bubble"]
+      assert [40.0, 20.0] = radii(figure)
+    end
+  end
+
   describe "the errors" do
+    test "a point of a bubble chart without a size" do
+      assert_raise ArgumentError,
+                   ~r/a bubble chart needs a size for each point, and the point "b"/,
+                   fn ->
+                     Builder.chart(:bubble,
+                       title: "Users",
+                       elements: [
+                         Builder.point("a", x: 1, y: 1, size: 4),
+                         Builder.point("b", x: 2, y: 2)
+                       ]
+                     )
+                   end
+    end
+
+    test "a size of zero, and a point without a size beside points with one" do
+      assert_raise ArgumentError, ~r/the point "a" has the size 0/, fn ->
+        services([], [Builder.point("a", x: 1, y: 1, size: 0)])
+      end
+
+      assert_raise ArgumentError, ~r/the point "b" has no size, and other points have one/, fn ->
+        services([], [Builder.point("a", x: 1, y: 1, size: 3), Builder.point("b", x: 2, y: 2)])
+      end
+    end
+
+    test "more categories of the symbol than symbols, and of the color than colors" do
+      points = for n <- 1..7, do: Builder.point("p#{n}", x: n, y: n, symbol: "s#{n}")
+
+      assert_raise ArgumentError, ~r/the symbol takes at most 6 categories/, fn ->
+        services([], points)
+      end
+
+      points = for n <- 1..9, do: Builder.point("p#{n}", x: n, y: n, color: "c#{n}")
+
+      assert_raise ArgumentError, ~r/the color takes at most 8 categories/, fn ->
+        services([], points)
+      end
+    end
+
+    test "an opacity outside 0 to 1" do
+      assert_raise ArgumentError, ~r/the opacity of a mark is a number from 0 to 1/, fn ->
+        services(opacity: 1.5)
+      end
+    end
+
     test "two points with one name" do
       points = [Builder.point("a", x: 1, y: 1), Builder.point("a", x: 2, y: 2)]
 

@@ -3,7 +3,8 @@ defmodule Expresso.Element.Point do
   A point of a scatter plot: its name and its values
 
   The `point` entity takes the name as its argument, and the options `x` and
-  `y` give its place. The name is the label of the mark. A point is a child of
+  `y` give its place. The options `symbol`, `color` and `size` give the
+  symbol, the color and the size of its mark. The name is the label of the mark. A point is a child of
   its group, so it takes the overlay options. `Expresso.Element.Chart.Scatter`
   checks it and draws it.
   """
@@ -15,6 +16,9 @@ defmodule Expresso.Element.Point do
               :name,
               :x,
               :y,
+              :symbol,
+              :color,
+              :size,
               :class,
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
