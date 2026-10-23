@@ -3008,8 +3008,13 @@ The commands are:
 
 ## Open work
 
-There is no item at this time. Issue #397 to issue #407, issue #411 and issue #426 propose
-features, and each one needs a decision before the work starts.
+1. The scatter plots of `docs/scatter-plots.md`: the chart kinds `:scatter` and `:bubble`,
+   which show each item as one mark with an x position, a y position, a symbol, a color and a
+   size. Issue #426 holds the plan, and its decisions are settled. The work comes in a stack
+   of eleven pull requests, and the document records the state of each one.
+
+Issue #397 to issue #407 and issue #411 propose features, and each one needs a decision
+before the work starts.
 
 The item before it, the diagrams from Mermaid of `docs/mermaid-diagrams.md`, let a `diagram`
 take the source of a Mermaid diagram of each of the 32 types of Pele. Issue #409 holds that
