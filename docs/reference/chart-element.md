@@ -60,7 +60,9 @@ The chart also takes the overlay options, such as `at`, `effect` and the `on` en
 | Option | Value | Effect |
 | --- | --- | --- |
 | The first argument | A string | The name of the series. |
-| The second argument | A list of numbers | One value for each category, in the order of the categories. |
+| The second argument | A list of numbers | One value for each category, in the order of the categories. A series of a scatter plot holds `point` entities in place of values. |
+| `symbol` | `:circle`, `:square`, `:triangle`, `:diamond`, `:cross` or `:star` | The symbol of each point of a series of a scatter plot. See [the series of points](#the-series-of-points). |
+| `color` | A role, such as `:chart_3` or `:accent` | The color of each point of a series of a scatter plot. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
@@ -604,6 +606,44 @@ a point names, such as `:star` or `:danger`, is in no legend.
 Each category of the color is one group of marks. Inside a group, the larger marks come
 first, so a large mark does not hide a small mark.
 
+### The series of points
+
+A `series` entity can hold the points of a group. The series gives its points a symbol and a
+color, and a point can replace them:
+
+```elixir
+slide "teams" do
+  chart :scatter do
+    title "Cost and load of each service, by team"
+    x_label "Cost per month (USD)"
+    y_label "Requests per second"
+    color_label "Team"
+
+    series "Core" do
+      symbol :square
+      point "api", x: 1200, y: 840
+      point "db", x: 1500, y: 600, color: :danger
+    end
+
+    series "Edge" do
+      point "cdn", x: 300, y: 2400
+      point "web", x: 400, y: 2100
+    end
+  end
+end
+```
+
+A series of points takes its options in its block, such as `symbol :square`, because the
+second argument of `series` is its list of values. The default symbol of a series is
+`:circle`, and the default color is the color of its place:
+`:chart_1` for the first series, `:chart_2` for the second, and so on. A chart has at most 8
+series. A point of a series takes a symbol by its name and a color by its role, and no
+category, because the series is its category. The legend shows each series by its name, with
+its symbol and its color, under the title `color_label`. The table has a column with the
+series of each point.
+
+A chart holds points or series of points, and not both.
+
 The table for a screen reader has one row for each point, with its name, its x value and
 its y value. The headers of the columns are `x_label` and `y_label`, or `x` and `y`. A chart
 with categories or sizes has a column for the category and a column for the size.
@@ -717,10 +757,13 @@ The compiler gives an error for these:
 - a group of `highlight` at a step at which the chart does not show;
 - a `point` in a chart that is not a scatter plot, and `x_label`, `y_label`, `x_range`,
   `y_range`, `x_scale` or `y_scale` on such a chart;
-- a scatter plot with no point, with a `series`, with two points of one name, or with an
+- a scatter plot with no point, with two points of one name, or with an
   option of the other kinds, such as `categories`, `src`, `reveal` or frames;
 - a point without `x` or `y`, a range with its low end at or above its high end, a value
   outside its range, and a value or a range of zero or less on a logarithmic axis;
+- a scatter plot with points and series, a series with values or with no point, more than
+  8 series, two series of one name, a point of a series with a category, and a `symbol` or a
+  `color` on a series of the other kinds;
 - a size of zero or less, a point without a size in a chart with sizes or in a bubble chart,
   more than 6 categories of the symbol, more than 8 categories of the color, and an
   `opacity` outside 0 to 1.

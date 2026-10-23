@@ -104,9 +104,48 @@ defmodule Expresso.Element.Chart.Scatter do
     do: {:error, "a #{kind} chart needs a point"}
 
   defp points(%Chart{elements: elements, kind: kind}) do
-    if Enum.all?(elements, &is_struct(&1, Point)),
-      do: {:ok, elements},
-      else: {:error, "a #{kind} chart holds point entities, and no series"}
+    cond do
+      Enum.all?(elements, &is_struct(&1, Point)) ->
+        {:ok, elements}
+
+      not Enum.all?(elements, &is_struct(&1, Series)) ->
+        {:error, "a #{kind} chart holds point entities or series of points, and not both"}
+
+      true ->
+        series_points(elements, kind)
+    end
+  end
+
+  # The checks of the series of a scatter plot: each holds points and no
+  # values, and a point of a series names its symbol and its color, because
+  # the series is its category.
+  defp series_points(series, kind) do
+    names = Enum.map(series, & &1.name)
+    points = Enum.flat_map(series, & &1.elements)
+
+    cond do
+      length(series) > 8 ->
+        {:error,
+         "a #{kind} chart has at most 8 series, one for each color. Put the smallest into a series \"Other\"."}
+
+      (twice = names -- Enum.uniq(names)) != [] ->
+        {:error, "two series have the name \"#{hd(twice)}\". Give each series its own name."}
+
+      one = Enum.find(series, &(&1.values != nil)) ->
+        {:error,
+         "the series \"#{one.name}\" of a #{kind} chart holds point entities, and no values"}
+
+      empty = Enum.find(series, &(&1.elements == [])) ->
+        {:error, "the series \"#{empty.name}\" of a #{kind} chart needs a point"}
+
+      point = Enum.find(points, &(is_binary(&1.symbol) or is_binary(&1.color))) ->
+        {:error,
+         "the point \"#{point.name}\" is in a series, and the series is its category. Give " <>
+           "the point a symbol such as :square and a color such as :accent, and no category."}
+
+      true ->
+        {:ok, points}
+    end
   end
 
   defp names(points) do
@@ -211,8 +250,23 @@ defmodule Expresso.Element.Chart.Scatter do
     end
   end
 
-  # The groups of the points: one group for each category of the color, in
-  # the order of its first point, or one group with each point.
+  # The groups of the points. Each series is a group, and it gives its symbol
+  # and its color to each point without one. Without series, each category of
+  # the color is a group, in the order of its first point, and the points
+  # without a category are one group.
+  defp groups(%Chart{elements: [%Series{} | _] = series}, _points) do
+    for {%Series{} = one, place} <- Enum.with_index(series, 1) do
+      symbol = one.symbol || :circle
+      color = one.color || Enum.at(Encoding.roles(), place - 1)
+
+      points =
+        for %Point{} = point <- one.elements,
+            do: %Point{point | symbol: point.symbol || symbol, color: point.color || color}
+
+      %Series{one | symbol: symbol, color: color, elements: points}
+    end
+  end
+
   defp groups(%Chart{title: title}, points) do
     points
     |> Enum.group_by(&if(is_binary(&1.color), do: &1.color))
@@ -254,11 +308,9 @@ defmodule Expresso.Element.Chart.Scatter do
             }
           end)
 
-        category = Enum.find(group.elements, &is_binary(&1.color))
-
         {%{
            name: group.name,
-           category: category && category.color,
+           category: category(group),
            class: group.class,
            overlay: Expresso.Overlay.Render.attributes(group),
            points: points
@@ -277,6 +329,11 @@ defmodule Expresso.Element.Chart.Scatter do
       groups: groups,
       symbols: symbols,
       colors: colors,
+      series:
+        for(
+          %Series{color: color} = one when color != nil <- chart.elements,
+          do: %{name: one.name, symbol: one.symbol, color: Encoding.role(color)}
+        ),
       symbol_label: chart.symbol_label,
       color_label: chart.color_label,
       size_label: chart.size_label,
@@ -288,6 +345,17 @@ defmodule Expresso.Element.Chart.Scatter do
       el: chart.el,
       overlay: Expresso.Overlay.Render.attributes(chart) ++ Chart.width(chart)
     }
+  end
+
+  # The key of the item of the legend in a group: the name of a series, or
+  # the category of the color. A group without either has no item.
+  defp category(%Series{color: color, name: name}) when color != nil, do: name
+
+  defp category(%Series{elements: points}) do
+    case Enum.find(points, &is_binary(&1.color)) do
+      nil -> nil
+      point -> point.color
+    end
   end
 
   # The values of each point of a frame, in the order of their numbers.
@@ -513,13 +581,15 @@ defmodule Expresso.Element.Chart.Scatter do
   Return the headers and the rows of the table of a scatter plot
 
   The table has one row for each point, with its name, its x value and its y
-  value. A chart with a category of the symbol or of the color, or with
-  sizes, has a column for each of them. A symbol or a color that is not a
+  value. A chart with series, with a category of the symbol or of the color,
+  or with sizes, has a column for each of them. A symbol or a color that is not a
   category has no text.
   """
   @spec table(map()) :: %{headers: [String.t() | nil], rows: [[String.t()]]}
   def table(assigns) do
-    points = for group <- assigns.groups, point <- group.points, do: point
+    points =
+      for group <- assigns.groups, point <- group.points, do: Map.put(point, :group, group.name)
+
     [frame] = assigns.frames
     columns = columns(assigns, frame)
 
@@ -545,6 +615,7 @@ defmodule Expresso.Element.Chart.Scatter do
     same = same?(assigns)
 
     [
+      {assigns.series != [], assigns.color_label || "Series", & &1.point.group},
       {assigns.symbols != [] and not same, assigns.symbol_label || "Symbol",
        &text(&1.point.symbol_value)},
       {assigns.colors != [], assigns.color_label || assigns.symbol_label || "Color",

@@ -4,6 +4,7 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
 
   A scatter plot has up to three legends, from the top:
 
+  - The series, with the symbol and the color of each one.
   - The colors: each category of the color, with its color. When the symbol
     and the color of each point take the same category, the item also shows
     the symbol, and the chart has no legend of the symbols.
@@ -49,6 +50,22 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
       Enum.map_reduce(rows, 0, fn row, dy -> {Map.put(row, :dy, dy), dy + row.height} end)
 
     %{rows: Enum.reject(rows, &(&1.type == :gap)), width: rows_width(rows)}
+  end
+
+  defp colors(%{series: [_ | _] = series} = assigns, _same) do
+    items =
+      for one <- series do
+        %{
+          type: :item,
+          category: one.name,
+          symbol: one.symbol,
+          color: one.color,
+          name: one.name,
+          height: @row
+        }
+      end
+
+    title(assigns.color_label) ++ items
   end
 
   defp colors(%{colors: []}, _same), do: []

@@ -18,6 +18,7 @@ element in a place that this page does not give.
 | `diagram` | `part` |
 | `chart` | `series`, `point`, `flow` and `node`, and `frame` in `timeline` |
 | `frame` | `series` and `flow` |
+| `series` in a scatter plot | `point` |
 | `tree` | one `node` |
 | `node` in a `tree` | `node` |
 
