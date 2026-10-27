@@ -35,6 +35,10 @@
 # GitHub Pages, at https://rellen.github.io/expresso/. The job `lint` makes the
 # site, so the site and the checks come from one build.
 #
+# Each job runs on ubuntu-24.04, as a remote session does, so apt-get gives
+# both the same Graphviz. `ubuntu-latest` moves to a new Ubuntu. See "The
+# runner" in `docs/development/ci.md`.
+#
 # Each job has `timeout-minutes`, so a job that hangs, such as on a mirror that
 # does not answer, fails in minutes and not after the six hours of GitHub. With
 # a warm cache each job takes less than four minutes, and each limit leaves
@@ -89,7 +93,7 @@ env:
 jobs:
   format:
     name: format
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
@@ -106,7 +110,7 @@ jobs:
   # of the job holds the PLT of Dialyzer, in `_build`.
   lint:
     name: lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
@@ -152,7 +156,7 @@ jobs:
   # `test/dependency/` is one test, so it has no partitions.
   test:
     name: test (${{ matrix.partition }}/2)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -176,7 +180,7 @@ jobs:
   # packages and the headless browser, from a cache when it can.
   e2e:
     name: e2e (${{ matrix.partition }}/3)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -206,7 +210,7 @@ jobs:
   # `D2_VERSION`. `docs/development/graph-tools.md` gives the details.
   graph:
     name: graph
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
@@ -234,7 +238,7 @@ jobs:
   # cannot save the cache `test`.
   dependency:
     name: dependency
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
@@ -252,7 +256,7 @@ jobs:
   # `mix check` does.
   presenter:
     name: presenter
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
@@ -274,7 +278,7 @@ jobs:
   # `gifs` holds them, and a person can look at them before a merge.
   gifs:
     name: gifs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
@@ -317,7 +321,7 @@ jobs:
       matrix:
         include:
           - target: linux_x86
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
           - target: linux_arm
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
@@ -351,7 +355,7 @@ jobs:
     name: media
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [all]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write
@@ -382,7 +386,7 @@ jobs:
     name: pages
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [all]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       pages: write
@@ -402,7 +406,7 @@ jobs:
     name: Erlang/OTP 29, Elixir 1.20, Node 24
     if: always()
     needs: [format, lint, test, e2e, graph, dependency, presenter, gifs, binary]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Fail when a check does not succeed
