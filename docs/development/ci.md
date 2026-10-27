@@ -119,6 +119,15 @@ necessary. The first `mix dialyzer` builds a PLT of approximately 570 modules, a
 operation takes approximately two minutes. The PLT stays in `_build`, so each
 `mix dialyzer` after the first takes a few seconds. Dialyzer reports no error at this time.
 
+## The runner
+
+Each job runs on `ubuntu-24.04`, and not on `ubuntu-latest`. A remote session also runs
+Ubuntu 24.04, so `apt-get` gives the same Graphviz to both, and the Erlang build for Ubuntu
+24.04 works on both. GitHub started to move `ubuntu-latest` to Ubuntu 26 on 2026-10-19. On
+2026-10-27, the job `graph` of pull request #476 got a runner with a newer Graphviz, and two
+tests of Graphviz failed. To change the version of Ubuntu, change it here, in each job, and
+in the documents that name Ubuntu 24.04.
+
 ## The time limits
 
 Each job of `.github/workflows/check.yml` has `timeout-minutes`, so a job that hangs fails in
