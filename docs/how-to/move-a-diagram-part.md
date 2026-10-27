@@ -109,3 +109,6 @@ Examples.DiagramMoveTo
 ```
 
 ![The widget moves to the center of the booth, then of the dryer, then of the packer, where it grows](https://raw.githubusercontent.com/rellen/expresso/media/diagram-move-to.gif)
+
+For a proof in which copies of symbols move into the holes of a new line, see
+[Show the steps of a proof](show-the-steps-of-a-proof.md).

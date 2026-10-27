@@ -35,3 +35,9 @@ its own line.
 Use the `~S` sigil for the text, so that Elixir does not change a `\` or a `#{`.
 
 A tool such as Pandoc or Temml makes MathML from LaTeX. Put its output into the element.
+
+## Show the steps of a proof
+
+To move a copy of each symbol of a formula, see
+[Show the steps of a proof](../how-to/show-the-steps-of-a-proof.md). A `math` element cannot
+change one symbol at a step, so that guide draws the formula as a diagram.
