@@ -142,7 +142,7 @@ end
 | Pull request | State |
 | --- | --- |
 | 1. This document | Done |
-| 2. Temml and the run in Node | To do |
+| 2. Temml and the run in Node | Done. `Expresso.Element.Math.Tex.render!/1` makes the MathML of a list of sources in one run, and returns the message of Temml for a source that it cannot read. `Expresso.Element.Diagram.Tool` takes a subject for its messages, such as "the formulas of the deck". Temml 0.14 has no `\href`, and it refuses `\id`, `\style` and `\includegraphics`. |
 | 3. The option `tex` | To do |
 | 4. The fonts | To do |
 | 5. The names of the parts | To do |
