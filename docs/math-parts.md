@@ -143,7 +143,7 @@ end
 | --- | --- |
 | 1. This document | Done |
 | 2. Temml and the run in Node | Done. `Expresso.Element.Math.Tex.render!/1` makes the MathML of a list of sources in one run, and returns the message of Temml for a source that it cannot read. `Expresso.Element.Diagram.Tool` takes a subject for its messages, such as "the formulas of the deck". Temml 0.14 has no `\href`, and it refuses `\id`, `\style` and `\includegraphics`. |
-| 3. The option `tex` | To do |
+| 3. The option `tex` | Done. `Expresso.Element.Math.typeset/2` makes the MathML of each `tex` option before the render. `Expresso.Element.Diagram.Cache.fetch_many/2` returns the MathML that the cache holds, and it calls Temml one time with the other sources. A test gives `typeset/2` a function in the place of Temml, so the tests of the option run without Node, and a test with the tag `:temml` renders a deck with Temml. These tests need no file of fixtures. |
 | 4. The fonts | To do |
 | 5. The names of the parts | To do |
 | 6. The `part` entity | To do |

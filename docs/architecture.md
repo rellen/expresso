@@ -1271,6 +1271,15 @@ and each browser of the floor of this project supports it. The text goes into th
 document as it is. Give the `math` tag the attribute `display="block"` for a formula on
 its own line.
 
+The `tex` option takes the formula in LaTeX in place of the MathML.
+`Expresso.Element.Math.typeset/1` runs before the render, after
+`Expresso.Element.Diagram.place/1`. It collects the LaTeX of each `math` element of the
+deck, and `Expresso.Element.Math.Tex` makes the MathML of each source in one run of Node,
+with the copy of Temml in `priv/temml/`. The cache of the watch mode,
+`Expresso.Element.Diagram.Cache`, keeps the MathML of each source, and its function
+`fetch_many/2` calls Temml with the sources that it does not hold. `docs/math-parts.md`
+gives the design.
+
 ### The diagram
 
 A `diagram` shows an SVG file. The `src` option gives the path, as for an image. The

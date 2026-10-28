@@ -939,12 +939,23 @@ defmodule Expresso.Extension do
   @math %Spark.Dsl.Entity{
     name: :math,
     target: Expresso.Element.Math,
-    args: [:text],
+    args: [{:optional, :text}],
     entities: [on: [@on]],
+    transform: {Expresso.Element.Math, :check, []},
     schema:
       @overlay_schema ++
         @class_schema ++
-        [text: [type: :string, required: true, doc: "The MathML, from <math> to </math>."]]
+        [
+          text: [
+            type: :string,
+            doc: "The MathML, from <math> to </math>. Give this argument or the tex option."
+          ],
+          tex: [
+            type: :string,
+            doc:
+              "The formula in LaTeX, such as ~S\"x^2 + 1\". Temml makes its MathML in Node at render time. See docs/reference/math-element.md."
+          ]
+        ]
   }
 
   @part %Spark.Dsl.Entity{
