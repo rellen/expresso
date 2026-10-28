@@ -55,4 +55,46 @@ defmodule Expresso.Element.DiagramCacheTest do
     assert Cache.fetch(:key, counted(3)) == 3
     assert_received {:called, 3}
   end
+
+  # A function of many keys that sends the keys of each call, so a test sees
+  # which keys it made.
+  defp many do
+    test = self()
+
+    fn keys ->
+      send(test, {:made, keys})
+      Enum.map(keys, &{:value, &1})
+    end
+  end
+
+  describe "fetch_many/2" do
+    test "outside run/2 calls the function with each key" do
+      assert Cache.fetch_many([:a, :b], many()) == [value: :a, value: :b]
+      assert_received {:made, [:a, :b]}
+    end
+
+    test "in a run calls the function one time with the missing keys, without a repeat" do
+      {result, cache} =
+        Cache.run(%{}, fn ->
+          first = Cache.fetch_many([:a, :b, :a], many())
+          second = Cache.fetch_many([:b, :c], many())
+          {first, second}
+        end)
+
+      assert result == {[value: :a, value: :b, value: :a], [value: :b, value: :c]}
+      assert_received {:made, [:a, :b]}
+      assert_received {:made, [:c]}
+      assert map_size(cache) == 3
+    end
+
+    test "takes the values of the run before, and calls no function when it has each key" do
+      {_result, cache} = Cache.run(%{}, fn -> Cache.fetch_many([:a, :b], many()) end)
+      assert_received {:made, [:a, :b]}
+
+      {result, cache} = Cache.run(cache, fn -> Cache.fetch_many([:b], many()) end)
+      assert result == [value: :b]
+      refute_received {:made, _keys}
+      assert map_size(cache) == 1
+    end
+  end
 end

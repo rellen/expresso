@@ -1,6 +1,7 @@
 defmodule Expresso.Element.Diagram.Cache do
   @moduledoc """
-  Keeps the SVG of each graph from one render of the watch mode to the next
+  Keeps the SVG of each graph and the MathML of each formula from one render
+  of the watch mode to the next
 
   D2 with ELK takes some seconds for a graph, and the watch mode renders the
   whole deck after each change. Without a cache, a change to the text of one
@@ -54,7 +55,7 @@ defmodule Expresso.Element.Diagram.Cache do
         function.()
 
       {old, used} ->
-        hash = :crypto.hash(:sha256, :erlang.term_to_binary(key))
+        hash = hash(key)
 
         value =
           case Map.fetch(used, hash) do
@@ -66,4 +67,47 @@ defmodule Expresso.Element.Diagram.Cache do
         value
     end
   end
+
+  @doc """
+  Return the value of each key, and call the function one time for the keys
+  that the cache does not hold
+
+  `function` takes the list of the missing keys, in the order of `keys`, and
+  returns one value for each. A tool that makes many values in one run, such
+  as Temml for the formulas of a deck, then runs one time. Outside `run/2`,
+  the function calls `function` with each key.
+  """
+  @spec fetch_many([term()], ([term()] -> [value])) :: [value] when value: var
+  def fetch_many(keys, function) do
+    case Process.get(@key) do
+      nil -> function.(keys)
+      {old, used} -> fetch_many(keys, function, old, used)
+    end
+  end
+
+  defp fetch_many(keys, function, old, used) do
+    hashes = Enum.map(keys, &hash/1)
+    known = Map.merge(old, used)
+
+    missing =
+      keys
+      |> Enum.zip(hashes)
+      |> Enum.reject(fn {_key, hash} -> Map.has_key?(known, hash) end)
+      |> Enum.uniq_by(fn {_key, hash} -> hash end)
+
+    known = Map.merge(known, make(missing, function))
+    values = Enum.map(hashes, &Map.fetch!(known, &1))
+    Process.put(@key, {old, Map.merge(used, Map.new(Enum.zip(hashes, values)))})
+    values
+  end
+
+  # The values of the missing keys, by hash, from one call of the function.
+  defp make([], _function), do: %{}
+
+  defp make(missing, function) do
+    {keys, hashes} = Enum.unzip(missing)
+    hashes |> Enum.zip(function.(keys)) |> Map.new()
+  end
+
+  defp hash(key), do: :crypto.hash(:sha256, :erlang.term_to_binary(key))
 end

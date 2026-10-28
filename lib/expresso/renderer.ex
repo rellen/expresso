@@ -544,6 +544,8 @@ defmodule Expresso.Renderer do
   dims the lines of each code element with the `highlight` option with
   `Expresso.Element.Code.spotlight/1` first. It runs the tool of each graph
   with `Expresso.Element.Diagram.draw/1`, so a render runs each tool one time.
+  `Expresso.Element.Math.typeset/1` makes the MathML of each formula in LaTeX,
+  in one run of Node.
   `Expresso.Element.Window.apply/1` gives each code element, image and embed
   the window of the deck when it has none of its own.
   It gives each element its identity
@@ -571,6 +573,7 @@ defmodule Expresso.Renderer do
           |> Expresso.Element.Code.spotlight()
           |> Expresso.Element.Diagram.draw()
           |> Expresso.Element.Diagram.place()
+          |> Expresso.Element.Math.typeset()
           |> Expresso.Element.Embed.number()
           |> Expresso.Element.Window.apply()
           |> Expresso.Element.Video.number()
