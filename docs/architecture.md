@@ -3064,8 +3064,14 @@ The commands are:
 
 ## Open work
 
-There is no item at this time. Issue #397 to issue #407 propose features, and each one needs
-a decision before the work starts.
+1. The formulas with parts of `docs/math-parts.md`: a `math` element that takes LaTeX, with
+   a name for each part of a formula, a math font and aligned lines. Issue #472 holds the
+   plan, and its decisions are settled. The work comes in a stack of nine pull requests, and
+   the document records the state of each one. Issues #473, #474, #478, #479 and #475 build
+   on it, in that order.
+
+Issue #397 to issue #407 propose features, and each one needs a decision before the work
+starts.
 
 The item before it, the waterfall charts of `docs/waterfall-charts.md`, added the chart kind
 `:waterfall`. It shows how a start value changes through increases, decreases and totals.
