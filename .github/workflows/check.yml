@@ -224,11 +224,12 @@ jobs:
         with:
           version: ${{ env.ZIG_VERSION }}
           cache: test
-      # Pele draws a Mermaid diagram in Node, so the job also needs Node.
+      # Pele draws a Mermaid diagram in Node, and Temml makes the MathML of a
+      # formula in Node, so the job also needs Node.
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - run: mix test --only graphviz --only d2 --only mermaid
+      - run: mix test --only graphviz --only d2 --only mermaid --only temml
 
   # The test of `test/dependency/` makes a project that takes Expresso as a dev
   # dependency, and it fetches the dependencies of that project from Hex and

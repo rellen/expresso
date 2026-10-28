@@ -5,10 +5,10 @@
 # needs the network. `mix test --only dependency` runs it.
 # `docs/development/browser-tests.md` and `docs/development/release.md` give the
 # setup of each. The tests with the tags `:graphviz`, `:d2` and `:mermaid` run a
-# tool that draws a graph. `mix test --only graphviz --only d2 --only mermaid`
-# runs them, and
-# `docs/development/graph-tools.md` tells how to install the tools.
-ExUnit.start(exclude: [:e2e, :release, :dependency, :graphviz, :d2, :mermaid])
+# tool that draws a graph, and the tests with the tag `:temml` run Temml in
+# Node. `mix test --only graphviz --only d2 --only mermaid --only temml` runs
+# them, and `docs/development/graph-tools.md` tells how to install the tools.
+ExUnit.start(exclude: [:e2e, :release, :dependency, :graphviz, :d2, :mermaid, :temml])
 
 # Some tests compile the same deck file more than one time, and
 # `mix test --repeat-until-failure` compiles each module again. Elixir then

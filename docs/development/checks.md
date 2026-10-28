@@ -13,7 +13,7 @@ mix test
 mix test --only e2e            # the browser tests, see browser-tests.md
 mix test --only dependency     # Expresso as a dependency, see release.md
 mix test --only release        # the tests of the binary, see release.md
-mix test --only graphviz --only d2 --only mermaid   # the graph tools, see graph-tools.md
+mix test --only graphviz --only d2 --only mermaid --only temml   # the graph tools and Temml, see graph-tools.md
 npm run check                  # tsc, the type check of the presenter script
 npm run lint                   # oxlint, see presenter-script.md
 npm run format:check           # prettier --check

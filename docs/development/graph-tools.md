@@ -3,7 +3,9 @@
 This page tells you how to install the tools that draw a graph, and how to run their
 tests. A `diagram` with a `.dot` or a `.gv` file runs Graphviz, and a `diagram` with a
 `.d2` file runs D2. A `diagram` with a `.mmd` file, or with a Mermaid source in the deck,
-runs Pele in Node. `docs/graph-diagrams.md` and `docs/mermaid-diagrams.md` give the design.
+runs Pele in Node. `Expresso.Element.Math.Tex` runs Temml in Node, and it makes the MathML
+of a formula in LaTeX. `docs/graph-diagrams.md`, `docs/mermaid-diagrams.md` and
+`docs/math-parts.md` give the design.
 
 ## The tests
 
@@ -15,9 +17,10 @@ excludes the browser tests.
 | `:graphviz` | Graphviz | `dot` |
 | `:d2` | D2 | `d2` |
 | `:mermaid` | Pele in Node | `node` |
+| `:temml` | Temml in Node | `node` |
 
 ```sh
-mix test --only graphviz --only d2 --only mermaid   # the tests of each graph tool
+mix test --only graphviz --only d2 --only mermaid --only temml   # the tests of each tool
 ```
 
 The other tests of a graph use an SVG that the tool wrote, in `test/fixtures/graphviz/` and
@@ -85,3 +88,19 @@ take a new version:
    `package.json`.
 4. Write the fixtures of `test/fixtures/mermaid/` again with the command above, and run
    `mix test --only mermaid`.
+
+## Temml
+
+Temml is a library in JavaScript that makes MathML from LaTeX, for the `math` element.
+`priv/temml/` holds a copy of `temml.mjs`, its license, and the script `render.mjs`, and the
+render runs the script with Node, as for Pele. One run makes the MathML of each formula of a
+deck. A deck with no LaTeX needs no Node. `docs/math-parts.md` gives the design.
+
+`package.json` names the same version of Temml, so Dependabot proposes a new version. To
+take a new version:
+
+1. Change the version in `package.json`, and run `npm install`.
+2. Copy `node_modules/temml/dist/temml.mjs` and `node_modules/temml/LICENSE` to
+   `priv/temml/`.
+3. Change `@version` in `Expresso.Element.Math.Tex`. A test compares it with `package.json`.
+4. Run `mix test --only temml`.

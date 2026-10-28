@@ -67,7 +67,7 @@ npm run lint
 npm run format:check
 npm test
 mix test --only e2e
-mix test --only graphviz --only d2 --only mermaid
+mix test --only graphviz --only d2 --only mermaid --only temml
 mix test --only dependency
 BURRITO_TARGET=linux_x86 MIX_ENV=prod mix release expresso_cli_app --overwrite
 EXPRESSO_BINARY=burrito_out/expresso_cli_app_linux_x86 mix test --only release
@@ -86,10 +86,11 @@ driver of `package.json` and Chromium. `mix test` excludes them. In a remote ses
 hook sets `EXPRESSO_CHROMIUM` to the Chromium of the container.
 `docs/development/browser-tests.md` gives the details.
 
-`mix test --only graphviz --only d2 --only mermaid` runs the tests that run a tool that
-draws a graph. They need Graphviz, D2 and Node. The hook installs Graphviz and D2, and
-Node draws a Mermaid diagram with the copy of Pele in `priv/pele/`. `mix test` excludes them.
-`docs/development/graph-tools.md` gives the details.
+`mix test --only graphviz --only d2 --only mermaid --only temml` runs the tests that run a
+tool that draws a graph or a formula. They need Graphviz, D2 and Node. The hook installs
+Graphviz and D2. Node draws a Mermaid diagram with the copy of Pele in `priv/pele/`, and it
+makes the MathML of a formula with the copy of Temml in `priv/temml/`. `mix test` excludes
+them. `docs/development/graph-tools.md` gives the details.
 
 `mix test --only dependency` runs the test of `test/dependency/`. It makes a project that
 takes Expresso as a dev dependency, and it runs `mix expresso` there. It needs the network

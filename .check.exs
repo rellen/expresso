@@ -40,7 +40,7 @@ burrito_target =
     # The tests that run a tool that draws a graph: Graphviz, D2, and Pele in
     # Node for Mermaid. `docs/development/graph-tools.md` tells how to install
     # each tool.
-    {:graph, "mix test --only graphviz --only d2 --only mermaid", deps: [:ex_unit]},
+    {:graph, "mix test --only graphviz --only d2 --only mermaid --only temml", deps: [:ex_unit]},
 
     # The binary of Burrito and its tests. The release uses the build of prod.
     # The tests start after the browser tests, and only after a release that

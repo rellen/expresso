@@ -1,6 +1,7 @@
 defmodule Expresso.Element.Diagram.Tool do
   @moduledoc """
-  Finds and runs the tool that draws a graph, such as Graphviz
+  Finds and runs the tool that draws a graph, such as Graphviz, or Node for
+  the MathML of a formula
 
   Expresso and the binary of Burrito do not hold the tools. The function
   `find/3` looks for the program of a tool on the `PATH`, and a variable of
@@ -20,14 +21,21 @@ defmodule Expresso.Element.Diagram.Tool do
   @typedoc "A tool: its name for the user, its program and its variable of the environment"
   @type t :: %{name: String.t(), program: String.t(), variable: String.t(), install: String.t()}
 
+  @typedoc """
+  The thing that a tool draws, for a message: the path of a diagram, or
+  `{:subject, text}` with the words of the message, such as
+  `{:subject, "the formulas of the deck"}`
+  """
+  @type subject :: Path.t() | {:subject, String.t()}
+
   @doc """
   Find the program of a tool
 
   The variable of the tool in `env` gives the path of the program. Without
   the variable, the function looks for the program on the `PATH`. `src` is
-  the path of the source, for the message.
+  the path of the source or a subject, for the message.
   """
-  @spec find(t(), Path.t(), %{String.t() => String.t()}) ::
+  @spec find(t(), subject(), %{String.t() => String.t()}) ::
           {:ok, Path.t()} | {:error, String.t()}
   def find(tool, src, env \\ System.get_env()) do
     case env[tool.variable] do
@@ -40,7 +48,7 @@ defmodule Expresso.Element.Diagram.Tool do
     case System.find_executable(tool.program) do
       nil ->
         {:error,
-         "the diagram \"#{src}\" needs #{tool.name}, and the render does not find " <>
+         "#{subject(src)} needs #{tool.name}, and the render does not find " <>
            "`#{tool.program}` on the path. Install #{tool.name} from #{tool.install}, " <>
            "or give its path in #{tool.variable}"}
 
@@ -56,7 +64,7 @@ defmodule Expresso.Element.Diagram.Tool do
   file, so a new version of the tool gives a new identity. The function
   returns `nil` for a tool that is not present.
   """
-  @spec identity(t(), Path.t()) :: {Path.t(), integer(), non_neg_integer()} | nil
+  @spec identity(t(), subject()) :: {Path.t(), integer(), non_neg_integer()} | nil
   def identity(tool, src) do
     with {:ok, path} <- find(tool, src),
          {:ok, %File.Stat{mtime: mtime, size: size}} <- File.stat(path, time: :posix) do
@@ -84,7 +92,7 @@ defmodule Expresso.Element.Diagram.Tool do
   """
   @spec run!(
           t(),
-          Path.t(),
+          subject(),
           (Path.t() -> {[String.t()], [{String.t(), String.t()}]}),
           [{String.t(), binary()}],
           String.t()
@@ -112,11 +120,14 @@ defmodule Expresso.Element.Diagram.Tool do
 
         {message, status} ->
           raise ArgumentError,
-                "#{tool.name} did not draw the diagram \"#{src}\", and it ended with the " <>
+                "#{tool.name} did not draw #{subject(src)}, and it ended with the " <>
                   "status #{status}:\n\n#{String.trim(message)}"
       end
     after
       Expresso.PrivateDir.close(private_dir)
     end
   end
+
+  defp subject({:subject, text}), do: text
+  defp subject(src), do: "the diagram \"#{src}\""
 end
