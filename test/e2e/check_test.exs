@@ -328,6 +328,35 @@ defmodule Expresso.E2E.CheckTest do
     refute output =~ "The keys"
   end
 
+  @math """
+  defmodule MathCheckDeck do
+    use Expresso
+
+    name "math check deck"
+
+    slide "the proof" do
+      heading "The proof"
+
+      math do
+        reveal true
+        line tex: ~S"(a + b)^2"
+        line "=", tex: ~S"\\part{sum}{a^2 + 2ab + b^2}", why: "multiply out"
+
+        part "line1" do
+          on 3, state: :alert
+        end
+      end
+    end
+  end
+  """
+
+  test "--check=a11y finds no problem in a derivation with parts at each step", %{tmp_dir: dir} do
+    {status, output} = check(dir, @math, :a11y)
+
+    assert {status, output} == {0, output}
+    assert String.ends_with?(output, "\nNo problems.\n")
+  end
+
   test "--check=a11y finds no problem in a good deck", %{tmp_dir: dir} do
     {status, output} = check(dir, @good, :a11y)
 

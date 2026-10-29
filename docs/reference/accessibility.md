@@ -90,7 +90,7 @@ part of the deck before the current step, from 0 to 100, as the width of the bar
 | `qr_code` | An `img` with the `title` option, or the text of the code, as its name. |
 | `video`, `audio`, `embed` | The `title` option as the name of the element. A video with the `captions` option has a `track` of captions. |
 | `callout` | A `note`, with the header as text. |
-| `math` | MathML, which a screen reader reads. |
+| `math` | MathML, which a screen reader reads. A formula from the `tex` option is MathML too. A part of a later step, such as a line of a derivation with `reveal true`, is hidden until its step, as an element is. |
 | `table` | The `caption` option as the name of the table. Each header cell is a `th` with a `scope`: `col` in the `header` row, and `row` for the first cell of a row with `row_header`. |
 | An element of a later step | Nothing. The style sheet hides it with `visibility: hidden` until its step. |
 
