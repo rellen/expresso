@@ -31,9 +31,13 @@ defmodule Expresso.Element.Math do
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 
+  # The name of a part: a letter, then letters, digits, "-" and "_".
+  @part_name ~r/^[A-Za-z][\w-]*$/
+
   @doc """
   Check that a math element has one source: the MathML or the `tex` option
 
+  The function also checks the name of each `\\part{name}{…}` of the LaTeX.
   The entity of the DSL and `Expresso.Builder` call this function.
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
@@ -43,7 +47,49 @@ defmodule Expresso.Element.Math do
   def check(%__MODULE__{text: text, tex: tex}) when is_binary(text) and is_binary(tex),
     do: {:error, "a math element takes the MathML or the tex option, and not both"}
 
+  def check(%__MODULE__{tex: tex} = math) when is_binary(tex) do
+    case Enum.reject(part_names(tex), &Regex.match?(@part_name, &1)) do
+      [] ->
+        {:ok, math}
+
+      [name | _names] ->
+        {:error,
+         "the part name #{inspect(name)} of a math element must start with a letter, and " <>
+           "hold only letters, digits, \"-\" and \"_\""}
+    end
+  end
+
   def check(%__MODULE__{} = math), do: {:ok, math}
+
+  # The name of each `\part{name}` of a source in LaTeX.
+  defp part_names(tex) do
+    ~r/\\part\s*\{([^}]*)\}/
+    |> Regex.scan(tex, capture: :all_but_first)
+    |> List.flatten()
+  end
+
+  @doc """
+  Give the names of the parts of the MathML of a formula, in the order of the
+  MathML, without a repeat
+
+  A part has a name in the attribute `data-part`, from `\\part{name}{…}`, or
+  in the attribute `class`, from `\\class{name}{…}`. The list also holds the
+  classes that Temml writes, such as `tml-display`.
+
+      iex> Expresso.Element.Math.parts(~s(<math class="tml-display"><mrow data-part="redex"><mi class="bind">f</mi></mrow></math>))
+      ["tml-display", "redex", "bind"]
+  """
+  @spec parts(String.t()) :: [String.t()]
+  def parts(mathml) do
+    mathml
+    |> Floki.parse_fragment!()
+    |> Floki.find("[data-part], [class]")
+    |> Enum.flat_map(fn {_tag, attrs, _children} ->
+      attrs = Map.new(attrs)
+      List.wrap(attrs["data-part"]) ++ String.split(attrs["class"] || "")
+    end)
+    |> Enum.uniq()
+  end
 
   @doc """
   Make the MathML of each math element of a deck with the `tex` option

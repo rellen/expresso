@@ -65,6 +65,27 @@ line.
 
 Use the `~S` sigil for the LaTeX, so that Elixir does not change a `\`.
 
+## The parts of a formula
+
+A part is a sub-term of a formula with a name. Two commands of the LaTeX give a name:
+
+| Command | The MathML gets | Use |
+| --- | --- | --- |
+| `\part{redex}{(\lambda f.\,f)\,g}` | `data-part="redex"` on the sub-term | A part of the formula. |
+| `\class{redex}{(\lambda f.\,f)\,g}` | `class="redex"` on the sub-term | A part, and a class for a rule of the `css` option. |
+
+```elixir
+slide "the redex" do
+  math tex: ~S"\part{redex}{(\lambda \part{bind}{f}.\,f\,x)\,\part{arg}{g}}"
+end
+```
+
+- A part can hold other parts, such as `bind` and `arg` in `redex` above.
+- Two sub-terms can have the same name. They are then one part.
+- A name starts with a letter, and it holds only letters, digits, `-` and `_`. The compiler
+  refuses a different name.
+- The MathML argument can give a part with the attribute `data-part` or `class`.
+
 ## The math font
 
 The deck option `math_font` gives the font of each `math` element. The document holds the

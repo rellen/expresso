@@ -52,11 +52,12 @@ defmodule Expresso.ElementPagesTest do
     end
   end
 
-  # A block with the source of a graph needs the tool of the graph to render.
-  # The test without a tag compiles such a block, and the test with the tag of
-  # the tool renders it.
+  # A block with the source of a graph needs the tool of the graph to render,
+  # and a block with LaTeX needs Temml in Node. The test without a tag compiles
+  # such a block, and the test with the tag of the tool renders it.
   defp tool(block) do
     cond do
+      block =~ ~r/\btex: / -> :temml
       block =~ ~r/"[^"]+\.(dot|gv)"/ -> :graphviz
       block =~ ~r/"[^"]+\.d2"/ -> :d2
       block =~ ~r/"[^"]+\.mmd"|lang: :mermaid/ -> :mermaid
@@ -121,6 +122,26 @@ defmodule Expresso.ElementPagesTest do
         deck = compile(block, "graph_#{unquote(tool)}", index, tmp_dir, path)
         assert Expresso.Deck.render(deck) =~ "<html"
       end
+    end
+  end
+
+  @tag :tmp_dir
+  @tag :temml
+  test "each code block of the page of the math element with LaTeX renders", %{tmp_dir: tmp_dir} do
+    files(tmp_dir)
+    path = "docs/reference/math-element.md"
+
+    formulas =
+      path
+      |> blocks()
+      |> Enum.with_index()
+      |> Enum.filter(fn {block, _} -> tool(block) == :temml end)
+
+    assert formulas != [], "#{path} has no code block with LaTeX"
+
+    for {block, index} <- formulas do
+      deck = compile(block, "tex", index, tmp_dir, path)
+      assert Expresso.Deck.render(deck) =~ "<html"
     end
   end
 

@@ -7,6 +7,8 @@ defmodule Expresso.Element.MathTest do
   alias Expresso.Element.Diagram.Cache
   alias Expresso.Element.Math
 
+  doctest Math
+
   @formula ~S(<math display="block"><mfrac><mi>a</mi><mi>b</mi></mfrac></math>)
 
   defmodule MathDeck do
@@ -155,6 +157,40 @@ defmodule Expresso.Element.MathTest do
 
       assert count(document, ~s(#slide-1 .math math[display="block"] msup)) == 1
       assert count(document, "#slide-1 .math mfrac") == 1
+    end
+  end
+
+  describe "the names of the parts" do
+    test "a part name starts with a letter, and holds letters, digits, - and _" do
+      assert %Math{} = Builder.math(tex: ~S"\part{redex}{x} + \part{line-1_b}{y}")
+
+      for name <- ["a,b", "1st", "a=b", ""] do
+        assert_raise ArgumentError,
+                     ~r/the part name "#{Regex.escape(name)}" of a math element/,
+                     fn ->
+                       Builder.math(tex: "\\part{#{name}}{x}")
+                     end
+      end
+    end
+
+    test "parts/1 gives the data-part and the classes of the MathML, in order, without a repeat" do
+      mathml =
+        ~s(<math><mrow data-part="redex"><mi data-part="bind">f</mi><mi class="f bound">f</mi>) <>
+          ~s(<mi class="f">f</mi></mrow></math>)
+
+      assert Math.parts(mathml) == ["redex", "bind", "f", "bound"]
+    end
+
+    @tag :temml
+    test "\\part gives each sub-term its data-part, and \\class its class" do
+      tex = ~S"\part{redex}{(\lambda \part{bind}{f}.\,f)\,\part{arg}{g}} + \class{rest}{h}"
+      [{:ok, mathml}] = Math.Tex.render!([tex])
+
+      assert Math.parts(mathml) -- ["tml-display"] == ["redex", "bind", "arg", "rest"]
+
+      tree = Floki.parse_fragment!(mathml)
+      assert Floki.text(Floki.find(tree, ~s([data-part="arg"]))) == "g"
+      assert Floki.text(Floki.find(tree, ~s([data-part="bind"]))) == "f"
     end
   end
 end
