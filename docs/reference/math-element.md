@@ -130,6 +130,62 @@ A `math` element with a `do` block takes `tex` inside the block, as above. The f
 - The render stops for a `part` with a name that the formula does not have, and the message
   gives the names of the parts.
 
+## The lines of a derivation
+
+A derivation has a line for each step, and the lines align on their relations, such as `=`
+or `→β`. A formula takes its lines in two forms.
+
+### Aligned LaTeX
+
+`\begin{aligned}` aligns the rows of the `tex` option on `&`. Give each row a part, so it can
+take steps:
+
+```elixir
+slide "the proof" do
+  math tex: ~S"""
+  \begin{aligned}
+    & \part{l1}{(a + b)^2} \\
+    \part{l2}{=} & \part{l2}{a^2 + 2ab + b^2}
+  \end{aligned}
+  """
+end
+```
+
+A cell of a row cannot be inside a group of a different cell, so a part of a row names each
+cell, as `l2` does above.
+
+### The line entity
+
+The `line` entity writes the aligned LaTeX for you. Its first argument is the relation in
+LaTeX, the `tex` option is the term, and the `why` option is the reason in a column at the
+right.
+
+```elixir
+slide "the proof" do
+  math do
+    reveal true
+    line tex: ~S"(a + b)^2"
+    line "=", tex: ~S"(a + b)(a + b)", why: "the definition of a square"
+    line "=", tex: ~S"a^2 + 2ab + b^2", why: "multiply out"
+  end
+end
+```
+
+| Option | Value | Effect |
+| --- | --- | --- |
+| The first argument | LaTeX, such as `"="` or `~S"\to_\beta"` | The relation of the line. The first line usually has none. |
+| `tex` | LaTeX | The term of the line. |
+| `why` | Plain text | The reason of the line. A character such as `&`, `%` or `{` shows as it is. |
+| `name` | A name | The name of the part of the line. The default is `line1`, `line2` and so on. |
+
+- Each line is a part with its name, so a `part` entity can give it steps, such as
+  `part "line2" do on 3, state: :alert end`. Its options add to the line.
+- `reveal true` on the `math` element shows each line at its own step. The first line shows at
+  the first step of the element. A `part` of the deck without an `at` option does not take a
+  step.
+- A `math` element takes line entities, the MathML argument or the `tex` option, and one
+  only.
+
 ## The math font
 
 The deck option `math_font` gives the font of each `math` element. The document holds the
