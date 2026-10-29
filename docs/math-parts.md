@@ -149,16 +149,17 @@ end
 | 3. The option `tex` | Done. `Expresso.Element.Math.typeset/2` makes the MathML of each `tex` option before the render. `Expresso.Element.Diagram.Cache.fetch_many/2` returns the MathML that the cache holds, and it calls Temml one time with the other sources. A test gives `typeset/2` a function in the place of Temml, so the tests of the option run without Node, and a test with the tag `:temml` renders a deck with Temml. These tests need no file of fixtures. |
 | 4. The fonts | Done. `priv/fonts/math/` holds the four fonts as WOFF2 files with their licenses, and `priv/temml/css/` holds the style sheet of Temml for each font, because each one tunes the stretched accents for its font. Noto Sans Math had no WOFF2 file with its math glyphs, so fontTools made one from the TTF file of the site of Temml. Latin Modern Math adds approximately 540 kilobytes to a document with a formula. The theme gives the font of the text in `--font-text`. |
 | 5. The names of the parts | Done. `priv/temml/render.mjs` gives Temml the macro `\part`, which becomes `\data{part=name}`, so a part can hold other parts. A part of one symbol gets `data-part` on its `mi`, and not on an `mrow`. `Expresso.Element.Math.check/1` refuses a name that `\data` cannot read, such as a name with a comma, and `parts/1` gives the names of the MathML. |
-| 6. The `part` entity | Done. A `math` element holds `part` entities, as a diagram does, so the steps, the identities and the rules of the overlays reach a part with no new code. The render puts the overlay attributes and the class `math-part` on each element with the name of the part. `Expresso.Placement` lets a `math` element hold parts, and `check/1` refuses `move_to`. The theme mixes the color of a part with `color-mix`, so the browser gives it as `color(srgb r g b)`. |
+| 6. The `part` entity | Done. A `math` element holds `part` entities, as a diagram does, so the steps, the identities and the rules of the overlays reach a part with no new code. The render puts the overlay attributes and the class `math-part` on each element with the name of the part. `Expresso.Placement` lets a `math` element hold parts, and `check/1` refuses `move_to`, until pull request 11. The theme mixes the color of a part with `color-mix`, so the browser gives it as `color(srgb r g b)`. |
 | 7. The lines | Done. The struct `Expresso.Element.MathLine` holds a line. `Expresso.Element.Math.check/1` writes the lines into the LaTeX of one `aligned` formula. A part of LaTeX cannot hold the `&` of a row, so each cell of a row is in the part of its line, and the part has three elements. With `reveal true`, `check/1` gives each part of a line `[from: :next]` and clears `reveal`, so a part of the deck without `at` does not take a step. A part of the deck with the name of a line adds its options to the line. Temml writes each space of `\text` as a space that does not break. |
 | 8. The handout, the screen reader and the layout check | Done. These needed no new code, because a part obeys the overlay contract. The handout view gives each step of a derivation a page, and the last page shows each line. axe-core finds no problem in a derivation with parts at each step and in each view. The layout check measures the whole `math` element, so it reports a long line at the first step, when the line is hidden but keeps its space. The guides tell how to make a formula smaller. |
 | 9. The guide, the example decks and their GIFs | Done. `docs/how-to/explain-a-formula-step-by-step.md` shows three example decks: the quadratic formula with a colored part and an outline, a derivation with `reveal true`, and the parts of one β-reduction. `mix spark.formatter` now names the new options, so the formatter adds no parentheses to `tex` and `line`. |
 | 10. `\id` | Done. The maintainer asked for `\id` as a third name of a part. The script gives Temml a macro `\id`, the same as `\part`, so the MathML gets `data-part` and no HTML `id`, and two formulas with the same name do not clash. |
+| 11. `move_to` | Done. The maintainer asked for `move_to` on a part of a formula. `Expresso.Element.Math.place/1` writes the move as `--x: var(--to-x-name)` and `--y: var(--to-y-name)`, and it gives the part the attribute `data-move-to`. `assets/src/move.ts` measures a hidden copy of the formula with no transform and no transition, and it sets the two custom properties. It measures again when the window changes its size and when a font loads. The issues #473 and #474 need this measure. |
 
 ## The result
 
-The nine pull requests of the stack contain the plan. These parts are different from the
-plan, or the plan did not tell them:
+The eleven pull requests of the stack contain the plan and two additions. These parts are
+different from the plan, or the plan did not tell them:
 
 - **The tests without Node.** Decision 9 planned a file of fixtures. `typeset/2` takes the
   function that makes the MathML, so a test gives a function in the place of Temml, and no
@@ -175,11 +176,14 @@ plan, or the plan did not tell them:
   part of one symbol gets `data-part` on its `mi`.
 - **The part entity.** A part obeys the overlay contract, so its steps, its identity and the
   rules of the theme needed no new code. `Expresso.Placement` lets a `math` element hold
-  parts, and a part of a formula takes no `move_to`.
+  parts.
 - **`math tex: ... do`.** With a `do` block, the DSL gives the keyword list to the optional
   MathML argument. A `math` element with parts takes `tex` inside its block.
 - **The lines.** A group of LaTeX cannot hold the `&` of a row, so each cell of a row is in
   the part of its line. `check/1` consumes `reveal`, so a part of the deck without `at` does
   not take a step of the lines.
+- **`\id` and `move_to`.** The maintainer asked for these two after the plan. `\id` is a third
+  name of a part. The render cannot measure a formula, so the presenter script measures each
+  `move_to` in the browser. A browser with no script shows the part at its own place.
 - **The handout, the screen reader and the layout check** needed no new code. The layout
   check reports a wide derivation at its first step, because a hidden line keeps its space.

@@ -83,6 +83,7 @@ import { load as loadEmbeds } from "./embed.ts";
 import { play as playVideos } from "./video.ts";
 import { play as playAudios } from "./audio.ts";
 import { count } from "./chart.ts";
+import { forget, place } from "./move.ts";
 import { modeOf, pairs } from "./morph.ts";
 import type { Pair } from "./morph.ts";
 import { search } from "./search.ts";
@@ -215,6 +216,7 @@ function show(changed: State, local = true): void {
     () => {
       apply(state, deck, program);
       count();
+      place();
     },
     pairs,
   );
@@ -326,6 +328,20 @@ if (isSpeaker) {
 // numbers of a chart with the `count` option get the values of their step.
 apply(state, deck, program);
 count();
+place();
+
+// A part of a formula with `move_to` moves by a distance that `move.ts`
+// measures. A new size of the window and a font that loads change the
+// distance.
+window.addEventListener("resize", place);
+if ("fonts" in document) {
+  const again = (): void => {
+    forget();
+    place();
+  };
+  document.fonts.addEventListener("loadingdone", again);
+  void document.fonts.ready.then(again);
+}
 
 // The state of the address sends no message. Before this rule, a reload of
 // the speaker view sent its old state, and the present view lost its black
@@ -357,8 +373,10 @@ window.addEventListener("online", embeds);
 function check(): void {
   document.fonts.ready
     .then(async () => {
-      const show = (index: number): void =>
+      const show = (index: number): void => {
         apply({ ...state, index }, deck, program);
+        place();
+      };
       const problems = audit(deck.steps, show);
       apply(state, deck, program);
       report(problems);
