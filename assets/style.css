@@ -4,7 +4,9 @@
  * `--code-keyword`, on `:root`. Paper always gets the default theme.
  */
 html {
-  font-family: "Atkinson Hyperlegible", sans-serif;
+  /* The font of the text, and of the text in a formula. */
+  --font-text: "Atkinson Hyperlegible", sans-serif;
+  font-family: var(--font-text);
   font-size: 48px;
   color: var(--text);
   background-color: var(--background);

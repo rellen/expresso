@@ -1,0 +1,34 @@
+The math fonts of the deck option math_font. `Expresso.Element.Math.Font` puts
+the chosen file into the document of a deck with a math element.
+`docs/math-parts.md` gives the design.
+
+Each file comes from the site of Temml, at
+https://github.com/ronkok/Temml/tree/main/site/assets, on 2026-10-28.
+
+| File                         | Font                    | Version | License               |
+| ---------------------------- | ----------------------- | ------- | --------------------- |
+| latinmodernmath.woff2        | Latin Modern Math       | 1.959   | GUST-FONT-LICENSE.txt |
+| STIXTwoMath.woff2            | STIX Two Math           | 2.14    | OFL-STIX.txt          |
+| LibertinusMath-Regular.woff2 | Libertinus Math         | 7.040   | OFL-Libertinus.txt    |
+| NotoSansMath-Regular.woff2   | Noto Sans Math          | 3.000   | OFL-Noto.txt          |
+| Temml.woff2                  | Temml (script capitals) | -       | OFL of KaTeX          |
+
+The site of Temml holds Noto Sans Math as a TTF file of approximately 1 MB.
+fontTools 4.60.1 with Brotli 1.1.0 made the WOFF2 file from it, with the same
+tables:
+
+    from fontTools.ttLib import TTFont
+    font = TTFont("NotoSansMath-Regular.ttf")
+    font.flavor = "woff2"
+    font.save("NotoSansMath-Regular.woff2")
+
+Temml.woff2 is a copy of KaTeX_Script-Regular, with the script capitals at the
+code points of Unicode from U+1D49C to U+1D4B5. The fonts of KaTeX have the SIL
+Open Font License, Version 1.1, which OFL-STIX.txt also holds.
+
+The licenses come from:
+
+- GUST-FONT-LICENSE.txt: https://www.gust.org.pl/projects/e-foundry/licenses
+- OFL-STIX.txt: https://github.com/stipub/stixfonts
+- OFL-Libertinus.txt: https://github.com/alerque/libertinus
+- OFL-Noto.txt: https://github.com/notofonts/math

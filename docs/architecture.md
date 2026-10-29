@@ -555,6 +555,14 @@ SIL Open Font License, Version 1.1. `assets/fonts/OFL.txt` holds that license, a
 license permits this use. The eight files take approximately 110 kilobytes, and the data
 URIs take approximately 147 kilobytes of the document.
 
+The math fonts are different, because a deck with no formula needs none.
+`Expresso.Element.Math.Font` reads the style sheet of Temml for the font of the
+`math_font` option from `priv/temml/css/`, and it replaces each `url()` of a font file with
+a data URI of the file in `priv/fonts/math/`. The renderer writes that style sheet only in
+a document with a `math` element. The font of Latin Modern Math, the default, adds
+approximately 540 kilobytes to such a document. `priv/fonts/math/SOURCE` names the origin
+and the license of each file.
+
 ### The style sheets and the bundle
 
 The renderer holds `assets/style.css` and the presenter bundle in module attributes.

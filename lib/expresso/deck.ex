@@ -40,6 +40,11 @@ defmodule Expresso.Deck do
   dimmed text, from 3 to 7. A deck without the key, or with `nil`, dims to
   3:1. `Expresso.Palette.with_dim_contrast/2` gives the rules.
 
+  The metadata can also hold `:math_font`, the font of each math element, one
+  of `Expresso.Element.Math.Font.names/0`. A deck without the key gets
+  `:latin_modern`. The renderer puts the font into a document with a math
+  element only.
+
   The metadata can also hold `:effect`, the way in which an element with steps
   shows and hides, such as `:grow`. The metadata of a slide and the `effect`
   field of an element can hold it too, and the nearest value applies. A deck

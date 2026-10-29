@@ -65,7 +65,8 @@ defmodule Expresso do
       speed: option.(:speed, nil),
       easing: option.(:easing, nil),
       css: option.(:css, nil),
-      theme: option.(:theme, :default)
+      theme: option.(:theme, :default),
+      math_font: option.(:math_font, Expresso.Element.Math.Font.default())
     }
 
     # The templates and the renderer read a key when it is present, so the key

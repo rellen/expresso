@@ -33,6 +33,7 @@ end
 | `slide_template MySlideTemplate` | A module that makes the body of each slide. |
 | `lang "de"` | The language of the text of the deck, for a screen reader. The default is `"en"`. See [the lang option](lang-option.md). |
 | `dim_contrast 4.5` | The minimum contrast of dimmed text, from 3 to 7. The default is 3. See [the dim_contrast option](dim-contrast-option.md). |
+| `math_font :stix` | The font of each `math` element: `:latin_modern`, the default, `:stix`, `:libertinus`, `:noto` or `:system`. A document holds the chosen font only when the deck has a `math` element. See [the math element](math-element.md#the-math-font). |
 | `window :macos` | A frame that looks like a window around each code element, image and embed: `:macos`, `:terminal`, `:plain` or `:none`. The default is `:none`. See [the window option](window-option.md). |
 | `icons logo: "assets/logo.svg"` | SVG files of your own for the `icon` element and for `:icon:name:` in a text. See [the icon element](icon-element.md). |
 | `theme :dracula` | The colors of the slides and of the code. Each built-in theme meets the contrast minimums of WCAG. `theme dark: :dracula, light: :default` gives two variants. See [the theme option](theme-option.md). |
