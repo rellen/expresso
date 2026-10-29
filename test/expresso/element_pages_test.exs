@@ -57,7 +57,7 @@ defmodule Expresso.ElementPagesTest do
   # such a block, and the test with the tag of the tool renders it.
   defp tool(block) do
     cond do
-      block =~ ~r/\btex: / -> :temml
+      block =~ ~r/\btex(: | ~S)/ -> :temml
       block =~ ~r/"[^"]+\.(dot|gv)"/ -> :graphviz
       block =~ ~r/"[^"]+\.d2"/ -> :d2
       block =~ ~r/"[^"]+\.mmd"|lang: :mermaid/ -> :mermaid

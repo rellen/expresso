@@ -38,10 +38,12 @@ script of 150 lines writes the file.
 
 ```elixir
 slide "the redex" do
-  math tex: ~S"""
-  \part{redex}{(\lambda \part{bind}{f}.\,(\lambda x.\part{f1}{f}\,(x\,x))\,
-    (\lambda x.\part{f2}{f}\,(x\,x)))\,\part{arg}{g}}
-  """ do
+  math do
+    tex ~S"""
+    \part{redex}{(\lambda \part{bind}{f}.\,(\lambda x.\part{f1}{f}\,(x\,x))\,
+      (\lambda x.\part{f2}{f}\,(x\,x)))\,\part{arg}{g}}
+    """
+
     part "bind" do
       on [from: 2], set: [color: "var(--accent)"]
     end
@@ -146,7 +148,7 @@ end
 | 3. The option `tex` | Done. `Expresso.Element.Math.typeset/2` makes the MathML of each `tex` option before the render. `Expresso.Element.Diagram.Cache.fetch_many/2` returns the MathML that the cache holds, and it calls Temml one time with the other sources. A test gives `typeset/2` a function in the place of Temml, so the tests of the option run without Node, and a test with the tag `:temml` renders a deck with Temml. These tests need no file of fixtures. |
 | 4. The fonts | Done. `priv/fonts/math/` holds the four fonts as WOFF2 files with their licenses, and `priv/temml/css/` holds the style sheet of Temml for each font, because each one tunes the stretched accents for its font. Noto Sans Math had no WOFF2 file with its math glyphs, so fontTools made one from the TTF file of the site of Temml. Latin Modern Math adds approximately 540 kilobytes to a document with a formula. The theme gives the font of the text in `--font-text`. |
 | 5. The names of the parts | Done. `priv/temml/render.mjs` gives Temml the macro `\part`, which becomes `\data{part=name}`, so a part can hold other parts. A part of one symbol gets `data-part` on its `mi`, and not on an `mrow`. `Expresso.Element.Math.check/1` refuses a name that `\data` cannot read, such as a name with a comma, and `parts/1` gives the names of the MathML. |
-| 6. The `part` entity | To do |
+| 6. The `part` entity | Done. A `math` element holds `part` entities, as a diagram does, so the steps, the identities and the rules of the overlays reach a part with no new code. The render puts the overlay attributes and the class `math-part` on each element with the name of the part. `Expresso.Placement` lets a `math` element hold parts, and `check/1` refuses `move_to`. The theme mixes the color of a part with `color-mix`, so the browser gives it as `color(srgb r g b)`. |
 | 7. The lines | To do |
 | 8. The handout, the screen reader and the layout check | To do |
 | 9. The guide, the example decks and their GIFs | To do |

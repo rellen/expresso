@@ -43,6 +43,22 @@ defmodule Expresso.Element.MathTest do
     end
   end
 
+  defmodule PartDeck do
+    use Expresso
+
+    name "part deck"
+
+    slide "parts" do
+      math ~S(<math><mrow data-part="redex"><mi data-part="bind">f</mi><mi class="arg x">g</mi></mrow></math>) do
+        part "bind" do
+          on 2, set: [color: "red"]
+        end
+
+        part "arg", at: [from: 3]
+      end
+    end
+  end
+
   # A function in the place of Temml, so the tests run without Node. It sends
   # the sources of each call, and it gives a fixed MathML for each source.
   defp fake do
@@ -191,6 +207,47 @@ defmodule Expresso.Element.MathTest do
       tree = Floki.parse_fragment!(mathml)
       assert Floki.text(Floki.find(tree, ~s([data-part="arg"]))) == "g"
       assert Floki.text(Floki.find(tree, ~s([data-part="bind"]))) == "f"
+    end
+  end
+
+  describe "the part entity" do
+    test "a math element holds parts, and a part gets its steps" do
+      [slide] = Expresso.parse(PartDeck).slides
+      assert [%Math{elements: [bind, arg]}] = slide.elements
+      assert %Expresso.Element.Part{id: "bind", on: [%{steps: [2]}]} = bind
+      assert %Expresso.Element.Part{id: "arg", steps: [3]} = arg
+    end
+
+    test "the render puts the overlay attributes and the class math-part on each element of a part" do
+      document = document(PartDeck)
+
+      bind = LazyHTML.query(document, ~s(#slide-1 .math mi[data-part="bind"]))
+      arg = LazyHTML.query(document, "#slide-1 .math mi.arg")
+
+      assert LazyHTML.attribute(bind, "class") == ["math-part"]
+      assert [_el] = LazyHTML.attribute(bind, "data-el")
+      assert LazyHTML.attribute(arg, "class") == ["math-part arg x"]
+      assert LazyHTML.attribute(arg, "data-on") == ["3"]
+
+      redex = LazyHTML.query(document, ~s(#slide-1 .math mrow[data-part="redex"]))
+      assert LazyHTML.attribute(redex, "class") == []
+    end
+
+    test "a part with a name that the formula does not have stops the render" do
+      math = Builder.math(@formula, elements: [Builder.part("redex")])
+      deck = Builder.deck([Builder.slide("a", elements: [math])])
+
+      assert_raise ArgumentError, ~r/the math element has no part with the name "redex"/, fn ->
+        Expresso.Deck.render(deck)
+      end
+    end
+
+    test "a part of a math element takes no move_to" do
+      part = Builder.part("bind", on: [Builder.on(2, move_to: "arg")])
+
+      assert_raise ArgumentError, ~r/a part of a math element takes no move_to/, fn ->
+        Builder.math(@formula, elements: [part])
+      end
     end
   end
 end

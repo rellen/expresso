@@ -86,6 +86,50 @@ end
   refuses a different name.
 - The MathML argument can give a part with the attribute `data-part` or `class`.
 
+## The steps of a part
+
+A `part` entity of a `math` element gives a part its steps. It takes the overlay options, as
+a part of a diagram does: `at`, `effect` and the `on` entity with `state` and `set`.
+
+```elixir
+slide "the redex" do
+  math do
+    tex ~S"\part{redex}{(\lambda \part{bind}{f}.\,f\,x)\,\part{arg}{g}}"
+
+    part "bind" do
+      on [from: 2], set: [color: "var(--accent)"]
+    end
+
+    part "arg", at: [from: 3]
+
+    part "redex" do
+      on 4, state: :alert
+    end
+  end
+end
+```
+
+At step 2 the binder `f` gets the accent color, at step 3 the argument `g` shows, and at
+step 4 an outline goes around the whole redex.
+
+A `math` element with a `do` block takes `tex` inside the block, as above. The form
+`math tex: ... do` gives the option to the MathML argument, and the compiler refuses it.
+
+| Option | Effect on a part |
+| --- | --- |
+| `at` | The part shows at these steps, and keeps its space at the other steps. |
+| `effect` | The way in which the part shows, such as `:grow` or `:fly_up`. |
+| `on ..., state: :dim` | The part dims. |
+| `on ..., state: :alert` | An outline goes around the part. |
+| `on ..., set: [color: ...]` | The part gets that color. |
+| `on ..., set: [x: ..., y: ..., scale: ..., rotate: ..., opacity: ...]` | The part moves, changes its size, turns or fades. |
+
+- A part with the name of two sub-terms changes both.
+- The compiler refuses `move_to` on a part of a formula. Issues #473 and #474 plan the moves
+  between parts.
+- The render stops for a `part` with a name that the formula does not have, and the message
+  gives the names of the parts.
+
 ## The math font
 
 The deck option `math_font` gives the font of each `math` element. The document holds the
