@@ -1524,6 +1524,12 @@ defmodule Expresso.Extension do
         doc:
           "The minimum contrast ratio of dimmed text on its background, from 3 to 7. The default is 3. Give 4.5 to meet WCAG 2.2 criterion 1.4.3 for normal text. See docs/reference/dim-contrast-option.md."
       ],
+      math_font: [
+        type: {:in, Expresso.Element.Math.Font.names()},
+        default: Expresso.Element.Math.Font.default(),
+        doc:
+          "The font of each math element: :latin_modern, the default, :stix, :libertinus, :noto or :system. The document holds the chosen font only, and only when the deck has a math element. :system holds no font. See docs/reference/math-element.md."
+      ],
       window: [
         type: {:in, Expresso.Element.Window.styles()},
         doc:

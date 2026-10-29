@@ -65,6 +65,40 @@ line.
 
 Use the `~S` sigil for the LaTeX, so that Elixir does not change a `\`.
 
+## The math font
+
+The deck option `math_font` gives the font of each `math` element. The document holds the
+font as a data URI, so a formula looks the same on each computer and needs no network.
+
+```elixir
+defmodule MyTalk do
+  use Expresso
+
+  math_font :stix
+
+  slide "the formula" do
+    math tex: ~S"\sum_{i=1}^n i = \frac{n(n+1)}{2}"
+  end
+end
+```
+
+| Value | Font | Size in the document |
+| --- | --- | --- |
+| `:latin_modern` | Latin Modern Math, the font of LaTeX. This is the default. | Approximately 540 kilobytes |
+| `:stix` | STIX Two Math, a font in the style of Times. | Approximately 750 kilobytes |
+| `:libertinus` | Libertinus Math. | Approximately 460 kilobytes |
+| `:noto` | Noto Sans Math, a font without serifs. | Approximately 470 kilobytes |
+| `:system` | A math font of the computer that shows the deck. | Approximately 20 kilobytes |
+
+- A document holds the chosen font only when the deck has a `math` element. A deck with no
+  formula is not larger.
+- The text of `\text{…}` in a formula takes the font of the slide, from the custom property
+  `--font-text`. See [the css option](css-option.md).
+- `:system` holds no math font. A computer without a math font shows a formula with a font
+  for text, and some symbols do not align.
+- The style sheet of Temml for each font comes with the font, so its rules for stretched
+  accents and arrows fit the font.
+
 ## Show the steps of a proof
 
 To move a copy of each symbol of a formula, see

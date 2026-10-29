@@ -83,7 +83,8 @@ defmodule ExpressoTest do
                speed: nil,
                easing: nil,
                css: nil,
-               theme: :default
+               theme: :default,
+               math_font: :latin_modern
              }
     end
 

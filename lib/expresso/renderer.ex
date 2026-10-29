@@ -173,6 +173,18 @@ defmodule Expresso.Renderer do
   # The language of the deck. A deck struct from data can have no key.
   defp lang(deck), do: deck.metadata[:lang] || "en"
 
+  # The math font and the style sheet of Temml come only into a document with a
+  # formula.
+  defp math_css(deck) do
+    math? =
+      deck.slides
+      |> Enum.flat_map(&Expresso.Element.Tree.descendants(&1.elements))
+      |> Enum.any?(&is_struct(&1, Expresso.Element.Math))
+
+    font = (deck.metadata || %{})[:math_font] || Expresso.Element.Math.Font.default()
+    if math?, do: "\n" <> Expresso.Element.Math.Font.css(font), else: ""
+  end
+
   defp menu_name(slide),
     do: slide.metadata[:heading] || slide.name || "Slide #{slide.metadata.slide_number}"
 
@@ -611,7 +623,7 @@ defmodule Expresso.Renderer do
           end
 
           style do
-            Phoenix.HTML.raw(Expresso.Highlight.stylesheet())
+            Phoenix.HTML.raw(Expresso.Highlight.stylesheet() <> math_css(@deck))
           end
 
           style do
