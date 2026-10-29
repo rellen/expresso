@@ -29,6 +29,8 @@ defmodule Expresso.Element.Math do
               :text,
               :tex,
               elements: [],
+              lines: [],
+              reveal: false,
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 
@@ -36,31 +38,121 @@ defmodule Expresso.Element.Math do
   @part_name ~r/^[A-Za-z][\w-]*$/
 
   @doc """
-  Check that a math element has one source: the MathML or the `tex` option
+  Check a math element, and write its lines into one formula
 
-  The function also checks the name of each `\\part{name}{…}` of the LaTeX.
-  The entity of the DSL and `Expresso.Builder` call this function.
+  A math element has one source: the MathML, the `tex` option, or `line`
+  entities. The function writes the lines into the LaTeX of one formula of the
+  environment `aligned`, a row for each line, with the relation, the term and
+  the reason in three columns. Each line becomes a part with its name, and
+  with `reveal true` it shows at its own step. The function then checks the
+  name of each `\\part{name}{…}` of the LaTeX, and it refuses `move_to` on a
+  part. The entity of the DSL and `Expresso.Builder` call this function.
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
-  def check(%__MODULE__{text: nil, tex: nil}),
-    do: {:error, "a math element takes the MathML as its argument, or the tex option"}
+  def check(%__MODULE__{} = math) do
+    with {:ok, math} <- write_lines(math),
+         :ok <- one_source(math),
+         :ok <- no_move(math),
+         :ok <- part_names_ok(math) do
+      {:ok, math}
+    end
+  end
 
-  def check(%__MODULE__{text: text, tex: tex}) when is_binary(text) and is_binary(tex),
+  defp write_lines(%__MODULE__{lines: []} = math), do: {:ok, math}
+
+  defp write_lines(%__MODULE__{lines: _lines, text: text, tex: tex})
+       when is_binary(text) or is_binary(tex),
+       do:
+         {:error,
+          "a math element takes the MathML, the tex option or line entities, and one only"}
+
+  defp write_lines(%__MODULE__{lines: lines, elements: parts, reveal: reveal} = math) do
+    named =
+      Enum.with_index(lines, 1) |> Enum.map(fn {line, n} -> {line.name || "line#{n}", line} end)
+
+    at = if reveal, do: Expresso.Overlay.from_next()
+
+    rows = Enum.map_join(named, " \\\\\n", fn {name, line} -> row(name, line) end)
+
+    # A part of the deck with the name of a line gives that line its options,
+    # such as an `on` entity, so the line has one set of overlay attributes.
+    own = Map.new(parts, &{&1.id, &1})
+
+    line_parts =
+      Enum.map(named, fn {name, _line} ->
+        case own do
+          %{^name => %Expresso.Element.Part{} = part} ->
+            %Expresso.Element.Part{part | at: part.at || at}
+
+          _own ->
+            %Expresso.Element.Part{id: name, at: at}
+        end
+      end)
+
+    names = Enum.map(named, &elem(&1, 0))
+    parts = Enum.reject(parts, &(&1.id in names))
+
+    {:ok,
+     %__MODULE__{
+       math
+       | tex: "\\begin{aligned}\n" <> rows <> "\n\\end{aligned}",
+         lines: [],
+         reveal: false,
+         elements: line_parts ++ parts
+     }}
+  end
+
+  # A row of the environment `aligned`: the relation in the first column, at
+  # the right, the term in the second column, and the reason in the fourth
+  # column, at the left. Each cell is in the part of the line.
+  defp row(name, line) do
+    relation = if line.relation, do: "\\part{#{name}}{#{line.relation}}", else: ""
+    why = if line.why, do: " && \\part{#{name}}{\\text{#{escape(line.why)}}}", else: ""
+    "#{relation} & \\part{#{name}}{#{line.tex}}#{why}"
+  end
+
+  # The characters of plain text that LaTeX reads as commands in `\text`.
+  @escapes %{
+    "\\" => "\\textbackslash{}",
+    "{" => "\\{",
+    "}" => "\\}",
+    "$" => "\\$",
+    "&" => "\\&",
+    "#" => "\\#",
+    "_" => "\\_",
+    "%" => "\\%",
+    "^" => "\\textasciicircum{}",
+    "~" => "\\textasciitilde{}"
+  }
+
+  defp escape(text),
+    do: String.replace(text, Map.keys(@escapes), &Map.fetch!(@escapes, &1))
+
+  defp one_source(%__MODULE__{text: nil, tex: nil}),
+    do:
+      {:error, "a math element takes the MathML as its argument, the tex option or line entities"}
+
+  defp one_source(%__MODULE__{text: text, tex: tex}) when is_binary(text) and is_binary(tex),
     do: {:error, "a math element takes the MathML or the tex option, and not both"}
 
-  def check(%__MODULE__{elements: parts} = math) when parts != [] do
+  defp one_source(_math), do: :ok
+
+  defp no_move(%__MODULE__{elements: parts}) do
     if Enum.any?(parts, &moves?/1),
       do:
         {:error,
          "a part of a math element takes no move_to. Give it set: [x: ..., y: ...], " <>
            "and see docs/reference/math-element.md"},
-      else: check(%__MODULE__{math | elements: []}) |> with_parts(parts)
+      else: :ok
   end
 
-  def check(%__MODULE__{tex: tex} = math) when is_binary(tex) do
+  defp moves?(%Expresso.Element.Part{on: on}),
+    do: Enum.any?(on || [], &(&1.move_to != nil))
+
+  defp part_names_ok(%__MODULE__{tex: tex}) when is_binary(tex) do
     case Enum.reject(part_names(tex), &Regex.match?(@part_name, &1)) do
       [] ->
-        {:ok, math}
+        :ok
 
       [name | _names] ->
         {:error,
@@ -69,15 +161,7 @@ defmodule Expresso.Element.Math do
     end
   end
 
-  def check(%__MODULE__{} = math), do: {:ok, math}
-
-  defp moves?(%Expresso.Element.Part{on: on}),
-    do: Enum.any?(on || [], &(&1.move_to != nil))
-
-  defp with_parts({:ok, %__MODULE__{} = math}, parts),
-    do: {:ok, %__MODULE__{math | elements: parts}}
-
-  defp with_parts(error, _parts), do: error
+  defp part_names_ok(_math), do: :ok
 
   # The name of each `\part{name}` of a source in LaTeX.
   defp part_names(tex) do

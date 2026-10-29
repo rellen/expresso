@@ -59,6 +59,25 @@ defmodule Expresso.Element.MathTest do
     end
   end
 
+  defmodule LinesDeck do
+    use Expresso
+
+    name "lines deck"
+
+    slide "proof" do
+      math do
+        reveal true
+        line tex: ~S"Y\,g"
+        line "=", tex: ~S"(\lambda f.\,f)\,g", why: "the definition of Y"
+        line ~S"\to_\beta", tex: "g", why: "f := g & 50% {x}", name: "reduce"
+
+        part "line2" do
+          on 3, state: :alert
+        end
+      end
+    end
+  end
+
   # A function in the place of Temml, so the tests run without Node. It sends
   # the sources of each call, and it gives a fixed MathML for each source.
   defp fake do
@@ -248,6 +267,62 @@ defmodule Expresso.Element.MathTest do
       assert_raise ArgumentError, ~r/a part of a math element takes no move_to/, fn ->
         Builder.math(@formula, elements: [part])
       end
+    end
+  end
+
+  describe "the line entity" do
+    test "the lines become one aligned formula, a row and a part for each line" do
+      [slide] = Expresso.parse(LinesDeck).slides
+      [%Math{tex: tex, lines: [], reveal: false, elements: parts}] = slide.elements
+
+      assert tex ==
+               Enum.join(
+                 [
+                   "\\begin{aligned}",
+                   ~S" & \part{line1}{Y\,g} \\",
+                   ~S"\part{line2}{=} & \part{line2}{(\lambda f.\,f)\,g} && \part{line2}{\text{the definition of Y}} \\",
+                   ~S"\part{reduce}{\to_\beta} & \part{reduce}{g} && \part{reduce}{\text{f := g \& 50\% \{x\}}}",
+                   "\\end{aligned}"
+                 ],
+                 "\n"
+               )
+
+      assert Enum.map(parts, & &1.id) == ["line1", "line2", "reduce"]
+    end
+
+    test "with reveal, each line shows at its own step, and a part of the deck with the name of a line adds to it" do
+      [slide] = Expresso.parse(LinesDeck).slides
+      [%Math{elements: [line1, line2, reduce]}] = slide.elements
+
+      assert {line1.steps, line2.steps, reduce.steps} == {[1, 2, 3], [2, 3], [3]}
+      assert [%{state: :alert, steps: [3]}] = line2.on
+    end
+
+    test "without reveal, each line shows at each step" do
+      math = Builder.math(lines: [Builder.line(tex: "x"), Builder.line("=", tex: "y")])
+      assert Enum.map(math.elements, & &1.at) == [nil, nil]
+    end
+
+    test "a math element takes lines, or the MathML, or the tex option, and one only" do
+      assert_raise ArgumentError,
+                   ~r/takes the MathML, the tex option or line entities, and one only/,
+                   fn ->
+                     Builder.math(tex: "x", lines: [Builder.line(tex: "y")])
+                   end
+    end
+
+    @tag :temml
+    test "Temml aligns the lines, and each line is a part" do
+      document = document(LinesDeck)
+
+      assert count(document, "#slide-1 .math mtable") == 1
+      assert count(document, ~s(#slide-1 .math [data-part="line2"].math-part)) == 3
+
+      # Temml writes each space of a text as a space that does not break.
+      reasons =
+        document |> texts("#slide-1 .math mtext") |> Enum.map(&String.replace(&1, "\u00A0", " "))
+
+      assert reasons == ["the definition of Y", "f := g & 50% {x}"]
     end
   end
 end

@@ -953,11 +953,33 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @math_line %Spark.Dsl.Entity{
+    name: :line,
+    target: Expresso.Element.MathLine,
+    args: [{:optional, :relation}],
+    schema: [
+      relation: [
+        type: :string,
+        doc:
+          "The relation of the line in LaTeX, such as \"=\" or ~S\"\\to_\\beta\". The first line usually has none."
+      ],
+      tex: [type: :string, required: true, doc: "The term of the line in LaTeX."],
+      why: [
+        type: :string,
+        doc: "The reason of the line, as plain text, in a column at the right."
+      ],
+      name: [
+        type: :string,
+        doc: "The name of the part of the line. The default is line1, line2 and so on."
+      ]
+    ]
+  }
+
   @math %Spark.Dsl.Entity{
     name: :math,
     target: Expresso.Element.Math,
     args: [{:optional, :text}],
-    entities: [elements: [@part], on: [@on]],
+    entities: [elements: [@part], lines: [@math_line], on: [@on]],
     transform: {Expresso.Element.Math, :check, []},
     schema:
       @overlay_schema ++
@@ -971,6 +993,12 @@ defmodule Expresso.Extension do
             type: :string,
             doc:
               "The formula in LaTeX, such as ~S\"x^2 + 1\". Temml makes its MathML in Node at render time. See docs/reference/math-element.md."
+          ],
+          reveal: [
+            type: :boolean,
+            default: false,
+            doc:
+              "With line entities, show each line at its own step. The first line shows at the first step of the element."
           ]
         ]
   }
