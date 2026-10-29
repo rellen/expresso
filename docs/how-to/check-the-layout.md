@@ -92,6 +92,10 @@ column. Do one of these:
   The check measures the text of the element, so the distance can be as large as the space
   next to the text.
 - Put fewer elements on the slide, or divide the slide into two slides.
+- Give a wide formula a smaller size of text. Give the `math` element a class, such as
+  `class "small"`, and the `css` option of the deck a rule, such as
+  `.small { font-size: 0.9rem; }`. A derivation with `reveal true` keeps the space of each
+  line from its first step, so the check reports a long line at the first step.
 
 ## Correct a chart or a diagram with small text
 
