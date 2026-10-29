@@ -47,6 +47,13 @@ defmodule Expresso.Element.MathTexTest do
       assert message == String.trim(message)
     end
 
+    test "\\id names a part with data-part, and writes no HTML id" do
+      assert [{:ok, mathml}] = Tex.render!([~S"\id{arg}{g}"])
+
+      assert mathml =~ ~s(data-part="arg")
+      refute mathml =~ ~s(id="arg")
+    end
+
     test "trusts \\class and \\data, so a part gets its attribute" do
       assert [{:ok, class}, {:ok, data}] =
                Tex.render!([~S"\class{redex}{x+1}", ~S"\data{part=arg}{g}"])
@@ -56,7 +63,7 @@ defmodule Expresso.Element.MathTexTest do
     end
 
     test "refuses each other command that writes an attribute or reads a file" do
-      for source <- [~S"\id{a}{x}", ~S"\style{color:red}{x}", ~S"\includegraphics{a.png}"] do
+      for source <- [~S"\style{color:red}{x}", ~S"\includegraphics{a.png}"] do
         assert [{:error, message}] = Tex.render!([source])
         assert message =~ "is not trusted", source
       end

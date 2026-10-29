@@ -13,7 +13,7 @@ defmodule Expresso.Element.Math.Tex do
   Node one time. Temml makes a formula in display mode, and it trusts `\\class`
   and `\\data` only, because the parts of a formula use them. It refuses each
   other command that writes an attribute or reads a file, such as
-  `\\includegraphics`.
+  `\\includegraphics`. The macros `\\part` and `\\id` give a name to a part.
   `docs/math-parts.md` gives the design.
   """
 

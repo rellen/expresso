@@ -9,11 +9,12 @@
 //
 // Temml trusts `\class` and `\data` only, because the parts of a formula use
 // them. It refuses each other command that writes an attribute or reads a
-// file, such as `\id`, `\style` and `\includegraphics`.
+// file, such as `\style` and `\includegraphics`.
 //
-// The macro `\part{name}{...}` gives a name to a sub-term. It becomes
-// `\data{part=name}{...}`, so the MathML of the sub-term gets the attribute
-// `data-part="name"`.
+// The macros `\part{name}{...}` and `\id{name}{...}` give a name to a
+// sub-term. Each becomes `\data{part=name}{...}`, so the MathML of the
+// sub-term gets the attribute `data-part="name"`. `\id` writes no HTML id, so
+// two formulas with the same name do not clash.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -29,7 +30,10 @@ const options = {
   annotate: false,
   throwOnError: true,
   trust: (context) => TRUSTED.has(context.command),
-  macros: { "\\part": "\\data{part=#1}{#2}" },
+  macros: {
+    "\\part": "\\data{part=#1}{#2}",
+    "\\id": "\\data{part=#1}{#2}",
+  },
 };
 
 const results = sources.map((source) => {
