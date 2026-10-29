@@ -5,8 +5,8 @@
 #     elixir examples/animations/y_combinator/write_svg.exs
 #
 # Each symbol has a cell of one width, because the script cannot measure the
-# glyphs of the font. Issue #472 asks for a math element that lays out the
-# terms and gives a name to each part.
+# glyphs of the font. The math element lays out a formula and names its parts,
+# and issues #473 and #474 plan the moves between parts.
 
 defmodule Examples.YCombinator.Svg do
   @moduledoc false

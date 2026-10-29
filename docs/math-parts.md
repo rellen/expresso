@@ -2,8 +2,9 @@
 
 This document gives the design for a `math` element that takes LaTeX and gives a name to
 each part of the formula, and the record of its progress. A step can then color, dim or move
-one part of a formula. The document records ten decisions, and each is settled. Issue #472
-holds the same plan.
+one part of a formula. The code contains this design. The document records ten decisions,
+and each is settled. Its last section, "The result", tells what changed during the work.
+Issue #472 holds the same plan.
 
 ## The problem
 
@@ -151,4 +152,33 @@ end
 | 6. The `part` entity | Done. A `math` element holds `part` entities, as a diagram does, so the steps, the identities and the rules of the overlays reach a part with no new code. The render puts the overlay attributes and the class `math-part` on each element with the name of the part. `Expresso.Placement` lets a `math` element hold parts, and `check/1` refuses `move_to`. The theme mixes the color of a part with `color-mix`, so the browser gives it as `color(srgb r g b)`. |
 | 7. The lines | Done. The struct `Expresso.Element.MathLine` holds a line. `Expresso.Element.Math.check/1` writes the lines into the LaTeX of one `aligned` formula. A part of LaTeX cannot hold the `&` of a row, so each cell of a row is in the part of its line, and the part has three elements. With `reveal true`, `check/1` gives each part of a line `[from: :next]` and clears `reveal`, so a part of the deck without `at` does not take a step. A part of the deck with the name of a line adds its options to the line. Temml writes each space of `\text` as a space that does not break. |
 | 8. The handout, the screen reader and the layout check | Done. These needed no new code, because a part obeys the overlay contract. The handout view gives each step of a derivation a page, and the last page shows each line. axe-core finds no problem in a derivation with parts at each step and in each view. The layout check measures the whole `math` element, so it reports a long line at the first step, when the line is hidden but keeps its space. The guides tell how to make a formula smaller. |
-| 9. The guide, the example decks and their GIFs | To do |
+| 9. The guide, the example decks and their GIFs | Done. `docs/how-to/explain-a-formula-step-by-step.md` shows three example decks: the quadratic formula with a colored part and an outline, a derivation with `reveal true`, and the parts of one β-reduction. `mix spark.formatter` now names the new options, so the formatter adds no parentheses to `tex` and `line`. |
+
+## The result
+
+The nine pull requests of the stack contain the plan. These parts are different from the
+plan, or the plan did not tell them:
+
+- **The tests without Node.** Decision 9 planned a file of fixtures. `typeset/2` takes the
+  function that makes the MathML, so a test gives a function in the place of Temml, and no
+  test needs a fixture. The test of the pages of the elements renders a code block with
+  LaTeX only with the tag `:temml`.
+- **One run of Node.** `Expresso.Element.Diagram.Cache.fetch_many/2` returns the MathML that
+  the cache of the watch mode holds, and it calls Temml one time with the other sources.
+- **The style sheets of Temml.** Temml tunes its stretched accents for each font, so the
+  document holds the style sheet of the chosen font with the font. A deck with no formula
+  holds neither.
+- **Noto Sans Math.** No WOFF2 file with its math glyphs was available, so fontTools made one
+  from the TTF file of the site of Temml.
+- **The macro `\part`.** The script gives Temml a macro, so a part can hold other parts. A
+  part of one symbol gets `data-part` on its `mi`.
+- **The part entity.** A part obeys the overlay contract, so its steps, its identity and the
+  rules of the theme needed no new code. `Expresso.Placement` lets a `math` element hold
+  parts, and a part of a formula takes no `move_to`.
+- **`math tex: ... do`.** With a `do` block, the DSL gives the keyword list to the optional
+  MathML argument. A `math` element with parts takes `tex` inside its block.
+- **The lines.** A group of LaTeX cannot hold the `&` of a row, so each cell of a row is in
+  the part of its line. `check/1` consumes `reveal`, so a part of the deck without `at` does
+  not take a step of the lines.
+- **The handout, the screen reader and the layout check** needed no new code. The layout
+  check reports a wide derivation at its first step, because a hidden line keeps its space.

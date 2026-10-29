@@ -3081,18 +3081,13 @@ The commands are:
 
 ## Open work
 
-1. The formulas with parts of `docs/math-parts.md`: a `math` element that takes LaTeX, with
-   a name for each part of a formula, a math font and aligned lines. Issue #472 holds the
-   plan, and its decisions are settled. The work comes in a stack of nine pull requests, and
-   the document records the state of each one. Issues #473, #474, #478, #479 and #475 build
-   on it, in that order.
+There is no item at this time. Issues #473, #474, #479, #478 and #475 build on the parts of
+a formula, in that order, and issue #397 to issue #407 propose other features. Each one needs
+a decision before the work starts.
 
-Issue #397 to issue #407 propose features, and each one needs a decision before the work
-starts.
-
-The item before it, the waterfall charts of `docs/waterfall-charts.md`, added the chart kind
-`:waterfall`. It shows how a start value changes through increases, decreases and totals.
-Issue #411 holds that plan.
+The item before it, the formulas with parts of `docs/math-parts.md`, added the option `tex`
+of `math`, the `part` and `line` entities of a formula, and the deck option `math_font`.
+Issue #472 holds that plan.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on

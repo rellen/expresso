@@ -4,7 +4,7 @@ defmodule Expresso.E2E.MathFontTest do
   defmodule FontDeck do
     use Expresso
 
-    math_font(:stix)
+    math_font :stix
 
     slide "formula" do
       math ~S(<math display="block"><mi>x</mi><mo>=</mo><mtext>the fix point</mtext></math>)

@@ -41,4 +41,4 @@ GitHub.
 - `docs/graph-diagrams.md` — the design for a diagram from Graphviz or D2, and its result.
 - `docs/scatter-plots.md` — the design for a scatter plot, and its result.
 - `docs/waterfall-charts.md` — the design for a waterfall chart, and its result.
-- `docs/math-parts.md` — the design for a formula with parts, and its progress.
+- `docs/math-parts.md` — the design for a formula with parts, and its result.
