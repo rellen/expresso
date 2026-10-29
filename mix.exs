@@ -53,6 +53,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/check-a-deck.md",
         "docs/how-to/style-one-slide.md",
         "docs/how-to/move-a-diagram-part.md",
+        "docs/how-to/explain-a-formula-step-by-step.md",
         "docs/how-to/show-the-steps-of-a-proof.md",
         "docs/how-to/point-at-a-part-of-a-slide.md",
         "docs/how-to/show-a-web-page.md",

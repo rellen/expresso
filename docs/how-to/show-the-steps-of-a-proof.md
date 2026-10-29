@@ -6,9 +6,11 @@ equal to `g (Y g)`.
 
 ![The proof that Y g is a fix point of g, one step at a time](https://raw.githubusercontent.com/rellen/expresso/media/y-combinator.gif)
 
-The `math` element cannot change one symbol of a formula at a step. The example therefore
-uses a `diagram` with one SVG element for each symbol. Issues #472, #473, #474 and #475
-plan a `math` element that makes these steps with less work.
+A `math` element can color, dim and show each part of a formula at a step. See
+[Explain a formula step by step](explain-a-formula-step-by-step.md). A part of a formula
+cannot move to the place of another part yet, so this example uses a `diagram` with one SVG
+element for each symbol. Issues #473, #474, #478, #479 and #475 plan the moves and the
+substitutions of a `math` element.
 
 ## Plan the steps of a β-reduction
 

@@ -222,6 +222,8 @@ end
 
 ## Show the steps of a proof
 
-To move a copy of each symbol of a formula, see
-[Show the steps of a proof](../how-to/show-the-steps-of-a-proof.md). A `math` element cannot
-change one symbol at a step, so that guide draws the formula as a diagram.
+[Explain a formula step by step](../how-to/explain-a-formula-step-by-step.md) shows the parts
+and the lines with example decks. A part cannot move to the place of another part yet. To
+move a copy of each symbol of a formula, see
+[Show the steps of a proof](../how-to/show-the-steps-of-a-proof.md), which draws the formula
+as a diagram.
