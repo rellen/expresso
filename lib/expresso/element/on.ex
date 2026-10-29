@@ -8,10 +8,12 @@ defmodule Expresso.Element.On do
   specification into the `steps` field, and the renderer writes the state and
   the properties as CSS rules.
 
-  `move_to` takes the id of an element of a diagram, and only an `on` entity
-  of a `part` takes it. `Expresso.Element.Diagram.place/1` replaces it with
-  `x` and `y` in `set` before the render: the distance from the center of the
-  part to the center of that element.
+  `move_to` takes the id of an element of a diagram, or the name of a part of
+  a formula, and only an `on` entity of a `part` takes it.
+  `Expresso.Element.Diagram.place/1` replaces it with `x` and `y` in `set`
+  before the render: the distance from the center of the part to the center
+  of that element. `Expresso.Element.Math.place/1` puts custom properties
+  into `x` and `y`, and the presenter script measures the distance.
   """
 
   @typedoc "The struct of an on entity"

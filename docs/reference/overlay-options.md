@@ -72,7 +72,7 @@ step specification.
 | `set: [rotate: "-8deg"]` | The element turns by that angle. |
 | `set: [opacity: 0.3]` | The element shows at that opacity, from 0 to 1. |
 | `set: [color: "#c92a2a"]` | The text of the element changes to that color. |
-| `move_to: "station"` | A part of a diagram moves to the center of the element with the id `"station"` in the same SVG file. See "Move a part to another part" below. |
+| `move_to: "station"` | A part of a diagram moves to the center of the element with the id `"station"` in the same SVG file. A part of a formula moves to the center of the part `"station"` of the same formula. See "Move a part to another part" below. |
 
 An `on` entity can be in each element, in an item of a list, in a row of a table and in
 a part of a diagram or of a formula. In a diagram, `x` and `y` are in the units of the SVG file. A part
@@ -92,6 +92,9 @@ the file changes the distance at the next render.
   hold `x` or `y`, because `move_to` gives them.
 - The render gives an error for an id that the file does not have, and for an element with
   no shape, such as a `title`.
+- A part of a `math` element moves to a different part of its formula. The presenter script
+  measures that move in the browser, because the place of a part comes from the fonts. See
+  [the math element](math-element.md#move-a-part-to-another-part).
 
 The render measures the box of each element from its attributes, with the `transform` of
 the element and of each parent. A path gives the box of its points and of its control

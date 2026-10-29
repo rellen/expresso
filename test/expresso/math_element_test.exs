@@ -10,6 +10,7 @@ defmodule Expresso.Element.MathTest do
   doctest Math
 
   @formula ~S(<math display="block"><mfrac><mi>a</mi><mi>b</mi></mfrac></math>)
+  @moves ~S(<math display="block"><mrow><mi data-part="bind">f</mi><mo>+</mo><mi class="arg">g</mi></mrow></math>)
 
   defmodule MathDeck do
     use Expresso
@@ -265,11 +266,51 @@ defmodule Expresso.Element.MathTest do
       end
     end
 
-    test "a part of a math element takes no move_to" do
+    test "a part moves to a different part, by two custom properties of the presenter script" do
       part = Builder.part("bind", on: [Builder.on(2, move_to: "arg")])
+      math = Builder.math(@moves, elements: [part])
+      html = Expresso.Deck.render(Builder.deck([Builder.slide("a", elements: [math])]))
+      document = LazyHTML.from_document(html)
 
-      assert_raise ArgumentError, ~r/a part of a math element takes no move_to/, fn ->
-        Builder.math(@formula, elements: [part])
+      bind = LazyHTML.query(document, ~s(#slide-1 .math mi[data-part="bind"]))
+      assert LazyHTML.attribute(bind, "data-move-to") == ["arg"]
+      assert html =~ "--x: var(--to-x-arg);"
+      assert html =~ "--y: var(--to-y-arg);"
+    end
+
+    test "a part without move_to has no data-move-to" do
+      math =
+        Builder.math(@moves,
+          elements: [Builder.part("bind", on: [Builder.on(2, set: [y: "1px"])])]
+        )
+
+      document =
+        Builder.deck([Builder.slide("a", elements: [math])])
+        |> Expresso.Deck.render()
+        |> LazyHTML.from_document()
+
+      assert LazyHTML.attribute(LazyHTML.query(document, "[data-move-to]"), "data-move-to") == []
+    end
+
+    test "a move to a name that the formula does not have, or to the part itself, stops the render" do
+      for {target, message} <- [
+            {"nothing", ~r/moves to "nothing", and the formula has no part with that name/},
+            {"bind", ~r/the part "bind" of a math element moves to itself/}
+          ] do
+        part = Builder.part("bind", on: [Builder.on(2, move_to: target)])
+
+        deck =
+          Builder.deck([Builder.slide("a", elements: [Builder.math(@moves, elements: [part])])])
+
+        assert_raise ArgumentError, message, fn -> Expresso.Deck.render(deck) end
+      end
+    end
+
+    test "a move_to with x or y in its set is refused" do
+      part = Builder.part("bind", on: [Builder.on(2, move_to: "arg", set: [x: "1px"])])
+
+      assert_raise Spark.Error.DslError, ~r/an on entity with move_to gives x and y itself/, fn ->
+        Builder.deck([Builder.slide("a", elements: [Builder.math(@moves, elements: [part])])])
       end
     end
   end

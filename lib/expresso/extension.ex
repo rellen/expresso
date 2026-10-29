@@ -99,7 +99,7 @@ defmodule Expresso.Extension do
       move_to: [
         type: :string,
         doc:
-          "The id of an element of the SVG file. The part moves to the center of that element. Only an on entity of a part takes it. See docs/reference/overlay-options.md."
+          "The id of an element of the SVG file, or the name of a different part of the formula. The part moves to the center of that element. Only an on entity of a part takes it. See docs/reference/overlay-options.md."
       ]
     ]
   }

@@ -1288,6 +1288,10 @@ with the copy of Temml in `priv/temml/`. The cache of the watch mode,
 `fetch_many/2` calls Temml with the sources that it does not hold. `docs/math-parts.md`
 gives the design.
 
+A part of a formula can take `move_to`, the name of a different part. The render cannot
+measure a formula, so `Expresso.Element.Math.place/1` writes the move with two custom
+properties, and `assets/src/move.ts` measures the distance in the browser and sets them.
+
 ### The diagram
 
 A `diagram` shows an SVG file. The `src` option gives the path, as for an image. The
@@ -2341,6 +2345,8 @@ The TypeScript part is under `assets/src/`. It has these modules:
 - `search.ts` filters the list of keys, and `scheme.ts` changes the variant of a theme.
 - `morph.ts` finds the elements that two slides share. See "The morph".
 - `chart.ts` writes the numbers that count, of a chart and of a stat.
+- `move.ts` measures each `move_to` of a part of a formula, and it sets the distance as
+  custom properties of the part.
 - `media.ts`, `video.ts`, `audio.ts` and `embed.ts` give the sources of the media and of
   the frames to their elements.
 
@@ -3087,7 +3093,8 @@ a decision before the work starts.
 
 The item before it, the formulas with parts of `docs/math-parts.md`, added the option `tex`
 of `math`, the `part` and `line` entities of a formula, and the deck option `math_font`.
-Issue #472 holds that plan.
+Issue #472 holds that plan. The maintainer then asked for `\id` and for `move_to` on a part
+of a formula.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of
 it. `.github/workflows/check.yml` runs each check for a pull request in parallel jobs, on

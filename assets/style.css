@@ -2269,6 +2269,23 @@ body[data-view="handout"] .chart-frames {
   outline-offset: 2px;
 }
 /*
+ * The copy of a formula that the presenter script measures for `move_to`.
+ * Each part of the copy is at its place, with no transform and no
+ * transition, and the copy does not show. `assets/src/move.ts` gives the
+ * rules.
+ */
+.math.math-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+}
+.math-measure,
+.math-measure * {
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+/*
  * The effects of `at`. A hidden element with `grow` has 80% of its size, an
  * element with `fly-up` is 1rem below its place, and an element with `blur`
  * has a blur of 0.2rem. Each also fades. At the last step of the element, the

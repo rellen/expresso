@@ -21,8 +21,8 @@ defmodule Expresso.Overlay.Check do
   - A `pause` entity is inside an element.
   - A step number is less than 1.
   - An `on` entity has a step at which its element does not show.
-  - An `on` entity with `move_to` is not in a part of a diagram, or it also
-    sets `x` or `y`.
+  - An `on` entity with `move_to` is not in a part, or it also sets `x` or
+    `y`.
   - A child element has a step at which its nearest ancestor with steps does
     not show.
   - A group of the `highlight` option of a chart has a step at which the chart

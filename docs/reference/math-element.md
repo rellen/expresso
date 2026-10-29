@@ -124,12 +124,30 @@ A `math` element with a `do` block takes `tex` inside the block, as above. The f
 | `on ..., state: :alert` | An outline goes around the part. |
 | `on ..., set: [color: ...]` | The part gets that color. |
 | `on ..., set: [x: ..., y: ..., scale: ..., rotate: ..., opacity: ...]` | The part moves, changes its size, turns or fades. |
+| `on ..., move_to: "name"` | The part moves, so its center is at the center of the part `name` of the same formula. |
 
 - A part with the name of two sub-terms changes both.
-- The compiler refuses `move_to` on a part of a formula. Issues #473 and #474 plan the moves
-  between parts.
+- The render stops for a `move_to` with a name that the formula does not have, and for a
+  part that moves to itself.
 - The render stops for a `part` with a name that the formula does not have, and the message
   gives the names of the parts.
+
+## Move a part to another part
+
+`on 3, move_to: "arg"` in a `part` of a formula moves the part at step 3, so its center is at
+the center of the part `arg`. The place of a part comes from the fonts of the browser, so the
+presenter script measures the two parts when the slide shows. The script measures again when
+the size of the window changes and when a font loads.
+
+- A part with two or more elements, such as a line, moves as one. Its center is the center of
+  the box that holds each of its elements.
+- The `set` of the same `on` entity can hold other keys, such as `color` and `scale`, and it
+  cannot hold `x` or `y`, because `move_to` gives them.
+- Each place is the place of the part at rest, without the moves of the other steps.
+- A browser with no script shows the part at its own place at each step.
+
+The render writes the move as `--x: var(--to-x-arg)` and `--y: var(--to-y-arg)`, and the
+script sets these two custom properties on the part. `assets/src/move.ts` gives the rules.
 
 ## The lines of a derivation
 
@@ -224,7 +242,6 @@ end
 ## Show the steps of a proof
 
 [Explain a formula step by step](../how-to/explain-a-formula-step-by-step.md) shows the parts
-and the lines with example decks. A part cannot move to the place of another part yet. To
-move a copy of each symbol of a formula, see
-[Show the steps of a proof](../how-to/show-the-steps-of-a-proof.md), which draws the formula
-as a diagram.
+and the lines with example decks. To move a copy of each symbol of a formula in a long proof,
+see [Show the steps of a proof](../how-to/show-the-steps-of-a-proof.md), which draws the
+formula as a diagram.

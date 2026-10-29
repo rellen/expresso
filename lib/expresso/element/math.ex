@@ -45,14 +45,13 @@ defmodule Expresso.Element.Math do
   environment `aligned`, a row for each line, with the relation, the term and
   the reason in three columns. Each line becomes a part with its name, and
   with `reveal true` it shows at its own step. The function then checks the
-  name of each `\\part{name}{…}` of the LaTeX, and it refuses `move_to` on a
-  part. The entity of the DSL and `Expresso.Builder` call this function.
+  name of each `\\part{name}{…}` and `\\id{name}{…}` of the LaTeX. The entity of
+  the DSL and `Expresso.Builder` call this function.
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
   def check(%__MODULE__{} = math) do
     with {:ok, math} <- write_lines(math),
          :ok <- one_source(math),
-         :ok <- no_move(math),
          :ok <- part_names_ok(math) do
       {:ok, math}
     end
@@ -136,18 +135,6 @@ defmodule Expresso.Element.Math do
     do: {:error, "a math element takes the MathML or the tex option, and not both"}
 
   defp one_source(_math), do: :ok
-
-  defp no_move(%__MODULE__{elements: parts}) do
-    if Enum.any?(parts, &moves?/1),
-      do:
-        {:error,
-         "a part of a math element takes no move_to. Give it set: [x: ..., y: ...], " <>
-           "and see docs/reference/math-element.md"},
-      else: :ok
-  end
-
-  defp moves?(%Expresso.Element.Part{on: on}),
-    do: Enum.any?(on || [], &(&1.move_to != nil))
 
   defp part_names_ok(%__MODULE__{tex: tex}) when is_binary(tex) do
     case Enum.reject(part_names(tex), &Regex.match?(@part_name, &1)) do
@@ -250,6 +237,62 @@ defmodule Expresso.Element.Math do
   end
 
   @doc """
+  Replace each `move_to` of the parts of a deck with a move that the browser
+  measures
+
+  An `on` entity of a part of a formula can take `move_to`, the name of a
+  different part of the same formula. The place of a part comes from the
+  fonts of the browser, so the render cannot measure it. This function puts
+  `x: "var(--to-x-name)"` and `y: "var(--to-y-name)"` into `set`, and the
+  presenter script gives the part these two custom properties: the distance
+  from the center of the part to the center of the part `name`. A browser
+  with no script then shows the part at its place.
+
+  `Expresso.Renderer` calls this function after `typeset/1`. It raises for a
+  name that the formula does not have, and for a part that moves to itself.
+  """
+  @spec place(Expresso.Deck.t()) :: Expresso.Deck.t()
+  def place(%Expresso.Deck{} = deck), do: Expresso.Element.Tree.map_deck(deck, &place_one/1)
+
+  defp place_one(%__MODULE__{text: text, elements: parts} = math) when is_binary(text) do
+    if Enum.any?(parts, &(targets(&1) != [])) do
+      names = parts(text)
+      %__MODULE__{math | elements: Enum.map(parts, &place_part(&1, names))}
+    else
+      math
+    end
+  end
+
+  defp place_one(element), do: element
+
+  defp place_part(%Expresso.Element.Part{id: id, on: on} = part, names) do
+    on =
+      Enum.map(on || [], fn
+        %Expresso.Element.On{move_to: nil} = entity ->
+          entity
+
+        %Expresso.Element.On{move_to: ^id} ->
+          raise ArgumentError, "the part #{inspect(id)} of a math element moves to itself"
+
+        %Expresso.Element.On{move_to: target, set: set} = entity ->
+          if target not in names do
+            raise ArgumentError,
+                  "the part #{inspect(id)} of a math element moves to #{inspect(target)}, and " <>
+                    "the formula has no part with that name"
+          end
+
+          move = [x: "var(--to-x-#{target})", y: "var(--to-y-#{target})"]
+          %Expresso.Element.On{entity | set: move ++ (set || [])}
+      end)
+
+    %Expresso.Element.Part{part | on: on}
+  end
+
+  # The names of the parts that a part moves to, in order, without a repeat.
+  defp targets(%Expresso.Element.Part{on: on}),
+    do: (on || []) |> Enum.map(& &1.move_to) |> Enum.reject(&is_nil/1) |> Enum.uniq()
+
+  @doc """
   Make the assigns of the render function from the struct
 
   The key `overlay` holds the attributes of the overlay contract, from
@@ -279,10 +322,21 @@ defmodule Expresso.Element.Math do
 
     parts
     |> Enum.reduce(Floki.parse_fragment!(text), fn %Expresso.Element.Part{id: id} = part, tree ->
-      attributes = [{"class", "math-part"} | Expresso.Overlay.Render.attributes(part)]
+      attributes =
+        [{"class", "math-part"} | Expresso.Overlay.Render.attributes(part)] ++ moves(part)
+
       Floki.traverse_and_update(tree, &mark_one(&1, id, attributes))
     end)
     |> Floki.raw_html()
+  end
+
+  # The attribute `data-move-to` names each part that a part moves to, so the
+  # presenter script knows which distances to measure.
+  defp moves(part) do
+    case targets(part) do
+      [] -> []
+      targets -> [{"data-move-to", Enum.join(targets, " ")}]
+    end
   end
 
   defp mark_one({tag, attrs, children} = node, id, attributes) do
