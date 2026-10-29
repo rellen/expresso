@@ -2209,6 +2209,7 @@ body[data-view="handout"] .chart-frames {
 .row,
 .line,
 .diagram-part,
+.math-part,
 .quotation,
 .code,
 .columns,
@@ -2254,6 +2255,15 @@ body[data-view="handout"] .chart-frames {
  */
 .diagram-part {
   transform-box: fill-box;
+  transform-origin: center;
+  outline-width: calc(var(--alert, 0) * 2px);
+  outline-offset: 2px;
+}
+/*
+ * A part of a formula. It turns and changes its size around its center, and
+ * its outline is close to the symbols.
+ */
+.math-part {
   transform-origin: center;
   outline-width: calc(var(--alert, 0) * 2px);
   outline-offset: 2px;

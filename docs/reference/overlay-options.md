@@ -75,7 +75,7 @@ step specification.
 | `move_to: "station"` | A part of a diagram moves to the center of the element with the id `"station"` in the same SVG file. See "Move a part to another part" below. |
 
 An `on` entity can be in each element, in an item of a list, in a row of a table and in
-a part of a diagram. In a diagram, `x` and `y` are in the units of the SVG file. A part
+a part of a diagram or of a formula. In a diagram, `x` and `y` are in the units of the SVG file. A part
 inside a `text` element of the file, such as a `tspan`, can fade, dim and change its
 color, and it cannot move or get an outline.
 

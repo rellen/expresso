@@ -28,6 +28,7 @@ defmodule Expresso.Element.Math do
               :class,
               :text,
               :tex,
+              elements: [],
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 
@@ -47,6 +48,15 @@ defmodule Expresso.Element.Math do
   def check(%__MODULE__{text: text, tex: tex}) when is_binary(text) and is_binary(tex),
     do: {:error, "a math element takes the MathML or the tex option, and not both"}
 
+  def check(%__MODULE__{elements: parts} = math) when parts != [] do
+    if Enum.any?(parts, &moves?/1),
+      do:
+        {:error,
+         "a part of a math element takes no move_to. Give it set: [x: ..., y: ...], " <>
+           "and see docs/reference/math-element.md"},
+      else: check(%__MODULE__{math | elements: []}) |> with_parts(parts)
+  end
+
   def check(%__MODULE__{tex: tex} = math) when is_binary(tex) do
     case Enum.reject(part_names(tex), &Regex.match?(@part_name, &1)) do
       [] ->
@@ -60,6 +70,14 @@ defmodule Expresso.Element.Math do
   end
 
   def check(%__MODULE__{} = math), do: {:ok, math}
+
+  defp moves?(%Expresso.Element.Part{on: on}),
+    do: Enum.any?(on || [], &(&1.move_to != nil))
+
+  defp with_parts({:ok, %__MODULE__{} = math}, parts),
+    do: {:ok, %__MODULE__{math | elements: parts}}
+
+  defp with_parts(error, _parts), do: error
 
   # The name of each `\part{name}` of a source in LaTeX.
   defp part_names(tex) do
@@ -156,8 +174,58 @@ defmodule Expresso.Element.Math do
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
   def get_assigns(math) do
-    %__MODULE__{text: text} = math
-    %{text: text, overlay: Expresso.Overlay.Render.attributes(math)}
+    %__MODULE__{text: text, elements: parts} = math
+    %{text: mark(text, parts), overlay: Expresso.Overlay.Render.attributes(math)}
+  end
+
+  # Put the overlay attributes of each part on each element of the MathML with
+  # its name, in `data-part` or in `class`. The class `math-part` gives the
+  # element the rules of the theme for an element with steps. A name that the
+  # MathML does not have stops the render.
+  defp mark(text, []), do: text
+
+  defp mark(text, parts) do
+    names = parts(text)
+
+    for %Expresso.Element.Part{id: id} <- parts, id not in names do
+      raise ArgumentError,
+            "the math element has no part with the name #{inspect(id)}. Its parts are: " <>
+              Enum.map_join(names -- ["tml-display"], ", ", &inspect/1)
+    end
+
+    parts
+    |> Enum.reduce(Floki.parse_fragment!(text), fn %Expresso.Element.Part{id: id} = part, tree ->
+      attributes = [{"class", "math-part"} | Expresso.Overlay.Render.attributes(part)]
+      Floki.traverse_and_update(tree, &mark_one(&1, id, attributes))
+    end)
+    |> Floki.raw_html()
+  end
+
+  defp mark_one({tag, attrs, children} = node, id, attributes) do
+    if named?(attrs, id), do: {tag, merge(attributes, attrs), children}, else: node
+  end
+
+  defp mark_one(node, _id, _attributes), do: node
+
+  defp named?(attrs, id) do
+    attrs = Map.new(attrs)
+    attrs["data-part"] == id or id in String.split(attrs["class"] || "")
+  end
+
+  # An HTML parser keeps the first of two attributes with the same name, so a
+  # `class` and a `style` of the element join the attribute of the overlay.
+  defp merge(overlay, attrs) do
+    {overlay, attrs} =
+      Enum.map_reduce(overlay, attrs, fn {name, value}, attrs ->
+        case List.keytake(attrs, name, 0) do
+          {{"class", own}, attrs} -> {{"class", "#{value} #{own}"}, attrs}
+          {{"style", own}, attrs} -> {{"style", "#{own}; #{value}"}, attrs}
+          {_own, attrs} -> {{name, value}, attrs}
+          nil -> {{name, value}, attrs}
+        end
+      end)
+
+    overlay ++ attrs
   end
 
   @doc """

@@ -936,11 +936,28 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @part %Spark.Dsl.Entity{
+    name: :part,
+    target: Expresso.Element.Part,
+    args: [:id],
+    entities: [on: [@on]],
+    schema:
+      @overlay_schema ++
+        [
+          id: [
+            type: :string,
+            required: true,
+            doc:
+              "The id of an element of the SVG file of a diagram, or the name of a part of a formula."
+          ]
+        ]
+  }
+
   @math %Spark.Dsl.Entity{
     name: :math,
     target: Expresso.Element.Math,
     args: [{:optional, :text}],
-    entities: [on: [@on]],
+    entities: [elements: [@part], on: [@on]],
     transform: {Expresso.Element.Math, :check, []},
     schema:
       @overlay_schema ++
@@ -956,16 +973,6 @@ defmodule Expresso.Extension do
               "The formula in LaTeX, such as ~S\"x^2 + 1\". Temml makes its MathML in Node at render time. See docs/reference/math-element.md."
           ]
         ]
-  }
-
-  @part %Spark.Dsl.Entity{
-    name: :part,
-    target: Expresso.Element.Part,
-    args: [:id],
-    entities: [on: [@on]],
-    schema:
-      @overlay_schema ++
-        [id: [type: :string, required: true, doc: "The id of an element of the SVG file."]]
   }
 
   @diagram %Spark.Dsl.Entity{
