@@ -60,18 +60,19 @@ line.
 | --- | --- |
 | Node | The render needs Node on the `PATH`, as for a diagram from Mermaid. `EXPRESSO_NODE` gives a different path. A deck with no `tex` option needs no Node. The project holds its own copy of Temml, so you do not install a package of npm. |
 | An error | A formula that Temml cannot read stops the render with the formula and the message of Temml, such as `Unexpected end of input`. |
-| The commands that Temml refuses | Temml refuses each command that writes an attribute or reads a file, such as `\id`, `\style` and `\includegraphics`. It allows `\class` and `\data`. |
+| The commands that Temml refuses | Temml refuses each command that writes an attribute or reads a file, such as `\style` and `\includegraphics`. It allows `\class` and `\data`, and `\part` and `\id` name a part. |
 | The watch mode | The watch mode keeps the MathML of each formula from one render to the next, so a change of one slide runs Temml for the formulas that changed. |
 
 Use the `~S` sigil for the LaTeX, so that Elixir does not change a `\`.
 
 ## The parts of a formula
 
-A part is a sub-term of a formula with a name. Two commands of the LaTeX give a name:
+A part is a sub-term of a formula with a name. Three commands of the LaTeX give a name:
 
 | Command | The MathML gets | Use |
 | --- | --- | --- |
 | `\part{redex}{(\lambda f.\,f)\,g}` | `data-part="redex"` on the sub-term | A part of the formula. |
+| `\id{redex}{(\lambda f.\,f)\,g}` | `data-part="redex"` on the sub-term, as `\part` gives | A part. The MathML gets no HTML `id`, so two formulas with the same name do not clash. |
 | `\class{redex}{(\lambda f.\,f)\,g}` | `class="redex"` on the sub-term | A part, and a class for a rule of the `css` option. |
 
 ```elixir

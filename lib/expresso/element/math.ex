@@ -163,9 +163,9 @@ defmodule Expresso.Element.Math do
 
   defp part_names_ok(_math), do: :ok
 
-  # The name of each `\part{name}` of a source in LaTeX.
+  # The name of each `\part{name}` and `\id{name}` of a source in LaTeX.
   defp part_names(tex) do
-    ~r/\\part\s*\{([^}]*)\}/
+    ~r/\\(?:part|id)\s*\{([^}]*)\}/
     |> Regex.scan(tex, capture: :all_but_first)
     |> List.flatten()
   end

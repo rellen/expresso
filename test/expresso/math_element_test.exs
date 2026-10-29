@@ -199,6 +199,10 @@ defmodule Expresso.Element.MathTest do
     test "a part name starts with a letter, and holds letters, digits, - and _" do
       assert %Math{} = Builder.math(tex: ~S"\part{redex}{x} + \part{line-1_b}{y}")
 
+      assert_raise ArgumentError, ~r/the part name "a,b"/, fn ->
+        Builder.math(tex: ~S"\id{a,b}{x}")
+      end
+
       for name <- ["a,b", "1st", "a=b", ""] do
         assert_raise ArgumentError,
                      ~r/the part name "#{Regex.escape(name)}" of a math element/,
