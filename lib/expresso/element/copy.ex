@@ -34,9 +34,14 @@ defmodule Expresso.Element.Copy do
 
   The part of a copy follows the part of its source. It has the name of the
   copy as its `id`, the source in `copy_of` and the target in `copy_to`, and
-  the `at`, `effect` and `on` of the copy. The function returns an error for
-  a copy to its own part, for two parts or copies with the same name, and for
-  a part with the name of a copy.
+  the `at`, `effect` and `on` of the copy. A `part` entity with the name of a
+  copy adds its `on` entities, its `effect` and its copies to that copy, so a
+  copy can have copies. A copy of a copy gets the target of its source in
+  `copy_start`, because it fades in there.
+
+  The function returns an error for a copy to its own part, for two parts or
+  copies with the same name, for a part with the name of a copy and the `at`
+  option, and for a loop of copies.
 
       iex> part = %Expresso.Element.Part{id: "arg", copies: [%Expresso.Element.Copy{target: "hole"}]}
       iex> {:ok, [_part, copy]} = Expresso.Element.Copy.expand([part])
@@ -45,13 +50,54 @@ defmodule Expresso.Element.Copy do
   """
   @spec expand([Part.t()]) :: {:ok, [Part.t()]} | {:error, String.t()}
   def expand(parts) do
-    with {:ok, parts} <- Shoddy.Result.collect(Enum.map(parts, &copy_to/1)) do
-      parts =
-        Enum.flat_map(parts, fn %Part{copies: copies} = part ->
-          [%Part{part | copies: []} | Enum.map(copies || [], &part(&1, part))]
-        end)
+    with {:ok, parts} <- Shoddy.Result.collect(Enum.map(parts, &copy_to/1)),
+         {:ok, trees} <- Shoddy.Result.collect(Enum.map(parts, &grow(&1, parts, []))) do
+      # A part with the name of a copy is in the tree of that copy, so it does
+      # not stand alone.
+      copies = trees |> List.flatten() |> Enum.filter(& &1.copy_of) |> MapSet.new(& &1.id)
+      parts = trees |> Enum.reject(&(hd(&1).id in copies)) |> List.flatten()
 
       with :ok <- no_copy_to_itself(parts), do: unique(parts)
+    end
+  end
+
+  # A part, then the part of each of its copies with the copies of that copy.
+  defp grow(%Part{id: id, copies: copies} = part, parts, path) do
+    if id in path do
+      {:error,
+       "the copies of the part \"#{id}\" make a loop: " <>
+         Enum.join(Enum.reverse([id | path]), ", ")}
+    else
+      (copies || [])
+      |> Enum.map(&grow_copy(&1, part, parts, [id | path]))
+      |> Shoddy.Result.collect()
+      |> Shoddy.Result.map_ok(&[%Part{part | copies: []} | List.flatten(&1)])
+    end
+  end
+
+  defp grow_copy(copy, part, parts, path) do
+    with {:ok, copy} <- merge(part(copy, part), parts), do: grow(copy, parts, path)
+  end
+
+  # Add the `part` entity with the name of a copy to the part of the copy.
+  defp merge(%Part{id: id} = copy, parts) do
+    case Enum.find(parts, &(&1.id == id and &1.copy_of == nil)) do
+      nil ->
+        {:ok, copy}
+
+      %Part{at: at} when at != nil ->
+        {:error,
+         "the part \"#{id}\" has the name of a copy, so it takes no at option. Give at to " <>
+           "the copy"}
+
+      %Part{on: on, copies: copies, effect: effect} ->
+        {:ok,
+         %Part{
+           copy
+           | on: copy.on ++ (on || []),
+             copies: copies || [],
+             effect: effect || copy.effect
+         }}
     end
   end
 
@@ -83,11 +129,12 @@ defmodule Expresso.Element.Copy do
   defp rest(%On{state: nil, set: nil, move_to: nil}), do: []
   defp rest(%On{} = on), do: [%On{on | copy_to: nil}]
 
-  defp part(%__MODULE__{} = copy, %Part{id: id, effect: effect}) do
+  defp part(%__MODULE__{} = copy, %Part{id: id, effect: effect, copy_to: start}) do
     %Part{
       id: copy.as || "#{id}@#{copy.target}",
       copy_of: id,
       copy_to: copy.target,
+      copy_start: start,
       at: copy.at,
       effect: copy.effect || effect,
       on: copy.on || []
@@ -120,7 +167,8 @@ defmodule Expresso.Element.Copy do
   Give the part of each copy its move and the delay of that move
 
   The move is an `on` entity with `move_to` the target, at each step of the
-  copy. At the first step of the copy, the custom property `--move-delay`
+  copy. A copy of a copy also moves to the target of its source before its
+  first step. At the first step of the copy, the custom property `--move-delay`
   holds the time of the fade, so the copy fades in at its source and then
   moves. The render calls this function after the transformer gives each
   part its steps.
@@ -131,6 +179,13 @@ defmodule Expresso.Element.Copy do
   def moves(%Part{copy_to: target, steps: [first | _] = steps, on: on} = part) do
     move = %On{steps: steps, move_to: target}
     delay = %On{steps: [first], set: ["move-delay": "var(--dur)"]}
-    %Part{part | on: [move, delay | on || []]}
+    %Part{part | on: wait(part, first) ++ [move, delay | on || []]}
   end
+
+  # Before its first step, a copy of a copy waits at the target of its
+  # source, so it fades in there.
+  defp wait(%Part{copy_start: start}, first) when is_binary(start) and first > 1,
+    do: [%On{steps: Enum.to_list(1..(first - 1)), move_to: start}]
+
+  defp wait(_part, _first), do: []
 end

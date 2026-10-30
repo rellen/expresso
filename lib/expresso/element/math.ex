@@ -334,7 +334,7 @@ defmodule Expresso.Element.Math do
 
       Floki.traverse_and_update(tree, &mark_one(&1, id, attributes))
     end)
-    |> Kernel.++(Enum.map(copies, &copy_math(&1, tree)))
+    |> Kernel.++(Enum.map(copies, &copy_math(&1, root(&1, copies), tree)))
     |> Floki.raw_html()
   end
 
@@ -344,7 +344,7 @@ defmodule Expresso.Element.Math do
   # inside it gives no name of a part. The style sheet puts the copy out of
   # the flow, and the presenter script puts it on its source. A screen reader
   # does not read it, because it repeats the source.
-  defp copy_math(%Expresso.Element.Part{id: id, copy_of: source} = part, tree) do
+  defp copy_math(%Expresso.Element.Part{id: id} = part, source, tree) do
     display =
       case tree do
         [{"math", attrs, _children} | _rest] -> List.keyfind(attrs, "display", 0)
@@ -358,6 +358,15 @@ defmodule Expresso.Element.Math do
         List.wrap(display)
 
     {"math", merge(attributes, []), [{"mrow", [], Enum.map(named(tree, source), &unname/1)}]}
+  end
+
+  # The part of the formula that a copy comes from. A copy of a copy comes from
+  # the source of its source.
+  defp root(%Expresso.Element.Part{copy_of: source}, copies) do
+    case Enum.find(copies, &(&1.id == source)) do
+      nil -> source
+      copy -> root(copy, copies)
+    end
   end
 
   defp named(nodes, id) when is_list(nodes), do: Enum.flat_map(nodes, &named(&1, id))

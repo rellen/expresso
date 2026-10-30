@@ -19,6 +19,24 @@ defmodule Expresso.E2E.MathCopyTest do
     end
   end
 
+  # A copy of a copy: g goes to the first hole at step 2, and a copy of that
+  # copy goes from the first hole to the second hole at step 3.
+  defmodule ChainDeck do
+    use Expresso
+
+    slide "chain" do
+      math ~S(<math display="block"><mrow><mi data-part="arg">g</mi><mo>+</mo><mi class="hole1">f</mi><mo>+</mo><mi class="hole2">f</mi></mrow></math>) do
+        part "arg" do
+          copy "hole1", at: [from: 2]
+        end
+
+        part "arg@hole1" do
+          copy "hole2", at: [from: 3]
+        end
+      end
+    end
+  end
+
   defp box(page, selector) do
     js(page, """
     (() => {
@@ -68,5 +86,29 @@ defmodule Expresso.E2E.MathCopyTest do
 
     assert box(page, ~s([data-part="arg"])) == arg
     assert js(page, "document.querySelectorAll('.math-measure').length") == 0
+  end
+
+  test "a copy of a copy of a part of a formula waits at the first hole, then moves", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    page = open(page, render(ChainDeck, tmp_dir, "chain"))
+    second = ~s(math.math-copy[data-part="arg@hole1@hole2"])
+
+    wait_for(
+      page,
+      "document.querySelector('.screen .math #{second}').hasAttribute('data-placed')"
+    )
+
+    assert js(page, "document.querySelector('.screen .math #{second} mi').textContent") == "g"
+
+    press(page, "j")
+    wait_for(page, "document.querySelector('.screen .slide').dataset.step === '2'")
+    assert gap(box(page, second), box(page, ".hole1")) < 1
+
+    press(page, "j")
+    wait_for(page, "document.querySelector('.screen .slide').dataset.step === '3'")
+    assert gap(box(page, second), box(page, ".hole2")) < 1
+    assert gap(box(page, ~s(math.math-copy[data-part="arg@hole1"])), box(page, ".hole1")) < 1
   end
 end

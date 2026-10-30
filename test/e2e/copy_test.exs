@@ -39,6 +39,26 @@ defmodule Expresso.E2E.CopyTest do
     end
   end
 
+  # A copy of a copy: at step 2, a copy of the token goes to the circle, and
+  # at step 3, a copy of that copy goes from the circle to the station.
+  defmodule ChainDeck do
+    use Expresso
+
+    slide "chain" do
+      diagram "test/fixtures/move.svg" do
+        width "80%"
+
+        part "token" do
+          copy "target", at: [from: 2]
+        end
+
+        part "token@target" do
+          copy "station", at: [from: 3]
+        end
+      end
+    end
+  end
+
   # The center of an element of the diagram on the screen.
   defp center(page, id) do
     js(page, """
@@ -125,6 +145,60 @@ defmodule Expresso.E2E.CopyTest do
     wait_for(page, "document.querySelector('.screen .slide').dataset.step === '2'")
     assert near?(center(page, "token@target"), center(page, "target"))
     assert near?(center(page, "token@station"), center(page, "station"))
+    assert center(page, "token") == token
+  end
+
+  test "a copy of a copy fades in at the target of its source, and then it moves", %{
+    browser: browser,
+    tmp_dir: tmp_dir
+  } do
+    {:ok, context} =
+      Browser.new_context(browser.guid,
+        timeout: 10_000,
+        viewport: %{width: 1280, height: 720},
+        reduced_motion: "no-preference"
+      )
+
+    on_exit(fn -> BrowserContext.close(context.guid, timeout: 10_000) end)
+    {:ok, page} = BrowserContext.new_page(context.guid, timeout: 10_000)
+    page = open(page, render(ChainDeck, tmp_dir, "chain"))
+    js(page, "document.documentElement.style.setProperty('--dur', '1s')")
+    token = center(page, "token")
+
+    press(page, "j")
+
+    wait_for(
+      page,
+      "Number(getComputedStyle(document.querySelector('.screen [id^=\"token@target-\"]').closest('[data-el]')).opacity) === 1"
+    )
+
+    wait_for(
+      page,
+      "(() => { const a = document.querySelector('.screen [id^=\"token@target-\"]').getBoundingClientRect(); const b = document.querySelector('.screen [id^=\"target-\"]').getBoundingClientRect(); return Math.abs(a.left + a.width / 2 - b.left - b.width / 2) < 1; })()"
+    )
+
+    target = center(page, "target")
+
+    press(page, "j")
+
+    wait_for(page, """
+    (() => {
+      const o = Number(getComputedStyle(document.querySelector('.screen [id^="token@target@station-"]').closest('[data-el]')).opacity);
+      return o > 0.3 && o < 0.7;
+    })()
+    """)
+
+    assert near?(center(page, "token@target@station"), target)
+
+    wait_for(page, """
+    (() => {
+      const box = (s) => document.querySelector('.screen [id^="' + s + '-"]').getBoundingClientRect();
+      const [a, b] = [box("token@target@station"), box("station")];
+      return Math.abs(a.left + a.width / 2 - b.left - b.width / 2) < 1;
+    })()
+    """)
+
+    assert near?(center(page, "token@target"), target)
     assert center(page, "token") == token
   end
 end

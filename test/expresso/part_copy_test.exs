@@ -67,10 +67,10 @@ defmodule Expresso.Element.CopyTest do
         diagram([Builder.part("token", copies: [Builder.copy("token", at: 2)])])
       end
 
-      copies = [Builder.copy("target", at: 2), Builder.copy("station", at: 2, as: "x")]
+      copies = [Builder.copy("target", at: 2, as: "x"), Builder.copy("station", at: 2, as: "x")]
 
       assert_raise ArgumentError, ~r/two parts or copies have the name "x"/, fn ->
-        diagram([Builder.part("token", copies: copies), Builder.part("x")])
+        diagram([Builder.part("token", copies: copies)])
       end
     end
 
@@ -150,6 +150,61 @@ defmodule Expresso.Element.CopyTest do
                    fn ->
                      Builder.deck([Builder.slide("a", elements: [text])])
                    end
+    end
+  end
+
+  describe "a copy of a copy" do
+    test "a part with the name of a copy adds its entities and its copies to that copy" do
+      parts = [
+        Builder.part("token", copies: [Builder.copy("target", at: [from: 2])]),
+        Builder.part("token@target",
+          on: [Builder.on(4, state: :dim)],
+          copies: [Builder.copy("station", at: [from: 3])]
+        )
+      ]
+
+      assert [token, copy, second] = diagram(parts).elements
+      assert token.id == "token"
+      assert {copy.id, copy.copy_of, copy.copy_start} == {"token@target", "token", nil}
+      assert [%{state: :dim}] = copy.on
+
+      assert {second.id, second.copy_of, second.copy_to, second.copy_start} ==
+               {"token@target@station", "token@target", "station", "target"}
+    end
+
+    test "a part with the name of a copy takes no at, and a loop of copies stops the compile" do
+      parts = [
+        Builder.part("token", copies: [Builder.copy("target", at: 2)]),
+        Builder.part("token@target", at: 3)
+      ]
+
+      assert_raise ArgumentError, ~r/has the name of a copy, so it takes no at option/, fn ->
+        diagram(parts)
+      end
+
+      parts = [
+        Builder.part("token", copies: [Builder.copy("target", at: 2, as: "a")]),
+        Builder.part("a", copies: [Builder.copy("station", at: 3, as: "token")])
+      ]
+
+      assert_raise ArgumentError, ~r/make a loop/, fn -> diagram(parts) end
+    end
+
+    test "a copy of a copy waits at the target of its source before its first step" do
+      parts = [
+        Builder.part("token", copies: [Builder.copy("target", at: [from: 2])]),
+        Builder.part("token@target", copies: [Builder.copy("station", at: [from: 3])])
+      ]
+
+      deck = Builder.deck([Builder.slide("a", elements: [diagram(parts)]), Builder.slide("b")])
+      html = Expresso.Deck.render(deck)
+
+      # The second copy is a copy of the first copy, and it moves to the
+      # circle at steps 1 and 2.
+      assert html =~ ~s(id="token@target@station-)
+
+      assert html =~
+               ~r/section\[data-step="1"\] \[data-el="s1-e\d+"\], section\[data-step="2"\] \[data-el="s1-e\d+"\] \{ --x: 300px; --y: 100px; \}/
     end
   end
 
