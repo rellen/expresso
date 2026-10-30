@@ -1,12 +1,15 @@
 # Writes ../y_combinator.svg for the deck y_combinator.exs. Each symbol of each
-# term is its own text, so that a part of the diagram can color, dim or move
+# term is its own text, so that a part of the diagram can color, dim or copy
 # it. Run it after a change to a term:
 #
 #     elixir examples/animations/y_combinator/write_svg.exs
 #
+# The file holds each line of the proof one time. The deck copies the symbols
+# of a line to their places in the next line, so the file holds no copy. Each
+# symbol of a line has the id "L<line>-c<index>", and a copy can land on it.
+#
 # Each symbol has a cell of one width, because the script cannot measure the
-# glyphs of the font. The math element lays out a formula and names its parts,
-# and issues #473 and #474 plan the moves between parts.
+# glyphs of the font.
 
 defmodule Examples.YCombinator.Svg do
   @moduledoc false
@@ -29,17 +32,14 @@ defmodule Examples.YCombinator.Svg do
 
   def y(line), do: 70 + line * 72
 
-  # One text for each symbol at `indexes` of `term`, on the line `line`. A copy
-  # that moves starts at the line of its source. A symbol with `name` gets the
-  # id "<name>-c<index>", so that `move_to` can name it.
-  def symbols(term, indexes, line, name \\ nil) do
+  # One text for each symbol at `indexes` of the term of the line `line`. Each
+  # symbol gets the id "L<line>-c<index>".
+  def symbols(term, indexes, line) do
     cells = cells(term)
 
     for i <- indexes, {char, x} <- [Enum.at(cells, i)], char != " " do
-      id = if name, do: ~s( id="#{name}-c#{i}"), else: ""
-
-      ~s(<text#{id} x="#{x}" y="#{y(line)}" text-anchor="middle" font-size="#{@size}" ) <>
-        ~s(fill="currentColor"#{style(char)}>#{char}</text>)
+      ~s(<text id="L#{line}-c#{i}" x="#{x}" y="#{y(line)}" text-anchor="middle" ) <>
+        ~s(font-size="#{@size}" fill="currentColor"#{style(char)}>#{char}</text>)
     end
   end
 
@@ -47,9 +47,6 @@ defmodule Examples.YCombinator.Svg do
   defp style(_char), do: ~s( font-style="italic")
 
   def group(id, children), do: [~s(<g id="#{id}">), children, "</g>"]
-
-  # A template: the places where the copies land. It does not show.
-  def template(id, children), do: [~s(<g id="#{id}" opacity="0">), children, "</g>"]
 
   def note(id, x, line, text, anchor \\ "start", size \\ 22) do
     ~s(<text id="#{id}" x="#{x}" y="#{y(line)}" text-anchor="#{anchor}" font-size="#{size}" ) <>
@@ -68,15 +65,6 @@ defmodule Examples.YCombinator.Svg.Write do
   @l3 "g ((λx.g (x x)) (λx.g (x x)))"
   @l4 "g (Y g)"
 
-  # The places in @l2 of the parts of the second β-reduction. The body of the
-  # first β-reduction is @l1 from 4 to 28, so a copy of the body starts at a
-  # place in @l2 plus 4, on line 1.
-  @l2_bind [1, 2]
-  @l2_bound [7, 9]
-  @l2_g [4, 17]
-  @l2_arg Enum.to_list(13..24) -- [17]
-  @l2_rest Enum.to_list(0..24) -- (@l2_bind ++ @l2_bound ++ @l2_g ++ @l2_arg)
-
   @captions [
     "The claim: Y g is a fix point of g.",
     "Unfold Y: replace Y with its definition.",
@@ -94,61 +82,50 @@ defmodule Examples.YCombinator.Svg.Write do
   ]
 
   def run(path) do
-    # The body of the first β-reduction is @l2 with f in the place of g.
+    # The body of the first β-reduction is line 2 with f in the place of g.
     @l2 = @l1 |> String.slice(4..28) |> String.replace("f", "g")
-
-    from_body = fn places -> Enum.map(places, &(&1 + 4)) end
 
     svg = [
       ~s(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 480" width="1180" ),
       ~s(height="480" font-family="'Latin Modern Math', 'STIX Two Math', 'Cambria Math', serif">),
       "<title>The proof that Y g is a fix point of g</title>",
 
-      # The first two lines.
+      # Line 0: Y g.
       group("L0", [group("L0-Y", symbols(@l0, [0], 0)), symbols(@l0, [2], 0)]),
+
+      # Line 1: the definition of Y applied to g. The body of the λf is the
+      # source of the copy of the first β-reduction.
       group("L1", [
         group("L1-def", [
+          group("L1-head", symbols(@l1, [0, 3], 1)),
           group("L1-bind", symbols(@l1, [1, 2], 1)),
-          group("L1-bound", symbols(@l1, [8, 21], 1)),
-          group("L1-rest", symbols(@l1, Enum.to_list(0..29) -- [1, 2, 8, 21], 1))
+          group("L1-body", [
+            group("L1-bound", symbols(@l1, [8, 21], 1)),
+            group("L1-body-rest", symbols(@l1, Enum.to_list(4..28) -- [8, 21], 1))
+          ]),
+          group("L1-close", symbols(@l1, [29], 1))
         ]),
         group("L1-arg", symbols(@l1, [31], 1))
       ]),
 
-      # The templates of lines 2, 3 and 4.
-      template("T2", group("T2-all", symbols(@l2, 0..24, 2, "T2"))),
-      template("T3", [
-        symbols(@l3, [0, 2, 28], 3, "T3"),
-        group("T3-s1", symbols(@l3, 3..14, 3)),
-        group("T3-s2", symbols(@l3, 16..27, 3))
+      # Line 2: the result of the first β-reduction.
+      group("L2", [
+        group("L2-bind", symbols(@l2, [1, 2], 2)),
+        group("L2-bound", symbols(@l2, [7, 9], 2)),
+        group("L2-arg", symbols(@l2, 13..24, 2)),
+        symbols(@l2, [0, 3, 4, 5, 6, 8, 10, 11, 12], 2)
       ]),
-      template("T4", [symbols(@l4, [0, 2, 6], 4, "T4"), group("T4-s", symbols(@l4, 3..5, 4))]),
 
-      # β-reduction 1: a copy of the body of line 1, and two copies of g.
-      group("M1-body", [
-        group("M1-f", symbols(@l1, from_body.(@l2_g), 1)),
-        group("M1-bind", symbols(@l1, from_body.(@l2_bind), 1)),
-        group("M1-bound", symbols(@l1, from_body.(@l2_bound), 1)),
-        group("M1-arg", symbols(@l1, from_body.(@l2_arg), 1)),
-        group("M1-rest", symbols(@l1, from_body.(@l2_rest), 1))
+      # Line 3: the result of the second β-reduction. Each argument is in the
+      # place of an x.
+      group("L3", [
+        symbols(@l3, [0, 2, 28], 3),
+        group("L3-s1", symbols(@l3, 3..14, 3)),
+        group("L3-s2", symbols(@l3, 16..27, 3))
       ]),
-      group("M1-g1", symbols(@l1, [31], 1)),
-      group("M1-g2", symbols(@l1, [31], 1)),
 
-      # β-reduction 2: copies of the symbols of line 2.
-      group("M2-g", symbols(@l2, [4], 2)),
-      group("M2-lp", symbols(@l2, [6], 2)),
-      group("M2-x1", symbols(@l2, [7], 2)),
-      group("M2-x2", symbols(@l2, [9], 2)),
-      group("M2-rp", symbols(@l2, [10], 2)),
-      group("M2-a1", symbols(@l2, 13..24, 2)),
-      group("M2-a2", symbols(@l2, 13..24, 2)),
-
-      # The last line: copies of g, ( and ) of line 3, and a copy of Y g.
-      group("M3-g", symbols(@l3, [0], 3)),
-      group("M3-lp", symbols(@l3, [2], 3)),
-      group("M3-rp", symbols(@l3, [28], 3)),
-      group("M3-Yg", symbols(@l0, 0..2, 0)),
+      # Line 4: g (Y g).
+      group("L4", [symbols(@l4, [0, 2, 6], 4), group("L4-s", symbols(@l4, 3..5, 4))]),
 
       # The relations, the reasons and the captions.
       note("rel1", 70, 1, "=", "middle", 30),

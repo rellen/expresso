@@ -135,7 +135,9 @@ not show.
 | `on` | The states of the copy, as for an element. |
 
 - The render copies the element of the part after that element. Each element of the copy
-  gets a new `id`, so the file keeps one element with each `id`.
+  gets a new `id`, so the file keeps one element with each `id`. The root gets the name of
+  the copy, and each other element gets the name of the copy, `-` and its old `id`, such as
+  `"body@line2-bound"`. A `part` entity can name such an element.
 - A copy does not change its target. To hide a bound variable when the argument lands on it,
   give the variable its own `part` with `at` or `on`.
 - A screen reader does not read a copy, because it repeats a part.
