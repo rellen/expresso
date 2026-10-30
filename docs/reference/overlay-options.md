@@ -72,7 +72,7 @@ step specification.
 | `set: [rotate: "-8deg"]` | The element turns by that angle. |
 | `set: [opacity: 0.3]` | The element shows at that opacity, from 0 to 1. |
 | `set: [color: "#c92a2a"]` | The text of the element changes to that color. |
-| `copy_to: ["hole1", "hole2"]` | From the first step of the entity, a copy of a part of a diagram goes to each element. See "Copy a part to other places" below. |
+| `copy_to: ["hole1", "hole2"]` | From the first step of the entity, a copy of a part goes to each element of the SVG file, or to each part of the formula. See "Copy a part to other places" below. |
 | `move_to: "station"` | A part of a diagram moves to the center of the element with the id `"station"` in the same SVG file. A part of a formula moves to the center of the part `"station"` of the same formula. See "Move a part to another part" below. |
 
 An `on` entity can be in each element, in an item of a list, in a row of a table and in
@@ -105,7 +105,7 @@ its group does not move that center.
 
 ### Copy a part to other places
 
-A `copy` entity in a `part` of a diagram makes a copy of the part at a step. The copy moves
+A `copy` entity in a `part` of a diagram or of a formula makes a copy of the part at a step. The copy moves
 to the center of its target, and the part stays at its place. A β-reduction uses copies to
 put the argument in the place of each bound variable.
 

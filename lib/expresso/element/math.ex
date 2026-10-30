@@ -52,9 +52,9 @@ defmodule Expresso.Element.Math do
   def check(%__MODULE__{} = math) do
     with {:ok, math} <- write_lines(math),
          :ok <- one_source(math),
-         :ok <- no_copies(math),
-         :ok <- part_names_ok(math) do
-      {:ok, math}
+         :ok <- part_names_ok(math),
+         {:ok, parts} <- Expresso.Element.Copy.expand(math.elements) do
+      {:ok, %__MODULE__{math | elements: parts}}
     end
   end
 
@@ -136,15 +136,6 @@ defmodule Expresso.Element.Math do
     do: {:error, "a math element takes the MathML or the tex option, and not both"}
 
   defp one_source(_math), do: :ok
-
-  defp no_copies(%__MODULE__{elements: parts}) do
-    if Enum.any?(
-         parts,
-         &((&1.copies || []) != [] or Enum.any?(&1.on || [], fn on -> on.copy_to end))
-       ),
-       do: {:error, "a part of a math element takes no copy entity yet"},
-       else: :ok
-  end
 
   defp part_names_ok(%__MODULE__{tex: tex}) when is_binary(tex) do
     case Enum.reject(part_names(tex), &Regex.match?(@part_name, &1)) do
@@ -265,6 +256,9 @@ defmodule Expresso.Element.Math do
   def place(%Expresso.Deck{} = deck), do: Expresso.Element.Tree.map_deck(deck, &place_one/1)
 
   defp place_one(%__MODULE__{text: text, elements: parts} = math) when is_binary(text) do
+    parts = Enum.map(parts, &Expresso.Element.Copy.moves/1)
+    math = %__MODULE__{math | elements: parts}
+
     if Enum.any?(parts, &(targets(&1) != [])) do
       names = parts(text)
       %__MODULE__{math | elements: Enum.map(parts, &place_part(&1, names))}
@@ -323,6 +317,7 @@ defmodule Expresso.Element.Math do
 
   defp mark(text, parts) do
     names = parts(text)
+    {copies, parts} = Enum.split_with(parts, & &1.copy_of)
 
     for %Expresso.Element.Part{id: id} <- parts, id not in names do
       raise ArgumentError,
@@ -330,15 +325,53 @@ defmodule Expresso.Element.Math do
               Enum.map_join(names -- ["tml-display"], ", ", &inspect/1)
     end
 
+    tree = Floki.parse_fragment!(text)
+
     parts
-    |> Enum.reduce(Floki.parse_fragment!(text), fn %Expresso.Element.Part{id: id} = part, tree ->
+    |> Enum.reduce(tree, fn %Expresso.Element.Part{id: id} = part, tree ->
       attributes =
         [{"class", "math-part"} | Expresso.Overlay.Render.attributes(part)] ++ moves(part)
 
       Floki.traverse_and_update(tree, &mark_one(&1, id, attributes))
     end)
+    |> Kernel.++(Enum.map(copies, &copy_math(&1, tree)))
     |> Floki.raw_html()
   end
+
+  # A copy of a part is its own `math` element after the formula, so the
+  # formula keeps its layout. It holds a copy of each element with the name of
+  # the source, from the MathML before the marks of the overlays, and a copy
+  # inside it gives no name of a part. The style sheet puts the copy out of
+  # the flow, and the presenter script puts it on its source. A screen reader
+  # does not read it, because it repeats the source.
+  defp copy_math(%Expresso.Element.Part{id: id, copy_of: source} = part, tree) do
+    display =
+      case tree do
+        [{"math", attrs, _children} | _rest] -> List.keyfind(attrs, "display", 0)
+        _tree -> nil
+      end
+
+    attributes =
+      [{"class", "math-copy math-part part-copy"} | Expresso.Overlay.Render.attributes(part)] ++
+        moves(part) ++
+        [{"data-part", id}, {"data-copy-of", source}, {"aria-hidden", "true"}] ++
+        List.wrap(display)
+
+    {"math", merge(attributes, []), [{"mrow", [], Enum.map(named(tree, source), &unname/1)}]}
+  end
+
+  defp named(nodes, id) when is_list(nodes), do: Enum.flat_map(nodes, &named(&1, id))
+
+  defp named({tag, attrs, children} = node, id) when is_binary(tag) do
+    if named?(attrs, id), do: [node], else: named(children, id)
+  end
+
+  defp named(_node, _id), do: []
+
+  defp unname({tag, attrs, children}) when is_binary(tag),
+    do: {tag, List.keydelete(attrs, "data-part", 0), Enum.map(children, &unname/1)}
+
+  defp unname(node), do: node
 
   # The attribute `data-move-to` names each part that a part moves to, so the
   # presenter script knows which distances to measure.

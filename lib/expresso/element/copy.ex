@@ -3,14 +3,17 @@ defmodule Expresso.Element.Copy do
   A copy of a part, which moves to a different place while the part stays
 
   The `copy` entity is inside a `part`. Its argument is the target: the id of
-  an element of the SVG file of a diagram. Its `at` option gives the steps
+  an element of the SVG file of a diagram, or the name of a part of a
+  formula. Its `at` option gives the steps
   that show the copy, and its `on` entities give the states of the copy. The
   `as` option gives the name of the copy. The default name is the id of the
   part, `@` and the target, such as `arg@hole1`.
 
-  `expand/1` gives each copy its own `Expresso.Element.Part`. The render puts
-  a copy of the element of the source after the source, and the copy moves to
-  its target with `move_to`. `docs/part-copies.md` gives the design.
+  `expand/1` gives each copy its own `Expresso.Element.Part`. In a diagram,
+  the render puts a copy of the element of the source after the source. In a
+  formula, the render writes the copy as its own `math` element after the
+  formula, and the presenter script puts it on its source. The copy then
+  moves to its target with `move_to`. `docs/part-copies.md` gives the design.
   """
 
   alias Expresso.Element.{On, Part}

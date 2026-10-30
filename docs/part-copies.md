@@ -29,7 +29,8 @@ a change to the layout of the formula.
   handout and the layout check reach a copy with little new code.
 - The render measures a diagram, as `Expresso.Element.Diagram.place/1` does for `move_to`.
   The presenter script measures a formula, as `assets/src/move.ts` does for `move_to`.
-- A browser with no script shows each copy of a formula at its target, at the last step.
+- A browser with no script shows no copy of a formula, because only the script can put a
+  copy on its source.
 
 ## An example
 
@@ -126,3 +127,4 @@ Each pull request is based on the one before it.
 | 1. This document | Done |
 | 2. The `copy` entity and copies in a diagram | Done. `Expresso.Element.Copy.expand/1` gives each copy its own part in the check of the diagram. `Expresso.Element.Diagram.place/1` adds the move and the delay of each copy from its steps, and it copies the element of the source. The reveal rule of a step sets each delay of a transition to zero, so the theme gives a copy its own list of delays with a higher specificity. A `copy` entity with a `do` block takes `at` inside the block, as `math` takes `tex`. A part of a formula refuses a copy until pull request 4. |
 | 3. The `copy_to` option | Done. `Expresso.Element.Copy.expand/1` gives each target of `copy_to` a `copy` entity from the first step of its `on` entity. A `:next` has no step number before the transformer runs, so `copy_to` refuses it, and a `copy` entity takes `at: :next`. An `on` entity with `copy_to` outside a part stops the compile. |
+| 4. Copies in a formula | Done. `Expresso.Element.Math.check/1` gives each copy its own part, as the check of a diagram does. The render writes a copy as its own `math` element after the formula, with the elements of the source and no name of a part inside it. `assets/src/move.ts` puts each copy on its source before it measures the moves, and it gives the copy the width of its source, because a source in a script is smaller. A copy without `data-placed` does not show, so a browser with no script shows no copy. |

@@ -2284,6 +2284,24 @@ body[data-view="handout"] .chart-frames {
  * transition, and the copy does not show. `assets/src/move.ts` gives the
  * rules.
  */
+/*
+ * A copy of a part of a formula is its own `math` element after the
+ * formula. It is out of the flow, so the formula keeps its layout. The
+ * presenter script puts it on its source and gives it `data-placed`. A copy
+ * that the script did not put on its source does not show.
+ */
+.math > div {
+  position: relative;
+}
+math.math-copy {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+}
+math.math-copy:not([data-placed]) {
+  visibility: hidden !important;
+}
 .math.math-measure {
   position: absolute;
   visibility: hidden;

@@ -17,6 +17,13 @@
 // distance on the screen by the scale of the slide. A formula that does not
 // show has no size, so the module measures it when it shows. A change of the
 // size of the window, or a font that loads, measures each formula again.
+//
+// A copy of a part is its own `math` element with the class `math-copy`, after
+// the formula, out of the flow. Before the measure, the module puts each copy
+// on its source and gives it `data-placed`, so the copy moves from there. A
+// source in a script, such as an exponent, is smaller than the copy, so the
+// module gives the copy the width of its source with its font size. An element
+// inside a copy repeats its source, so it gives no name of a part.
 
 import { union } from "./layout.ts";
 import type { Box } from "./layout.ts";
@@ -84,10 +91,61 @@ function measure(math: HTMLElement): void {
   try {
     const scale = copy.getBoundingClientRect().width / copy.offsetWidth;
     if (scale > 0) {
+      putCopies(math, copy, scale);
       write(math, copy, scale);
     }
   } finally {
     copy.remove();
+  }
+}
+
+// An element inside a copy of a part, but not the copy itself.
+function inCopy(element: Element): boolean {
+  const copy = element.closest("math.math-copy");
+  return copy !== null && copy !== element;
+}
+
+// The elements of a formula with a name, without the elements inside a copy.
+function named(elements: readonly Element[], name: string): Element[] {
+  return elements.filter(
+    (element) => !inCopy(element) && names(element).includes(name),
+  );
+}
+
+const box = (selected: readonly Element[]): Box | null =>
+  union(selected.map((element) => element.getBoundingClientRect()));
+
+// Put each copy of a part on the center of its source, with the width of
+// its source, in the copy of the formula and in the formula.
+function putCopies(math: HTMLElement, copy: HTMLElement, scale: number): void {
+  const elements = Array.from(copy.querySelectorAll("*"));
+  for (const part of copy.querySelectorAll<HTMLElement>("math.math-copy")) {
+    const from = box(named(elements, part.getAttribute("data-copy-of") ?? ""));
+    const holder = part.parentElement?.getBoundingClientRect();
+    const original = math.querySelector<HTMLElement>(
+      `math.math-copy[data-part="${CSS.escape(part.getAttribute("data-part") ?? "")}"]`,
+    );
+    if (from === null || holder === undefined || original === null) {
+      continue;
+    }
+    let size = part.getBoundingClientRect();
+    const ratio = size.width > 0 ? (from.right - from.left) / size.width : 1;
+    if (Math.abs(ratio - 1) > 0.01) {
+      for (const each of [part, original]) {
+        each.style.fontSize = `${Math.round(ratio * 1000) / 1000}em`;
+      }
+      size = part.getBoundingClientRect();
+    }
+    const center = (low: number, high: number): number => (low + high) / 2;
+    const left =
+      (center(from.left, from.right) - holder.left - size.width / 2) / scale;
+    const top =
+      (center(from.top, from.bottom) - holder.top - size.height / 2) / scale;
+    for (const each of [part, original]) {
+      each.style.left = `${Math.round(left * 100) / 100}px`;
+      each.style.top = `${Math.round(top * 100) / 100}px`;
+    }
+    original.setAttribute("data-placed", "");
   }
 }
 
@@ -97,8 +155,6 @@ function measure(math: HTMLElement): void {
 // of the other part.
 function write(math: HTMLElement, copy: HTMLElement, scale: number): void {
   const elements = Array.from(copy.querySelectorAll("*"));
-  const box = (selected: Element[]): Box | null =>
-    union(selected.map((element) => element.getBoundingClientRect()));
   const parts = new Map<string, Element[]>();
   for (const element of copy.querySelectorAll("[data-move-to]")) {
     const el = element.getAttribute("data-el") ?? "";
@@ -113,7 +169,7 @@ function write(math: HTMLElement, copy: HTMLElement, scale: number): void {
       ),
     );
     for (const target of targets.filter((name) => name !== "")) {
-      const to = box(elements.filter((each) => names(each).includes(target)));
+      const to = box(named(elements, target));
       if (from === null || to === null) {
         continue;
       }
