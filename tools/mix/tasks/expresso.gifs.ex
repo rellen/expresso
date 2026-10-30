@@ -154,6 +154,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "math-lines", deck: "math_lines.exs", actions: List.duplicate("j", 4)},
     %{name: "math-redex", deck: "math_redex.exs", actions: ["j", "j", "j"]},
     %{name: "math-move", deck: "math_move.exs", actions: ["j", "j", "j"]},
+    %{name: "math-copy", deck: "math_copy.exs", actions: ["j", "j", "j"]},
     %{
       name: "chart-parallel-sets",
       deck: "chart_parallel_sets.exs",

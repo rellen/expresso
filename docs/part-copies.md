@@ -2,8 +2,9 @@
 
 This document gives the design for a copy of a part: a step makes a copy of a part of a
 diagram or of a formula, and the copy moves to a different place while the part stays. The
-document also records the progress of the work. It records ten decisions, and each is
-settled. Issue #473 holds the same plan.
+code contains this design. The document records ten decisions, and each is settled. Its
+last section, "The result", tells what changed during the work. Issue #473 holds the same
+plan.
 
 ## The problem
 
@@ -130,3 +131,33 @@ Each pull request is based on the one before it.
 | 4. Copies in a formula | Done. `Expresso.Element.Math.check/1` gives each copy its own part, as the check of a diagram does. The render writes a copy as its own `math` element after the formula, with the elements of the source and no name of a part inside it. `assets/src/move.ts` puts each copy on its source before it measures the moves, and it gives the copy the width of its source, because a source in a script is smaller. A copy without `data-placed` does not show, so a browser with no script shows no copy. |
 | 5. A copy of a copy | Done. `Expresso.Element.Copy.expand/1` walks each part and its copies, and a `part` entity with the name of a copy adds its entities and its copies to that copy. A copy of a copy has the target of its source in `copy_start`, and before its first step it moves there, so it fades in there. A copy of a copy in a formula holds the elements of the first source. |
 | 6. The example of the Y combinator | Done. The SVG file holds each line of the proof one time, with an `id` on each symbol, and no template: 97 texts in the place of 149. Each move is a copy from one line to its place in the next line. When the copies of a line land, the line shows, and the copies fade with `set: [opacity: 0]`. A part of an element inside a copy, such as the bound variables of the copy of the body, names the new `id` of that element. |
+| 7. The guide and the example of a formula | Done. `docs/how-to/explain-a-formula-step-by-step.md` shows `examples/animations/math_copy.exs`: a copy of the argument goes into each hole of the reduced term, and `mix expresso.gifs` records `math-copy.gif`. |
+
+## The result
+
+The seven pull requests of the stack contain the design. These parts are different from the
+plan, or the plan did not tell them:
+
+- **The place of a copy.** The plan put each copy at its target, with a move back to its
+  source. A copy now rests on its source and gets to its target by `move_to`, so a copy
+  uses the measure of `move_to` with no new code.
+- **The delay of the move.** The reveal rule of a step sets each delay of a transition to
+  zero. The theme gives a copy, with the class `part-copy`, its own list of delays with a
+  higher specificity, and the first step of the copy sets `--move-delay`.
+- **A formula with no script.** Only the presenter script can put a copy of a formula on its
+  source, so a browser with no script shows no copy. The plan showed each copy at its
+  target.
+- **The size of a copy of a formula.** A source in a script, such as an exponent, is smaller
+  than a symbol at the top level. The script gives the copy the width of its source with
+  its font size.
+- **`copy_to` and `:next`.** A `:next` has no step number before the transformer runs, so
+  `copy_to` needs step numbers. A `copy` entity takes `at: :next`.
+- **A part of an element inside a copy.** Each element of a copy in a diagram gets the name
+  of the copy, `-` and its old `id`, and a `part` entity can name it. The Y combinator
+  example uses this for the bound variables in the copy of the body.
+- **The Y combinator example.** Its SVG file holds each line one time and no template: 97
+  texts in the place of 149. Each move is a copy from one line to the next line, and the
+  next line shows when its copies land.
+- **The browser of the container.** The full Chromium of the container did not end after
+  `--check`, so the checks of the stack used the headless shell of Playwright in
+  `EXPRESSO_CHROMIUM`.

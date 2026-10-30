@@ -224,6 +224,81 @@ font and each size of the window. `examples/animations/math_move.exs` holds the 
 the symbols of a long proof with a layout of your own, see
 [Show the steps of a proof](show-the-steps-of-a-proof.md).
 
+
+## Copy the argument into each hole
+
+A β-reduction keeps its argument and puts a copy of it in the place of each bound variable.
+`copy_to` makes one copy of a part for each target, and the part stays at its place.
+
+```elixir
+defmodule Examples.MathCopy do
+  use Expresso
+
+  css ".small { font-size: 1.25rem; }"
+
+  slide "copy the argument" do
+    heading "Copy the argument"
+
+    math do
+      class "small"
+
+      line tex: ~S"(\lambda \part{bind}{f}.\,\part{f1}{f}\,(\part{f2}{f}\,x))\,\part{arg}{g}"
+
+      line ~S"\to_\beta",
+        tex: ~S"\part{h1}{g}\,(\part{h2}{g}\,x)",
+        why: "f := g",
+        name: "reduced"
+
+      part "bind" do
+        on [from: 2], set: [color: "var(--accent)"]
+      end
+
+      for bound <- ["f1", "f2"] do
+        part bound do
+          on [from: 2], set: [color: "var(--accent)"]
+        end
+      end
+
+      part "arg" do
+        on [from: 2], set: [color: "var(--success)"]
+        on 3, copy_to: ["h1", "h2"]
+      end
+
+      part "line1" do
+        on [from: 4], state: :dim
+      end
+
+      part "reduced", at: [from: 3]
+
+      for hole <- ["h1", "h2"] do
+        part hole do
+          at from: 4
+          on [from: 4], set: [color: "var(--success)"]
+        end
+
+        part "arg@#{hole}" do
+          on [from: 3], set: [color: "var(--success)"]
+          on [from: 4], set: [opacity: 0]
+        end
+      end
+    end
+  end
+end
+
+Examples.MathCopy
+```
+
+![The binder, the bound variables and the argument get colors, then a copy of the argument goes into each hole of the reduced term, then the redex dims](https://raw.githubusercontent.com/rellen/expresso/media/math-copy.gif)
+
+1. At step 2, the binder, each bound variable and the argument get their colors.
+2. At step 3, the reduced term shows without its two `g`. A copy of the argument fades in on
+   the argument and moves into each hole.
+3. At step 4, the two `g` of the reduced term show, the copies fade, and the redex dims.
+
+The two holes are parts with `at [from: 4]`, so they show when the copies fade. A `part`
+with the name of a copy, such as `"arg@h1"`, gives that copy its options.
+`examples/animations/math_copy.exs` holds the deck.
+
 ## Make a wide formula fit
 
 A formula is larger than the text of the slide. When the layout check reports that a formula

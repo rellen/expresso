@@ -10,7 +10,7 @@ Read these documents before you change the code:
 
 - `docs/architecture.md` — the two input paths, the render pipeline, the templates, the
   elements, the DSL, the presenter and the build. Its section "Open work" gives the next
-  items in the order of their value. Its item at this time is the copies of a part.
+  items in the order of their value. It has no item at this time.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide. The
   code contains each part of the design. The document ends with six decisions, and
   each is settled.
@@ -46,8 +46,9 @@ Read these documents before you change the code:
   design. The document records ten decisions, and each is settled. Its last section, "The
   result", tells what changed during the work.
 - `docs/part-copies.md` — the design for a copy of a part of a diagram or of a formula, which
-  moves to a different place while the part stays. The document records ten decisions, and
-  each is settled. Its section "The progress" tells which pull requests are done.
+  moves to a different place while the part stays. The code contains this design. The
+  document records ten decisions, and each is settled. Its last section, "The result", tells
+  what changed during the work.
 
 ## Build and test
 
