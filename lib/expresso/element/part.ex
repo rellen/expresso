@@ -8,7 +8,7 @@ defmodule Expresso.Element.Part do
 
   A `copy` entity of a part goes into `copies`. `Expresso.Element.Copy.expand/1`
   gives each copy its own part, with the source in `copy_of` and the target in
-  `copy_to`.
+  `copy_to`. A copy of a copy has the target of its source in `copy_start`.
   """
 
   @typedoc "The struct of a part"
@@ -18,6 +18,7 @@ defmodule Expresso.Element.Part do
               :id,
               :copy_of,
               :copy_to,
+              :copy_start,
               copies: [],
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()

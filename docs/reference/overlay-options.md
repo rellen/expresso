@@ -143,6 +143,26 @@ not show.
   the same name. The render gives an error for a target that the file does not have.
 - A `copy` with a `do` block takes `at` inside the block, as above.
 
+A `part` entity with the name of a copy adds its `on` entities, its `effect` and its copies to
+that copy. A copy of a copy fades in where its source landed, and then it moves to its own
+target. A proof uses this to copy a term in one reduction and to copy it again in the next.
+
+```elixir
+part "arg" do
+  copy "hole1", at: [from: 3]
+end
+
+part "arg@hole1" do
+  on [from: 6], state: :dim
+  copy "hole3", at: [from: 5]
+end
+```
+
+- A `part` entity with the name of a copy takes no `at`, because the copy has its own.
+- A copy of a copy starts at the target of its source, also when its source moves later.
+- The compiler gives an error for a loop of copies, such as two names that `as` gives to
+  each other.
+
 The `copy_to` option of an `on` entity is a short form for copies with no options of their
 own. `on 3, copy_to: ["hole1", "hole2"]` gives a copy to each target, and each copy shows
 from step 3 to the last step of the slide. The `on` entity can also take `state` and `set`
