@@ -138,9 +138,12 @@ defmodule Expresso.Element.Math do
   defp one_source(_math), do: :ok
 
   defp no_copies(%__MODULE__{elements: parts}) do
-    if Enum.any?(parts, &((&1.copies || []) != [])),
-      do: {:error, "a part of a math element takes no copy entity yet"},
-      else: :ok
+    if Enum.any?(
+         parts,
+         &((&1.copies || []) != [] or Enum.any?(&1.on || [], fn on -> on.copy_to end))
+       ),
+       do: {:error, "a part of a math element takes no copy entity yet"},
+       else: :ok
   end
 
   defp part_names_ok(%__MODULE__{tex: tex}) when is_binary(tex) do

@@ -100,6 +100,11 @@ defmodule Expresso.Extension do
         type: :string,
         doc:
           "The id of an element of the SVG file, or the name of a different part of the formula. The part moves to the center of that element. Only an on entity of a part takes it. See docs/reference/overlay-options.md."
+      ],
+      copy_to: [
+        type: {:list, :string},
+        doc:
+          "The ids of elements of the SVG file. From the first step of the entity, a copy of the part goes to each one. Only an on entity of a part takes it. See docs/reference/overlay-options.md."
       ]
     ]
   }

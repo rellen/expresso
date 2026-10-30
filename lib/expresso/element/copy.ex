@@ -42,13 +42,43 @@ defmodule Expresso.Element.Copy do
   """
   @spec expand([Part.t()]) :: {:ok, [Part.t()]} | {:error, String.t()}
   def expand(parts) do
-    parts =
-      Enum.flat_map(parts, fn %Part{copies: copies} = part ->
-        [%Part{part | copies: []} | Enum.map(copies || [], &part(&1, part))]
-      end)
+    with {:ok, parts} <- Shoddy.Result.collect(Enum.map(parts, &copy_to/1)) do
+      parts =
+        Enum.flat_map(parts, fn %Part{copies: copies} = part ->
+          [%Part{part | copies: []} | Enum.map(copies || [], &part(&1, part))]
+        end)
 
-    with :ok <- no_copy_to_itself(parts), do: unique(parts)
+      with :ok <- no_copy_to_itself(parts), do: unique(parts)
+    end
   end
+
+  # Replace the `copy_to` of each `on` entity of a part with a `copy` entity
+  # for each target. Each copy shows from the first step of the entity to the
+  # last step of the slide. An `on` entity with no other option goes away.
+  defp copy_to(%Part{on: on, copies: copies} = part) do
+    {copy_tos, kept} = Enum.split_with(on || [], &((&1.copy_to || []) != []))
+
+    with {:ok, made} <- Shoddy.Result.collect(Enum.map(copy_tos, &copies_of(&1, part))) do
+      kept = kept ++ Enum.flat_map(copy_tos, &rest/1)
+      {:ok, %Part{part | on: kept, copies: (copies || []) ++ List.flatten(made)}}
+    end
+  end
+
+  defp copies_of(%On{at: %Expresso.Overlay{pairs: pairs}, copy_to: targets}, %Part{id: id}) do
+    firsts = Enum.map(pairs, &elem(&1, 0))
+
+    if Enum.all?(firsts, &is_integer/1) do
+      at = %Expresso.Overlay{pairs: [{Enum.min(firsts), :max}]}
+      {:ok, Enum.map(targets, &%__MODULE__{target: &1, at: at})}
+    else
+      {:error,
+       "the on entity of the part \"#{id}\" has copy_to and :next. Give the step as a " <>
+         "number, or use a copy entity with at: :next"}
+    end
+  end
+
+  defp rest(%On{state: nil, set: nil, move_to: nil}), do: []
+  defp rest(%On{} = on), do: [%On{on | copy_to: nil}]
 
   defp part(%__MODULE__{} = copy, %Part{id: id, effect: effect}) do
     %Part{

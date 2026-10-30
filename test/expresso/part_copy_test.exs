@@ -91,6 +91,49 @@ defmodule Expresso.Element.CopyTest do
     end
   end
 
+  describe "the copy_to option" do
+    test "copy_to gives a copy for each target, from the first step of the on entity" do
+      part = Builder.part("token", on: [Builder.on([3, 5..6], copy_to: ["target", "station"])])
+      [_part, first, second] = diagram([part]).elements
+
+      assert {first.id, first.copy_to, first.at} ==
+               {"token@target", "target", %Expresso.Overlay{pairs: [{3, :max}]}}
+
+      assert {second.id, second.copy_to} == {"token@station", "station"}
+    end
+
+    test "an on entity with copy_to keeps its other options, and goes away without them" do
+      part =
+        Builder.part("token",
+          on: [
+            Builder.on(2, copy_to: ["target"], state: :alert),
+            Builder.on(3, copy_to: ["station"])
+          ]
+        )
+
+      [token | _copies] = diagram([part]).elements
+      assert [%{state: :alert, copy_to: nil}] = token.on
+    end
+
+    test "copy_to with :next stops the compile" do
+      part = Builder.part("token", on: [Builder.on(:next, copy_to: ["target"])])
+
+      assert_raise ArgumentError, ~r/has copy_to and :next. Give the step as a number/, fn ->
+        diagram([part])
+      end
+    end
+
+    test "copy_to in an element that is not a part stops the compile" do
+      text = Builder.text_area(text: "a", on: [Builder.on(2, copy_to: ["x"])])
+
+      assert_raise Spark.Error.DslError,
+                   ~r/has copy_to, and only an on entity of a part takes it/,
+                   fn ->
+                     Builder.deck([Builder.slide("a", elements: [text])])
+                   end
+    end
+  end
+
   describe "the render" do
     test "the copy of the element follows its source, with new ids and no screen reader" do
       document =

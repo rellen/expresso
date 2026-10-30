@@ -72,6 +72,7 @@ step specification.
 | `set: [rotate: "-8deg"]` | The element turns by that angle. |
 | `set: [opacity: 0.3]` | The element shows at that opacity, from 0 to 1. |
 | `set: [color: "#c92a2a"]` | The text of the element changes to that color. |
+| `copy_to: ["hole1", "hole2"]` | From the first step of the entity, a copy of a part of a diagram goes to each element. See "Copy a part to other places" below. |
 | `move_to: "station"` | A part of a diagram moves to the center of the element with the id `"station"` in the same SVG file. A part of a formula moves to the center of the part `"station"` of the same formula. See "Move a part to another part" below. |
 
 An `on` entity can be in each element, in an item of a list, in a row of a table and in
@@ -141,6 +142,12 @@ not show.
 - The compiler gives an error for a copy to its own part, and for two parts or copies with
   the same name. The render gives an error for a target that the file does not have.
 - A `copy` with a `do` block takes `at` inside the block, as above.
+
+The `copy_to` option of an `on` entity is a short form for copies with no options of their
+own. `on 3, copy_to: ["hole1", "hole2"]` gives a copy to each target, and each copy shows
+from step 3 to the last step of the slide. The `on` entity can also take `state` and `set`
+for the part. `copy_to` needs step numbers, so the compiler gives an error for `:next` in
+its entity. A `copy` entity takes `at: :next`.
 
 `docs/part-copies.md` gives the design.
 
