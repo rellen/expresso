@@ -287,6 +287,16 @@ html[data-transition="zoom"][data-direction="back"]::view-transition-new(
   inherits: false;
   initial-value: 0px;
 }
+/*
+ * The delay of a move. A copy of a part sets it at its first step, so the
+ * copy fades in at its source and then moves. The property does not
+ * inherit, so a copy does not delay the moves of a different element.
+ */
+@property --move-delay {
+  syntax: "<time>";
+  inherits: false;
+  initial-value: 0s;
+}
 @property --scale {
   syntax: "<number>";
   inherits: false;
@@ -2442,6 +2452,19 @@ svg [data-el] {
     color var(--dur) var(--ease),
     --dimmed var(--dur) var(--ease),
     --highlight var(--dur) var(--ease);
+}
+/*
+ * A copy of a part fades in at its source at its first step, and then it
+ * moves to its target. The rule of the first step sets `--move-delay` to the
+ * time of the fade, and this list delays the transform by it. The reveal
+ * rule of a step sets each delay to zero, so this rule has a higher
+ * specificity. The delay of `visibility` comes from `--shown`, as the reveal
+ * rule gives it. `docs/part-copies.md` gives the design.
+ */
+section[data-step] .part-copy[data-on][data-el] {
+  transition-delay:
+    0s, calc((1 - var(--shown)) * var(--dur)), var(--move-delay), 0s, 0s, 0s,
+    0s, 0s, 0s;
 }
 /*
  * A series of a chart has its own list with `--chart-dim`, and that list

@@ -52,6 +52,7 @@ defmodule Expresso.Element.Math do
   def check(%__MODULE__{} = math) do
     with {:ok, math} <- write_lines(math),
          :ok <- one_source(math),
+         :ok <- no_copies(math),
          :ok <- part_names_ok(math) do
       {:ok, math}
     end
@@ -135,6 +136,12 @@ defmodule Expresso.Element.Math do
     do: {:error, "a math element takes the MathML or the tex option, and not both"}
 
   defp one_source(_math), do: :ok
+
+  defp no_copies(%__MODULE__{elements: parts}) do
+    if Enum.any?(parts, &((&1.copies || []) != [])),
+      do: {:error, "a part of a math element takes no copy entity yet"},
+      else: :ok
+  end
 
   defp part_names_ok(%__MODULE__{tex: tex}) when is_binary(tex) do
     case Enum.reject(part_names(tex), &Regex.match?(@part_name, &1)) do

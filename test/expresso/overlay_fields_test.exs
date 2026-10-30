@@ -1,7 +1,7 @@
 defmodule Expresso.OverlayFieldsTest do
   use ExUnit.Case, async: true
 
-  alias Expresso.Element.{Lines, On, TocEntry}
+  alias Expresso.Element.{Copy, Lines, On, TocEntry}
   alias Expresso.Overlay
 
   # The overlay options of the DSL. The fields `steps` and `el` have no
@@ -17,14 +17,15 @@ defmodule Expresso.OverlayFieldsTest do
   end
 
   # The entities of the elements: each entity with the `at` option, except the
-  # `on` entity, which is not an element.
+  # `on` entity and the `copy` entity, which are not elements. The check of a
+  # diagram makes a part from each copy.
   defp entities do
     [section] = Expresso.Extension.sections()
 
     section.entities
     |> descendants()
     |> Enum.uniq_by(& &1.name)
-    |> Enum.filter(&(Keyword.has_key?(&1.schema, :at) and &1.target != On))
+    |> Enum.filter(&(Keyword.has_key?(&1.schema, :at) and &1.target not in [On, Copy]))
   end
 
   defp fields(module), do: module.__struct__() |> Map.from_struct() |> Map.keys()

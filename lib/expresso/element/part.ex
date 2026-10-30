@@ -5,6 +5,10 @@ defmodule Expresso.Element.Part do
   The `part` entity takes the `id` of an element of the SVG file as its first
   argument, and its `at` option gives the steps that show that element.
   `Expresso.Element.Diagram` gives the rules.
+
+  A `copy` entity of a part goes into `copies`. `Expresso.Element.Copy.expand/1`
+  gives each copy its own part, with the source in `copy_of` and the target in
+  `copy_to`.
   """
 
   @typedoc "The struct of a part"
@@ -12,6 +16,9 @@ defmodule Expresso.Element.Part do
 
   defstruct [
               :id,
+              :copy_of,
+              :copy_to,
+              copies: [],
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 end

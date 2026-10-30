@@ -107,6 +107,8 @@ defmodule Expresso.Element.Diagram do
   def place(%Expresso.Deck{} = deck), do: Expresso.Element.Tree.map_deck(deck, &place_one/1)
 
   defp place_one(%__MODULE__{elements: parts} = diagram) do
+    parts = Enum.map(parts, &Expresso.Element.Copy.moves/1)
+    diagram = %__MODULE__{diagram | elements: parts}
     if Enum.any?(parts, &moves?/1), do: place_parts(diagram), else: diagram
   end
 
@@ -115,7 +117,7 @@ defmodule Expresso.Element.Diagram do
   defp moves?(%Expresso.Element.Part{on: on}), do: Enum.any?(on, &(&1.move_to != nil))
 
   defp place_parts(%__MODULE__{src: src, elements: parts} = diagram) do
-    tree = parse(diagram)
+    tree = diagram |> parse() |> copies(parts)
     %__MODULE__{diagram | elements: Enum.map(parts, &place_part(&1, tree, src))}
   end
 
@@ -201,7 +203,7 @@ defmodule Expresso.Element.Diagram do
   end
 
   defp svg(%__MODULE__{elements: parts} = diagram, hidden?) do
-    tree = diagram |> parse() |> hide(hidden?)
+    tree = diagram |> parse() |> hide(hidden?) |> copies(parts)
 
     parts
     |> Enum.reduce(tree, fn %Expresso.Element.Part{id: id} = part, tree ->
@@ -216,6 +218,50 @@ defmodule Expresso.Element.Diagram do
     |> Floki.raw_html()
     |> Expresso.SvgCopy.number(Expresso.Copies.next())
   end
+
+  # Put a copy of the element of the source of each copy after that element.
+  # Each element of the copy gets a new id: the name of the copy for its root,
+  # and the name of the copy, "-" and the old id for each child. A copy repeats
+  # a term, so a screen reader does not read it. A source that the file does
+  # not have stops the render later, with the message for an unknown id.
+  defp copies(tree, parts) do
+    Enum.reduce(parts, tree, fn
+      %Expresso.Element.Part{copy_of: nil}, tree ->
+        tree
+
+      %Expresso.Element.Part{id: id, copy_of: source}, tree ->
+        insert_copy(tree, source, id)
+    end)
+  end
+
+  defp insert_copy(nodes, source, id) when is_list(nodes) do
+    Enum.flat_map(nodes, fn
+      {tag, attrs, children} = node when is_binary(tag) ->
+        if List.keyfind(attrs, "id", 0) == {"id", source},
+          do: [node, copy_node(node, id)],
+          else: [{tag, attrs, insert_copy(children, source, id)}]
+
+      node ->
+        [node]
+    end)
+  end
+
+  defp copy_node({tag, attrs, children}, id) do
+    attrs = [{"id", id}, {"aria-hidden", "true"} | List.keydelete(attrs, "id", 0)]
+    {tag, attrs, Enum.map(children, &rename(&1, id))}
+  end
+
+  defp rename({tag, attrs, children}, prefix) when is_binary(tag) do
+    attrs =
+      Enum.map(attrs, fn
+        {"id", id} -> {"id", "#{prefix}-#{id}"}
+        attr -> attr
+      end)
+
+    {tag, attrs, Enum.map(children, &rename(&1, prefix))}
+  end
+
+  defp rename(node, _prefix), do: node
 
   defp hide(tree, false), do: tree
 
@@ -263,8 +309,9 @@ defmodule Expresso.Element.Diagram do
     {:attributes, Expresso.Overlay.Render.attributes(part)}
   end
 
-  defp part_attributes(part) do
-    {:wrapper, [{"class", "diagram-part"} | Expresso.Overlay.Render.attributes(part)]}
+  defp part_attributes(%Expresso.Element.Part{copy_of: copy_of} = part) do
+    class = if copy_of, do: "diagram-part part-copy", else: "diagram-part"
+    {:wrapper, [{"class", class} | Expresso.Overlay.Render.attributes(part)]}
   end
 
   # Put the attributes of a part on the element with its id. The wrapper is a
@@ -423,7 +470,11 @@ defmodule Expresso.Element.Diagram do
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
   def check(%__MODULE__{} = diagram) do
-    with :ok <- one_source(diagram), do: options(diagram)
+    with :ok <- one_source(diagram),
+         {:ok, _diagram} <- options(diagram),
+         {:ok, parts} <- Expresso.Element.Copy.expand(diagram.elements) do
+      {:ok, %__MODULE__{diagram | elements: parts}}
+    end
   end
 
   defp one_source(%__MODULE__{src: nil, source: nil}),
