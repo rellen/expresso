@@ -26,7 +26,7 @@ source and not the compiled modules, so the functions that `use Spark.Dsl` and
 `use Temple.Component` write do not count. Each public function that you write needs a
 `@doc` and a `@spec`, and each struct needs a `@type t`.
 
-Each result above comes from Erlang/OTP 29.1, Elixir 1.20.4 and Zig 0.16.0, which
+Each result above comes from Erlang/OTP 29.1, Elixir 1.20.5 and Zig 0.16.0, which
 `.tool-versions` gives. The Nix shell, a remote session and the workflow each give these
 versions. Therefore a check that passes in a session also passes on your machine and in the
 workflow.

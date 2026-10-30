@@ -2,7 +2,7 @@
 
 This page tells you how to get the versions of the tools that the checks need.
 
-The versions are in `.tool-versions`: Elixir 1.20.4, Erlang/OTP 29.1, Node 24.20.0 and
+The versions are in `.tool-versions`: Elixir 1.20.5, Erlang/OTP 29.1, Node 24.20.0 and
 Zig 0.16.0. Zigler needs Zig to compile the GIF encoder of `tools/` in dev and in test,
 so `mix compile` and `mix test` need it. Burrito needs Zig for the binary.
 
@@ -27,11 +27,17 @@ mix deps.get
 
 `flake.nix` pins `nixpkgs` to one commit, `b6c98e9e6633`. This commit is the release
 `nixpkgs-26.11pre1078010` of the channel `nixpkgs-unstable`, from 2026-09-22. It gives
-Erlang/OTP 29.1, Elixir 1.20.4, Node 24.20.0 and Zig 0.16.0 on Linux and on macOS, which
-are the versions of `.tool-versions`. `nix flake update` does not move the pin.
+Erlang/OTP 29.1, Elixir 1.20.4, Node 24.20.0 and Zig 0.16.0 on Linux and on macOS.
+`nix flake update` does not move the pin.
+
+`.tool-versions` gives Elixir 1.20.5, which came out on 2026-10-29. No release of
+`nixpkgs-unstable` gave it on 2026-10-30, so `shell.nix` builds Elixir 1.20.5 from its
+source with `overrideAttrs`. The hash comes from `nixpkgs` master. When a release of the
+channel gives 1.20.5, remove the override and move the pin.
 
 Hydra built the channel release, so `cache.nixos.org` gives each tool of the shell. The
-exception is `elixir-ls`, because `shell.nix` builds it with Elixir 1.20. On 2026-09-27,
+exceptions are Elixir, because of the override, and `elixir-ls`, because `shell.nix` builds
+it with that Elixir. On 2026-09-27,
 `nix develop` on Linux built the shell. The shell made the binary with Burrito, and the
 release tests passed.
 
@@ -68,7 +74,7 @@ packages are older. The apt package of Erlang gives OTP 25, the apt package of E
 1.14, and the container gives Node 22. Five rules apply to the container:
 
 - The Elixir build must agree with the OTP release. The name of the file is
-  `v1.20.4-otp-29.zip`.
+  `v1.20.5-otp-29.zip`.
 - The archive of Erlang and the archive of Node are builds for Ubuntu 24.04 on x86_64. The
   hook stops with a message for a container of a different target.
 - The container gives a latin1 name encoding. Therefore `ELIXIR_ERL_OPTIONS` must contain

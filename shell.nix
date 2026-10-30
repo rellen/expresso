@@ -3,7 +3,18 @@ let
   inherit (pkgs.lib) optional;
   beam = pkgs.beam.packages.erlang_29;
   erlang = pkgs.beam.interpreters.erlang_29;
-  elixir = beam.elixir_1_20;
+  # The pin of flake.nix gives Elixir 1.20.4. Build 1.20.5 from its source, with
+  # the hash of nixpkgs master, until a release of nixpkgs-unstable gives it.
+  # Then remove the override and move the pin.
+  elixir = beam.elixir_1_20.overrideAttrs (old: rec {
+    version = "1.20.5";
+    src = pkgs.fetchFromGitHub {
+      owner = "elixir-lang";
+      repo = "elixir";
+      rev = "v${version}";
+      hash = "sha256-MsRNaWAQ05ysL3hOqpfhm//tRNL0Z4Ia/NfEWEQfEWE=";
+    };
+  });
   elixir-ls = beam.elixir-ls.override { inherit elixir; };
   # Burrito pins the Zig it builds wrappers with; keep this in step with
   # @zig_version_expected in burrito.ex (1.6.0 wants exactly 0.16.0).

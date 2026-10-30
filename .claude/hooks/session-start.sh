@@ -17,7 +17,7 @@ fi
 # Keep these versions in agreement with `.tool-versions` and with
 # `.github/workflows/check.yml`.
 OTP_VERSION="29.1"
-ELIXIR_VERSION="1.20.4"
+ELIXIR_VERSION="1.20.5"
 NODE_VERSION="24.20.0"
 ZIG_VERSION="0.16.0"
 
