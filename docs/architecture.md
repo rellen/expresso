@@ -3087,14 +3087,14 @@ The commands are:
 
 ## Open work
 
-1. **The copies of a part.** A step makes a copy of a part of a diagram or of a formula, and
-   the copy moves to a different place while the part stays. `docs/part-copies.md` gives the
-   design and the stack of seven pull requests. Issue #473 holds the same plan.
+There is no item at this time. Issues #474, #479, #478 and #475 build on the copies of a
+part, in that order, and issue #397 to issue #407 propose other features. Each one needs a
+decision before the work starts.
 
-Issues #474, #479, #478 and #475 build on the copies, in that order, and issue #397 to issue
-#407 propose other features. Each one needs a decision before the work starts.
+The item before it, the copies of a part of `docs/part-copies.md`, added the `copy` entity
+and the `copy_to` option of a part of a diagram or of a formula. Issue #473 holds that plan.
 
-The item before it, the formulas with parts of `docs/math-parts.md`, added the option `tex`
+The item before that, the formulas with parts of `docs/math-parts.md`, added the option `tex`
 of `math`, the `part` and `line` entities of a formula, and the deck option `math_font`.
 Issue #472 holds that plan. The maintainer then asked for `\id` and for `move_to` on a part
 of a formula.

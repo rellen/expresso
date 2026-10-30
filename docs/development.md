@@ -42,4 +42,4 @@ GitHub.
 - `docs/scatter-plots.md` — the design for a scatter plot, and its result.
 - `docs/waterfall-charts.md` — the design for a waterfall chart, and its result.
 - `docs/math-parts.md` — the design for a formula with parts, and its result.
-- `docs/part-copies.md` — the design for a copy of a part, and its progress.
+- `docs/part-copies.md` — the design for a copy of a part, and its result.
