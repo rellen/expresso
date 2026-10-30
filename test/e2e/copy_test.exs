@@ -24,6 +24,21 @@ defmodule Expresso.E2E.CopyTest do
     end
   end
 
+  # The short form: at step 2, a copy goes to each target.
+  defmodule ShortDeck do
+    use Expresso
+
+    slide "copy_to" do
+      diagram "test/fixtures/move.svg" do
+        width "80%"
+
+        part "token" do
+          on 2, copy_to: ["target", "station"]
+        end
+      end
+    end
+  end
+
   # The center of an element of the diagram on the screen.
   defp center(page, id) do
     js(page, """
@@ -99,5 +114,17 @@ defmodule Expresso.E2E.CopyTest do
       return Math.abs(a.left + a.width / 2 - b.left - b.width / 2) < 1;
     })()
     """)
+  end
+
+  test "copy_to sends a copy to each target", %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(ShortDeck, tmp_dir, "short"))
+    token = center(page, "token")
+    assert opacity(page, "token@station") == 0
+
+    press(page, "j")
+    wait_for(page, "document.querySelector('.screen .slide').dataset.step === '2'")
+    assert near?(center(page, "token@target"), center(page, "target"))
+    assert near?(center(page, "token@station"), center(page, "station"))
+    assert center(page, "token") == token
   end
 end

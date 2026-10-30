@@ -23,6 +23,7 @@ defmodule Expresso.Overlay.Check do
   - An `on` entity has a step at which its element does not show.
   - An `on` entity with `move_to` is not in a part, or it also sets `x` or
     `y`.
+  - An `on` entity with `copy_to` is not in a part of a diagram.
   - A child element has a step at which its nearest ancestor with steps does
     not show.
   - A group of the `highlight` option of a chart has a step at which the chart
@@ -74,6 +75,7 @@ defmodule Expresso.Overlay.Check do
     |> Stream.map(fn %On{steps: steps} = entity ->
       with :ok <- check_positive(steps, "on entity"),
            :ok <- check_move(entity, element),
+           :ok <- check_copy_to(entity, element),
            do: check_inside(steps, limit, "the on entity")
     end)
     |> Result.collect()
@@ -92,6 +94,16 @@ defmodule Expresso.Overlay.Check do
     |> Result.collect()
     |> Result.ignore()
   end
+
+  # `Expresso.Element.Copy.expand/1` takes `copy_to` from each part, so an
+  # `on` entity with `copy_to` here is not in a part.
+  defp check_copy_to(%On{copy_to: [_ | _]}, element),
+    do:
+      {:error,
+       "the on entity of the #{name(element)} has copy_to, and only an on entity of a part " <>
+         "takes it"}
+
+  defp check_copy_to(%On{}, _element), do: :ok
 
   defp check_move(%On{move_to: nil}, _element), do: :ok
 
