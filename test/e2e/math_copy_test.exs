@@ -50,7 +50,9 @@ defmodule Expresso.E2E.MathCopyTest do
     exponent = box(page, ~s([data-part="exp"]))
     copy = box(page, ~s(math.math-copy[data-part="exp@end"]))
     assert gap(copy, exponent) < 1
-    assert abs(copy["w"] - exponent["w"]) < 1
+    # The font size changes in steps, so the width of the copy can differ
+    # from the width of its source by one pixel.
+    assert abs(copy["w"] - exponent["w"]) <= 1.5
 
     arg = box(page, ~s([data-part="arg"]))
 
