@@ -80,14 +80,33 @@ defmodule Expresso.Element.CopyTest do
       end
     end
 
-    test "a part of a math element takes no copy yet" do
+    test "a copy of a part of a formula is its own math element after the formula" do
       part = Builder.part("bind", copies: [Builder.copy("arg", at: 2)])
 
-      assert_raise ArgumentError, ~r/a part of a math element takes no copy entity yet/, fn ->
-        Builder.math(~S(<math><mi data-part="bind">f</mi><mi data-part="arg">g</mi></math>),
+      math =
+        Builder.math(
+          ~S(<math display="block"><mrow><mi data-part="bind">f</mi><mi data-part="arg">g</mi></mrow></math>),
           elements: [part]
         )
-      end
+
+      document =
+        Builder.deck([Builder.slide("a", elements: [math])])
+        |> Expresso.Deck.render()
+        |> LazyHTML.from_document()
+
+      [copy] = LazyHTML.query(document, ".screen .math math.math-copy") |> Enum.to_list()
+
+      assert LazyHTML.attribute(copy, "data-part") == ["bind@arg"]
+      assert LazyHTML.attribute(copy, "data-copy-of") == ["bind"]
+      assert LazyHTML.attribute(copy, "data-move-to") == ["arg"]
+      assert LazyHTML.attribute(copy, "aria-hidden") == ["true"]
+      assert LazyHTML.attribute(copy, "display") == ["block"]
+
+      # The copy holds a copy of the source with no name of a part, and the
+      # formula keeps one element with the name.
+      assert LazyHTML.query(copy, "mi") |> LazyHTML.text() == "f"
+      assert LazyHTML.query(copy, "[data-part]:not(math)") |> Enum.count() == 0
+      assert LazyHTML.query(document, ~s(.screen .math mi[data-part="bind"])) |> Enum.count() == 1
     end
   end
 

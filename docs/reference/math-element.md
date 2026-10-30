@@ -149,6 +149,36 @@ the size of the window changes and when a font loads.
 The render writes the move as `--x: var(--to-x-arg)` and `--y: var(--to-y-arg)`, and the
 script sets these two custom properties on the part. `assets/src/move.ts` gives the rules.
 
+## Copy a part to other places
+
+A `copy` entity in a `part` of a formula makes a copy of the part at a step. The copy moves
+to the center of a different part, and the part stays at its place. A β-reduction uses
+copies to put the argument in the place of each bound variable.
+
+```elixir
+slide "the substitution" do
+  math do
+    tex ~S"(\lambda \part{bind}{f}.\,\part{hole1}{f}\,\part{hole2}{f})\,\part{arg}{g}"
+
+    part "arg" do
+      on 2, copy_to: ["hole1", "hole2"]
+    end
+  end
+end
+```
+
+The `copy` entity and `copy_to` take the same options as in a diagram. See
+[Copy a part to other places](overlay-options.md#copy-a-part-to-other-places).
+
+- The render writes each copy as its own `math` element after the formula, so the formula
+  keeps its layout. The presenter script puts the copy on its source before the steps.
+- A source in a script, such as an exponent, is smaller than a symbol of the formula. The
+  copy gets the width of its source.
+- A copy does not change its target. To hide a bound variable when the argument lands on
+  it, give the variable its own `part` with `at` or `on`.
+- A screen reader does not read a copy, because it repeats a part.
+- A browser with no script does not show a copy.
+
 ## The lines of a derivation
 
 A derivation has a line for each step, and the lines align on their relations, such as `=`
