@@ -108,7 +108,7 @@ installs it. `mix test` excludes these tests. `docs/development/release.md` give
 `mix deps.get` writes a warning for the same advisory, and the session start hook runs it,
 so read its output. `docs/development/dependencies.md` tells how to act on an advisory.
 
-These results come from Erlang/OTP 29.1, Elixir 1.20.4, Node 24.20.0 and Zig 0.16.0, which
+These results come from Erlang/OTP 29.1, Elixir 1.20.5, Node 24.20.0 and Zig 0.16.0, which
 `.tool-versions` gives. The hook installs these versions, the Nix shell gives them, and the
 workflow uses them. Therefore a command in a session gives the same result as a command on
 a machine.

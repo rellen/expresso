@@ -83,7 +83,7 @@ concurrency:
 env:
   # The versions of `.tool-versions`.
   OTP_VERSION: "29.1"
-  ELIXIR_VERSION: "1.20.4-otp-29"
+  ELIXIR_VERSION: "1.20.5-otp-29"
   NODE_VERSION: "24.20.0"
   ZIG_VERSION: "0.16.0"
   # The version of D2 for `.github/actions/setup-graph-tools`, as the session
