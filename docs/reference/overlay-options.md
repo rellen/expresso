@@ -102,6 +102,48 @@ points. A text has no width without its font, so a text gives the point of its `
 `y`. A group thus gets the center of its shapes, and a text that goes past the shapes of
 its group does not move that center.
 
+### Copy a part to other places
+
+A `copy` entity in a `part` of a diagram makes a copy of the part at a step. The copy moves
+to the center of its target, and the part stays at its place. A β-reduction uses copies to
+put the argument in the place of each bound variable.
+
+```elixir
+diagram "reduction.svg" do
+  part "arg" do
+    copy "hole1", at: [from: 3]
+
+    copy "hole2" do
+      at from: 3
+      on [from: 4], state: :dim
+    end
+  end
+end
+```
+
+At its first step, a copy fades in on its part, and then it moves to its target. At each
+later step of its `at`, the copy stays at its target. Before its first step, the copy does
+not show.
+
+| Option | Effect |
+| --- | --- |
+| The argument | The id of the element of the SVG file where the copy goes. |
+| `at` | The steps that show the copy. The option is necessary. |
+| `as` | The name of the copy. The default is the part, `@` and the target, such as `"arg@hole1"`. |
+| `effect` | How the copy shows and hides. The default is the effect of the part. |
+| `on` | The states of the copy, as for an element. |
+
+- The render copies the element of the part after that element. Each element of the copy
+  gets a new `id`, so the file keeps one element with each `id`.
+- A copy does not change its target. To hide a bound variable when the argument lands on it,
+  give the variable its own `part` with `at` or `on`.
+- A screen reader does not read a copy, because it repeats a part.
+- The compiler gives an error for a copy to its own part, and for two parts or copies with
+  the same name. The render gives an error for a target that the file does not have.
+- A `copy` with a `do` block takes `at` inside the block, as above.
+
+`docs/part-copies.md` gives the design.
+
 The theme owns the custom properties that `set` writes. The compiler gives a warning for a
 key that the theme does not use. The theme of this project uses `x`, `y`, `scale`,
 `rotate`, `opacity` and `color`.

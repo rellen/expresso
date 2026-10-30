@@ -7,6 +7,7 @@
 spark_locals_without_parens = [
   alt: 1,
   any: 1,
+  as: 1,
   aspect: 1,
   at: 1,
   attribute: 2,
@@ -40,6 +41,8 @@ spark_locals_without_parens = [
   columns: 0,
   columns: 1,
   controls: 1,
+  copy: 1,
+  copy: 2,
   count: 1,
   css: 1,
   decimals: 1,

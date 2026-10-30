@@ -936,11 +936,41 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @copy %Spark.Dsl.Entity{
+    name: :copy,
+    target: Expresso.Element.Copy,
+    args: [:target],
+    entities: [on: [@on]],
+    schema: [
+      target: [
+        type: :string,
+        required: true,
+        doc:
+          "The id of the element of the SVG file where the copy goes. See docs/reference/overlay-options.md."
+      ],
+      as: [
+        type: :string,
+        doc:
+          "The name of the copy. The default is the part, @ and the target, such as \"arg@hole1\"."
+      ],
+      at: [
+        type: {:custom, Expresso.Overlay, :new, []},
+        required: true,
+        doc:
+          "The steps that show the copy. At its first step, the copy fades in at its part and then moves to its target."
+      ],
+      effect: [
+        type: :atom,
+        doc: "How the copy shows and hides. The default is the effect of the part."
+      ]
+    ]
+  }
+
   @part %Spark.Dsl.Entity{
     name: :part,
     target: Expresso.Element.Part,
     args: [:id],
-    entities: [on: [@on]],
+    entities: [on: [@on], copies: [@copy]],
     schema:
       @overlay_schema ++
         [

@@ -1,0 +1,103 @@
+defmodule Expresso.Element.Copy do
+  @moduledoc """
+  A copy of a part, which moves to a different place while the part stays
+
+  The `copy` entity is inside a `part`. Its argument is the target: the id of
+  an element of the SVG file of a diagram. Its `at` option gives the steps
+  that show the copy, and its `on` entities give the states of the copy. The
+  `as` option gives the name of the copy. The default name is the id of the
+  part, `@` and the target, such as `arg@hole1`.
+
+  `expand/1` gives each copy its own `Expresso.Element.Part`. The render puts
+  a copy of the element of the source after the source, and the copy moves to
+  its target with `move_to`. `docs/part-copies.md` gives the design.
+  """
+
+  alias Expresso.Element.{On, Part}
+
+  @typedoc "The struct of a copy entity"
+  @type t :: %__MODULE__{
+          target: String.t(),
+          as: String.t() | nil,
+          at: Expresso.Overlay.t(),
+          effect: atom() | nil,
+          on: [On.t()]
+        }
+
+  defstruct [:target, :as, :at, :effect, on: [], __spark_metadata__: nil]
+
+  @doc """
+  Give each copy of a list of parts its own part
+
+  The part of a copy follows the part of its source. It has the name of the
+  copy as its `id`, the source in `copy_of` and the target in `copy_to`, and
+  the `at`, `effect` and `on` of the copy. The function returns an error for
+  a copy to its own part, for two parts or copies with the same name, and for
+  a part with the name of a copy.
+
+      iex> part = %Expresso.Element.Part{id: "arg", copies: [%Expresso.Element.Copy{target: "hole"}]}
+      iex> {:ok, [_part, copy]} = Expresso.Element.Copy.expand([part])
+      iex> {copy.id, copy.copy_of, copy.copy_to}
+      {"arg@hole", "arg", "hole"}
+  """
+  @spec expand([Part.t()]) :: {:ok, [Part.t()]} | {:error, String.t()}
+  def expand(parts) do
+    parts =
+      Enum.flat_map(parts, fn %Part{copies: copies} = part ->
+        [%Part{part | copies: []} | Enum.map(copies || [], &part(&1, part))]
+      end)
+
+    with :ok <- no_copy_to_itself(parts), do: unique(parts)
+  end
+
+  defp part(%__MODULE__{} = copy, %Part{id: id, effect: effect}) do
+    %Part{
+      id: copy.as || "#{id}@#{copy.target}",
+      copy_of: id,
+      copy_to: copy.target,
+      at: copy.at,
+      effect: copy.effect || effect,
+      on: copy.on || []
+    }
+  end
+
+  defp no_copy_to_itself(parts) do
+    case Enum.find(parts, &(&1.copy_of != nil and &1.copy_of == &1.copy_to)) do
+      nil -> :ok
+      %Part{copy_of: id} -> {:error, "the part \"#{id}\" has a copy to itself"}
+    end
+  end
+
+  defp unique(parts) do
+    parts
+    |> Enum.frequencies_by(& &1.id)
+    |> Enum.find(fn {_id, count} -> count > 1 end)
+    |> case do
+      nil ->
+        {:ok, parts}
+
+      {id, _count} ->
+        {:error,
+         "two parts or copies have the name \"#{id}\". Give a copy a different name with " <>
+           "the as option"}
+    end
+  end
+
+  @doc """
+  Give the part of each copy its move and the delay of that move
+
+  The move is an `on` entity with `move_to` the target, at each step of the
+  copy. At the first step of the copy, the custom property `--move-delay`
+  holds the time of the fade, so the copy fades in at its source and then
+  moves. The render calls this function after the transformer gives each
+  part its steps.
+  """
+  @spec moves(Part.t()) :: Part.t()
+  def moves(%Part{copy_to: nil} = part), do: part
+
+  def moves(%Part{copy_to: target, steps: [first | _] = steps, on: on} = part) do
+    move = %On{steps: steps, move_to: target}
+    delay = %On{steps: [first], set: ["move-delay": "var(--dur)"]}
+    %Part{part | on: [move, delay | on || []]}
+  end
+end
