@@ -3087,9 +3087,13 @@ The commands are:
 
 ## Open work
 
-There is no item at this time. Issues #479, #478 and #475 build on the links between the
-lines of a derivation, in that order, and issue #397 to issue #407 propose other features.
-Each one needs a decision before the work starts.
+1. **Each occurrence of a symbol.** A part names each occurrence of a symbol in a formula,
+   and a group of `highlight` names each token with a text in a code element.
+   `docs/each-occurrence.md` gives the design and the stack of seven pull requests. Issue
+   #479 holds the same plan.
+
+Issues #478 and #475 build on it, in that order, and issue #397 to issue #407 propose other
+features. Each one needs a decision before the work starts.
 
 The item before it, the links of `docs/line-links.md`, added `\from{name}{…}` to the lines
 of a `math` element and the option `steps` of a line. Issue #474 holds that plan.
