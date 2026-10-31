@@ -44,6 +44,56 @@ defmodule Expresso.Element.Math.LambdaTest do
     assert {arg.first, arg.last} == {6, 6}
   end
 
+  defp redex(tex) do
+    {:ok, atoms} = Latex.parse(tex)
+    {:ok, term} = Lambda.parse(atoms)
+    Lambda.redex(term)
+  end
+
+  test "the bound variables are the free occurrences of the variable in the body" do
+    assert {:ok, %{var: "f", bound: [4, 6]}} = redex(~S"(\lambda f.\,f\,(f\,x))\,g")
+
+    # An inner λ with the same variable hides its own body.
+    assert {:ok, %{bound: [4]}} = redex(~S"(\lambda f.\,f\,(\lambda f.\,f))\,g")
+
+    # An inner λ with a different variable does not.
+    assert {:ok, %{bound: [4, 9]}} = redex(~S"(\lambda f.\,f\,(\lambda x.\,f))\,g")
+  end
+
+  test "a redex without parentheses has no close, and its head starts at the λ" do
+    {:ok, atoms} = Latex.parse(~S"y\,((\lambda f.\,f)\,g)")
+    {:ok, term} = Lambda.parse(atoms)
+    inner = Lambda.leftmost(term)
+    assert Lambda.show(inner) == "((λf. f) g)"
+    assert {:ok, %{head: {2, 5}, close: 7, body: {6, 6}, arg: {8, 8}}} = Lambda.redex(inner)
+  end
+
+  test "a capture gives an error that names the variable" do
+    assert {:error, message} = redex(~S"(\lambda f.\,\lambda x.\,f\,x)\,x")
+    assert message =~ "captures the free variable x of the argument"
+
+    # A λ with the free variable is not a capture when no bound variable is in it.
+    assert {:ok, _redex} = redex(~S"(\lambda f.\,f\,(\lambda x.\,x))\,x")
+  end
+
+  test "the leftmost outermost redex is the one of normal order" do
+    {:ok, atoms} =
+      Latex.parse(~S"(\lambda f.\,(\lambda x.\,f\,(x\,x))\,(\lambda x.\,f\,(x\,x)))\,g")
+
+    {:ok, term} = Lambda.parse(atoms)
+    assert Lambda.leftmost(term) == term
+
+    {:ok, atoms} = Latex.parse(~S"x\,(\lambda y.\,(\lambda z.\,z)\,y)")
+    {:ok, term} = Lambda.parse(atoms)
+    assert Lambda.show(Lambda.leftmost(term)) == "((λz. z) y)"
+
+    {:ok, atoms} = Latex.parse(~S"x\,y")
+    {:ok, term} = Lambda.parse(atoms)
+    assert Lambda.leftmost(term) == nil
+    assert {:error, message} = Lambda.redex(term)
+    assert message =~ "is not a redex"
+  end
+
   test "LaTeX that is not a λ-term gives an error" do
     assert {:error, message} = show("x + y")
     assert message =~ ~s(is not a λ-term at "+")
