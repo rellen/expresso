@@ -66,4 +66,72 @@ defmodule Expresso.Element.Math.LinksTest do
     math = math(String.replace(@mathml, ~s(data-from="arg"), ""))
     assert Links.place(math) == math
   end
+
+  describe "steps: 2" do
+    test "the line takes one more step of the counter, in an on entity last in its part" do
+      math =
+        Expresso.Builder.math(
+          reveal: true,
+          lines: [
+            Expresso.Builder.line(tex: "a"),
+            Expresso.Builder.line("=", tex: "b", steps: 2),
+            Expresso.Builder.line("=", tex: "c")
+          ]
+        )
+
+      deck = Expresso.Builder.deck([Expresso.Builder.slide("s", elements: [math])])
+      {:ok, %{slides: [%{elements: [math]}]}} = Expresso.to_deck(deck)
+
+      assert math.two_step_lines == ["line2"]
+
+      assert Enum.map(math.elements, &{&1.id, &1.steps, Enum.map(&1.on, fn on -> on.steps end)}) ==
+               [{"line1", [1, 2, 3, 4], []}, {"line2", [2, 3, 4], [[3]]}, {"line3", [4], []}]
+    end
+
+    test "the line shows from its second step, and its copies move from its first step" do
+      math = %Math{
+        math(@mathml, [2, 3, 4])
+        | two_step_lines: ["line2"],
+          elements: [
+            %Part{id: "line1"},
+            %Part{id: "line2", steps: [2, 3, 4], on: [%Expresso.Element.On{steps: [3], set: []}]}
+          ]
+      }
+
+      %Math{elements: [_line1, line2 | copies]} = Links.place(math)
+
+      assert {line2.steps, line2.on} == {[3, 4], []}
+      assert Enum.map(copies, & &1.steps) == [[2, 3, 4], [2, 3, 4]]
+    end
+
+    test "steps: 2 needs reveal true" do
+      assert_raise ArgumentError, ~r/a line with steps: 2 needs reveal true/, fn ->
+        Expresso.Builder.math(
+          lines: [Expresso.Builder.line(tex: "a"), Expresso.Builder.line("=", tex: "b", steps: 2)]
+        )
+      end
+    end
+  end
+
+  test "a part inside a linked sub-term also reaches its copy" do
+    mathml =
+      String.replace(
+        @mathml,
+        ~s(<mi data-from="arg">g</mi><mo>+</mo>),
+        ~s(<mrow data-from="arg"><mi data-part="hole">g</mi></mrow><mo>+</mo>)
+      )
+
+    math = math(mathml)
+    math = %Math{math | elements: math.elements ++ [%Part{id: "hole", el: "s1-e9", steps: [3]}]}
+    %{text: text} = math |> Links.place() |> Math.get_assigns()
+
+    [copy] =
+      text
+      |> LazyHTML.from_fragment()
+      |> LazyHTML.query(~s(math.math-copy[data-part="arg@link-1"] mrow[data-el="s1-e9"]))
+      |> Enum.to_list()
+
+    assert LazyHTML.text(copy) == "g"
+    assert text =~ ~s(<mi class="math-part" data-on="3" data-el="s1-e9" data-part="hole">g</mi>)
+  end
 end

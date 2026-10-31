@@ -1006,6 +1006,12 @@ defmodule Expresso.Extension do
       name: [
         type: :string,
         doc: "The name of the part of the line. The default is line1, line2 and so on."
+      ],
+      steps: [
+        type: {:in, [1, 2]},
+        default: 1,
+        doc:
+          "With 2, the \\from links of the line move at its first step, and the other symbols show at the next step. It needs reveal true."
       ]
     ]
   }

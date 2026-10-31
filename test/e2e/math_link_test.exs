@@ -15,6 +15,20 @@ defmodule Expresso.E2E.MathLinkTest do
     end
   end
 
+  # With steps: 2, the copies move at step 2, and the rest of the second line
+  # shows at step 3.
+  defmodule TwoStepDeck do
+    use Expresso
+
+    slide "two steps" do
+      math do
+        reveal true
+        line tex: ~S"(\lambda f.\,f\,x)\,\part{arg}{g}"
+        line ~S"\to_\beta", tex: ~S"\from{arg}{g}\,x", why: "f := g", steps: 2
+      end
+    end
+  end
+
   defp center(page, selector) do
     js(page, """
     (() => {
@@ -49,5 +63,25 @@ defmodule Expresso.E2E.MathLinkTest do
              1
 
     assert gap(center(page, ~s([data-part="arg"])), source) < 1
+  end
+
+  test "with steps: 2, the copy moves first, and the rest of the line shows at the next step",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(TwoStepDeck, tmp_dir, "two"))
+    copy = ~s(math.math-copy[data-part="arg@link-1"])
+
+    line =
+      "getComputedStyle(document.querySelector('.screen .math [data-part=\"line2\"]')).opacity"
+
+    wait_for(page, "document.querySelector('.screen .math #{copy}').hasAttribute('data-placed')")
+
+    press(page, "j")
+    wait_for(page, "document.querySelector('.screen .slide').dataset.step === '2'")
+    assert gap(center(page, copy), center(page, ".link-1")) < 1
+    assert js(page, line) == "0"
+
+    press(page, "j")
+    wait_for(page, "#{line} === '1'")
+    assert gap(center(page, copy), center(page, ".link-1")) < 1
   end
 end

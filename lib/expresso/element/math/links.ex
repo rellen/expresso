@@ -13,7 +13,7 @@ defmodule Expresso.Element.Math.Links do
   ancestor with the name of a line. `docs/line-links.md` gives the design.
   """
 
-  alias Expresso.Element.Part
+  alias Expresso.Element.{On, Part}
 
   @doc """
   Give each link of a math element a copy of its source
@@ -23,10 +23,16 @@ defmodule Expresso.Element.Math.Links do
   adds one copy part for each link: from `from-j-name` to `link-n`, with the
   steps of the part of the line of the link. It raises for a name that no
   earlier line has, and for a line with links and with no steps.
+
+  A line with `steps: 2` shows from its second step, and its copies move from
+  its first step.
   """
   @spec place(Expresso.Element.Math.t()) :: Expresso.Element.Math.t()
-  def place(%Expresso.Element.Math{text: text, line_names: lines, elements: parts} = math)
+  def place(%Expresso.Element.Math{text: text, line_names: lines} = math)
       when is_binary(text) and lines != [] do
+    # The steps of each line before a line with `steps: 2` loses its first step.
+    steps = Map.new(math.elements, &{&1.id, &1.steps})
+    %Expresso.Element.Math{elements: parts} = math = second_steps(math)
     tree = Floki.parse_fragment!(text)
 
     case links(tree, lines) do
@@ -36,7 +42,7 @@ defmodule Expresso.Element.Math.Links do
       links ->
         links = Enum.map(links, &source(&1, tree, lines))
         tree = mark(tree, lines, links)
-        copies = Enum.map(links, &copy(&1, parts, lines))
+        copies = Enum.map(links, &copy(&1, steps, lines))
         %Expresso.Element.Math{math | text: Floki.raw_html(tree), elements: parts ++ copies}
     end
   end
@@ -132,17 +138,38 @@ defmodule Expresso.Element.Math.Links do
     end
   end
 
+  # A line with `steps: 2` has an `on` entity last in its part, from
+  # `Expresso.Element.Math.check/1`. The line shows from the step of that
+  # entity, and the entity goes away.
+  defp second_steps(%Expresso.Element.Math{two_step_lines: names, elements: parts} = math) do
+    parts =
+      Enum.map(parts, fn
+        %Part{id: id, on: on, steps: [_ | _] = steps} = part ->
+          if id in names do
+            {[%On{steps: [second | _]}], on} = on |> Enum.reverse() |> Enum.split(1)
+            %Part{part | on: Enum.reverse(on), steps: Enum.filter(steps, &(&1 >= second))}
+          else
+            part
+          end
+
+        part ->
+          part
+      end)
+
+    %Expresso.Element.Math{math | elements: parts}
+  end
+
   # The copy of a link: from the source to the linked sub-term, at the steps
   # of the line of the link.
-  defp copy(%{n: n, line: line, name: name, source: source}, parts, lines) do
+  defp copy(%{n: n, line: line, name: name, source: source}, steps, lines) do
     line_name = Enum.at(lines, line)
 
     steps =
-      case Enum.find(parts, &(&1.id == line_name)) do
-        %Part{steps: [_ | _] = steps} ->
+      case Map.get(steps, line_name) do
+        [_ | _] = steps ->
           steps
 
-        _part ->
+        _steps ->
           raise ArgumentError,
                 "the line #{inspect(line_name)} of a math element has \\from, so it needs " <>
                   "steps. Give the math element reveal true, or give the line an at option"
