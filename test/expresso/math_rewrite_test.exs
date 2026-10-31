@@ -58,10 +58,14 @@ defmodule Expresso.Element.Math.RewriteTest do
         %MathRewrite{replace: "r", by_tex: "3"}
       ])
 
+    # A relation and a binary operator get parts of their own, inside
+    # \mathrel and \mathbin, so they keep their spaces.
     assert old.tex ==
-             ~S"\part{keep-2-1}{A = \pi} \class{hit-2}{r}^2 \part{keep-2-2}{+} \class{hit-2}{r}"
+             ~S"\part{keep-2-1}{A} \mathrel{\part{keep-2-2}{=}} \part{keep-2-3}{\pi} \class{hit-2}{r}^2 \mathbin{\part{keep-2-4}{+}} \class{hit-2}{r}"
 
-    assert new.tex == ~S"\from{keep-2-1}{A = \pi} 3^2 \from{keep-2-2}{+} 3"
+    assert new.tex ==
+             ~S"\from{keep-2-1}{A} \mathrel{\from{keep-2-2}{=}} \from{keep-2-3}{\pi} 3^2 \mathbin{\from{keep-2-4}{+}} 3"
+
     assert new.relation == "="
   end
 
@@ -79,7 +83,7 @@ defmodule Expresso.Element.Math.RewriteTest do
         %MathRewrite{replace: "n", by_tex: "y"}
       ])
 
-    assert new.tex == ~S"y \from{keep-2-1}{+ x\,\text{if x}}"
+    assert new.tex == ~S"y \mathbin{\from{keep-2-1}{+}} \from{keep-2-2}{x\,\text{if x}}"
   end
 
   test "a rewrite of a rewrite reads the links of the old line as their bodies" do
@@ -90,7 +94,7 @@ defmodule Expresso.Element.Math.RewriteTest do
         %MathRewrite{replace: "z", by: "a"}
       ])
 
-    assert l3.tex == ~S"\from{keep-3-1}{\part{a}{x} +} \from{a}{x}"
+    assert l3.tex == ~S"\from{keep-3-1}{\part{a}{x} \mathbin{+}} \from{a}{x}"
   end
 
   test "from reads a line with a name, and the lines keep their names" do
@@ -102,10 +106,65 @@ defmodule Expresso.Element.Math.RewriteTest do
       ])
 
     assert Enum.map(lines, &{&1.name, &1.tex}) == [
-             {"first", ~S"\class{hit-3}{x}"},
+             {"first", ~S"\class{hit-3}{x}{}"},
              {nil, "y"},
              {"last", "1"}
            ]
+  end
+
+  test "an occurrence that is the whole body of a line or a part gets an empty group after it" do
+    # Temml drops a \class that is the whole body of a \data.
+    {:ok, [old, _new]} =
+      Rewrite.expand([
+        %MathLine{tex: ~S"\part{n}{a + b}"},
+        %MathRewrite{replace: "n", by_tex: "c"}
+      ])
+
+    assert old.tex == ~S"\class{hit-2}{\part{n}{a + b}}{}"
+
+    {:ok, [old, _new]} =
+      Rewrite.expand([
+        %MathLine{tex: ~S"\part{p}{x} + 1"},
+        %MathRewrite{replace: "x", by_tex: "y"}
+      ])
+
+    assert old.tex =~ ~S"\part{p}{\class{hit-2}{x}{}}"
+  end
+
+  test "a sign with no operand before it stays in its run" do
+    {:ok, [_old, new]} =
+      Rewrite.expand([%MathLine{tex: "-a + (-x)"}, %MathRewrite{replace: "x", by_tex: "y"}])
+
+    assert new.tex ==
+             ~S"\from{keep-2-1}{-a} \mathbin{\from{keep-2-2}{+}} \from{keep-2-3}{(-}y\from{keep-2-4}{)}"
+  end
+
+  test "a template puts a copy of each part of \\use in place of the part of replace" do
+    {:ok, [old, new]} =
+      Rewrite.expand([
+        %MathLine{tex: ~S"y = \part{prod}{\part{a}{k}\,(\part{b}{x} + \part{c}{h})}"},
+        %MathRewrite{replace: "prod", to: ~S"\use{a}\,\use{b} + \use{a}\,\use{c}"}
+      ])
+
+    assert old.tex =~ ~S"\class{hit-2}{\part{prod}"
+
+    assert new.tex ==
+             ~S"\from{keep-2-1}{y} \mathrel{\from{keep-2-2}{=}} \from{a}{k}\,\from{b}{x} + \from{a}{k}\,\from{c}{h}"
+
+    assert new.why_tex == ~S"k\,(x + h) := k\,x + k\,h"
+  end
+
+  test "a template without replace is the whole new line, and \\use reads an earlier line" do
+    {:ok, [l1, _l2, l3]} =
+      Rewrite.expand([
+        %MathLine{tex: ~S"\part{Y}{Y}\,\part{g}{g}"},
+        %MathRewrite{replace: "Y", by_tex: "D"},
+        %MathRewrite{to: ~S"\use{g}\,(\use{Y}\,\use{g})"}
+      ])
+
+    assert l1.tex =~ ~S"\class{hit-2}{\part{Y}{Y}}"
+    assert l3.tex == ~S"\from{g}{g}\,(\from{Y}{Y}\,\from{g}{g})"
+    assert l3.why_tex == nil
   end
 
   test "a rewrite gives an error for each missing name" do
@@ -130,10 +189,16 @@ defmodule Expresso.Element.Math.RewriteTest do
     assert message =~ ~s(reads the line "nothing")
 
     assert {:error, message} = Rewrite.expand([line, beta(by: nil)])
-    assert message =~ "takes the by option or the by_tex option"
+    assert message =~ "takes one of the options by, by_tex and to"
 
     assert {:error, message} = Rewrite.expand([line, beta(by_tex: "1")])
-    assert message =~ "and not both"
+    assert message =~ "takes one of the options by, by_tex and to"
+
+    assert {:error, message} = Rewrite.expand([line, beta(replace: nil)])
+    assert message =~ "with by or by_tex needs the replace option"
+
+    assert {:error, message} = Rewrite.expand([line, beta(by: nil, to: ~S"\use{nothing}")])
+    assert message =~ ~s(takes the part "nothing")
   end
 
   test "the DSL takes a rewrite after a line, and the math element gets two lines" do

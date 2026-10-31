@@ -1047,7 +1047,6 @@ defmodule Expresso.Extension do
       ],
       replace: [
         type: :string,
-        required: true,
         doc:
           "The name of a part of the old line, or a symbol, such as \"f\" or ~S\"\\alpha\". Each occurrence becomes the new content. See docs/reference/math-element.md."
       ],
@@ -1064,6 +1063,11 @@ defmodule Expresso.Extension do
       by_tex: [
         type: :string,
         doc: "New LaTeX for the place of each occurrence, in place of by. It fades in."
+      ],
+      to: [
+        type: :string,
+        doc:
+          "A template in LaTeX for the part of replace, or for the whole line without replace. Each \\use{name} in it is a copy of the part name."
       ],
       drop: [
         type: {:list, :string},

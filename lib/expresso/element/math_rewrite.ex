@@ -9,8 +9,9 @@ defmodule Expresso.Element.MathRewrite do
   that `within` can limit to a part. `by` names a part of an earlier line,
   and a copy of it goes into each place. `by_tex` gives new LaTeX in place
   of `by`. The option is not `with`, because `with` is a special form of
-  Elixir. `drop` names the parts of the old line that the new line does
-  not hold.
+  Elixir. `to` gives a template, and each `\\use{name}` in it is a copy of the
+  part `name`. Without `replace`, the template is the whole new line. `drop`
+  names the parts of the old line that the new line does not hold.
 
   `Expresso.Element.Math.check/1` turns each rewrite into an
   `Expresso.Element.MathLine` with `Expresso.Element.Math.Rewrite.expand/1`.
@@ -27,6 +28,7 @@ defmodule Expresso.Element.MathRewrite do
     :within,
     :by,
     :by_tex,
+    :to,
     :why,
     :name,
     drop: [],

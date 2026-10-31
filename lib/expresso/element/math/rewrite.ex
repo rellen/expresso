@@ -64,12 +64,18 @@ defmodule Expresso.Element.Math.Rewrite do
     do: {:error, "a rewrite of a math element needs a line before it"}
 
   defp rewrite(%MathRewrite{} = rewrite, k, done) do
-    with {:ok, index} <- source(rewrite, done),
+    with :ok <- one_content(rewrite),
+         {:ok, index} <- source(rewrite, done),
          %MathLine{} = old <- Enum.at(done, index),
          {:ok, atoms} <- parse(old.tex),
          {:ok, content} <- content(rewrite, done),
          :ok <- present(rewrite, atoms) do
-      kind = if Latex.part(atoms, rewrite.replace), do: :part, else: :symbol
+      kind =
+        cond do
+          rewrite.replace == nil -> :line
+          Latex.part(atoms, rewrite.replace) -> :part
+          true -> :symbol
+        end
 
       state = %{
         replace: rewrite.replace,
@@ -83,7 +89,7 @@ defmodule Expresso.Element.Math.Rewrite do
         count: 0
       }
 
-      {old_atoms, new_atoms, state} = walk(atoms, rewrite.within == nil, state)
+      {old_atoms, new_atoms, state} = whole(atoms, rewrite.within == nil, state)
 
       if state.count == 0 do
         {:error,
@@ -94,14 +100,18 @@ defmodule Expresso.Element.Math.Rewrite do
           relation: rewrite.relation || "=",
           tex: new_atoms |> trim() |> Latex.write(),
           why: rewrite.why,
-          why_tex: if(rewrite.why, do: nil, else: reason(rewrite, atoms, content)),
+          why_tex:
+            if(rewrite.why || kind == :line, do: nil, else: reason(rewrite, atoms, content)),
           name: rewrite.name,
           steps: 3,
           rewrite: %{hit: "hit-#{k}", by: rewrite.by}
         }
 
         {:ok,
-         List.replace_at(done, index, %MathLine{old | tex: Latex.write(old_atoms)}) ++ [line]}
+         List.replace_at(done, index, %MathLine{
+           old
+           | tex: old_atoms |> guard(state.hit) |> Latex.write()
+         }) ++ [line]}
       end
     end
   end
@@ -134,44 +144,100 @@ defmodule Expresso.Element.Math.Rewrite do
     end
   end
 
-  # The atoms that go into the place of each occurrence.
-  defp content(%MathRewrite{by: nil, by_tex: nil}, _done),
-    do: {:error, "a rewrite of a math element takes the by option or the by_tex option"}
+  # A rewrite takes one of the options of the new content, and `replace`
+  # unless it takes `to`.
+  defp one_content(%MathRewrite{} = rewrite) do
+    given =
+      for {key, value} <- [by: rewrite.by, by_tex: rewrite.by_tex, to: rewrite.to],
+          value != nil,
+          do: key
 
-  defp content(%MathRewrite{by: by, by_tex: tex}, _done) when by != nil and tex != nil,
-    do:
-      {:error,
-       "a rewrite of a math element takes the by option or the by_tex option, and not both"}
+    cond do
+      length(given) != 1 ->
+        {:error, "a rewrite of a math element takes one of the options by, by_tex and to"}
+
+      rewrite.replace == nil and given != [:to] ->
+        {:error, "a rewrite of a math element with by or by_tex needs the replace option"}
+
+      true ->
+        :ok
+    end
+  end
+
+  # The atoms that go into the place of each occurrence. In a template, each
+  # `\\use{name}` becomes a link to the part `name` of the nearest line.
+  defp content(%MathRewrite{to: to}, done) when is_binary(to) do
+    with {:ok, atoms} <- parse(to), do: uses(atoms, done)
+  end
 
   defp content(%MathRewrite{by_tex: tex}, _done) when is_binary(tex), do: parse(tex)
 
   defp content(%MathRewrite{by: by}, done) do
+    with {:ok, link} <- link(by, done), do: {:ok, [link]}
+  end
+
+  # A link to the part `name` of the nearest line that has it.
+  defp link(name, done) do
     done
     |> Enum.reverse()
     |> Enum.find_value(fn line ->
-      with {:ok, atoms} <- Latex.parse(line.tex), do: Latex.part(atoms, by)
+      with {:ok, atoms} <- Latex.parse(line.tex), do: Latex.part(atoms, name)
     end)
     |> case do
       nil ->
         {:error,
-         "a rewrite of a math element takes the part #{inspect(by)}, and no line before it has that part"}
+         "a rewrite of a math element takes the part #{inspect(name)}, and no line before it has that part"}
 
       body ->
-        {:ok, [{:command, "\\from", [{:group, [{:symbol, by}]}, {:group, unlink(body)}]}]}
+        {:ok, {:command, "\\from", [{:group, [{:symbol, name}]}, {:group, unlink(body)}]}}
     end
   end
 
+  defp uses(atoms, done) do
+    Enum.reduce_while(atoms, {:ok, []}, fn atom, {:ok, acc} ->
+      case use_atom(atom, done) do
+        {:ok, atom} -> {:cont, {:ok, acc ++ [atom]}}
+        {:error, message} -> {:halt, {:error, message}}
+      end
+    end)
+  end
+
+  defp use_atom({:command, "\\use", [{:group, label}]}, done), do: link(Latex.write(label), done)
+
+  defp use_atom({:group, atoms}, done) do
+    with {:ok, atoms} <- uses(atoms, done), do: {:ok, {:group, atoms}}
+  end
+
+  defp use_atom({:command, name, groups}, done) do
+    with {:ok, groups} <- uses(groups, done), do: {:ok, {:command, name, groups}}
+  end
+
+  defp use_atom(atom, _done), do: {:ok, atom}
+
   # The default reason: the symbol or the part of `replace`, `:=`, and the new
-  # content, in LaTeX and without links.
+  # content, in LaTeX.
   defp reason(%MathRewrite{replace: replace}, atoms, content) do
     old =
       case Latex.part(atoms, replace) do
         nil -> replace
-        body -> body |> unlink() |> Latex.write()
+        body -> body |> plain() |> Latex.write()
       end
 
-    old <> " := " <> (content |> unlink() |> Latex.write())
+    old <> " := " <> (content |> plain() |> Latex.write())
   end
+
+  # The reason holds no names, because a later link must not find a part in
+  # it. Each naming command gives its body.
+  defp plain(atoms) do
+    Enum.flat_map(atoms, fn
+      {:command, name, [_label, {:group, body}]} when name in @names -> plain(body)
+      {:command, name, groups} -> [{:command, name, Enum.map(groups, &plain_group/1)}]
+      {:group, inner} -> [{:group, plain(inner)}]
+      atom -> [atom]
+    end)
+  end
+
+  defp plain_group({:group, atoms}), do: {:group, plain(atoms)}
 
   # Each name of `within` and `drop` must be a part of the old line.
   defp present(%MathRewrite{within: within, drop: drop}, atoms) do
@@ -184,6 +250,34 @@ defmodule Expresso.Element.Math.Rewrite do
          "a rewrite of a math element names the part #{inspect(name)}, and its old line has no part with that name"}
     end
   end
+
+  # Temml drops a `\\class` that is the whole body of a `\\data`, such as
+  # the cell of a line or a part. A list whose only atom is an occurrence thus
+  # gets an empty group after it, and the class stays.
+  defp guard(atoms, hit) do
+    atoms = Enum.map(atoms, &guard_atom(&1, hit))
+
+    case Enum.reject(atoms, &space?/1) do
+      [{:command, "\\class", [{:group, [{:symbol, ^hit}]}, _body]}] -> atoms ++ [{:group, []}]
+      _atoms -> atoms
+    end
+  end
+
+  defp guard_atom({:group, atoms}, hit), do: {:group, guard(atoms, hit)}
+
+  defp guard_atom({:command, name, groups}, hit),
+    do: {:command, name, Enum.map(groups, fn {:group, atoms} -> {:group, guard(atoms, hit)} end)}
+
+  defp guard_atom(atom, _hit), do: atom
+
+  # A template without `replace` is the whole new line, and the whole old
+  # line is its occurrence.
+  defp whole(atoms, _inside, %{kind: :line} = state) do
+    hit = {:command, "\\class", [{:group, [{:symbol, state.hit}]}, {:group, atoms}]}
+    {[hit], state.content, %{state | count: 1}}
+  end
+
+  defp whole(atoms, inside, state), do: walk(atoms, inside, state)
 
   # Walk a list of atoms. The function returns the atoms of the old line, the
   # atoms of the new line and the state. `inside` is true inside the part of
@@ -198,13 +292,13 @@ defmodule Expresso.Element.Math.Rewrite do
             {old, new, run ++ unit, state}
 
           kind ->
-            {old_run, new_run, state} = keep(run, state)
+            {old_run, new_run, state} = keep(run, old != [], state)
             {old_unit, new_unit, state} = change(kind, unit, inside, state)
             {old ++ old_run ++ old_unit, new ++ new_run ++ new_unit, [], state}
         end
       end)
 
-    {old_run, new_run, state} = keep(run, state)
+    {old_run, new_run, state} = keep(run, old != [], state)
     {old ++ old_run, new ++ new_run, state}
   end
 
@@ -345,11 +439,77 @@ defmodule Expresso.Element.Math.Rewrite do
   end
 
   # A run of plain atoms gets a part in the old line and a link in the new
-  # line. The spaces at its ends stay outside, and a run of spaces only stays
-  # as it is.
-  defp keep([], state), do: {[], [], state}
+  # line. Temml gives an operator in a part no space, so the run splits at
+  # each relation and at each binary operator, and each operator gets its own
+  # part inside `\\mathrel` or `\\mathbin`, which give the space back. A `+`
+  # or a `-` with no operand before it is a sign, and it stays in its run.
+  # `follows` is true when an atom comes before the run in its group. The spaces
+  # at the ends of a piece stay outside, and a run of spaces only stays as it
+  # is.
+  defp keep([], _after, state), do: {[], [], state}
 
-  defp keep(run, state) do
+  defp keep(run, follows, state) do
+    run
+    |> pieces(follows)
+    |> Enum.reduce({[], [], state}, fn piece, {old, new, state} ->
+      {o, n, state} = piece(piece, state)
+      {old ++ o, new ++ n, state}
+    end)
+  end
+
+  # The run in pieces: `{:run, atoms}` and `{:operator, wrapper, atom}`.
+  defp pieces(run, follows) do
+    {pieces, current, _operand} =
+      Enum.reduce(run, {[], [], follows}, fn atom, {pieces, current, operand} ->
+        case operator(atom, operand) do
+          nil ->
+            {pieces, current ++ [atom], operand(atom, operand)}
+
+          wrapper ->
+            {pieces ++ [{:run, current}, {:operator, wrapper, atom}], [], false}
+        end
+      end)
+
+    Enum.reject(pieces ++ [{:run, current}], &(&1 == {:run, []}))
+  end
+
+  @relations ~w(= < > : \\le \\ge \\leq \\geq \\neq \\to \\equiv \\approx \\sim \\mapsto \\Rightarrow \\iff \\in \\subset \\subseteq)
+  @binaries ~w(+ - * \\cdot \\times \\pm \\mp \\div \\circ \\cup \\cap \\wedge \\vee)
+
+  defp operator(atom, operand) do
+    text = op_text(atom)
+
+    cond do
+      text in @relations -> "\\mathrel"
+      text in @binaries and operand -> "\\mathbin"
+      true -> nil
+    end
+  end
+
+  defp op_text({:symbol, text}), do: text
+  defp op_text({:command, name, []}), do: name
+  defp op_text(_atom), do: nil
+
+  # True when the atoms so far end with an operand, so a `+` after them is a
+  # binary operator.
+  defp operand({:space, _text}, operand), do: operand
+  defp operand({:symbol, text}, _operand) when text in ["(", "[", ","], do: false
+  defp operand(_atom, _operand), do: true
+
+  defp piece({:operator, wrapper, atom}, state) do
+    n = state.n + 1
+    name = [{:symbol, "#{state.prefix}-#{n}"}]
+
+    old =
+      {:command, wrapper, [{:group, [{:command, "\\part", [{:group, name}, {:group, [atom]}]}]}]}
+
+    new =
+      {:command, wrapper, [{:group, [{:command, "\\from", [{:group, name}, {:group, [atom]}]}]}]}
+
+    {[old], [new], %{state | n: n}}
+  end
+
+  defp piece({:run, run}, state) do
     {lead, rest} = Enum.split_while(run, &space?/1)
     {trail, core} = rest |> Enum.reverse() |> Enum.split_while(&space?/1)
     core = Enum.reverse(core)
