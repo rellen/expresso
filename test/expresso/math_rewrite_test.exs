@@ -22,15 +22,33 @@ defmodule Expresso.Element.Math.RewriteTest do
   test "a substitution with two occurrences writes the new line, its links and its copies" do
     {:ok, [old, new]} = Rewrite.expand([%MathLine{tex: @redex}, beta()])
 
-    # Each run of kept symbols gets a part in the old line.
+    # Each run of kept symbols gets a part in the old line, and each
+    # occurrence the class of the rewrite.
     assert old.tex ==
-             ~S"\part{lam}{(\lambda f.}\,\part{body}{f\,\part{keep-2-1}{(}f\,\part{keep-2-2}{x)}}\part{close}{)}\,\part{arg}{g}"
+             ~S"\part{lam}{(\lambda f.}\,\part{body}{\class{hit-2}{f}\,\part{keep-2-1}{(}\class{hit-2}{f}\,\part{keep-2-2}{x)}}\part{close}{)}\,\part{arg}{g}"
 
     # Each occurrence becomes a copy of the argument, and each kept run a link.
     assert new.tex ==
              ~S"\part{body}{\from{arg}{g}\,\from{keep-2-1}{(}\from{arg}{g}\,\from{keep-2-2}{x)}}"
 
     assert new.relation == ~S"\to_\beta"
+
+    # The new line takes three steps, and its default reason is in LaTeX.
+    assert new.steps == 3
+    assert new.rewrite == %{hit: "hit-2", by: "arg"}
+    assert new.why_tex == "f := g"
+  end
+
+  test "the reason of a rewrite is its why, or the replaced part and the new content" do
+    line = %MathLine{tex: ~S"\part{n}{a + b} \cdot 2"}
+
+    {:ok, [_old, new]} = Rewrite.expand([line, %MathRewrite{replace: "n", by_tex: "c"}])
+    assert {new.why, new.why_tex} == {nil, "a + b := c"}
+
+    {:ok, [_old, new]} =
+      Rewrite.expand([line, %MathRewrite{replace: "n", by_tex: "c", why: "sum"}])
+
+    assert {new.why, new.why_tex} == {"sum", nil}
   end
 
   test "without within, each occurrence of the line is replaced, and by_tex gives new LaTeX" do
@@ -40,7 +58,9 @@ defmodule Expresso.Element.Math.RewriteTest do
         %MathRewrite{replace: "r", by_tex: "3"}
       ])
 
-    assert old.tex == ~S"\part{keep-2-1}{A = \pi} r^2 \part{keep-2-2}{+} r"
+    assert old.tex ==
+             ~S"\part{keep-2-1}{A = \pi} \class{hit-2}{r}^2 \part{keep-2-2}{+} \class{hit-2}{r}"
+
     assert new.tex == ~S"\from{keep-2-1}{A = \pi} 3^2 \from{keep-2-2}{+} 3"
     assert new.relation == "="
   end
@@ -81,7 +101,11 @@ defmodule Expresso.Element.Math.RewriteTest do
         %MathRewrite{replace: "x", by_tex: "1", from: "first", name: "last"}
       ])
 
-    assert Enum.map(lines, &{&1.name, &1.tex}) == [{"first", "x"}, {nil, "y"}, {"last", "1"}]
+    assert Enum.map(lines, &{&1.name, &1.tex}) == [
+             {"first", ~S"\class{hit-3}{x}"},
+             {nil, "y"},
+             {"last", "1"}
+           ]
   end
 
   test "a rewrite gives an error for each missing name" do

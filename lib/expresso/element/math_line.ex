@@ -11,10 +11,23 @@ defmodule Expresso.Element.MathLine do
 
   The `steps` option takes 1 or 2. With 2, the links of the line move at its
   first step, and the other symbols of the line show at the next step.
+
+  A line from a `rewrite` entity has 3 steps, the reason in LaTeX in `why_tex`
+  when the rewrite gives no `why`, and the names of its occurrences and of its
+  source in `rewrite`. `Expresso.Element.Math.Rewrite.expand/1` writes them.
   """
 
   @typedoc "The struct of a line of a derivation"
   @type t :: %__MODULE__{}
 
-  defstruct [:relation, :tex, :why, :name, steps: 1, __spark_metadata__: nil]
+  defstruct [
+    :relation,
+    :tex,
+    :why,
+    :why_tex,
+    :name,
+    :rewrite,
+    steps: 1,
+    __spark_metadata__: nil
+  ]
 end

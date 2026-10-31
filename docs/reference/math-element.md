@@ -380,7 +380,14 @@ slide "the reduction" do
 end
 ```
 
-The rewrite makes the line `g\,(g\,x)`.
+The rewrite makes the line `g\,(g\,x)`, with the reason `f := g`. It takes three steps of
+the counter of `reveal`:
+
+| Step | What changes |
+| --- | --- |
+| 1 | Each occurrence in the old line gets the color `--accent`, and the source of `by` gets the color `--success`. |
+| 2 | Each run of kept symbols, such as `(` and `x)`, moves down from the old line to its place. |
+| 3 | A copy of the source of `by` moves into the place of each occurrence, and the rest of the new line shows, with its relation and its reason. |
 
 | Option | Effect |
 | --- | --- |
@@ -391,7 +398,8 @@ The rewrite makes the line `g\,(g\,x)`.
 | `by_tex` | New LaTeX for the place of each occurrence, in place of `by`. It fades in. |
 | `drop` | The names of the parts of the old line that the new line does not hold. |
 | `from` | The name of the line that the rewrite reads. The default is the line before it. |
-| `why`, `name` | The reason and the name of the new line, as for a `line`. |
+| `why` | The reason of the new line, as plain text. The default is the replaced symbol or part, `:=` and the new content, in LaTeX. |
+| `name` | The name of the part of the new line, as for a `line`. |
 
 - A rewrite gives each run of kept symbols of the old line a part, such as `keep-2-1`, and
   the new line a link to it. A symbol of `\text` or of `\operatorname` is not an occurrence.
@@ -401,9 +409,12 @@ The rewrite makes the line `g\,(g\,x)`.
   `\part{arg}{(a + b)}`.
 - A rewrite can read a line that a rewrite makes, so each line after the first can be a
   rewrite.
+- A rewrite needs `reveal true`, because it takes three steps.
+- Each occurrence in the old line gets the class `hit-k`, where `k` is the number of the new
+  line, so a `part` entity with that name can change it.
 - The compiler gives an error for a rewrite with no line before it, for a name that the
-  lines do not have, for a rewrite with no occurrence, and for a rewrite with both `by` and
-  `by_tex` or with neither.
+  lines do not have, for a rewrite with no occurrence, for a rewrite with both `by` and
+  `by_tex` or with neither, and for a rewrite without `reveal true`.
 
 `docs/line-rewrites.md` gives the design.
 

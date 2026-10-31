@@ -34,6 +34,9 @@ defmodule Expresso.Element.Math do
               line_names: [],
               # The names of the lines with `steps: 2`, from `check/1`.
               two_step_lines: [],
+              # The lines of rewrites, by name, each with the names of its
+              # occurrences and of its source, from `check/1`.
+              rewrite_lines: %{},
               reveal: false,
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
@@ -103,6 +106,7 @@ defmodule Expresso.Element.Math do
       end)
 
     two_steps = for {name, %{steps: 2}} <- named, do: name
+    rewrites = for {name, %{rewrite: %{} = rewrite}} <- named, into: %{}, do: {name, rewrite}
 
     names = Enum.map(named, &elem(&1, 0))
     parts = Enum.reject(parts, &(&1.id in names))
@@ -114,17 +118,20 @@ defmodule Expresso.Element.Math do
          lines: [],
          line_names: names,
          two_step_lines: two_steps,
+         rewrite_lines: rewrites,
          reveal: false,
          elements: line_parts ++ parts
      }}
   end
 
   # A line with `steps: 2` takes one more step of the counter of `reveal`: an
-  # `on` entity with `:next`, last in the part of the line. At render,
-  # `Expresso.Element.Math.Links.place/1` reads its step, and it removes it.
-  defp second_step(%Expresso.Element.Part{} = part, %{steps: 2}) do
+  # `on` entity with `:next`, last in the part of the line. A line of a
+  # rewrite takes two more steps. At render,
+  # `Expresso.Element.Math.Links.place/1` reads their steps, and it removes
+  # them.
+  defp second_step(%Expresso.Element.Part{} = part, %{steps: steps}) when steps > 1 do
     next = %Expresso.Element.On{at: %Expresso.Overlay{pairs: [{:next, :next}]}, set: []}
-    %Expresso.Element.Part{part | on: (part.on || []) ++ [next]}
+    %Expresso.Element.Part{part | on: (part.on || []) ++ List.duplicate(next, steps - 1)}
   end
 
   defp second_step(part, _line), do: part
@@ -137,7 +144,14 @@ defmodule Expresso.Element.Math do
   # whole cell. A `\part` that is the whole term of a line thus keeps its name.
   defp row(name, line) do
     relation = if line.relation, do: "\\data{line=#{name}}{#{line.relation}}", else: ""
-    why = if line.why, do: " && \\data{line=#{name}}{\\text{#{escape(line.why)}}}", else: ""
+
+    why =
+      cond do
+        line.why -> " && \\data{line=#{name}}{\\text{#{escape(line.why)}}}"
+        line.why_tex -> " && \\data{line=#{name}}{#{line.why_tex}}"
+        true -> ""
+      end
+
     "#{relation} & \\data{line=#{name}}{#{line.tex}}#{why}"
   end
 
@@ -232,9 +246,16 @@ defmodule Expresso.Element.Math do
 
   # The second step of a line comes from the counter of `reveal`.
   defp two_steps_reveal(%__MODULE__{lines: lines, reveal: false}) do
-    if Enum.any?(lines, &(&1.steps == 2)),
-      do: {:error, "a line with steps: 2 needs reveal true on its math element"},
-      else: :ok
+    cond do
+      Enum.any?(lines, &(&1.steps == 3)) ->
+        {:error, "a rewrite needs reveal true on its math element, because it takes three steps"}
+
+      Enum.any?(lines, &(&1.steps == 2)) ->
+        {:error, "a line with steps: 2 needs reveal true on its math element"}
+
+      true ->
+        :ok
+    end
   end
 
   defp two_steps_reveal(_math), do: :ok
