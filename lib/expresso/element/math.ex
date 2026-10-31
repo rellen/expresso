@@ -55,7 +55,7 @@ defmodule Expresso.Element.Math do
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
   def check(%__MODULE__{} = math) do
     with :ok <- links_in_lines(math),
-         :ok <- within_needs_each(math),
+         :ok <- options_need_each(math),
          :ok <- two_steps_reveal(math),
          {:ok, math} <- write_lines(math),
          :ok <- one_source(math),
@@ -211,12 +211,21 @@ defmodule Expresso.Element.Math do
 
   defp links_in_lines(_math), do: :ok
 
-  defp within_needs_each(%__MODULE__{elements: parts}) do
-    case Enum.find(parts, &(&1.within != nil and &1.each == nil)) do
-      nil -> :ok
-      part -> {:error, "the part #{inspect(part.id)} of a math element has within and no each"}
+  # `within` and `bare` change the occurrences of `each`.
+  defp options_need_each(%__MODULE__{elements: parts}) do
+    case Enum.find(parts, &(&1.each == nil and needs_each(&1) != nil)) do
+      nil ->
+        :ok
+
+      part ->
+        {:error,
+         "the part #{inspect(part.id)} of a math element has #{needs_each(part)} and no each"}
     end
   end
+
+  defp needs_each(%Expresso.Element.Part{within: within}) when within != nil, do: "within"
+  defp needs_each(%Expresso.Element.Part{bare: bare}) when bare != nil, do: "bare"
+  defp needs_each(_part), do: nil
 
   # The second step of a line comes from the counter of `reveal`.
   defp two_steps_reveal(%__MODULE__{lines: lines, reveal: false}) do

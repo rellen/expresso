@@ -118,3 +118,4 @@ Each pull request is based on the one before it.
 | --- | --- |
 | 1. This document | Done |
 | 2. `each`, `within` and the short form | Done. `Expresso.Element.Math.Each.place/1` runs first in `Expresso.Element.Math.place/1`. It gives each occurrence the class of its set, and a part of the short form takes the name `each-name`. An entity with a `do` block takes the options inside the block, as `each "x"`, because Spark gives the keyword list to the arguments. |
+| 3. The option `bare` | Done. With `bare true`, a token that is the first child of `msub`, `msup` or `msubsup` is not an occurrence. The `x` of `(x)^2` stays an occurrence, because the base of its index is a group. A prime, as in `x'`, is a superscript in MathML, so `bare` also skips the `x` of `x'`. |

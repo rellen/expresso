@@ -162,16 +162,23 @@ end
 | --- | --- |
 | `each` | The symbol, such as `"x"`, `"2"` or `"+"`. An occurrence is a symbol of the formula with that text. |
 | `within` | The name of the part that holds the occurrences. The default is the whole formula. |
+| `bare` | With `true`, a symbol with an index is not an occurrence, so `each "x"` does not select the `x` of `x_1` or of `x^2`. The default is `false`. |
 
 - A part with `each` and with the name of a part of the formula, such as `part "body"` with
   `each "x"`, puts its options on each occurrence inside that part, and not on the part.
 - An occurrence is one symbol with the same text, so `each "x"` does not select the `x` of
   `\exp`.
+- By default, the base of a symbol with an index, such as the `x` of `x_1`, is an
+  occurrence. With `bare true`, the base of `_`, of `^` or of both is not an occurrence. A
+  prime is an index, so `bare` also skips the `x` of `x'`. The `x` of `(x)^2` stays an
+  occurrence, because the base of the index is the group.
+- The index of a symbol is an occurrence of its own text, so `each "1"` selects the `1` of
+  `x_1`.
 - `each` knows no rules of scope. It also selects the variable of a binder, such as the `x`
   of `\lambda x`.
 - The render gives an error for a `within` that the formula does not have, and for a symbol
-  with no occurrence. The compiler gives an error for `within` without `each`, and for
-  `each` in a part of a diagram.
+  with no occurrence. The compiler gives an error for `within` or `bare` without `each`,
+  and for `each` in a part of a diagram.
 
 ## Move a part to another part
 

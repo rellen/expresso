@@ -5,13 +5,18 @@ defmodule Expresso.Element.Math.Each do
   A `part` entity with `each: "x"` names each occurrence of `x`. An occurrence
   is a token element of the MathML, `mi`, `mn` or `mo`, with the text `x`. The
   scope is the part of `within`, or the part with the name of the entity in the
-  short form, or else the whole formula. `docs/each-occurrence.md` gives the
-  design.
+  short form, or else the whole formula. With `bare: true`, the base of a
+  symbol with an index, such as the `x` of `x_1`, is not an occurrence.
+  `docs/each-occurrence.md` gives the design.
   """
 
   alias Expresso.Element.Part
 
   @tokens ~w(mi mn mo)
+
+  # The elements of MathML with a base and an index. The base is the first
+  # child.
+  @scripts ~w(msub msup msubsup)
 
   @doc """
   Give each occurrence of each part with `each` the class of its part
@@ -42,7 +47,7 @@ defmodule Expresso.Element.Math.Each do
 
   defp mark(%Part{each: nil} = part, tree, _names), do: {part, tree}
 
-  defp mark(%Part{id: id, each: symbol, within: within} = part, tree, names) do
+  defp mark(%Part{id: id, each: symbol, within: within, bare: bare} = part, tree, names) do
     {scope, part} =
       cond do
         within != nil ->
@@ -61,7 +66,8 @@ defmodule Expresso.Element.Math.Each do
           {nil, part}
       end
 
-    {tree, count} = add_class(tree, scope == nil, scope, symbol, part.id)
+    select = %{scope: scope, symbol: symbol, class: part.id, bare: bare == true}
+    {tree, count} = add_class(tree, scope == nil, false, select)
 
     if count == 0 do
       raise ArgumentError,
@@ -73,26 +79,40 @@ defmodule Expresso.Element.Math.Each do
   end
 
   # Walk the tree. Inside the scope, a token with the text of the symbol gets
-  # the class. The function returns the tree and the number of occurrences.
-  defp add_class(nodes, inside, scope, symbol, class) when is_list(nodes) do
+  # the class. With `bare`, a token that is the base of a script does not.
+  # The function returns the tree and the number of occurrences.
+  defp add_class(nodes, inside, base, select) when is_list(nodes) do
     Enum.map_reduce(nodes, 0, fn node, count ->
-      {node, n} = add_class(node, inside, scope, symbol, class)
+      {node, n} = add_class(node, inside, base, select)
       {node, count + n}
     end)
   end
 
-  defp add_class({tag, attrs, children}, inside, scope, symbol, class) when is_binary(tag) do
-    inside = inside or named?(attrs, scope)
+  defp add_class({tag, attrs, children}, inside, base, select) when is_binary(tag) do
+    inside = inside or named?(attrs, select.scope)
 
-    if inside and tag in @tokens and String.trim(Floki.text(children)) == symbol do
-      {{tag, add(attrs, class), children}, 1}
-    else
-      {children, count} = add_class(children, inside, scope, symbol, class)
-      {{tag, attrs, children}, count}
+    cond do
+      tag in @tokens and String.trim(Floki.text(children)) == select.symbol ->
+        occurrence({tag, attrs, children}, inside and not (select.bare and base), select)
+
+      tag in @scripts and children != [] ->
+        [first | rest] = children
+        {first, n} = add_class(first, inside, true, select)
+        {rest, count} = add_class(rest, inside, false, select)
+        {{tag, attrs, [first | rest]}, n + count}
+
+      true ->
+        {children, count} = add_class(children, inside, false, select)
+        {{tag, attrs, children}, count}
     end
   end
 
-  defp add_class(node, _inside, _scope, _symbol, _class), do: {node, 0}
+  defp add_class(node, _inside, _base, _select), do: {node, 0}
+
+  defp occurrence({tag, attrs, children}, true, select),
+    do: {{tag, add(attrs, select.class), children}, 1}
+
+  defp occurrence(token, false, _select), do: {token, 0}
 
   defp named?(_attrs, nil), do: false
 
