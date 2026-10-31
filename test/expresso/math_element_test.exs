@@ -361,9 +361,9 @@ defmodule Expresso.Element.MathTest do
                Enum.join(
                  [
                    "\\begin{aligned}",
-                   ~S" & \part{line1}{Y\,g} \\",
-                   ~S"\part{line2}{=} & \part{line2}{(\lambda f.\,f)\,g} && \part{line2}{\text{the definition of Y}} \\",
-                   ~S"\part{reduce}{\to_\beta} & \part{reduce}{g} && \part{reduce}{\text{f := g \& 50\% \{x\}}}",
+                   ~S" & \data{line=line1}{Y\,g} \\",
+                   ~S"\data{line=line2}{=} & \data{line=line2}{(\lambda f.\,f)\,g} && \data{line=line2}{\text{the definition of Y}} \\",
+                   ~S"\data{line=reduce}{\to_\beta} & \data{line=reduce}{g} && \data{line=reduce}{\text{f := g \& 50\% \{x\}}}",
                    "\\end{aligned}"
                  ],
                  "\n"
@@ -398,7 +398,7 @@ defmodule Expresso.Element.MathTest do
       document = document(LinesDeck)
 
       assert count(document, "#slide-1 .math mtable") == 1
-      assert count(document, ~s(#slide-1 .math [data-part="line2"].math-part)) == 3
+      assert count(document, ~s(#slide-1 .math [data-line="line2"].math-part)) == 3
 
       # Temml writes each space of a text as a space that does not break.
       reasons =

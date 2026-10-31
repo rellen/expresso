@@ -72,7 +72,7 @@ defmodule Expresso.Element.Math.Links do
 
   defp walk(_node, _lines, _line, acc), do: acc
 
-  defp line_of(attrs, lines), do: Enum.find_index(lines, &(&1 == attrs["data-part"]))
+  defp line_of(attrs, lines), do: Enum.find_index(lines, &(&1 == attrs["data-line"]))
 
   # The nearest earlier line with an element with the name of the link.
   defp source(%{line: line, name: name} = link, tree, lines) do

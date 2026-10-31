@@ -127,11 +127,14 @@ defmodule Expresso.Element.Math do
 
   # A row of the environment `aligned`: the relation in the first column, at
   # the right, the term in the second column, and the reason in the fourth
-  # column, at the left. Each cell is in the part of the line.
+  # column, at the left. Each cell is in the part of the line. The cell takes
+  # the attribute `data-line` and not `data-part`, because Temml puts the
+  # attributes of two nested `\data` on one element when the inner one is the
+  # whole cell. A `\part` that is the whole term of a line thus keeps its name.
   defp row(name, line) do
-    relation = if line.relation, do: "\\part{#{name}}{#{line.relation}}", else: ""
-    why = if line.why, do: " && \\part{#{name}}{\\text{#{escape(line.why)}}}", else: ""
-    "#{relation} & \\part{#{name}}{#{line.tex}}#{why}"
+    relation = if line.relation, do: "\\data{line=#{name}}{#{line.relation}}", else: ""
+    why = if line.why, do: " && \\data{line=#{name}}{\\text{#{escape(line.why)}}}", else: ""
+    "#{relation} & \\data{line=#{name}}{#{line.tex}}#{why}"
   end
 
   # The characters of plain text that LaTeX reads as commands in `\text`.
@@ -231,10 +234,13 @@ defmodule Expresso.Element.Math do
   def parts(mathml) do
     mathml
     |> Floki.parse_fragment!()
-    |> Floki.find("[data-part], [class]")
+    |> Floki.find("[data-part], [data-line], [class]")
     |> Enum.flat_map(fn {_tag, attrs, _children} ->
       attrs = Map.new(attrs)
-      List.wrap(attrs["data-part"]) ++ String.split(attrs["class"] || "")
+
+      List.wrap(attrs["data-part"]) ++
+        List.wrap(attrs["data-line"]) ++
+        String.split(attrs["class"] || "")
     end)
     |> Enum.uniq()
   end
@@ -434,10 +440,13 @@ defmodule Expresso.Element.Math do
     names =
       tree
       |> named(target)
-      |> Floki.find("[data-part], [class]")
+      |> Floki.find("[data-part], [data-line], [class]")
       |> Enum.flat_map(fn {_tag, attrs, _children} ->
         attrs = Map.new(attrs)
-        List.wrap(attrs["data-part"]) ++ String.split(attrs["class"] || "")
+
+        List.wrap(attrs["data-part"]) ++
+          List.wrap(attrs["data-line"]) ++
+          String.split(attrs["class"] || "")
       end)
 
     Enum.filter(parts, &(&1.id in names and &1.copy_of == nil))
@@ -491,7 +500,9 @@ defmodule Expresso.Element.Math do
 
   defp named?(attrs, id) do
     attrs = Map.new(attrs)
-    attrs["data-part"] == id or id in String.split(attrs["class"] || "")
+
+    attrs["data-part"] == id or attrs["data-line"] == id or
+      id in String.split(attrs["class"] || "")
   end
 
   # An HTML parser keeps the first of two attributes with the same name, so a

@@ -229,6 +229,8 @@ end
 
 - Each line is a part with its name, so a `part` entity can give it steps, such as
   `part "line2" do on 3, state: :alert end`. Its options add to the line.
+- The MathML of each cell of a line has the attribute `data-line` with the name of the
+  line. A `\part` that is the whole term of a line thus keeps its own name.
 - `reveal true` on the `math` element shows each line at its own step. The first line shows at
   the first step of the element. A `part` of the deck without an `at` option does not take a
   step.

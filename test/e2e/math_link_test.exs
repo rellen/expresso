@@ -71,7 +71,7 @@ defmodule Expresso.E2E.MathLinkTest do
     copy = ~s(math.math-copy[data-part="arg@link-1"])
 
     line =
-      "getComputedStyle(document.querySelector('.screen .math [data-part=\"line2\"]')).opacity"
+      "getComputedStyle(document.querySelector('.screen .math [data-line=\"line2\"]')).opacity"
 
     wait_for(page, "document.querySelector('.screen .math #{copy}').hasAttribute('data-placed')")
 
