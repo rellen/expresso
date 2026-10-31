@@ -3087,23 +3087,23 @@ The commands are:
 
 ## Open work
 
-1. **Each occurrence of a symbol.** A part names each occurrence of a symbol in a formula,
-   and a group of `highlight` names each token with a text in a code element.
-   `docs/each-occurrence.md` gives the design and the stack of seven pull requests. Issue
-   #479 holds the same plan.
+There is no item at this time. Issues #478 and #475 build on each occurrence of a symbol,
+in that order, and issue #397 to issue #407 propose other features. Each one needs a
+decision before the work starts.
 
-Issues #478 and #475 build on it, in that order, and issue #397 to issue #407 propose other
-features. Each one needs a decision before the work starts.
+The item before it, each occurrence of `docs/each-occurrence.md`, added the options `each`,
+`within` and `bare` of a part of a formula, and the token groups of `highlight`. Issue #479
+holds that plan.
 
-The item before it, the links of `docs/line-links.md`, added `\from{name}{…}` to the lines
+The item before that, the links of `docs/line-links.md`, added `\from{name}{…}` to the lines
 of a `math` element and the option `steps` of a line. Issue #474 holds that plan.
 
-The item before that, the copies of a part of `docs/part-copies.md`, added the `copy` entity
+An earlier item, the copies of a part of `docs/part-copies.md`, added the `copy` entity
 and the `copy_to` option of a part of a diagram or of a formula. Issue #473 holds that plan.
 
-An earlier item, the formulas with parts of `docs/math-parts.md`, added the option `tex`
-of `math`, the `part` and `line` entities of a formula, and the deck option `math_font`.
-Issue #472 holds that plan. The maintainer then asked for `\id` and for `move_to` on a part
+The first of these items, the formulas with parts of `docs/math-parts.md`, added the option
+`tex` of `math`, the `part` and `line` entities of a formula, and the deck option
+`math_font`. Issue #472 holds that plan. The maintainer then asked for `\id` and for `move_to` on a part
 of a formula.
 
 `docs/overlays.md` gives the design of the overlays, and the code contains each part of

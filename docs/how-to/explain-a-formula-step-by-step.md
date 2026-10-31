@@ -300,6 +300,65 @@ with the name of a copy, such as `"arg@h1"`, gives that copy its options.
 `examples/animations/math_copy.exs` holds the deck.
 
 
+## Use each occurrence of a symbol
+
+A part with `each` names each occurrence of a symbol, such as each `x` of a polynomial. One
+entry then colors each occurrence, and one `copy_to` puts a copy of a part in the place of
+each occurrence.
+
+```elixir
+defmodule Examples.MathEach do
+  use Expresso
+
+  # One part names each x of the polynomial, so one entry colors each x, and
+  # one copy_to puts the value in the place of each x.
+
+  slide "evaluate a polynomial" do
+    heading "Evaluate a polynomial"
+
+    math do
+      tex ~S"p(x) = \part{poly}{3 \cdot x^2 + 2 \cdot x + 1}, \quad x = \part{value}{2}"
+
+      # Each x of the polynomial, and not the x of p(x) or of x = 2.
+      part "xs" do
+        each "x"
+        within "poly"
+        on [from: 2], set: [color: "var(--accent)"]
+        on [from: 3], set: [opacity: 0]
+      end
+
+      # At step 3, a copy of the value goes to each x.
+      part "value" do
+        on [from: 2], set: [color: "var(--success)"]
+        on 3, copy_to: ["xs"]
+      end
+
+      # The copies of the value, one for each x.
+      part "value@xs" do
+        on [from: 3], set: [color: "var(--success)"]
+      end
+    end
+  end
+end
+
+Examples.MathEach
+```
+
+![Each x of the polynomial gets a color, then a copy of the value goes into the place of each x](https://raw.githubusercontent.com/rellen/expresso/media/math-each.gif)
+
+1. At step 1, the polynomial and the value show.
+2. At step 2, each `x` of the polynomial and the value get their colors. The `x` of `p(x)`
+   and of `x = 2` stay as they are, because `within "poly"` limits the part to the part
+   `poly`.
+3. At step 3, a copy of the value fades in on the value and moves to the place of each `x`,
+   and each `x` fades.
+
+A `part` with the name of the copy, `"value@xs"`, gives each copy its color. The copy to the
+occurrence `n` has the name `value@xs-n`. With `bare true`, the part skips a symbol with an
+index, such as the `x` of `x_1`. See
+[each occurrence of a symbol](../reference/math-element.md#each-occurrence-of-a-symbol).
+`examples/animations/math_each.exs` holds the deck.
+
 ## Build the next line from the line before
 
 `\from{name}{…}` in a line marks a sub-term that comes from the part `name` of an earlier

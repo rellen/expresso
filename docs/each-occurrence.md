@@ -3,8 +3,9 @@
 This document gives the design for a part that names each occurrence of a symbol inside a
 formula or inside a part, such as each `f` in the body of a λ. One entry can then color,
 dim, move or copy each occurrence. The same option selects each token with a text in a
-`code` element. The document also records the progress of the work. It records ten
-decisions, and each is settled. Issue #479 holds the same plan.
+`code` element. The code contains this design. The document records ten decisions, and
+each is settled. Its last section, "The result", tells what changed during the work. Issue
+#479 holds the same plan.
 
 ## The problem
 
@@ -122,3 +123,31 @@ Each pull request is based on the one before it.
 | 4. A set as a target and as a source | Done. `Expresso.Element.Math.Each.place/1` gives the occurrence `n` of a set the class `set-n` also. A copy to a set becomes one copy for each occurrence, with the name `copy-n`. A copy of a copy to a set stops the render, because the copy of a copy names one source. `Expresso.Element.Math.Links.place/1` counts the links with the name of a set for each source line, and the link `k` takes the class of the occurrence `k`. |
 | 5. `each` in a group of `highlight` | Done. A token group is an `Expresso.Element.Lines` child with `each` and no line numbers. The render puts its attributes and the class `code-token` on each token with the text, and the token keeps its own class. The highlighter keeps the white space around a word in its token, so the white space goes to the token before it and to the token after it, and the bar goes under the word. `Expresso.Deck.render/1` drops a text node of white space only, so a token at the start of a line keeps its indent. The rule of its step sets `--dimmed: 0`, and `--color` gives a token with no role the code text. A token group does not dim at the steps of the other groups. |
 | 6. `examples/animations/y_combinator.exs` with `each` | Done. The part `fs` with `each "f"` and `within "body"` colors the two bound variables, so they have no names. A symbol in two parts keeps the overlay attributes of the last part only, so the set does not hold the binder, which has its own part `bind`. The new part `body` holds the two bodies of the definition. The steps and the GIF do not change. |
+| 7. The guide and the example of a polynomial | Done. `docs/how-to/explain-a-formula-step-by-step.md` shows `examples/animations/math_each.exs`, and `mix expresso.gifs` records `math-each.gif`. |
+
+## The result
+
+The seven pull requests of the stack contain the design. These parts are different from the
+plan, or the plan did not tell them:
+
+- **The name of the option.** `in` is a reserved word of Elixir, so the option is `within`.
+- **The form of the options.** An entity with a `do` block takes its options inside the
+  block, such as `each "x"`, because Spark gives a keyword list after the name to the
+  arguments of the entity.
+- **The short form.** The part of the short form takes the name `each-name`, so the scope
+  keeps its own name.
+- **A symbol with an index.** `bare` skips a token that is the first child of `msub`,
+  `msup` or `msubsup`. A prime is an index in MathML, so `bare` also skips the `x` of `x'`.
+- **The occurrences of a set.** The occurrence `n` of a set gets the class `set-n` also, so
+  a copy and a link can name one occurrence.
+- **A copy of a copy.** A copy of a copy to a set stops the render, because the copy of a
+  copy names one source.
+- **The tokens of a code element.** The highlighter keeps the white space around a word in
+  its token, and `Expresso.Deck.render/1` drops a text node of white space only. The render
+  thus moves the white space to the tokens before and after the word, and a token at the
+  start of a line keeps its indent. The token keeps its own class, so the rule of the color
+  of its role reads its own `--dimmed`. A token with no role gets the code text through
+  `--color`.
+- **A symbol in two parts.** A symbol keeps the overlay attributes of the last part that
+  names it. The Y combinator example thus gives the bound variables a set inside a new part
+  `body`, and the binder keeps its own part.
