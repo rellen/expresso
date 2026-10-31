@@ -8,7 +8,11 @@ defmodule Expresso.Element.Part do
 
   A `copy` entity of a part goes into `copies`. `Expresso.Element.Copy.expand/1`
   gives each copy its own part, with the source in `copy_of` and the target in
-  `copy_to`. A copy of a copy has the target of its source in `copy_start`. The
+  `copy_to`. A copy of a copy has the target of its source in `copy_start`.
+
+  In a formula, `each` names a symbol and `within` names the part that holds
+  its occurrences. `Expresso.Element.Math.Each` gives the occurrences
+  the class of the part. The
   copy of a link between the lines of a formula has `covers`, and it hides its
   target.
   """
@@ -21,6 +25,8 @@ defmodule Expresso.Element.Part do
               :copy_of,
               :copy_to,
               :copy_start,
+              :each,
+              :within,
               covers: false,
               copies: [],
               __spark_metadata__: nil

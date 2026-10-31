@@ -228,6 +228,7 @@ spark_locals_without_parens = [
   width: 1,
   window: 1,
   window_title: 1,
+  within: 1,
   wrap: 1,
   x: 1,
   x_label: 1,

@@ -55,6 +55,7 @@ defmodule Expresso.Element.Math do
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
   def check(%__MODULE__{} = math) do
     with :ok <- links_in_lines(math),
+         :ok <- within_needs_each(math),
          :ok <- two_steps_reveal(math),
          {:ok, math} <- write_lines(math),
          :ok <- one_source(math),
@@ -210,6 +211,13 @@ defmodule Expresso.Element.Math do
 
   defp links_in_lines(_math), do: :ok
 
+  defp within_needs_each(%__MODULE__{elements: parts}) do
+    case Enum.find(parts, &(&1.within != nil and &1.each == nil)) do
+      nil -> :ok
+      part -> {:error, "the part #{inspect(part.id)} of a math element has within and no each"}
+    end
+  end
+
   # The second step of a line comes from the counter of `reveal`.
   defp two_steps_reveal(%__MODULE__{lines: lines, reveal: false}) do
     if Enum.any?(lines, &(&1.steps == 2)),
@@ -320,7 +328,8 @@ defmodule Expresso.Element.Math do
   def place(%Expresso.Deck{} = deck), do: Expresso.Element.Tree.map_deck(deck, &place_one/1)
 
   defp place_one(%__MODULE__{text: text} = math) when is_binary(text) do
-    %__MODULE__{text: text, elements: parts} = math = Expresso.Element.Math.Links.place(math)
+    math = math |> Expresso.Element.Math.Each.place() |> Expresso.Element.Math.Links.place()
+    %__MODULE__{text: text, elements: parts} = math
     parts = Enum.map(parts, &Expresso.Element.Copy.moves/1)
     math = %__MODULE__{math | elements: parts}
 

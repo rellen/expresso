@@ -984,6 +984,16 @@ defmodule Expresso.Extension do
             required: true,
             doc:
               "The id of an element of the SVG file of a diagram, or the name of a part of a formula."
+          ],
+          each: [
+            type: :string,
+            doc:
+              "A symbol of a formula, such as \"x\". The part names each occurrence of the symbol. See docs/reference/math-element.md."
+          ],
+          within: [
+            type: :string,
+            doc:
+              "With each, the name of the part of the formula that holds the occurrences. The default is the whole formula."
           ]
         ]
   }

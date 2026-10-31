@@ -32,12 +32,16 @@ math do
   tex ~S"\part{body}{x^2 + 2x + x_1}"
 
   # Each x of the formula.
-  part "xs", each: "x" do
+  part "xs" do
+    each "x"
     on 2, set: [color: "var(--accent)"]
   end
 
   # Each x of the part body, and not the x of x_1.
-  part "bare", in: "body", each: "x", bare: true do
+  part "bare" do
+    each "x"
+    within "body"
+    bare true
     on 3, state: :alert
   end
 end
@@ -46,7 +50,8 @@ end
 The short form puts the options of a part on each occurrence inside it:
 
 ```elixir
-part "body", each: "x" do
+part "body" do
+  each "x"
   on 2, set: [color: "var(--accent)"]
 end
 ```
@@ -63,11 +68,11 @@ end
 
 | Number | Question | Decision |
 | --- | --- | --- |
-| 1 | The forms | `part "name", in: "scope", each: "x"` makes a new part, a **set**, with each occurrence of `x` inside the part `scope`. Without `in`, a part with the name of a part of the formula is the short form: its options go to each occurrence inside it. |
-| 2 | The scope | Without `in`, and with a name that the formula does not have, the scope is the whole formula. |
+| 1 | The forms | `part "name", within: "scope", each: "x"` makes a new part, a **set**, with each occurrence of `x` inside the part `scope`. Without `within`, a part with the name of a part of the formula is the short form: its options go to each occurrence inside it. The issue proposed `in`, and `in` is a reserved word of Elixir, so a `do` block cannot call it. |
+| 2 | The scope | Without `within`, and with a name that the formula does not have, the scope is the whole formula. |
 | 3 | An occurrence | An occurrence is a token element of the MathML, `mi`, `mn` or `mo`, with the text of `each`. The text must be equal, so `each: "x"` does not select `exp`. |
 | 4 | A symbol with an index | By default, the base of `x_1` or of `x^2` is an occurrence of `x`. The option `bare: true` selects only an `x` with no index. |
-| 5 | The rules of scope | `each` selects each symbol, also a binder and the variable of an inner λ. A deck limits the set with `in`. Issue #475 adds the rules of scope of the λ-calculus. |
+| 5 | The rules of scope | `each` selects each symbol, also a binder and the variable of an inner λ. A deck limits the set with `within`. Issue #475 adds the rules of scope of the λ-calculus. |
 | 6 | The options of a set | A set takes the options of a part: `at`, `effect`, `on`, `move_to`, `copy` and `copy_to`. Its occurrences move as one with `move_to`. |
 | 7 | A set as a target | A copy to a set makes one copy for each occurrence, so `on 3, copy_to: ["bound"]` puts the argument in the place of each bound variable. |
 | 8 | A set as a source | A copy of a set to a set with the same number of occurrences pairs them in order. `\from{set}{…}` takes the next occurrence of the set at each link with that name. The render stops for a different number. |
@@ -76,10 +81,11 @@ end
 
 ## The design
 
-- **The options.** The `part` entity takes `each`, `in` and `bare`. The check of a math
-  element refuses `in` and `bare` without `each`, and `each` in a part of a diagram.
+- **The options.** The `part` entity takes `each`, `within` and `bare`. The check of a math
+  element refuses `within` and `bare` without `each`, and the check of a diagram refuses
+  `each`.
 - **The occurrences.** At render, `Expresso.Element.Math` finds the scope: the elements with
-  the name of `in`, the part of the short form, or the whole formula. It finds each token
+  the name of `within`, the part of the short form, or the whole formula. It finds each token
   inside the scope with the text of `each`. It gives each occurrence the class of the set,
   so the occurrences are the elements of a part as for `\class`.
 - **The short form.** The part of the short form keeps its name, and its overlay attributes
@@ -99,7 +105,7 @@ end
 Each pull request is based on the one before it.
 
 1. This document.
-2. `each`, `in` and the short form in a math element.
+2. `each`, `within` and the short form in a math element.
 3. The option `bare`.
 4. A set as a target and as a source of copies and links.
 5. `each` in a group of `highlight` of a code element.
@@ -111,3 +117,4 @@ Each pull request is based on the one before it.
 | Pull request | State |
 | --- | --- |
 | 1. This document | Done |
+| 2. `each`, `within` and the short form | Done. `Expresso.Element.Math.Each.place/1` runs first in `Expresso.Element.Math.place/1`. It gives each occurrence the class of its set, and a part of the short form takes the name `each-name`. An entity with a `do` block takes the options inside the block, as `each "x"`, because Spark gives the keyword list to the arguments. |

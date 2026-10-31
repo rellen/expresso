@@ -132,6 +132,47 @@ A `math` element with a `do` block takes `tex` inside the block, as above. The f
 - The render stops for a `part` with a name that the formula does not have, and the message
   gives the names of the parts.
 
+## Each occurrence of a symbol
+
+A `part` entity with `each` names each occurrence of a symbol, such as each `x` of a
+polynomial. One entity then colors, dims or moves each occurrence.
+
+```elixir
+slide "the polynomial" do
+  math do
+    tex ~S"\part{body}{x^2 + 2x} + \exp(x)"
+
+    # Each x of the formula. exp is a different symbol.
+    part "xs" do
+      each "x"
+      on 2, set: [color: "var(--accent)"]
+    end
+
+    # Each x of the part body.
+    part "inner" do
+      each "x"
+      within "body"
+      on 3, state: :alert
+    end
+  end
+end
+```
+
+| Option | Effect |
+| --- | --- |
+| `each` | The symbol, such as `"x"`, `"2"` or `"+"`. An occurrence is a symbol of the formula with that text. |
+| `within` | The name of the part that holds the occurrences. The default is the whole formula. |
+
+- A part with `each` and with the name of a part of the formula, such as `part "body"` with
+  `each "x"`, puts its options on each occurrence inside that part, and not on the part.
+- An occurrence is one symbol with the same text, so `each "x"` does not select the `x` of
+  `\exp`.
+- `each` knows no rules of scope. It also selects the variable of a binder, such as the `x`
+  of `\lambda x`.
+- The render gives an error for a `within` that the formula does not have, and for a symbol
+  with no occurrence. The compiler gives an error for `within` without `each`, and for
+  `each` in a part of a diagram.
+
 ## Move a part to another part
 
 `on 3, move_to: "arg"` in a `part` of a formula moves the part at step 3, so its center is at
