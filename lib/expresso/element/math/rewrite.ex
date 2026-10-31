@@ -16,9 +16,10 @@ defmodule Expresso.Element.Math.Rewrite do
       and the walk goes into it. In the new line, it fades in.
 
   Each occurrence also gets `\\class{hit-k}{…}` in the old line. The new line
-  has 3 steps: the occurrences and the source of `by` get a color, then the
-  kept runs move, then the copies of `by` move. Without `why`, the reason is
-  `replace := by` in LaTeX.
+  has 3 steps by default, one for each phase: at `:occurrences`, the
+  occurrences and the source of `by` get a color; at `:kept`, the kept runs
+  move; at `:copies`, the copies of `by` move. The `steps` option puts phases
+  together in one step. Without `why`, the reason is `replace := by` in LaTeX.
 
   The links of `Expresso.Element.Math.Links` and the copies of
   `Expresso.Element.Copy` then move the symbols. `docs/line-rewrites.md` gives
@@ -121,19 +122,16 @@ defmodule Expresso.Element.Math.Rewrite do
 
       {old_atoms, new_atoms, state} = whole(atoms, rewrite.within == nil, state)
 
-      if state.count == 0 do
-        {:error,
-         "the rewrite of the line #{k} of a math element finds no #{inspect(rewrite.replace)} " <>
-           "to replace"}
-      else
+      with :ok <- found(state, rewrite, k),
+           {:ok, plan} <- plan(rewrite, k) do
         line = %MathLine{
           relation: rewrite.relation || "=",
           tex: new_atoms |> trim_all() |> Latex.write(),
           why: rewrite.why,
           why_tex: why_tex(rewrite, kind, atoms, content),
           name: rewrite.name,
-          steps: 3,
-          rewrite: %{hit: "hit-#{k}", by: rewrite.by}
+          steps: plan.steps,
+          rewrite: plan
         }
 
         {:ok,
@@ -142,6 +140,66 @@ defmodule Expresso.Element.Math.Rewrite do
            | tex: old_atoms |> guard(state.hit) |> Latex.write()
          }) ++ [line]}
       end
+    end
+  end
+
+  defp found(%{count: 0}, rewrite, k) do
+    {:error,
+     "the rewrite of the line #{k} of a math element finds no #{inspect(rewrite.replace)} " <>
+       "to replace"}
+  end
+
+  defp found(_state, _rewrite, _k), do: :ok
+
+  # The phases of each kind of rewrite in order, the color of each part at its
+  # phase, and the phases when the copies of the kept runs and the other
+  # copies move.
+  defp phases(:rewrite, k, by) do
+    colors = [{"hit-#{k}", "var(--accent)", :occurrences}]
+    colors = if by, do: colors ++ [{by, "var(--success)", :occurrences}], else: colors
+    {[:occurrences, :kept, :copies], colors, :kept, :copies}
+  end
+
+  defp phases(:reduce, k, _by) do
+    colors = [
+      {"lam-#{k}", "var(--binder)", :redex},
+      {"arg-#{k}", "var(--argument)", :redex},
+      {"hit-#{k}", "var(--binder)", :bound}
+    ]
+
+    {[:redex, :bound, :body, :argument], colors, :body, :argument}
+  end
+
+  defp phases(:body, k, _by),
+    do:
+      {[:redex, :bound, :body, :argument], [{"arg-#{k}", "var(--argument)", :redex}], :body,
+       :body}
+
+  # The steps of the new line: a step for each group of `steps`. The plan
+  # gives the number of steps, the step of each color, and the steps when
+  # the copies move, each from 1.
+  defp plan(%MathRewrite{kind: kind, by: by, steps: groups}, k) do
+    {order, colors, keep, rest} = phases(kind, k, by)
+    groups = groups || order
+
+    if Enum.flat_map(groups, &List.wrap/1) == order do
+      at =
+        groups
+        |> Enum.with_index(1)
+        |> Enum.flat_map(fn {group, i} -> Enum.map(List.wrap(group), &{&1, i}) end)
+        |> Map.new()
+
+      {:ok,
+       %{
+         steps: length(groups),
+         colors: Enum.map(colors, fn {id, color, phase} -> {id, color, at[phase]} end),
+         keep: at[keep],
+         rest: at[rest]
+       }}
+    else
+      {:error,
+       "the steps of the line #{k} of a math element must hold " <>
+         Enum.map_join(order, ", ", &inspect/1) <> " once each, in this order"}
     end
   end
 

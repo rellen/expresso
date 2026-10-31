@@ -1089,6 +1089,17 @@ defmodule Expresso.Extension do
         type: :string,
         doc: "The reason of the new line, as plain text, in a column at the right."
       ],
+      steps: [
+        type:
+          {:list,
+           {:or,
+            [
+              {:in, [:occurrences, :kept, :copies]},
+              {:list, {:in, [:occurrences, :kept, :copies]}}
+            ]}},
+        doc:
+          "The steps of the rewrite, as a list of groups of its phases, :occurrences, :kept and :copies, in this order. Each group is one step. The default is [:occurrences, :kept, :copies]."
+      ],
       name: [
         type: :string,
         doc: "The name of the part of the new line. The default is line1, line2 and so on."
@@ -1119,6 +1130,17 @@ defmodule Expresso.Extension do
         type: :string,
         doc:
           "The reason of the new line, as plain text. The default is the variable, := and the argument."
+      ],
+      steps: [
+        type:
+          {:list,
+           {:or,
+            [
+              {:in, [:redex, :bound, :body, :argument]},
+              {:list, {:in, [:redex, :bound, :body, :argument]}}
+            ]}},
+        doc:
+          "The steps of the reduction, as a list of groups of its phases, :redex, :bound, :body and :argument, in this order. Each group is one step. The default is [:redex, :bound, :body, :argument]."
       ],
       name: [
         type: :string,

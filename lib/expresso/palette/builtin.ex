@@ -19,7 +19,10 @@ defmodule Expresso.Palette.Builtin do
   limit leaves out.
 
   The theme `:default` is the theme of Expresso. It has black text on white,
-  and its code colors come from the Tango style of Makeup.
+  and its code colors come from the Tango style of Makeup. Tango gives
+  `base0C` and `base0E` the same blue, so `base0C` is the cyan of the Tango
+  palette. The roles `binder` and `argument` of a β-reduction thus have
+  different colors.
   """
 
   alias Expresso.Palette
@@ -41,7 +44,7 @@ defmodule Expresso.Palette.Builtin do
              base09: "#ce5c00",
              base0A: "#000000",
              base0B: "#4e9a06",
-             base0C: "#204a87",
+             base0C: "#06989a",
              base0D: "#3465a4",
              base0E: "#204a87",
              base0F: "#5c35cc"

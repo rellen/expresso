@@ -185,7 +185,9 @@ defmodule Expresso.Element.Math.Reduce do
       to: "\\use{body-#{k}}",
       from: line.name || "line#{index + 1}",
       why: reduce.why,
-      name: reduce.name
+      name: reduce.name,
+      steps: reduce.steps,
+      kind: :body
     }
   end
 
@@ -198,7 +200,9 @@ defmodule Expresso.Element.Math.Reduce do
       drop: ["lam-#{k}", "arg-#{k}"] ++ if(redex.close, do: ["close-#{k}"], else: []),
       from: line.name || "line#{index + 1}",
       why: reduce.why,
-      name: reduce.name
+      name: reduce.name,
+      steps: reduce.steps,
+      kind: :reduce
     }
   end
 

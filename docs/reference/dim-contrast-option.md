@@ -55,12 +55,12 @@ At 4.5, each light built-in theme has `--dim-opacity` 1.0:
 
 | Theme | Roles of text that do not dim at 4.5 |
 | --- | --- |
-| `:default` | `warning`, `success`, `code_number` and `code_string` |
+| `:default` | `warning`, `success`, `argument`, `code_number`, `code_string` and `code_support` |
 | `:github` | `muted`, `code_comment`, `code_type` and `code_function` |
-| `:one_light` | 9 of the 16 roles |
-| `:rose_pine_dawn` | 12 of the 16 roles |
-| `:solarized_light` | Each of the 16 roles |
-| `:tokyo_night_light` | `warning` |
+| `:one_light` | 10 of the 18 roles |
+| `:rose_pine_dawn` | 14 of the 18 roles |
+| `:solarized_light` | Each of the 18 roles |
+| `:tokyo_night_light` | `warning` and `argument` |
 
 At 7, 21 of the 27 built-in themes do not dim. At the default of 3, each built-in theme dims.
 
@@ -69,7 +69,7 @@ still compiles. `--check` gives the same text as a note. This is the warning for
 theme at 4.5:
 
 ```text
-at a dim contrast of 4.5:1, the theme gives --dim-opacity 1.0, so a dimmed image, SVG file, embed and video do not dim, and the roles warning, success, code_number, code_string do not dim. Give a lower dim_contrast or a theme with more contrast. See docs/reference/dim-contrast-option.md
+at a dim contrast of 4.5:1, the theme gives --dim-opacity 1.0, so a dimmed image, SVG file, embed and video do not dim, and the roles warning, success, argument, code_number, code_string, code_support do not dim. Give a lower dim_contrast or a theme with more contrast. See docs/reference/dim-contrast-option.md
 ```
 
 To get the dimming again, do one of these steps:

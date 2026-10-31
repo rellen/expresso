@@ -79,7 +79,9 @@ defmodule Expresso.DimContrastTest do
 
       assert message =~ "at a dim contrast of 4.5:1, the theme gives --dim-opacity 1.0"
       assert message =~ "a dimmed image, SVG file, embed and video do not dim"
-      assert message =~ "the roles warning, success, code_number, code_string do not dim"
+
+      assert message =~
+               "the roles warning, success, argument, code_number, code_string, code_support do not dim"
     end
 
     test "the reference gives the warning for the default theme" do
@@ -92,7 +94,11 @@ defmodule Expresso.DimContrastTest do
     end
 
     test "names one role that does not dim in the singular" do
-      assert [message] = ThemeVerifier.dim_messages(:tokyo_night_light, 4.5)
+      # Tokyo Night Light with the slot of the accent in place of base0C, so
+      # only the role warning does not dim.
+      [{_name, palette}] = Expresso.Palette.variants(:tokyo_night_light)
+      colors = Map.put(palette.colors, :base0C, palette.colors.base0D)
+      assert [message] = ThemeVerifier.dim_messages([colors: colors, adjust: true], 4.5)
       assert message =~ "and the role warning does not dim."
     end
 

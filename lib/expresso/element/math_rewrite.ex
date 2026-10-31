@@ -16,6 +16,10 @@ defmodule Expresso.Element.MathRewrite do
   `Expresso.Element.Math.Rule` finds the left side in the old line, or in
   the part of `replace`.
 
+  A rewrite takes three steps: `:occurrences`, `:kept` and `:copies`.
+  `steps` takes a list of groups, and each group is one step, such as
+  `[[:occurrences, :kept], :copies]`.
+
   `Expresso.Element.Math.check/1` turns each rewrite into an
   `Expresso.Element.MathLine` with `Expresso.Element.Math.Rewrite.expand/1`.
   `docs/line-rewrites.md` gives the design.
@@ -35,6 +39,7 @@ defmodule Expresso.Element.MathRewrite do
     :rule,
     :why,
     :name,
+    :steps,
     drop: [],
     vars: [],
     # From `Expresso.Element.Math.Reduce`: put each copy of `by` in
@@ -42,6 +47,10 @@ defmodule Expresso.Element.MathRewrite do
     paren: false,
     # From `Expresso.Element.Math.Reduce`: the default reason in LaTeX.
     why_tex: nil,
+    # From `Expresso.Element.Math.Reduce`: `:reduce` for a redex with bound
+    # variables, and `:body` for a redex with none. It gives the phases and
+    # the colors of the steps.
+    kind: :rewrite,
     __spark_metadata__: nil
   ]
 end

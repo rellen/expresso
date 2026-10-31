@@ -34,8 +34,9 @@ defmodule Expresso.Element.Math do
               line_names: [],
               # The names of the lines with `steps: 2`, from `check/1`.
               two_step_lines: [],
-              # The lines of rewrites, by name, each with the names of its
-              # occurrences and of its source, from `check/1`.
+              # The lines of rewrites, by name, each with its number of
+              # steps, the colors of its parts and the steps when its copies
+              # move, from `check/1`.
               rewrite_lines: %{},
               reveal: false,
               __spark_metadata__: nil
@@ -105,7 +106,7 @@ defmodule Expresso.Element.Math do
         second_step(part, line)
       end)
 
-    two_steps = for {name, %{steps: 2}} <- named, do: name
+    two_steps = for {name, %{steps: 2, rewrite: nil}} <- named, do: name
     rewrites = for {name, %{rewrite: %{} = rewrite}} <- named, into: %{}, do: {name, rewrite}
 
     names = Enum.map(named, &elem(&1, 0))
@@ -126,7 +127,8 @@ defmodule Expresso.Element.Math do
 
   # A line with `steps: 2` takes one more step of the counter of `reveal`: an
   # `on` entity with `:next`, last in the part of the line. A line of a
-  # rewrite takes two more steps. At render,
+  # rewrite takes one more step for each group of its phases after the first.
+  # At render,
   # `Expresso.Element.Math.Links.place/1` reads their steps, and it removes
   # them.
   defp second_step(%Expresso.Element.Part{} = part, %{steps: steps}) when steps > 1 do

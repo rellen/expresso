@@ -35,7 +35,14 @@ defmodule Expresso.Element.Math.RewriteTest do
 
     # The new line takes three steps, and its default reason is in LaTeX.
     assert new.steps == 3
-    assert new.rewrite == %{hit: "hit-2", by: "arg"}
+
+    assert new.rewrite == %{
+             steps: 3,
+             colors: [{"hit-2", "var(--accent)", 1}, {"arg", "var(--success)", 1}],
+             keep: 2,
+             rest: 3
+           }
+
     assert new.why_tex == "f := g"
   end
 
