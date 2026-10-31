@@ -50,7 +50,8 @@ defmodule Expresso.Element.Math do
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
   def check(%__MODULE__{} = math) do
-    with {:ok, math} <- write_lines(math),
+    with :ok <- links_in_lines(math),
+         {:ok, math} <- write_lines(math),
          :ok <- one_source(math),
          :ok <- part_names_ok(math),
          {:ok, parts} <- Expresso.Element.Copy.expand(math.elements) do
@@ -138,7 +139,7 @@ defmodule Expresso.Element.Math do
   defp one_source(_math), do: :ok
 
   defp part_names_ok(%__MODULE__{tex: tex}) when is_binary(tex) do
-    case Enum.reject(part_names(tex), &Regex.match?(@part_name, &1)) do
+    case Enum.reject(part_names(tex) ++ link_names(tex), &Regex.match?(@part_name, &1)) do
       [] ->
         :ok
 
@@ -157,6 +158,32 @@ defmodule Expresso.Element.Math do
     |> Regex.scan(tex, capture: :all_but_first)
     |> List.flatten()
   end
+
+  # The name of each `\from{name}` of a source in LaTeX.
+  defp link_names(tex) do
+    ~r/\\from\s*\{([^}]*)\}/
+    |> Regex.scan(tex, capture: :all_but_first)
+    |> List.flatten()
+  end
+
+  # A link names a part of an earlier line, so only a math element with line
+  # entities takes `\from`.
+  defp links_in_lines(%__MODULE__{lines: [], tex: tex}) when is_binary(tex) do
+    if link_names(tex) == [],
+      do: :ok,
+      else:
+        {:error,
+         "\\from links a line to an earlier line, so it needs line entities. " <>
+           "See docs/reference/math-element.md"}
+  end
+
+  defp links_in_lines(%__MODULE__{lines: [%Expresso.Element.MathLine{} = first | _lines]}) do
+    if link_names(first.tex <> (first.relation || "")) == [],
+      do: :ok,
+      else: {:error, "the first line of a math element has \\from, and no line comes before it"}
+  end
+
+  defp links_in_lines(_math), do: :ok
 
   @doc """
   Give the names of the parts of the MathML of a formula, in the order of the

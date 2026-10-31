@@ -315,6 +315,43 @@ defmodule Expresso.Element.MathTest do
     end
   end
 
+  describe "a link to an earlier line" do
+    test "a line takes \\from with the name of a part of an earlier line" do
+      math =
+        Builder.math(
+          lines: [
+            Builder.line(tex: ~S"\part{arg}{g}"),
+            Builder.line("=", tex: ~S"\from{arg}{g}\,x")
+          ]
+        )
+
+      assert math.tex =~ ~S"\from{arg}{g}"
+    end
+
+    test "\\from with a name that \\data cannot read stops the compile" do
+      assert_raise ArgumentError, ~r/the part name "a,b" of a math element must start/, fn ->
+        Builder.math(
+          lines: [
+            Builder.line(tex: ~S"\part{a}{g}"),
+            Builder.line("=", tex: ~S"\from{a,b}{g}")
+          ]
+        )
+      end
+    end
+
+    test "\\from needs line entities, and the first line takes none" do
+      assert_raise ArgumentError,
+                   ~r/\\from links a line to an earlier line, so it needs line entities/,
+                   fn ->
+                     Builder.math(tex: ~S"\from{arg}{g}")
+                   end
+
+      assert_raise ArgumentError, ~r/the first line of a math element has \\from/, fn ->
+        Builder.math(lines: [Builder.line(tex: ~S"\from{arg}{g}")])
+      end
+    end
+  end
+
   describe "the line entity" do
     test "the lines become one aligned formula, a row and a part for each line" do
       [slide] = Expresso.parse(LinesDeck).slides

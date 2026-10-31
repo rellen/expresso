@@ -105,3 +105,4 @@ Each pull request is based on the one before it.
 | Pull request | State |
 | --- | --- |
 | 1. This document | Done |
+| 2. The macro `\from` and its names | Done. `priv/temml/render.mjs` gives Temml the macro `\from`, which becomes `\data{from=name}{…}`. `Expresso.Element.Math.check/1` reads the name of each `\from` as the name of a part. It refuses `\from` in a math element without `line` entities and in the first line, because no line comes before it. A link does nothing at render until pull request 3. |
