@@ -19,7 +19,7 @@ defmodule Expresso.E2E.MathLinesTest do
   defp opacities do
     """
     ['line1', 'line2', 'line3'].map((name) =>
-      getComputedStyle(document.querySelector(`.screen .math [data-part="${name}"]`)).opacity
+      getComputedStyle(document.querySelector(`.screen .math [data-line="${name}"]`)).opacity
     ).join(' ')
     """
   end
@@ -30,7 +30,7 @@ defmodule Expresso.E2E.MathLinesTest do
     """
     Array.from(document.querySelectorAll('.handout-page')).map((page) =>
       ['line1', 'line2', 'line3'].map((name) =>
-        getComputedStyle(page.querySelector(`.math [data-part="${name}"]`)).opacity
+        getComputedStyle(page.querySelector(`.math [data-line="${name}"]`)).opacity
       ).join(' ')
     ).join(' / ')
     """

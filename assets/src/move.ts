@@ -42,14 +42,16 @@ export function distance(from: Box, to: Box, scale: number): Move {
 }
 
 // The names that an element of a formula has: its attribute `data-part`, from
-// `\part` or `\id`, and each of its classes, from `\class`.
+// `\part` or `\id`, its attribute `data-line`, from a line of a derivation,
+// and each of its classes, from `\class`.
 export function names(element: {
   getAttribute(name: string): string | null;
 }): string[] {
   const part = element.getAttribute("data-part");
+  const line = element.getAttribute("data-line");
   const classes = (element.getAttribute("class") ?? "").split(/\s+/);
-  return [...(part === null ? [] : [part]), ...classes].filter(
-    (name) => name !== "",
+  return [part, line, ...classes].filter(
+    (name): name is string => name !== null && name !== "",
   );
 }
 
