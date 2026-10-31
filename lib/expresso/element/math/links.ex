@@ -31,13 +31,18 @@ defmodule Expresso.Element.Math.Links do
 
   A line with `steps: 2` shows from its second step, and its copies move from
   its first step.
+
+  A line of a rewrite takes three steps. At the first step, the occurrences of
+  the rewrite in the old line and the source of `by` get a color. At the second
+  step, the copies of the kept runs, `keep-k-n`, move. At the third step, the
+  copies of `by` move, and the line shows.
   """
   @spec place(Expresso.Element.Math.t()) :: Expresso.Element.Math.t()
   def place(%Expresso.Element.Math{text: text, line_names: lines} = math)
       when is_binary(text) and lines != [] do
     # The steps of each line before a line with `steps: 2` loses its first step.
     steps = Map.new(math.elements, &{&1.id, &1.steps})
-    %Expresso.Element.Math{elements: parts} = math = second_steps(math)
+    {%Expresso.Element.Math{elements: parts} = math, phases} = second_steps(math)
     tree = Floki.parse_fragment!(text)
 
     case links(tree, lines) do
@@ -48,7 +53,8 @@ defmodule Expresso.Element.Math.Links do
         sets = for %Part{id: id, each: symbol} <- parts, symbol != nil, do: id
         links = links |> Enum.map(&source(&1, tree, lines)) |> occurrences(sets, tree, lines)
         tree = mark(tree, lines, links)
-        copies = Enum.map(links, &copy(&1, steps, lines))
+        copies = Enum.map(links, &copy(&1, steps, lines, phases))
+        parts = colors(parts, math.rewrite_lines, steps)
         %Expresso.Element.Math{math | text: Floki.raw_html(tree), elements: parts ++ copies}
     end
   end
@@ -188,29 +194,74 @@ defmodule Expresso.Element.Math.Links do
   end
 
   # A line with `steps: 2` has an `on` entity last in its part, from
-  # `Expresso.Element.Math.check/1`. The line shows from the step of that
-  # entity, and the entity goes away.
-  defp second_steps(%Expresso.Element.Math{two_step_lines: names, elements: parts} = math) do
-    parts =
-      Enum.map(parts, fn
-        %Part{id: id, on: on, steps: [_ | _] = steps} = part ->
-          if id in names do
-            {[%On{steps: [second | _]}], on} = on |> Enum.reverse() |> Enum.split(1)
-            %Part{part | on: Enum.reverse(on), steps: Enum.filter(steps, &(&1 >= second))}
-          else
-            part
-          end
+  # `Expresso.Element.Math.check/1`, and a line of a rewrite has two. The line
+  # shows from the step of the last entity, and the entities go away. The
+  # function also returns the steps of the two entities of each line of a
+  # rewrite, by name.
+  defp second_steps(%Expresso.Element.Math{} = math) do
+    %Expresso.Element.Math{two_step_lines: twos, rewrite_lines: rewrites, elements: parts} = math
 
-        part ->
-          part
+    {parts, phases} =
+      Enum.map_reduce(parts, %{}, fn part, phases ->
+        count = added(part.id, twos, rewrites)
+        split(part, count, phases)
       end)
 
-    %Expresso.Element.Math{math | elements: parts}
+    {%Expresso.Element.Math{math | elements: parts}, phases}
+  end
+
+  # The number of `on` entities that the check added to the part of a line.
+  defp added(id, twos, rewrites) do
+    cond do
+      id in twos -> 1
+      Map.has_key?(rewrites, id) -> 2
+      true -> 0
+    end
+  end
+
+  defp split(%Part{id: id, on: on, steps: [_ | _] = steps} = part, count, phases)
+       when count > 0 do
+    {on, added} = Enum.split(on, length(on) - count)
+    seconds = Enum.map(added, fn %On{steps: [step | _]} -> step end)
+    last = List.last(seconds)
+    part = %Part{part | on: on, steps: Enum.filter(steps, &(&1 >= last))}
+    {part, Map.put(phases, id, seconds)}
+  end
+
+  defp split(part, _count, phases), do: {part, phases}
+
+  # At the first step of a line of a rewrite, its occurrences get the accent
+  # color and the source of `by` gets the color of success. A part of the deck
+  # with the name of the source keeps its own entities.
+  defp colors(parts, rewrites, steps) do
+    Enum.reduce(rewrites, parts, fn {line, rewrite}, parts ->
+      color(parts, rewrite, Map.get(steps, line))
+    end)
+  end
+
+  defp color(parts, %{hit: hit, by: by}, [_ | _] = from) do
+    parts = add_on(parts, hit, %On{steps: from, set: [color: "var(--accent)"]})
+    if by, do: add_on(parts, by, %On{steps: from, set: [color: "var(--success)"]}), else: parts
+  end
+
+  defp color(parts, _rewrite, _steps), do: parts
+
+  defp add_on(parts, id, on) do
+    case Enum.find_index(parts, &(&1.id == id and &1.copy_of == nil)) do
+      nil ->
+        parts ++ [%Part{id: id, on: [on]}]
+
+      index ->
+        List.update_at(parts, index, fn %Part{} = part ->
+          %Part{part | on: (part.on || []) ++ [on]}
+        end)
+    end
   end
 
   # The copy of a link: from the source to the linked sub-term, at the steps
-  # of the line of the link.
-  defp copy(%{n: n, line: line, name: name, source: source}, steps, lines) do
+  # of the line of the link. In a line of a rewrite, the copy of a kept run
+  # moves from the second step, and each other copy from the third step.
+  defp copy(%{n: n, line: line, name: name, source: source}, steps, lines, phases) do
     line_name = Enum.at(lines, line)
 
     steps =
@@ -222,6 +273,16 @@ defmodule Expresso.Element.Math.Links do
           raise ArgumentError,
                 "the line #{inspect(line_name)} of a math element has \\from, so it needs " <>
                   "steps. Give the math element reveal true, or give the line an at option"
+      end
+
+    steps =
+      case Map.get(phases, line_name) do
+        [keep, rest] ->
+          from = if String.starts_with?(name, "keep-"), do: keep, else: rest
+          Enum.filter(steps, &(&1 >= from))
+
+        _phases ->
+          steps
       end
 
     %Part{

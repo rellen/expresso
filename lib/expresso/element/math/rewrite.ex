@@ -15,6 +15,11 @@ defmodule Expresso.Element.Math.Rewrite do
     * A group or a command that holds an occurrence or a part of `drop` stays,
       and the walk goes into it. In the new line, it fades in.
 
+  Each occurrence also gets `\\class{hit-k}{…}` in the old line. The new line
+  has 3 steps: the occurrences and the source of `by` get a color, then the
+  kept runs move, then the copies of `by` move. Without `why`, the reason is
+  `replace := by` in LaTeX.
+
   The links of `Expresso.Element.Math.Links` and the copies of
   `Expresso.Element.Copy` then move the symbols. `docs/line-rewrites.md` gives
   the design.
@@ -73,6 +78,7 @@ defmodule Expresso.Element.Math.Rewrite do
         within: rewrite.within,
         content: content,
         prefix: "keep-#{k}",
+        hit: "hit-#{k}",
         n: 0,
         count: 0
       }
@@ -88,7 +94,10 @@ defmodule Expresso.Element.Math.Rewrite do
           relation: rewrite.relation || "=",
           tex: new_atoms |> trim() |> Latex.write(),
           why: rewrite.why,
-          name: rewrite.name
+          why_tex: if(rewrite.why, do: nil, else: reason(rewrite, atoms, content)),
+          name: rewrite.name,
+          steps: 3,
+          rewrite: %{hit: "hit-#{k}", by: rewrite.by}
         }
 
         {:ok,
@@ -150,6 +159,18 @@ defmodule Expresso.Element.Math.Rewrite do
       body ->
         {:ok, [{:command, "\\from", [{:group, [{:symbol, by}]}, {:group, unlink(body)}]}]}
     end
+  end
+
+  # The default reason: the symbol or the part of `replace`, `:=`, and the new
+  # content, in LaTeX and without links.
+  defp reason(%MathRewrite{replace: replace}, atoms, content) do
+    old =
+      case Latex.part(atoms, replace) do
+        nil -> replace
+        body -> body |> unlink() |> Latex.write()
+      end
+
+    old <> " := " <> (content |> unlink() |> Latex.write())
   end
 
   # Each name of `within` and `drop` must be a part of the old line.
@@ -258,8 +279,10 @@ defmodule Expresso.Element.Math.Rewrite do
     do: for({:group, atoms} <- groups, do: {atoms, inside})
 
   # The old atoms and the new atoms of a unit that is not plain.
-  defp change(:hit, [atom], _inside, state),
-    do: {[atom], state.content, %{state | count: state.count + 1}}
+  defp change(:hit, [atom], _inside, state) do
+    hit = {:command, "\\class", [{:group, [{:symbol, state.hit}]}, {:group, [atom]}]}
+    {[hit], state.content, %{state | count: state.count + 1}}
+  end
 
   defp change(:drop, [atom], _inside, state), do: {[atom], [], state}
 
