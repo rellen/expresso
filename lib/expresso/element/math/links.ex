@@ -11,6 +11,11 @@ defmodule Expresso.Element.Math.Links do
   The source of a link is each element with the name in the nearest earlier
   line that has the name. An element belongs to the line of its nearest
   ancestor with the name of a line. `docs/line-links.md` gives the design.
+
+  A link with the name of a set of `Expresso.Element.Math.Each` takes one
+  occurrence of the set: the link number `k` with that name and that source
+  line takes the occurrence `k` of the set in that line.
+  `docs/each-occurrence.md` gives the design.
   """
 
   alias Expresso.Element.{On, Part}
@@ -40,7 +45,8 @@ defmodule Expresso.Element.Math.Links do
         math
 
       links ->
-        links = Enum.map(links, &source(&1, tree, lines))
+        sets = for %Part{id: id, each: symbol} <- parts, symbol != nil, do: id
+        links = links |> Enum.map(&source(&1, tree, lines)) |> occurrences(sets, tree, lines)
         tree = mark(tree, lines, links)
         copies = Enum.map(links, &copy(&1, steps, lines))
         %Expresso.Element.Math{math | text: Floki.raw_html(tree), elements: parts ++ copies}
@@ -89,6 +95,49 @@ defmodule Expresso.Element.Math.Links do
 
       source ->
         Map.put(link, :source, source)
+    end
+  end
+
+  # A link to a set takes the next occurrence of the set in its source line,
+  # with the class `set-n` of that occurrence.
+  defp occurrences(links, sets, tree, lines) do
+    nodes = walk(tree, lines, nil, [])
+
+    {links, _taken} =
+      Enum.map_reduce(links, %{}, fn %{name: name, source: line} = link, taken ->
+        if name in sets do
+          k = Map.get(taken, {name, line}, 0) + 1
+          {%{link | name: occurrence(nodes, name, line, k)}, Map.put(taken, {name, line}, k)}
+        else
+          {link, taken}
+        end
+      end)
+
+    links
+  end
+
+  defp occurrence(nodes, name, line, k) do
+    classes =
+      for {attrs, ^line} <- nodes,
+          class <- String.split(attrs["class"] || ""),
+          numbered?(class, name),
+          do: class
+
+    case Enum.at(classes, k - 1) do
+      nil ->
+        raise ArgumentError,
+              "the math element has #{k} links \\from{#{name}} to the line #{line + 1}, " <>
+                "and the set #{inspect(name)} has #{length(classes)} occurrences there"
+
+      class ->
+        class
+    end
+  end
+
+  defp numbered?(class, name) do
+    case String.split_at(class, String.length(name) + 1) do
+      {prefix, number} when prefix == name <> "-" -> number =~ ~r/^[0-9]+$/
+      _split -> false
     end
   end
 
