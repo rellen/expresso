@@ -227,6 +227,38 @@ The `copy` entity and `copy_to` take the same options as in a diagram. See
 - A screen reader does not read a copy, because it repeats a part.
 - A browser with no script does not show a copy.
 
+### Copy to each occurrence of a symbol
+
+A copy to a set of `each` makes one copy for each occurrence. A β-reduction can thus put
+the argument in the place of each bound variable with one entry.
+
+```elixir
+slide "the substitution" do
+  math do
+    tex ~S"(\lambda f.\,\part{body}{f\,f})\,\part{arg}{g}"
+
+    part "holes" do
+      each "f"
+      within "body"
+    end
+
+    part "arg" do
+      on 2, copy_to: ["holes"]
+    end
+  end
+end
+```
+
+- The occurrence `n` of a set has the class `set-n`, such as `holes-1` and `holes-2`.
+- The copy to the occurrence `n` has the name of the copy, `-` and `n`, such as
+  `arg@holes-1`.
+- A copy of a set to a set pairs the occurrences in order, so the copy of the first `a`
+  goes to the first `b`. The render gives an error when the two sets have a different
+  number of occurrences.
+- A copy of a set to a part that is not a set moves the occurrences as one.
+- The render gives an error for a copy of a copy to a set. Give each copy a copy of the
+  source.
+
 ## The lines of a derivation
 
 A derivation has a line for each step, and the lines align on their relations, such as `=`
@@ -316,8 +348,12 @@ end
   `reveal true`.
 - A `\part` inside a `\from`, such as `\from{arg}{\part{hole}{g}}`, names the linked
   sub-term and its copy. A `part` entity with that name thus changes the copy that shows.
+- A link with the name of a set of `each` takes one occurrence of the set: the first link
+  with that name takes the first occurrence in the earlier line, the second link takes the
+  second occurrence, and so on.
 - The compiler gives an error for `\from` in a math element without `line` entities and in
-  the first line. The render gives an error for a name that no earlier line has.
+  the first line. The render gives an error for a name that no earlier line has, and for
+  more links to a set than occurrences of the set in the earlier line.
 
 `docs/line-links.md` gives the design.
 
