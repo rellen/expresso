@@ -3,8 +3,9 @@
 This document gives the design for a `rewrite` entity of a derivation. The entity makes the
 next line from a line before it by a substitution or by a rule, so the author does not write
 the new line by hand. The render then writes the new line, its links and its copies. The
-document also records the progress of the work. It records ten decisions, and each is
-settled. Issue #478 holds the same plan.
+code contains this design. The document records ten decisions, and each is settled. Its
+last section, "The result", tells what changed during the work. Issue #478 holds the same
+plan.
 
 ## The problem
 
@@ -120,3 +121,28 @@ Each pull request is based on the one before it.
 | 4. The three steps and the default reason | Done. A line of a rewrite has `steps: 3`, and the check gives its part two `on` entities with `:next`, as for `steps: 2`. `Expresso.Element.Math.Links.place/1` reads and removes them: the occurrences, with the class `hit-k`, and the source of `by` get a color from the first step, the copies of `keep-k-n` move from the second step, and the other copies and the line take the third step. Without `why`, the reason is `replace := by` in LaTeX, in the new field `why_tex` of a line. A rewrite needs `reveal true`. |
 | 5. The template `to` | Done. Each `\use{name}` of the template becomes `\from{name}{…}` with the body of the part in the nearest line. Without `replace`, the template is the whole new line, and the old line is its occurrence. A screenshot showed that Temml gives an operator in a part no space, so a kept run splits at each relation and each binary operator, and each operator gets its own part inside `\mathrel` or `\mathbin`. A sign with no operand before it stays in its run. The default reason holds no names, because a later link must not find a part in it. Temml drops a `\\class` that is the whole body of a `\\data`, so an occurrence that is the whole body of a line or a part gets an empty group after it. |
 | 6. The pattern `rule` | Done. `Expresso.Element.Math.Rule.match/6` finds the first match of the left side, from the left and from the outside in, and binds each variable to one operand. It gives the first binding of each variable the part `var-k-x` and the match the part `rule-k` in the old line. The rewrite then replaces `rule-k` with the right side as a template, with `\\use{var-k-x}` for each variable. A match does not cross a `\\part` or a `\\from` of the old line. |
+| 7. The examples and the guide | Done. `examples/animations/y_combinator.exs` has one line and four rewrites: the unfold of `Y`, two β-reductions and a template. The guide to a proof shows it. `docs/how-to/explain-a-formula-step-by-step.md` shows `examples/animations/math_rule.exs`, and `mix expresso.gifs` records `math-rule.gif`. The copy of a link now takes the colors of the parts inside its sub-term on the same symbols, and the parts around the sub-term reach it through `data-el`. |
+
+## The result
+
+The seven pull requests of the stack contain the design. These parts are different from the
+plan, or the plan did not tell them:
+
+- **The name of the parser.** `Expresso.Element.Math.Tex` runs Temml, so the parser is
+  `Expresso.Element.Math.Latex`.
+- **The option `by`.** The issue proposed `with`. Spark makes a function for each option,
+  and `with` is a special form of Elixir, so each deck got a warning. The options are `by`
+  and `by_tex`.
+- **The operators.** Temml gives an operator in a part no space. Each relation and each
+  binary operator of a kept run thus gets its own part inside `\mathrel` or `\mathbin`.
+- **The class of an occurrence.** Temml drops a `\class` that is the whole body of a
+  `\data`. An occurrence that is the whole body of a line or a part gets an empty group after
+  it.
+- **The colors of a copy.** The symbols of a line that a rewrite makes are copies, and a copy
+  covers its linked sub-term at each later step. The copy of a link thus takes the colors of
+  the parts inside its sub-term on the same symbols, so the occurrences of a later rewrite
+  show their color. The parts around the sub-term, such as its line and the source of `by`,
+  reach the copy through `data-el`, so a copy dims with its line.
+- **The default reason** holds no names, because a later link must not find a part in it.
+- **The Y combinator example.** It takes 13 steps in the place of 9, because each rewrite
+  takes three steps. The deck gives no colors of its own.

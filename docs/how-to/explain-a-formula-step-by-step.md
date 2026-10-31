@@ -417,6 +417,59 @@ The body is in parts around its holes, so no bound variable shows under a copy o
 argument. A `\part` inside a `\from`, such as `\part{g1}{g}`, gives the copy a color. To
 show a whole proof in this form, see [Show the steps of a proof](show-the-steps-of-a-proof.md).
 
+## Make the next line by a rule
+
+A `rewrite` entity makes the next line from the line before it, so you do not write the new
+line. A rule with variables applies an equation, and `replace` with `by_tex` puts a value in
+the place of a symbol.
+
+```elixir
+defmodule Examples.MathRule do
+  use Expresso
+
+  # Two rewrites make the next lines. A rule with variables expands the
+  # product, and a substitution puts the value of x into each place.
+
+  slide "apply a rule" do
+    heading "Apply a rule"
+
+    math do
+      reveal true
+
+      line tex: ~S"k\,(x + h)"
+
+      rewrite rule: {~S"a\,(b + c)", ~S"a \cdot b + a \cdot c"},
+              vars: ~w(a b c),
+              why: "distribute"
+
+      rewrite replace: "x", by_tex: "2", why: "x := 2"
+
+      # The first line dims when the third line starts.
+      part "line1" do
+        on [from: 5], state: :dim
+      end
+    end
+  end
+end
+
+Examples.MathRule
+```
+
+![The product gets a color, then each part of it moves down and the sum fades in, then the value goes into the place of x](https://raw.githubusercontent.com/rellen/expresso/media/math-rule.gif)
+
+Each rewrite takes three steps:
+
+1. The match of the rule, or each occurrence of `x`, gets the accent color.
+2. Each kept symbol of the old line moves down to its place in the new line.
+3. A copy of each part of the match moves into its place, the new content fades in, and the
+   relation and the reason show.
+
+The rule binds `a` to `k`, `b` to `x` and `c` to `h`, so a copy of `k` goes to two places.
+The old line needs no names. See
+[write the next line by a rewrite](../reference/math-element.md#write-the-next-line-by-a-rewrite).
+`examples/animations/math_rule.exs` holds the deck. To show a whole proof in this form, see
+[Show the steps of a proof](show-the-steps-of-a-proof.md).
+
 ## Make a wide formula fit
 
 A formula is larger than the text of the slide. When the layout check reports that a formula

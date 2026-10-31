@@ -2,15 +2,10 @@ defmodule Examples.YCombinator do
   use Expresso
 
   # The proof that Y g is equal to g (Y g), with each step of each
-  # β-reduction. Each line comes from the lines before it: \from marks a
-  # sub-term that comes from a part of an earlier line, and a copy of that
-  # part moves to its place at the step of the line. The body of each λ is in
-  # parts around its holes, so a copy of the argument lands in an empty place.
-  # One part with each colors each f of the body of the definition, so the
-  # bound variables need no names.
-
-  @accent "var(--accent)"
-  @argument "var(--success)"
+  # β-reduction. Only the first line is written by hand. Each rewrite makes
+  # the next line: the occurrences get a color, the kept symbols move down,
+  # and a copy of the new content moves into each place. The definition of Y
+  # names the parts that the later rewrites use.
 
   css ".small { font-size: 1rem; }"
 
@@ -19,91 +14,38 @@ defmodule Examples.YCombinator do
 
     math do
       class "small"
+      reveal true
 
-      line tex: ~S"\part{Yg}{\part{Y}{Y}\,g}"
+      line tex: ~S"\part{Y}{Y}\,\part{g}{g}"
 
-      line "=",
-        tex: ~S"""
-        \part{def}{(\lambda \part{bind}{f}.\,\part{body}{\part{lam1}{(\lambda x.}\,f\,
-        \part{app1}{(x\,x))}\,\part{lam2}{(\lambda x.}\,f\,
-        \part{app2}{(x\,x))}})}\,\part{arg}{g}
+      rewrite "=",
+        replace: "Y",
+        by_tex: ~S"""
+        \part{lam}{(\lambda f.}\,\part{body}{\part{lamx}{(\lambda x.}\,\part{bodyx}{f\,
+        \part{pair}{(x\,x)}}\part{closex}{)}\,\part{arg}{(\lambda x.\,f\,(x\,x))}}\part{close}{)}
         """,
         why: "the definition of Y"
 
-      line ~S"\to_\beta",
-        tex: ~S"""
-        \from{lam1}{(\lambda \part{bindx}{x}.}\,\from{arg}{\part{g2}{g}}\,
-        \from{app1}{\part{bound}{(x\,x))}}\,
-        \part{A}{\from{lam2}{(\lambda x.}\,\from{arg}{g}\,\from{app2}{(x\,x))}}
-        """,
+      rewrite ~S"\to_\beta",
+        replace: "f",
+        within: "body",
+        by: "g",
+        drop: ["lam", "close", "g"],
         why: "f := g"
 
-      line ~S"\to_\beta",
-        tex: ~S"""
-        \from{g2}{\part{g3}{g}}\,(\from{A}{(\lambda x.\,g\,(x\,x))}\,
-        \from{A}{(\lambda x.\,g\,(x\,x))})
-        """,
+      rewrite ~S"\to_\beta",
+        replace: "x",
+        within: "bodyx",
+        by: "arg",
+        drop: ["lamx", "closex", "arg"],
         why: ~S"x := λx.g (x x)"
 
-      line ~S"=_\beta",
-        tex: ~S"\from{g3}{\part{g4}{g}}\,(\from{Yg}{\part{Yg4}{Y\,g}})",
-        why: "line 3 =β Y g"
+      rewrite ~S"=_\beta", replace: "pair", to: ~S"(\use{Y}\,\use{g})", why: "line 3 =β Y g"
 
-      # Line 1 shows at step 2, line 2 at step 5, line 3 at step 8 and line 4
-      # at step 9. An old line dims after the step that uses it.
-      part "line2" do
-        at from: 2
-        on [from: 6], state: :dim
-      end
-
-      part "line3" do
-        at from: 5
-        on [from: 9], state: :dim
-      end
-
-      part "line4", at: [from: 8]
-      part "line5", at: [from: 9]
-
-      part "Y" do
-        on 2, set: [color: @accent]
-      end
-
-      part "def" do
-        on 2, set: [color: @accent]
-      end
-
-      part "bind" do
-        on 3..4, set: [color: @accent]
-      end
-
-      # The two bound variables: each f of the body.
-      part "fs" do
-        each "f"
-        within "body"
-        on 4, set: [color: @accent]
-      end
-
-      part "arg" do
-        on 3..5, set: [color: @argument]
-      end
-
-      # The second β-reduction: λx.g (x x) applied to a copy of itself.
-      part "bindx" do
-        on 6..7, set: [color: @accent]
-      end
-
-      part "bound" do
-        on 7, set: [color: @accent]
-      end
-
-      part "A" do
-        on 6..8, set: [color: @argument]
-      end
-
-      # Y g and the copy of Y g in the last line, and the g in front of it.
-      for last <- ["Yg", "g4", "Yg4"] do
-        part last do
-          on [from: 9], set: [color: @argument]
+      # An old line dims when the line after the next one starts.
+      for {line, step} <- [{"line1", 5}, {"line2", 8}, {"line3", 11}] do
+        part line do
+          on [from: step], state: :dim
         end
       end
     end
