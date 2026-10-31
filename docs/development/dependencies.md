@@ -53,6 +53,11 @@ Dependabot does not open a major version of `@types/node`. That version follows 
 Node.js of `.tool-versions`, and a change of the toolchain changes its four places
 together. Dependabot does not change the toolchain.
 
+Dependabot does not open a minor or a major version of Zigler. Each minor version of
+Zigler needs a new Zig, and Burrito needs exactly the Zig of `.tool-versions`: Burrito
+1.6.0 needs Zig 0.16.0, and Zigler 0.17 needs Zig 0.17.0. When a version of Burrito takes
+the new Zig, remove the rule, and change the toolchain in its four places together.
+
 The workflow runs each check for a pull request of Dependabot, as for each pull request.
 Read the breaking changes of a major version before a merge. A new version of Playwright
 also needs a new browser. The workflow installs it. A session with `EXPRESSO_CHROMIUM` uses
