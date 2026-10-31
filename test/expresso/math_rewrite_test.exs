@@ -228,4 +228,44 @@ defmodule Expresso.Element.Math.RewriteTest do
     assert math.tex =~ ~S"\from{arg}{g}"
     assert math.tex =~ ~S"\text{f := g}"
   end
+
+  @tag :temml
+  test "a copy of a link takes the colors of the parts inside its sub-term on the same symbols" do
+    defmodule CopyColorDeck do
+      use Expresso
+
+      slide "copy colors" do
+        math do
+          reveal true
+          line tex: ~S"x\,y + 1"
+          rewrite replace: "1", by_tex: "2"
+          rewrite replace: "x", by_tex: "w"
+
+          part "line2" do
+            on [from: 7], state: :dim
+          end
+        end
+      end
+    end
+
+    document = CopyColorDeck |> Expresso.to_deck() |> elem(1) |> Expresso.Deck.render()
+    document = LazyHTML.from_document(document)
+
+    # The link keep-2-1 of line 2 holds x and y, and only x is an occurrence of
+    # the second rewrite. The copy of the link gets the color of x on x only.
+    [copy] =
+      document
+      |> LazyHTML.query(~s(.screen math.math-copy[data-part^="keep-2-1@"]))
+      |> Enum.to_list()
+
+    assert copy |> LazyHTML.query("mrow.math-part > mi") |> LazyHTML.text() == "x"
+    assert copy |> LazyHTML.query("mi") |> Enum.map(&LazyHTML.text/1) == ["x", "y"]
+
+    # The line of the sub-term reaches the copy through data-el, so the copy
+    # dims with the line, and it keeps its own steps.
+    [el | _same] =
+      document |> LazyHTML.query(~s(.screen [data-line="line2"])) |> LazyHTML.attribute("data-el")
+
+    assert copy |> LazyHTML.query(~s(mrow[data-el="#{el}"])) |> Enum.count() == 1
+  end
 end

@@ -149,7 +149,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "waterfall-cash", deck: "waterfall_cash.exs", actions: ["j", "j", "j", "j", "j"]},
     %{name: "waterfall-budget", deck: "waterfall_budget.exs", actions: ["j"]},
     %{name: "waterfall-years", deck: "waterfall_years.exs", actions: ["j"]},
-    %{name: "y-combinator", deck: "y_combinator.exs", actions: List.duplicate("j", 8)},
+    %{name: "y-combinator", deck: "y_combinator.exs", actions: List.duplicate("j", 12)},
     %{name: "math-parts", deck: "math_parts.exs", actions: ["j", "j"]},
     %{name: "math-lines", deck: "math_lines.exs", actions: List.duplicate("j", 4)},
     %{name: "math-redex", deck: "math_redex.exs", actions: ["j", "j", "j"]},
@@ -157,6 +157,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "math-copy", deck: "math_copy.exs", actions: ["j", "j", "j"]},
     %{name: "math-link", deck: "math_link.exs", actions: ["j", "j"]},
     %{name: "math-each", deck: "math_each.exs", actions: ["j", "j"]},
+    %{name: "math-rule", deck: "math_rule.exs", actions: List.duplicate("j", 6)},
     %{
       name: "chart-parallel-sets",
       deck: "chart_parallel_sets.exs",

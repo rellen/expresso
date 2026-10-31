@@ -464,16 +464,108 @@ defmodule Expresso.Element.Math do
         [{"data-part", id}, {"data-copy-of", source}, {"aria-hidden", "true"}] ++
         covers(part) ++ List.wrap(display)
 
+    content = Enum.map(named(tree, source), &unname/1)
+    {whole, content} = inner_tokens(part, tree, parts, content)
+
     inner =
-      part
-      |> inner_parts(tree, parts)
-      |> Enum.reduce({"mrow", [], Enum.map(named(tree, source), &unname/1)}, fn inner, node ->
+      Enum.reduce(whole, {"mrow", [], content}, fn inner, node ->
         attributes = [{"class", "math-part"} | Expresso.Overlay.Render.attributes(inner)]
         {"mrow", attributes, [node]}
       end)
 
+    inner =
+      part
+      |> outer_parts(tree, parts)
+      |> Enum.reduce(inner, fn outer, node -> {"mrow", [{"data-el", outer.el}], [node]} end)
+
     {"math", merge(attributes, []), [inner]}
   end
+
+  # The symbols of the MathML, in order. A copy of a link and its linked
+  # sub-term come from the same LaTeX, so the symbol `n` of one is the symbol
+  # `n` of the other.
+  @symbols ~w(mi mn mo mtext ms mspace)
+
+  # A part inside a linked sub-term that holds each of its symbols reaches the
+  # whole copy. A part that holds only some of them reaches the same symbols
+  # of the copy, so a color of one symbol stays on that symbol. When the two
+  # do not have the same number of symbols, each part reaches the whole copy.
+  defp inner_tokens(part, tree, parts, content) do
+    inner = inner_parts(part, tree, parts)
+    names = part.copy_to |> then(&named(tree, &1)) |> token_names([])
+
+    if inner == [] or length(names) != count_tokens(content) do
+      {inner, content}
+    else
+      {whole, some} =
+        Enum.split_with(inner, fn inner -> Enum.all?(names, &(inner.id in &1)) end)
+
+      {content, _n} = Enum.map_reduce(content, 0, &mark_tokens(&1, &2, names, some))
+      {whole, content}
+    end
+  end
+
+  # The names of the ancestors of each symbol, in the order of the symbols.
+  defp token_names(nodes, above) when is_list(nodes),
+    do: Enum.flat_map(nodes, &token_names(&1, above))
+
+  defp token_names({tag, attrs, children}, above) when is_binary(tag) do
+    above = above ++ element_names(attrs)
+    if tag in @symbols, do: [above], else: token_names(children, above)
+  end
+
+  defp token_names(_node, _above), do: []
+
+  defp element_names(attrs) do
+    attrs = Map.new(attrs)
+
+    List.wrap(attrs["data-part"]) ++
+      List.wrap(attrs["data-line"]) ++ String.split(attrs["class"] || "")
+  end
+
+  defp count_tokens(nodes), do: nodes |> token_names([]) |> length()
+
+  defp mark_tokens({tag, attrs, children}, n, names, some) when is_binary(tag) do
+    if tag in @symbols do
+      here = Enum.filter(some, &(&1.id in Enum.at(names, n)))
+
+      node =
+        Enum.reduce(here, {tag, attrs, children}, fn inner, node ->
+          {"mrow", [{"class", "math-part"} | Expresso.Overlay.Render.attributes(inner)], [node]}
+        end)
+
+      {node, n + 1}
+    else
+      {children, n} = Enum.map_reduce(children, n, &mark_tokens(&1, &2, names, some))
+      {{tag, attrs, children}, n}
+    end
+  end
+
+  defp mark_tokens(node, n, _names, _some), do: {node, n}
+
+  # The parts around a linked sub-term, such as its line, also reach its copy,
+  # because the copy is not inside them. Only their `on` entities reach it,
+  # through `data-el`, so the copy keeps its own steps.
+  defp outer_parts(%Expresso.Element.Part{covers: true, copy_to: target}, tree, parts) do
+    names = ancestors(tree, target, [])
+    Enum.filter(parts, &(&1.id in names and &1.copy_of == nil and Map.get(&1, :el) != nil))
+  end
+
+  defp outer_parts(_part, _tree, _parts), do: []
+
+  defp ancestors(nodes, target, above) when is_list(nodes),
+    do: Enum.find_value(nodes, [], &(ancestors(&1, target, above) |> nonempty()))
+
+  defp ancestors({tag, attrs, children}, target, above) when is_binary(tag) do
+    if named?(attrs, target),
+      do: above,
+      else: ancestors(children, target, above ++ element_names(attrs))
+  end
+
+  defp ancestors(_node, _target, _above), do: []
+
+  defp nonempty([]), do: nil
+  defp nonempty(list), do: list
 
   # The parts that a `\part` inside a linked sub-term names. The copy of the
   # link shows in the place of the sub-term, so each of these parts also

@@ -3087,19 +3087,18 @@ The commands are:
 
 ## Open work
 
-1. **The next line by a rewrite.** A `rewrite` entity makes the next line of a derivation
-   from a line before it, by a substitution or by a rule with variables.
-   `docs/line-rewrites.md` gives the design and the stack of seven pull requests. Issue
-   #478 holds the same plan.
+There is no item at this time. Issue #475 builds on the rewrites of a derivation, and issue
+#397 to issue #407 propose other features. Each one needs a decision before the work starts.
 
-Issue #475 builds on it, and issue #397 to issue #407 propose other features. Each one
-needs a decision before the work starts.
+The item before it, the rewrites of `docs/line-rewrites.md`, added the `rewrite` entity of a
+`math` element, with a substitution, a template and a rule with variables. Issue #478 holds
+that plan.
 
-The item before it, each occurrence of `docs/each-occurrence.md`, added the options `each`,
+The item before that, each occurrence of `docs/each-occurrence.md`, added the options `each`,
 `within` and `bare` of a part of a formula, and the token groups of `highlight`. Issue #479
 holds that plan.
 
-The item before that, the links of `docs/line-links.md`, added `\from{name}{…}` to the lines
+An earlier item, the links of `docs/line-links.md`, added `\from{name}{…}` to the lines
 of a `math` element and the option `steps` of a line. Issue #474 holds that plan.
 
 An earlier item, the copies of a part of `docs/part-copies.md`, added the `copy` entity

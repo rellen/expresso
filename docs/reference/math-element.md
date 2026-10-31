@@ -348,6 +348,9 @@ end
   `reveal true`.
 - A `\part` inside a `\from`, such as `\from{arg}{\part{hole}{g}}`, names the linked
   sub-term and its copy. A `part` entity with that name thus changes the copy that shows.
+  A part that holds only some symbols of the sub-term changes the same symbols of the copy.
+- A part around a linked sub-term, such as its line, gives the copy its `on` entities, so a
+  copy dims with its line.
 - A link with the name of a set of `each` takes one occurrence of the set: the first link
   with that name takes the first occurrence in the earlier line, the second link takes the
   second occurrence, and so on.
