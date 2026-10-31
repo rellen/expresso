@@ -3087,9 +3087,13 @@ The commands are:
 
 ## Open work
 
-There is no item at this time. Issues #474, #479, #478 and #475 build on the copies of a
-part, in that order, and issue #397 to issue #407 propose other features. Each one needs a
-decision before the work starts.
+1. **The links between the lines of a derivation.** A sub-term of a line names the
+   sub-term of an earlier line that it comes from, and it moves from there at the step of
+   its line. `docs/line-links.md` gives the design and the stack of six pull requests.
+   Issue #474 holds the same plan.
+
+Issues #479, #478 and #475 build on the links, in that order, and issue #397 to issue #407
+propose other features. Each one needs a decision before the work starts.
 
 The item before it, the copies of a part of `docs/part-copies.md`, added the `copy` entity
 and the `copy_to` option of a part of a diagram or of a formula. Issue #473 holds that plan.
