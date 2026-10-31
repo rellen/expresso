@@ -470,6 +470,59 @@ The old line needs no names. See
 `examples/animations/math_rule.exs` holds the deck. To show a whole proof in this form, see
 [Show the steps of a proof](show-the-steps-of-a-proof.md).
 
+## Reduce a λ-term
+
+A `reduce` entity makes the next line by one β-reduction. It finds the redex, its bound
+variables and its argument in the LaTeX of the line before it, so the line needs no names.
+
+```elixir
+defmodule Examples.MathReduce do
+  use Expresso
+
+  # Two β-reductions make the next lines. Each reduce finds the leftmost
+  # outermost redex, its bound variables and its argument, so the first line
+  # needs no names. The second reduce puts its first two phases in one step.
+
+  slide "reduce a term" do
+    heading "Reduce a term"
+
+    math do
+      reveal true
+
+      line tex: ~S"(\lambda f.\,\lambda x.\,f\,(f\,x))\,g\,y"
+
+      reduce :leftmost
+
+      reduce :leftmost, steps: [[:redex, :bound], :body, :argument]
+
+      # The first line dims when the third line starts.
+      part "line1" do
+        on [from: 6], state: :dim
+      end
+    end
+  end
+end
+
+Examples.MathReduce
+```
+
+![The λ and the argument get colors, then the bound variable, then the body moves down, then the argument goes into its place, and the next reduction does the same in three steps](https://raw.githubusercontent.com/rellen/expresso/media/math-reduce.gif)
+
+Each reduction takes four steps:
+
+1. The λ with its variable gets the color `--binder`, and the argument gets the color
+   `--argument`.
+2. Each bound variable gets the color `--binder`.
+3. The rest of the body moves down from the old line to its place in the new line.
+4. A copy of the argument moves into the place of each bound variable, and the relation and
+   the reason show.
+
+`:leftmost` takes the leftmost outermost redex. To reduce a different redex, give it a name
+with `\part` and give the name to `reduce`. The option `steps` puts phases together, so the
+second reduction takes three steps. The first result is a λ with a term after it, so it keeps
+its parentheses. See [reduce a λ-term](../reference/math-element.md#reduce-a-λ-term).
+`examples/animations/math_reduce.exs` holds the deck.
+
 ## Make a wide formula fit
 
 A formula is larger than the text of the slide. When the layout check reports that a formula

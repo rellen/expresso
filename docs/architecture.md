@@ -3087,13 +3087,12 @@ The commands are:
 
 ## Open work
 
-1. **Each step of a β-reduction.** A `reduce` entity makes the next line of a derivation by
-   one β-reduction, with a parser of λ-terms, the rules of scope and four steps.
-   `docs/beta-reductions.md` gives the design and the stack of six pull requests. Issue
-   #475 holds the same plan.
+No item is open at this time. Issue #397 to issue #407 propose other features. Each one
+needs a decision before the work starts.
 
-Issue #397 to issue #407 propose other features. Each one needs a decision before the work
-starts.
+The last item, the β-reductions of `docs/beta-reductions.md`, added the `reduce` entity of a
+`math` element, with a parser of λ-terms, the rules of scope, four steps and the theme roles
+`binder` and `argument`. Issue #475 holds that plan.
 
 The item before it, the rewrites of `docs/line-rewrites.md`, added the `rewrite` entity of a
 `math` element, with a substitution, a template and a rule with variables. Issue #478 holds

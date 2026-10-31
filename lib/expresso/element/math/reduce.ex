@@ -37,11 +37,15 @@ defmodule Expresso.Element.Math.Reduce do
          {:ok, term} <- Lambda.parse(atoms),
          {:ok, redex_term} <- find(term, reduce.redex, Lambda.tokens(atoms)),
          {:ok, redex} <- Lambda.redex(redex_term),
+         paren = paren_body?(term, redex_term),
+         redex = keep_parens(redex, paren),
+         {atoms, done} = split(atoms, done, index, ranges(redex, redex_term)),
          {:ok, atoms} <- mark(atoms, redex, redex_term, k) do
-      line = %MathLine{old | tex: Latex.write(atoms)}
+      %MathLine{} = line = Enum.at(done, index)
+      line = %{line | tex: Latex.write(atoms)}
 
       rewrite = %MathRewrite{
-        rewrite(reduce, redex, redex_term, k, line, index)
+        rewrite(reduce, redex, redex_term, k, line, index, paren)
         | why_tex: reason(reduce, redex, atoms, k)
       }
 
@@ -101,6 +105,211 @@ defmodule Expresso.Element.Math.Reduce do
   defp children(%{kind: :paren, term: term}), do: [term]
   defp children(_term), do: []
 
+  # A body that is a λ needs parentheses when a term comes after the redex,
+  # so the redex is the function of an application: in `(\\lambda f.\\,\\lambda
+  # x.\\,f)\\,g\\,y`, the λ of `x` must not take `y`.
+  defp paren_body?(term, redex) do
+    match?(%{kind: :abs}, unwrap(unwrap(redex.fun).body)) and function?(term, redex)
+  end
+
+  defp unwrap(%{kind: :paren, term: term}), do: unwrap(term)
+  defp unwrap(term), do: term
+
+  defp function?(%{kind: :app, fun: fun} = term, redex) do
+    same?(fun, redex) or Enum.any?(children(term), &function?(&1, redex))
+  end
+
+  defp function?(term, redex), do: Enum.any?(children(term), &function?(&1, redex))
+
+  defp same?(a, b), do: {a.first, a.last} == {b.first, b.last}
+
+  # A body in parentheses keeps the parentheses of the λ: the part of the λ
+  # starts after its `(`, and its `)` stays.
+  defp keep_parens(%{close: close, head: {first, last}} = redex, true) when close != nil,
+    do: %{redex | head: {first + 1, last}, close: nil}
+
+  defp keep_parens(redex, _paren), do: redex
+
+  # The ranges of tokens that get a part.
+  defp ranges(%{bound: []} = redex, term), do: [redex.arg, redex.body, {term.first, term.last}]
+
+  defp ranges(redex, _term) do
+    Enum.map(redex.bound, &{&1, &1}) ++
+      [redex.arg, redex.head] ++ if(redex.close, do: [{redex.close, redex.close}], else: [])
+  end
+
+  # A kept run of a rewrite follows the atoms of a line, and not its terms,
+  # so a link `\from{keep-…}{…}` can hold the end of one term and the start
+  # of the next. A link of a body can hold a λ without its parenthesis. Where
+  # a range of tokens starts or ends inside a link that occurs once in the
+  # line, the function splits the link, and the part of its source in an
+  # earlier line, in two. The copies then move as one copy did before.
+  defp split(atoms, done, index, ranges) do
+    edges = ranges |> Enum.flat_map(fn {first, last} -> [first, last + 1] end) |> Enum.uniq()
+
+    Enum.reduce(edges, {atoms, done}, fn edge, {atoms, done} ->
+      tokens = Lambda.tokens(atoms)
+
+      with %{path: path} <- Enum.at(tokens, edge),
+           {:ok, prefix, i, j, name} <- inside_link(atoms, path),
+           1 <- links(atoms, name),
+           {:ok, source} <- source_line(done, index, name) do
+        new = fresh(name, done)
+        atoms = update(atoms, prefix, &cut(&1, i, j, "\\from", new))
+        %MathLine{} = source_line = Enum.at(done, source)
+        {:ok, source_atoms} = Latex.parse(source_line.tex)
+        n = count_before(atoms_of(Enum.at(atoms_at(atoms, prefix), i)), j)
+        source_atoms = cut_part(source_atoms, name, n, new)
+        {atoms, List.replace_at(done, source, %{source_line | tex: Latex.write(source_atoms)})}
+      else
+        _none -> {atoms, done}
+      end
+    end)
+  end
+
+  # The list of the link, the index of the link in it, the index of the token
+  # in the body of the link, and the name of the link, for a token at the top
+  # of the body of a link, after its first atom.
+  defp inside_link(atoms, path) do
+    case Enum.split(path, -2) do
+      {prefix, [{:body, i}, j]} -> link_at(Enum.at(atoms_at(atoms, prefix), i), prefix, i, j)
+      _short -> :none
+    end
+  end
+
+  defp link_at({:command, "\\from", [{:group, label}, {:group, body}]}, prefix, i, j) do
+    if Enum.any?(Enum.take(body, j), &(not space?(&1))),
+      do: {:ok, prefix, i, j, Latex.write(label)},
+      else: :none
+  end
+
+  defp link_at(_atom, _prefix, _i, _j), do: :none
+
+  # The number of links with a name in a list of atoms, at each depth.
+  defp links(atoms, name) do
+    Enum.reduce(atoms, 0, fn
+      {:command, "\\from", [{:group, label}, {:group, body}]}, n ->
+        n + if(Latex.write(label) == name, do: 1, else: 0) + links(body, name)
+
+      {:command, _command, groups}, n ->
+        n + Enum.sum_by(groups, fn {:group, inner} -> links(inner, name) end)
+
+      {:group, inner}, n ->
+        n + links(inner, name)
+
+      _atom, n ->
+        n
+    end)
+  end
+
+  defp space?({:space, _text}), do: true
+  defp space?(_atom), do: false
+
+  # The list of atoms at a path.
+  defp atoms_at(atoms, []), do: atoms
+
+  defp atoms_at(atoms, [{:group, i} | rest]) do
+    {:group, inner} = Enum.at(atoms, i)
+    atoms_at(inner, rest)
+  end
+
+  defp atoms_at(atoms, [{:body, i} | rest]) do
+    {:command, _name, [_label, {:group, body}]} = Enum.at(atoms, i)
+    atoms_at(body, rest)
+  end
+
+  defp atoms_of({:command, _name, [_label, {:group, body}]}), do: body
+
+  # Split the naming command `i` of a list before the atom `j` of its body.
+  # The second half takes the new name.
+  defp cut(atoms, i, j, command, new) do
+    {:command, ^command, [label, {:group, body}]} = Enum.at(atoms, i)
+    {left, right} = Enum.split(body, j)
+
+    pieces = [
+      {:command, command, [label, {:group, left}]},
+      {:command, command, [{:group, [{:symbol, new}]}, {:group, right}]}
+    ]
+
+    Enum.take(atoms, i) ++ pieces ++ Enum.drop(atoms, i + 1)
+  end
+
+  # The number of atoms that are not a space before the atom `j` of a body.
+  defp count_before(body, j), do: body |> Enum.take(j) |> Enum.count(&(not space?(&1)))
+
+  # Split the part `name` of a line after its atom number `n` that is not a
+  # space.
+  defp cut_part(atoms, name, n, new) do
+    atoms
+    |> Enum.with_index()
+    |> Enum.flat_map(fn
+      {{:command, "\\part", [{:group, label}, {:group, body}]} = atom, i} ->
+        if Latex.write(label) == name do
+          j = after_count(body, n)
+          cut(atoms, i, j, "\\part", new) |> Enum.slice(i, 2)
+        else
+          [put_body(atom, cut_part(body, name, n, new))]
+        end
+
+      {{:command, command, groups}, _i} ->
+        [
+          {:command, command,
+           Enum.map(groups, fn {:group, g} -> {:group, cut_part(g, name, n, new)} end)}
+        ]
+
+      {{:group, inner}, _i} ->
+        [{:group, cut_part(inner, name, n, new)}]
+
+      {atom, _i} ->
+        [atom]
+    end)
+  end
+
+  defp put_body({:command, name, [label, {:group, _body}]}, body),
+    do: {:command, name, [label, {:group, body}]}
+
+  # The index of the atom after `n` atoms that are not a space.
+  defp after_count(body, n) do
+    body
+    |> Enum.with_index()
+    |> Enum.reject(fn {atom, _i} -> space?(atom) end)
+    |> Enum.at(n)
+    |> elem(1)
+  end
+
+  # The nearest line before the old line with the part `name`.
+  defp source_line(done, index, name) do
+    done
+    |> Enum.take(index)
+    |> Enum.with_index()
+    |> Enum.reverse()
+    |> Enum.find_value(:none, fn {line, i} ->
+      with {:ok, atoms} <- Latex.parse(line.tex),
+           body when body != nil <- Latex.part(atoms, name),
+           do: {:ok, i},
+           else: (_none -> nil)
+    end)
+  end
+
+  # A name for the second half: the name of the link, or of its kept run
+  # `keep-k-n`, with `-2`, `-3` and so on, that no line holds.
+  defp fresh(name, done) do
+    texts = Enum.map(done, & &1.tex)
+
+    base =
+      case Regex.run(~r/^keep-\d+-\d+/, name) do
+        [base] -> base
+        nil -> name
+      end
+
+    2
+    |> Stream.iterate(&(&1 + 1))
+    |> Stream.map(&"#{base}-#{&1}")
+    |> Enum.find(fn candidate ->
+      not Enum.any?(texts, &String.contains?(&1, "{#{candidate}}"))
+    end)
+  end
+
   # Give the old line the parts of the redex. The bound variables first, and
   # then the other parts from the right, so the tokens keep their order.
   defp mark(atoms, %{bound: []} = redex, term, k) do
@@ -157,10 +366,23 @@ defmodule Expresso.Element.Math.Reduce do
   defp step({_kind, i}), do: i
   defp step(i), do: i
 
+  # Temml puts the attributes of a `\part` that is the whole body of a
+  # `\part` on one element, so one name goes away. An empty group after the
+  # inner part keeps the two names on two elements.
   defp part(atoms, i, j, name) do
-    inner = Enum.slice(atoms, i..j//1)
+    inner = atoms |> Enum.slice(i..j//1) |> guard()
     command = {:command, "\\part", [{:group, [{:symbol, name}]}, {:group, inner}]}
     Enum.take(atoms, i) ++ [command] ++ Enum.drop(atoms, j + 1)
+  end
+
+  defp guard(atoms) do
+    case Enum.reject(atoms, &space?/1) do
+      [{:command, name, [_label, _body]}] when name in ["\\part", "\\id"] ->
+        atoms ++ [{:group, []}]
+
+      _atoms ->
+        atoms
+    end
   end
 
   # Change the list of atoms at a path.
@@ -172,17 +394,19 @@ defmodule Expresso.Element.Math.Reduce do
 
   defp update(atoms, [{:body, i} | rest], fun) do
     List.update_at(atoms, i, fn {:command, name, [label, {:group, body}]} ->
-      {:command, name, [label, {:group, update(body, rest, fun)}]}
+      body = update(body, rest, fun)
+      body = if rest == [] and name in ["\\part", "\\id"], do: guard(body), else: body
+      {:command, name, [label, {:group, body}]}
     end)
   end
 
   # The rewrite of the reduction. An argument of more than one variable gets
   # parentheses in each place, unless it has its own.
-  defp rewrite(reduce, %{bound: []}, _term, k, line, index) do
+  defp rewrite(reduce, %{bound: []}, _term, k, line, index, paren) do
     %MathRewrite{
       relation: reduce.relation || "\\to_\\beta",
       replace: "redex-#{k}",
-      to: "\\use{body-#{k}}",
+      to: if(paren, do: "(\\use{body-#{k}})", else: "\\use{body-#{k}}"),
       from: line.name || "line#{index + 1}",
       why: reduce.why,
       name: reduce.name,
@@ -191,7 +415,7 @@ defmodule Expresso.Element.Math.Reduce do
     }
   end
 
-  defp rewrite(reduce, redex, term, k, line, index) do
+  defp rewrite(reduce, redex, term, k, line, index, _paren) do
     %MathRewrite{
       relation: reduce.relation || "\\to_\\beta",
       replace: "bound-#{k}",

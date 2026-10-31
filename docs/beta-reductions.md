@@ -3,8 +3,9 @@
 This document gives the design for a `reduce` entity of a derivation. The entity makes the
 next line by one β-reduction of the line before it, and it shows the reduction in four steps.
 The design holds only the parts that are special to the λ-calculus: a parser of λ-terms, the
-rules of scope and a preset of steps. The document also records the progress of the work.
-It records ten decisions, and each is settled. Issue #475 holds the same plan.
+rules of scope and a preset of steps. The code contains this design. The document records
+ten decisions, and each is settled. Issue #475 holds the same plan. The last section, "The
+result", tells what changed during the work.
 
 ## The problem
 
@@ -98,3 +99,34 @@ Each pull request is based on the one before it.
 | 3. The rules of scope and the error for a capture | Done. `free/1` returns the free variables of a term, and `redex/1` returns the parts of a redex by their tokens: the head with the λ and the parenthesis before it, the closing parenthesis, the body, the argument and each bound variable. An inner λ with the same variable hides its body. A λ of the body around a bound variable that binds a free variable of the argument stops the reduction with an error. `leftmost/1` returns the redex of normal order. |
 | 4. The `reduce` entity | Done. `Expresso.Element.Math.Reduce.prepare/3` turns each `reduce` into a `rewrite`. It gives the old line the parts `lam-k`, `close-k`, `body-k`, `arg-k` and `bound-k`, and the rewrite replaces `bound-k` with a copy of `arg-k` and drops the rest. A redex with no bound variable becomes its body through a template. A part goes around the atoms of a range of tokens only when no other token is in them, so a redex that crosses a part or a link stops the render. `:leftmost` is in this pull request, because it is three lines, so the stack has six pull requests. A rewrite gets the internal fields `paren` and `why_tex`, and the new line trims the spaces at the ends of each group. |
 | 5. The steps and the roles of the theme | Done. A rewrite and a reduction each give the new line a plan: the number of steps, the color of each part at the step of its phase, and the steps when the copies of the kept runs and the other copies move. `steps` takes the groups of the phases, and the render stops for groups that do not hold each phase once in its order. `Expresso.Palette` gets the roles `binder` from `base0E` and `argument` from `base0C`, so each theme writes `--binder`, `--argument` and their dimmed colors. Tango gives `base0C` and `base0E` the same blue, so the default theme takes the cyan of the Tango palette for `base0C`. This also changes `--code-support` of the default theme, and `docs/reference/dim-contrast-option.md` gives the new roles that do not dim at 4.5. A redex with no bound variable moves its body at `:body`. |
+| 6. The example and the guide | Done. `examples/animations/y_combinator.exs` unfolds `Y` with a `rewrite`, makes two reductions with `reduce :leftmost`, and folds the last line with a rule. `examples/animations/math_reduce.exs` and its GIF show a reduction in the how-to guide, and `docs/how-to/show-the-steps-of-a-proof.md` uses `reduce`. |
+
+## The result
+
+The six pull requests of the stack contain the design. These parts are different from the
+plan, or the plan did not tell them:
+
+- **The stack.** `:leftmost` is three lines, so it went into the pull request of the entity,
+  and the stack has six pull requests in the place of seven.
+- **A link across two terms.** A kept run of a rewrite follows the atoms of a line, and not
+  its terms, so one link can hold the end of one term and the start of the next. A
+  reduction splits such a link, and the part of its source, in two, such as `keep-2-1` and
+  `keep-2-1-2`. The Y combinator needs this for its second reduction.
+- **A body that is a λ.** When a term comes after the redex, a body that is a λ keeps the
+  parentheses of its λ, so `(\lambda f.\,\lambda x.\,f\,x)\,g\,y` becomes
+  `(\lambda x.\,g\,x)\,y`.
+- **The spaces of a dropped part.** A run of dropped parts and spaces becomes one space when
+  the kept atoms on its two sides need one, and no space after `(` or before `)`.
+- **Two names on one symbol.** Temml puts the attributes of a `\part` that is the whole body
+  of a `\part` on one element. A part of a reduction thus gets an empty group after it, as
+  an occurrence of a rewrite does. The parser of LaTeX gives a naming command two groups
+  only, so the empty group stays an atom.
+- **The default theme.** Tango gives `base0C` and `base0E` the same blue, so the binder and
+  the argument had one color. The maintainer chose the cyan of the Tango palette for
+  `base0C`. It also changes `--code-support` of the default theme.
+- **The fold of the Y combinator.** The argument of `g` is two links, and a rule does not
+  look through a link for a symbol. A link is one operand of a rule, so the rule `a\,a` with
+  the variable `a` matches the term applied to itself.
+- **The Y combinator example.** It takes 15 steps in the place of 13, because each reduction
+  takes four steps. Its definition of `Y` has no names, and only `Y` of the first line has a
+  name, for the copy of the fold.

@@ -238,4 +238,65 @@ defmodule Expresso.Element.Math.ReduceTest do
     assert document =~ "var(--binder)"
     assert document =~ "var(--argument)"
   end
+
+  defp plain(line) do
+    {:ok, atoms} = Expresso.Element.Math.Latex.parse(line.tex)
+    atoms |> Expresso.Element.Math.Lambda.plain() |> Expresso.Element.Math.Latex.write()
+  end
+
+  defp leftmost(tex, count) do
+    {:ok, lines} =
+      Rewrite.expand([%MathLine{tex: tex} | List.duplicate(%MathReduce{redex: :leftmost}, count)])
+
+    lines
+  end
+
+  test "a reduction splits a link of a kept run that holds the end of one term and the start of the next" do
+    # The line 2 holds (x\,x))\,(\lambda x. in one kept run, and the argument
+    # of the next redex starts inside it.
+    lines =
+      leftmost(~S"(\lambda f.\,(\lambda x.\,f\,(x\,x))\,(\lambda x.\,f\,(x\,x)))\,g", 2)
+
+    assert Enum.map(lines, &plain/1) |> List.last() ==
+             ~S"g\,((\lambda x.\,g\,(x\,x))\,(\lambda x.\,g\,(x\,x)))"
+
+    # Each half of a split link has a source in the line before it.
+    [line1, line2, _line3] = lines
+
+    for [name] <- Regex.scan(~r/\\from\{(keep-2-[0-9-]+)\}/, line2.tex, capture: :all_but_first) do
+      assert line1.tex =~ "\\part{#{name}}"
+    end
+
+    assert line2.tex =~ ~r/\\from\{keep-2-\d+-2\}/
+  end
+
+  test "a body that is a λ keeps the parentheses of its λ when a term comes after the redex" do
+    lines = leftmost(~S"(\lambda f.\,\lambda x.\,f\,(f\,x))\,g\,y", 2)
+    assert lines |> Enum.at(1) |> plain() =~ ~S"\lambda x.\,g\,(g\,"
+    assert lines |> Enum.at(1) |> plain() |> String.starts_with?(~S"(\lambda x.")
+    assert lines |> List.last() |> plain() == ~S"g\,(g\,y)"
+
+    lines = leftmost(~S"(\lambda f.\,\lambda z.\,z)\,a\,b", 2)
+    assert Enum.map(tl(lines), &plain/1) |> List.last() == "b"
+  end
+
+  test "a dropped part leaves one space between two terms, and none after a parenthesis" do
+    [_old, new] = leftmost(~S"(\lambda f.\,f\,x)\,g\,y", 1)
+    assert plain(new) == ~S"g\,x\,y"
+
+    [_old, new] = leftmost(~S"a\,((\lambda f.\,f)\,b)", 1)
+    assert plain(new) == ~S"a\,(b)"
+  end
+
+  test "a part of a reduction inside a part of the deck around one symbol keeps the two names" do
+    [old, new] = leftmost(~S"(\lambda f.\,f\,x)\,\part{g}{g}", 1)
+
+    # Temml puts two names on one element without the empty group.
+    assert old.tex =~ ~S"\part{g}{\part{arg-2}{g}{}}"
+    assert new.tex =~ ~S"\from{arg-2}{g}"
+    refute new.tex =~ "{}"
+
+    {:ok, atoms} = Expresso.Element.Math.Latex.parse(old.tex)
+    assert Expresso.Element.Math.Latex.part(atoms, "arg-2") == [{:symbol, "g"}]
+  end
 end
