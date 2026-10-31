@@ -3087,9 +3087,13 @@ The commands are:
 
 ## Open work
 
-There is no item at this time. Issues #478 and #475 build on each occurrence of a symbol,
-in that order, and issue #397 to issue #407 propose other features. Each one needs a
-decision before the work starts.
+1. **The next line by a rewrite.** A `rewrite` entity makes the next line of a derivation
+   from a line before it, by a substitution or by a rule with variables.
+   `docs/line-rewrites.md` gives the design and the stack of seven pull requests. Issue
+   #478 holds the same plan.
+
+Issue #475 builds on it, and issue #397 to issue #407 propose other features. Each one
+needs a decision before the work starts.
 
 The item before it, each occurrence of `docs/each-occurrence.md`, added the options `each`,
 `within` and `bare` of a part of a formula, and the token groups of `highlight`. Issue #479

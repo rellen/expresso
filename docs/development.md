@@ -46,3 +46,4 @@ GitHub.
 - `docs/line-links.md` — the design for the links between the lines of a derivation, and its
   result.
 - `docs/each-occurrence.md` — the design for each occurrence of a symbol, and its result.
+- `docs/line-rewrites.md` — the design for the next line by a rewrite, and its progress.
