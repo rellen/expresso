@@ -47,14 +47,17 @@ defmodule Expresso.Element.Math do
   A math element has one source: the MathML, the `tex` option, or `line`
   entities. The function writes the lines into the LaTeX of one formula of the
   environment `aligned`, a row for each line, with the relation, the term and
-  the reason in three columns. Each line becomes a part with its name, and
+  the reason in three columns. A `rewrite` entity becomes a line first, with
+  `Expresso.Element.Math.Rewrite.expand/1`. Each line becomes a part with its name, and
   with `reveal true` it shows at its own step. The function then checks the
   name of each `\\part{name}{…}` and `\\id{name}{…}` of the LaTeX. The entity of
   the DSL and `Expresso.Builder` call this function.
   """
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
   def check(%__MODULE__{} = math) do
-    with :ok <- links_in_lines(math),
+    with {:ok, lines} <- Expresso.Element.Math.Rewrite.expand(math.lines),
+         math = %__MODULE__{math | lines: lines},
+         :ok <- links_in_lines(math),
          :ok <- options_need_each(math),
          :ok <- two_steps_reveal(math),
          {:ok, math} <- write_lines(math),

@@ -41,7 +41,7 @@ math do
   rewrite ~S"\to_\beta",
     replace: "f",
     within: "body",
-    with: "arg",
+    by: "arg",
     drop: ["lam", "close", "arg"]
 end
 ```
@@ -69,13 +69,13 @@ the symbols that it matched, and each copy moves from the old line.
 | 1 | The entity | A `rewrite` entity of a math element makes the next line from the line before it, or from the line that `from` names. Its first argument is the relation, and the default is `=`. It takes the options `name` and `why` of a `line`. |
 | 2 | The level | The check of a math element writes the LaTeX of the new line, with `\from{…}` around each kept part and each copy. Temml, the links of #474 and the copies of #473 then work as for a line that the author writes. |
 | 3 | The occurrences | `replace` names a `\part` of the old line, or a symbol. A symbol is a letter, a digit or a command, such as `\alpha`, with an equal text. `within` limits the symbol to a part, as in `docs/each-occurrence.md`. |
-| 4 | The new content | One of four options gives what goes into each place: `with` names a part of an earlier line, and a copy of it moves. `with_tex` gives new LaTeX, which fades in. `to` gives a template, and `rule` gives a pattern. |
-| 5 | The parentheses | The author gives the parentheses in the source of `with`, such as `\part{arg}{(a + b)}`. The render adds none, so the result is predictable. |
+| 4 | The new content | One of four options gives what goes into each place: `by` names a part of an earlier line, and a copy of it moves. `by_tex` gives new LaTeX, which fades in. `to` gives a template, and `rule` gives a pattern. The issue proposed `with`, and Spark makes a function for each option, so `with` conflicts with a special form of Elixir. |
+| 5 | The parentheses | The author gives the parentheses in the source of `by`, such as `\part{arg}{(a + b)}`. The render adds none, so the result is predictable. |
 | 6 | The removed parts | `drop` names the parts of the old line that the new line does not hold, such as the λ and the argument of a β-reduction. |
 | 7 | The kept symbols | Each kept symbol of the old line moves to its place in the new line. A run of kept symbols inside one brace group becomes one part, `keep-n`, of the old line and one link of the new line. A command or a brace that holds an occurrence fades in. |
 | 8 | A template | `to: ~S"\use{a}\,\use{b} + \use{a}\,\use{c}"` replaces the part of `replace`, or the whole line. Each `\use{name}` is a copy of the part `name` of the old line. |
 | 9 | A pattern | `rule: {left, right}` and `vars` match the left side in the old line, or in the part of `replace`. A variable binds one atom: a symbol, a brace group or a group in parentheses. The match skips spaces such as `\,`. The first match from the left wins, and the render stops for no match. |
-| 10 | The steps | A rewrite takes three steps of the counter of `reveal`: the occurrences and the source of `with` get a color, then each kept symbol moves, then each copy moves. The default reason is `replace := with`. Seven pull requests. `examples/animations/y_combinator.exs` writes each line after the first with `rewrite`, and the how-to guide gets an example of a rule with a GIF. |
+| 10 | The steps | A rewrite takes three steps of the counter of `reveal`: the occurrences and the source of `by` get a color, then each kept symbol moves, then each copy moves. The default reason is `replace := by`. Seven pull requests. `examples/animations/y_combinator.exs` writes each line after the first with `rewrite`, and the how-to guide gets an example of a rule with a GIF. |
 
 ## The design
 
@@ -88,7 +88,7 @@ the symbols that it matched, and each copy moves from the old line.
 - **The new line.** The check walks the tree of the old line. An occurrence becomes the new
   content, a dropped part goes away, and each run of kept atoms in one brace group gets a
   `\part{keep-n}{…}` in the old line and a `\from{keep-n}{…}` in the new line.
-- **The new content.** `with` becomes `\from{name}{…}` with the LaTeX of the part. `with_tex`
+- **The new content.** `by` becomes `\from{name}{…}` with the LaTeX of the part. `by_tex`
   becomes its LaTeX. `to` becomes its template, and each `\use{name}` becomes
   `\from{name}{…}`. `rule` matches the left side, names each bound atom with a part of the
   old line, and writes the right side as a template.
@@ -103,7 +103,7 @@ Each pull request is based on the one before it.
 
 1. This document.
 2. The parser of LaTeX, `Expresso.Element.Math.Latex`.
-3. The `rewrite` entity with `replace`, `within`, `with`, `with_tex` and `drop`.
+3. The `rewrite` entity with `replace`, `within`, `by`, `by_tex` and `drop`.
 4. The three steps and the default reason.
 5. The template `to` with `\use`.
 6. The pattern `rule` with `vars`.
@@ -116,3 +116,4 @@ Each pull request is based on the one before it.
 | --- | --- |
 | 1. This document | Done |
 | 2. The parser of LaTeX | Done. `Expresso.Element.Math.Latex` reads LaTeX into atoms: a symbol, a command with its brace groups, a group, a script mark and a space. A number is one symbol. `write/1` returns the same LaTeX, and it puts a space between a command of letters and a letter. The name `Expresso.Element.Math.Tex` is the module that runs Temml, so the parser has a different name. |
+| 3. The `rewrite` entity | Done. `Expresso.Element.Math.Rewrite.expand/1` runs first in `Expresso.Element.Math.check/1`, and it turns each rewrite into a line. A run of kept atoms gets the name `keep-k-n`, where `k` is the number of the new line. A base with a script is one unit, so a script stays on its base, and a plain script fades in. A new base of more than one atom goes into a group. `\text` and its kind hold no symbols. The options are `by` and `by_tex`, because `with` is a special form of Elixir. The spaces at the ends of the new line go away. |
