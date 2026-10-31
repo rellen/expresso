@@ -472,8 +472,21 @@ defmodule Expresso.Element.Diagram do
   def check(%__MODULE__{} = diagram) do
     with :ok <- one_source(diagram),
          {:ok, _diagram} <- options(diagram),
+         :ok <- no_each(diagram),
          {:ok, parts} <- Expresso.Element.Copy.expand(diagram.elements) do
       {:ok, %__MODULE__{diagram | elements: parts}}
+    end
+  end
+
+  defp no_each(%__MODULE__{elements: parts}) do
+    case Enum.find(parts, &(&1.each != nil or &1.within != nil)) do
+      nil ->
+        :ok
+
+      part ->
+        {:error,
+         "the part #{inspect(part.id)} of a diagram has each or within, and only a part of a " <>
+           "formula takes them"}
     end
   end
 
