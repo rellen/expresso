@@ -89,6 +89,134 @@ defmodule Expresso.Element.Math.Lambda do
   def show(%{kind: :app, fun: fun, arg: arg}), do: "(#{show(fun)} #{show(arg)})"
   def show(%{kind: :paren, term: term}), do: show(term)
 
+  @doc """
+  Return the free variables of a term
+
+      iex> {:ok, atoms} = Expresso.Element.Math.Latex.parse(~S"\\lambda x.\\,f\\,x\\,y")
+      iex> {:ok, term} = Expresso.Element.Math.Lambda.parse(atoms)
+      iex> Expresso.Element.Math.Lambda.free(term) |> Enum.sort()
+      ["f", "y"]
+  """
+  @spec free(term_t()) :: MapSet.t(String.t())
+  def free(%{kind: :var, name: name}), do: MapSet.new([name])
+  def free(%{kind: :abs, var: var, body: body}), do: body |> free() |> MapSet.delete(var)
+  def free(%{kind: :app, fun: fun, arg: arg}), do: MapSet.union(free(fun), free(arg))
+  def free(%{kind: :paren, term: term}), do: free(term)
+
+  @doc """
+  Return true for a redex: an application of an abstraction, in parentheses
+  or not
+  """
+  @spec redex?(term_t()) :: boolean()
+  def redex?(%{kind: :app, fun: fun}), do: match?(%{kind: :abs}, unwrap(fun))
+  def redex?(_term), do: false
+
+  @doc """
+  Return the parts of a redex, by the indices of their tokens
+
+  The map has these keys:
+
+    * `head`, the first and the last token of the λ, its variable and its dot,
+      with the parenthesis before it,
+    * `close`, the token of the parenthesis after the body, or `nil`,
+    * `body` and `arg`, the first and the last token of the body and of the
+      argument,
+    * `var`, the variable, and `bound`, the token of each bound variable: each
+      free occurrence of the variable in the body.
+
+  An inner λ with the same variable hides the occurrences in its own body.
+  The function returns an error for a capture: a λ of the body around a bound
+  variable binds a free variable of the argument.
+
+      iex> {:ok, atoms} = Expresso.Element.Math.Latex.parse(~S"(\\lambda f.\\,f\\,(\\lambda f.\\,f))\\,g")
+      iex> {:ok, term} = Expresso.Element.Math.Lambda.parse(atoms)
+      iex> {:ok, redex} = Expresso.Element.Math.Lambda.redex(term)
+      iex> {redex.var, redex.bound, redex.head, redex.close, redex.arg}
+      {"f", [4], {0, 3}, 11, {12, 12}}
+  """
+  @spec redex(term_t()) :: {:ok, map()} | {:error, String.t()}
+  def redex(%{kind: :app, fun: fun, arg: arg} = term) do
+    case {fun, unwrap(fun)} do
+      {_fun, %{kind: :abs, var: var, body: body} = abs} ->
+        {open, close} = parens(fun)
+        bound = occurrences(body, var, [])
+
+        with :ok <- no_capture(bound, free(arg), var) do
+          {:ok,
+           %{
+             var: var,
+             bound: Enum.map(bound, &elem(&1, 0)),
+             head: {open || abs.first, body.first - 1},
+             close: close,
+             body: {body.first, body.last},
+             arg: {arg.first, arg.last},
+             term: {term.first, term.last}
+           }}
+        end
+
+      _other ->
+        {:error, "the term #{show(term)} is not a redex"}
+    end
+  end
+
+  def redex(term), do: {:error, "the term #{show(term)} is not a redex"}
+
+  @doc """
+  Return the leftmost outermost redex of a term, the redex of normal order, or
+  `nil`
+  """
+  @spec leftmost(term_t()) :: term_t() | nil
+  def leftmost(term) do
+    if redex?(term), do: term, else: term |> children() |> Enum.find_value(&leftmost/1)
+  end
+
+  defp children(%{kind: :abs, body: body}), do: [body]
+  defp children(%{kind: :app, fun: fun, arg: arg}), do: [fun, arg]
+  defp children(%{kind: :paren, term: term}), do: [term]
+  defp children(_term), do: []
+
+  # The term inside each pair of parentheses.
+  defp unwrap(%{kind: :paren, term: term}), do: unwrap(term)
+  defp unwrap(term), do: term
+
+  # The first parenthesis before a term and the last one after it, from the
+  # outer pair.
+  defp parens(%{kind: :paren, first: open, last: close}), do: {open, close}
+  defp parens(_term), do: {nil, nil}
+
+  # Each free occurrence of a variable in a term, with the variables of the
+  # λs around it.
+  defp occurrences(%{kind: :var, name: name, first: i}, var, around) when name == var,
+    do: [{i, around}]
+
+  defp occurrences(%{kind: :var}, _var, _around), do: []
+  defp occurrences(%{kind: :abs, var: var}, var, _around), do: []
+
+  defp occurrences(%{kind: :abs, var: inner, body: body}, var, around),
+    do: occurrences(body, var, [inner | around])
+
+  defp occurrences(%{kind: :app, fun: fun, arg: arg}, var, around),
+    do: occurrences(fun, var, around) ++ occurrences(arg, var, around)
+
+  defp occurrences(%{kind: :paren, term: term}, var, around), do: occurrences(term, var, around)
+
+  defp no_capture(bound, free, var) do
+    captured =
+      bound
+      |> Enum.flat_map(fn {_i, around} -> around end)
+      |> Enum.find(&MapSet.member?(free, &1))
+
+    case captured do
+      nil ->
+        :ok
+
+      name ->
+        {:error,
+         "the β-reduction of #{var} captures the free variable #{name} of the argument, " <>
+           "because a λ#{name} of the body binds it. Give that λ a different variable"}
+    end
+  end
+
   # The tokens of a list of atoms. A naming command and a brace group are
   # transparent, and a symbol with its scripts is one token.
   defp collect(atoms, path) do
