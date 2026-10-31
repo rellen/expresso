@@ -86,6 +86,8 @@ defmodule Expresso.Palette do
     danger: {:base08, :background},
     success: {:base0B, :background},
     emphasis: {:base0E, :background},
+    binder: {:base0E, :background},
+    argument: {:base0C, :background},
     code_background: {:base01, nil},
     code_text: {:base05, :code_background},
     code_comment: {:base03, :code_background},

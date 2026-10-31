@@ -179,7 +179,7 @@ defmodule Expresso.PaletteTest do
     palette = Palette.of(colors(%{base05: "#999999", base09: "#ffaa00"}))
     suggestions = Palette.suggestions(palette)
 
-    assert Map.keys(suggestions) |> Enum.sort() == [:base05, :base09, :base0B]
+    assert Map.keys(suggestions) |> Enum.sort() == [:base05, :base09, :base0B, :base0C]
 
     fixed = Palette.of(colors(suggestions))
     failing = fixed |> Palette.problems() |> Enum.map(&elem(&1, 0))
@@ -239,7 +239,7 @@ defmodule Expresso.PaletteTest do
 
     test "variants adjusts a map with adjust true, and keeps it without" do
       assert [{nil, kept}] = Palette.variants(colors: @harbor)
-      assert length(Palette.problems(kept)) == 17
+      assert length(Palette.problems(kept)) == 19
 
       assert [{nil, adjusted}] = Palette.variants(colors: @harbor, adjust: true)
       assert Palette.problems(adjusted) == []

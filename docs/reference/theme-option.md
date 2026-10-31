@@ -244,6 +244,8 @@ option of the deck comes after them, so a deck can replace a role.
 | `--danger` | `base08` | A talk that is over its time, and a callout of the kind `:caution` |
 | `--success` | `base0B` | A callout of the kind `:tip` or `:example` |
 | `--emphasis` | `base0E` | A callout of the kind `:important` |
+| `--binder` | `base0E` | The λ, its variable and the bound variables of a `reduce` of a math element |
+| `--argument` | `base0C` | The argument of a `reduce` of a math element |
 | `--code-background` | `base01` | A code block |
 | `--code-text` | `base05` | Operators, variables and punctuation |
 | `--code-comment` | `base03` | Comments and documentation |

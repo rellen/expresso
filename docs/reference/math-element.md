@@ -384,13 +384,13 @@ end
 ```
 
 The rewrite makes the line `g\,(g\,x)`, with the reason `f := g`. It takes three steps of
-the counter of `reveal`:
+the counter of `reveal`, one for each phase:
 
-| Step | What changes |
-| --- | --- |
-| 1 | Each occurrence in the old line gets the color `--accent`, and the source of `by` gets the color `--success`. |
-| 2 | Each run of kept symbols, such as `(` and `x)`, moves down from the old line to its place. |
-| 3 | A copy of the source of `by` moves into the place of each occurrence, and the rest of the new line shows, with its relation and its reason. |
+| Step | Phase | What changes |
+| --- | --- | --- |
+| 1 | `:occurrences` | Each occurrence in the old line gets the color `--accent`, and the source of `by` gets the color `--success`. |
+| 2 | `:kept` | Each run of kept symbols, such as `(` and `x)`, moves down from the old line to its place. |
+| 3 | `:copies` | A copy of the source of `by` moves into the place of each occurrence, and the rest of the new line shows, with its relation and its reason. |
 
 | Option | Effect |
 | --- | --- |
@@ -406,6 +406,7 @@ the counter of `reveal`:
 | `from` | The name of the line that the rewrite reads. The default is the line before it. |
 | `why` | The reason of the new line, as plain text. The default is the replaced symbol or part, `:=` and the new content, in LaTeX. |
 | `name` | The name of the part of the new line, as for a `line`. |
+| `steps` | A list of groups of the phases, such as `[[:occurrences, :kept], :copies]`. Each group is one step, and the new line shows at the last step. The groups hold each phase once, in the order of the table above. The default is `[:occurrences, :kept, :copies]`. |
 
 - A rewrite gives each run of kept symbols of the old line a part, such as `keep-2-1`, and
   the new line a link to it. A relation, such as `=`, and a binary operator, such as `+`,
@@ -416,7 +417,7 @@ the counter of `reveal`:
   `\part{arg}{(a + b)}`.
 - A rewrite can read a line that a rewrite makes, so each line after the first can be a
   rewrite.
-- A rewrite needs `reveal true`, because it takes three steps.
+- A rewrite needs `reveal true`, because it takes a step for each group of its phases.
 - Each occurrence in the old line gets the class `hit-k`, where `k` is the number of the new
   line, so a `part` entity with that name can change it.
 - The compiler gives an error for a rewrite with no line before it, for a name that the
@@ -498,7 +499,14 @@ end
 ```
 
 The reduction makes the line `g\,(g\,x)`, with the relation `\to_\beta` and the reason
-`f := g`.
+`f := g`. It takes four steps of the counter of `reveal`, one for each phase:
+
+| Step | Phase | What changes |
+| --- | --- | --- |
+| 1 | `:redex` | The λ with its variable gets the color `--binder`, and the argument gets the color `--argument`. |
+| 2 | `:bound` | Each bound variable gets the color `--binder`. |
+| 3 | `:body` | Each run of the rest of the body moves down from the old line to its place. |
+| 4 | `:argument` | A copy of the argument moves into the place of each bound variable, and the new line shows. |
 
 | Option | Effect |
 | --- | --- |
@@ -507,6 +515,7 @@ The reduction makes the line `g\,(g\,x)`, with the relation `\to_\beta` and the 
 | `from` | The name of the line that the reduction reads. The default is the line before it. |
 | `why` | The reason, as plain text. The default is the variable, `:=` and the argument, in LaTeX. |
 | `name` | The name of the part of the new line. |
+| `steps` | A list of groups of the phases, such as `[[:redex, :bound], :body, :argument]`. Each group is one step, and the new line shows at the last step. The groups hold each phase once, in the order of the table above. The default is `[:redex, :bound, :body, :argument]`. |
 
 - A λ-term is a variable, `\lambda x.` with a body, an application, or a term in
   parentheses. A variable is a letter, a number or a command such as `\alpha`, with its
@@ -517,7 +526,8 @@ The reduction makes the line `g\,(g\,x)`, with the relation `\to_\beta` and the 
   the same variable keeps its own variable.
 - An argument of more than one variable, such as `a\,b`, gets parentheses in each place,
   unless it has its own.
-- A redex with no bound variable, such as `(\lambda f.\,y)\,a`, becomes its body.
+- A redex with no bound variable, such as `(\lambda f.\,y)\,a`, becomes its body. Its
+  body moves at the phase `:body`.
 - The render gives an error for a line that is not a λ-term, for a part with no redex, and
   for a capture: a λ of the body around a bound variable that binds a free variable of the
   argument. Give that λ a different variable.
