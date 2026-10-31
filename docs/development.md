@@ -45,3 +45,4 @@ GitHub.
 - `docs/part-copies.md` — the design for a copy of a part, and its result.
 - `docs/line-links.md` — the design for the links between the lines of a derivation, and its
   result.
+- `docs/each-occurrence.md` — the design for each occurrence of a symbol, and its progress.
