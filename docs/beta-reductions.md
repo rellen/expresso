@@ -57,7 +57,7 @@ The reduction takes four steps:
 | 7 | The parentheses | A copy of the argument keeps the parentheses of its source. An argument that is not one variable and that has no parentheses gets them in each place. |
 | 8 | The steps | A reduction takes four steps: `:redex`, `:bound`, `:body` and `:argument`. The option `steps` takes a list of groups, and each group is one step, such as `[[:redex, :bound], :body, :argument]`. A `rewrite` takes the same option with its phases `:occurrences`, `:kept` and `:copies`. |
 | 9 | The colors | Two new roles of the theme, `binder` and `argument`, each with a dimmed color, color the λ, its binder and the bound variables, and the argument. Each built-in theme meets the contrast minimums for them. |
-| 10 | The stack and the examples | Seven pull requests. `examples/animations/y_combinator.exs` unfolds `Y` with a `rewrite`, makes each β-reduction with `reduce :leftmost`, and folds the last line with a `rewrite`. The definition of `Y` needs no names. The how-to guide gets an example of a reduction with a GIF. |
+| 10 | The stack and the examples | Six pull requests. `examples/animations/y_combinator.exs` unfolds `Y` with a `rewrite`, makes each β-reduction with `reduce :leftmost`, and folds the last line with a `rewrite`. The definition of `Y` needs no names. The how-to guide gets an example of a reduction with a GIF. |
 
 ## The design
 
@@ -84,10 +84,9 @@ Each pull request is based on the one before it.
 1. This document.
 2. The parser of λ-terms, `Expresso.Element.Math.Lambda`.
 3. The rules of scope and the error for a capture.
-4. The `reduce` entity with a named redex.
-5. `reduce :leftmost`.
-6. The four steps, the option `steps` and the roles of the theme.
-7. `examples/animations/y_combinator.exs` with `reduce`, and the guide with an example of a
+4. The `reduce` entity with a named redex and with `:leftmost`.
+5. The four steps, the option `steps` and the roles of the theme.
+6. `examples/animations/y_combinator.exs` with `reduce`, and the guide with an example of a
    reduction and its GIF.
 
 ## The progress
@@ -97,3 +96,4 @@ Each pull request is based on the one before it.
 | 1. This document | Done |
 | 2. The parser of λ-terms | Done. `Expresso.Element.Math.Lambda.parse/1` reads the atoms of `Expresso.Element.Math.Latex` into a variable, an abstraction, an application or a term in parentheses, and each term keeps the indices of its first and last tokens. `tokens/1` returns each token with its atoms and its path in the tree. A variable with its scripts, such as `x_1`, is one token with that name. A property test makes sure that the parser reads each term that a generator writes. |
 | 3. The rules of scope and the error for a capture | Done. `free/1` returns the free variables of a term, and `redex/1` returns the parts of a redex by their tokens: the head with the λ and the parenthesis before it, the closing parenthesis, the body, the argument and each bound variable. An inner λ with the same variable hides its body. A λ of the body around a bound variable that binds a free variable of the argument stops the reduction with an error. `leftmost/1` returns the redex of normal order. |
+| 4. The `reduce` entity | Done. `Expresso.Element.Math.Reduce.prepare/3` turns each `reduce` into a `rewrite`. It gives the old line the parts `lam-k`, `close-k`, `body-k`, `arg-k` and `bound-k`, and the rewrite replaces `bound-k` with a copy of `arg-k` and drops the rest. A redex with no bound variable becomes its body through a template. A part goes around the atoms of a range of tokens only when no other token is in them, so a redex that crosses a part or a link stops the render. `:leftmost` is in this pull request, because it is three lines, so the stack has six pull requests. A rewrite gets the internal fields `paren` and `why_tex`, and the new line trims the spaces at the ends of each group. |
