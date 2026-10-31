@@ -392,11 +392,13 @@ the counter of `reveal`:
 | Option | Effect |
 | --- | --- |
 | The first argument | The relation of the new line, such as `~S"\to_\beta"`. The default is `=`. |
-| `replace` | The name of a part of the old line, or a symbol, such as `"f"`, `"2"` or `~S"\alpha"`. Each occurrence becomes the new content. A rewrite with `to` can omit it. |
+| `replace` | The name of a part of the old line, or a symbol, such as `"f"`, `"2"` or `~S"\alpha"`. Each occurrence becomes the new content. A rewrite with `to` or `rule` can omit it. |
 | `within` | With a symbol, the name of the part of the old line that holds the occurrences. The default is the whole line. |
 | `by` | The name of a part of the old line or of an earlier line. A copy of it moves into the place of each occurrence. |
 | `by_tex` | New LaTeX for the place of each occurrence, in place of `by`. It fades in. |
 | `to` | A template in LaTeX for the part of `replace`, or for the whole line without `replace`. Each `\use{name}` in it is a copy of the part `name`, and the rest fades in. |
+| `rule` | A left side and a right side in LaTeX, such as `{~S"a\,(b + c)", ~S"a\,b + a\,c"}`. The first match of the left side in the old line, or in the part of `replace`, becomes the right side. |
+| `vars` | The variables of `rule`, such as `~w(a b c)`. |
 | `drop` | The names of the parts of the old line that the new line does not hold. |
 | `from` | The name of the line that the rewrite reads. The default is the line before it. |
 | `why` | The reason of the new line, as plain text. The default is the replaced symbol or part, `:=` and the new content, in LaTeX. |
@@ -416,7 +418,7 @@ the counter of `reveal`:
   line, so a `part` entity with that name can change it.
 - The compiler gives an error for a rewrite with no line before it, for a name that the
   lines do not have, for a rewrite with no occurrence, for a rewrite with more or less than
-  one of `by`, `by_tex` and `to`, for `by` or `by_tex` without `replace`, and for a rewrite
+  one of `by`, `by_tex`, `to` and `rule`, for `by` or `by_tex` without `replace`, and for a rewrite
   without `reveal true`.
 
 #### A template
@@ -439,6 +441,38 @@ end
 The rewrite makes the line `k\,x + k\,h`: a copy of `k` moves to two places, and `+` fades
 in. Without `replace`, the template is the whole new line, and the whole old line gets the
 color of step 1.
+
+#### A rule with variables
+
+`rule` applies an equation to the old line. The left side is a pattern, and each variable
+of `vars` binds the operand that it matches. The right side is the new content, and each
+variable in it is a copy of its operand.
+
+```elixir
+slide "a rule" do
+  math do
+    reveal true
+
+    line tex: ~S"y = k\,(x + h)"
+
+    rewrite rule: {~S"a\,(b + c)", ~S"a\,b + a\,c"}, vars: ~w(a b c), why: "distribute"
+  end
+end
+```
+
+The rewrite makes the line `y = k\,x + k\,h`, and you give the old line no names.
+
+- A variable binds one operand: a symbol or a command with its scripts, a brace group, or
+  a group in parentheses from `(` to its `)`. A variable before a script, as in `a^2`,
+  binds the base only.
+- The match skips spaces, such as `\,`, so `a\,b` matches `k (x + h)`.
+- A variable that occurs two times in the left side, as in `a + a`, must bind equal LaTeX.
+- A command or a brace group of the left side, such as `\frac{a}{b}`, matches its groups in
+  full.
+- The first match from the left wins. With `replace`, the match must be inside that part.
+- A match does not cross a `\part` or a `\from` of the old line, but it looks inside them.
+- The render gives an error for a rule that matches nothing, and for a variable of the
+  right side that the left side does not have.
 
 `docs/line-rewrites.md` gives the design.
 
