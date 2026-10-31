@@ -141,7 +141,10 @@ The compiler gives an error for:
 - a group with a `to` text that is not in the code after its `from` text, and a group with
   a `to` text and no `from` text,
 - `reveal` and `highlight` together, and `highlight` with `dim`,
-- a line that is in two groups of `highlight`.
+- a line that is in two groups of `highlight`,
+- a token group in `reveal`.
+
+The render gives an error for a token group with no token.
 
 `Expresso.Builder.code/2` raises an `ArgumentError` with the same message for an option.
 `Expresso.Builder.deck/2` raises a `Spark.Error.DslError` for an error of the file, such as a
@@ -165,6 +168,7 @@ A group of `reveal` or `highlight` takes one of these forms:
 | Texts | `[from: "next = ", to: "{:reply"]` | From the line that holds the `from` text to the line that holds the last character of the `to` text. |
 | A block | `[from: "if (extra) {", to: :block]` | From the line that holds the `from` text to [the end of its block](#the-end-of-a-block). |
 | A start text only | `[from: "def handle_call("]` | The line that holds the text. |
+| Each token with a text | `[each: "count"]` | No line. Each token with the text is in focus. Only `highlight` takes this form. See [each token with a text](#each-token-with-a-text). |
 
 A number is the number of the line in the file, as [the numbers of the lines](#the-numbers-of-the-lines)
 tell. With `relative true`, a number counts from the first line of the excerpt, so `1` is
@@ -222,6 +226,26 @@ first group, as a `pause()` in front of the code element does. See
 A line can be in one group only. A line in no group dims at each step of a group.
 
 The bar is a shadow at the left of the line. It takes no space, so the text does not move.
+
+### Each token with a text
+
+A group `[each: "count"]` puts each token with the text `count` in focus, such as each use
+of a variable. At the step of the group, each line dims, and each token with the text shows
+in full color with a bar in the color `--accent` under it.
+
+```elixir
+code "elixir" do
+  src "lib/counter.ex"
+  highlight [[each: "count"], 12..14]
+end
+```
+
+- A token is a word, a number or a sign that the lexer of the language finds. The text
+  must be the whole token, so `[each: "count"]` does not select `counter` or `@count`.
+- A token in focus keeps the color of its role, such as the color of a keyword.
+- At the step of a line group, a token dims with its line.
+- A code element without a lexer has no token, so it gives an error for a token group.
+- `reveal` does not take a token group, because a hidden token leaves a hole in its line.
 
 ### The key d
 

@@ -7,10 +7,13 @@ defmodule Expresso.Element.Lines do
   children of the code element, so the transformer gives each group its steps,
   and the verifier checks each group against the code element. A group is not
   an entity of the DSL.
+
+  A token group of the `highlight` option has the text of its tokens in
+  `each`, and no line numbers.
   """
 
   @typedoc "The struct of a group of lines"
   @type t :: %__MODULE__{}
 
-  defstruct [numbers: []] ++ Expresso.Overlay.fields()
+  defstruct [:each, numbers: []] ++ Expresso.Overlay.fields()
 end
