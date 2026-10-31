@@ -1064,6 +1064,17 @@ defmodule Expresso.Extension do
         type: :string,
         doc: "New LaTeX for the place of each occurrence, in place of by. It fades in."
       ],
+      rule: [
+        type: {:tuple, [:string, :string]},
+        doc:
+          "A rule as a left side and a right side in LaTeX, such as {~S\"a\\,(b + c)\", ~S\"a\\,b + a\\,c\"}. The first match of the left side in the old line, or in the part of replace, becomes the right side."
+      ],
+      vars: [
+        type: {:list, :string},
+        default: [],
+        doc:
+          "The variables of a rule, such as [\"a\", \"b\", \"c\"]. A variable binds one symbol, one group or one group in parentheses."
+      ],
       to: [
         type: :string,
         doc:

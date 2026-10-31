@@ -189,10 +189,10 @@ defmodule Expresso.Element.Math.RewriteTest do
     assert message =~ ~s(reads the line "nothing")
 
     assert {:error, message} = Rewrite.expand([line, beta(by: nil)])
-    assert message =~ "takes one of the options by, by_tex and to"
+    assert message =~ "takes one of the options by, by_tex, to and rule"
 
     assert {:error, message} = Rewrite.expand([line, beta(by_tex: "1")])
-    assert message =~ "takes one of the options by, by_tex and to"
+    assert message =~ "takes one of the options by, by_tex, to and rule"
 
     assert {:error, message} = Rewrite.expand([line, beta(replace: nil)])
     assert message =~ "with by or by_tex needs the replace option"

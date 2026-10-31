@@ -26,7 +26,7 @@ defmodule Expresso.Element.Math.Rewrite do
   """
 
   alias Expresso.Element.{MathLine, MathRewrite}
-  alias Expresso.Element.Math.Latex
+  alias Expresso.Element.Math.{Latex, Rule}
 
   # The commands that give a name to their second group. The walk does not go
   # into the first group, which holds the name.
@@ -62,6 +62,30 @@ defmodule Expresso.Element.Math.Rewrite do
 
   defp rewrite(_rewrite, _k, []),
     do: {:error, "a rewrite of a math element needs a line before it"}
+
+  # A rule gives the old line the parts of its match, and the rewrite then
+  # replaces the part of the match with the right side as a template.
+  defp rewrite(%MathRewrite{rule: {left, right}} = rewrite, k, done) do
+    with :ok <- one_content(rewrite),
+         {:ok, index} <- source(rewrite, done),
+         %MathLine{} = old <- Enum.at(done, index),
+         {:ok, atoms} <- parse(old.tex),
+         :ok <- present(%MathRewrite{rewrite | within: rewrite.replace}, atoms),
+         {:ok, atoms, template} <-
+           Rule.match(atoms, left, right, rewrite.vars || [], rewrite.replace, k) do
+      old = %MathLine{old | tex: Latex.write(atoms)}
+
+      rewrite = %MathRewrite{
+        rewrite
+        | rule: nil,
+          replace: "rule-#{k}",
+          to: template,
+          from: name(old, index + 1)
+      }
+
+      rewrite(rewrite, k, List.replace_at(done, index, old))
+    end
+  end
 
   defp rewrite(%MathRewrite{} = rewrite, k, done) do
     with :ok <- one_content(rewrite),
@@ -145,18 +169,23 @@ defmodule Expresso.Element.Math.Rewrite do
   end
 
   # A rewrite takes one of the options of the new content, and `replace`
-  # unless it takes `to`.
+  # unless it takes `to` or `rule`.
   defp one_content(%MathRewrite{} = rewrite) do
     given =
-      for {key, value} <- [by: rewrite.by, by_tex: rewrite.by_tex, to: rewrite.to],
+      for {key, value} <- [
+            by: rewrite.by,
+            by_tex: rewrite.by_tex,
+            to: rewrite.to,
+            rule: rewrite.rule
+          ],
           value != nil,
           do: key
 
     cond do
       length(given) != 1 ->
-        {:error, "a rewrite of a math element takes one of the options by, by_tex and to"}
+        {:error, "a rewrite of a math element takes one of the options by, by_tex, to and rule"}
 
-      rewrite.replace == nil and given != [:to] ->
+      rewrite.replace == nil and given in [[:by], [:by_tex]] ->
         {:error, "a rewrite of a math element with by or by_tex needs the replace option"}
 
       true ->

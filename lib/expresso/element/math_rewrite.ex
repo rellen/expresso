@@ -11,7 +11,10 @@ defmodule Expresso.Element.MathRewrite do
   of `by`. The option is not `with`, because `with` is a special form of
   Elixir. `to` gives a template, and each `\\use{name}` in it is a copy of the
   part `name`. Without `replace`, the template is the whole new line. `drop`
-  names the parts of the old line that the new line does not hold.
+  names the parts of the old line that the new line does not hold. `rule`
+  gives a left side and a right side with the variables of `vars`, and
+  `Expresso.Element.Math.Rule` finds the left side in the old line, or in
+  the part of `replace`.
 
   `Expresso.Element.Math.check/1` turns each rewrite into an
   `Expresso.Element.MathLine` with `Expresso.Element.Math.Rewrite.expand/1`.
@@ -29,9 +32,11 @@ defmodule Expresso.Element.MathRewrite do
     :by,
     :by_tex,
     :to,
+    :rule,
     :why,
     :name,
     drop: [],
+    vars: [],
     __spark_metadata__: nil
   ]
 end
