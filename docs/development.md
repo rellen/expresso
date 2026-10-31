@@ -47,3 +47,4 @@ GitHub.
   result.
 - `docs/each-occurrence.md` — the design for each occurrence of a symbol, and its result.
 - `docs/line-rewrites.md` — the design for the next line by a rewrite, and its result.
+- `docs/beta-reductions.md` — the design for each step of a β-reduction, and its progress.

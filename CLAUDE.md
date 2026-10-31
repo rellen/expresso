@@ -10,7 +10,7 @@ Read these documents before you change the code:
 
 - `docs/architecture.md` — the two input paths, the render pipeline, the templates, the
   elements, the DSL, the presenter and the build. Its section "Open work" gives the next
-  items in the order of their value. It has no item at this time.
+  items in the order of their value. Its item at this time is each step of a β-reduction.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide. The
   code contains each part of the design. The document ends with six decisions, and
   each is settled.
@@ -61,6 +61,11 @@ Read these documents before you change the code:
   derivation from a line before it by a substitution or by a rule. The code contains this
   design. The document records ten decisions, and each is settled. Its last section, "The
   result", tells what changed during the work.
+
+- `docs/beta-reductions.md` — the design for a `reduce` entity, which makes the next line of
+  a derivation by one β-reduction and shows it in four steps. The document records ten
+  decisions, and each is settled. Its section "The progress" tells which pull requests are
+  done.
 
 ## Build and test
 
