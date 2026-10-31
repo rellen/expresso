@@ -2,9 +2,9 @@
 
 This document gives the design for a link from a sub-term of a line of a derivation to the
 sub-term of an earlier line that it comes from. At the step of the new line, each linked
-sub-term moves from its place in the earlier line to its place in the new line. The
-document also records the progress of the work. It records ten decisions, and each is
-settled. Issue #474 holds the same plan.
+sub-term moves from its place in the earlier line to its place in the new line. The code
+contains this design. The document records ten decisions, and each is settled. Its last
+section, "The result", tells what changed during the work. Issue #474 holds the same plan.
 
 ## The problem
 
@@ -109,3 +109,26 @@ Each pull request is based on the one before it.
 | 3. The copies and the moves of the links | Done. `Expresso.Element.Math.Links.place/1` runs in `Expresso.Element.Math.place/1`. It gives the linked sub-term number `n` the class `link-n`, and each source element in the line `j` the class `from-j-name`, so a copy has its source in one line only. Each link gets a copy part with `covers`, and the copy of #473 does the rest. `check/1` keeps the names of the lines in the new field `line_names`. A line with a link and no steps stops the render, because its copy has no step. `assets/src/move.ts` gives each linked sub-term under a placed copy `data-covered`, and the style sheet hides it. |
 | 4. The option `steps` and the names inside a link | Done. With `steps: 2`, `check/1` puts an `on` entity with `:next` last in the part of the line, so the line takes one more step of the counter of `reveal`. `Expresso.Element.Math.Links.place/1` reads the step of that entity and removes it: the line shows from that step, and its copies keep the first step. A `\part` inside a `\from` puts its overlay attributes on an element around the symbols of the copy. |
 | 5. The example of the Y combinator | Done. `examples/animations/y_combinator.exs` is a `math` element with five lines and links, in 9 steps in the place of 13. Its SVG file and the script that wrote it go away. A math element has no caption, so the reason of each line tells the step. The body of each λ is in parts around its holes, so a copy of the argument lands in a place with no bound variable under it. A part that was the whole term of a line lost its name, because Temml puts the attributes of two nested `\data` on one element. Each cell of a line now has `data-line` in the place of `data-part`. |
+| 6. The guide and the example of one β-reduction | Done. `docs/how-to/explain-a-formula-step-by-step.md` shows `examples/animations/math_link.exs`, with `steps: 2`, and `mix expresso.gifs` records `math-link.gif`. |
+
+## The result
+
+The six pull requests of the stack contain the design. These parts are different from the
+plan, or the plan did not tell them:
+
+- **The classes of a link.** A link and its source get the classes `link-n` and
+  `from-j-name`, so a copy takes the elements of one line only, and a name can be in two
+  lines.
+- **A line with no steps.** A copy needs a step, so the render stops for a line with a link
+  and with no `at` and no `reveal`.
+- **The second step.** `steps: 2` puts an `on` entity with `:next` last in the part of the
+  line, so the transformer gives the line one more step. The render reads that step and
+  removes the entity. The option needs `reveal true`.
+- **The cells of a line.** Temml puts the attributes of two nested `\data` on one element
+  when the inner one is the whole body of the outer one. A part that was the whole term of
+  a line thus lost its name. Each cell of a line now has `data-line`.
+- **The colors of a copy.** A copy takes no color from its source. A `\part` inside a
+  `\from` gives the copy its own name, and the Y combinator example colors its last line
+  that way.
+- **The Y combinator example.** It takes 9 steps in the place of 13, and the reason of each
+  line tells the step, because a math element has no caption.

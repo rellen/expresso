@@ -299,6 +299,65 @@ The two holes are parts with `at [from: 4]`, so they show when the copies fade. 
 with the name of a copy, such as `"arg@h1"`, gives that copy its options.
 `examples/animations/math_copy.exs` holds the deck.
 
+
+## Build the next line from the line before
+
+`\from{name}{…}` in a line marks a sub-term that comes from the part `name` of an earlier
+line. At the step of the line, a copy of that part moves to its place, so the audience sees
+where each sub-term of the new line comes from.
+
+```elixir
+defmodule Examples.MathLink do
+  use Expresso
+
+  css ".small { font-size: 1.25rem; }"
+
+  slide "build the next line" do
+    heading "Build the next line"
+
+    math do
+      class "small"
+      reveal true
+
+      line tex:
+             ~S"(\lambda \part{bind}{f}.\,\part{f1}{f}\,\part{open}{(}\part{f2}{f}\,\part{x}{x)})\,\part{arg}{g}"
+
+      line ~S"\to_\beta",
+        tex: ~S"\from{arg}{\part{g1}{g}}\,\from{open}{(}\from{arg}{\part{g2}{g}}\,\from{x}{x)}",
+        why: "f := g",
+        steps: 2
+
+      for bound <- ["bind", "f1", "f2"] do
+        part bound do
+          on [from: 1], set: [color: "var(--accent)"]
+        end
+      end
+
+      for argument <- ["arg", "g1", "g2"] do
+        part argument do
+          on [from: 1], set: [color: "var(--success)"]
+        end
+      end
+    end
+  end
+end
+
+Examples.MathLink
+```
+
+![The redex has its colors, then a copy of the argument moves into each hole of the next line, then the relation and the reason show](https://raw.githubusercontent.com/rellen/expresso/media/math-link.gif)
+
+1. At step 1, the redex shows, with the binder, the bound variables and the argument in
+   their colors.
+2. At step 2, a copy of `g` moves into each hole of the second line, and a copy of `(` and
+   of `x)` moves down from the body.
+3. At step 3, the relation and the reason of the second line show, because the line has
+   `steps: 2`.
+
+The body is in parts around its holes, so no bound variable shows under a copy of the
+argument. A `\part` inside a `\from`, such as `\part{g1}{g}`, gives the copy a color. To
+show a whole proof in this form, see [Show the steps of a proof](show-the-steps-of-a-proof.md).
+
 ## Make a wide formula fit
 
 A formula is larger than the text of the slide. When the layout check reports that a formula
