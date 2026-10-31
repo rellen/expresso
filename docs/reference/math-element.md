@@ -392,17 +392,19 @@ the counter of `reveal`:
 | Option | Effect |
 | --- | --- |
 | The first argument | The relation of the new line, such as `~S"\to_\beta"`. The default is `=`. |
-| `replace` | The name of a part of the old line, or a symbol, such as `"f"`, `"2"` or `~S"\alpha"`. Each occurrence becomes the new content. |
+| `replace` | The name of a part of the old line, or a symbol, such as `"f"`, `"2"` or `~S"\alpha"`. Each occurrence becomes the new content. A rewrite with `to` can omit it. |
 | `within` | With a symbol, the name of the part of the old line that holds the occurrences. The default is the whole line. |
 | `by` | The name of a part of the old line or of an earlier line. A copy of it moves into the place of each occurrence. |
 | `by_tex` | New LaTeX for the place of each occurrence, in place of `by`. It fades in. |
+| `to` | A template in LaTeX for the part of `replace`, or for the whole line without `replace`. Each `\use{name}` in it is a copy of the part `name`, and the rest fades in. |
 | `drop` | The names of the parts of the old line that the new line does not hold. |
 | `from` | The name of the line that the rewrite reads. The default is the line before it. |
 | `why` | The reason of the new line, as plain text. The default is the replaced symbol or part, `:=` and the new content, in LaTeX. |
 | `name` | The name of the part of the new line, as for a `line`. |
 
 - A rewrite gives each run of kept symbols of the old line a part, such as `keep-2-1`, and
-  the new line a link to it. A symbol of `\text` or of `\operatorname` is not an occurrence.
+  the new line a link to it. A relation, such as `=`, and a binary operator, such as `+`,
+  get a part of their own inside `\mathrel` or `\mathbin`, so they keep their spaces. A symbol of `\text` or of `\operatorname` is not an occurrence.
 - A group or a command that holds an occurrence, such as `\frac`, fades in with the new
   line.
 - A rewrite adds no parentheses. Put them in the source of `by`, such as
@@ -413,8 +415,30 @@ the counter of `reveal`:
 - Each occurrence in the old line gets the class `hit-k`, where `k` is the number of the new
   line, so a `part` entity with that name can change it.
 - The compiler gives an error for a rewrite with no line before it, for a name that the
-  lines do not have, for a rewrite with no occurrence, for a rewrite with both `by` and
-  `by_tex` or with neither, and for a rewrite without `reveal true`.
+  lines do not have, for a rewrite with no occurrence, for a rewrite with more or less than
+  one of `by`, `by_tex` and `to`, for `by` or `by_tex` without `replace`, and for a rewrite
+  without `reveal true`.
+
+#### A template
+
+`to` gives the new content as a template. Each `\use{name}` in it becomes a copy of the part
+`name` of the nearest line before the rewrite, so one part can go to two places.
+
+```elixir
+slide "distribute" do
+  math do
+    reveal true
+
+    line tex: ~S"\part{prod}{\part{a}{k}\,(\part{b}{x} + \part{c}{h})}"
+
+    rewrite replace: "prod", to: ~S"\use{a}\,\use{b} + \use{a}\,\use{c}", why: "distribute"
+  end
+end
+```
+
+The rewrite makes the line `k\,x + k\,h`: a copy of `k` moves to two places, and `+` fades
+in. Without `replace`, the template is the whole new line, and the whole old line gets the
+color of step 1.
 
 `docs/line-rewrites.md` gives the design.
 
