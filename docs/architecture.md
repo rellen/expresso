@@ -3089,7 +3089,7 @@ The commands are:
 
 1. **Each step of a β-reduction.** A `reduce` entity makes the next line of a derivation by
    one β-reduction, with a parser of λ-terms, the rules of scope and four steps.
-   `docs/beta-reductions.md` gives the design and the stack of seven pull requests. Issue
+   `docs/beta-reductions.md` gives the design and the stack of six pull requests. Issue
    #475 holds the same plan.
 
 Issue #397 to issue #407 propose other features. Each one needs a decision before the work

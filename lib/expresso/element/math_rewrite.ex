@@ -37,6 +37,11 @@ defmodule Expresso.Element.MathRewrite do
     :name,
     drop: [],
     vars: [],
+    # From `Expresso.Element.Math.Reduce`: put each copy of `by` in
+    # parentheses.
+    paren: false,
+    # From `Expresso.Element.Math.Reduce`: the default reason in LaTeX.
+    why_tex: nil,
     __spark_metadata__: nil
   ]
 end

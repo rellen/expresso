@@ -35,14 +35,16 @@ defmodule Expresso.Element.Math.Lambda do
         }
 
   @typedoc """
-  A token: its text, its atoms and the path of its first atom. Each step of
+  A token: its text, its atoms, the names of the naming commands around it,
+  and the path of its first atom. Each step of
   the path is the index of an atom in its list, `{:group, i}` into the brace
   group `i`, or `{:body, i}` into the body of the naming command `i`.
   """
   @type token :: %{
           text: String.t(),
           atoms: [Latex.atom_t()],
-          path: [non_neg_integer() | {:group | :body, non_neg_integer()}]
+          path: [non_neg_integer() | {:group | :body, non_neg_integer()}],
+          names: [String.t()]
         }
 
   @doc """
@@ -77,7 +79,7 @@ defmodule Expresso.Element.Math.Lambda do
   A variable with its scripts is one token. A space is not a token.
   """
   @spec tokens([Latex.atom_t()]) :: [token()]
-  def tokens(atoms), do: atoms |> collect([]) |> Enum.reverse()
+  def tokens(atoms), do: atoms |> collect([], []) |> Enum.reverse()
 
   @doc """
   Write a term in a short form with each application in parentheses, for a
@@ -88,6 +90,27 @@ defmodule Expresso.Element.Math.Lambda do
   def show(%{kind: :abs, var: var, body: body}), do: "(λ#{var}. #{show(body)})"
   def show(%{kind: :app, fun: fun, arg: arg}), do: "(#{show(fun)} #{show(arg)})"
   def show(%{kind: :paren, term: term}), do: show(term)
+
+  @doc """
+  Return the atoms without the naming commands, each with its body, so the
+  LaTeX holds no names
+  """
+  @spec plain([Latex.atom_t()]) :: [Latex.atom_t()]
+  def plain(atoms) do
+    Enum.flat_map(atoms, fn
+      {:command, name, [_label, {:group, body}]} when name in @names ->
+        plain(body)
+
+      {:command, name, groups} ->
+        [{:command, name, Enum.map(groups, fn {:group, g} -> {:group, plain(g)} end)}]
+
+      {:group, inner} ->
+        [{:group, plain(inner)}]
+
+      atom ->
+        [atom]
+    end)
+  end
 
   @doc """
   Return the free variables of a term
@@ -219,11 +242,11 @@ defmodule Expresso.Element.Math.Lambda do
 
   # The tokens of a list of atoms. A naming command and a brace group are
   # transparent, and a symbol with its scripts is one token.
-  defp collect(atoms, path) do
+  defp collect(atoms, path, names) do
     atoms
     |> Enum.with_index()
     |> units()
-    |> Enum.reduce([], fn unit, acc -> token(unit, path) ++ acc end)
+    |> Enum.reduce([], fn unit, acc -> token(unit, path, names) ++ acc end)
   end
 
   defp units(indexed) do
@@ -243,17 +266,19 @@ defmodule Expresso.Element.Math.Lambda do
     |> Enum.reverse()
   end
 
-  defp token([{{:space, _text}, _i}], _path), do: []
+  defp token([{{:space, _text}, _i}], _path, _names), do: []
 
-  defp token([{{:group, inner}, i}], path), do: collect(inner, path ++ [{:group, i}])
+  defp token([{{:group, inner}, i}], path, names),
+    do: collect(inner, path ++ [{:group, i}], names)
 
-  defp token([{{:command, name, [_label, {:group, body}]}, i}], path) when name in @names,
-    do: collect(body, path ++ [{:body, i}])
+  defp token([{{:command, name, [label, {:group, body}]}, i}], path, names)
+       when name in @names,
+       do: collect(body, path ++ [{:body, i}], names ++ [Latex.write(elem(label, 1))])
 
-  defp token([{atom, i} | _rest] = unit, path) do
+  defp token([{atom, i} | _rest] = unit, path, names) do
     atoms = Enum.map(unit, &elem(&1, 0))
     text = if length(atoms) == 1, do: text(atom), else: Latex.write(atoms)
-    [%{text: text, atoms: atoms, path: path ++ [i]}]
+    [%{text: text, atoms: atoms, path: path ++ [i], names: names}]
   end
 
   defp text({:symbol, text}), do: text

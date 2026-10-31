@@ -25,7 +25,7 @@ defmodule Expresso.Element.Math.Rewrite do
   the design.
   """
 
-  alias Expresso.Element.{MathLine, MathRewrite}
+  alias Expresso.Element.{MathLine, MathReduce, MathRewrite}
   alias Expresso.Element.Math.{Latex, Rule}
 
   # The commands that give a name to their second group. The walk does not go
@@ -54,6 +54,12 @@ defmodule Expresso.Element.Math.Rewrite do
 
       {%MathRewrite{} = rewrite, k}, {:ok, done} ->
         case rewrite(rewrite, k, done) do
+          {:ok, done} -> {:cont, {:ok, done}}
+          {:error, message} -> {:halt, {:error, message}}
+        end
+
+      {%MathReduce{} = reduce, k}, {:ok, done} ->
+        case reduce(reduce, k, done) do
           {:ok, done} -> {:cont, {:ok, done}}
           {:error, message} -> {:halt, {:error, message}}
         end
@@ -122,10 +128,9 @@ defmodule Expresso.Element.Math.Rewrite do
       else
         line = %MathLine{
           relation: rewrite.relation || "=",
-          tex: new_atoms |> trim() |> Latex.write(),
+          tex: new_atoms |> trim_all() |> Latex.write(),
           why: rewrite.why,
-          why_tex:
-            if(rewrite.why || kind == :line, do: nil, else: reason(rewrite, atoms, content)),
+          why_tex: why_tex(rewrite, kind, atoms, content),
           name: rewrite.name,
           steps: 3,
           rewrite: %{hit: "hit-#{k}", by: rewrite.by}
@@ -138,6 +143,16 @@ defmodule Expresso.Element.Math.Rewrite do
          }) ++ [line]}
       end
     end
+  end
+
+  # A β-reduction gives its old line the parts of its redex, and a rewrite
+  # makes the new line.
+  defp reduce(_reduce, _k, []),
+    do: {:error, "a reduce of a math element needs a line before it"}
+
+  defp reduce(reduce, k, done) do
+    with {:ok, done, rewrite} <- Expresso.Element.Math.Reduce.prepare(reduce, k, done),
+         do: rewrite(rewrite, k, done)
   end
 
   # The index of the old line: the line before the rewrite, or the line with
@@ -201,8 +216,10 @@ defmodule Expresso.Element.Math.Rewrite do
 
   defp content(%MathRewrite{by_tex: tex}, _done) when is_binary(tex), do: parse(tex)
 
-  defp content(%MathRewrite{by: by}, done) do
-    with {:ok, link} <- link(by, done), do: {:ok, [link]}
+  defp content(%MathRewrite{by: by, paren: paren}, done) do
+    with {:ok, link} <- link(by, done) do
+      if paren, do: {:ok, [{:symbol, "("}, link, {:symbol, ")"}]}, else: {:ok, [link]}
+    end
   end
 
   # A link to the part `name` of the nearest line that has it.
@@ -242,6 +259,11 @@ defmodule Expresso.Element.Math.Rewrite do
   end
 
   defp use_atom(atom, _done), do: {:ok, atom}
+
+  defp why_tex(%MathRewrite{why: why}, _kind, _atoms, _content) when why != nil, do: nil
+  defp why_tex(%MathRewrite{why_tex: tex}, _kind, _atoms, _content) when tex != nil, do: tex
+  defp why_tex(_rewrite, :line, _atoms, _content), do: nil
+  defp why_tex(rewrite, _kind, atoms, content), do: reason(rewrite, atoms, content)
 
   # The default reason: the symbol or the part of `replace`, `:=`, and the new
   # content, in LaTeX.
@@ -407,7 +429,9 @@ defmodule Expresso.Element.Math.Rewrite do
     {[hit], state.content, %{state | count: state.count + 1}}
   end
 
-  defp change(:drop, [atom], _inside, state), do: {[atom], [], state}
+  # A dropped part leaves a mark in the new line, and `trim_all/1` removes the
+  # mark with the spaces after it, so no space stays in the place of the part.
+  defp change(:drop, [atom], _inside, state), do: {[atom], [:dropped], state}
 
   defp change(:deep, [atom], inside, state), do: deep(atom, inside, state)
 
@@ -557,7 +581,24 @@ defmodule Expresso.Element.Math.Rewrite do
   end
 
   # The parts of `drop` leave their spaces, so the spaces at the ends of the
-  # new line go away.
+  # new line and of each group in it go away.
+  defp trim_all(atoms) do
+    atoms
+    |> undrop()
+    |> trim()
+    |> Enum.map(fn
+      {:group, inner} -> {:group, trim_all(inner)}
+      {:command, name, groups} -> {:command, name, Enum.map(groups, &trim_group/1)}
+      atom -> atom
+    end)
+  end
+
+  defp trim_group({:group, inner}), do: {:group, trim_all(inner)}
+
+  defp undrop([:dropped | rest]), do: rest |> Enum.drop_while(&space?/1) |> undrop()
+  defp undrop([atom | rest]), do: [atom | undrop(rest)]
+  defp undrop([]), do: []
+
   defp trim(atoms) do
     atoms
     |> Enum.drop_while(&space?/1)
