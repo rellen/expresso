@@ -53,6 +53,15 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # Each minor version of Zigler needs a new Zig, and Burrito needs exactly
+      # the Zig of `.tool-versions`. Remove this rule when a version of Burrito
+      # takes the Zig of the new Zigler, and change the toolchain in its four
+      # places together.
+      - dependency-name: zigler
+        update-types:
+          - version-update:semver-minor
+          - version-update:semver-major
     commit-message:
       prefix: build
       include: scope
