@@ -2054,6 +2054,17 @@ body[data-view="handout"] .chart-frames {
     calc(var(--highlight, 0) * -0.25rem) 0 0 var(--code-background),
     calc(var(--highlight, 0) * -0.4rem) 0 0 var(--accent);
 }
+/* A token group of the option `highlight` draws a bar in the accent color
+   under each token in focus. Its rule of the step sets `--dimmed: 0`, so the
+   token shows in full color in a dimmed line. A token with a role, such as a
+   keyword, takes the color of its role. A token with no role, such as a name,
+   takes the code text through `--color`, and not the dimmed color of its
+   line. The bar is a shadow inside the box of the token, so it takes no
+   space. */
+.code .code-token {
+  --color: var(--code-text);
+  box-shadow: inset 0 calc(var(--highlight, 0) * -0.12em) 0 var(--accent);
+}
 /*
  * The key `d` turns off the dimming of code and of the series of a chart until
  * the next change of the step, so the presenter can show a dimmed line or

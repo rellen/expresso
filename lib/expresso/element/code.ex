@@ -55,6 +55,14 @@ defmodule Expresso.Element.Code do
   `spotlight/1` then gives each group the state `dim` at the steps of the
   other groups, before the render.
 
+  A group of `highlight` can also be `[each: "count"]`, each token of the
+  highlighter with the text `count`. Its `Expresso.Element.Lines` child has
+  `each` and no line numbers. At the step of the group, each line dims, and
+  the tokens with the text show in full color with a bar under them. A token
+  group does not dim at the steps of the other groups, because its tokens
+  dim with their lines. `reveal` takes no such group, because a hidden token
+  leaves a hole in its line.
+
   The `whole_first` option gives the code element one step before its first
   group, as a `pause` in front of it does. At that step, no group is in focus,
   so the whole code shows in full color. `Expresso.Overlay.Expand` reads the
@@ -251,7 +259,8 @@ defmodule Expresso.Element.Code do
   defp groups(%__MODULE__{reveal: nil, highlight: nil} = code), do: {:ok, code}
 
   defp groups(%__MODULE__{reveal: reveal, highlight: nil} = code) do
-    with {:ok, reveal} <- resolve(code, :reveal, reveal),
+    with :ok <- no_tokens(reveal),
+         {:ok, reveal} <- resolve(code, :reveal, reveal),
          :ok <- shows(code, :reveal, reveal) do
       groups = Enum.map(reveal, &%Lines{numbers: numbers(&1), at: Overlay.from_next()})
       {:ok, %__MODULE__{code | elements: groups}}
@@ -265,8 +274,12 @@ defmodule Expresso.Element.Code do
       {:ok, next} = Overlay.new(:next)
 
       groups =
-        Enum.map(highlight, fn item ->
-          %Lines{numbers: numbers(item), on: [%On{at: next, state: :highlight}]}
+        Enum.map(highlight, fn
+          {:each, text} ->
+            %Lines{each: text, on: [%On{at: next, state: :highlight, set: [dimmed: 0]}]}
+
+          item ->
+            %Lines{numbers: numbers(item), on: [%On{at: next, state: :highlight}]}
         end)
 
       grouped = Enum.flat_map(highlight, &numbers/1)
@@ -274,6 +287,18 @@ defmodule Expresso.Element.Code do
       rest = if rest == [], do: [], else: [%Lines{numbers: rest}]
 
       {:ok, %__MODULE__{code | elements: groups ++ rest}}
+    end
+  end
+
+  defp no_tokens(reveal) do
+    case Enum.find(reveal, &match?([each: _text], &1)) do
+      nil ->
+        :ok
+
+      group ->
+        {:error,
+         "the reveal option of a code element takes no group #{inspect(group)}, because a " <>
+           "hidden token leaves a hole in its line. Use the highlight option"}
     end
   end
 
@@ -313,6 +338,7 @@ defmodule Expresso.Element.Code do
   defp resolve_item(%__MODULE__{relative: true, first: first}, _option, low..high//1),
     do: {:ok, (low + first - 1)..(high + first - 1)//1}
 
+  defp resolve_item(_code, _option, each: text), do: {:ok, {:each, text}}
   defp resolve_item(_code, _option, line) when is_integer(line), do: {:ok, line}
   defp resolve_item(_code, _option, _low.._high//1 = range), do: {:ok, range}
 
@@ -490,6 +516,7 @@ defmodule Expresso.Element.Code do
       end)
   end
 
+  defp numbers({:each, _text}), do: []
   defp numbers(line) when is_integer(line), do: [line]
   defp numbers(_first.._last//1 = range), do: Enum.to_list(range)
 
@@ -529,10 +556,14 @@ defmodule Expresso.Element.Code do
 
     groups
     |> Enum.with_index()
-    |> Enum.map(fn {%Lines{} = group, index} ->
-      others = focus |> List.delete_at(index) |> List.flatten() |> Enum.sort()
-      dims = if others == [], do: [], else: [%On{state: :dim, steps: others}]
-      %Lines{group | on: group.on ++ dims}
+    |> Enum.map(fn
+      {%Lines{each: text} = group, _index} when text != nil ->
+        group
+
+      {%Lines{} = group, index} ->
+        others = focus |> List.delete_at(index) |> List.flatten() |> Enum.sort()
+        dims = if others == [], do: [], else: [%On{state: :dim, steps: others}]
+        %Lines{group | on: group.on ++ dims}
     end)
   end
 
@@ -545,7 +576,8 @@ defmodule Expresso.Element.Code do
   This function is the custom type of the options `reveal` and `highlight`.
   Each item is a positive integer, a range with a step of 1, or a keyword list
   with `from` and an optional `to`, each a text that is not empty, or
-  `to: :block`.
+  `to: :block`. An item can also be `[each: text]`, a token group, and
+  `build/1` refuses it in `reveal`.
 
       iex> Expresso.Element.Code.reveal([1..2, [from: "let hit", to: "return hit;"], 7])
       {:ok, [1..2, [from: "let hit", to: "return hit;"], 7]}
@@ -562,11 +594,14 @@ defmodule Expresso.Element.Code do
   def reveal(_term) do
     {:error,
      "a reveal option takes line numbers, ranges and texts, such as " <>
-       "[1..3, 4..8, [from: \"def start(\", to: \"end\"]]"}
+       "[1..3, 4..8, [from: \"def start(\", to: \"end\"]]. A highlight option also " <>
+       "takes [each: \"text\"]"}
   end
 
   defp line_item?(line) when is_integer(line), do: line >= 1
   defp line_item?(first..last//1), do: first >= 1 and first <= last
+
+  defp line_item?(each: text), do: is_binary(text) and text != ""
 
   defp line_item?([_ | _] = texts),
     do: Keyword.keyword?(texts) and Keyword.has_key?(texts, :from) and texts?(texts)
@@ -591,9 +626,12 @@ defmodule Expresso.Element.Code do
     source = String.replace_suffix(text, "\n", "")
     indents = source |> String.split("\n") |> Enum.map(&indent/1)
 
+    tokens = for %Lines{each: text} = group <- groups, text != nil, do: group
+
     lines =
       source
       |> Expresso.Highlight.lines(lang, trailing_comments: code.trailing_comments)
+      |> mark_tokens(tokens)
       |> Enum.zip(indents)
       |> Enum.with_index(first)
       |> Enum.map(fn {{html, indent}, number} ->
@@ -610,6 +648,67 @@ defmodule Expresso.Element.Code do
       overlay: Expresso.Overlay.Render.attributes(code)
     }
   end
+
+  # Each token group puts its overlay attributes and the class `code-token`
+  # on each token of the highlighter with its text. A token is an element of
+  # the HTML of a line with no child element. A group with no token stops the
+  # render.
+  defp mark_tokens(lines, []), do: lines
+
+  defp mark_tokens(lines, tokens) do
+    Enum.reduce(tokens, lines, fn %Lines{each: text} = group, lines ->
+      attributes = [{"class", "code-token"} | Expresso.Overlay.Render.attributes(group)]
+
+      escaped = text |> Phoenix.HTML.html_escape() |> Phoenix.HTML.safe_to_string()
+      {lines, count} = Enum.map_reduce(lines, 0, &tokens_of(&1, &2, text, escaped, attributes))
+
+      if count == 0 do
+        raise ArgumentError,
+              "the highlight group [each: #{inspect(text)}] of a code element selects no " <>
+                "token. A token is a word, a number or a sign that the lexer of the language " <>
+                "finds, so a code element without a lexer has no token"
+      end
+
+      lines
+    end)
+  end
+
+  # Only a line that holds the text changes, so each other line keeps the HTML
+  # of the highlighter.
+  defp tokens_of(html, count, text, escaped, attributes) do
+    if String.contains?(html, escaped) do
+      {nodes, n} = html |> Floki.parse_fragment!() |> token(text, attributes)
+      {Floki.raw_html(nodes), count + n}
+    else
+      {html, count}
+    end
+  end
+
+  defp token(nodes, text, attributes) when is_list(nodes),
+    do: Enum.map_reduce(nodes, 0, fn node, n -> token(node, text, attributes) |> add(n) end)
+
+  # The highlighter keeps the white space around a word in its token, so the
+  # word goes into a `span` of its own inside the token, and the bar does not
+  # go under the white space. The `span` takes the class of the token, so the
+  # rule of the color of the token reads its own `--dimmed`.
+  defp token({tag, attrs, children}, text, [{"class", class} | attributes]) do
+    content = Floki.text(children)
+
+    if Enum.all?(children, &is_binary/1) and String.trim(content) == text do
+      [lead, trail] = String.split(content, text, parts: 2)
+      own = attrs |> List.keyfind("class", 0, {"class", ""}) |> elem(1)
+      span = {"span", [{"class", String.trim("#{own} #{class}")} | attributes], [text]}
+      inner = Enum.reject([lead, span, trail], &(&1 == ""))
+      {{tag, attrs, inner}, 1}
+    else
+      {children, n} = token(children, text, [{"class", class} | attributes])
+      {{tag, attrs, children}, n}
+    end
+  end
+
+  defp token(node, _text, _attributes), do: {node, 0}
+
+  defp add({node, n}, count), do: {node, n + count}
 
   # The width of the white space at the start of a line, in characters. A tab
   # is 8 characters wide, as the `tab-size` of the browser.

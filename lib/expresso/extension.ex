@@ -912,7 +912,7 @@ defmodule Expresso.Extension do
           highlight: [
             type: {:custom, Expresso.Element.Code, :reveal, []},
             doc:
-              "Groups of lines in the form of reveal, one group in focus at each step. Each line shows at each step, and the lines that are not in focus dim. See docs/reference/code-element.md."
+              "Groups of lines in the form of reveal, one group in focus at each step. Each line shows at each step, and the lines that are not in focus dim. A group can also be [each: \"count\"], each token with the text count. See docs/reference/code-element.md."
           ],
           trailing_comments: [
             type: :boolean,
