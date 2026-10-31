@@ -677,38 +677,83 @@ defmodule Expresso.Element.Code do
   # of the highlighter.
   defp tokens_of(html, count, text, escaped, attributes) do
     if String.contains?(html, escaped) do
-      {nodes, n} = html |> Floki.parse_fragment!() |> token(text, attributes)
+      {nodes, n} = html |> Floki.parse_fragment!() |> tokens(text, attributes)
       {Floki.raw_html(nodes), count + n}
     else
       {html, count}
     end
   end
 
-  defp token(nodes, text, attributes) when is_list(nodes),
-    do: Enum.map_reduce(nodes, 0, fn node, n -> token(node, text, attributes) |> add(n) end)
+  # A token of the group gets the attributes of the group and the class
+  # `code-token`, and it keeps its own class, so the rule of the color of its
+  # role reads its own `--dimmed`. The highlighter keeps the white space around
+  # a word in its token, and the bar must go under the word only. Therefore
+  # the white space before the word goes to the end of the token before it,
+  # and the white space after the word goes to the start of the token after
+  # it. `Expresso.Deck.render/1` drops a text node of white space only, so the
+  # white space stays in the token when its neighbor has no other character,
+  # such as at the start and at the end of a line.
+  defp tokens(nodes, text, attributes) do
+    {acc, pending, n} =
+      Enum.reduce(nodes, {[], "", 0}, fn node, {acc, pending, n} ->
+        case split(node, text) do
+          {:token, tag, attrs, lead, trail} ->
+            {acc, word} = give_back(acc, pending <> lead, text)
+            {[{:token, {tag, merge_class(attributes, attrs), [word]}} | acc], trail, n + 1}
 
-  # The highlighter keeps the white space around a word in its token, so the
-  # word goes into a `span` of its own inside the token, and the bar does not
-  # go under the white space. The `span` takes the class of the token, so the
-  # rule of the color of the token reads its own `--dimmed`.
-  defp token({tag, attrs, children}, text, [{"class", class} | attributes]) do
-    content = Floki.text(children)
+          :other ->
+            {acc, node} = give_forward(acc, pending, node)
+            {[{:other, node} | acc], "", n}
+        end
+      end)
 
-    if Enum.all?(children, &is_binary/1) and String.trim(content) == text do
+    acc = if pending == "", do: acc, else: append_last(acc, pending)
+    {acc |> Enum.reverse() |> Enum.map(&elem(&1, 1)), n}
+  end
+
+  defp split({tag, attrs, [content]}, text) when is_binary(content) do
+    if String.trim(content) == text do
       [lead, trail] = String.split(content, text, parts: 2)
-      own = attrs |> List.keyfind("class", 0, {"class", ""}) |> elem(1)
-      span = {"span", [{"class", String.trim("#{own} #{class}")} | attributes], [text]}
-      inner = Enum.reject([lead, span, trail], &(&1 == ""))
-      {{tag, attrs, inner}, 1}
+      {:token, tag, attrs, lead, trail}
     else
-      {children, n} = token(children, text, [{"class", class} | attributes])
-      {{tag, attrs, children}, n}
+      :other
     end
   end
 
-  defp token(node, _text, _attributes), do: {node, 0}
+  defp split(_node, _text), do: :other
 
-  defp add({node, n}, count), do: {node, n + count}
+  # The white space before a word goes to the token before it, when that token
+  # is not a token of the group and has a visible character.
+  defp give_back(acc, "", text), do: {acc, text}
+
+  defp give_back([{:other, {tag, attrs, [last]}} | acc], space, text)
+       when is_binary(last) do
+    if String.trim(last) == "",
+      do: {[{:other, {tag, attrs, [last]}} | acc], space <> text},
+      else: {[{:other, {tag, attrs, [last <> space]}} | acc], text}
+  end
+
+  defp give_back(acc, space, text), do: {acc, space <> text}
+
+  # The white space after a word goes to the start of the next token, when
+  # that token has a visible character. Else it goes back to the word.
+  defp give_forward(acc, "", node), do: {acc, node}
+
+  defp give_forward(acc, space, {tag, attrs, [first]} = node) when is_binary(first) do
+    if String.trim(first) == "",
+      do: {append_last(acc, space), node},
+      else: {acc, {tag, attrs, [space <> first]}}
+  end
+
+  defp give_forward(acc, space, node), do: {append_last(acc, space), node}
+
+  defp append_last([{kind, {tag, attrs, [last]}} | acc], space),
+    do: [{kind, {tag, attrs, [last <> space]}} | acc]
+
+  defp merge_class([{"class", class} | attributes], attrs) do
+    own = attrs |> List.keyfind("class", 0, {"class", ""}) |> elem(1)
+    [{"class", String.trim("#{own} #{class}")} | attributes] ++ List.keydelete(attrs, "class", 0)
+  end
 
   # The width of the white space at the start of a line, in characters. A tab
   # is 8 characters wide, as the `tab-size` of the browser.

@@ -31,10 +31,28 @@ defmodule Expresso.CodeTokensTest do
   test "each token with the text gets the class code-token and the overlay attributes" do
     document = document(highlight: [[each: "count"], 4])
 
-    assert texts(document, ".code-token") == ["count", "count", "count", "count"]
+    assert texts(document, ".code-token") |> Enum.map(&String.trim/1) ==
+             ["count", "count", "count", "count"]
+
     assert texts(document, ".code-token[data-el]") |> length() == 4
     # A name that holds the text, such as a longer name, is not a token of it.
-    assert texts(document, ".line .code-token") |> Enum.uniq() == ["count"]
+    assert texts(document, ".line .code-token") |> Enum.map(&String.trim/1) |> Enum.uniq() ==
+             ["count"]
+  end
+
+  test "each line keeps its white space, and a token holds only its word" do
+    plain = document(highlight: [4])
+    marked = document(highlight: [[each: "count"], [each: "step"], 4])
+
+    # Floki drops a text node of white space only, so a split of a token must
+    # keep each space next to a visible character.
+    assert texts(marked, ".line") == texts(plain, ".line")
+    assert texts(marked, ".line") |> Enum.at(1) == "  count = count + step\n"
+
+    # A token at the start of a line keeps its indent, and the other tokens
+    # hold only the word.
+    assert texts(marked, ".code-token") ==
+             ["count", "step", "  count", "count", "step\n", "count", "step"]
   end
 
   test "at the step of a token group, each line dims, and the tokens show in full color" do
