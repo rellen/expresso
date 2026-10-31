@@ -95,3 +95,4 @@ Each pull request is based on the one before it.
 | Pull request | State |
 | --- | --- |
 | 1. This document | Done |
+| 2. The parser of λ-terms | Done. `Expresso.Element.Math.Lambda.parse/1` reads the atoms of `Expresso.Element.Math.Latex` into a variable, an abstraction, an application or a term in parentheses, and each term keeps the indices of its first and last tokens. `tokens/1` returns each token with its atoms and its path in the tree. A variable with its scripts, such as `x_1`, is one token with that name. A property test makes sure that the parser reads each term that a generator writes. |
