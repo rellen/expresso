@@ -146,6 +146,20 @@ function putCopies(math: HTMLElement, copy: HTMLElement, scale: number): void {
       each.style.top = `${Math.round(top * 100) / 100}px`;
     }
     original.setAttribute("data-placed", "");
+    cover(math, original);
+  }
+}
+
+// The copy of a link between the lines of a derivation stays on the linked
+// sub-term, so the sub-term under it does not show. A browser with no script
+// shows the sub-term.
+function cover(math: HTMLElement, copy: HTMLElement): void {
+  const covers = copy.getAttribute("data-covers");
+  if (covers === null) {
+    return;
+  }
+  for (const element of named(Array.from(math.querySelectorAll("*")), covers)) {
+    element.setAttribute("data-covered", "");
   }
 }
 

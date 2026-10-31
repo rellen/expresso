@@ -30,6 +30,8 @@ defmodule Expresso.Element.Math do
               :tex,
               elements: [],
               lines: [],
+              # The names of the lines in order, from `check/1`.
+              line_names: [],
               reveal: false,
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
@@ -98,6 +100,7 @@ defmodule Expresso.Element.Math do
        math
        | tex: "\\begin{aligned}\n" <> rows <> "\n\\end{aligned}",
          lines: [],
+         line_names: names,
          reveal: false,
          elements: line_parts ++ parts
      }}
@@ -282,7 +285,8 @@ defmodule Expresso.Element.Math do
   @spec place(Expresso.Deck.t()) :: Expresso.Deck.t()
   def place(%Expresso.Deck{} = deck), do: Expresso.Element.Tree.map_deck(deck, &place_one/1)
 
-  defp place_one(%__MODULE__{text: text, elements: parts} = math) when is_binary(text) do
+  defp place_one(%__MODULE__{text: text} = math) when is_binary(text) do
+    %__MODULE__{text: text, elements: parts} = math = Expresso.Element.Math.Links.place(math)
     parts = Enum.map(parts, &Expresso.Element.Copy.moves/1)
     math = %__MODULE__{math | elements: parts}
 
@@ -382,7 +386,7 @@ defmodule Expresso.Element.Math do
       [{"class", "math-copy math-part part-copy"} | Expresso.Overlay.Render.attributes(part)] ++
         moves(part) ++
         [{"data-part", id}, {"data-copy-of", source}, {"aria-hidden", "true"}] ++
-        List.wrap(display)
+        covers(part) ++ List.wrap(display)
 
     {"math", merge(attributes, []), [{"mrow", [], Enum.map(named(tree, source), &unname/1)}]}
   end
@@ -395,6 +399,13 @@ defmodule Expresso.Element.Math do
       copy -> root(copy, copies)
     end
   end
+
+  # The copy of a link hides its target, the linked sub-term, when the script
+  # puts the copy on its place.
+  defp covers(%Expresso.Element.Part{covers: true, copy_to: target}),
+    do: [{"data-covers", target}]
+
+  defp covers(_part), do: []
 
   defp named(nodes, id) when is_list(nodes), do: Enum.flat_map(nodes, &named(&1, id))
 
