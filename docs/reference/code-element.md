@@ -243,6 +243,8 @@ end
 - A token is a word, a number or a sign that the lexer of the language finds. The text
   must be the whole token, so `[each: "count"]` does not select `counter` or `@count`.
 - A token in focus keeps the color of its role, such as the color of a keyword.
+- The bar goes under the word. A token at the start of a line keeps its indent, so its bar
+  also goes under the indent.
 - At the step of a line group, a token dims with its line.
 - A code element without a lexer has no token, so it gives an error for a token group.
 - `reveal` does not take a token group, because a hidden token leaves a hole in its line.
