@@ -1096,11 +1096,42 @@ defmodule Expresso.Extension do
     ]
   }
 
+  @math_reduce %Spark.Dsl.Entity{
+    name: :reduce,
+    target: Expresso.Element.MathReduce,
+    args: [:redex],
+    schema: [
+      redex: [
+        type: {:or, [:string, {:in, [:leftmost]}]},
+        required: true,
+        doc:
+          "The name of a part of the old line that holds the redex, or :leftmost for the leftmost outermost redex. See docs/reference/math-element.md."
+      ],
+      relation: [
+        type: :string,
+        doc: "The relation of the new line in LaTeX. The default is ~S\"\\to_\\beta\"."
+      ],
+      from: [
+        type: :string,
+        doc: "The name of the line that the reduction reads. The default is the line before it."
+      ],
+      why: [
+        type: :string,
+        doc:
+          "The reason of the new line, as plain text. The default is the variable, := and the argument."
+      ],
+      name: [
+        type: :string,
+        doc: "The name of the part of the new line. The default is line1, line2 and so on."
+      ]
+    ]
+  }
+
   @math %Spark.Dsl.Entity{
     name: :math,
     target: Expresso.Element.Math,
     args: [{:optional, :text}],
-    entities: [elements: [@part], lines: [@math_line, @math_rewrite], on: [@on]],
+    entities: [elements: [@part], lines: [@math_line, @math_rewrite, @math_reduce], on: [@on]],
     transform: {Expresso.Element.Math, :check, []},
     schema:
       @overlay_schema ++

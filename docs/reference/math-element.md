@@ -479,6 +479,54 @@ The rewrite makes the line `y = k\,x + k\,h`, and you give the old line no names
 
 `docs/line-rewrites.md` gives the design.
 
+### Reduce a λ-term
+
+A `reduce` entity makes the next line by one β-reduction. The render reads the λ-term in the
+LaTeX of the old line, finds the redex, its bound variables and its argument, and writes a
+rewrite for them, so you give no names but the redex.
+
+```elixir
+slide "a reduction" do
+  math do
+    reveal true
+
+    line tex: ~S"(\lambda f.\,f\,(f\,x))\,g"
+
+    reduce :leftmost
+  end
+end
+```
+
+The reduction makes the line `g\,(g\,x)`, with the relation `\to_\beta` and the reason
+`f := g`.
+
+| Option | Effect |
+| --- | --- |
+| The first argument | The redex: `:leftmost` for the leftmost outermost redex, the redex of normal order, or the name of a `\part` of the old line that holds the redex. |
+| `relation` | The relation of the new line. The default is `~S"\to_\beta"`. |
+| `from` | The name of the line that the reduction reads. The default is the line before it. |
+| `why` | The reason, as plain text. The default is the variable, `:=` and the argument, in LaTeX. |
+| `name` | The name of the part of the new line. |
+
+- A λ-term is a variable, `\lambda x.` with a body, an application, or a term in
+  parentheses. A variable is a letter, a number or a command such as `\alpha`, with its
+  scripts. A body goes as far right as it can, and an application groups from the left.
+- The parser reads through a `\part`, a `\from`, a `\class` and a brace group, so a
+  reduction can read a line that a rewrite or a reduction made.
+- The bound variables are the free occurrences of the variable in the body. An inner λ with
+  the same variable keeps its own variable.
+- An argument of more than one variable, such as `a\,b`, gets parentheses in each place,
+  unless it has its own.
+- A redex with no bound variable, such as `(\lambda f.\,y)\,a`, becomes its body.
+- The render gives an error for a line that is not a λ-term, for a part with no redex, and
+  for a capture: a λ of the body around a bound variable that binds a free variable of the
+  argument. Give that λ a different variable.
+- A reduction gives the old line the parts `lam-k`, `close-k`, `body-k`, `arg-k` and
+  `bound-k`, where `k` is the number of the new line. A redex that crosses a `\part` or a
+  link of the old line stops the render.
+
+`docs/beta-reductions.md` gives the design.
+
 ## The math font
 
 The deck option `math_font` gives the font of each `math` element. The document holds the
