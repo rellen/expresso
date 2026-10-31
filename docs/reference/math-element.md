@@ -261,6 +261,11 @@ end
   sub-term under it. A browser with no script shows the sub-term, so the line is complete.
 - A line with a link needs steps: give the math element `reveal true`, or give the part of
   the line an `at` option.
+- `steps: 2` on a `line` entity moves the copies of its links at its first step, and shows
+  the other symbols of the line, its relation and its reason at the next step. It needs
+  `reveal true`.
+- A `\part` inside a `\from`, such as `\from{arg}{\part{hole}{g}}`, names the linked
+  sub-term and its copy. A `part` entity with that name thus changes the copy that shows.
 - The compiler gives an error for `\from` in a math element without `line` entities and in
   the first line. The render gives an error for a name that no earlier line has.
 

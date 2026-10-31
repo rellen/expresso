@@ -32,6 +32,8 @@ defmodule Expresso.Element.Math do
               lines: [],
               # The names of the lines in order, from `check/1`.
               line_names: [],
+              # The names of the lines with `steps: 2`, from `check/1`.
+              two_step_lines: [],
               reveal: false,
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
@@ -53,6 +55,7 @@ defmodule Expresso.Element.Math do
   @spec check(t()) :: {:ok, t()} | {:error, String.t()}
   def check(%__MODULE__{} = math) do
     with :ok <- links_in_lines(math),
+         :ok <- two_steps_reveal(math),
          {:ok, math} <- write_lines(math),
          :ok <- one_source(math),
          :ok <- part_names_ok(math),
@@ -82,15 +85,20 @@ defmodule Expresso.Element.Math do
     own = Map.new(parts, &{&1.id, &1})
 
     line_parts =
-      Enum.map(named, fn {name, _line} ->
-        case own do
-          %{^name => %Expresso.Element.Part{} = part} ->
-            %Expresso.Element.Part{part | at: part.at || at}
+      Enum.map(named, fn {name, line} ->
+        part =
+          case own do
+            %{^name => %Expresso.Element.Part{} = part} ->
+              %Expresso.Element.Part{part | at: part.at || at}
 
-          _own ->
-            %Expresso.Element.Part{id: name, at: at}
-        end
+            _own ->
+              %Expresso.Element.Part{id: name, at: at}
+          end
+
+        second_step(part, line)
       end)
+
+    two_steps = for {name, %{steps: 2}} <- named, do: name
 
     names = Enum.map(named, &elem(&1, 0))
     parts = Enum.reject(parts, &(&1.id in names))
@@ -101,10 +109,21 @@ defmodule Expresso.Element.Math do
        | tex: "\\begin{aligned}\n" <> rows <> "\n\\end{aligned}",
          lines: [],
          line_names: names,
+         two_step_lines: two_steps,
          reveal: false,
          elements: line_parts ++ parts
      }}
   end
+
+  # A line with `steps: 2` takes one more step of the counter of `reveal`: an
+  # `on` entity with `:next`, last in the part of the line. At render,
+  # `Expresso.Element.Math.Links.place/1` reads its step, and it removes it.
+  defp second_step(%Expresso.Element.Part{} = part, %{steps: 2}) do
+    next = %Expresso.Element.On{at: %Expresso.Overlay{pairs: [{:next, :next}]}, set: []}
+    %Expresso.Element.Part{part | on: (part.on || []) ++ [next]}
+  end
+
+  defp second_step(part, _line), do: part
 
   # A row of the environment `aligned`: the relation in the first column, at
   # the right, the term in the second column, and the reason in the fourth
@@ -187,6 +206,15 @@ defmodule Expresso.Element.Math do
   end
 
   defp links_in_lines(_math), do: :ok
+
+  # The second step of a line comes from the counter of `reveal`.
+  defp two_steps_reveal(%__MODULE__{lines: lines, reveal: false}) do
+    if Enum.any?(lines, &(&1.steps == 2)),
+      do: {:error, "a line with steps: 2 needs reveal true on its math element"},
+      else: :ok
+  end
+
+  defp two_steps_reveal(_math), do: :ok
 
   @doc """
   Give the names of the parts of the MathML of a formula, in the order of the
@@ -365,7 +393,7 @@ defmodule Expresso.Element.Math do
 
       Floki.traverse_and_update(tree, &mark_one(&1, id, attributes))
     end)
-    |> Kernel.++(Enum.map(copies, &copy_math(&1, root(&1, copies), tree)))
+    |> Kernel.++(Enum.map(copies, &copy_math(&1, root(&1, copies), tree, parts)))
     |> Floki.raw_html()
   end
 
@@ -375,7 +403,7 @@ defmodule Expresso.Element.Math do
   # inside it gives no name of a part. The style sheet puts the copy out of
   # the flow, and the presenter script puts it on its source. A screen reader
   # does not read it, because it repeats the source.
-  defp copy_math(%Expresso.Element.Part{id: id} = part, source, tree) do
+  defp copy_math(%Expresso.Element.Part{id: id} = part, source, tree, parts) do
     display =
       case tree do
         [{"math", attrs, _children} | _rest] -> List.keyfind(attrs, "display", 0)
@@ -388,8 +416,34 @@ defmodule Expresso.Element.Math do
         [{"data-part", id}, {"data-copy-of", source}, {"aria-hidden", "true"}] ++
         covers(part) ++ List.wrap(display)
 
-    {"math", merge(attributes, []), [{"mrow", [], Enum.map(named(tree, source), &unname/1)}]}
+    inner =
+      part
+      |> inner_parts(tree, parts)
+      |> Enum.reduce({"mrow", [], Enum.map(named(tree, source), &unname/1)}, fn inner, node ->
+        attributes = [{"class", "math-part"} | Expresso.Overlay.Render.attributes(inner)]
+        {"mrow", attributes, [node]}
+      end)
+
+    {"math", merge(attributes, []), [inner]}
   end
+
+  # The parts that a `\part` inside a linked sub-term names. The copy of the
+  # link shows in the place of the sub-term, so each of these parts also
+  # reaches the copy, on an element around its symbols.
+  defp inner_parts(%Expresso.Element.Part{covers: true, copy_to: target}, tree, parts) do
+    names =
+      tree
+      |> named(target)
+      |> Floki.find("[data-part], [class]")
+      |> Enum.flat_map(fn {_tag, attrs, _children} ->
+        attrs = Map.new(attrs)
+        List.wrap(attrs["data-part"]) ++ String.split(attrs["class"] || "")
+      end)
+
+    Enum.filter(parts, &(&1.id in names and &1.copy_of == nil))
+  end
+
+  defp inner_parts(_part, _tree, _parts), do: []
 
   # The part of the formula that a copy comes from. A copy of a copy comes from
   # the source of its source.

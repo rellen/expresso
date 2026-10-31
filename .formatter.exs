@@ -43,6 +43,7 @@ spark_locals_without_parens = [
   controls: 1,
   copy: 1,
   copy: 2,
+  copy_to: 1,
   count: 1,
   css: 1,
   decimals: 1,
