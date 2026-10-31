@@ -6,6 +6,8 @@ defmodule Examples.YCombinator do
   # sub-term that comes from a part of an earlier line, and a copy of that
   # part moves to its place at the step of the line. The body of each λ is in
   # parts around its holes, so a copy of the argument lands in an empty place.
+  # One part with each colors each f of the body of the definition, so the
+  # bound variables need no names.
 
   @accent "var(--accent)"
   @argument "var(--success)"
@@ -22,9 +24,9 @@ defmodule Examples.YCombinator do
 
       line "=",
         tex: ~S"""
-        \part{def}{(\lambda \part{bind}{f}.\,\part{lam1}{(\lambda x.}\,\part{f1}{f}\,
-        \part{app1}{(x\,x))}\,\part{lam2}{(\lambda x.}\,\part{f2}{f}\,
-        \part{app2}{(x\,x))})}\,\part{arg}{g}
+        \part{def}{(\lambda \part{bind}{f}.\,\part{body}{\part{lam1}{(\lambda x.}\,f\,
+        \part{app1}{(x\,x))}\,\part{lam2}{(\lambda x.}\,f\,
+        \part{app2}{(x\,x))}})}\,\part{arg}{g}
         """,
         why: "the definition of Y"
 
@@ -74,10 +76,11 @@ defmodule Examples.YCombinator do
         on 3..4, set: [color: @accent]
       end
 
-      for bound <- ["f1", "f2"] do
-        part bound do
-          on 4, set: [color: @accent]
-        end
+      # The two bound variables: each f of the body.
+      part "fs" do
+        each "f"
+        within "body"
+        on 4, set: [color: @accent]
       end
 
       part "arg" do

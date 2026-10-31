@@ -29,9 +29,9 @@ it. The reason of each line tells what the step does.
 
 1. Write each line with `line`: its relation, its term in `tex` and its reason in `why`.
 2. Give a name with `\part` to each sub-term that a later line uses, such as the argument.
-3. Write the body of a λ in parts around its holes, such as `\part{lam1}{(\lambda x.}`,
-   `\part{f1}{f}` and `\part{app1}{(x\,x))}`. A copy of the argument then lands in a place
-   that shows no bound variable under it.
+3. Write the body of a λ in parts around its holes, such as `\part{lam1}{(\lambda x.}`
+   and `\part{app1}{(x\,x))}`. A copy of the argument then lands in a place that shows no
+   bound variable under it. The bound variables need no names.
 4. In a later line, write each sub-term that comes from an earlier line with
    `\from{name}{…}`, and the same LaTeX as its source.
 5. Write a new symbol, such as a parenthesis that the reduction adds, with no `\from`. It
@@ -45,11 +45,14 @@ line before it. The last line of the example takes `Y g` from the first line.
 1. Give the part of each line, such as `"line3"`, the step at which it shows with `at`.
 2. Color a part with `set: [color: "var(--accent)"]`, and dim an old line with `state: :dim`
    in the part of that line.
-3. To color a copy, put a `\part` inside its `\from`, such as
+3. Color each bound variable with one part: `each "f"` and `within "body"` select each `f`
+   of the part `body`. See
+   [each occurrence of a symbol](../reference/math-element.md#each-occurrence-of-a-symbol).
+4. To color a copy, put a `\part` inside its `\from`, such as
    `\from{Yg}{\part{Yg4}{Y\,g}}`, and give that part an `on` entity. A copy takes no
    color from its source.
 
-`for` makes the same part for each item of a list, such as the bound variables of a λ.
+`for` makes the same part for each item of a list, such as the parts of the last line.
 
 ## The example deck
 
@@ -62,6 +65,8 @@ defmodule Examples.YCombinator do
   # sub-term that comes from a part of an earlier line, and a copy of that
   # part moves to its place at the step of the line. The body of each λ is in
   # parts around its holes, so a copy of the argument lands in an empty place.
+  # One part with each colors each f of the body of the definition, so the
+  # bound variables need no names.
 
   @accent "var(--accent)"
   @argument "var(--success)"
@@ -78,9 +83,9 @@ defmodule Examples.YCombinator do
 
       line "=",
         tex: ~S"""
-        \part{def}{(\lambda \part{bind}{f}.\,\part{lam1}{(\lambda x.}\,\part{f1}{f}\,
-        \part{app1}{(x\,x))}\,\part{lam2}{(\lambda x.}\,\part{f2}{f}\,
-        \part{app2}{(x\,x))})}\,\part{arg}{g}
+        \part{def}{(\lambda \part{bind}{f}.\,\part{body}{\part{lam1}{(\lambda x.}\,f\,
+        \part{app1}{(x\,x))}\,\part{lam2}{(\lambda x.}\,f\,
+        \part{app2}{(x\,x))}})}\,\part{arg}{g}
         """,
         why: "the definition of Y"
 
@@ -130,10 +135,11 @@ defmodule Examples.YCombinator do
         on 3..4, set: [color: @accent]
       end
 
-      for bound <- ["f1", "f2"] do
-        part bound do
-          on 4, set: [color: @accent]
-        end
+      # The two bound variables: each f of the body.
+      part "fs" do
+        each "f"
+        within "body"
+        on 4, set: [color: @accent]
       end
 
       part "arg" do
