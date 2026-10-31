@@ -18,6 +18,19 @@ defmodule Expresso.Element.Math.LatexTest do
     assert Latex.part(atoms, "nothing") == nil
   end
 
+  test "a command that gives a name takes two groups, so a group after it is its own atom" do
+    {:ok, atoms} = Latex.parse(~S"\part{g}{g}{}\frac{a}{b}{c}")
+
+    assert atoms == [
+             {:command, "\\part", [{:group, [{:symbol, "g"}]}, {:group, [{:symbol, "g"}]}]},
+             {:group, []},
+             {:command, "\\frac",
+              [{:group, [{:symbol, "a"}]}, {:group, [{:symbol, "b"}]}, {:group, [{:symbol, "c"}]}]}
+           ]
+
+    assert Latex.write(atoms) == ~S"\part{g}{g}{}\frac{a}{b}{c}"
+  end
+
   test "a part inside a group or inside a command is found" do
     {:ok, atoms} = Latex.parse(~S"\frac{\part{num}{a + 1}}{2}")
     assert Latex.write(Latex.part(atoms, "num")) == "a + 1"

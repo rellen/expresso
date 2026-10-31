@@ -535,8 +535,13 @@ defmodule Expresso.Element.Math.Rewrite do
     [{body, inside}] = bodies(atom, inside, state)
     {old, new, state} = walk(body, inside, state)
 
-    {[{:command, name, [label, {:group, old}]}], [{:command, name, [label, {:group, new}]}],
-     state}
+    # A part that holds only dropped parts goes away with them.
+    new =
+      if :dropped in new and Enum.all?(new, &(&1 == :dropped or blank?(&1))),
+        do: [:dropped],
+        else: [{:command, name, [label, {:group, new}]}]
+
+    {[{:command, name, [label, {:group, old}]}], new, state}
   end
 
   defp deep({:command, name, groups}, inside, state) do
@@ -620,14 +625,16 @@ defmodule Expresso.Element.Math.Rewrite do
     {[old], [new], %{state | n: n}}
   end
 
+  # An empty group, such as the guard of a part, is blank as a space is. A
+  # run of blanks only gets no part, and its empty groups stay in the old line.
   defp piece({:run, run}, state) do
-    {lead, rest} = Enum.split_while(run, &space?/1)
-    {trail, core} = rest |> Enum.reverse() |> Enum.split_while(&space?/1)
+    {lead, rest} = Enum.split_while(run, &blank?/1)
+    {trail, core} = rest |> Enum.reverse() |> Enum.split_while(&blank?/1)
     core = Enum.reverse(core)
     trail = Enum.reverse(trail)
 
     if core == [] do
-      {run, run, state}
+      {run, Enum.filter(run, &space?/1), state}
     else
       n = state.n + 1
       name = [{:symbol, "#{state.prefix}-#{n}"}]
@@ -653,9 +660,43 @@ defmodule Expresso.Element.Math.Rewrite do
 
   defp trim_group({:group, inner}), do: {:group, trim_all(inner)}
 
-  defp undrop([:dropped | rest]), do: rest |> Enum.drop_while(&space?/1) |> undrop()
-  defp undrop([atom | rest]), do: [atom | undrop(rest)]
-  defp undrop([]), do: []
+  # A run of dropped parts and spaces becomes one space when it holds a space
+  # and the kept atoms on its two sides need one: the left atom does not end
+  # with `(`, and the right atom does not start with `)`. Otherwise it goes
+  # away.
+  defp undrop(atoms) do
+    chunks = Enum.chunk_by(atoms, &gap?/1)
+
+    chunks
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {chunk, i} ->
+      cond do
+        :dropped not in chunk -> chunk
+        i == 0 or i == length(chunks) - 1 -> []
+        true -> join(List.last(Enum.at(chunks, i - 1)), hd(Enum.at(chunks, i + 1)), chunk)
+      end
+    end)
+  end
+
+  defp gap?(atom), do: atom == :dropped or space?(atom)
+
+  defp join(left, right, chunk) do
+    space = Enum.find(chunk, &space?/1)
+
+    if space != nil and edge(left, &List.last/1) != "(" and edge(right, &hd/1) != ")",
+      do: [space],
+      else: []
+  end
+
+  # The first or the last symbol of an atom, inside its groups and its names.
+  defp edge({:symbol, text}, _pick), do: text
+  defp edge({:group, [_ | _] = inner}, pick), do: edge(pick.(inner), pick)
+
+  defp edge({:command, _name, [_label, {:group, [_ | _] = body}]} = atom, pick) do
+    if Latex.name_of(atom), do: edge(pick.(body), pick), else: nil
+  end
+
+  defp edge(_atom, _pick), do: nil
 
   defp trim(atoms) do
     atoms
@@ -667,6 +708,8 @@ defmodule Expresso.Element.Math.Rewrite do
 
   defp space?({:space, _text}), do: true
   defp space?(_atom), do: false
+
+  defp blank?(atom), do: space?(atom) or atom == {:group, []}
 
   # The links of an earlier rewrite go away in a copy, and their bodies stay.
   defp unlink(atoms) do

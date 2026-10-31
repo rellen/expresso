@@ -136,7 +136,7 @@ defmodule Expresso.Element.Math.Latex do
     if name in @spaces do
       atoms(rest, [{:space, name} | acc])
     else
-      {groups, rest} = groups(rest, [])
+      {groups, rest} = groups(rest, [], if(name in @names, do: 2, else: nil))
       atoms(rest, [{:command, name, groups} | acc])
     end
   end
@@ -189,13 +189,14 @@ defmodule Expresso.Element.Math.Latex do
     end
   end
 
-  # The brace groups right after a command.
-  defp groups("{" <> rest, acc) do
+  # The brace groups right after a command. A command that gives a name, such
+  # as `\part`, takes two groups, so a group after it is its own atom.
+  defp groups("{" <> rest, acc, limit) when length(acc) != limit do
     {group, rest} = group(rest)
-    groups(rest, [group | acc])
+    groups(rest, [group | acc], limit)
   end
 
-  defp groups(text, acc), do: {Enum.reverse(acc), text}
+  defp groups(text, acc, _limit), do: {Enum.reverse(acc), text}
 
   defp write_atom({:symbol, text}), do: text
   defp write_atom({:space, text}), do: text

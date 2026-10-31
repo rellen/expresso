@@ -2,10 +2,11 @@ defmodule Examples.YCombinator do
   use Expresso
 
   # The proof that Y g is equal to g (Y g), with each step of each
-  # β-reduction. Only the first line is written by hand. Each rewrite makes
-  # the next line: the occurrences get a color, the kept symbols move down,
-  # and a copy of the new content moves into each place. The definition of Y
-  # names the parts that the later rewrites use.
+  # β-reduction. Only the first line is written by hand. A rewrite unfolds
+  # the definition of Y, each reduce makes the next line by one β-reduction
+  # of the leftmost outermost redex, and a rule folds the last line. The
+  # definition of Y needs no names, because each reduce finds the λ, the
+  # bound variables and the argument of its redex.
 
   css ".small { font-size: 1rem; }"
 
@@ -16,34 +17,24 @@ defmodule Examples.YCombinator do
       class "small"
       reveal true
 
-      line tex: ~S"\part{Y}{Y}\,\part{g}{g}"
+      line tex: ~S"\part{Y}{Y}\,g"
 
       rewrite "=",
         replace: "Y",
-        by_tex: ~S"""
-        \part{lam}{(\lambda f.}\,\part{body}{\part{lamx}{(\lambda x.}\,\part{bodyx}{f\,
-        \part{pair}{(x\,x)}}\part{closex}{)}\,\part{arg}{(\lambda x.\,f\,(x\,x))}}\part{close}{)}
-        """,
+        by_tex: ~S"(\lambda f.\,(\lambda x.\,f\,(x\,x))\,(\lambda x.\,f\,(x\,x)))",
         why: "the definition of Y"
 
-      rewrite ~S"\to_\beta",
-        replace: "f",
-        within: "body",
-        by: "g",
-        drop: ["lam", "close", "g"],
-        why: "f := g"
+      reduce :leftmost
+      reduce :leftmost
 
-      rewrite ~S"\to_\beta",
-        replace: "x",
-        within: "bodyx",
-        by: "arg",
-        drop: ["lamx", "closex", "arg"],
-        why: ~S"x := λx.g (x x)"
-
-      rewrite ~S"=_\beta", replace: "pair", to: ~S"(\use{Y}\,\use{g})", why: "line 3 =β Y g"
+      # The argument of g is a term applied to itself: the line 3.
+      rewrite ~S"=_\beta",
+        rule: {~S"a\,a", ~S"\use{Y}\,g"},
+        vars: ["a"],
+        why: "line 3 =β Y g"
 
       # An old line dims when the line after the next one starts.
-      for {line, step} <- [{"line1", 5}, {"line2", 8}, {"line3", 11}] do
+      for {line, step} <- [{"line1", 5}, {"line2", 9}, {"line3", 13}] do
         part line do
           on [from: step], state: :dim
         end

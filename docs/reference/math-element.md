@@ -528,12 +528,20 @@ The reduction makes the line `g\,(g\,x)`, with the relation `\to_\beta` and the 
   unless it has its own.
 - A redex with no bound variable, such as `(\lambda f.\,y)\,a`, becomes its body. Its
   body moves at the phase `:body`.
+- A body that is a λ keeps the parentheses of its λ when a term comes after the redex, so
+  `(\lambda f.\,\lambda x.\,f\,x)\,g\,y` becomes `(\lambda x.\,g\,x)\,y`.
 - The render gives an error for a line that is not a λ-term, for a part with no redex, and
   for a capture: a λ of the body around a bound variable that binds a free variable of the
   argument. Give that λ a different variable.
 - A reduction gives the old line the parts `lam-k`, `close-k`, `body-k`, `arg-k` and
-  `bound-k`, where `k` is the number of the new line. A redex that crosses a `\part` or a
-  link of the old line stops the render.
+  `bound-k`, where `k` is the number of the new line.
+- A link of the old line that occurs once, such as a kept run of a rewrite, can hold the end
+  of one term and the start of the next. A reduction then splits the link and its source in
+  two, such as `keep-2-1` and `keep-2-1-2`. A redex that crosses a `\part`, or a link that
+  occurs more than once, stops the render.
+- A part of a reduction that is the whole body of a `\part`, such as `\part{g}{g}`, gets an
+  empty group after it, `\part{g}{\part{arg-2}{g}{}}`. Temml then keeps the two names on
+  two elements.
 
 `docs/beta-reductions.md` gives the design.
 
