@@ -2302,6 +2302,13 @@ math.math-copy {
 math.math-copy:not([data-placed]) {
   visibility: hidden !important;
 }
+/*
+ * A linked sub-term of a line of a derivation, under the copy that the
+ * presenter script put on it. `docs/line-links.md` gives the design.
+ */
+.math [data-covered] {
+  visibility: hidden !important;
+}
 .math.math-measure {
   position: absolute;
   visibility: hidden;

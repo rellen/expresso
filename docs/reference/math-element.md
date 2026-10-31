@@ -235,6 +235,37 @@ end
 - A `math` element takes line entities, the MathML argument or the `tex` option, and one
   only.
 
+### Link a line to an earlier line
+
+`\from{name}{…}` in the LaTeX of a line marks a sub-term that comes from the part `name` of
+an earlier line. At the step of the line, a copy of that part moves from the earlier line
+to the sub-term, and the part stays in its line.
+
+```elixir
+slide "the reduction" do
+  math do
+    reveal true
+
+    line tex: ~S"(\lambda f.\,f\,(f\,x))\,\part{arg}{g}"
+
+    line ~S"\to_\beta",
+      tex: ~S"\from{arg}{g}\,(\from{arg}{g}\,x)",
+      why: "f := g"
+  end
+end
+```
+
+- A link names a part of the nearest earlier line that has a part with that name.
+- Each `\from` makes one copy, so two links with one name make two copies.
+- The copy stays on the sub-term at each later step, and the presenter script hides the
+  sub-term under it. A browser with no script shows the sub-term, so the line is complete.
+- A line with a link needs steps: give the math element `reveal true`, or give the part of
+  the line an `at` option.
+- The compiler gives an error for `\from` in a math element without `line` entities and in
+  the first line. The render gives an error for a name that no earlier line has.
+
+`docs/line-links.md` gives the design.
+
 ## The math font
 
 The deck option `math_font` gives the font of each `math` element. The document holds the
