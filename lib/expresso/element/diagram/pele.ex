@@ -40,7 +40,7 @@ defmodule Expresso.Element.Diagram.Pele do
 
   # The version of the copy of `pele.js` in `priv/pele/`. A test compares it
   # with the version in `package.json`.
-  @version "1.8.0"
+  @version "1.12.0"
 
   # The printable characters of ASCII, and the ellipsis, for the widths of a
   # text that Pele writes and that the source does not hold.
