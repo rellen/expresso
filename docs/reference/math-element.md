@@ -357,6 +357,56 @@ end
 
 `docs/line-links.md` gives the design.
 
+### Write the next line by a rewrite
+
+A `rewrite` entity makes the next line from the line before it by a substitution, so you do
+not write the new line. The render writes the new line with links, so each kept symbol of
+the old line moves down, and a copy of the argument moves into each place.
+
+```elixir
+slide "the reduction" do
+  math do
+    reveal true
+
+    line tex: ~S"\part{lam}{(\lambda f.}\,\part{body}{f\,(f\,x)}\part{close}{)}\,\part{arg}{g}"
+
+    rewrite ~S"\to_\beta",
+      replace: "f",
+      within: "body",
+      by: "arg",
+      drop: ["lam", "close", "arg"],
+      why: "f := g"
+  end
+end
+```
+
+The rewrite makes the line `g\,(g\,x)`.
+
+| Option | Effect |
+| --- | --- |
+| The first argument | The relation of the new line, such as `~S"\to_\beta"`. The default is `=`. |
+| `replace` | The name of a part of the old line, or a symbol, such as `"f"`, `"2"` or `~S"\alpha"`. Each occurrence becomes the new content. |
+| `within` | With a symbol, the name of the part of the old line that holds the occurrences. The default is the whole line. |
+| `by` | The name of a part of the old line or of an earlier line. A copy of it moves into the place of each occurrence. |
+| `by_tex` | New LaTeX for the place of each occurrence, in place of `by`. It fades in. |
+| `drop` | The names of the parts of the old line that the new line does not hold. |
+| `from` | The name of the line that the rewrite reads. The default is the line before it. |
+| `why`, `name` | The reason and the name of the new line, as for a `line`. |
+
+- A rewrite gives each run of kept symbols of the old line a part, such as `keep-2-1`, and
+  the new line a link to it. A symbol of `\text` or of `\operatorname` is not an occurrence.
+- A group or a command that holds an occurrence, such as `\frac`, fades in with the new
+  line.
+- A rewrite adds no parentheses. Put them in the source of `by`, such as
+  `\part{arg}{(a + b)}`.
+- A rewrite can read a line that a rewrite makes, so each line after the first can be a
+  rewrite.
+- The compiler gives an error for a rewrite with no line before it, for a name that the
+  lines do not have, for a rewrite with no occurrence, and for a rewrite with both `by` and
+  `by_tex` or with neither.
+
+`docs/line-rewrites.md` gives the design.
+
 ## The math font
 
 The deck option `math_font` gives the font of each `math` element. The document holds the

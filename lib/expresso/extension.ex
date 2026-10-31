@@ -1031,11 +1031,61 @@ defmodule Expresso.Extension do
     ]
   }
 
+  @math_rewrite %Spark.Dsl.Entity{
+    name: :rewrite,
+    target: Expresso.Element.MathRewrite,
+    args: [{:optional, :relation}],
+    schema: [
+      relation: [
+        type: :string,
+        doc:
+          "The relation of the new line in LaTeX, such as ~S\"\\to_\\beta\". The default is \"=\"."
+      ],
+      from: [
+        type: :string,
+        doc: "The name of the line that the rewrite reads. The default is the line before it."
+      ],
+      replace: [
+        type: :string,
+        required: true,
+        doc:
+          "The name of a part of the old line, or a symbol, such as \"f\" or ~S\"\\alpha\". Each occurrence becomes the new content. See docs/reference/math-element.md."
+      ],
+      within: [
+        type: :string,
+        doc:
+          "With a symbol in replace, the name of the part of the old line that holds the occurrences."
+      ],
+      by: [
+        type: :string,
+        doc:
+          "The name of a part of an earlier line. A copy of it goes into the place of each occurrence."
+      ],
+      by_tex: [
+        type: :string,
+        doc: "New LaTeX for the place of each occurrence, in place of by. It fades in."
+      ],
+      drop: [
+        type: {:list, :string},
+        default: [],
+        doc: "The names of the parts of the old line that the new line does not hold."
+      ],
+      why: [
+        type: :string,
+        doc: "The reason of the new line, as plain text, in a column at the right."
+      ],
+      name: [
+        type: :string,
+        doc: "The name of the part of the new line. The default is line1, line2 and so on."
+      ]
+    ]
+  }
+
   @math %Spark.Dsl.Entity{
     name: :math,
     target: Expresso.Element.Math,
     args: [{:optional, :text}],
-    entities: [elements: [@part], lines: [@math_line], on: [@on]],
+    entities: [elements: [@part], lines: [@math_line, @math_rewrite], on: [@on]],
     transform: {Expresso.Element.Math, :check, []},
     schema:
       @overlay_schema ++
