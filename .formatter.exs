@@ -16,6 +16,7 @@ spark_locals_without_parens = [
   audio: 2,
   auto_reveal: 1,
   bar: 1,
+  bare: 1,
   box: 1,
   by: 1,
   callout: 1,

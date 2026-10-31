@@ -59,13 +59,69 @@ defmodule Expresso.Element.Math.EachTest do
     end
   end
 
-  test "within needs each, and a part of a diagram takes no each" do
+  test "bare skips the base of a symbol with an index, and keeps a symbol in a group" do
+    # x^2 + x_1 + x_1^3 + (x)^2 + x, from Temml.
+    mathml =
+      ~S|<math><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msub><mi>x</mi><mn>1</mn></msub><mo>+</mo><msubsup><mi>x</mi><mn>1</mn><mn>3</mn></msubsup><mo>+</mo><msup><mrow><mo>(</mo><mi>x</mi><mo>)</mo></mrow><mn>2</mn></msup><mo>+</mo><mi>x</mi></math>|
+
+    render = fn part ->
+      [Builder.slide("a", elements: [Builder.math(mathml, elements: [part])])]
+      |> Builder.deck()
+      |> Expresso.Deck.render()
+      |> LazyHTML.from_document()
+    end
+
+    all = render.(Builder.part("xs", each: "x", on: [Builder.on(2, state: :alert)]))
+    assert marked(all, ".xs") == 5
+
+    bare = render.(Builder.part("xs", each: "x", bare: true, on: [Builder.on(2, state: :alert)]))
+    assert marked(bare, ".xs") == 2
+    assert marked(bare, "msup > mrow > mi.xs") == 1
+    assert marked(bare, "math > mi.xs") == 1
+
+    # The index of a symbol is an occurrence of its own text.
+    ones =
+      render.(Builder.part("ones", each: "1", bare: true, on: [Builder.on(2, state: :alert)]))
+
+    assert marked(ones, ".ones") == 2
+  end
+
+  test "the DSL takes each, within and bare inside the block of a part" do
+    defmodule BareDeck do
+      use Expresso
+
+      slide "math" do
+        math ~S|<math><mrow data-part="body"><msub><mi>x</mi><mn>1</mn></msub><mi>x</mi></mrow></math>| do
+          part "xs" do
+            each "x"
+            within "body"
+            bare(true)
+            on 2, state: :alert
+          end
+        end
+      end
+    end
+
+    assert {:ok, deck} = Expresso.to_deck(BareDeck)
+    [math] = hd(deck.slides).elements
+    assert [%Expresso.Element.Part{each: "x", within: "body", bare: true}] = math.elements
+  end
+
+  test "within and bare need each, and a part of a diagram takes none of them" do
     assert_raise ArgumentError, ~r/the part "xs" of a math element has within and no each/, fn ->
       Builder.math(@mathml, elements: [Builder.part("xs", within: "body")])
     end
 
+    assert_raise ArgumentError, ~r/the part "xs" of a math element has bare and no each/, fn ->
+      Builder.math(@mathml, elements: [Builder.part("xs", bare: true)])
+    end
+
     assert_raise ArgumentError, ~r/only a part of a formula takes them/, fn ->
       Builder.diagram("test/fixtures/move.svg", elements: [Builder.part("token", each: "x")])
+    end
+
+    assert_raise ArgumentError, ~r/has each, within or bare, and only a part/, fn ->
+      Builder.diagram("test/fixtures/move.svg", elements: [Builder.part("token", bare: true)])
     end
   end
 end

@@ -11,9 +11,9 @@ defmodule Expresso.Element.Part do
   `copy_to`. A copy of a copy has the target of its source in `copy_start`.
 
   In a formula, `each` names a symbol and `within` names the part that holds
-  its occurrences. `Expresso.Element.Math.Each` gives the occurrences
-  the class of the part. The
-  copy of a link between the lines of a formula has `covers`, and it hides its
+  its occurrences. With `bare`, the base of a symbol with an index is not an
+  occurrence. `Expresso.Element.Math.Each` gives the occurrences the class of
+  the part. The copy of a link between the lines of a formula has `covers`, and it hides its
   target.
   """
 
@@ -27,6 +27,7 @@ defmodule Expresso.Element.Part do
               :copy_start,
               :each,
               :within,
+              :bare,
               covers: false,
               copies: [],
               __spark_metadata__: nil

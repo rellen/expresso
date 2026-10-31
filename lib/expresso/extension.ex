@@ -994,6 +994,11 @@ defmodule Expresso.Extension do
             type: :string,
             doc:
               "With each, the name of the part of the formula that holds the occurrences. The default is the whole formula."
+          ],
+          bare: [
+            type: :boolean,
+            doc:
+              "With each, select only a symbol with no index, so the x of x_1 and of x^2 is not an occurrence. The default is false."
           ]
         ]
   }

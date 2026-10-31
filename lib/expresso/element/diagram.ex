@@ -479,13 +479,13 @@ defmodule Expresso.Element.Diagram do
   end
 
   defp no_each(%__MODULE__{elements: parts}) do
-    case Enum.find(parts, &(&1.each != nil or &1.within != nil)) do
+    case Enum.find(parts, &(&1.each != nil or &1.within != nil or &1.bare != nil)) do
       nil ->
         :ok
 
       part ->
         {:error,
-         "the part #{inspect(part.id)} of a diagram has each or within, and only a part of a " <>
+         "the part #{inspect(part.id)} of a diagram has each, within or bare, and only a part of a " <>
            "formula takes them"}
     end
   end
