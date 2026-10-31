@@ -3087,18 +3087,17 @@ The commands are:
 
 ## Open work
 
-1. **The links between the lines of a derivation.** A sub-term of a line names the
-   sub-term of an earlier line that it comes from, and it moves from there at the step of
-   its line. `docs/line-links.md` gives the design and the stack of six pull requests.
-   Issue #474 holds the same plan.
+There is no item at this time. Issues #479, #478 and #475 build on the links between the
+lines of a derivation, in that order, and issue #397 to issue #407 propose other features.
+Each one needs a decision before the work starts.
 
-Issues #479, #478 and #475 build on the links, in that order, and issue #397 to issue #407
-propose other features. Each one needs a decision before the work starts.
+The item before it, the links of `docs/line-links.md`, added `\from{name}{…}` to the lines
+of a `math` element and the option `steps` of a line. Issue #474 holds that plan.
 
-The item before it, the copies of a part of `docs/part-copies.md`, added the `copy` entity
+The item before that, the copies of a part of `docs/part-copies.md`, added the `copy` entity
 and the `copy_to` option of a part of a diagram or of a formula. Issue #473 holds that plan.
 
-The item before that, the formulas with parts of `docs/math-parts.md`, added the option `tex`
+An earlier item, the formulas with parts of `docs/math-parts.md`, added the option `tex`
 of `math`, the `part` and `line` entities of a formula, and the deck option `math_font`.
 Issue #472 holds that plan. The maintainer then asked for `\id` and for `move_to` on a part
 of a formula.
