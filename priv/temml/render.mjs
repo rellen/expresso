@@ -15,6 +15,11 @@
 // sub-term. Each becomes `\data{part=name}{...}`, so the MathML of the
 // sub-term gets the attribute `data-part="name"`. `\id` writes no HTML id, so
 // two formulas with the same name do not clash.
+//
+// The macro `\from{name}{...}` marks a sub-term of a line of a derivation that
+// comes from the part `name` of an earlier line. It becomes
+// `\data{from=name}{...}`, and the MathML gets `data-from="name"`.
+// `docs/line-links.md` gives the design.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -33,6 +38,7 @@ const options = {
   macros: {
     "\\part": "\\data{part=#1}{#2}",
     "\\id": "\\data{part=#1}{#2}",
+    "\\from": "\\data{from=#1}{#2}",
   },
 };
 

@@ -54,6 +54,13 @@ defmodule Expresso.Element.MathTexTest do
       refute mathml =~ ~s(id="arg")
     end
 
+    test "\\from marks a linked sub-term with data-from" do
+      assert [{:ok, mathml}] = Tex.render!([~S"\from{arg}{g}\,x"])
+
+      assert mathml =~ ~s(data-from="arg")
+      refute mathml =~ ~s(data-part="arg")
+    end
+
     test "trusts \\class and \\data, so a part gets its attribute" do
       assert [{:ok, class}, {:ok, data}] =
                Tex.render!([~S"\class{redex}{x+1}", ~S"\data{part=arg}{g}"])
