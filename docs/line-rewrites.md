@@ -79,7 +79,7 @@ the symbols that it matched, and each copy moves from the old line.
 
 ## The design
 
-- **The parser.** `Expresso.Element.Math.Tex` reads LaTeX into a tree of atoms: a symbol, a
+- **The parser.** `Expresso.Element.Math.Latex` reads LaTeX into a tree of atoms: a symbol, a
   command with its brace groups, a brace group, a script, and a space. Each atom keeps its
   source, so the parser writes the same LaTeX back. It finds the extent of each `\part`.
 - **The entity.** The DSL has a `rewrite` entity beside `line`. `Expresso.Element.Math.check/1`
@@ -102,7 +102,7 @@ the symbols that it matched, and each copy moves from the old line.
 Each pull request is based on the one before it.
 
 1. This document.
-2. The parser of LaTeX, `Expresso.Element.Math.Tex`.
+2. The parser of LaTeX, `Expresso.Element.Math.Latex`.
 3. The `rewrite` entity with `replace`, `within`, `with`, `with_tex` and `drop`.
 4. The three steps and the default reason.
 5. The template `to` with `\use`.
@@ -115,3 +115,4 @@ Each pull request is based on the one before it.
 | Pull request | State |
 | --- | --- |
 | 1. This document | Done |
+| 2. The parser of LaTeX | Done. `Expresso.Element.Math.Latex` reads LaTeX into atoms: a symbol, a command with its brace groups, a group, a script mark and a space. A number is one symbol. `write/1` returns the same LaTeX, and it puts a space between a command of letters and a letter. The name `Expresso.Element.Math.Tex` is the module that runs Temml, so the parser has a different name. |
