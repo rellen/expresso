@@ -200,6 +200,28 @@ defmodule Expresso.Presenter.DslTest do
       end
     end
 
+    # `Enum.find/2` returns nil for a nil command, so the check must not take
+    # nil as "no command that is not valid".
+    test "refuses a nil command, such as an if with no else in a list of commands" do
+      for commands <- ["[step(1), nil]", "[if(false, do: step(1))]"] do
+        message =
+          error("""
+          #{@state}
+          mode :present do
+            match view: :present
+            key "x", #{commands}, "A key"
+          end
+          """)
+
+        assert message =~ "nil is not a valid command", commands
+      end
+
+      assert error("""
+             #{@state}
+             mode :blank, match: [blank: true], any: [nil]
+             """) =~ "nil is not a valid command"
+    end
+
     test "refuses a mode with the option any and a binding" do
       message =
         error("""
