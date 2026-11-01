@@ -95,6 +95,31 @@ defmodule Expresso.ChartVoronoiTest do
   end
 
   describe "layout/2" do
+    # The property of the errors found this input with the seed 400169. Its
+    # three small parts passed area among themselves while the sites moved,
+    # and the error of [0] stayed above the limit.
+    test "one large part and three small parts in a box reach the limit" do
+      leaf = fn id, value -> %{id: id, value: value, children: []} end
+
+      items = [
+        leaf.([0], 125.875),
+        leaf.([1], 5000.0),
+        leaf.([2], 552.7290981221962),
+        leaf.([3], 698.4677276611328)
+      ]
+
+      polygon = Voronoi.container(:rectangle, @box)
+      cells = Voronoi.layout(items, polygon)
+      whole = Voronoi.area(polygon)
+      total = items |> Enum.map(& &1.value) |> Enum.sum()
+
+      for item <- items do
+        target = item.value / total * whole
+        error = abs(Voronoi.area(cells[item.id]) - target) / whole
+        assert error <= Voronoi.limit(), "error #{error} of #{inspect(item.id)}"
+      end
+    end
+
     test "a part with the value 0 and a group with the sum 0 get no cell" do
       items = [
         %{id: :a, value: 3, children: []},
