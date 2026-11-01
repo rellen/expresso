@@ -74,9 +74,9 @@ defmodule Expresso.Watch.Files do
   # sobelow_skip ["Traversal.FileModule"]
   defp digest(path) do
     case File.read(path) do
-      # The digest only tells a change, so MD5 is sufficient, and it needs no
-      # `crypto` application in the release.
-      {:ok, bytes} -> :erlang.md5(bytes)
+      # The release holds the `crypto` application, and
+      # `Expresso.Element.Diagram.Cache` also uses SHA-256.
+      {:ok, bytes} -> :crypto.hash(:sha256, bytes)
       {:error, _reason} -> nil
     end
   end
