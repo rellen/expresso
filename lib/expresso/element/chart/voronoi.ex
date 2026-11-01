@@ -22,7 +22,8 @@ defmodule Expresso.Element.Chart.Voronoi do
      percent. When the error becomes larger than in the iteration before,
      the most change becomes smaller, so the weights do not swing from side
      to side. Then make sure that each site stays in its own cell, and do
-     step 2 again.
+     step 2 again. After 50 iterations, the sites stay where they are, and
+     only the weights change.
   4. Stop when the error is less than 1 percent and each part has a cell, or
      after 200 iterations. The error is the sum of the differences between
      each area and its target, as a part of the area of the container. A
@@ -34,6 +35,12 @@ defmodule Expresso.Element.Chart.Voronoi do
 
   The error of each area is therefore less than the error of the diagram. A
   part with the value 0 gets no cell.
+
+  The sites stop because a moving site can keep the small cells in a cycle.
+  With one large part and three small parts in a box, the small parts can
+  pass area among themselves until the last iteration, and the error stays
+  near 3 percent after each start. With fixed sites, the weights alone bring
+  each area to its target.
 
   A very thin container, such as a triangle with one side of a few units and
   two sides of hundreds, leaves little room to move the sites. Its error can
@@ -76,6 +83,9 @@ defmodule Expresso.Element.Chart.Voronoi do
   @limit 0.01
   @iterations 200
   @starts 6
+
+  # The number of iterations of one start in which the sites move.
+  @moves 50
 
   # The most points of the Halton sequence to try for the sites of one
   # container.
@@ -290,7 +300,11 @@ defmodule Expresso.Element.Chart.Voronoi do
           do: max(flicker * 0.8, 0.01),
           else: min(flicker * 1.05, @flicker)
 
-      sites = Enum.zip_with(cells, sites, &move/2)
+      sites =
+        if @iterations - left < @moves,
+          do: Enum.zip_with(cells, sites, &move/2),
+          else: sites
+
       weights = Enum.zip_with([cells, weights, targets], &adapt(&1, flicker))
       weights = settle(sites, weights)
       iterate({sites, weights, flicker, error}, targets, polygon, whole, left - 1, best)

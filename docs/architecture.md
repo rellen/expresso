@@ -1700,8 +1700,9 @@ design:
   for it.
 - **The algorithm of Nocaj and Brandes.** A cell is the container, clipped by one half-plane
   for each other site of a power diagram. Each iteration moves a site to the centroid of its
-  cell and changes its weight by the ratio of its target area to its area. The algorithm
-  needs no library, and it runs in the compiler.
+  cell and changes its weight by the ratio of its target area to its area. After 50
+  iterations, the sites stay, and only the weights change, because a moving site can keep
+  small cells in a cycle. The algorithm needs no library, and it runs in the compiler.
 - **A deterministic layout.** The first sites come from the Halton sequence, and a layout
   that stays above its limit starts again from the next sites of the sequence. Thus the same
   deck gives the same HTML, and a test can compare the output.
