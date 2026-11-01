@@ -139,10 +139,13 @@ defmodule Expresso.Presenter.Verifier do
     end
   end
 
+  # A command can be nil, for example from an `if` with no `else`, and
+  # `Enum.find/2` returns nil also when it finds no command. The list of the
+  # commands that are not valid has no such ambiguity.
   defp commands(commands) do
-    case Enum.find(commands, &(not command?(&1))) do
-      nil -> :ok
-      command -> {:error, "#{inspect(command)} is not a valid command"}
+    case Enum.reject(commands, &command?/1) do
+      [] -> :ok
+      [command | _commands] -> {:error, "#{inspect(command)} is not a valid command"}
     end
   end
 
