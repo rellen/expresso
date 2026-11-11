@@ -90,10 +90,10 @@ four types:
 
 ## Develop
 
-`mix check` runs each check: the compiler, the formatter, Credo, Dialyzer, Sobelow, the
-tests, the browser tests, the binary and its tests. `CONTRIBUTING.md` tells how to send a
-change. `docs/development.md` tells how to get the toolchain, run each check and make a
-binary. `CLAUDE.md` gives the conventions for a commit message and for prose.
+`mix check` runs each check: the compiler, the formatter, Credo, Credence, Dialyzer,
+Sobelow, the tests, the browser tests, the binary and its tests. `CONTRIBUTING.md` tells how
+to send a change. `docs/development.md` tells how to get the toolchain, run each check and
+make a binary. `CLAUDE.md` gives the conventions for a commit message and for prose.
 
 ## License
 
