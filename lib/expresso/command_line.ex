@@ -177,7 +177,7 @@ defmodule Expresso.CommandLine do
   defp command({options, args}) do
     cond do
       option = Enum.find(args, &option?/1) -> {:error, "Unknown option: #{option}"}
-      length(args) > 2 -> {:error, "Unexpected argument: #{Enum.at(args, 2)}"}
+      argument = Enum.at(args, 2) -> {:error, "Unexpected argument: #{argument}"}
       same_file?(args) -> {:error, "The output file is the input file"}
       true -> mode(options, Enum.at(args, 0), Enum.at(args, 1))
     end

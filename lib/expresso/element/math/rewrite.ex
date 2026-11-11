@@ -255,7 +255,7 @@ defmodule Expresso.Element.Math.Rewrite do
           do: key
 
     cond do
-      length(given) != 1 ->
+      not match?([_], given) ->
         {:error, "a rewrite of a math element takes one of the options by, by_tex, to and rule"}
 
       rewrite.replace == nil and given in [[:by], [:by_tex]] ->
@@ -499,7 +499,7 @@ defmodule Expresso.Element.Math.Rewrite do
   # more than one atom goes into a group.
   defp change(:deep, unit, inside, state) do
     unit
-    |> Enum.with_index()
+    |> Stream.with_index()
     |> Enum.reduce({[], [], state}, fn
       {{:script, _mark} = mark, _i}, {old, new, state} ->
         {old ++ [mark], new ++ [mark], state}

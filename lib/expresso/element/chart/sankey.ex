@@ -373,14 +373,14 @@ defmodule Expresso.Element.Chart.Sankey do
     backs = Enum.map(frames, fn links -> Enum.filter(links, &back?(&1, shared)) end)
     lanes = map_size(shared.lanes)
     reserve = if lanes == 0, do: 0, else: @gap + @lane * (lanes - 1)
-    extra = backs |> Enum.map(fn links -> links |> Enum.map(& &1.value) |> Enum.sum() end)
+    extra = Enum.map(backs, fn links -> Enum.sum_by(links, & &1.value) end)
     extra = Enum.max(extra)
 
     scale =
       for size <- sizes,
           {_column, names} <- stacks(size, shared) do
         (@height - 8 - shared.top - reserve - @gap * (length(names) - 1)) /
-          (Enum.sum(Enum.map(names, &size[&1])) + extra)
+          (Enum.sum_by(names, &size[&1]) + extra)
       end
       |> Enum.min()
 

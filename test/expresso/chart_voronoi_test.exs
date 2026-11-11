@@ -111,7 +111,7 @@ defmodule Expresso.ChartVoronoiTest do
       polygon = Voronoi.container(:rectangle, @box)
       cells = Voronoi.layout(items, polygon)
       whole = Voronoi.area(polygon)
-      total = items |> Enum.map(& &1.value) |> Enum.sum()
+      total = Enum.sum_by(items, & &1.value)
 
       for item <- items do
         target = item.value / total * whole
@@ -142,7 +142,7 @@ defmodule Expresso.ChartVoronoiTest do
       cells = Voronoi.layout(items, needle)
 
       for id <- 1..5, do: assert(Voronoi.area(cells[id]) > 0)
-      sum = 1..5 |> Enum.map(&Voronoi.area(cells[&1])) |> Enum.sum()
+      sum = Enum.sum_by(1..5, &Voronoi.area(cells[&1]))
       assert_in_delta sum, Voronoi.area(needle), 1.0e-9
     end
 
@@ -177,7 +177,7 @@ defmodule Expresso.ChartVoronoiTest do
 
         for {container, children} <- containers(items, polygon, cells),
             whole = Voronoi.area(container) do
-          total = children |> Enum.map(&value/1) |> Enum.sum()
+          total = Enum.sum_by(children, &value/1)
 
           for child <- children, value(child) > 0 do
             target = value(child) / total * whole
@@ -201,7 +201,7 @@ defmodule Expresso.ChartVoronoiTest do
 
           for cell <- inner, point <- cell, do: assert(Voronoi.inside?(point, container))
 
-          sum = inner |> Enum.map(&Voronoi.area/1) |> Enum.sum()
+          sum = Enum.sum_by(inner, &Voronoi.area/1)
           assert_in_delta sum, Voronoi.area(container), 1.0e-6 * Voronoi.area(container)
 
           for {a, i} <- Enum.with_index(inner), {b, j} <- Enum.with_index(inner), i < j do
@@ -285,7 +285,7 @@ defmodule Expresso.ChartVoronoiTest do
   end
 
   defp value(%{children: [], value: value}), do: value
-  defp value(%{children: children}), do: children |> Enum.map(&value/1) |> Enum.sum()
+  defp value(%{children: children}), do: Enum.sum_by(children, &value/1)
 
   # Each container with the parts that divide it: the root polygon with the
   # top level, and the cell of each group with its children. A container
@@ -298,7 +298,7 @@ defmodule Expresso.ChartVoronoiTest do
           do: {cells[item.id], item.children}
 
     Enum.filter([{polygon, items} | groups], fn {_container, children} ->
-      children |> Enum.map(&value/1) |> Enum.sum() > 0
+      Enum.sum_by(children, &value/1) > 0
     end)
   end
 

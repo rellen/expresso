@@ -175,8 +175,7 @@ defmodule Expresso.Color do
   @spec blend(t(), t(), float()) :: t()
   def blend(foreground, background, opacity) do
     rgb(foreground)
-    |> Enum.zip(rgb(background))
-    |> Enum.map(fn {f, b} -> opacity * f + (1 - opacity) * b end)
+    |> Enum.zip_with(rgb(background), fn f, b -> opacity * f + (1 - opacity) * b end)
     |> hex()
   end
 

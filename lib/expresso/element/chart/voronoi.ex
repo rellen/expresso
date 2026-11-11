@@ -130,7 +130,7 @@ defmodule Expresso.Element.Chart.Voronoi do
          "each point of the shape is a tuple {x, y} of two numbers from 0 to 1, " <>
            "such as {0.5, 1}"}
 
-      length(points) < 3 ->
+      not match?([_, _, _ | _], points) ->
         {:error, "the shape has #{length(points)} points, and a polygon needs at least 3"}
 
       crosses?(Enum.map(points, &float_point/1)) ->
@@ -258,7 +258,7 @@ defmodule Expresso.Element.Chart.Voronoi do
     do: Enum.reduce(item.children, Map.put(cells, item.id, []), &empty_cells/2)
 
   defp value(%{children: []} = item), do: item.value
-  defp value(%{children: children}), do: children |> Enum.map(&value/1) |> Enum.sum()
+  defp value(%{children: children}), do: Enum.sum_by(children, &value/1)
 
   # The cells of the items of one container, each with a value more than 0.
   defp divide([], _polygon), do: []
@@ -266,7 +266,7 @@ defmodule Expresso.Element.Chart.Voronoi do
 
   defp divide(items, polygon) do
     whole = area(polygon)
-    total = items |> Enum.map(&value/1) |> Enum.sum()
+    total = Enum.sum_by(items, &value/1)
     targets = Enum.map(items, &(value(&1) / total * whole))
     count = length(items)
     weights = List.duplicate(whole / count / 2, count)
@@ -440,7 +440,9 @@ defmodule Expresso.Element.Chart.Voronoi do
       end)
       |> Enum.map(&hd/1)
 
-    if length(points) < 3 or abs(signed_area(points)) < @epsilon, do: [], else: points
+    if not match?([_, _, _ | _], points) or abs(signed_area(points)) < @epsilon,
+      do: [],
+      else: points
   end
 
   @doc """
@@ -456,8 +458,7 @@ defmodule Expresso.Element.Chart.Voronoi do
   defp signed_area(polygon) do
     polygon
     |> Enum.zip(tl(polygon) ++ [hd(polygon)])
-    |> Enum.map(fn {{x1, y1}, {x2, y2}} -> x1 * y2 - x2 * y1 end)
-    |> Enum.sum()
+    |> Enum.sum_by(fn {{x1, y1}, {x2, y2}} -> x1 * y2 - x2 * y1 end)
     |> Kernel./(2)
   end
 

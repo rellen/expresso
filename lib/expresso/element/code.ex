@@ -759,7 +759,7 @@ defmodule Expresso.Element.Code do
   # is 8 characters wide, as the `tab-size` of the browser.
   defp indent(line) do
     [space] = Regex.run(~r/^[ \t]*/, line)
-    space |> String.graphemes() |> Enum.map(&if(&1 == "\t", do: 8, else: 1)) |> Enum.sum()
+    space |> String.graphemes() |> Enum.sum_by(&if(&1 == "\t", do: 8, else: 1))
   end
 
   # A line of a code element with `wrap` gets its indent, and the style sheet

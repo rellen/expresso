@@ -542,7 +542,7 @@ defmodule Expresso.Renderer do
   end
 
   defp count(groups) do
-    case groups |> Enum.map(fn {_heading, rows} -> length(rows) end) |> Enum.sum() do
+    case Enum.sum_by(groups, fn {_heading, rows} -> length(rows) end) do
       1 -> "1 row"
       rows -> "#{rows} rows"
     end

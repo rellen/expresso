@@ -88,7 +88,7 @@ defmodule Expresso.ChartWaterfallTest do
     assert_in_delta last.v + last.h, bottom, 0.2
 
     # Each column has the same width, and the columns go from left to right.
-    assert Enum.uniq(Enum.map([start, sales, last], & &1.w)) |> length() == 1
+    assert [_] = [start, sales, last] |> Enum.map(& &1.w) |> Enum.uniq()
     assert start.u < sales.u and sales.u < last.u
 
     # The height of a column is in proportion to its change: 40 and 50 units.
@@ -276,7 +276,7 @@ defmodule Expresso.ChartWaterfallTest do
       assert_in_delta sales.w / start.w, 40 / 50, 0.01
       assert_in_delta costs.w / start.w, 50 / 50, 0.01
       assert start.v < sales.v and sales.v < last.v
-      assert Enum.uniq(Enum.map([start, sales, last], & &1.h)) |> length() == 1
+      assert [_] = [start, sales, last] |> Enum.map(& &1.h) |> Enum.uniq()
     end
 
     test "the categories go down the left side, and the ticks along the bottom" do

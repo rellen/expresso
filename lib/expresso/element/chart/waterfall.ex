@@ -391,7 +391,9 @@ defmodule Expresso.Element.Chart.Waterfall do
   """
   @spec moves?(Chart.t()) :: boolean()
   def moves?(%Chart{elements: groups, timeline: timeline} = chart),
-    do: match?([%Series{columns: [_ | _]} | _], groups) or length(timeline) > 1 or grow?(chart)
+    do:
+      match?([%Series{columns: [_ | _]} | _], groups) or match?([_, _ | _], timeline) or
+        grow?(chart)
 
   @doc """
   Return the steps that a waterfall chart takes before its first change: 1

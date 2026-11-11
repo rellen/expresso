@@ -67,7 +67,7 @@ defmodule Expresso.ShapeElementTest do
     assert LazyHTML.query(arrow, "line") |> LazyHTML.attribute("marker-end") == ["url(##{id})"]
 
     ids = html |> LazyHTML.query("svg.shape-line marker") |> LazyHTML.attribute("id")
-    assert length(ids) > 1
+    assert [_, _ | _] = ids
     assert Enum.uniq(ids) == ids
   end
 

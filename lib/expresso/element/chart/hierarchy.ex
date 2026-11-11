@@ -234,7 +234,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
   # The value of a part in a frame: the value of its category, or the sum of
   # its parts.
   defp value(%{index: nil, children: children}, values),
-    do: children |> Enum.map(&value(&1, values)) |> Enum.sum()
+    do: Enum.sum_by(children, &value(&1, values))
 
   defp value(%{index: index}, values), do: Enum.at(values, index)
 
@@ -408,7 +408,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
   end
 
   defp place_parts(parts, rect, values, numbers?) do
-    total = parts |> Enum.map(&value(&1, values)) |> Enum.sum()
+    total = Enum.sum_by(parts, &value(&1, values))
     scale = if total > 0, do: rect.w * rect.h / total, else: 0
     sized = for part <- parts, do: {part, value(part, values) * scale}
     {full, empty} = Enum.split_with(sized, fn {_part, area} -> area > 0 end)
@@ -486,13 +486,14 @@ defmodule Expresso.Element.Chart.Hierarchy do
   defp worst(row, side) do
     areas = Enum.map(row, &elem(&1, 1))
     sum = Enum.sum(areas)
-    max(side * side * Enum.max(areas) / (sum * sum), sum * sum / (side * side * Enum.min(areas)))
+    {smallest, largest} = Enum.min_max(areas)
+    max(side * side * largest / (sum * sum), sum * sum / (side * side * smallest))
   end
 
   # A row along the short side of the rectangle: a column at the left of a
   # wide rectangle, or a row at the top of a tall rectangle.
   defp lay(row, rect) do
-    sum = row |> Enum.map(&elem(&1, 1)) |> Enum.sum()
+    sum = Enum.sum_by(row, &elem(&1, 1))
 
     if rect.w >= rect.h do
       width = sum / rect.h
@@ -519,7 +520,7 @@ defmodule Expresso.Element.Chart.Hierarchy do
   # from the top, the length of the dash on the circle of its ring, the
   # place of its label, and whether its label fits.
   defp sunburst(parts, from, sweep, values, ring) do
-    total = parts |> Enum.map(&value(&1, values)) |> Enum.sum()
+    total = Enum.sum_by(parts, &value(&1, values))
 
     {arcs, _start} =
       Enum.reduce(parts, {%{}, from}, fn part, {arcs, start} ->
@@ -814,7 +815,13 @@ defmodule Expresso.Element.Chart.Hierarchy do
     {x, y} = form.point
     small? = form.size == :small
     {name_y, value_y} = if small?, do: {y - 1, y + 14}, else: {y - 2, y + 18}
-    name_y = if form.value, do: name_y, else: if(small?, do: y + 5, else: y + 6)
+
+    name_y =
+      cond do
+        form.value -> name_y
+        small? -> y + 5
+        true -> y + 6
+      end
 
     assigns =
       Map.merge(assigns, %{

@@ -159,7 +159,7 @@ defmodule Expresso.ChartElementTest do
     assert texts(figure, "text.chart-value") == ["0.0000001", "0.0000002"]
     ticks = texts(figure, "text.chart-tick")
     assert List.first(ticks) == "0" and List.last(ticks) == "0.0000002"
-    assert ticks |> Enum.uniq() |> length() == length(ticks)
+    refute Shoddy.Lists.has_duplicates?(ticks)
 
     small =
       Builder.chart(:bar,

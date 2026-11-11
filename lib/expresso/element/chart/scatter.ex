@@ -283,7 +283,7 @@ defmodule Expresso.Element.Chart.Scatter do
         |> add_category(point.symbol, keys, "s")
     end
     |> then(fn names ->
-      Enum.reduce(Enum.with_index(groups, 1), names, fn
+      Enum.reduce(Stream.with_index(groups, 1), names, fn
         {%Series{color: color, name: name}, place}, names when color != nil ->
           Map.update(names, name, ["g#{place}"], &(&1 ++ ["g#{place}"]))
 

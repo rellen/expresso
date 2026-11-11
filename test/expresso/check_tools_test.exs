@@ -37,7 +37,7 @@ defmodule Expresso.CheckToolsTest do
     output = capture_io(fn -> assert Tools.install(%{"EXPRESSO_TOOLS" => dir}, run) == :ok end)
 
     assert_received {:run, "npm", ["install", "--prefix", ^dir | packages]}
-    assert Enum.take(packages, -2) == Tools.packages()
+    assert packages == ["--no-audit", "--no-fund" | Tools.packages()]
 
     cli = Path.join(dir, "node_modules/playwright/cli.js")
     assert_received {:run, "node", [^cli, "install", "chromium"]}

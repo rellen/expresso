@@ -413,7 +413,7 @@ defmodule Expresso.Check.Session do
     |> Map.fetch!(:keys)
     |> Enum.filter(fn {_key, commands} -> command in commands end)
     |> Enum.map(&elem(&1, 0))
-    |> Enum.min_by(&{not (String.length(&1) == 1 and &1 =~ ~r/^[a-z]$/), String.length(&1), &1})
+    |> Enum.min_by(&{not (&1 =~ ~r/\A[a-z]\z/), String.length(&1), &1})
   end
 
   # The name of a key in the report. A space is not readable alone.

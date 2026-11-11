@@ -239,7 +239,7 @@ defmodule Expresso.E2E.TreeTest do
     page = open(page, render(Deck, tmp_dir))
     %{"svg" => [left, top, width, height], "boxes" => boxes} = geometry(page)
 
-    assert length(boxes) == 5
+    assert [_, _, _, _, _] = boxes
     assert width > 0 and height > 0
 
     for [x, y, w, h] <- boxes do
@@ -489,7 +489,7 @@ defmodule Expresso.E2E.TreeTest do
       """)
 
     # The lines to Ben, Cy, Di, Eve and Gus show, and each one is drawn.
-    assert length(offsets) == 5
+    assert [_, _, _, _, _] = offsets
     assert Enum.all?(offsets, &(&1 in ["0", "0px", "0%"]))
   end
 

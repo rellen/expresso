@@ -277,7 +277,7 @@ defmodule Expresso.Element.Math.Lambda do
 
   defp token([{atom, i} | _rest] = unit, path, names) do
     atoms = Enum.map(unit, &elem(&1, 0))
-    text = if length(atoms) == 1, do: text(atom), else: Latex.write(atoms)
+    text = if match?([_], atoms), do: text(atom), else: Latex.write(atoms)
     [%{text: text, atoms: atoms, path: path ++ [i], names: names}]
   end
 

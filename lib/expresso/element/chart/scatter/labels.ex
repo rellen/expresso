@@ -99,7 +99,7 @@ defmodule Expresso.Element.Chart.Scatter.Labels do
   defp inside?({left, top, right, bottom}, box),
     do: left >= box.left and right <= box.right and top >= box.top and bottom <= box.bottom
 
-  defp covered(area, boxes), do: boxes |> Enum.map(&overlap(area, &1)) |> Enum.sum()
+  defp covered(area, boxes), do: Enum.sum_by(boxes, &overlap(area, &1))
 
   defp overlap({l1, t1, r1, b1}, {l2, t2, r2, b2}),
     do: max(0, min(r1, r2) - max(l1, l2)) * max(0, min(b1, b2) - max(t1, t2))

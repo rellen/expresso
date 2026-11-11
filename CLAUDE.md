@@ -78,6 +78,7 @@ Run these commands before each commit:
 mix compile --warnings-as-errors
 mix format
 mix credo
+mix expresso.credence
 mix sobelow --exit --skip
 mix hex.audit
 mix dialyzer

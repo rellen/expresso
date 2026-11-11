@@ -341,7 +341,7 @@ defmodule Expresso.Element.Chart do
   defp delimiter_option(nil), do: :ok
 
   defp delimiter_option(delimiter) do
-    if String.length(delimiter) == 1 and delimiter not in ["\"", "\n", "\r"],
+    if match?([_], String.graphemes(delimiter)) and delimiter not in ["\"", "\n", "\r"],
       do: :ok,
       else: {:error, "the delimiter option is one character, and not a quote or a line break"}
   end

@@ -53,7 +53,7 @@ defmodule Expresso.Element.Chart.Table do
   @spec values([%{values: [[number()]]}], non_neg_integer()) :: [String.t()]
   def values(frames, index) do
     for frame <- frames,
-        do: frame.values |> Enum.map(&Enum.at(&1, index)) |> Enum.sum() |> Plot.label()
+        do: frame.values |> Enum.sum_by(&Enum.at(&1, index)) |> Plot.label()
   end
 
   @doc """

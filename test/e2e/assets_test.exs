@@ -31,7 +31,7 @@ defmodule Expresso.E2E.AssetsTest do
         [image.getAttribute("src").slice(0, 22), image.naturalWidth])
       """)
 
-    assert length(images) > 1
+    assert [_, _ | _] = images
     assert Enum.all?(images, fn [src, width] -> src == "data:image/png;base64," and width > 0 end)
   end
 end

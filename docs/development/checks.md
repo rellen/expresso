@@ -7,6 +7,7 @@ mix check                      # each tool below, Dialyzer, Doctor, ex_doc and u
 mix compile --warnings-as-errors
 mix format --check-formatted
 mix credo
+mix expresso.credence          # Credence, see "Credence" below
 mix sobelow --exit --skip
 mix hex.audit                  # the advisories and the retirements of the dependencies
 mix test
@@ -50,19 +51,28 @@ skipped tool does not fail the run.
 
 Credence finds code that works, but that is slower than necessary or that is not
 idiomatic Elixir, such as `Enum.map/2` before `Enum.sum/1`. It is a dependency in `dev`
-and in `test`, and no check runs it.
-
-Credence has no task for a project. `Credence.Pattern.analyze/1` reads the source of one
-file and returns its issues. This command reads each file of `lib/` and `tools/`:
+and in `test`. Credence has no task for a project, so `mix expresso.credence` in `tools/`
+runs it:
 
 ```sh
-mix run -e 'for f <- Path.wildcard("{lib,tools}/**/*.ex"), i <- Credence.Pattern.analyze(File.read!(f)), do: IO.puts("#{f}:#{i.meta[:line]} #{i.rule} #{i.message}")'
+mix expresso.credence                      # each file of lib/, tools/ and test/
+mix expresso.credence lib/expresso/css.ex  # one file or one directory
 ```
 
-Use `Credence.Pattern.analyze/1`, and not `Credence.analyze/1`. `Credence.analyze/1` also
-compiles each file to find the warnings of the compiler. It then defines each module again,
-and it runs the code that a module runs at the compile time. `Credence.fix/1` rewrites the
-source, so read each change before you keep it.
+The task writes each issue with its file, its line and its rule, and it fails when it finds
+an issue. `mix check` and the job `lint` of the workflow run it. Change the code, and read
+the message of the rule for the change that it expects.
+
+- The task uses only the Pattern round of Credence, with `Credence.Pattern.analyze/2`.
+  `Credence.analyze/1` also compiles each file to find the warnings of the compiler. It then
+  defines each module again, and it runs the code that a module runs at the compile time,
+  such as the build of a NIF.
+- The task gives `assumptions: :strict`. Each rule then gives the same result as the code
+  for each text. A deck can hold any Unicode text.
+- Do not use `Credence.fix/1` on a file of Expresso. It compiles the file for the same
+  check, and some of its fixes make the code less clear. For example, it changes
+  `Enum.map/2` and `Enum.sum/1` into `Enum.reduce/3` with a capture that it calls at once,
+  where `Enum.sum_by/2` is clearer.
 
 ## Flaky tests
 

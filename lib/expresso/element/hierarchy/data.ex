@@ -71,7 +71,7 @@ defmodule Expresso.Element.Hierarchy.Data do
   defp unique(entries) do
     entries
     |> Enum.group_by(fn {node, _parent, _where} -> node.name end, &elem(&1, 2))
-    |> Enum.find(fn {_name, places} -> length(places) > 1 end)
+    |> Enum.find(fn {_name, places} -> match?([_, _ | _], places) end)
     |> case do
       nil ->
         :ok
@@ -176,7 +176,9 @@ defmodule Expresso.Element.Hierarchy.Data do
     tops =
       rows |> Enum.flat_map(fn {path, _node, _where} -> Enum.take(path, 1) end) |> Enum.uniq()
 
-    root? = length(tops) > 1 or Enum.any?(rows, fn {path, _node, _where} -> path == [] end)
+    root? =
+      match?([_, _ | _], tops) or Enum.any?(rows, fn {path, _node, _where} -> path == [] end)
+
     given = MapSet.new(rows, &elem(&1, 0))
 
     ordered = with_levels(rows, given, root?)

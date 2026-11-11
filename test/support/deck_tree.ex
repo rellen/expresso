@@ -86,7 +86,7 @@ defmodule Expresso.Test.DeckTree do
     |> tuple()
     |> map(fn {auto_reveal, elements, pause?} ->
       elements =
-        if pause? and length(elements) > 1,
+        if pause? and match?([_, _ | _], elements),
           do: List.insert_at(elements, 1, entity(:pause)),
           else: elements
 

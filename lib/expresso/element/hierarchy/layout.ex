@@ -239,7 +239,7 @@ defmodule Expresso.Element.Hierarchy.Layout do
 
   # The width of a row or the height of a column of subtrees, with the gaps.
   defp row_size(children, key),
-    do: Enum.sum(Enum.map(children, &Map.fetch!(&1, key))) + @gap * (length(children) - 1)
+    do: Enum.sum_by(children, &Map.fetch!(&1, key)) + @gap * (length(children) - 1)
 
   # Each line of a node goes to the box of one child, the first box of the
   # child, and it carries the name of that child.

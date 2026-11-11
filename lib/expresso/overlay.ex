@@ -84,10 +84,7 @@ defmodule Expresso.Overlay do
   defp pair({:from, step}) when is_integer(step) and step >= 1, do: {:ok, {step, :max}}
   defp pair({:from, :next}), do: {:ok, {:next, :max}}
 
-  defp pair(first..last//1 = range) when first >= 1 and first <= last do
-    _ = range
-    {:ok, {first, last}}
-  end
+  defp pair(first..last//1) when first >= 1 and first <= last, do: {:ok, {first, last}}
 
   defp pair(first..last//step) do
     {:error,

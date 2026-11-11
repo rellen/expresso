@@ -58,7 +58,7 @@ defmodule Expresso.Element.Diagram.Path do
 
     case {flag?, text, Regex.run(@value, text)} do
       {true, <<flag, rest::binary>>, _value} when flag in [?0, ?1] ->
-        arc_values(rest, index + 1, [(flag - ?0) * 1.0 | values])
+        arc_values(rest, index + 1, [:erlang.float(flag - ?0) | values])
 
       {_flag?, _text, [value]} ->
         rest = binary_part(text, byte_size(value), byte_size(text) - byte_size(value))
@@ -82,7 +82,7 @@ defmodule Expresso.Element.Diagram.Path do
       arity ->
         args
         |> Enum.chunk_every(arity, arity, :discard)
-        |> Enum.with_index()
+        |> Stream.with_index()
         |> Enum.reduce({points, current, start}, &step(upper, relative, &1, &2))
     end
   end
@@ -94,7 +94,7 @@ defmodule Expresso.Element.Diagram.Path do
     new = segment(kind, values, current, relative)
     last = List.last(new)
     start = if kind == "M", do: last, else: start
-    {Enum.reverse(new) ++ points, last, start}
+    {Enum.reverse(new, points), last, start}
   end
 
   defp segment("H", [x], {cx, cy}, relative), do: [{if(relative, do: cx + x, else: x), cy}]

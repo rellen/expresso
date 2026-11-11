@@ -65,8 +65,9 @@ defmodule Expresso.Element.Chart.Scale do
   end
 
   def new(values, nil, :log) do
-    low = power(Float.floor(:math.log10(Enum.min(values))))
-    high = power(Float.ceil(:math.log10(Enum.max(values))))
+    {smallest, largest} = Enum.min_max(values)
+    low = power(Float.floor(:math.log10(smallest)))
+    high = power(Float.ceil(:math.log10(largest)))
     high = if high == low, do: Plot.number(low * 10), else: high
     %__MODULE__{type: :log, low: low, high: high, ticks: log_ticks(low, high)}
   end

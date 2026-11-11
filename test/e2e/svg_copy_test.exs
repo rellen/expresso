@@ -64,7 +64,7 @@ defmodule Expresso.E2E.SvgCopyTest do
                  getComputedStyle(rect).fill]
       """)
 
-    assert length(fills) > 2
+    assert [_, _, _ | _] = fills
 
     for [red?, fill] <- fills do
       assert fill == if(red?, do: "rgb(255, 0, 0)", else: "rgb(0, 0, 255)")
@@ -79,7 +79,7 @@ defmodule Expresso.E2E.SvgCopyTest do
 
     fills = each_copy(page, ".diagram .node rect", "(rect) => getComputedStyle(rect).fill")
 
-    assert length(fills) > 1
+    assert [_, _ | _] = fills
     assert Enum.all?(fills, &(&1 == "rgb(236, 236, 255)"))
   end
 
@@ -98,7 +98,7 @@ defmodule Expresso.E2E.SvgCopyTest do
       }
       """)
 
-    assert length(stops) > 1
+    assert [_, _ | _] = stops
     assert Enum.all?(stops, &(&1 == "#0000ff"))
   end
 

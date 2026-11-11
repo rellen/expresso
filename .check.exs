@@ -21,6 +21,10 @@ burrito_target =
     {:compiler, "mix compile --warnings-as-errors"},
     {:sobelow, "mix sobelow --exit --skip"},
 
+    # The code that Credence can make faster or more idiomatic. The task is in
+    # `tools/`, and `docs/development/checks.md` gives the details.
+    {:credence, "mix expresso.credence"},
+
     # The security advisories and the retirements of the dependencies on Hex.
     {:hex_audit, "mix hex.audit"},
 

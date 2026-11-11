@@ -258,7 +258,7 @@ defmodule Expresso.Element.Hierarchy do
     colors = Map.put(colors, node.name, role || palette(node, color, branch, palette))
 
     (node.elements || [])
-    |> Enum.with_index()
+    |> Stream.with_index()
     |> Enum.reduce(colors, fn {child, index}, colors ->
       branch = if depth == 0, do: {:palette, Chart.Layers.color(index)}, else: branch
       paint(child, scheme, {role, branch, depth + 1}, colors)
@@ -494,7 +494,7 @@ defmodule Expresso.Element.Hierarchy do
   defp delimiter?(nil), do: true
 
   defp delimiter?(delimiter),
-    do: String.length(delimiter) == 1 and delimiter not in ["\"", "\n", "\r"]
+    do: match?([_], String.graphemes(delimiter)) and delimiter not in ["\"", "\n", "\r"]
 
   # Nodes with the parent option go under the node that they name. Only a
   # node at the top of the tree takes the option.
@@ -794,7 +794,7 @@ defmodule Expresso.Element.Hierarchy do
       end)
 
     for [first | _rest] = group <- groups do
-      steps = if length(groups) == 1, do: [], else: on(Enum.flat_map(group, & &1.steps))
+      steps = if match?([_], groups), do: [], else: on(Enum.flat_map(group, & &1.steps))
       {first.boxes[name].node, first.colors[name], first.values, steps}
     end
   end

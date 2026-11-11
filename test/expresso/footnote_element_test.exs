@@ -91,6 +91,7 @@ defmodule Expresso.FootnoteElementTest do
     children =
       html |> LazyHTML.query(".handout > *") |> LazyHTML.to_tree() |> Enum.map(&elem(&1, 0))
 
-    assert Enum.take(children, -5) == ["section", "div", "div", "div", "div"]
+    {_slides, last} = Enum.split(children, -5)
+    assert last == ["section", "div", "div", "div", "div"]
   end
 end

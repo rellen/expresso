@@ -50,7 +50,7 @@ defmodule Expresso.ChartFlowCopiesTest do
         |> figure()
 
       {layers, copies} = layers_and_copies(figure)
-      assert length(copies) == 2
+      assert [_, _] = copies
       assert copies == layers
 
       [_first, second] = figure |> LazyHTML.query("figure.chart-copy") |> Enum.to_list()
@@ -69,7 +69,7 @@ defmodule Expresso.ChartFlowCopiesTest do
 
       for chart <- [chord, alluvial([{"1", [2, 3]}, {"2", [4, 1]}])] do
         {layers, copies} = chart |> figure() |> layers_and_copies()
-        assert length(copies) == 2
+        assert [_, _] = copies
         assert copies == layers
       end
     end

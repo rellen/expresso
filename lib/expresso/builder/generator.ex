@@ -102,7 +102,7 @@ defmodule Expresso.Builder.Generator do
     |> descendants()
     |> Enum.group_by(& &1.name)
     |> Map.new(fn {name, [entity | _copies] = copies} ->
-      if copies |> Enum.map(&{&1.target, &1.args, &1.schema}) |> Enum.uniq() |> length() > 1 do
+      if copies |> MapSet.new(&{&1.target, &1.args, &1.schema}) |> MapSet.size() > 1 do
         raise ArgumentError, "two entities have the name #{inspect(name)}"
       end
 

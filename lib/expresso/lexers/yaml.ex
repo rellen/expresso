@@ -111,5 +111,5 @@ defmodule Expresso.Lexers.Yaml do
   end
 
   defp width(tokens),
-    do: tokens |> Enum.map(fn {_type, _meta, value} -> IO.iodata_length(value) end) |> Enum.sum()
+    do: Enum.sum_by(tokens, fn {_type, _meta, value} -> IO.iodata_length(value) end)
 end

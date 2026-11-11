@@ -22,14 +22,14 @@ defmodule Expresso.Element.Chart.Scatter.Trend do
   @spec fit([{number(), number()}]) :: {float(), float()} | nil
   def fit(points) do
     n = length(points)
-    mean_x = points |> Enum.map(&elem(&1, 0)) |> Enum.sum() |> Kernel./(max(n, 1))
-    mean_y = points |> Enum.map(&elem(&1, 1)) |> Enum.sum() |> Kernel./(max(n, 1))
-    sxx = points |> Enum.map(fn {x, _y} -> (x - mean_x) ** 2 end) |> Enum.sum()
+    mean_x = points |> Enum.sum_by(&elem(&1, 0)) |> Kernel./(max(n, 1))
+    mean_y = points |> Enum.sum_by(&elem(&1, 1)) |> Kernel./(max(n, 1))
+    sxx = Enum.sum_by(points, fn {x, _y} -> (x - mean_x) ** 2 end)
 
     if sxx < 1.0e-12 do
       nil
     else
-      sxy = points |> Enum.map(fn {x, y} -> (x - mean_x) * (y - mean_y) end) |> Enum.sum()
+      sxy = Enum.sum_by(points, fn {x, y} -> (x - mean_x) * (y - mean_y) end)
       slope = sxy / sxx
       {Float.round(mean_y - slope * mean_x, 12), Float.round(slope, 12)}
     end

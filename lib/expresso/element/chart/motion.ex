@@ -60,7 +60,7 @@ defmodule Expresso.Element.Chart.Motion do
     assigns
     |> scene()
     |> Map.fetch!(:channels)
-    |> Enum.reject(fn {_name, values} -> values |> Enum.uniq() |> length() == 1 end)
+    |> Enum.reject(fn {_name, values} -> values |> MapSet.new() |> MapSet.size() == 1 end)
   end
 
   @doc """
@@ -304,7 +304,7 @@ defmodule Expresso.Element.Chart.Motion do
   """
   @spec ref(String.t(), [number()]) :: String.t()
   def ref(name, [first | _rest] = values) do
-    if values |> Enum.uniq() |> length() == 1,
+    if values |> MapSet.new() |> MapSet.size() == 1,
       do: write(name, first),
       else: "var(--#{name}, #{write(name, first)})"
   end
@@ -332,7 +332,7 @@ defmodule Expresso.Element.Chart.Motion do
   def changing(assigns) do
     temple do
       cond do
-        Enum.uniq(@texts) |> length() == 1 ->
+        @texts |> MapSet.new() |> MapSet.size() == 1 ->
           text x: @x, y: @y, text_anchor: @anchor, class: @class, data_keys: @keys do
             List.first(@texts)
           end

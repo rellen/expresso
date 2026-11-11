@@ -148,11 +148,11 @@ defmodule Expresso.Presenter.SchemaTest do
 
   test "a record form has a name with written_, and the records of a union have the same keys" do
     forms = for {name, _doc, form} <- Schema.types(), records(form) != [], do: {name, form}
-    assert length(forms) == 4
+    assert [_, _, _, _] = forms
 
     for {name, form} <- forms do
       assert name |> Atom.to_string() |> String.starts_with?("written_")
-      assert form |> records() |> Enum.map(&Keyword.keys/1) |> Enum.uniq() |> length() == 1
+      assert [_] = form |> records() |> Enum.map(&Keyword.keys/1) |> Enum.uniq()
     end
 
     assert Enum.sort(Expresso.Presenter.Schema.Record.names()) ==

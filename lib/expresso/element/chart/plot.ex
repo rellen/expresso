@@ -24,8 +24,9 @@ defmodule Expresso.Element.Chart.Plot do
   """
   @spec ticks([number()]) :: [number()]
   def ticks(values) do
-    low = min(Enum.min(values), 0)
-    high = max(Enum.max(values), 0)
+    {smallest, largest} = Enum.min_max(values)
+    low = min(smallest, 0)
+    high = max(largest, 0)
 
     if low == high do
       [0, 1]

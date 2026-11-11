@@ -7,9 +7,9 @@
 # `mix expresso.gifs`:
 #
 # - format: `mix format --check-formatted`
-# - lint: `mix compile --warnings-as-errors`, `mix credo`, `mix sobelow`,
-#   `mix hex.audit`, the check of unused dependencies, `mix docs`,
-#   `mix doctor` and `mix dialyzer`
+# - lint: `mix compile --warnings-as-errors`, `mix credo`,
+#   `mix expresso.credence`, `mix sobelow`, `mix hex.audit`, the check of
+#   unused dependencies, `mix docs`, `mix doctor` and `mix dialyzer`
 # - test: `mix test`, in two partitions
 # - e2e: `mix test --only e2e`, the browser tests, in three partitions
 # - dependency: `mix test --only dependency`, the test of Expresso as a
@@ -124,6 +124,8 @@ jobs:
       - run: mix compile --warnings-as-errors
       - if: ${{ !cancelled() }}
         run: mix credo
+      - if: ${{ !cancelled() }}
+        run: mix expresso.credence
       - if: ${{ !cancelled() }}
         run: mix sobelow --exit --skip
       - if: ${{ !cancelled() }}

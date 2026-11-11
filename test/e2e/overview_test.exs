@@ -102,15 +102,15 @@ defmodule Expresso.E2E.OverviewTest do
     # Three columns and two rows, each inside the viewport.
     boxes = boxes(page)
 
-    assert boxes
-           |> Enum.map(fn [_left, top, _right, _bottom] -> round(top) end)
-           |> Enum.uniq()
-           |> length() == 2
+    assert [_, _] =
+             boxes
+             |> Enum.map(fn [_left, top, _right, _bottom] -> round(top) end)
+             |> Enum.uniq()
 
-    assert boxes
-           |> Enum.map(fn [left, _top, _right, _bottom] -> round(left) end)
-           |> Enum.uniq()
-           |> length() == 3
+    assert [_, _, _] =
+             boxes
+             |> Enum.map(fn [left, _top, _right, _bottom] -> round(left) end)
+             |> Enum.uniq()
 
     for [left, top, right, bottom] <- boxes do
       assert left >= 0 and top >= 0 and right <= 1280 and bottom <= 720

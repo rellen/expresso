@@ -209,7 +209,7 @@ defmodule Expresso.SvgCopyTest do
         |> Enum.flat_map(&LazyHTML.attribute(&1, "data-morph-signature"))
 
       assert [_one, _two] = signatures
-      assert Enum.uniq(signatures) |> length() == 1
+      assert [_] = Enum.uniq(signatures)
     end
 
     @tag :tmp_dir

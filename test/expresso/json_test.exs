@@ -20,7 +20,7 @@ defmodule Expresso.JsonTest do
 
     scripts = Regex.scan(@script, html, capture: :all_but_first)
 
-    assert length(scripts) == 3
+    assert [_, _, _] = scripts
     assert html =~ ~S(\u003cp>A page\u003c/p>\u003cscript>\u003c/script>)
 
     for [json] <- scripts, do: refute(json =~ "<")

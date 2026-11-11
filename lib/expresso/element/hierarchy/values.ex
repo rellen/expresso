@@ -182,7 +182,7 @@ defmodule Expresso.Element.Hierarchy.Values do
   defp number(value, _decimals) when is_integer(value), do: Stat.format(value, 0, true)
 
   defp number(value, decimals) do
-    rounded = Float.round(value * 1.0, decimals)
+    rounded = Float.round(:erlang.float(value), decimals)
 
     if rounded == trunc(rounded),
       do: Stat.format(trunc(rounded), 0, true),

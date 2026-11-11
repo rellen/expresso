@@ -64,7 +64,7 @@ defmodule Expresso.GifTest do
         frames
         |> Enum.chunk_by(&elem(&1, 0))
         |> Enum.map(fn chunk ->
-          {rgb(chunk |> hd() |> elem(0)), chunk |> Enum.map(&elem(&1, 1)) |> Enum.sum()}
+          {rgb(chunk |> hd() |> elem(0)), Enum.sum_by(chunk, &elem(&1, 1))}
         end)
 
       assert {decoded.width, decoded.height, decoded.loop} == {width, height, 0}

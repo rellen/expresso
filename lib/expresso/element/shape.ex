@@ -61,7 +61,7 @@ defmodule Expresso.Element.Shape do
       iex> {:error, _message} = Expresso.Element.Shape.point(["10%"])
   """
   @spec point(term()) :: {:ok, [String.t()]} | {:error, String.t()}
-  def point([x, y]) when is_binary(x) and is_binary(y), do: {:ok, [x, y]}
+  def point([x, y] = coordinates) when is_binary(x) and is_binary(y), do: {:ok, coordinates}
 
   def point(_value),
     do: {:error, "a point is a list of two CSS lengths, such as [\"10%\", \"40%\"]"}

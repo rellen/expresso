@@ -41,10 +41,10 @@ defmodule Expresso.E2E.CodeLinesTest do
     page = open(page, render(Deck, tmp_dir))
     heights = heights(page)
 
-    assert length(heights) == 3
+    assert [_, _, _] = heights
 
     for {lines, index} <- Enum.with_index(heights) do
-      assert length(lines) == 3
+      assert [_, _, _] = lines
       assert Enum.all?(lines, &(&1 > 0.8 and &1 < 2)), "code #{index}: #{inspect(lines)}"
     end
   end

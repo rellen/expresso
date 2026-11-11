@@ -11,7 +11,9 @@ defmodule Expresso.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       releases: releases(),
-      dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix]],
+      # Credence is a dependency with no runtime, so the PLT adds it for the
+      # task `mix expresso.credence` in `tools/`.
+      dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix, :credence]],
       docs: docs()
     ]
   end
