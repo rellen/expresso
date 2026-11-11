@@ -46,24 +46,6 @@ of `mix check` runs each tool. In the retry mode, a run after a failure runs onl
 failed tools. A failed tool with a dependency that does not run is then skipped, and a
 skipped tool does not fail the run.
 
-## Credence
-
-Credence finds code that works, but that is slower than necessary or that is not
-idiomatic Elixir, such as `Enum.map/2` before `Enum.sum/1`. It is a dependency in `dev`
-and in `test`, and no check runs it.
-
-Credence has no task for a project. `Credence.Pattern.analyze/1` reads the source of one
-file and returns its issues. This command reads each file of `lib/` and `tools/`:
-
-```sh
-mix run -e 'for f <- Path.wildcard("{lib,tools}/**/*.ex"), i <- Credence.Pattern.analyze(File.read!(f)), do: IO.puts("#{f}:#{i.meta[:line]} #{i.rule} #{i.message}")'
-```
-
-Use `Credence.Pattern.analyze/1`, and not `Credence.analyze/1`. `Credence.analyze/1` also
-compiles each file to find the warnings of the compiler. It then defines each module again,
-and it runs the code that a module runs at the compile time. `Credence.fix/1` rewrites the
-source, so read each change before you keep it.
-
 ## Flaky tests
 
 A flaky test passes in one run and fails in a different run of the same code. To find one,

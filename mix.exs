@@ -244,10 +244,7 @@ defmodule Expresso.MixProject do
       # the Zig of the toolchain.
       {:zigler, "~> 0.16", only: [:dev, :test], runtime: false},
 
-      # static analysis. Credence finds code that works but is slow or not
-      # idiomatic. It has no task for a project: `Credence.analyze/1` reads
-      # the source of one file. See docs/development/checks.md.
-      {:credence, "~> 0.8.1", only: [:dev, :test], runtime: false},
+      # static analysis
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
       {:doctor, ">= 0.0.0", only: :dev, runtime: false},
       {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},
