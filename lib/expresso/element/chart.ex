@@ -1164,7 +1164,7 @@ defmodule Expresso.Element.Chart do
           c(&plot/1, rest!: assigns)
         end
 
-        if length(@frames) > 1 do
+        if match?([_, _ | _], @frames) do
           div class: "chart-frames", aria_hidden: "true" do
             for {frame, layer} <- Enum.with_index(@frames, 1) do
               figure class: "chart-copy" do
@@ -1331,7 +1331,7 @@ defmodule Expresso.Element.Chart do
   defp box(assigns, ticks) do
     widest = ticks |> Enum.map(&String.length(Plot.label(&1))) |> Enum.max()
     left = 24 + widest * 10 + if(assigns[:value_label], do: 32, else: 0)
-    top = if length(assigns.series) > 1 or label?(assigns), do: 64, else: 28
+    top = if match?([_, _ | _], assigns.series) or label?(assigns), do: 64, else: 28
     right = if assigns.kind == :line, do: @width - 150, else: @width - 16
     bottom = @height - 40 - if(assigns[:category_label], do: 30, else: 0)
     %{left: left, top: top, right: right, bottom: bottom}

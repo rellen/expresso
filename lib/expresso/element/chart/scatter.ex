@@ -34,6 +34,10 @@ defmodule Expresso.Element.Chart.Scatter do
   @width 800
   @height 450
 
+  # The colors of a palette for the series and for the categories of the
+  # color, so the most series and the most categories of a scatter plot.
+  @colors 8
+
   # The radius of a mark without a size, and the radius of the largest mark
   # of a scatter plot and of a bubble chart, in the units of the SVG.
   @radius 7
@@ -404,9 +408,9 @@ defmodule Expresso.Element.Chart.Scatter do
     points = Enum.flat_map(series, & &1.elements)
 
     cond do
-      length(series) > 8 ->
+      length(series) > @colors ->
         {:error,
-         "a #{kind} chart has at most 8 series, one for each color. Put the smallest into a series \"Other\"."}
+         "a #{kind} chart has at most #{@colors} series, one for each color. Put the smallest into a series \"Other\"."}
 
       (twice = names -- Enum.uniq(names)) != [] ->
         {:error, "two series have the name \"#{hd(twice)}\". Give each series its own name."}
@@ -535,9 +539,9 @@ defmodule Expresso.Element.Chart.Scatter do
          "the symbol takes at most #{count} categories, one for each symbol, and the points " <>
            "have #{length(symbols)}: #{Enum.map_join(symbols, ", ", &inspect/1)}"}
 
-      length(colors) > 8 ->
+      length(colors) > @colors ->
         {:error,
-         "the color takes at most 8 categories, one for each color of the theme, and the " <>
+         "the color takes at most #{@colors} categories, one for each color of the theme, and the " <>
            "points have #{length(colors)}. Put the smallest into a category \"Other\"."}
 
       true ->

@@ -78,7 +78,7 @@ defmodule Expresso.Renderer do
   defp declarations(palette), do: Expresso.Palette.declarations(palette)
 
   # The presenter changes the variant with the key `t` only in a document with two variants.
-  defp two_variants?(deck), do: length(variants(deck)) == 2
+  defp two_variants?(deck), do: match?([_, _], variants(deck))
 
   defp deck_css(deck) do
     metadata = deck.metadata || %{}

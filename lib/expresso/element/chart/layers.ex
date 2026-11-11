@@ -54,7 +54,7 @@ defmodule Expresso.Element.Chart.Layers do
       Motion.frame_label(assigns)
       Sankey.titles(assigns)
 
-      if length(@layers) == 1 do
+      if match?([_], @layers) do
         c(@drawing, rest!: @layers |> hd() |> elem(1))
       else
         for {k, layer} <- @layers do

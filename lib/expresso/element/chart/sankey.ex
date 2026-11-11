@@ -121,7 +121,7 @@ defmodule Expresso.Element.Chart.Sankey do
     paths = Enum.map(categories, &path(&1, separator))
 
     cond do
-      short = Enum.find(paths, &(length(&1) < 2)) ->
+      short = Enum.find(paths, &(not match?([_, _ | _], &1))) ->
         {:error,
          "the category #{inspect(Enum.join(short, separator))} of a sankey names one node. " <>
            "A category is a path of two nodes or more, such as [\"Coal\", \"Electricity\"]."}

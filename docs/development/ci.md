@@ -8,8 +8,8 @@ This page describes the workflow that checks a pull request on GitHub, and how i
 The jobs run in parallel on Linux, so the slowest of them gives their time:
 
 - `format`: the formatter.
-- `lint`: the compiler with warnings as errors, Credo, Credence, Sobelow, `mix hex.audit`,
-  the check of unused dependencies, `mix docs`, Doctor and Dialyzer.
+- `lint`: the compiler with warnings as errors, Credo with ExSlop, Credence, Sobelow,
+  `mix hex.audit`, the check of unused dependencies, `mix docs`, Doctor and Dialyzer.
 - `test`: the unit tests, in two jobs, `test (1/2)` and `test (2/2)`.
 - `e2e`: the browser tests, in three jobs, `e2e (1/3)` to `e2e (3/3)`.
 - `graph`: the tests that run a tool that draws a graph. This job, the jobs of `e2e` and

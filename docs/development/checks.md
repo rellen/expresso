@@ -6,7 +6,7 @@ This page lists the checks of the project, and tells you what each check needs.
 mix check                      # each tool below, Dialyzer, Doctor, ex_doc and unused_deps
 mix compile --warnings-as-errors
 mix format --check-formatted
-mix credo
+mix credo                      # Credo and ExSlop, see "ExSlop" below
 mix expresso.credence          # Credence, see "Credence" below
 mix sobelow --exit --skip
 mix hex.audit                  # the advisories and the retirements of the dependencies
@@ -73,6 +73,22 @@ the message of the rule for the change that it expects.
   check, and some of its fixes make the code less clear. For example, it changes
   `Enum.map/2` and `Enum.sum/1` into `Enum.reduce/3` with a capture that it calls at once,
   where `Enum.sum_by/2` is clearer.
+
+## ExSlop
+
+ExSlop is a plugin of Credo. It finds the patterns that a code generator writes too often,
+such as a rescue of each exception, a comment that tells what the next line does, or
+`Enum.map/2` before `Enum.join/2`. `mix credo` runs its checks, so `mix check` and the job
+`lint` of the workflow also run them.
+
+- `.credo.exs` gives `plugins: [{ExSlop, []}]`. The configuration has no list
+  `checks.enabled`, so the plugin turns on its 28 recommended checks. Do not add that list,
+  because Credo then ignores the checks of the plugin.
+- The check `LengthComparison` finds a comparison of `length/1` with an integer, such as
+  `length(list) > 1`. Use a list pattern, such as `match?([_, _ | _], list)`.
+- `LengthComparison` does not read `test/`. An assert of a test compares a count, such as
+  2000, that a list pattern cannot give.
+- ExSlop is a dependency in `dev` only, like Credo, because it depends on Credo.
 
 ## Flaky tests
 
