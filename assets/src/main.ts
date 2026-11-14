@@ -64,6 +64,11 @@
 // with the mouse or with a finger, in the two windows, and a click or a swipe
 // does not change the step. `laser.ts` gives the rules.
 //
+// The key `x` turns the drawing on and off. While it is on, a drag of the
+// mouse or of a finger draws a line on the slide, in the two windows. The key
+// `h` changes the pen to the highlighter, and the key `c` removes the drawing.
+// A change of the slide also removes it. `drawing.ts` gives the rules.
+//
 // `?check` in the address of the present view runs the layout check after the
 // load of the document and of its fonts. The check shows each step, finds the
 // elements that go past an edge of the window and the lines of code that
@@ -119,11 +124,22 @@ import {
   link,
   program as readProgram,
   scheme,
+  showDrawing,
   showScheme,
   slideBox,
   text,
   timeLeft,
 } from "./dom.ts";
+import {
+  drawing,
+  extend,
+  isDrawing,
+  message as drawingMessage,
+  nearest,
+  start as startLine,
+  tool,
+} from "./drawing.ts";
+import type { Line } from "./drawing.ts";
 import {
   isPointer,
   placeIn,
@@ -164,6 +180,12 @@ let started: number | null = null;
 
 // True after the first state of the address shows.
 let loaded = false;
+
+// The lines of the drawing of the slide that shows, and the line that the
+// pointer draws now, or null. The first state of the address shows before
+// each later part of this file, so the two values are here.
+let lines: readonly Line[] = [];
+let stroke: Line | null = null;
 
 // The length of the talk, from the list of the steps or the address
 // parameter `?duration=`. The speaker view opens with the address of the
@@ -260,6 +282,16 @@ function show(changed: State, local = true): void {
   if (!pointing(state)) {
     laser(null);
   }
+  // The drawing belongs to the slide that shows, so a change of the slide
+  // removes it. The other window removes its own drawing at the same change.
+  // A change with no drawing mode ends the line that the pointer draws.
+  if (slideChanged) {
+    lines = [];
+    stroke = null;
+  } else if (!drawing(state)) {
+    finishStroke();
+  }
+  showDrawing(shownLines(), state.view);
   if (document.readyState === "complete") {
     embeds();
   }
@@ -465,6 +497,11 @@ function call(builtin: Builtin): void {
     case "switch_scheme":
       switchScheme();
       break;
+    case "clear_drawing":
+      lines = [];
+      stroke = null;
+      redraw();
+      break;
     default: {
       // The type check finds each built-in function that has no branch. The
       // program comes from the renderer with no examination, so a function
@@ -606,8 +643,69 @@ function trackPlace(place: Place | null): void {
   }
 }
 
-document.addEventListener("pointermove", track);
-document.addEventListener("pointerdown", track);
+function shownLines(): readonly Line[] {
+  return stroke === null ? lines : [...lines, stroke];
+}
+
+// Show the drawing in this window, and send it to the other window.
+function redraw(): void {
+  showDrawing(shownLines(), state.view);
+  if (partner !== null && !partner.closed) {
+    partner.postMessage(drawingMessage(shownLines()), "*");
+  }
+}
+
+// Put the line that the pointer draws with the lines of the drawing.
+function finishStroke(): void {
+  if (stroke !== null) {
+    lines = [...lines, stroke];
+    stroke = null;
+  }
+}
+
+// Start a line at the pointer, when the drawing is on and the pointer is on
+// the slide.
+function startStroke(event: PointerEvent): void {
+  if (!drawing(state) || event.button !== 0) {
+    return;
+  }
+  const place = placeIn(event.clientX, event.clientY, slideBox(state.view));
+  if (place !== null) {
+    finishStroke();
+    stroke = startLine(tool(state), place);
+    redraw();
+  }
+}
+
+// Add the place of the pointer to the line. A drag past an edge of the slide
+// continues along that edge.
+function continueStroke(event: PointerEvent): void {
+  const box = slideBox(state.view);
+  if (stroke === null || box === null) {
+    return;
+  }
+  const longer = extend(stroke, nearest(event.clientX, event.clientY, box));
+  if (longer !== stroke) {
+    stroke = longer;
+    redraw();
+  }
+}
+
+document.addEventListener("pointermove", (event: PointerEvent) => {
+  track(event);
+  continueStroke(event);
+});
+document.addEventListener("pointerdown", (event: PointerEvent) => {
+  track(event);
+  startStroke(event);
+});
+// The end of a drag. The line stays in the drawing of the slide.
+document.addEventListener("pointerup", finishStroke);
+document.addEventListener("pointercancel", finishStroke);
+// The box of the slide changes with the size of the window.
+window.addEventListener("resize", () => {
+  showDrawing(shownLines(), state.view);
+});
 
 // The mouse left the window, so the dot goes away in the two windows. A
 // finger that leaves the screen keeps the dot at its place.
@@ -625,8 +723,9 @@ document.addEventListener("click", (event: MouseEvent) => {
   if (ignores(event)) {
     return;
   }
-  // While the laser pointer is on, a click moves the dot only.
-  if (pointing(state)) {
+  // While the laser pointer is on, a click moves the dot only. While the
+  // drawing is on, a click draws.
+  if (pointing(state) || drawing(state)) {
     return;
   }
   handle(
@@ -662,7 +761,13 @@ document.addEventListener(
     const start = touched;
     touched = null;
     // While the laser pointer is on, a movement of a finger moves the dot.
-    if (start === null || finger === undefined || pointing(state)) {
+    // While the drawing is on, it draws a line.
+    if (
+      start === null ||
+      finger === undefined ||
+      pointing(state) ||
+      drawing(state)
+    ) {
       return;
     }
     const direction = swipe(finger.clientX - start.x, finger.clientY - start.y);
@@ -704,6 +809,10 @@ window.addEventListener("message", (event: MessageEvent) => {
   if (isRequest(event.data)) {
     if (!isSpeaker) {
       partner.postMessage(message(program, state, deck, time, scheme()), "*");
+      // A speaker view that loads after a line also gets the drawing.
+      if (shownLines().length > 0) {
+        partner.postMessage(drawingMessage(shownLines()), "*");
+      }
     }
     return;
   }
@@ -711,6 +820,14 @@ window.addEventListener("message", (event: MessageEvent) => {
   // state, so it has no time.
   if (isPointer(event.data)) {
     point(placeOf(event.data));
+    return;
+  }
+  // The drawing of the other window. It replaces the drawing of this window,
+  // and an empty list removes it.
+  if (isDrawing(event.data)) {
+    lines = event.data.lines;
+    stroke = null;
+    showDrawing(lines, state.view);
     return;
   }
   if (!isMessage(event.data)) {

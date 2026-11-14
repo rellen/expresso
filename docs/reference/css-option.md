@@ -112,7 +112,9 @@ A rule of the deck can set or read these custom properties of the theme:
 - The parts of the page: `--slide-padding`, `--progress-color`, `--progress-height`,
   `--slide-number-color`, `--slide-number-size`, `--slide-number-right`,
   `--slide-number-bottom`, `--overview-color`, `--menu-color`, `--menu-zoom`,
-  `--hidden-slide-opacity`, `--laser-color`, `--laser-size`,
+  `--hidden-slide-opacity`, `--laser-color`, `--laser-size`, `--draw-pen-color`,
+  `--draw-pen-width`, `--draw-highlighter-color`, `--draw-highlighter-width`,
+  `--draw-highlighter-opacity`,
   `--pace-behind-color` and `--pace-over-color`.
 - The charts: `--chart-1` to `--chart-8`, `--chart-width`, `--chart-height` and
   `--chart-dim-opacity`. See [the chart element](chart-element.md).

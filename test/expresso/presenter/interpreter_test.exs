@@ -78,7 +78,7 @@ defmodule Expresso.Presenter.InterpreterTest do
     end
 
     test "an unknown key does not change the state" do
-      assert effects(at(2, 2), "x") == {at(2, 2), [], false}
+      assert effects(at(2, 2), "q") == {at(2, 2), [], false}
     end
   end
 
@@ -151,8 +151,8 @@ defmodule Expresso.Presenter.InterpreterTest do
 
     test "a key that is not a digit removes the digits, and so does a key with no binding" do
       assert keys(at(1, 1), ["3", "j"]) == at(2, 1)
-      assert keys(at(1, 1), ["3", "x"]) == at(1, 1)
-      assert effects(%{at(1, 1) | digits: "3"}, "x") == {at(1, 1), [], true}
+      assert keys(at(1, 1), ["3", "q"]) == at(1, 1)
+      assert effects(%{at(1, 1) | digits: "3"}, "q") == {at(1, 1), [], true}
     end
   end
 
@@ -196,7 +196,7 @@ defmodule Expresso.Presenter.InterpreterTest do
     test "the next key closes the list of keys, and does nothing more" do
       open = %{at(2, 2) | help: true}
 
-      for key <- ["j", "?", "x", "r"] do
+      for key <- ["j", "?", "q", "r"] do
         assert key(open, key) == at(2, 2), key
       end
     end

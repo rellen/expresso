@@ -46,6 +46,9 @@ The present view knows these keys:
 | Click or tap the left third, or swipe right | Previous step |
 | Click or tap a link | The slide and the step of the link |
 | `l` | Laser pointer on or off, in the two windows. A red dot goes with the mouse or with your finger until the next step, and a click does not change the step. |
+| `x` | Drawing on or off, in the two windows. A drag of the mouse or of your finger draws a line on the slide, and a click does not change the step. |
+| `h` | Highlighter or pen for the next line of the drawing |
+| `c` | Remove the drawing of the slide, in the two windows |
 
 <!-- /keys -->
 
@@ -148,6 +151,9 @@ or click closes it. The speaker view knows these keys:
 | Click or tap the right two thirds, or swipe left | Next step |
 | Click or tap the left third, or swipe right | Previous step |
 | `l` | Laser pointer on or off, in the two windows. A red dot goes with the mouse or with your finger until the next step, and a click does not change the step. |
+| `x` | Drawing on or off, in the two windows. A drag of the mouse or of your finger draws a line on the slide, and a click does not change the step. |
+| `h` | Highlighter or pen for the next line of the drawing |
+| `c` | Remove the drawing of the slide, in the two windows |
 
 <!-- /keys -->
 
@@ -245,6 +251,32 @@ These rules apply:
 - The overview, the menu, a black screen, the handout view and paper show no dot. A screen
   reader reads no change.
 
+## The drawing
+
+The key `x` in the present view or in the speaker view turns the drawing on. A drag of
+the mouse, or of your finger on a touch screen, then draws a line on the slide, in the two
+windows. For the design, see [The drawing](../drawing.md).
+
+![The key x turns the drawing on, the pen draws a line under a sentence, the highlighter marks two words, and the key c removes the drawing](https://raw.githubusercontent.com/rellen/expresso/media/present-drawing.gif)
+
+| Key | Effect |
+| --- | --- |
+| `x` | The drawing on or off. |
+| `h` | The highlighter or the pen for the next line. The pen is the tool at the start. |
+| `c` | Remove the drawing of the slide. |
+
+These rules apply:
+
+- A line in one window is on the same part of the slide in the other window. In the
+  speaker view, draw on the page of the current step.
+- While the drawing is on, a click, a tap or a swipe draws, and it does not change the
+  step. The keys still change the step.
+- The drawing stays through the steps of its slide. A change of the slide removes it, and
+  it does not come back with the slide.
+- The key `x` turns the laser pointer off, and the key `l` turns the drawing off.
+- The overview, the menu, a black screen, the handout view and paper show no drawing. A
+  screen reader reads no change.
+
 ## The progress bar
 
 A thin bar at the bottom of the present view shows the part of the talk that is done. Each
@@ -301,3 +333,5 @@ A theme can set these custom properties:
 | `--digits-color`, `--digits-background` | The colors of the slide number that the presenter types. |
 | `--hidden-slide-opacity` | The opacity of the content of a hidden slide in the overview and in the menu. The default is 0.45. |
 | `--laser-color`, `--laser-size` | The color and the size of the dot of the laser pointer. The defaults are the role `danger` and `0.4rem`. |
+| `--draw-pen-color`, `--draw-pen-width` | The color and the width of a line of the pen. The defaults are the role `danger` and `0.12rem`. |
+| `--draw-highlighter-color`, `--draw-highlighter-width`, `--draw-highlighter-opacity` | The color, the width and the opacity of a line of the highlighter. The defaults are the role `warning`, `0.7rem` and 0.4. |

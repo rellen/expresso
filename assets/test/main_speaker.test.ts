@@ -87,7 +87,7 @@ test("b gives a black screen to the present view", () => {
 
   assert.deepEqual(lastPosition(opener), position({ slide: 2, blank: true }));
   assert.equal(text("speaker-position"), "Slide 2 of 2, black screen");
-  page.press("x");
+  page.press("q");
 });
 
 test("the timer counts from the first change of the step", () => {

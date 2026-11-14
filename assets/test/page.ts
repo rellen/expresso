@@ -18,9 +18,11 @@ export type FakeElement = {
   style: {
     display: string;
     width?: string;
-    // The place of the dot of the laser pointer.
+    // The place of the dot of the laser pointer, and the box of the layer
+    // of the drawing.
     left?: string;
     top?: string;
+    height?: string;
     setProperty: (name: string, value: string) => void;
     // The custom properties that `setProperty` got.
     properties: Record<string, string>;
@@ -185,6 +187,9 @@ export type FakePage = {
   // the size of the window, and the page of the current step of the speaker
   // view is at `SPEAKER_BOX`.
   point: (point: Point | null) => void;
+  // Drag the mouse through the points, with the main button: a press at the
+  // first point, a move to each next point, and a release.
+  drag: (points: Point[]) => void;
   element: (id: string) => FakeElement | undefined;
   // The rows of the list of keys that shows, as the names of the keys and the
   // text. The test fails when not exactly one list shows.
@@ -391,8 +396,10 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   // The renderer writes the progress bar into each document.
   const progress = element("progress");
   const announce = element("announce");
-  // The renderer writes the dot of the laser pointer into each document.
+  // The renderer writes the dot of the laser pointer and the layer of the
+  // drawing into each document.
   const laser = element("laser");
+  const drawing = element("drawing");
   const all = () => [
     list,
     ...(options.links === undefined ? [] : [links]),
@@ -404,6 +411,7 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     progress,
     announce,
     laser,
+    drawing,
     ...body.children,
   ];
 
@@ -462,6 +470,9 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
         : null;
     },
     createElement: () => element(""),
+    // A path of the drawing. Its attributes `d` and `class` go into
+    // `attributes`.
+    createElementNS: () => element(""),
     addEventListener: listen,
     get fullscreenElement() {
       return page.fullscreen ? doc.documentElement : null;
@@ -566,6 +577,21 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     },
     receive: (data, source) => {
       call("message", { data, source });
+    },
+    drag: (points) => {
+      const [first, ...rest] = points;
+      assert.ok(first, "a drag needs a point");
+      const event = (point: Point) => ({
+        pointerType: "mouse",
+        button: 0,
+        clientX: point.x,
+        clientY: point.y,
+      });
+      call("pointerdown", event(first));
+      for (const point of rest) {
+        call("pointermove", event(point));
+      }
+      call("pointerup", event(rest[rest.length - 1] ?? first));
     },
     point: (point) => {
       if (point === null) {

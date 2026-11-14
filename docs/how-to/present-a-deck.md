@@ -63,6 +63,19 @@ audience changes only at `Enter` or at a click.
 While the pointer is on, a click does not change the step. To make a mark before the
 talk, see [Point at a part of a slide](point-at-a-part-of-a-slide.md).
 
+## Draw on a slide
+
+1. Press `x` in the present view or in the speaker view. The drawing is then on.
+2. Drag the mouse over the slide, or move your finger on a touch screen. A red line shows
+   in the two windows.
+3. Press `h` for the highlighter, which draws a wide line that the text shows through.
+   Press `h` again for the pen.
+4. Press `c` to remove the drawing. The next slide also removes it.
+5. Press `x` again to turn the drawing off.
+
+While the drawing is on, a click does not change the step. Use the keys to go to the next
+step, and the drawing stays on the slide.
+
 ## Find a key
 
 1. Press `?` or `/` to open the list of keys.

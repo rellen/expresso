@@ -138,6 +138,8 @@ test("the state decoder takes exactly the fields of the state", () => {
     menu: false,
     cursor: 0,
     laser: false,
+    draw: false,
+    highlighter: false,
   };
 
   assert.deepEqual(decodeState(state), state);

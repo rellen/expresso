@@ -98,11 +98,13 @@ defmodule Expresso.Presenter.Schema do
     undim: :boolean,
     menu: :boolean,
     cursor: :index,
-    laser: :boolean
+    laser: :boolean,
+    draw: :boolean,
+    highlighter: :boolean
   ]
 
   @views [:present, :handout, :speaker]
-  @builtins [:open_speaker, :fullscreen, :reset_timer, :switch_scheme]
+  @builtins [:open_speaker, :fullscreen, :reset_timer, :switch_scheme, :clear_drawing]
   @transitions [:none, :fade, :slide, :zoom]
   @regions [:left_third, :right]
   @directions [:left, :right]
@@ -274,6 +276,14 @@ defmodule Expresso.Presenter.Schema do
         expresso: {:literal, "pointer"},
         x: {:nullable, {:number, 0, 1}},
         y: {:nullable, {:number, 0, 1}}}},
+      {:line,
+       "One line of the drawing of a slide: the tool, and each point of the line as a part of the width and of the height of the slide, from 0 to 1.",
+       {:object,
+        tool: {:enum, ["pen", "highlighter"]},
+        points: {:list, {:tuple, [{:number, 0, 1}, {:number, 0, 1}]}}}},
+      {:drawing,
+       "The message that one window of the presenter sends to the other window when the drawing of the current slide changes. `lines` holds each line of the drawing, and an empty list removes the drawing.",
+       {:open_object, expresso: {:literal, "drawing"}, lines: {:list, {:ref, :line}}}},
       {:element_kind, "A kind of element: the class of its root tag, and its name.",
        {:tuple, [:string, :string]}}
     ]

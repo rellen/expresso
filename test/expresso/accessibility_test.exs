@@ -94,6 +94,14 @@ defmodule Expresso.AccessibilityTest do
     assert document |> LazyHTML.query("#laser") |> LazyHTML.text() == ""
   end
 
+  test "the layer of the drawing is one SVG element that a screen reader does not read" do
+    document = document()
+
+    assert count(document, "svg#drawing") == 1
+    assert document |> LazyHTML.query("#drawing") |> LazyHTML.attribute("aria-hidden") == ["true"]
+    assert count(document, "#drawing > *") == 0
+  end
+
   test "the menu is a listbox of groups of options, with a name for each option" do
     document = document()
     [list] = LazyHTML.query(document, "#menu > ol") |> Enum.to_list()

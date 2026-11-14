@@ -29,7 +29,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
 
   # Each key of the definition, and some keys with no binding.
   defp key do
-    frequency([{9, member_of(@keys)}, {1, member_of(["x", "Tab", "F5", "Shift"])}])
+    frequency([{9, member_of(@keys)}, {1, member_of(["q", "Tab", "F5", "Shift"])}])
   end
 
   # A slide number or a step number, inside and outside the deck.
@@ -350,6 +350,51 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
       end
 
       assert run(program, %{state | laser: false}, {:key, "l"}).laser == true
+    end
+  end
+
+  property "x turns the drawing on and off, and a change of the step keeps it" do
+    check all {program, state} <- shown(),
+              key <- member_of(["j", "k", "Home", "End", "x"]),
+              view <- member_of([:present, :speaker]),
+              max_runs: @runs do
+      state = %{state | draw: true, view: view, blank: false, help: false, overview: false}
+      after_key = run(program, state, {:key, key})
+
+      if key == "x" do
+        assert after_key.draw == false and after_key.index == state.index
+      else
+        assert after_key.draw == true
+      end
+
+      assert run(program, %{state | draw: false}, {:key, "x"}).draw == true
+    end
+  end
+
+  property "the laser pointer and the drawing do not go together" do
+    check all {program, state} <- shown(),
+              view <- member_of([:present, :speaker]),
+              max_runs: @runs do
+      state = %{state | view: view, blank: false, help: false, overview: false}
+
+      drawn = run(program, %{state | laser: true, draw: false}, {:key, "x"})
+      assert {drawn.draw, drawn.laser} == {true, false}
+
+      pointed = run(program, %{state | laser: false, draw: true}, {:key, "l"})
+      assert {pointed.draw, pointed.laser} == {false, true}
+    end
+  end
+
+  property "h changes the tool, and c calls the function that removes the drawing" do
+    check all {program, state} <- shown(),
+              view <- member_of([:present, :speaker]),
+              max_runs: @runs do
+      state = %{state | view: view, blank: false, help: false, overview: false}
+
+      assert run(program, state, {:key, "h"}).highlighter == not state.highlighter
+
+      assert Interpreter.run(program, state, {:key, "c"}) ==
+               {%{state | digits: ""}, [:clear_drawing]}
     end
   end
 

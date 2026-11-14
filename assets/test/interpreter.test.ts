@@ -97,7 +97,7 @@ test("run throws for a command that the script does not know", () => {
   };
 
   assert.throws(
-    () => run(broken, deck, program.state, { kind: "key", key: "x" }),
+    () => run(broken, deck, program.state, { kind: "key", key: "q" }),
     { message: 'An unknown command: ["jump",1]' },
   );
 });
@@ -105,7 +105,7 @@ test("run throws for a command that the script does not know", () => {
 test("a state with no change is the same object", () => {
   const { deck, program } = load("1,2");
   const state = program.state;
-  const result = run(program, deck, state, { kind: "key", key: "x" });
+  const result = run(program, deck, state, { kind: "key", key: "q" });
 
   assert.equal(result.state, state);
   assert.equal(prevented(state, result), false);

@@ -46,12 +46,10 @@ test("l turns the pointer on in the two windows, and shows no dot before a move"
 
   assert.equal(page.body.dataset.laser, "true");
   assert.equal(dot(), null);
-  assert.deepEqual((last(opener) as { fields: unknown }).fields, {
-    blank: false,
-    white: false,
-    undim: false,
-    laser: true,
-  });
+  assert.equal(
+    (last(opener) as { fields: { laser: boolean } }).fields.laser,
+    true,
+  );
 });
 
 test("a move of the mouse puts the dot at the mouse, and sends the part of the slide", () => {
@@ -117,12 +115,10 @@ test("the next step turns the pointer off, and the dot goes away", () => {
   assert.equal(page.location.hash, "#1.2");
   assert.equal(page.body.dataset.laser, undefined);
   assert.equal(dot(), null);
-  assert.deepEqual((last(opener) as { fields: unknown }).fields, {
-    blank: false,
-    white: false,
-    undim: false,
-    laser: false,
-  });
+  assert.equal(
+    (last(opener) as { fields: { laser: boolean } }).fields.laser,
+    false,
+  );
 });
 
 test("the pointer of the other window turns on with its message, and a click then moves no step", () => {

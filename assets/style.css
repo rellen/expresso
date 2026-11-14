@@ -3501,6 +3501,68 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     touch-action: none;
   }
 }
+/*
+ * The drawing of the presenter. The key `x` writes `data-draw` on the
+ * `body`, and the presenter script then writes a path for each line into the
+ * element `drawing`, and it puts that element on the box of the slide. The
+ * box of the SVG goes from 0 to 1 in each direction, and
+ * `non-scaling-stroke` keeps the width of a line in the units of the page.
+ * `--draw-scale` is the size of the slide in the window, so a line in the
+ * speaker view is as thin as its slide is small.
+ *
+ * The pen has the color `--danger` of the theme, and the highlighter is a
+ * wide line in `--warning` that the content of the slide shows through. A
+ * deck can set `--draw-pen-color`, `--draw-pen-width`,
+ * `--draw-highlighter-color`, `--draw-highlighter-width` and
+ * `--draw-highlighter-opacity`.
+ *
+ * The drawing shows in the present view and in the speaker view. It does not
+ * show on a black screen, in the overview, in the menu, in the handout view
+ * or on paper. The layer takes no click. While the drawing is on, the slide
+ * shows a cross, a finger on the slide does not scroll the page, and a drag
+ * does not select the text of the slide.
+ */
+#drawing {
+  display: none;
+  position: fixed;
+  z-index: 7;
+  overflow: visible;
+  pointer-events: none;
+}
+#drawing path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.drawing-pen {
+  stroke: var(--draw-pen-color, var(--danger));
+  stroke-width: calc(var(--draw-pen-width, 0.12rem) * var(--draw-scale, 1));
+}
+.drawing-highlighter {
+  stroke: var(--draw-highlighter-color, var(--warning));
+  stroke-width: calc(
+    var(--draw-highlighter-width, 0.7rem) * var(--draw-scale, 1)
+  );
+  opacity: var(--draw-highlighter-opacity, 0.4);
+}
+@media screen {
+  body:is([data-view="present"], [data-view="speaker"]):not(
+      [data-blank="true"],
+      [data-overview="true"],
+      [data-menu="true"]
+    )
+    #drawing {
+    display: block;
+  }
+  body[data-draw="true"][data-view="present"] .screen,
+  body[data-draw="true"][data-view="speaker"]
+    .handout-page[data-speaker="current"] {
+    cursor: crosshair;
+    touch-action: none;
+    user-select: none;
+  }
+}
 #progress {
   display: none;
   width: calc(var(--fraction, 0) * 100%);

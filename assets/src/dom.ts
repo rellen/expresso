@@ -4,6 +4,8 @@
 // decide the next state. `main.ts` connects the two.
 
 import { move, parse } from "./deck.ts";
+import { path as linePath } from "./drawing.ts";
+import type { Line } from "./drawing.ts";
 import type { Deck } from "./deck.ts";
 import { helpMode } from "./interpreter.ts";
 import { search } from "./search.ts";
@@ -376,6 +378,42 @@ export function laser(point: { left: number; top: number } | null): void {
   dot.style.left = `${point.left}px`;
   dot.style.top = `${point.top}px`;
   dot.setAttribute("data-shown", "");
+}
+
+// Write the lines of the drawing of the current slide into the element
+// `drawing`, and put that element on the box of the slide. The element is an
+// SVG whose box goes from 0 to 1 in each direction, as the points of a line
+// do. `--draw-scale` is the size of the slide in this window as a part of
+// the window, so a line in the speaker view is as thin as its slide is
+// small. `drawing.ts` tells how the presenter draws a line.
+//
+// A path takes the namespace of the element `drawing`, which the parser of
+// the browser made as SVG. The script then holds no address of that
+// namespace, and the document names no address of a network.
+export function showDrawing(lines: readonly Line[], view: View): void {
+  const layer = document.getElementById("drawing");
+  if (layer === null) {
+    return;
+  }
+  const box = slideBox(view);
+  if (box !== null) {
+    layer.style.left = `${box.left}px`;
+    layer.style.top = `${box.top}px`;
+    layer.style.width = `${box.width}px`;
+    layer.style.height = `${box.height}px`;
+    layer.style.setProperty(
+      "--draw-scale",
+      String(window.innerWidth > 0 ? box.width / window.innerWidth : 1),
+    );
+  }
+  layer.replaceChildren(
+    ...lines.map((line) => {
+      const path = document.createElementNS(layer.namespaceURI, "path");
+      path.setAttribute("d", linePath(line));
+      path.setAttribute("class", `drawing-${line.tool}`);
+      return path;
+    }),
+  );
 }
 
 // Open the list of keys at the section of a mode, or close it with no mode.

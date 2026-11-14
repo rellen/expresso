@@ -38,9 +38,15 @@ defmodule Expresso.Recorder do
   milliseconds, or a move of the mouse to a part of the window. The speaker
   view shows a later time after a move of the clock. `{:point, 0.25, 0.5}`
   puts the mouse at a quarter of the width and at one half of the height, as
-  for the laser pointer.
+  for the laser pointer. `{:drag, [{0.2, 0.3}, {0.6, 0.3}]}` presses the main
+  button at the first point, moves the mouse through each next point, and
+  releases the button, as for a line of the drawing.
   """
-  @type action :: String.t() | {:advance, pos_integer()} | {:point, number(), number()}
+  @type action ::
+          String.t()
+          | {:advance, pos_integer()}
+          | {:point, number(), number()}
+          | {:drag, [{number(), number()}]}
 
   @typedoc "A PNG image and the time that the GIF shows it, in milliseconds"
   @type frame :: Expresso.Gif.frame()
@@ -177,6 +183,18 @@ defmodule Expresso.Recorder do
   # example whose picture is higher.
   defp act(_recorder, page, _height, {:point, x, y}, now) do
     {:ok, _result} = Page.mouse_move(page.guid, timeout: @timeout, x: x * 1280, y: y * 720)
+    {[], now}
+  end
+
+  defp act(_recorder, page, _height, {:drag, [first | rest]}, now) do
+    move = fn {x, y} ->
+      {:ok, _result} = Page.mouse_move(page.guid, timeout: @timeout, x: x * 1280, y: y * 720)
+    end
+
+    move.(first)
+    {:ok, _result} = Page.mouse_down(page.guid, timeout: @timeout)
+    Enum.each(rest, move)
+    {:ok, _result} = Page.mouse_up(page.guid, timeout: @timeout)
     {[], now}
   end
 

@@ -541,6 +541,8 @@ html               lang "en", and data-variants for a theme with two variants
                      speaker-position, speaker-timer and speaker-left
       div            the progress bar, id "progress", role "progressbar"
       div            the dot of the laser pointer, id "laser", aria-hidden
+      svg            the drawing of the presenter, id "drawing", aria-hidden,
+                     with the box 0 0 1 1
       div            the live region of the moves, id "announce", role "status"
       nav            the menu of the slides and the steps, id "menu", with an ol
                      of role "listbox" and an option for each step
@@ -2397,6 +2399,9 @@ The TypeScript part is under `assets/src/`. It has these modules:
   `data-back` on the slide, and the effect `:type` then shows its text at once.
 - `laser.ts` holds the rules of the laser pointer: the place of the dot as a part of the
   slide, and the message `pointer` between the windows. It does not touch the document.
+- `drawing.ts` holds the rules of the drawing: a line with its tool and its points, the
+  path of a line, and the message `drawing` between the windows. It does not touch the
+  document.
 - `main.ts` connects the modules. It sends each event to the interpreter, and it writes
   the fragment of the address.
 - `layout.ts` makes the layout check of `?check`. It shows each step with `dom.ts`, it
@@ -2454,9 +2459,9 @@ and the modes. For each key, click and swipe, `run` in `interpreter.ts` does the
 3. It applies the commands to the state, one after the other.
 
 A command changes a field of the state, goes to a step or a slide, or calls a built-in
-function. The built-in functions are `open_speaker`, `fullscreen`, `reset_timer` and
-`switch_scheme`, and `main.ts` calls them. `main.ts` stops the default operation of the browser when the state
-changes or when the event calls a built-in function. The fragment of the address and the
+function. The built-in functions are `open_speaker`, `fullscreen`, `reset_timer`,
+`switch_scheme` and `clear_drawing`, and `main.ts` calls them. `main.ts` stops the default
+operation of the browser when the state changes or when the event calls a built-in function. The fragment of the address and the
 messages between the windows do not go through the modes.
 
 A new key with the current commands is therefore a change to `Expresso.Presenter.Default`
@@ -2596,14 +2601,23 @@ The tables do not give these rules:
   option `reset [:undim]` sets `undim` to `false` at each change of the step, so the next
   step dims the code again. The presenter does not have to press `d` again after an
   answer. See "The options sync and reset".
-- `l` toggles the field `laser`, which is the laser pointer. The field is in the options
-  `sync` and `reset`, so the two windows have the same value, and a change of the step
-  turns the pointer off. While the field is true, `main.ts` puts the element `laser` at
+- `l` toggles the field `laser`, which is the laser pointer, and it sets `draw` to
+  `false`. The field is in the options `sync` and `reset`, so the two windows have the
+  same value, and a change of the step turns the pointer off. While the field is true, `main.ts` puts the element `laser` at
   the mouse, and it sends the place of the dot to the other window in a message
   `pointer`. The place is a part of the box of the slide, from 0 to 1, so the dot is on
   the same part of the slide in a window of a different size. A click and a swipe then
   move the dot only, because `main.ts` does not give them to the interpreter.
   `docs/laser-pointer.md` gives the design.
+- `x` toggles the field `draw`, which is the drawing, and it sets `laser` to `false`. `h`
+  toggles the field `highlighter`, which gives the tool of the next line. The two fields
+  are in the option `sync`. While `draw` is true, a drag of the mouse or of a finger makes
+  a line. `main.ts` keeps the lines of the slide that shows, and `showDrawing` in `dom.ts`
+  writes a path for each line into the SVG element `drawing`, which it puts on the box of
+  the slide. Each change goes to the other window in a message `drawing` with each line.
+  A change of the slide removes the lines. `docs/drawing.md` gives the design.
+- `c` calls the built-in function `clear_drawing`, which removes the lines in the two
+  windows.
 
 ### The list of keys
 

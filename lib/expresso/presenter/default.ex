@@ -30,6 +30,15 @@ defmodule Expresso.Presenter.Default do
   @laser "Laser pointer on or off, in the two windows. A red dot goes with the mouse or with " <>
            "your finger until the next step, and a click does not change the step."
 
+  # The drawing. While the field `draw` is true, the script draws a line for
+  # each drag of the mouse or of a finger, and a click or a swipe does not
+  # change the step. The laser pointer and the drawing do not go together, so
+  # each key turns the other one off. `docs/drawing.md` gives the design.
+  @draw "Drawing on or off, in the two windows. A drag of the mouse or of your finger draws " <>
+          "a line on the slide, and a click does not change the step."
+  @highlighter "Highlighter or pen for the next line of the drawing"
+  @clear "Remove the drawing of the slide, in the two windows"
+
   state index: 0,
         view: :present,
         blank: false,
@@ -43,9 +52,11 @@ defmodule Expresso.Presenter.Default do
         undim: false,
         menu: false,
         cursor: 0,
-        laser: false
+        laser: false,
+        draw: false,
+        highlighter: false
 
-  sync [:blank, :white, :undim, :laser]
+  sync [:blank, :white, :undim, :laser, :draw, :highlighter]
   reset [:undim, :laser]
 
   # The attributes of the `body`. The style sheet reads them.
@@ -60,6 +71,8 @@ defmodule Expresso.Presenter.Default do
   attribute :undim, "data-undim", flag: true
   attribute :menu, "data-menu", flag: true
   attribute :laser, "data-laser", flag: true
+  attribute :draw, "data-draw", flag: true
+  attribute :highlighter, "data-highlighter", flag: true
 
   # The style sheet sets the width of the progress bar from the part of the
   # deck before the current step.
@@ -184,7 +197,10 @@ defmodule Expresso.Presenter.Default do
       label: "Click or tap a link",
       group: @pointer
 
-    key "l", toggle(:laser), @laser, group: @pointer
+    key "l", [toggle(:laser), set(:draw, false)], @laser, group: @pointer
+    key "x", [toggle(:draw), set(:laser, false)], @draw, group: @pointer
+    key "h", toggle(:highlighter), @highlighter, group: @pointer
+    key "c", builtin(:clear_drawing), @clear, group: @pointer
   end
 
   # The speaker view knows the keys of the present view, except `p`, `s` and
@@ -253,7 +269,10 @@ defmodule Expresso.Presenter.Default do
       label: "Click or tap the left third, or swipe right",
       group: @pointer
 
-    key "l", toggle(:laser), @laser, group: @pointer
+    key "l", [toggle(:laser), set(:draw, false)], @laser, group: @pointer
+    key "x", [toggle(:draw), set(:laser, false)], @draw, group: @pointer
+    key "h", toggle(:highlighter), @highlighter, group: @pointer
+    key "c", builtin(:clear_drawing), @clear, group: @pointer
   end
 
   # The handout view knows only these keys. The browser gets each other key,

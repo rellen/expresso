@@ -429,6 +429,16 @@ defmodule Expresso.Renderer do
     end
   end
 
+  # The layer of the drawing. Temple writes the name of an attribute with a
+  # hyphen for each underscore, and `viewBox` has a capital letter, so the
+  # element is text. The text holds no value of a deck.
+  # sobelow_skip ["XSS.Raw"]
+  defp drawing(_assigns) do
+    Phoenix.HTML.raw(
+      ~s(<svg id="drawing" aria-hidden="true" viewBox="0 0 1 1" preserveAspectRatio="none"></svg>)
+    )
+  end
+
   # The notes of one page of the handout view. A note of an earlier step
   # that has no page of its own has `data-covered` and a label with its
   # steps. The speaker view leaves such a note out. `Expresso.Notes.html/1`
@@ -898,6 +908,12 @@ defmodule Expresso.Renderer do
             # decoration for the eye, so a screen reader gets no element.
             div id: "laser", aria_hidden: "true" do
             end
+
+            # The drawing of the presenter. The key `x` turns the drawing on,
+            # and the script then writes a path for each line into this
+            # element. Its box goes from 0 to 1 in each direction, as the
+            # points of a line do. A screen reader gets no element.
+            c(&drawing/1, [])
 
             # The script writes the slide and the step of each move into this
             # element, and a screen reader reads the text.

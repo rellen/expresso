@@ -30,13 +30,13 @@ export const VIEWS: readonly View[] = ["present", "handout", "speaker"];
 export const decodeView: Decoder<View> = /* @__PURE__ */ oneOf(VIEWS);
 
 // A field of the state.
-export type Field = "index" | "view" | "blank" | "white" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim" | "menu" | "cursor" | "laser";
-export const FIELDS: readonly Field[] = ["index", "view", "blank", "white", "digits", "help", "progress", "every", "overview", "selected", "undim", "menu", "cursor", "laser"];
+export type Field = "index" | "view" | "blank" | "white" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim" | "menu" | "cursor" | "laser" | "draw" | "highlighter";
+export const FIELDS: readonly Field[] = ["index", "view", "blank", "white", "digits", "help", "progress", "every", "overview", "selected", "undim", "menu", "cursor", "laser", "draw", "highlighter"];
 export const decodeField: Decoder<Field> = /* @__PURE__ */ oneOf(FIELDS);
 
 // A field of the state that holds true or false.
-export type BooleanField = "blank" | "white" | "help" | "progress" | "every" | "overview" | "undim" | "menu" | "laser";
-export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "white", "help", "progress", "every", "overview", "undim", "menu", "laser"];
+export type BooleanField = "blank" | "white" | "help" | "progress" | "every" | "overview" | "undim" | "menu" | "laser" | "draw" | "highlighter";
+export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "white", "help", "progress", "every", "overview", "undim", "menu", "laser", "draw", "highlighter"];
 export const decodeBooleanField: Decoder<BooleanField> = /* @__PURE__ */ oneOf(BOOLEAN_FIELDS);
 
 // A field of the state that holds a number.
@@ -65,6 +65,8 @@ export type State = Readonly<{
   menu: boolean;
   cursor: number;
   laser: boolean;
+  draw: boolean;
+  highlighter: boolean;
 }>;
 export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   index: /* @__PURE__ */ integer(0),
@@ -81,11 +83,13 @@ export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   menu: boolean,
   cursor: /* @__PURE__ */ integer(0),
   laser: boolean,
+  draw: boolean,
+  highlighter: boolean,
 });
 
 // A built-in function of the browser.
-export type Builtin = "open_speaker" | "fullscreen" | "reset_timer" | "switch_scheme";
-export const BUILTINS: readonly Builtin[] = ["open_speaker", "fullscreen", "reset_timer", "switch_scheme"];
+export type Builtin = "open_speaker" | "fullscreen" | "reset_timer" | "switch_scheme" | "clear_drawing";
+export const BUILTINS: readonly Builtin[] = ["open_speaker", "fullscreen", "reset_timer", "switch_scheme", "clear_drawing"];
 export const decodeBuiltin: Decoder<Builtin> = /* @__PURE__ */ oneOf(BUILTINS);
 
 // A part of the window under a click.
@@ -115,6 +119,8 @@ export type Command =
   | readonly ["set", "menu", boolean]
   | readonly ["set", "cursor", number]
   | readonly ["set", "laser", boolean]
+  | readonly ["set", "draw", boolean]
+  | readonly ["set", "highlighter", boolean]
   | readonly ["toggle", BooleanField]
   | readonly ["clear", Field]
   | readonly ["assign", "selected", readonly ["entry", "slide"]]
@@ -145,6 +151,8 @@ export const decodeCommand: Decoder<Command> = /* @__PURE__ */ union(
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("menu"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("cursor"), /* @__PURE__ */ integer(0)),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("laser"), boolean),
+  /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("draw"), boolean),
+  /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("highlighter"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("toggle"), decodeBooleanField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("clear"), decodeField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("assign"), /* @__PURE__ */ literal("selected"), /* @__PURE__ */ tuple(/* @__PURE__ */ literal("entry"), /* @__PURE__ */ literal("slide"))),
@@ -184,6 +192,8 @@ export type WrittenMode = Readonly<{
     menu?: boolean;
     cursor?: number;
     laser?: boolean;
+    draw?: boolean;
+    highlighter?: boolean;
   }>;
   any: Commands | null;
   other: Commands | null;
@@ -209,6 +219,8 @@ export const decodeWrittenMode: Decoder<WrittenMode> = /* @__PURE__ */ object({
     menu: boolean,
     cursor: /* @__PURE__ */ integer(0),
     laser: boolean,
+    draw: boolean,
+    highlighter: boolean,
   }),
   any: /* @__PURE__ */ nullable(decodeCommands),
   other: /* @__PURE__ */ nullable(decodeCommands),
@@ -407,6 +419,8 @@ export type Message = Readonly<{
     menu?: boolean;
     cursor?: number;
     laser?: boolean;
+    draw?: boolean;
+    highlighter?: boolean;
   }>;
   scheme: Scheme;
   time: number;
@@ -430,6 +444,8 @@ export const decodeMessage: Decoder<Message> = /* @__PURE__ */ openObject({
     menu: boolean,
     cursor: /* @__PURE__ */ integer(0),
     laser: boolean,
+    draw: boolean,
+    highlighter: boolean,
   }),
   scheme: decodeScheme,
   time: /* @__PURE__ */ number(),
@@ -457,6 +473,29 @@ export const decodePointer: Decoder<Pointer> = /* @__PURE__ */ openObject({
   expresso: /* @__PURE__ */ literal("pointer"),
   x: /* @__PURE__ */ nullable(/* @__PURE__ */ number(0, 1)),
   y: /* @__PURE__ */ nullable(/* @__PURE__ */ number(0, 1)),
+});
+
+// One line of the drawing of a slide: the tool, and each point of the line as a
+// part of the width and of the height of the slide, from 0 to 1.
+export type Line = Readonly<{
+  tool: "pen" | "highlighter";
+  points: readonly (readonly [number, number])[];
+}>;
+export const decodeLine: Decoder<Line> = /* @__PURE__ */ object({
+  tool: /* @__PURE__ */ oneOf(["pen", "highlighter"]),
+  points: /* @__PURE__ */ list(/* @__PURE__ */ tuple(/* @__PURE__ */ number(0, 1), /* @__PURE__ */ number(0, 1))),
+});
+
+// The message that one window of the presenter sends to the other window when
+// the drawing of the current slide changes. `lines` holds each line of the
+// drawing, and an empty list removes the drawing.
+export type Drawing = Readonly<{
+  expresso: "drawing";
+  lines: readonly Line[];
+}>;
+export const decodeDrawing: Decoder<Drawing> = /* @__PURE__ */ openObject({
+  expresso: /* @__PURE__ */ literal("drawing"),
+  lines: /* @__PURE__ */ list(decodeLine),
 });
 
 // A kind of element: the class of its root tag, and its name.

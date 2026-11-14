@@ -48,7 +48,7 @@ test("a move back to a slide of one step gives its name", () => {
 });
 
 test("a key that does not move writes nothing new", () => {
-  page.press("x");
+  page.press("q");
 
   assert.equal(page.announce.textContent, "Slide 1 of 2: Hello");
 });

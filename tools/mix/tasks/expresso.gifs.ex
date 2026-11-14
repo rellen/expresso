@@ -261,6 +261,19 @@ defmodule Mix.Tasks.Expresso.Gifs do
       address: "#2",
       actions: ["l", {:point, 0.33, 0.44}, {:point, 0.5, 0.44}, {:point, 0.67, 0.44}, "j"]
     },
+    %{
+      name: "present-drawing",
+      deck: "tour.exs",
+      address: "#2",
+      actions: [
+        "x",
+        {:drag, [{0.3, 0.5}, {0.7, 0.5}]},
+        "h",
+        {:drag, [{0.52, 0.43}, {0.69, 0.43}]},
+        "j",
+        "c"
+      ]
+    },
     %{name: "present-progress", deck: "short.exs", actions: ["j", "j", "j"]},
     %{name: "present-slide-numbers", deck: "tour.exs", address: "#3", still: true},
     %{name: "present-handout", deck: "tour.exs", actions: ["p"], still: true, height: 2160}

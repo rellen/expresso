@@ -42,7 +42,7 @@ test("the progress bar is on and empty at load", () => {
 
 test("an unknown key writes nothing, because the state does not change", () => {
   const count = page.written.length;
-  assert.equal(page.press("x"), false);
+  assert.equal(page.press("q"), false);
 
   assert.equal(page.written.length, count);
   assert.deepEqual(displays(), ["flex", "none"]);
@@ -111,7 +111,7 @@ test("a digit writes data-digits, and another key removes the digits", () => {
   page.press("2");
   assert.equal(body.dataset.digits, "12");
 
-  page.press("x");
+  page.press("q");
   assert.equal(body.dataset.digits, "");
   assert.deepEqual(displays(), ["flex", "none"]);
 });
@@ -191,7 +191,7 @@ test("a message older than the state of the window has no effect", () => {
 });
 
 test("a message from another window has no effect", () => {
-  page.press("x");
+  page.press("q");
   page.receive(position({ time: later() }), null);
 
   assert.equal(nth(slides, 1).dataset.step, "2");
