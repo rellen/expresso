@@ -100,11 +100,19 @@ defmodule Expresso.Presenter.Schema do
     cursor: :index,
     laser: :boolean,
     draw: :boolean,
-    highlighter: :boolean
+    highlighter: :boolean,
+    zoom: :boolean
   ]
 
   @views [:present, :handout, :speaker]
-  @builtins [:open_speaker, :fullscreen, :reset_timer, :switch_scheme, :clear_drawing]
+  @builtins [
+    :open_speaker,
+    :fullscreen,
+    :reset_timer,
+    :switch_scheme,
+    :clear_drawing,
+    :zoom_out
+  ]
   @transitions [:none, :fade, :slide, :zoom]
   @regions [:left_third, :right]
   @directions [:left, :right]
@@ -284,6 +292,13 @@ defmodule Expresso.Presenter.Schema do
       {:drawing,
        "The message that one window of the presenter sends to the other window when the drawing of the current slide changes. `lines` holds each line of the drawing, and an empty list removes the drawing.",
        {:open_object, expresso: {:literal, "drawing"}, lines: {:list, {:ref, :line}}}},
+      {:area,
+       "A rectangle on a slide: the place of its top left corner, its width and its height, each as a part of the width or of the height of the slide, from 0 to 1.",
+       {:object,
+        x: {:number, 0, 1}, y: {:number, 0, 1}, width: {:number, 0, 1}, height: {:number, 0, 1}}},
+      {:zoom,
+       "The message that one window of the presenter sends to the other window when the zoom of the current slide changes. `area` is the part of the slide that fills the window, and null shows the full slide.",
+       {:open_object, expresso: {:literal, "zoom"}, area: {:nullable, {:ref, :area}}}},
       {:element_kind, "A kind of element: the class of its root tag, and its name.",
        {:tuple, [:string, :string]}}
     ]

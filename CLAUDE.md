@@ -58,6 +58,10 @@ Read these documents before you change the code:
   presenter draws on a slide during the talk, with a pen or with a highlighter. The code
   contains this design. The document records ten decisions, and each is settled. Its last
   section, "The result", tells what changed during the work.
+- `docs/zoom.md` — the design for the zoom of the presenter: a part of a slide that fills
+  the window during the talk. The code contains this design. The document records ten
+  decisions, and each is settled. Its last section, "The result", tells what changed
+  during the work.
 - `docs/graph-diagrams.md` — the design for a `diagram` from the source of a graph, in the
   language of Graphviz or of D2. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during

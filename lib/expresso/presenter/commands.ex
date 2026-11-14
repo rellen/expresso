@@ -86,6 +86,7 @@ defmodule Expresso.Presenter.Commands do
           | :reset_timer
           | :switch_scheme
           | :clear_drawing
+          | :zoom_out
         ) :: Definition.command()
   def builtin(name), do: {:builtin, name}
 

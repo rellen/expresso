@@ -11,7 +11,8 @@ defmodule Expresso.Presenter.DslTest do
   @state """
   state index: 0, view: :present, blank: false, white: false, help: false, digits: "",
         overview: false, selected: 1, progress: true, every: false, undim: false,
-        menu: false, cursor: 0, laser: false, draw: false, highlighter: false
+        menu: false, cursor: 0, laser: false, draw: false, highlighter: false,
+        zoom: false
 
   sync [:blank]
   reset [:undim]
@@ -118,7 +119,8 @@ defmodule Expresso.Presenter.DslTest do
         error("""
         state index: 0, view: :stage, blank: false, white: false, help: false, digits: "",
               overview: false, selected: 1, progress: true, every: false, undim: false,
-        menu: false, cursor: 0, laser: false, draw: false, highlighter: false
+        menu: false, cursor: 0, laser: false, draw: false, highlighter: false,
+        zoom: false
         sync []
         """)
 
@@ -132,7 +134,7 @@ defmodule Expresso.Presenter.DslTest do
           |> Keyword.merge(digits: ~s(""), overview: "false", selected: "1", progress: "true")
           |> Keyword.merge(every: "false")
           |> Keyword.merge(undim: "false", menu: "false", cursor: "0", laser: "false")
-          |> Keyword.merge(draw: "false", highlighter: "false")
+          |> Keyword.merge(draw: "false", highlighter: "false", zoom: "false")
           |> Keyword.put(field, value)
           |> Enum.map_join(", ", fn {key, text} -> "#{key}: #{text}" end)
 

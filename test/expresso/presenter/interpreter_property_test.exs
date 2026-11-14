@@ -320,13 +320,14 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
 
       if {slide, 1} in Tuple.to_list(program.steps) do
         # A change of the step also turns the dimming of code on again, and
-        # it turns the laser pointer off.
+        # it turns the laser pointer and the zoom off.
         same = chosen.index == state.index
         undim = state.undim and same
         laser = state.laser and same
+        zoom = state.zoom and same
 
         assert %{chosen | index: state.index} ==
-                 %{state | overview: false, undim: undim, laser: laser}
+                 %{state | overview: false, undim: undim, laser: laser, zoom: zoom}
 
         assert where(program, chosen) == {slide, 1}
       else
@@ -382,6 +383,53 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
 
       pointed = run(program, %{state | laser: false, draw: true}, {:key, "l"})
       assert {pointed.draw, pointed.laser} == {false, true}
+    end
+  end
+
+  property "z turns the zoom on and off, and a change of the step turns it off" do
+    check all {program, state} <- shown(),
+              key <- member_of(["j", "k", "Home", "End", "z"]),
+              view <- member_of([:present, :speaker]),
+              max_runs: @runs do
+      state = %{state | zoom: true, view: view, blank: false, help: false, overview: false}
+      after_key = run(program, state, {:key, key})
+
+      if key == "z" or after_key.index != state.index do
+        assert after_key.zoom == false
+      else
+        assert after_key.zoom == true
+      end
+
+      assert run(program, %{state | zoom: false}, {:key, "z"}).zoom == true
+    end
+  end
+
+  property "the zoom does not go with the laser pointer or with the drawing" do
+    check all {program, state} <- shown(),
+              view <- member_of([:present, :speaker]),
+              max_runs: @runs do
+      state = %{state | view: view, blank: false, help: false, overview: false}
+
+      zoomed = run(program, %{state | laser: true, draw: true, zoom: false}, {:key, "z"})
+      assert {zoomed.zoom, zoomed.laser, zoomed.draw} == {true, false, false}
+
+      pointed = run(program, %{state | laser: false, zoom: true}, {:key, "l"})
+      assert {pointed.laser, pointed.zoom} == {true, false}
+
+      drawn = run(program, %{state | draw: false, zoom: true}, {:key, "x"})
+      assert {drawn.draw, drawn.zoom} == {true, false}
+    end
+  end
+
+  property "Escape turns the zoom off and calls the function that shows the full slide" do
+    check all {program, state} <- shown(),
+              zoom <- boolean(),
+              view <- member_of([:present, :speaker]),
+              max_runs: @runs do
+      state = %{state | zoom: zoom, view: view, blank: false, help: false, overview: false}
+
+      assert Interpreter.run(program, state, {:key, "Escape"}) ==
+               {%{state | zoom: false, digits: ""}, [:zoom_out]}
     end
   end
 

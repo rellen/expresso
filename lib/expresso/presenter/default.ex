@@ -32,12 +32,23 @@ defmodule Expresso.Presenter.Default do
 
   # The drawing. While the field `draw` is true, the script draws a line for
   # each drag of the mouse or of a finger, and a click or a swipe does not
-  # change the step. The laser pointer and the drawing do not go together, so
-  # each key turns the other one off. `docs/drawing.md` gives the design.
+  # change the step. The laser pointer, the drawing and the zoom each use the
+  # click, so each key turns the other two off. `docs/drawing.md` gives the
+  # design.
   @draw "Drawing on or off, in the two windows. A drag of the mouse or of your finger draws " <>
           "a line on the slide, and a click does not change the step."
   @highlighter "Highlighter or pen for the next line of the drawing"
   @clear "Remove the drawing of the slide, in the two windows"
+
+  # The zoom. While the field `zoom` is true, a click makes the part of the
+  # slide under the mouse fill the window, and the next click shows the full
+  # slide again. A click with the Alt key does the same with the field at
+  # `false`, and the script reads that click itself. `docs/zoom.md` gives the
+  # design.
+  @zoom "Zoom on or off, in the two windows. A click then makes the part of the slide under " <>
+          "the mouse fill the window, and the next click shows the full slide. A click with " <>
+          "the Alt key does the same while the zoom is off."
+  @zoom_out "Show the full slide again after a zoom, in the two windows"
 
   state index: 0,
         view: :present,
@@ -54,10 +65,11 @@ defmodule Expresso.Presenter.Default do
         cursor: 0,
         laser: false,
         draw: false,
-        highlighter: false
+        highlighter: false,
+        zoom: false
 
-  sync [:blank, :white, :undim, :laser, :draw, :highlighter]
-  reset [:undim, :laser]
+  sync [:blank, :white, :undim, :laser, :draw, :highlighter, :zoom]
+  reset [:undim, :laser, :zoom]
 
   # The attributes of the `body`. The style sheet reads them.
   attribute :view, "data-view"
@@ -73,6 +85,7 @@ defmodule Expresso.Presenter.Default do
   attribute :laser, "data-laser", flag: true
   attribute :draw, "data-draw", flag: true
   attribute :highlighter, "data-highlighter", flag: true
+  attribute :zoom, "data-zoom", flag: true
 
   # The style sheet sets the width of the progress bar from the part of the
   # deck before the current step.
@@ -197,10 +210,12 @@ defmodule Expresso.Presenter.Default do
       label: "Click or tap a link",
       group: @pointer
 
-    key "l", [toggle(:laser), set(:draw, false)], @laser, group: @pointer
-    key "x", [toggle(:draw), set(:laser, false)], @draw, group: @pointer
+    key "l", [toggle(:laser), set(:draw, false), set(:zoom, false)], @laser, group: @pointer
+    key "x", [toggle(:draw), set(:laser, false), set(:zoom, false)], @draw, group: @pointer
     key "h", toggle(:highlighter), @highlighter, group: @pointer
     key "c", builtin(:clear_drawing), @clear, group: @pointer
+    key "z", [toggle(:zoom), set(:laser, false), set(:draw, false)], @zoom, group: @pointer
+    key "Escape", [set(:zoom, false), builtin(:zoom_out)], @zoom_out, group: @pointer
   end
 
   # The speaker view knows the keys of the present view, except `p`, `s` and
@@ -269,10 +284,12 @@ defmodule Expresso.Presenter.Default do
       label: "Click or tap the left third, or swipe right",
       group: @pointer
 
-    key "l", [toggle(:laser), set(:draw, false)], @laser, group: @pointer
-    key "x", [toggle(:draw), set(:laser, false)], @draw, group: @pointer
+    key "l", [toggle(:laser), set(:draw, false), set(:zoom, false)], @laser, group: @pointer
+    key "x", [toggle(:draw), set(:laser, false), set(:zoom, false)], @draw, group: @pointer
     key "h", toggle(:highlighter), @highlighter, group: @pointer
     key "c", builtin(:clear_drawing), @clear, group: @pointer
+    key "z", [toggle(:zoom), set(:laser, false), set(:draw, false)], @zoom, group: @pointer
+    key "Escape", [set(:zoom, false), builtin(:zoom_out)], @zoom_out, group: @pointer
   end
 
   # The handout view knows only these keys. The browser gets each other key,

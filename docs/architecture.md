@@ -2402,6 +2402,9 @@ The TypeScript part is under `assets/src/`. It has these modules:
 - `drawing.ts` holds the rules of the drawing: a line with its tool and its points, the
   path of a line, and the message `drawing` between the windows. It does not touch the
   document.
+- `zoom.ts` holds the rules of the zoom: the area of a click as a part of the slide, the
+  scale and the move of the slide for an area, and the message `zoom` between the
+  windows. It does not touch the document.
 - `main.ts` connects the modules. It sends each event to the interpreter, and it writes
   the fragment of the address.
 - `layout.ts` makes the layout check of `?check`. It shows each step with `dom.ts`, it
@@ -2460,7 +2463,7 @@ and the modes. For each key, click and swipe, `run` in `interpreter.ts` does the
 
 A command changes a field of the state, goes to a step or a slide, or calls a built-in
 function. The built-in functions are `open_speaker`, `fullscreen`, `reset_timer`,
-`switch_scheme` and `clear_drawing`, and `main.ts` calls them. `main.ts` stops the default
+`switch_scheme`, `clear_drawing` and `zoom_out`, and `main.ts` calls them. `main.ts` stops the default
 operation of the browser when the state changes or when the event calls a built-in function. The fragment of the address and the
 messages between the windows do not go through the modes.
 
@@ -2618,6 +2621,17 @@ The tables do not give these rules:
   A change of the slide removes the lines. `docs/drawing.md` gives the design.
 - `c` calls the built-in function `clear_drawing`, which removes the lines in the two
   windows.
+- `z` toggles the field `zoom`, and it sets `laser` and `draw` to `false`. The field is
+  in the options `sync` and `reset`. While it is true, a click zooms. A click with the
+  Alt key zooms at each time, and `main.ts` reads that click before the interpreter.
+  `elementBox` in `dom.ts` returns the box of the content of the element under the click,
+  and `zoom.ts` makes an area from it, as a part of the slide. `showZoom` in `dom.ts`
+  writes `data-zoomed` and the custom properties `--zoom-scale`, `--zoom-x` and
+  `--zoom-y` on the `html` element, and the style sheet makes the transform of the
+  element that holds the slide. The area goes to the other window in a message `zoom`. A
+  change of the step shows the full slide. `docs/zoom.md` gives the design.
+- `Escape` sets `zoom` to `false`, and it calls the built-in function `zoom_out`, which
+  shows the full slide in the two windows.
 
 ### The list of keys
 

@@ -133,6 +133,27 @@ defmodule Expresso.E2E do
   end
 
   @doc """
+  Click the main mouse button at a point of the viewport of a page, with the
+  Alt key down
+  """
+  @spec alt_click(map(), number(), number()) :: map()
+  def alt_click(page, x, y) do
+    key(page, :keyboard_down, "Alt")
+    click(page, x, y)
+    key(page, :keyboard_up, "Alt")
+  end
+
+  # Press or release one key of the keyboard of a page.
+  defp key(page, method, key) do
+    case PlaywrightEx.send(%{guid: page.guid, method: method, params: %{key: key}},
+           timeout: @timeout
+         ) do
+      %{error: error} -> raise "#{method} failed: #{inspect(error)}"
+      _response -> page
+    end
+  end
+
+  @doc """
   Tap a point of the viewport of a page with a finger
 
   The context of the page must have `has_touch: true`.

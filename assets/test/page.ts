@@ -85,6 +85,11 @@ type Key = {
 // A click. The window of the fake page is 1200 pixels wide.
 type Click = {
   clientX: number;
+  // The height of the click in the window, for a click that zooms.
+  clientY?: number;
+  // The box of the element of the slide under the click, in pixels. A click
+  // with no box is outside each element.
+  box?: { left: number; top: number; width: number; height: number };
   button?: number;
   ctrlKey?: boolean;
   altKey?: boolean;
@@ -152,7 +157,11 @@ export type FakePage = {
   location: { hash: string; search: string; readonly href: string };
   document: {
     title: string;
-    documentElement: { dataset: Record<string, string | undefined> };
+    documentElement: {
+      dataset: Record<string, string | undefined>;
+      // The custom properties that the zoom writes.
+      style: { properties: Record<string, string> };
+    };
   };
   // The fragments that `history.replaceState` got, in sequence.
   written: string[];
@@ -486,6 +495,19 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
       // dark variant.
       hasAttribute: (name: string) =>
         name === "data-variants" && options.variants === true,
+      // The zoom writes `data-zoomed` and three custom properties.
+      setAttribute: (name: string, value: string) => {
+        doc.documentElement.dataset[datasetKey(name)] = value;
+      },
+      removeAttribute: (name: string) => {
+        delete doc.documentElement.dataset[datasetKey(name)];
+      },
+      style: {
+        properties: {} as Record<string, string>,
+        setProperty: (name: string, value: string) => {
+          doc.documentElement.style.properties[name] = value;
+        },
+      },
       requestFullscreen: async () => {
         page.fullscreen = true;
       },
@@ -530,6 +552,18 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
       // commands. A page of the overview holds commands, and it is not
       // interactive.
       const target = {
+        // The element of the slide under the click: an element with a box
+        // whose parent holds the elements of a slide.
+        parentElement:
+          event.box === undefined
+            ? null
+            : {
+                matches: (selector: string) => selector.includes(".slide-main"),
+              },
+        matches: () => false,
+        // The fake element has no kind of node, so the script finds no text
+        // and no picture in it, and its own box is the box of its content.
+        getBoundingClientRect: () => event.box,
         closest: (selector: string) => {
           const link =
             event.link === undefined

@@ -76,6 +76,18 @@ talk, see [Point at a part of a slide](point-at-a-part-of-a-slide.md).
 While the drawing is on, a click does not change the step. Use the keys to go to the next
 step, and the drawing stays on the slide.
 
+## Zoom into a part of a slide
+
+1. Hold the Alt key, and click a part of the slide in the present view or in the speaker
+   view. On a Mac, the Alt key is the Option key. That part then fills the window, in the
+   two windows.
+2. Click with the Alt key again, or press `Esc`, to show the full slide. The next step
+   also shows the full slide.
+
+On a touch screen, or when the window system uses a click with the Alt key, press `z`
+first. Each click or tap then zooms, and it does not change the step. Press `z` again to
+turn this off.
+
 ## Find a key
 
 1. Press `?` or `/` to open the list of keys.

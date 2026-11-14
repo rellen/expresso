@@ -3563,6 +3563,84 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     user-select: none;
   }
 }
+/*
+ * The zoom of the presenter. A click with the Alt key, or a click while the
+ * key `z` has the zoom on, makes a part of the slide fill the window. The
+ * presenter script writes `data-zoomed` on the `html` element, and the custom
+ * properties `--zoom-scale`, `--zoom-x` and `--zoom-y`: the scale of the
+ * slide, and the move of its top left corner as a part of its width and of
+ * its height. The transform has its origin at that corner. The move keeps
+ * each edge of the slide at an edge of the window or outside it.
+ *
+ * In the present view the transform changes with the speed and the easing of
+ * the theme, and a reader who asks for reduced motion gets no change in
+ * progress, because `--dur` is then 0s. The window shows no scroll bar for
+ * the part of the slide outside it.
+ *
+ * In the speaker view the page of the current step has the same transform.
+ * A page cannot cut its own transform, so `clip-path` cuts the page to the
+ * part that the transform puts on the box of the page. The values of the cut
+ * are the inverse of the transform. The page changes at once, because the
+ * cut and the transform of a change in progress do not agree. The overview
+ * shows each page with no zoom.
+ *
+ * While the zoom of the key `z` is on, the mouse shows a magnifying glass on
+ * the slide.
+ */
+@media screen {
+  body[data-view="present"] .screen {
+    transform-origin: 0 0;
+    transition: transform var(--dur) var(--ease);
+  }
+  body[data-view="speaker"] .handout-page[data-speaker="current"] {
+    transform-origin: 0 0;
+  }
+  /*
+   * The slide with a zoom is larger than the window. `hidden` starts with
+   * the zoom, and it ends after the time of the change to the full slide,
+   * so the window shows no scroll bar while the slide gets smaller. A
+   * browser that cannot delay the change of `overflow` ends it at once.
+   */
+  body[data-view="present"] {
+    transition: overflow 0s linear var(--dur);
+    transition-behavior: allow-discrete;
+  }
+  :root[data-zoomed] body[data-view="present"] {
+    overflow: hidden;
+    transition-delay: 0s;
+  }
+  :root[data-zoomed] body[data-view="present"] .screen,
+  :root[data-zoomed]
+    body[data-view="speaker"]:not([data-overview="true"])
+    .handout-page[data-speaker="current"] {
+    transform: translate(
+        calc(var(--zoom-x, 0) * 100%),
+        calc(var(--zoom-y, 0) * 100%)
+      )
+      scale(var(--zoom-scale, 1));
+  }
+  :root[data-zoomed]
+    body[data-view="speaker"]:not([data-overview="true"])
+    .handout-page[data-speaker="current"] {
+    clip-path: inset(
+      calc(var(--zoom-y, 0) / var(--zoom-scale, 1) * -100%)
+        calc((1 - (1 - var(--zoom-x, 0)) / var(--zoom-scale, 1)) * 100%)
+        calc((1 - (1 - var(--zoom-y, 0)) / var(--zoom-scale, 1)) * 100%)
+        calc(var(--zoom-x, 0) / var(--zoom-scale, 1) * -100%)
+    );
+  }
+  body[data-zoom="true"][data-view="present"] .screen,
+  body[data-zoom="true"][data-view="speaker"]:not([data-overview="true"])
+    .handout-page[data-speaker="current"] {
+    cursor: zoom-in;
+  }
+  :root[data-zoomed] body[data-zoom="true"][data-view="present"] .screen,
+  :root[data-zoomed]
+    body[data-zoom="true"][data-view="speaker"]:not([data-overview="true"])
+    .handout-page[data-speaker="current"] {
+    cursor: zoom-out;
+  }
+}
 #progress {
   display: none;
   width: calc(var(--fraction, 0) * 100%);

@@ -69,6 +69,12 @@
 // `h` changes the pen to the highlighter, and the key `c` removes the drawing.
 // A change of the slide also removes it. `drawing.ts` gives the rules.
 //
+// A click with the Alt key makes the part of the slide under the mouse fill
+// the window, in the two windows, and the next such click shows the full
+// slide again. The key `z` turns on a zoom where a click with no key does the
+// same. `Escape` and a change of the step show the full slide. `zoom.ts`
+// gives the rules.
+//
 // `?check` in the address of the present view runs the layout check after the
 // load of the document and of its fonts. The check shows each step, finds the
 // elements that go past an edge of the window and the lines of code that
@@ -120,12 +126,15 @@ import {
   announce,
   announceOverview,
   deck as readDeck,
+  elementBox,
+  isSlideBox,
   laser,
   link,
   program as readProgram,
   scheme,
   showDrawing,
   showScheme,
+  showZoom,
   slideBox,
   text,
   timeLeft,
@@ -149,6 +158,15 @@ import {
   pointOf,
 } from "./laser.ts";
 import type { Place } from "./laser.ts";
+import {
+  isZoom,
+  message as zoomMessage,
+  scaleOf,
+  target as zoomTarget,
+  zoomable,
+  zooming,
+} from "./zoom.ts";
+import type { Area } from "./zoom.ts";
 import { fromAddress, next } from "./scheme.ts";
 import { restore as restoreAssets } from "./assets.ts";
 import { COMMAND_HOLDERS } from "./schema.ts";
@@ -186,6 +204,11 @@ let loaded = false;
 // each later part of this file, so the two values are here.
 let lines: readonly Line[] = [];
 let stroke: Line | null = null;
+
+// The part of the slide that fills the window, or null for the full slide.
+// The first state of the address shows before each later part of this file,
+// so the value is here.
+let zoomed: Area | null = null;
 
 // The length of the talk, from the list of the steps or the address
 // parameter `?duration=`. The speaker view opens with the address of the
@@ -290,6 +313,13 @@ function show(changed: State, local = true): void {
     stroke = null;
   } else if (!drawing(state)) {
     finishStroke();
+  }
+  // The zoom belongs to the step that shows, so a change of the step shows
+  // the full slide again, and so does the end of the zoom of the key `z`.
+  // The other window gets the same change of the state, so it needs no
+  // message of the zoom.
+  if (moved || (before.zoom && !state.zoom)) {
+    zoomTo(null, false);
   }
   showDrawing(shownLines(), state.view);
   if (document.readyState === "complete") {
@@ -502,6 +532,9 @@ function call(builtin: Builtin): void {
       stroke = null;
       redraw();
       break;
+    case "zoom_out":
+      zoomTo(null);
+      break;
     default: {
       // The type check finds each built-in function that has no branch. The
       // program comes from the renderer with no examination, so a function
@@ -664,9 +697,10 @@ function finishStroke(): void {
 }
 
 // Start a line at the pointer, when the drawing is on and the pointer is on
-// the slide.
+// the slide. A press with the Alt key is the start of a click that zooms, so
+// it draws no line.
 function startStroke(event: PointerEvent): void {
-  if (!drawing(state) || event.button !== 0) {
+  if (!drawing(state) || event.button !== 0 || event.altKey) {
     return;
   }
   const place = placeIn(event.clientX, event.clientY, slideBox(state.view));
@@ -707,6 +741,80 @@ window.addEventListener("resize", () => {
   showDrawing(shownLines(), state.view);
 });
 
+// Show an area of the slide, or the full slide with null. A change from this
+// window goes to the other window. The drawing is on the box of the slide,
+// so it moves with the slide.
+function zoomTo(area: Area | null, local = true): void {
+  if (area === zoomed) {
+    return;
+  }
+  zoomed = area;
+  showZoom(area === null ? null : scaleOf(area));
+  showDrawing(shownLines(), state.view);
+  if (local && partner !== null && !partner.closed) {
+    partner.postMessage(zoomMessage(area), "*");
+  }
+}
+
+// True for a click that zooms: a click of the main button with the Alt key,
+// or with no key while the zoom is on. The window must show a slide.
+function zooms(event: MouseEvent): boolean {
+  if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey) {
+    return false;
+  }
+  return event.altKey ? zoomable(state) : zooming(state);
+}
+
+// Zoom to the element of the slide under a click, or around the point of a
+// click outside each element. A click on a zoomed slide shows the full slide
+// again. A click outside the slide, such as on the notes of the speaker
+// view, does nothing.
+function zoomAt(event: MouseEvent): void {
+  const slide = slideBox(state.view);
+  const place = placeIn(event.clientX, event.clientY, slide);
+  if (slide === null || place === null) {
+    return;
+  }
+  // The browser saves the target of a link at a click with the Alt key.
+  event.preventDefault();
+  if (zoomed !== null) {
+    zoomTo(null);
+    return;
+  }
+  const element = elementBox(event.target as Element | null);
+  zoomTo(zoomTarget(place, element, slide));
+}
+
+// The transition of the zoom moves the slide for some time. The drawing is
+// on the box of the slide, so it follows that box at each frame until the
+// transition ends.
+let moving = false;
+
+function followSlide(): void {
+  showDrawing(shownLines(), state.view);
+  if (moving) {
+    requestAnimationFrame(followSlide);
+  }
+}
+
+document.addEventListener("transitionrun", (event: TransitionEvent) => {
+  const slide = isSlideBox(event.target, state.view);
+  if (slide && event.propertyName === "transform" && !moving) {
+    moving = true;
+    requestAnimationFrame(followSlide);
+  }
+});
+
+function settle(event: TransitionEvent): void {
+  if (isSlideBox(event.target, state.view)) {
+    moving = false;
+    showDrawing(shownLines(), state.view);
+  }
+}
+
+document.addEventListener("transitionend", settle);
+document.addEventListener("transitioncancel", settle);
+
 // The mouse left the window, so the dot goes away in the two windows. A
 // finger that leaves the screen keeps the dot at its place.
 document.addEventListener("pointerout", (event: PointerEvent) => {
@@ -720,6 +828,10 @@ document.addEventListener("pointerout", (event: PointerEvent) => {
 });
 
 document.addEventListener("click", (event: MouseEvent) => {
+  if (zooms(event)) {
+    zoomAt(event);
+    return;
+  }
   if (ignores(event)) {
     return;
   }
@@ -761,12 +873,14 @@ document.addEventListener(
     const start = touched;
     touched = null;
     // While the laser pointer is on, a movement of a finger moves the dot.
-    // While the drawing is on, it draws a line.
+    // While the drawing is on, it draws a line. While the zoom is on, only a
+    // tap has an effect.
     if (
       start === null ||
       finger === undefined ||
       pointing(state) ||
-      drawing(state)
+      drawing(state) ||
+      zooming(state)
     ) {
       return;
     }
@@ -809,9 +923,13 @@ window.addEventListener("message", (event: MessageEvent) => {
   if (isRequest(event.data)) {
     if (!isSpeaker) {
       partner.postMessage(message(program, state, deck, time, scheme()), "*");
-      // A speaker view that loads after a line also gets the drawing.
+      // A speaker view that loads after a line also gets the drawing, and
+      // one that loads after a zoom gets the zoom.
       if (shownLines().length > 0) {
         partner.postMessage(drawingMessage(shownLines()), "*");
+      }
+      if (zoomed !== null) {
+        partner.postMessage(zoomMessage(zoomed), "*");
       }
     }
     return;
@@ -828,6 +946,11 @@ window.addEventListener("message", (event: MessageEvent) => {
     lines = event.data.lines;
     stroke = null;
     showDrawing(lines, state.view);
+    return;
+  }
+  // The zoom of the other window. Null shows the full slide.
+  if (isZoom(event.data)) {
+    zoomTo(event.data.area, false);
     return;
   }
   if (!isMessage(event.data)) {

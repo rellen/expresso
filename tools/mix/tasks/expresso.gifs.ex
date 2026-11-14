@@ -274,6 +274,12 @@ defmodule Mix.Tasks.Expresso.Gifs do
         "c"
       ]
     },
+    %{
+      name: "present-zoom",
+      deck: "tour.exs",
+      address: "#5",
+      actions: [{:alt_click, 0.5, 0.55}, "Escape"]
+    },
     %{name: "present-progress", deck: "short.exs", actions: ["j", "j", "j"]},
     %{name: "present-slide-numbers", deck: "tour.exs", address: "#3", still: true},
     %{name: "present-handout", deck: "tour.exs", actions: ["p"], still: true, height: 2160}

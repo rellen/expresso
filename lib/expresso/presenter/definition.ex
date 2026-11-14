@@ -64,8 +64,8 @@ defmodule Expresso.Presenter.Definition do
       a step. A move past the first step or the last step makes no change.
     * `{:go, field}` - goes to the step at the index that a field holds.
     * `{:builtin, name}` - calls a built-in function of the browser:
-      `:open_speaker`, `:fullscreen`, `:reset_timer`, `:switch_scheme` or
-      `:clear_drawing`.
+      `:open_speaker`, `:fullscreen`, `:reset_timer`, `:switch_scheme`,
+      `:clear_drawing` or `:zoom_out`.
 
   A definition can hold three symbols in place of a number: `:first_slide`,
   `:last_slide` and `{:columns, sign}`. `Expresso.Presenter.Program` changes
@@ -89,6 +89,7 @@ defmodule Expresso.Presenter.Definition do
           | :laser
           | :draw
           | :highlighter
+          | :zoom
 
   @typedoc "A command of a definition. The section \"The commands\" of the module documentation tells what each command does."
   @type command ::
@@ -107,7 +108,12 @@ defmodule Expresso.Presenter.Definition do
           | {:go, field()}
           | :go_typed
           | {:builtin,
-             :open_speaker | :fullscreen | :reset_timer | :switch_scheme | :clear_drawing}
+             :open_speaker
+             | :fullscreen
+             | :reset_timer
+             | :switch_scheme
+             | :clear_drawing
+             | :zoom_out}
 
   @typedoc "An event of a binding"
   @type event ::

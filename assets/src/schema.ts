@@ -30,13 +30,13 @@ export const VIEWS: readonly View[] = ["present", "handout", "speaker"];
 export const decodeView: Decoder<View> = /* @__PURE__ */ oneOf(VIEWS);
 
 // A field of the state.
-export type Field = "index" | "view" | "blank" | "white" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim" | "menu" | "cursor" | "laser" | "draw" | "highlighter";
-export const FIELDS: readonly Field[] = ["index", "view", "blank", "white", "digits", "help", "progress", "every", "overview", "selected", "undim", "menu", "cursor", "laser", "draw", "highlighter"];
+export type Field = "index" | "view" | "blank" | "white" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim" | "menu" | "cursor" | "laser" | "draw" | "highlighter" | "zoom";
+export const FIELDS: readonly Field[] = ["index", "view", "blank", "white", "digits", "help", "progress", "every", "overview", "selected", "undim", "menu", "cursor", "laser", "draw", "highlighter", "zoom"];
 export const decodeField: Decoder<Field> = /* @__PURE__ */ oneOf(FIELDS);
 
 // A field of the state that holds true or false.
-export type BooleanField = "blank" | "white" | "help" | "progress" | "every" | "overview" | "undim" | "menu" | "laser" | "draw" | "highlighter";
-export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "white", "help", "progress", "every", "overview", "undim", "menu", "laser", "draw", "highlighter"];
+export type BooleanField = "blank" | "white" | "help" | "progress" | "every" | "overview" | "undim" | "menu" | "laser" | "draw" | "highlighter" | "zoom";
+export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "white", "help", "progress", "every", "overview", "undim", "menu", "laser", "draw", "highlighter", "zoom"];
 export const decodeBooleanField: Decoder<BooleanField> = /* @__PURE__ */ oneOf(BOOLEAN_FIELDS);
 
 // A field of the state that holds a number.
@@ -67,6 +67,7 @@ export type State = Readonly<{
   laser: boolean;
   draw: boolean;
   highlighter: boolean;
+  zoom: boolean;
 }>;
 export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   index: /* @__PURE__ */ integer(0),
@@ -85,11 +86,12 @@ export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   laser: boolean,
   draw: boolean,
   highlighter: boolean,
+  zoom: boolean,
 });
 
 // A built-in function of the browser.
-export type Builtin = "open_speaker" | "fullscreen" | "reset_timer" | "switch_scheme" | "clear_drawing";
-export const BUILTINS: readonly Builtin[] = ["open_speaker", "fullscreen", "reset_timer", "switch_scheme", "clear_drawing"];
+export type Builtin = "open_speaker" | "fullscreen" | "reset_timer" | "switch_scheme" | "clear_drawing" | "zoom_out";
+export const BUILTINS: readonly Builtin[] = ["open_speaker", "fullscreen", "reset_timer", "switch_scheme", "clear_drawing", "zoom_out"];
 export const decodeBuiltin: Decoder<Builtin> = /* @__PURE__ */ oneOf(BUILTINS);
 
 // A part of the window under a click.
@@ -121,6 +123,7 @@ export type Command =
   | readonly ["set", "laser", boolean]
   | readonly ["set", "draw", boolean]
   | readonly ["set", "highlighter", boolean]
+  | readonly ["set", "zoom", boolean]
   | readonly ["toggle", BooleanField]
   | readonly ["clear", Field]
   | readonly ["assign", "selected", readonly ["entry", "slide"]]
@@ -153,6 +156,7 @@ export const decodeCommand: Decoder<Command> = /* @__PURE__ */ union(
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("laser"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("draw"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("highlighter"), boolean),
+  /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("zoom"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("toggle"), decodeBooleanField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("clear"), decodeField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("assign"), /* @__PURE__ */ literal("selected"), /* @__PURE__ */ tuple(/* @__PURE__ */ literal("entry"), /* @__PURE__ */ literal("slide"))),
@@ -194,6 +198,7 @@ export type WrittenMode = Readonly<{
     laser?: boolean;
     draw?: boolean;
     highlighter?: boolean;
+    zoom?: boolean;
   }>;
   any: Commands | null;
   other: Commands | null;
@@ -221,6 +226,7 @@ export const decodeWrittenMode: Decoder<WrittenMode> = /* @__PURE__ */ object({
     laser: boolean,
     draw: boolean,
     highlighter: boolean,
+    zoom: boolean,
   }),
   any: /* @__PURE__ */ nullable(decodeCommands),
   other: /* @__PURE__ */ nullable(decodeCommands),
@@ -421,6 +427,7 @@ export type Message = Readonly<{
     laser?: boolean;
     draw?: boolean;
     highlighter?: boolean;
+    zoom?: boolean;
   }>;
   scheme: Scheme;
   time: number;
@@ -446,6 +453,7 @@ export const decodeMessage: Decoder<Message> = /* @__PURE__ */ openObject({
     laser: boolean,
     draw: boolean,
     highlighter: boolean,
+    zoom: boolean,
   }),
   scheme: decodeScheme,
   time: /* @__PURE__ */ number(),
@@ -496,6 +504,34 @@ export type Drawing = Readonly<{
 export const decodeDrawing: Decoder<Drawing> = /* @__PURE__ */ openObject({
   expresso: /* @__PURE__ */ literal("drawing"),
   lines: /* @__PURE__ */ list(decodeLine),
+});
+
+// A rectangle on a slide: the place of its top left corner, its width and its
+// height, each as a part of the width or of the height of the slide, from 0 to
+// 1.
+export type Area = Readonly<{
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}>;
+export const decodeArea: Decoder<Area> = /* @__PURE__ */ object({
+  x: /* @__PURE__ */ number(0, 1),
+  y: /* @__PURE__ */ number(0, 1),
+  width: /* @__PURE__ */ number(0, 1),
+  height: /* @__PURE__ */ number(0, 1),
+});
+
+// The message that one window of the presenter sends to the other window when
+// the zoom of the current slide changes. `area` is the part of the slide that
+// fills the window, and null shows the full slide.
+export type Zoom = Readonly<{
+  expresso: "zoom";
+  area: Area | null;
+}>;
+export const decodeZoom: Decoder<Zoom> = /* @__PURE__ */ openObject({
+  expresso: /* @__PURE__ */ literal("zoom"),
+  area: /* @__PURE__ */ nullable(decodeArea),
 });
 
 // A kind of element: the class of its root tag, and its name.

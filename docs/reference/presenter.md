@@ -49,6 +49,8 @@ The present view knows these keys:
 | `x` | Drawing on or off, in the two windows. A drag of the mouse or of your finger draws a line on the slide, and a click does not change the step. |
 | `h` | Highlighter or pen for the next line of the drawing |
 | `c` | Remove the drawing of the slide, in the two windows |
+| `z` | Zoom on or off, in the two windows. A click then makes the part of the slide under the mouse fill the window, and the next click shows the full slide. A click with the Alt key does the same while the zoom is off. |
+| `Esc` | Show the full slide again after a zoom, in the two windows |
 
 <!-- /keys -->
 
@@ -154,6 +156,8 @@ or click closes it. The speaker view knows these keys:
 | `x` | Drawing on or off, in the two windows. A drag of the mouse or of your finger draws a line on the slide, and a click does not change the step. |
 | `h` | Highlighter or pen for the next line of the drawing |
 | `c` | Remove the drawing of the slide, in the two windows |
+| `z` | Zoom on or off, in the two windows. A click then makes the part of the slide under the mouse fill the window, and the next click shows the full slide. A click with the Alt key does the same while the zoom is off. |
+| `Esc` | Show the full slide again after a zoom, in the two windows |
 
 <!-- /keys -->
 
@@ -276,6 +280,44 @@ These rules apply:
 - The key `x` turns the laser pointer off, and the key `l` turns the drawing off.
 - The overview, the menu, a black screen, the handout view and paper show no drawing. A
   screen reader reads no change.
+
+## The zoom
+
+A click with the Alt key on a slide of the present view or of the speaker view zooms: the
+part of the slide under the mouse fills the window, in the two windows. For the design,
+see [The zoom](../zoom.md).
+
+![A click with the Alt key on a table makes the table fill the window, and the key Esc shows the full slide again](https://raw.githubusercontent.com/rellen/expresso/media/present-zoom.gif)
+
+| Key or click | Effect |
+| --- | --- |
+| Click with the Alt key | Zoom to the part of the slide under the mouse. The next such click shows the full slide. |
+| `z` | The zoom of a click with no key, on or off. |
+| `Esc` | The full slide. |
+
+The part of the slide comes from the element under the mouse:
+
+- The text, the pictures and the tables of the element fill the window in one direction,
+  with a small margin. The scale is not more than 4.
+- A click outside each element zooms by the factor 2 around the point. So does a click on
+  an element that already takes most of the slide, such as a long sentence.
+
+These rules apply:
+
+- The same part of the slide fills each window. In the speaker view, click on the page
+  of the current step.
+- While the key `z` has the zoom on, a click or a tap zooms, and it does not change the
+  step. Use the key `z` on a touch screen, or when the window system uses a click with
+  the Alt key.
+- A change of the step shows the full slide, and it turns the key `z` off.
+- The key `z` turns the laser pointer and the drawing off, and the keys `l` and `x` turn
+  the key `z` off. A click with the Alt key zooms also while the laser pointer or the
+  drawing is on, and the dot and the lines stay on their part of the slide.
+- The present view changes with the speed and the easing of the theme. The speaker view
+  changes at once, and so does the present view of a reader who asks for reduced motion.
+- In full screen, the browser uses `Esc` to leave full screen. Click with the Alt key
+  again, or press `z`.
+- The overview and the handout view show no zoom. A screen reader reads no change.
 
 ## The progress bar
 

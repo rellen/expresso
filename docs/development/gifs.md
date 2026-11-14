@@ -25,9 +25,10 @@ the examples is in `Mix.Tasks.Expresso.Gifs`. An example has:
   position;
 - actions, which are keys, a move of the clock of the page, such as
   `{:advance, 90_000}`, for the timer of the speaker view, a move of the mouse to a
-  part of the window, such as `{:point, 0.25, 0.5}`, for the laser pointer, or a drag of
+  part of the window, such as `{:point, 0.25, 0.5}`, for the laser pointer, a drag of
   the mouse through parts of the window, such as `{:drag, [{0.2, 0.3}, {0.6, 0.3}]}`,
-  for a line of the drawing;
+  for a line of the drawing, or a click with the Alt key at a part of the window, such
+  as `{:alt_click, 0.5, 0.6}`, for the zoom;
 - `still: true` for a PNG of the page after the actions, in place of a GIF;
 - a height of the picture, in the layout of a window of 1280 by 720 pixels, so a still of
   the handout view can show several pages;

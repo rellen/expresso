@@ -40,13 +40,17 @@ defmodule Expresso.Recorder do
   puts the mouse at a quarter of the width and at one half of the height, as
   for the laser pointer. `{:drag, [{0.2, 0.3}, {0.6, 0.3}]}` presses the main
   button at the first point, moves the mouse through each next point, and
-  releases the button, as for a line of the drawing.
+  releases the button, as for a line of the drawing. `{:alt_click, 0.5, 0.6}`
+  clicks the main button at a part of the window with the Alt key down, as
+  for the zoom. The recorder takes the frames of the animations after a key
+  and after such a click.
   """
   @type action ::
           String.t()
           | {:advance, pos_integer()}
           | {:point, number(), number()}
           | {:drag, [{number(), number()}]}
+          | {:alt_click, number(), number()}
 
   @typedoc "A PNG image and the time that the GIF shows it, in milliseconds"
   @type frame :: Expresso.Gif.frame()
@@ -198,9 +202,23 @@ defmodule Expresso.Recorder do
     {[], now}
   end
 
+  defp act(_recorder, page, height, {:alt_click, x, y}, now) do
+    send!(page, :keyboard_down, %{key: "Alt"})
+    {:ok, _result} = Page.mouse_move(page.guid, timeout: @timeout, x: x * 1280, y: y * 720)
+    {:ok, _result} = Page.mouse_down(page.guid, timeout: @timeout)
+    {:ok, _result} = Page.mouse_up(page.guid, timeout: @timeout)
+    send!(page, :keyboard_up, %{key: "Alt"})
+    {animation(page, height), now}
+  end
+
   defp act(_recorder, page, height, key, now) do
     press(page, key)
+    {animation(page, height), now}
+  end
 
+  # The frames of the animations that an action started. The function moves
+  # each animation to its end after the last frame.
+  defp animation(page, height) do
     frames =
       for time <- Frames.times(started(page)) do
         seek(page, time)
@@ -208,7 +226,7 @@ defmodule Expresso.Recorder do
       end
 
     finish(page)
-    {frames, now}
+    frames
   end
 
   # The picture of the page, from its top.

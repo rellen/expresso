@@ -21,6 +21,8 @@ import { position } from "./speaker.ts";
 import type { Pace } from "./speaker.ts";
 import { current } from "./state.ts";
 import type { State, View } from "./state.ts";
+import type { Box } from "./laser.ts";
+import type { Scale } from "./zoom.ts";
 
 // Read the list of the steps from the element `expresso-deck`, where the
 // renderer writes it as JSON. A document with no list is a defect of the
@@ -352,15 +354,141 @@ function notes(aside: Element | null): void {
 // The box of the slide in this window: the present view in the present
 // view, and the page of the current step in the speaker view. Each other
 // view has no such box. `laser.ts` tells how the laser pointer uses it.
+//
+// The zoom changes this box, because the box is the box of the element after
+// its transform. A place on the slide is thus the same part of the slide with
+// a zoom and with no zoom.
 export function slideBox(view: View): DOMRect | null {
-  const selector =
-    view === "present"
-      ? ".screen"
-      : view === "speaker"
-        ? '.handout-page[data-speaker="current"]'
-        : null;
+  const selector = slideSelector(view);
   const element = selector === null ? null : document.querySelector(selector);
   return element?.getBoundingClientRect() ?? null;
+}
+
+// The selector of the element that holds the slide of a view, or null for a
+// view with no such element.
+function slideSelector(view: View): string | null {
+  switch (view) {
+    case "present":
+      return ".screen";
+    case "speaker":
+      return '.handout-page[data-speaker="current"]';
+    default:
+      return null;
+  }
+}
+
+// Tell if the target of an event is the element that holds the slide of a
+// view. The transition of the zoom runs on that element.
+export function isSlideBox(target: EventTarget | null, view: View): boolean {
+  const selector = slideSelector(view);
+  const element = target as Element | null;
+  return selector !== null && element?.matches?.(selector) === true;
+}
+
+// The elements that hold the elements of a slide: the body of the slide, and
+// a column of a `columns` element.
+const HOLDERS = ".slide-main, .column";
+
+// The box of the content of the element of the slide under the target of a
+// click, or null when the target is in no element. The element is the nearest
+// parent of the target that a holder holds, so a click on a word of a code
+// element gives the code element. A spacer has no content, so it gives no
+// box.
+//
+// An element such as a code element or a text box takes the full width of
+// the slide, and its content can be much smaller. The zoom is for the
+// content, so the box is the box of the text, the pictures and the tables
+// that show.
+export function elementBox(target: Element | null): Box | null {
+  for (let node = target; node; node = node.parentElement) {
+    if (node.parentElement?.matches(HOLDERS) === true) {
+      return node.matches(".spacer") ? null : contentBox(node);
+    }
+  }
+  return null;
+}
+
+// The elements that give their own box: a picture, and a table, whose lines
+// and cells are a part of its content. The script does not look at the
+// content of such an element.
+const WHOLE = "img, svg, video, canvas, iframe, math, table";
+
+// The box that holds the text, the pictures and the tables of an element, or
+// the box of the element when it has none.
+function contentBox(element: Element): Box {
+  const boxes: DOMRect[] = [];
+  collect(element, boxes);
+  const marks = boxes.filter((box) => box.width > 0 && box.height > 0);
+  if (marks.length === 0) {
+    return element.getBoundingClientRect();
+  }
+  const left = Math.min(...marks.map((box) => box.left));
+  const top = Math.min(...marks.map((box) => box.top));
+  return {
+    left,
+    top,
+    width: Math.max(...marks.map((box) => box.right)) - left,
+    height: Math.max(...marks.map((box) => box.bottom)) - top,
+  };
+}
+
+// Add the boxes of the content of a node to a list: the lines of a text,
+// and the box of each picture and of each table. A text or a picture that
+// does not show, such as an element of a later step, gives no box.
+function collect(node: Node, boxes: DOMRect[]): void {
+  if (node.nodeType === TEXT) {
+    const parent = node.parentElement;
+    if (node.textContent?.trim() && parent !== null && shows(parent)) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      boxes.push(...Array.from(range.getClientRects()));
+    }
+  } else if (node.nodeType === ELEMENT) {
+    const element = node as Element;
+    if (!element.matches(WHOLE)) {
+      element.childNodes.forEach((child) => collect(child, boxes));
+    } else if (shows(element)) {
+      boxes.push(element.getBoundingClientRect());
+    }
+  }
+}
+
+// The values of `nodeType` for an element and for a text.
+const ELEMENT = 1;
+const TEXT = 3;
+
+// Tell if an element shows: it has a box, and no rule hides it or makes it
+// fully transparent. A browser without `checkVisibility` shows each element.
+function shows(element: Element): boolean {
+  return (
+    element.checkVisibility?.({
+      checkOpacity: true,
+      checkVisibilityCSS: true,
+    }) ?? true
+  );
+}
+
+// Write the zoom of the slide for the style sheet, or remove it with null.
+// The `html` element gets `data-zoomed`, and the custom properties
+// `--zoom-scale`, `--zoom-x` and `--zoom-y`. The style sheet makes the
+// transform of the slide from them. The properties stay after the zoom, so
+// the transition to the full slide starts from the last transform.
+// `zoom.ts` gives the rules.
+export function showZoom(zoom: Scale | null): void {
+  const root = document.documentElement;
+  if (zoom === null) {
+    root.removeAttribute("data-zoomed");
+    return;
+  }
+  root.style.setProperty("--zoom-scale", rounded(zoom.scale));
+  root.style.setProperty("--zoom-x", rounded(zoom.x));
+  root.style.setProperty("--zoom-y", rounded(zoom.y));
+  root.setAttribute("data-zoomed", "");
+}
+
+// A number with no more than four digits after the point, as text.
+function rounded(value: number): string {
+  return String(Math.round(value * 10000) / 10000);
 }
 
 // Put the dot of the laser pointer at a point of the window, in pixels, or
