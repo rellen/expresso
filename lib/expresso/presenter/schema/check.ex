@@ -110,7 +110,10 @@ defmodule Expresso.Presenter.Schema.Check do
   end
 
   # Each pattern compiles one time in the VM. A compiled regular expression
-  # cannot go into a module attribute.
+  # cannot go into a module attribute. Each pattern comes from a form of
+  # `Expresso.Presenter.Schema`, and not from a JSON value, so the pattern
+  # is not an input.
+  # sobelow_skip ["DOS.Regex"]
   defp regex(pattern) do
     key = {__MODULE__, pattern}
 
