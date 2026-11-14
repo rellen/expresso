@@ -63,6 +63,16 @@ Read the breaking changes of a major version before a merge. A new version of Pl
 also needs a new browser. The workflow installs it. A session with `EXPRESSO_CHROMIUM` uses
 the Chromium of the container, and that Chromium can be older than the new version needs.
 
+Thus a browser test can pass in a session and fail in the workflow. To use the browser of
+the workflow, install the headless shell of the new version in a different directory:
+
+```sh
+PLAYWRIGHT_BROWSERS_PATH=/tmp/pw npx playwright install --only-shell chromium
+EXPRESSO_CHROMIUM=$(ls /tmp/pw/chromium_headless_shell-*/chrome-headless-shell-linux64/chrome-headless-shell) mix test --only e2e
+```
+
+The directory keeps the browser of the container in its place.
+
 ## The icons
 
 `priv/icons/lucide.json` holds the Lucide icons, from the file `icon-nodes.json` of the npm
