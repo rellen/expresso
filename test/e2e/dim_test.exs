@@ -51,7 +51,7 @@ defmodule Expresso.E2E.DimTest do
 
     name "graphic deck"
     dim_contrast 4.5
-    dim_graphic_opacity(0.5)
+    dim_graphic_opacity 0.5
 
     slide "graphics" do
       image "test/fixtures/dot.png" do

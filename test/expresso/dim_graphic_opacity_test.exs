@@ -82,7 +82,7 @@ defmodule Expresso.DimGraphicOpacityTest do
       use Expresso
 
       theme :dracula
-      dim_graphic_opacity(0.5)
+      dim_graphic_opacity 0.5
 
       slide "s" do
         heading "A slide"
