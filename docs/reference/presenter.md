@@ -45,6 +45,7 @@ The present view knows these keys:
 | Click or tap the right two thirds, or swipe left | Next step |
 | Click or tap the left third, or swipe right | Previous step |
 | Click or tap a link | The slide and the step of the link |
+| `l` | Laser pointer on or off, in the two windows. A red dot goes with the mouse or with your finger until the next step, and a click does not change the step. |
 
 <!-- /keys -->
 
@@ -146,6 +147,7 @@ or click closes it. The speaker view knows these keys:
 | `?`, `/` | The search of the keys and commands. Esc closes it. |
 | Click or tap the right two thirds, or swipe left | Next step |
 | Click or tap the left third, or swipe right | Previous step |
+| `l` | Laser pointer on or off, in the two windows. A red dot goes with the mouse or with your finger until the next step, and a click does not change the step. |
 
 <!-- /keys -->
 
@@ -223,6 +225,26 @@ parameters:
 A step that the slide does not have shows the nearest step of that slide, so an old link
 still opens the right slide after the slide loses a step.
 
+## The laser pointer
+
+The key `l` in the present view or in the speaker view turns the laser pointer on. A red
+dot then goes with the mouse, or with your finger on a touch screen, in the two windows.
+For the design, see [The laser pointer](../laser-pointer.md).
+
+![The key l turns the pointer on, the dot moves along a sentence, and the next step turns it off](https://raw.githubusercontent.com/rellen/expresso/media/present-laser.gif)
+
+These rules apply:
+
+- The dot in one window is on the same part of the slide in the other window. In the
+  speaker view, point at the page of the current step.
+- While the pointer is on, a click, a tap or a swipe moves the dot, and it does not change
+  the step. The keys still change the step.
+- A change of the step turns the pointer off. A second `l` also turns it off.
+- The dot goes away when the mouse leaves the slide.
+- The slide does not show the cursor of the system while the pointer is on.
+- The overview, the menu, a black screen, the handout view and paper show no dot. A screen
+  reader reads no change.
+
 ## The progress bar
 
 A thin bar at the bottom of the present view shows the part of the talk that is done. Each
@@ -278,3 +300,4 @@ A theme can set these custom properties:
 | `--goto-color` | The color of a link of the `goto` option. |
 | `--digits-color`, `--digits-background` | The colors of the slide number that the presenter types. |
 | `--hidden-slide-opacity` | The opacity of the content of a hidden slide in the overview and in the menu. The default is 0.45. |
+| `--laser-color`, `--laser-size` | The color and the size of the dot of the laser pointer. The defaults are the role `danger` and `0.4rem`. |

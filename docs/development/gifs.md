@@ -23,8 +23,9 @@ the examples is in `Mix.Tasks.Expresso.Gifs`. An example has:
 - a deck file;
 - an address after the path of the HTML file, such as `?speaker#2.1`, for a view or a
   position;
-- actions, which are keys, or a move of the clock of the page, such as
-  `{:advance, 90_000}`, for the timer of the speaker view;
+- actions, which are keys, a move of the clock of the page, such as
+  `{:advance, 90_000}`, for the timer of the speaker view, or a move of the mouse to a
+  part of the window, such as `{:point, 0.25, 0.5}`, for the laser pointer;
 - `still: true` for a PNG of the page after the actions, in place of a GIF;
 - a height of the picture, in the layout of a window of 1280 by 720 pixels, so a still of
   the handout view can show several pages;

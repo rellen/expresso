@@ -30,13 +30,13 @@ export const VIEWS: readonly View[] = ["present", "handout", "speaker"];
 export const decodeView: Decoder<View> = /* @__PURE__ */ oneOf(VIEWS);
 
 // A field of the state.
-export type Field = "index" | "view" | "blank" | "white" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim" | "menu" | "cursor";
-export const FIELDS: readonly Field[] = ["index", "view", "blank", "white", "digits", "help", "progress", "every", "overview", "selected", "undim", "menu", "cursor"];
+export type Field = "index" | "view" | "blank" | "white" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim" | "menu" | "cursor" | "laser";
+export const FIELDS: readonly Field[] = ["index", "view", "blank", "white", "digits", "help", "progress", "every", "overview", "selected", "undim", "menu", "cursor", "laser"];
 export const decodeField: Decoder<Field> = /* @__PURE__ */ oneOf(FIELDS);
 
 // A field of the state that holds true or false.
-export type BooleanField = "blank" | "white" | "help" | "progress" | "every" | "overview" | "undim" | "menu";
-export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "white", "help", "progress", "every", "overview", "undim", "menu"];
+export type BooleanField = "blank" | "white" | "help" | "progress" | "every" | "overview" | "undim" | "menu" | "laser";
+export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "white", "help", "progress", "every", "overview", "undim", "menu", "laser"];
 export const decodeBooleanField: Decoder<BooleanField> = /* @__PURE__ */ oneOf(BOOLEAN_FIELDS);
 
 // A field of the state that holds a number.
@@ -64,6 +64,7 @@ export type State = Readonly<{
   undim: boolean;
   menu: boolean;
   cursor: number;
+  laser: boolean;
 }>;
 export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   index: /* @__PURE__ */ integer(0),
@@ -79,6 +80,7 @@ export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   undim: boolean,
   menu: boolean,
   cursor: /* @__PURE__ */ integer(0),
+  laser: boolean,
 });
 
 // A built-in function of the browser.
@@ -112,6 +114,7 @@ export type Command =
   | readonly ["set", "undim", boolean]
   | readonly ["set", "menu", boolean]
   | readonly ["set", "cursor", number]
+  | readonly ["set", "laser", boolean]
   | readonly ["toggle", BooleanField]
   | readonly ["clear", Field]
   | readonly ["assign", "selected", readonly ["entry", "slide"]]
@@ -141,6 +144,7 @@ export const decodeCommand: Decoder<Command> = /* @__PURE__ */ union(
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("undim"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("menu"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("cursor"), /* @__PURE__ */ integer(0)),
+  /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("laser"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("toggle"), decodeBooleanField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("clear"), decodeField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("assign"), /* @__PURE__ */ literal("selected"), /* @__PURE__ */ tuple(/* @__PURE__ */ literal("entry"), /* @__PURE__ */ literal("slide"))),
@@ -179,6 +183,7 @@ export type WrittenMode = Readonly<{
     undim?: boolean;
     menu?: boolean;
     cursor?: number;
+    laser?: boolean;
   }>;
   any: Commands | null;
   other: Commands | null;
@@ -203,6 +208,7 @@ export const decodeWrittenMode: Decoder<WrittenMode> = /* @__PURE__ */ object({
     undim: boolean,
     menu: boolean,
     cursor: /* @__PURE__ */ integer(0),
+    laser: boolean,
   }),
   any: /* @__PURE__ */ nullable(decodeCommands),
   other: /* @__PURE__ */ nullable(decodeCommands),
@@ -400,6 +406,7 @@ export type Message = Readonly<{
     undim?: boolean;
     menu?: boolean;
     cursor?: number;
+    laser?: boolean;
   }>;
   scheme: Scheme;
   time: number;
@@ -422,6 +429,7 @@ export const decodeMessage: Decoder<Message> = /* @__PURE__ */ openObject({
     undim: boolean,
     menu: boolean,
     cursor: /* @__PURE__ */ integer(0),
+    laser: boolean,
   }),
   scheme: decodeScheme,
   time: /* @__PURE__ */ number(),
@@ -434,6 +442,21 @@ export type Request = Readonly<{
 }>;
 export const decodeRequest: Decoder<Request> = /* @__PURE__ */ openObject({
   expresso: /* @__PURE__ */ literal("request"),
+});
+
+// The message that one window of the presenter sends to the other window when
+// the laser pointer moves. `x` and `y` are the place of the dot as a part of
+// the width and of the height of the slide, from 0 to 1. Each is null when the
+// pointer is not on the slide.
+export type Pointer = Readonly<{
+  expresso: "pointer";
+  x: number | null;
+  y: number | null;
+}>;
+export const decodePointer: Decoder<Pointer> = /* @__PURE__ */ openObject({
+  expresso: /* @__PURE__ */ literal("pointer"),
+  x: /* @__PURE__ */ nullable(/* @__PURE__ */ number(0, 1)),
+  y: /* @__PURE__ */ nullable(/* @__PURE__ */ number(0, 1)),
 });
 
 // A kind of element: the class of its root tag, and its name.

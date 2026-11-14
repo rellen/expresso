@@ -45,7 +45,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
           name: String.t(),
           deck: Path.t(),
           address: String.t(),
-          actions: [String.t() | {:advance, pos_integer()}],
+          actions: [Expresso.Recorder.action()],
           still: boolean(),
           height: pos_integer(),
           page: :guides | :presenter | :themes,
@@ -254,6 +254,12 @@ defmodule Mix.Tasks.Expresso.Gifs do
       deck: "tour.exs",
       address: "?speaker&duration=10#2.1",
       actions: ["j", {:advance, 90_000}, {:advance, 150_000}, {:advance, 420_000}]
+    },
+    %{
+      name: "present-laser",
+      deck: "tour.exs",
+      address: "#2",
+      actions: ["l", {:point, 0.33, 0.44}, {:point, 0.5, 0.44}, {:point, 0.67, 0.44}, "j"]
     },
     %{name: "present-progress", deck: "short.exs", actions: ["j", "j", "j"]},
     %{name: "present-slide-numbers", deck: "tour.exs", address: "#3", still: true},

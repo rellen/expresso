@@ -18,7 +18,7 @@ import type { Scheme } from "./scheme.ts";
 import { position } from "./speaker.ts";
 import type { Pace } from "./speaker.ts";
 import { current } from "./state.ts";
-import type { State } from "./state.ts";
+import type { State, View } from "./state.ts";
 
 // Read the list of the steps from the element `expresso-deck`, where the
 // renderer writes it as JSON. A document with no list is a defect of the
@@ -345,6 +345,37 @@ function notes(aside: Element | null): void {
     .filter((note) => !note.hasAttribute("data-covered"))
     .map((note) => note.cloneNode(true));
   target.replaceChildren(...copies);
+}
+
+// The box of the slide in this window: the present view in the present
+// view, and the page of the current step in the speaker view. Each other
+// view has no such box. `laser.ts` tells how the laser pointer uses it.
+export function slideBox(view: View): DOMRect | null {
+  const selector =
+    view === "present"
+      ? ".screen"
+      : view === "speaker"
+        ? '.handout-page[data-speaker="current"]'
+        : null;
+  const element = selector === null ? null : document.querySelector(selector);
+  return element?.getBoundingClientRect() ?? null;
+}
+
+// Put the dot of the laser pointer at a point of the window, in pixels, or
+// hide it with null. The renderer writes the element `laser`, and the style
+// sheet shows it only with `data-shown` and while the pointer is on.
+export function laser(point: { left: number; top: number } | null): void {
+  const dot = document.getElementById("laser");
+  if (dot === null) {
+    return;
+  }
+  if (point === null) {
+    dot.removeAttribute("data-shown");
+    return;
+  }
+  dot.style.left = `${point.left}px`;
+  dot.style.top = `${point.top}px`;
+  dot.setAttribute("data-shown", "");
 }
 
 // Open the list of keys at the section of a mode, or close it with no mode.

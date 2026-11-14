@@ -18,6 +18,9 @@ export type FakeElement = {
   style: {
     display: string;
     width?: string;
+    // The place of the dot of the laser pointer.
+    left?: string;
+    top?: string;
     setProperty: (name: string, value: string) => void;
     // The custom properties that `setProperty` got.
     properties: Record<string, string>;
@@ -101,6 +104,11 @@ type Click = {
 // A point on the screen.
 type Point = { x: number; y: number };
 
+// The box of the present view in the fake window, and the box of the page of
+// the current step in the speaker view.
+export const SCREEN_BOX = { left: 0, top: 0, width: 1200, height: 600 };
+export const SPEAKER_BOX = { left: 100, top: 50, width: 600, height: 300 };
+
 type Options = {
   hash?: string;
   search?: string;
@@ -172,6 +180,11 @@ export type FakePage = {
   navigate: (hash: string) => void;
   // Send a message from a window to the page.
   receive: (data: unknown, source: FakeWindow | null) => void;
+  // Move the mouse to a point of the window, or out of the window with null.
+  // The window is 1200 pixels wide and 600 pixels high. The present view has
+  // the size of the window, and the page of the current step of the speaker
+  // view is at `SPEAKER_BOX`.
+  point: (point: Point | null) => void;
   element: (id: string) => FakeElement | undefined;
   // The rows of the list of keys that shows, as the names of the keys and the
   // text. The test fails when not exactly one list shows.
@@ -378,6 +391,8 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   // The renderer writes the progress bar into each document.
   const progress = element("progress");
   const announce = element("announce");
+  // The renderer writes the dot of the laser pointer into each document.
+  const laser = element("laser");
   const all = () => [
     list,
     ...(options.links === undefined ? [] : [links]),
@@ -388,6 +403,7 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     ...handout.children,
     progress,
     announce,
+    laser,
     ...body.children,
   ];
 
@@ -432,6 +448,19 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     },
     getElementById: (id: string) =>
       all().find((each) => each.id === id) ?? null,
+    // Only the two selectors of the box of the slide. The page of the
+    // current step has the mark `data-speaker` of the program. Each other
+    // selector finds no element, as before this function.
+    querySelector: (selector: string) => {
+      if (selector === ".screen") {
+        return { getBoundingClientRect: () => SCREEN_BOX };
+      }
+      const current = pages.find((each) => each.dataset.speaker === "current");
+      return selector === '.handout-page[data-speaker="current"]' &&
+        current !== undefined
+        ? { getBoundingClientRect: () => SPEAKER_BOX }
+        : null;
+    },
     createElement: () => element(""),
     addEventListener: listen,
     get fullscreenElement() {
@@ -537,6 +566,17 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     },
     receive: (data, source) => {
       call("message", { data, source });
+    },
+    point: (point) => {
+      if (point === null) {
+        call("pointerout", { pointerType: "mouse", relatedTarget: null });
+      } else {
+        call("pointermove", {
+          pointerType: "mouse",
+          clientX: point.x,
+          clientY: point.y,
+        });
+      }
     },
     element: (id) => all().find((each) => each.id === id),
     keys: () => {

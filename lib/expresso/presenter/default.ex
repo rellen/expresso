@@ -24,6 +24,12 @@ defmodule Expresso.Presenter.Default do
   @views "Views and windows"
   @pointer "Mouse and touch"
 
+  # The laser pointer. While it is on, the script moves the dot for each
+  # movement of the mouse or of a finger, and a click or a swipe does not
+  # change the step. `docs/laser-pointer.md` gives the design.
+  @laser "Laser pointer on or off, in the two windows. A red dot goes with the mouse or with " <>
+           "your finger until the next step, and a click does not change the step."
+
   state index: 0,
         view: :present,
         blank: false,
@@ -36,10 +42,11 @@ defmodule Expresso.Presenter.Default do
         every: false,
         undim: false,
         menu: false,
-        cursor: 0
+        cursor: 0,
+        laser: false
 
-  sync [:blank, :white, :undim]
-  reset [:undim]
+  sync [:blank, :white, :undim, :laser]
+  reset [:undim, :laser]
 
   # The attributes of the `body`. The style sheet reads them.
   attribute :view, "data-view"
@@ -52,6 +59,7 @@ defmodule Expresso.Presenter.Default do
   attribute :digits, "data-digits"
   attribute :undim, "data-undim", flag: true
   attribute :menu, "data-menu", flag: true
+  attribute :laser, "data-laser", flag: true
 
   # The style sheet sets the width of the progress bar from the part of the
   # deck before the current step.
@@ -175,6 +183,8 @@ defmodule Expresso.Presenter.Default do
     event :element, [], "The slide and the step of the link",
       label: "Click or tap a link",
       group: @pointer
+
+    key "l", toggle(:laser), @laser, group: @pointer
   end
 
   # The speaker view knows the keys of the present view, except `p`, `s` and
@@ -242,6 +252,8 @@ defmodule Expresso.Presenter.Default do
     event [click: :left_third, swipe: :right], step(-1), "Previous step",
       label: "Click or tap the left third, or swipe right",
       group: @pointer
+
+    key "l", toggle(:laser), @laser, group: @pointer
   end
 
   # The handout view knows only these keys. The browser gets each other key,

@@ -540,6 +540,7 @@ html               lang "en", and data-variants for a theme with two variants
         div          the four elements of the speaker view: speaker-notes,
                      speaker-position, speaker-timer and speaker-left
       div            the progress bar, id "progress", role "progressbar"
+      div            the dot of the laser pointer, id "laser", aria-hidden
       div            the live region of the moves, id "announce", role "status"
       nav            the menu of the slides and the steps, id "menu", with an ol
                      of role "listbox" and an option for each step
@@ -2394,6 +2395,8 @@ The TypeScript part is under `assets/src/`. It has these modules:
   and it shows the slide of the current step with the inline `style.display` property and
   the `data-step` attribute. After a step back on the slide that shows, it writes
   `data-back` on the slide, and the effect `:type` then shows its text at once.
+- `laser.ts` holds the rules of the laser pointer: the place of the dot as a part of the
+  slide, and the message `pointer` between the windows. It does not touch the document.
 - `main.ts` connects the modules. It sends each event to the interpreter, and it writes
   the fragment of the address.
 - `layout.ts` makes the layout check of `?check`. It shows each step with `dom.ts`, it
@@ -2538,8 +2541,8 @@ commands:
 
 | Option | Example | Effect |
 | --- | --- | --- |
-| `sync` | `sync [:blank, :undim]` | The message to the other window holds these fields, after the slide and the step. The other window takes them, and it ignores each other field of the message. |
-| `reset` | `reset [:undim]` | Each change of the step gives these fields their first value. A message to another step applies its own fields after the reset. |
+| `sync` | `sync [:blank, :undim, :laser]` | The message to the other window holds these fields, after the slide and the step. The other window takes them, and it ignores each other field of the message. |
+| `reset` | `reset [:undim, :laser]` | Each change of the step gives these fields their first value. A message to another step applies its own fields after the reset. |
 
 The program holds the two lists, and the two interpreters read them. A field with one of
 these rules is therefore a change to `Expresso.Presenter.Default` only, and neither
@@ -2593,6 +2596,14 @@ The tables do not give these rules:
   option `reset [:undim]` sets `undim` to `false` at each change of the step, so the next
   step dims the code again. The presenter does not have to press `d` again after an
   answer. See "The options sync and reset".
+- `l` toggles the field `laser`, which is the laser pointer. The field is in the options
+  `sync` and `reset`, so the two windows have the same value, and a change of the step
+  turns the pointer off. While the field is true, `main.ts` puts the element `laser` at
+  the mouse, and it sends the place of the dot to the other window in a message
+  `pointer`. The place is a part of the box of the slide, from 0 to 1, so the dot is on
+  the same part of the slide in a window of a different size. A click and a swipe then
+  move the dot only, because `main.ts` does not give them to the interpreter.
+  `docs/laser-pointer.md` gives the design.
 
 ### The list of keys
 

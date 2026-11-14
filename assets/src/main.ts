@@ -60,6 +60,10 @@
 // A number of a chart with the `count` option counts from one frame to the
 // next after each change of the step. `chart.ts` gives the rules.
 //
+// The key `l` turns the laser pointer on and off. While it is on, a dot goes
+// with the mouse or with a finger, in the two windows, and a click or a swipe
+// does not change the step. `laser.ts` gives the rules.
+//
 // `?check` in the address of the present view runs the layout check after the
 // load of the document and of its fonts. The check shows each step, finds the
 // elements that go past an edge of the window and the lines of code that
@@ -111,13 +115,24 @@ import {
   announce,
   announceOverview,
   deck as readDeck,
+  laser,
   link,
   program as readProgram,
   scheme,
   showScheme,
+  slideBox,
   text,
   timeLeft,
 } from "./dom.ts";
+import {
+  isPointer,
+  placeIn,
+  placeOf,
+  pointer,
+  pointing,
+  pointOf,
+} from "./laser.ts";
+import type { Place } from "./laser.ts";
 import { fromAddress, next } from "./scheme.ts";
 import { restore as restoreAssets } from "./assets.ts";
 import { COMMAND_HOLDERS } from "./schema.ts";
@@ -238,6 +253,12 @@ function show(changed: State, local = true): void {
   history.replaceState(null, "", toHash(state, deck));
   if (local && sent) {
     send();
+  }
+  // The dot of the laser pointer goes away when the pointer turns off, and
+  // while a view with no slide covers the slide. The next move of the mouse
+  // shows it again.
+  if (!pointing(state)) {
+    laser(null);
   }
   if (document.readyState === "complete") {
     embeds();
@@ -560,8 +581,52 @@ function element(event: MouseEvent) {
   return text === undefined ? null : commands(text);
 }
 
+// Put the dot of the laser pointer at a place on the slide, or hide it. The
+// place comes from the mouse of this window, or from the other window.
+function point(place: Place | null): void {
+  const box = slideBox(state.view);
+  const shown = place !== null && box !== null && pointing(state);
+  laser(shown ? pointOf(place, box) : null);
+}
+
+// Move the dot to the mouse or to the finger, and send its place to the
+// other window. The place is a part of the slide, so the dot is on the same
+// part of the slide in a window of a different size.
+function track(event: PointerEvent): void {
+  if (!pointing(state)) {
+    return;
+  }
+  trackPlace(placeIn(event.clientX, event.clientY, slideBox(state.view)));
+}
+
+function trackPlace(place: Place | null): void {
+  point(place);
+  if (partner !== null && !partner.closed) {
+    partner.postMessage(pointer(place), "*");
+  }
+}
+
+document.addEventListener("pointermove", track);
+document.addEventListener("pointerdown", track);
+
+// The mouse left the window, so the dot goes away in the two windows. A
+// finger that leaves the screen keeps the dot at its place.
+document.addEventListener("pointerout", (event: PointerEvent) => {
+  if (
+    pointing(state) &&
+    event.pointerType === "mouse" &&
+    event.relatedTarget === null
+  ) {
+    trackPlace(null);
+  }
+});
+
 document.addEventListener("click", (event: MouseEvent) => {
   if (ignores(event)) {
+    return;
+  }
+  // While the laser pointer is on, a click moves the dot only.
+  if (pointing(state)) {
     return;
   }
   handle(
@@ -596,7 +661,8 @@ document.addEventListener(
     const finger = event.changedTouches[0];
     const start = touched;
     touched = null;
-    if (start === null || finger === undefined) {
+    // While the laser pointer is on, a movement of a finger moves the dot.
+    if (start === null || finger === undefined || pointing(state)) {
       return;
     }
     const direction = swipe(finger.clientX - start.x, finger.clientY - start.y);
@@ -639,6 +705,12 @@ window.addEventListener("message", (event: MessageEvent) => {
     if (!isSpeaker) {
       partner.postMessage(message(program, state, deck, time, scheme()), "*");
     }
+    return;
+  }
+  // The place of the laser pointer of the other window. The message holds no
+  // state, so it has no time.
+  if (isPointer(event.data)) {
+    point(placeOf(event.data));
     return;
   }
   if (!isMessage(event.data)) {

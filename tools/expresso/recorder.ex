@@ -34,10 +34,13 @@ defmodule Expresso.Recorder do
   @type t :: %{browser: map(), context: map()}
 
   @typedoc """
-  A key, such as `"j"`, or a move of the clock of the page by a number of
-  milliseconds. The speaker view then shows a later time.
+  A key, such as `"j"`, a move of the clock of the page by a number of
+  milliseconds, or a move of the mouse to a part of the window. The speaker
+  view shows a later time after a move of the clock. `{:point, 0.25, 0.5}`
+  puts the mouse at a quarter of the width and at one half of the height, as
+  for the laser pointer.
   """
-  @type action :: String.t() | {:advance, pos_integer()}
+  @type action :: String.t() | {:advance, pos_integer()} | {:point, number(), number()}
 
   @typedoc "A PNG image and the time that the GIF shows it, in milliseconds"
   @type frame :: Expresso.Gif.frame()
@@ -167,6 +170,13 @@ defmodule Expresso.Recorder do
   defp act(recorder, page, _height, {:advance, milliseconds}, now) do
     now = now + milliseconds
     advance(recorder, page, now)
+    {[], now}
+  end
+
+  # The window is 1280 pixels wide. Its height is 720 pixels, also for an
+  # example whose picture is higher.
+  defp act(_recorder, page, _height, {:point, x, y}, now) do
+    {:ok, _result} = Page.mouse_move(page.guid, timeout: @timeout, x: x * 1280, y: y * 720)
     {[], now}
   end
 

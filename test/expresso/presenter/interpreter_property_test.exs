@@ -319,13 +319,37 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
       chosen = run(program, state, {:click, :right, Program.element(slide)})
 
       if {slide, 1} in Tuple.to_list(program.steps) do
-        # A change of the step also turns the dimming of code on again.
-        undim = state.undim and chosen.index == state.index
-        assert %{chosen | index: state.index} == %{state | overview: false, undim: undim}
+        # A change of the step also turns the dimming of code on again, and
+        # it turns the laser pointer off.
+        same = chosen.index == state.index
+        undim = state.undim and same
+        laser = state.laser and same
+
+        assert %{chosen | index: state.index} ==
+                 %{state | overview: false, undim: undim, laser: laser}
+
         assert where(program, chosen) == {slide, 1}
       else
         assert chosen == %{state | overview: false}
       end
+    end
+  end
+
+  property "a change of the step turns the laser pointer off, and l turns it on and off" do
+    check all {program, state} <- shown(),
+              key <- member_of(["j", "k", "Home", "End", "l"]),
+              view <- member_of([:present, :speaker]),
+              max_runs: @runs do
+      state = %{state | laser: true, view: view, blank: false, help: false, overview: false}
+      after_key = run(program, state, {:key, key})
+
+      cond do
+        key == "l" -> assert after_key.laser == false and after_key.index == state.index
+        after_key.index != state.index -> assert after_key.laser == false
+        true -> assert after_key.laser == true
+      end
+
+      assert run(program, %{state | laser: false}, {:key, "l"}).laser == true
     end
   end
 

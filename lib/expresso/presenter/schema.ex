@@ -97,7 +97,8 @@ defmodule Expresso.Presenter.Schema do
     selected: :slide,
     undim: :boolean,
     menu: :boolean,
-    cursor: :index
+    cursor: :index,
+    laser: :boolean
   ]
 
   @views [:present, :handout, :speaker]
@@ -267,6 +268,12 @@ defmodule Expresso.Presenter.Schema do
       {:request,
        "The message that the speaker view sends to the present view after its load. The present view answers with a message of its full state.",
        {:open_object, expresso: {:literal, "request"}}},
+      {:pointer,
+       "The message that one window of the presenter sends to the other window when the laser pointer moves. `x` and `y` are the place of the dot as a part of the width and of the height of the slide, from 0 to 1. Each is null when the pointer is not on the slide.",
+       {:open_object,
+        expresso: {:literal, "pointer"},
+        x: {:nullable, {:number, 0, 1}},
+        y: {:nullable, {:number, 0, 1}}}},
       {:element_kind, "A kind of element: the class of its root tag, and its name.",
        {:tuple, [:string, :string]}}
     ]

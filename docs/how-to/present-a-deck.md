@@ -53,6 +53,16 @@ step skip it. The overview and the menu go to it. See
 In the speaker view, only the speaker window shows the overview and the menu. The step of the
 audience changes only at `Enter` or at a click.
 
+## Point at a part of a slide
+
+1. Press `l` in the present view or in the speaker view. The laser pointer is then on.
+2. Move the mouse to the part of the slide. A red dot goes with the mouse, and the
+   audience sees it on the same part of the slide. On a touch screen, touch the part.
+3. Press `l` again to turn the pointer off. The next step also turns it off.
+
+While the pointer is on, a click does not change the step. To make a mark before the
+talk, see [Point at a part of a slide](point-at-a-part-of-a-slide.md).
+
 ## Find a key
 
 1. Press `?` or `/` to open the list of keys.

@@ -3458,6 +3458,49 @@ body[data-view="handout"][data-print-notes="false"] .notes {
  * `--progress-height`. The bar
  * is not on a black screen, in the overview, in the other views or on paper.
  */
+/*
+ * The laser pointer. The key `l` writes `data-laser` on the `body`, and the
+ * presenter script then puts the element `laser` at the mouse, with
+ * `data-shown`. The dot is a circle in the color `--danger` of the theme,
+ * with a glow, and a deck can set `--laser-color` and `--laser-size`. The
+ * dot takes no click, so the mouse reaches the slide under it.
+ *
+ * The dot shows in the present view and in the speaker view. It does not
+ * show on a black screen, in the overview, in the menu, in the handout view
+ * or on paper. While the pointer is on, the slide does not show the cursor
+ * of the system, and a finger on the slide does not scroll the page, so the
+ * script gets each movement of the finger.
+ */
+#laser {
+  display: none;
+  position: fixed;
+  z-index: 8;
+  width: var(--laser-size, 0.4rem);
+  height: var(--laser-size, 0.4rem);
+  margin: calc(var(--laser-size, 0.4rem) / -2);
+  border-radius: 50%;
+  background-color: var(--laser-color, var(--danger));
+  box-shadow: 0 0 calc(var(--laser-size, 0.4rem) * 0.8)
+    calc(var(--laser-size, 0.4rem) * 0.3)
+    color-mix(in srgb, var(--laser-color, var(--danger)) 60%, transparent);
+  pointer-events: none;
+}
+@media screen {
+  body[data-laser="true"]:is([data-view="present"], [data-view="speaker"]):not(
+      [data-blank="true"],
+      [data-overview="true"],
+      [data-menu="true"]
+    )
+    #laser[data-shown] {
+    display: block;
+  }
+  body[data-laser="true"][data-view="present"] .screen,
+  body[data-laser="true"][data-view="speaker"]
+    .handout-page[data-speaker="current"] {
+    cursor: none;
+    touch-action: none;
+  }
+}
 #progress {
   display: none;
   width: calc(var(--fraction, 0) * 100%);

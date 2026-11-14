@@ -893,6 +893,12 @@ defmodule Expresso.Renderer do
                 aria_valuenow: 0 do
             end
 
+            # The dot of the laser pointer. The key `l` turns the pointer on,
+            # and the script then moves the dot with the mouse. The dot is
+            # decoration for the eye, so a screen reader gets no element.
+            div id: "laser", aria_hidden: "true" do
+            end
+
             # The script writes the slide and the step of each move into this
             # element, and a screen reader reads the text.
             div id: "announce", role: "status", class: "announce" do

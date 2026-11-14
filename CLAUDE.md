@@ -50,6 +50,10 @@ Read these documents before you change the code:
   a PNG file of each slide, from a headless Chrome or Chromium. The code contains this
   design. The document records ten decisions, and each is settled. Its last section, "The
   result", tells what changed during the work.
+- `docs/laser-pointer.md` — the design for the laser pointer of the presenter: a red dot
+  that goes with the mouse, in the two windows. The code contains this design. The
+  document records ten decisions, and each is settled. Its last section, "The result",
+  tells what changed during the work.
 - `docs/graph-diagrams.md` — the design for a `diagram` from the source of a graph, in the
   language of Graphviz or of D2. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during

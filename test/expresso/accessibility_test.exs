@@ -86,6 +86,14 @@ defmodule Expresso.AccessibilityTest do
     assert document |> LazyHTML.query("#announce") |> LazyHTML.attribute("role") == ["status"]
   end
 
+  test "the dot of the laser pointer is one element that a screen reader does not read" do
+    document = document()
+
+    assert count(document, "#laser") == 1
+    assert document |> LazyHTML.query("#laser") |> LazyHTML.attribute("aria-hidden") == ["true"]
+    assert document |> LazyHTML.query("#laser") |> LazyHTML.text() == ""
+  end
+
   test "the menu is a listbox of groups of options, with a name for each option" do
     document = document()
     [list] = LazyHTML.query(document, "#menu > ol") |> Enum.to_list()
