@@ -22,6 +22,32 @@ the version of the release. A later binary of the same version runs that install
 and not its own. Therefore change the version in `mix.exs` for each binary that you give
 to other users. `<binary> maintenance uninstall` removes the installed release.
 
+## The binary has no MDEx
+
+MDEx makes the HTML of the notes of the speaker, and it is a NIF. The binary does not hold
+it, so the binary shows each note as plain text, and `--check` gives a note about it.
+
+The library of MDEx does not load in the binary for Linux. Burrito puts an ERTS for musl
+in that binary. The library for glibc and the library for musl both need `libgcc_s.so.1`.
+On a computer with glibc, the loader of musl gets the `libgcc_s.so.1` of glibc, and it
+stops:
+
+```
+Error relocating /lib/x86_64-linux-gnu/libgcc_s.so.1: _dl_find_object: symbol not found
+```
+
+RustlerPrecompiled also gets the library for the computer that compiles, so a binary for
+macOS from a computer with Linux gets the library of Linux.
+
+Therefore the dependency has `runtime: false` in `mix.exs`, and a release does not hold
+it. A release directory from before that change can hold the old libraries. Remove
+`_build/prod/rel` to make a release with no MDEx.
+
+The test "writes the same HTML as Expresso.main/2" gives `Expresso.main/2` the setting
+`notes_markdown: false`, because its deck has notes. The test "shows the notes of the
+speaker as plain text" makes sure that the binary writes no warning about the library.
+`docs/speaker-notes.md` gives the alternatives.
+
 ## The dependency test
 
 The test of `test/dependency/` makes a Mix project in `_build/dependency_project`.

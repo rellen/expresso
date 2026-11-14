@@ -66,7 +66,13 @@ defmodule Expresso.Check do
          html = Expresso.Deck.render(deck),
          :ok <- write(html, output),
          {:ok, page} <- page(html, deck, tools, sizes) do
-      checks = [Document.theme(deck), Document.size(html), Document.slides(html)]
+      checks = [
+        Document.theme(deck),
+        Document.size(html),
+        Document.slides(html),
+        Document.notes(deck)
+      ]
+
       problems = named(Enum.flat_map(checks, & &1.problems) ++ page_problems(page), deck)
       notes = named(Enum.flat_map(checks, & &1.notes), deck)
       text = text(input, deck, {level, browser(tools)}, page, notes, problems)

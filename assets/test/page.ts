@@ -28,7 +28,10 @@ export type FakeElement = {
   matches: (selector: string) => boolean;
   children: FakeElement[];
   appendChild: (child: FakeElement) => void;
-  replaceChildren: () => void;
+  replaceChildren: (...children: FakeElement[]) => void;
+  // A copy of the element with a copy of each child.
+  cloneNode: (deep: boolean) => FakeElement;
+  hasAttribute: (name: string) => boolean;
   querySelector: (selector: string) => FakeElement | null;
   // The attributes `data-*` of the element, in its `dataset`, and each other
   // attribute, such as `aria-valuenow`, in `attributes`.
@@ -103,7 +106,8 @@ type Options = {
   search?: string;
   opener?: FakeWindow | null;
   // The notes of each slide, in slide order. A slide without an entry has no
-  // notes.
+  // notes. Each page of the slide holds the note, after a note of an earlier
+  // step with `data-covered`, as the renderer writes it on a page of paper.
   notes?: string[];
   // The value of `data-progress` that the renderer writes on the `body`. The
   // value `"false"` also gives the program the first state with no progress
@@ -213,9 +217,19 @@ export function element(
     appendChild: (child) => {
       self.children.push(child);
     },
-    replaceChildren: () => {
-      self.children = [];
+    replaceChildren: (...children) => {
+      self.children = children;
     },
+    cloneNode: () => {
+      const copy = element(self.id, self.className, { ...self.dataset });
+      copy.textContent = self.textContent;
+      copy.children = self.children.map((child) => child.cloneNode(true));
+      return copy;
+    },
+    hasAttribute: (name) =>
+      name.startsWith("data-")
+        ? self.dataset[datasetKey(name)] !== undefined
+        : self.attributes[name] !== undefined,
     querySelector: (selector) =>
       self.children.find((child) => `.${child.className}` === selector) ?? null,
     attributes: {},
@@ -334,7 +348,12 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
       const notes = options.notes?.[index];
       if (notes !== undefined) {
         const aside = element("", "notes");
-        aside.textContent = notes;
+        const covered = element("", "note", { covered: "" });
+        covered.textContent = "A note of an earlier step.";
+        const note = element("", "note");
+        note.textContent = notes;
+        aside.appendChild(covered);
+        aside.appendChild(note);
         page.appendChild(aside);
       }
       handout.appendChild(page);

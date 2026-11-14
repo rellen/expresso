@@ -195,7 +195,8 @@ defmodule Expresso.Template do
           module not in [
             Expresso.Element.Pause,
             Expresso.Element.Footnote,
-            Expresso.Element.Shape
+            Expresso.Element.Shape,
+            Expresso.Element.Note
           ] do
         c(&do_render_element(module, &1),
           rest!: Expresso.Element.assigns(element)

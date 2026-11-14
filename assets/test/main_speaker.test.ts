@@ -26,6 +26,13 @@ function text(id: string): string | undefined {
   return page.element(id)?.textContent;
 }
 
+// The text of each note that the speaker view shows.
+function notes(): (string | undefined)[] {
+  return (page.element("speaker-notes")?.children ?? []).map(
+    (note) => note.textContent,
+  );
+}
+
 function marked(): string[] {
   return page.pages.flatMap((each) =>
     each.dataset.speaker === undefined
@@ -38,7 +45,8 @@ test("the speaker view shows the current step, the next step and the notes", () 
   assert.equal(page.body.dataset.view, "speaker");
   assert.equal(page.document.title, "Speaker view: Deck");
   assert.deepEqual(marked(), ["current 1.1", "next 1.2"]);
-  assert.equal(text("speaker-notes"), "Say hello.");
+  // The page also holds a note of an earlier step, which only paper shows.
+  assert.deepEqual(notes(), ["Say hello."]);
   assert.equal(text("speaker-position"), "Slide 1 of 2, step 1 of 2");
   assert.equal(text("speaker-timer"), "0:00");
 });
@@ -63,7 +71,7 @@ test("the last step has no next step, and a slide without notes has no notes", (
   page.receive(position({ slide: 2, time: 1_000_000 }), opener);
 
   assert.deepEqual(marked(), ["current 2.1"]);
-  assert.equal(text("speaker-notes"), "");
+  assert.deepEqual(notes(), []);
   assert.equal(text("speaker-position"), "Slide 2 of 2");
 });
 

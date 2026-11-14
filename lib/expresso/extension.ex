@@ -1604,6 +1604,25 @@ defmodule Expresso.Extension do
         ]
   }
 
+  @note %Spark.Dsl.Entity{
+    name: :note,
+    target: Expresso.Element.Note,
+    args: [{:optional, :text}],
+    schema: [
+      text: [
+        type: :string,
+        required: true,
+        doc:
+          "The text of the note, in Markdown. The speaker view and the handout view show it at the steps of the note. See docs/reference/note-element.md."
+      ],
+      at: [
+        type: {:custom, Expresso.Element.Note, :at, []},
+        doc:
+          "The steps of the note, such as 2, 2..4 or [from: 3]. It takes no :next. A note with no at option is a note for each step."
+      ]
+    ]
+  }
+
   @pause %Spark.Dsl.Entity{
     name: :pause,
     target: Expresso.Element.Pause,
@@ -1618,7 +1637,8 @@ defmodule Expresso.Extension do
 
   @slide_elements [
     elements:
-      [@text_box, @columns, @callout, @toc] ++ @inner_elements ++ [@footnote, @shape, @pause]
+      [@text_box, @columns, @callout, @toc] ++
+        @inner_elements ++ [@footnote, @shape, @note, @pause]
   ]
 
   @slide %Spark.Dsl.Entity{
@@ -1651,7 +1671,8 @@ defmodule Expresso.Extension do
       ],
       notes: [
         type: :string,
-        doc: "The notes of the speaker. The handout view shows them under each page."
+        doc:
+          "The notes of the speaker for each step of the slide, in Markdown. The speaker view shows them, and the handout view shows them under each page. A note entity gives a note for some steps. See docs/reference/note-element.md."
       ],
       meta: [
         type: :keyword_list,

@@ -11,7 +11,7 @@ defmodule Expresso.Overlay.Expand do
   `docs/overlays.md` gives the rules.
   """
 
-  alias Expresso.Element.{Chart, Code, Hierarchy, On, Pause}
+  alias Expresso.Element.{Chart, Code, Hierarchy, Note, On, Pause}
   alias Expresso.Element.Hierarchy.Steps
   alias Expresso.Overlay
   alias Expresso.Slide
@@ -70,6 +70,11 @@ defmodule Expresso.Overlay.Expand do
   The function gives an error when a specification has a step number that is
   more than the maximum. It gives the same error for a step of the `handout`
   option of the slide. That option does not change the maximum.
+
+  A `note` entity takes no step from the counter, and it does not change the
+  maximum. The function puts the step numbers of its `at` option into its
+  `steps` field, and it gives an error for a step that the slide does not
+  have. A note with no `at` option keeps `nil`, also with `auto_reveal`.
 
   The `label` option of a `pause` names the step that the pause starts, and
   the `labels` option of the slide names each step from step 1. The function
@@ -150,12 +155,14 @@ defmodule Expresso.Overlay.Expand do
   # The implicit specification of the auto_reveal option. It goes on each
   # element at the level of the slide that has no at option. A pause has no at
   # field, so the third clause does not match it. A footnote and a spacer
-  # keep nil, because neither has visible content of its own on the slide.
+  # keep nil, because neither has visible content of its own on the slide. A
+  # note with no at option is a note for each step.
 
   defp auto_reveal(elements, true) do
     Enum.map(elements, fn
       %Expresso.Element.Footnote{} = footnote -> footnote
       %Expresso.Element.Spacer{} = spacer -> spacer
+      %Note{} = note -> note
       %{at: nil} = element -> %{element | at: Overlay.from_next()}
       element -> element
     end)
@@ -178,6 +185,9 @@ defmodule Expresso.Overlay.Expand do
   # The counter walk inside an element
 
   defp resolve_element(%Pause{} = pause, counter), do: {pause, counter}
+
+  # A note has only step numbers, and it takes no step from the counter.
+  defp resolve_element(%Note{} = note, counter), do: {note, counter}
 
   defp resolve_element(element, counter) do
     entry = counter
@@ -304,6 +314,9 @@ defmodule Expresso.Overlay.Expand do
 
   defp specs(%Pause{}), do: []
 
+  # A note does not add a step to its slide.
+  defp specs(%Note{}), do: []
+
   defp specs(element) do
     at = List.wrap(at(element))
     on = Enum.map(on(element), & &1.at)
@@ -321,6 +334,20 @@ defmodule Expresso.Overlay.Expand do
   end
 
   defp expand_element(%Pause{} = pause, _max), do: {:ok, pause}
+
+  defp expand_element(%Note{at: nil} = note, _max), do: {:ok, note}
+
+  defp expand_element(%Note{at: at} = note, max) do
+    case Overlay.max_step(at) do
+      step when is_integer(step) and step > max ->
+        {:error,
+         "a note has the step #{step}, and the slide has #{max} steps. A note does not " <>
+           "add a step to its slide"}
+
+      _step ->
+        at |> Overlay.steps(max) |> Result.map_ok(&%Note{note | steps: &1})
+    end
+  end
 
   defp expand_element(element, max) do
     with {:ok, steps} <- expand_spec(at(element), max),

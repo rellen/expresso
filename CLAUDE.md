@@ -41,6 +41,11 @@ Read these documents before you change the code:
   an element one character at a time. The code contains this design. The document records
   ten decisions, and each is settled. Its last section, "The result", tells what changed
   during the work.
+- `docs/speaker-notes.md` — the design for the notes of the speaker: Markdown in a note,
+  and a note for some steps of a slide. The code contains this design. The document records
+  ten decisions. Nine are settled, and decision 2 has a question for the maintainer: the
+  binary shows the notes as plain text, because it does not hold MDEx. Its last section,
+  "The result", tells what changed during the work.
 - `docs/graph-diagrams.md` — the design for a `diagram` from the source of a graph, in the
   language of Graphviz or of D2. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during

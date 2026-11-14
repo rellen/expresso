@@ -105,6 +105,8 @@ defmodule Expresso.DevDependencyTest do
       root Path.expand("..", __DIR__)
 
       slide "the server" do
+        notes "Say **why** the server starts."
+
         code "elixir" do
           src "lib/server.ex"
           lines from: "def start"
@@ -122,9 +124,12 @@ defmodule Expresso.DevDependencyTest do
     assert {output, 0} = mix(project, ["expresso", "talk/deck.exs", "talk/deck.html"])
     refute output =~ "error"
 
-    html = File.read!(Path.join(project, "talk/deck.html"))
-    text = html |> LazyHTML.from_document() |> screen(".code") |> LazyHTML.text()
+    html = project |> Path.join("talk/deck.html") |> File.read!() |> LazyHTML.from_document()
 
-    assert text =~ "def start, do: :ok"
+    assert html |> screen(".code") |> LazyHTML.text() =~ "def start, do: :ok"
+
+    # MDEx is a dependency of Expresso with `runtime: false`. The project gets
+    # it, so the notes of the speaker show their Markdown.
+    assert texts(html, ".handout-page .note strong") == ["why"]
   end
 end
