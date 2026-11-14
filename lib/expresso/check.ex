@@ -61,11 +61,17 @@ defmodule Expresso.Check do
   def check(input, output, level, sizes \\ []) do
     sizes = if sizes == [], do: [@default_size], else: Enum.uniq(sizes)
 
+    # A file of an element with `external true` goes next to the output file,
+    # and next to the private document of a browser level.
+    directory = Expresso.MediaFiles.directory(output || input)
+
     with {:ok, tools} <- tools(level, input),
          {:ok, deck} <- Expresso.load_file(input),
-         html = Expresso.Deck.render(deck),
+         {html, files} =
+           Expresso.MediaFiles.collect(directory, fn -> Expresso.Deck.render(deck) end),
          :ok <- write(html, output),
-         {:ok, page} <- page(html, deck, tools, sizes) do
+         :ok <- Expresso.MediaFiles.write(files, output),
+         {:ok, page} <- page({html, files}, deck, tools, sizes) do
       checks = [
         Document.theme(deck),
         Document.size(html),
@@ -143,16 +149,16 @@ defmodule Expresso.Check do
   # Run the checks of the page one time for each size and each variant of
   # the theme. The result is a list of `{{size, scheme}, result}`, with `nil`
   # as the scheme of a theme with one variant.
-  defp page(_html, _deck, nil, _sizes), do: {:ok, nil}
+  defp page(_rendered, _deck, nil, _sizes), do: {:ok, nil}
 
-  defp page(html, deck, {:session, tools}, sizes),
-    do: Session.run(html, deck, tools, schemes: schemes(deck), sizes: sizes)
+  defp page({html, files}, deck, {:session, tools}, sizes),
+    do: Session.run(html, deck, tools, schemes: schemes(deck), sizes: sizes, files: files)
 
-  defp page(html, deck, {browser, axe}, sizes) do
+  defp page({html, files}, deck, {browser, axe}, sizes) do
     runs = for size <- sizes, scheme <- schemes(deck), do: {size, scheme}
 
     Enum.reduce_while(runs, {:ok, []}, fn {size, scheme} = run, {:ok, pages} ->
-      case Browser.run(html, browser, axe, scheme: scheme, size: size) do
+      case Browser.run(html, browser, axe, scheme: scheme, size: size, files: files) do
         {:ok, result} -> {:cont, {:ok, pages ++ [{run, result}]}}
         error -> {:halt, error}
       end

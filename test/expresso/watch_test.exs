@@ -192,6 +192,53 @@ defmodule Expresso.WatchTest do
       assert runs.() == 2
     end
 
+    test "serves the copy of a video with external true, and writes it next to the output file",
+         %{tmp_dir: dir} do
+      input = Path.join(dir, "talk.exs")
+      output = Path.join(dir, "out.html")
+      clip = Path.expand("test/fixtures/clip.webm")
+      poster = Path.expand("test/fixtures/dot.png")
+
+      video =
+        ~s|, video(#{inspect(clip)}, title: "A clip", poster: #{inspect(poster)}, external: true)|
+
+      File.write!(input, script("with a clip", video))
+
+      %{url: url} = start_watch(input, output)
+      assert_receive {Watch, {:rendered, 1}}, 10_000
+
+      # The name of the directory comes from the output file.
+      name = Expresso.MediaFiles.name(clip, File.read!(clip))
+      assert {200, page} = get(url)
+      assert page =~ "out_files/" <> name
+      refute page =~ "data:video/"
+
+      assert get(url <> "out_files/" <> name) == {200, File.read!(clip)}
+      assert File.read!(Path.join([dir, "out_files", name])) == File.read!(clip)
+      refute File.read!(output) =~ "data:video/"
+    end
+
+    test "with no output file, the directory of the copies has the name of the input file", %{
+      tmp_dir: dir
+    } do
+      input = Path.join(dir, "talk.exs")
+      clip = Path.expand("test/fixtures/clip.webm")
+      poster = Path.expand("test/fixtures/dot.png")
+
+      video =
+        ~s|, video(#{inspect(clip)}, title: "A clip", poster: #{inspect(poster)}, external: true)|
+
+      File.write!(input, script("with a clip", video))
+
+      %{url: url} = start_watch(input)
+      assert_receive {Watch, {:rendered, 1}}, 10_000
+
+      name = Expresso.MediaFiles.name(clip, File.read!(clip))
+      assert get(url <> "talk_files/" <> name) == {200, File.read!(clip)}
+      # The watch mode writes no file next to the input file.
+      assert File.ls!(dir) == ["talk.exs"]
+    end
+
     test "gives an error for a port in use", %{tmp_dir: dir} do
       {:ok, socket} = :gen_tcp.listen(0, ip: {127, 0, 0, 1})
       {:ok, port} = :inet.port(socket)

@@ -146,6 +146,11 @@ defmodule Expresso do
   and returns an error tuple. The standard output then holds no text. A failed
   write of the output file is an error too.
 
+  A `video` or an `audio` element with `external true` keeps its file in a
+  directory next to the output file, such as `talk_files/` for `talk.html`.
+  The function writes each such file after the document.
+  `Expresso.MediaFiles` gives the rules.
+
   When the standard output closes before the function writes all the HTML, as
   for `| head`, the function returns `{:error, :closed}` and writes no message.
   """
@@ -155,10 +160,19 @@ defmodule Expresso do
   def main(nil, _output_path), do: error(Expresso.CommandLine.usage("mix expresso"))
 
   def main(input_path, output_path) do
-    with {:ok, rendered} <- render_input(input_path),
-         :ok <- output(rendered, output_path) do
+    # A `video` or an `audio` element with `external true` keeps its file next
+    # to the output file. The standard output has no directory for it, and
+    # the render then raises an error that names the option.
+    file = if output_path not in [nil, "-"], do: output_path
+    directory = if file, do: Expresso.MediaFiles.directory(file)
+
+    with {{:ok, rendered}, files} <-
+           Expresso.MediaFiles.collect(directory, fn -> render_input(input_path) end),
+         :ok <- output(rendered, output_path),
+         :ok <- Expresso.MediaFiles.write(files, file) do
       :ok
     else
+      {{:error, message}, _files} -> error(message)
       {:error, :closed} = closed -> closed
       {:error, message} -> error(message)
     end

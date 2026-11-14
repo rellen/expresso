@@ -285,6 +285,46 @@ defmodule Expresso.BinaryTest do
     assert document =~ ~s(<p class="note-plain">Then `wait`.</p>)
   end
 
+  test "writes the copy of a video with external true next to the output file",
+       %{tmp_dir: dir} = context do
+    script = Path.join(dir, "talk.exs")
+
+    File.write!(script, """
+    defmodule Release.External do
+      use Expresso
+
+      name "external"
+
+      slide "one" do
+        video "examples/animations/clip.webm" do
+          title "A clip"
+          poster "examples/animations/clip.png"
+          external true
+        end
+      end
+    end
+
+    Release.External
+    """)
+
+    html = Path.join(dir, "talk.html")
+    clip = File.read!("examples/animations/clip.webm")
+    name = Expresso.MediaFiles.name("clip.webm", clip)
+
+    assert {_output, 0} = run(context, [script, html])
+    assert File.ls!(Path.join(dir, "talk_files")) == [name]
+    assert File.read!(Path.join([dir, "talk_files", name])) == clip
+
+    document = File.read!(html)
+    assert document =~ ~s(["talk_files/#{name}"])
+    refute document =~ "data:video/"
+
+    # The standard output has no directory for the copy.
+    assert {output, 1} = run(context, [script])
+    assert output =~ ~s(the video "examples/animations/clip.webm" has external true)
+    refute output =~ "<!DOCTYPE html>"
+  end
+
   # The export needs Chrome or Chromium. The binary gets a new home directory
   # for each run, so it does not find the browsers of Playwright there.
   # Therefore the test gives the path of the browser: `EXPRESSO_CHROMIUM`, or

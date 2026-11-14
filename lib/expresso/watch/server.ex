@@ -14,6 +14,10 @@ defmodule Expresso.Watch.Server do
       end of the `body`.
     * `version` - the number of that render.
 
+  It also holds the copy of each file of a `video` or an `audio` element with
+  `external true`, in a directory such as `talk_files/`. `Expresso.MediaFiles`
+  gives the rules.
+
   The script asks for `version` two times each second. When the number is not
   the number of its own document, the script reloads the page. The address
   holds the slide and the step, so the page shows the same step after the
@@ -52,6 +56,18 @@ defmodule Expresso.Watch.Server do
 
   # The time between two requests of the script, in milliseconds.
   @interval 500
+
+  # The media type of each extension of a video file or of a sound file that
+  # an element with `external true` keeps next to the document.
+  @media_types [
+    {~c"webm", ~c"video/webm"},
+    {~c"mp4", ~c"video/mp4"},
+    {~c"mp3", ~c"audio/mpeg"},
+    {~c"m4a", ~c"audio/mp4"},
+    {~c"ogg", ~c"audio/ogg"},
+    {~c"oga", ~c"audio/ogg"},
+    {~c"wav", ~c"audio/wav"}
+  ]
 
   @doc """
   Start the server on a port of 127.0.0.1
@@ -95,10 +111,16 @@ defmodule Expresso.Watch.Server do
 
   @doc """
   Serve a new document, and tell each open page to reload
+
+  `files` holds the copy of each file of an element with `external true`,
+  from `Expresso.MediaFiles.collect/2`. The server writes each copy into its
+  directory before the document, so the document never names a file that the
+  server does not have.
   """
-  @spec publish(t(), String.t()) :: t()
-  def publish(server, html) do
+  @spec publish(t(), String.t(), [Expresso.MediaFiles.file()]) :: t()
+  def publish(server, html, files \\ []) do
     version = server.version + 1
+    :ok = Expresso.MediaFiles.write(files, Path.join(server.directory, "index.html"))
     write(server, "index.html", page(html, version))
     write(server, "version", Integer.to_string(version))
     %{server | version: version}
@@ -120,6 +142,9 @@ defmodule Expresso.Watch.Server do
   #     `index.html` for `/` with a query: `mod_alias` looks for the index
   #     with the query still in the path, and `mod_get` then refuses the
   #     directory with the status 403.
+  #   * `Expresso.Watch.Range` sends a part of a file, so a browser can go
+  #     to a time of a video or of a sound of an element with
+  #     `external true`.
   #   * `mod_get` sends a file.
   #   * `mod_head` answers a HEAD request.
   defp config(directory, port) do
@@ -131,8 +156,8 @@ defmodule Expresso.Watch.Server do
       document_root: String.to_charlist(directory),
       directory_index: [~c"index.html"],
       re_write: {~c"^/\\?", String.to_charlist(replacement(directory) <> "/index.html?")},
-      modules: [Expresso.Watch.Host, :mod_alias, :mod_get, :mod_head],
-      mime_types: [{~c"html", ~c"text/html; charset=utf-8"}],
+      modules: [Expresso.Watch.Host, :mod_alias, Expresso.Watch.Range, :mod_get, :mod_head],
+      mime_types: [{~c"html", ~c"text/html; charset=utf-8"} | @media_types],
       default_type: ~c"text/plain"
     ]
   end

@@ -458,9 +458,18 @@ two files:
   `</body>`.
 - `version` holds the number of that render.
 
-`Expresso.Watch.Server.publish/2` writes the document first, and then the number. Each
+`Expresso.Watch.Server.publish/3` writes the document first, and then the number. Each
 write goes to a temporary file, and a rename then replaces the file, so the server never
 sends a part of a file. The output file of the command does not get the script.
+
+The directory also holds the copy of each file of a `video` or an `audio` element with
+`external true`, in a directory such as `talk_files/`. `publish/3` writes each copy
+before the document. A browser asks for a part of such a file with a `Range` header.
+`mod_range` of OTP answers with `Content-Range: bytes=2-5/10`, which is not the form of
+RFC 9110, and Chrome then does not play the file. `Expresso.Watch.Range` is therefore in
+the module list in front of `mod_get`. It answers a request for one range with the status
+206 and the header `Content-Range: bytes 2-5/10`, so a video can go to a time. See "A
+file next to the document".
 
 The address holds the slide and the step, so a reload shows the same step. The speaker
 view opens the same address, so it gets the script and reloads too. `window.opener` stays
@@ -1496,6 +1505,9 @@ for the user. It follows the design of the embed, with these differences:
   slide holds only `data-video` and the poster, and the renderer writes the files into the
   element `expresso-videos`. The form `written_videos` of `Expresso.Presenter.Schema`
   describes it.
+- **With `external true`, the file stays next to the document.** The element
+  `expresso-videos` then holds the relative address of a copy of the file. See "A file
+  next to the document".
 - **The step decides when it plays.** The player of `media.ts` runs after each change of
   the state. A
   video plays while its slide shows in the present view and each parent with an overlay
@@ -1514,6 +1526,30 @@ for the user. It follows the design of the embed, with these differences:
 - **It uses the box of an embed.** The element has the classes of an embed, so the size,
   the poster under the video, and the rules that hide the frame in the handout view and in
   the menu apply to it.
+
+### A file next to the document
+
+A `video` or an `audio` element with `external true` does not put its file into the
+document. `docs/external-media.md` gives the design. The parts are:
+
+- `Expresso.Media.sources/4` reads the file through `Expresso.DeckFile`, as for a data
+  URI, and it gives the bytes to `Expresso.MediaFiles.put/3`. That function returns the
+  relative address of the copy, such as `talk_files/run-3f2a1c9e.webm`, and the JSON
+  element holds that address. The name holds eight digits of the SHA-256 of the content.
+- `Expresso.MediaFiles.collect/2` runs a render with the name of the directory of the
+  copies, and it returns each copy. It keeps the copies in the process dictionary, as
+  `Expresso.DeckFile.track/1` keeps its paths. `Expresso.MediaFiles.directory/1` makes
+  the name from the output file, or from the input file when the command has no output
+  file.
+- `Expresso.MediaFiles.write/2` writes each copy next to a document. A copy that is
+  already there has the same content, so the function does not write it again.
+- Each code that writes a document calls these functions: `Expresso.main/2`,
+  `Expresso.Watch`, `Expresso.Check` and `Expresso.Export`. The check and the export also
+  write the copies next to the private document that the browser opens.
+- A render with no directory raises an `ArgumentError` that names the file and the
+  option: the standard output, and `Expresso.Deck.render/1` with no `collect/2`.
+- The presenter script needs no change. `media.ts` puts each value of the JSON element
+  into `src` when the element plays first, so the browser asks for the file only then.
 
 ### The audio
 

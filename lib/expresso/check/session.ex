@@ -179,6 +179,9 @@ defmodule Expresso.Check.Session do
     private_dir = Expresso.PrivateDir.open!("session")
     page_path = Path.join(private_dir.path, "deck.html")
     File.write!(page_path, Browser.with_axe(html, tools.axe))
+    # The copy of each file of an element with `external true` goes next to
+    # the private document.
+    :ok = Expresso.MediaFiles.write(Keyword.get(opts, :files, []), page_path)
     previous = Process.flag(:trap_exit, true)
 
     try do

@@ -115,3 +115,43 @@ Examples.VideoControls
 
 The controls take the clicks on the video, so a click on the video does not go to the next
 step. A click on another part of the slide still does.
+
+## Keep a long video next to the document
+
+The document holds each video file, so a long recording makes a large document, and the
+first slide waits for the whole file. Write `external true` to keep the file next to the
+document:
+
+```elixir
+defmodule Examples.VideoExternal do
+  use Expresso
+
+  slide "the recording" do
+    heading "The recording"
+
+    video "examples/animations/clip.webm" do
+      title "A test pattern that moves"
+      poster "examples/animations/clip.png"
+      width "60%"
+      external true
+    end
+  end
+end
+
+Examples.VideoExternal
+```
+
+![A slide with a heading and a video](https://raw.githubusercontent.com/rellen/expresso/media/video-external.png)
+
+1. Give the command an output file, such as `mix expresso talk.exs talk.html`. The
+   standard output has no directory for the file.
+2. Find the copy of the video in the directory `talk_files/`, next to `talk.html`. Its
+   name holds a hash of its content, such as `clip-3dc53cfe.webm`.
+3. Put the document and the directory on the web host together.
+
+The browser then asks for the video only when its slide shows, and it can go to a time of
+the video before the whole file arrives. The poster stays in the document, so the speaker
+view and the handout view show it with no file.
+
+An `audio` element takes the same option. For each rule, see
+[A file next to the document](../reference/video-element.md#a-file-next-to-the-document).

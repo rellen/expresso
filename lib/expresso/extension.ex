@@ -235,6 +235,12 @@ defmodule Expresso.Extension do
             default: false,
             doc:
               "Show the controls of the browser, so the presenter can turn the sound on. The default is false, so the clicks of the presenter work on the slide."
+          ],
+          external: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Keep the file next to the document, in a directory such as talk_files for talk.html, in place of a data URI in the document. The browser then gets the file only when its slide plays. The output must be a file. See docs/reference/video-element.md."
           ]
         ]
   }
@@ -269,6 +275,12 @@ defmodule Expresso.Extension do
             default: false,
             doc:
               "Show the controls of the browser on the slide. The default is false, so the present view shows nothing in the place of the element."
+          ],
+          external: [
+            type: :boolean,
+            default: false,
+            doc:
+              "Keep the file next to the document, in a directory such as talk_files for talk.html, in place of a data URI in the document. The browser then gets the file only when its slide plays. The output must be a file. See docs/reference/audio-element.md."
           ]
         ]
   }

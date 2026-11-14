@@ -51,6 +51,8 @@ GitHub.
   and its result.
 - `docs/rehearsal.md` — the design for the rehearsal, which records the time of each
   slide, and its result.
+- `docs/external-media.md` — the design for a video file or a sound file next to the
+  document, and its result.
 - `docs/tree.md` — the design for the element `tree`, and its result.
 - `docs/graph-diagrams.md` — the design for a diagram from Graphviz or D2, and its result.
 - `docs/scatter-plots.md` — the design for a scatter plot, and its result.

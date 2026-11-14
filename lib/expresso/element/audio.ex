@@ -32,6 +32,7 @@ defmodule Expresso.Element.Audio do
               :index,
               loop: false,
               controls: false,
+              external: false,
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 
@@ -68,7 +69,7 @@ defmodule Expresso.Element.Audio do
   function writes the number into `data-audio`.
   """
   @spec number(Expresso.Deck.t()) :: Expresso.Deck.t()
-  def number(deck), do: Expresso.Media.number(deck, __MODULE__)
+  def number(deck), do: Expresso.Media.number(deck, __MODULE__, &Expresso.Media.key/1)
 
   @doc """
   Return the data URI of each file of the sounds of a deck, in the order of

@@ -399,15 +399,17 @@ export const decodeWrittenEmbeds: Decoder<WrittenEmbeds> = /* @__PURE__ */ list(
 export type WrittenLinks = readonly Commands[];
 export const decodeWrittenLinks: Decoder<WrittenLinks> = /* @__PURE__ */ list(decodeCommands);
 
-// The data URI of each video of a deck, in the order of the numbers of the
-// elements, as the renderer writes it.
+// The source of each video of a deck, in the order of the numbers of the
+// elements, as the renderer writes it: a data URI, or the relative address of a
+// copy of the file next to the document, for an element with external true.
 export type WrittenVideos = readonly string[];
-export const decodeWrittenVideos: Decoder<WrittenVideos> = /* @__PURE__ */ list(/* @__PURE__ */ string(/^data:video\/(webm|mp4);base64,/));
+export const decodeWrittenVideos: Decoder<WrittenVideos> = /* @__PURE__ */ list(/* @__PURE__ */ string(/^(data:video\/(webm|mp4);base64,|[^:\/][^:]*\.(webm|mp4)$)/));
 
-// The data URI of each sound of a deck, in the order of the numbers of the
-// elements, as the renderer writes it.
+// The source of each sound of a deck, in the order of the numbers of the
+// elements, as the renderer writes it: a data URI, or the relative address of a
+// copy of the file next to the document, for an element with external true.
 export type WrittenAudios = readonly string[];
-export const decodeWrittenAudios: Decoder<WrittenAudios> = /* @__PURE__ */ list(/* @__PURE__ */ string(/^data:audio\/(mpeg|mp4|ogg|wav);base64,/));
+export const decodeWrittenAudios: Decoder<WrittenAudios> = /* @__PURE__ */ list(/* @__PURE__ */ string(/^(data:audio\/(mpeg|mp4|ogg|wav);base64,|[^:\/][^:]*\.(mp3|m4a|ogg|oga|wav)$)/));
 
 // The variant of a theme with a light and a dark variant that the key t chose,
 // or null for the variant of the screen.

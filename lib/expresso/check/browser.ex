@@ -279,7 +279,9 @@ defmodule Expresso.Check.Browser do
   `:scheme`, `:light` or `:dark`, shows that variant of a theme with two
   variants, with `?scheme=` in the address. The option `:size`, such as
   `{1280, 720}`, gives the size of the page, and it is `{1920, 1080}` by
-  default.
+  default. The option `:files` holds the copy of each file of an element with
+  `external true`, from `Expresso.MediaFiles.collect/2`, and the function
+  writes each copy next to the private document.
   """
   @spec run(String.t(), Path.t(), Path.t() | nil, keyword()) ::
           {:ok, result()} | {:error, String.t()}
@@ -291,6 +293,7 @@ defmodule Expresso.Check.Browser do
     try do
       page = Path.join(directory, "deck.html")
       File.write!(page, with_axe(html, axe))
+      :ok = Expresso.MediaFiles.write(Keyword.get(opts, :files, []), page)
       url = "file://#{page}?" <> if(axe, do: "check=a11y", else: "check")
       url = scheme(url, Keyword.get(opts, :scheme))
 

@@ -23,6 +23,7 @@ end
 | `title` | A string, required | The name of the sound for a screen reader. The handout view and paper show it with a note symbol. |
 | `loop` | `true` or `false` | Play the sound again from the start at its end. The default is `false`. |
 | `controls` | `true` or `false` | Show the controls of the browser on the slide. The default is `false`. |
+| `external` | `true` or `false` | Keep the file next to the document, in place of a data URI in the document. The default is `false`. See "The file". |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
@@ -30,7 +31,9 @@ The element also takes the overlay options, such as `at` and `effect`. See
 [the overlay options](overlay-options.md).
 
 The compiler gives an error for a path with a different extension and for an address. The
-render gives an error for a file that it cannot read.
+render gives an error for a file that it cannot read. It also gives an error for a sound
+with `external true` when the output is the standard output, because the document then
+has no directory for the copy of the file.
 
 ## When the sound plays
 
@@ -58,3 +61,10 @@ The document holds each file one time, as a data URI, so a long sound makes a la
 document. Two elements with the same path share the file. A short sound in the Ogg format
 is the smallest, and an MP3 file plays in each browser. The watch mode renders the deck
 again after a change to the file.
+
+With `external true`, the document does not hold the file. The render writes a copy of
+the file into a directory next to the output file, such as `talk_files/` for `talk.html`,
+and the element `expresso-audios` holds the relative address of the copy, such as
+`talk_files/bell-3e700d6d.wav`. The browser then asks for the file only when the sound
+plays first. The rules are the rules of a video. See
+[A file next to the document](video-element.md#a-file-next-to-the-document).

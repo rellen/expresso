@@ -28,6 +28,7 @@ defmodule Expresso.Watch do
 
   alias Expresso.DeckFile
   alias Expresso.Element.Diagram.Cache
+  alias Expresso.MediaFiles
   alias Expresso.Watch.{Files, Server}
 
   # The time between two snapshots of the files, in milliseconds.
@@ -97,15 +98,24 @@ defmodule Expresso.Watch do
     known = Files.snapshot(watched_paths(state.paths))
     started = System.monotonic_time(:millisecond)
 
-    {{result, read_paths}, cache} =
-      Cache.run(state.cache, fn -> DeckFile.track(fn -> render_file(state.input) end) end)
+    # A file of an element with `external true` goes to the server, and next
+    # to the output file. The name of its directory comes from the output
+    # file, or from the input file with no output file.
+    directory = MediaFiles.directory(state.output || state.input)
+
+    {{{result, files}, read_paths}, cache} =
+      Cache.run(state.cache, fn ->
+        DeckFile.track(fn ->
+          MediaFiles.collect(directory, fn -> render_file(state.input) end)
+        end)
+      end)
 
     milliseconds = System.monotonic_time(:millisecond) - started
     state = %{state | cache: cache}
 
     state =
       case result do
-        {:ok, html} -> rendered(state, html, milliseconds, read_paths)
+        {:ok, html} -> rendered(state, {html, files}, milliseconds, read_paths)
         {:error, message} -> failed(state, message, read_paths)
       end
 
@@ -114,9 +124,9 @@ defmodule Expresso.Watch do
     %{state | snapshot: Map.merge(Files.snapshot(new_paths), Map.take(known, paths))}
   end
 
-  defp rendered(state, html, milliseconds, read_paths) do
-    server = Server.publish(state.server, html)
-    written = write(html, state.output, state.options)
+  defp rendered(state, {html, files}, milliseconds, read_paths) do
+    server = Server.publish(state.server, html, files)
+    written = write({html, files}, state.output, state.options)
 
     IO.puts(
       device(state.options),
@@ -150,12 +160,16 @@ defmodule Expresso.Watch do
     end
   end
 
-  defp write(_html, nil, _options), do: ""
+  defp write(_rendered, nil, _options), do: ""
 
-  defp write(html, output_path, options) do
-    case write_to_file(html, output_path) do
-      :ok ->
-        ", and wrote #{output_path}"
+  defp write({html, files}, output_path, options) do
+    with :ok <- write_to_file(html, output_path),
+         :ok <- MediaFiles.write(files, output_path) do
+      ", and wrote #{output_path}"
+    else
+      {:error, message} when is_binary(message) ->
+        IO.puts(error_device(options), message)
+        ""
 
       {:error, reason} ->
         IO.puts(

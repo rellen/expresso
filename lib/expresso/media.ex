@@ -9,6 +9,10 @@ defmodule Expresso.Media do
   element, such as `expresso-videos`. The presenter gives an element its
   source when it plays. `assets/src/media.ts` gives the rules of the script.
 
+  An element with `external true` keeps its file next to the document, and
+  the JSON element then holds the address of that copy. `Expresso.MediaFiles`
+  gives the rules.
+
   An element module with the field `src` and the field `index` uses these
   functions with its own struct and its own media types, such as
   `%{".webm" => "video/webm"}`.
@@ -54,8 +58,12 @@ defmodule Expresso.Media do
   end
 
   @doc """
-  Return the data URI of each file of the elements of a module in a deck, in
+  Return the source of each file of the elements of a module in a deck, in
   the order of their numbers
+
+  A source is the data URI of the file. For an element with `external true`,
+  it is the address of a copy of the file next to the document, such as
+  `talk_files/run-3f2a1c9e.webm`, and `Expresso.MediaFiles` keeps the copy.
 
   The function reads each file through `Expresso.DeckFile`, so the watch mode
   renders the deck again after a change to the file. It raises for a file
@@ -65,13 +73,28 @@ defmodule Expresso.Media do
   @spec sources(Expresso.Deck.t(), module(), %{String.t() => String.t()}, String.t()) ::
           [String.t()]
   def sources(%Expresso.Deck{} = deck, module, types, noun) do
-    deck |> numbered(module) |> Enum.map(&data_uri(&1.src, types, noun))
+    deck |> numbered(module) |> Enum.map(&source_of(&1, types, noun))
   end
 
-  defp data_uri(src, types, noun) do
+  # An element with `external true` gives the address of a copy of its file
+  # next to the document. `Expresso.MediaFiles` keeps the copy.
+  defp source_of(%{external: true, src: src}, _types, noun),
+    do: Expresso.MediaFiles.put(src, Expresso.DeckFile.read!(src, noun), noun)
+
+  defp source_of(%{src: src}, types, noun) do
     bytes = Expresso.DeckFile.read!(src, noun)
     "data:#{Map.fetch!(types, extension(src))};base64," <> Base.encode64(bytes)
   end
+
+  @doc """
+  Return the key of a media element for `number/3`: its file, and its
+  `external` option
+
+  Two elements with the same file and the same option get one number, so the
+  document holds the file one time, or one address of its copy.
+  """
+  @spec key(struct()) :: {String.t(), boolean()}
+  def key(%{src: src} = element), do: {src, Map.get(element, :external, false) == true}
 
   @doc """
   Write a list of data URIs as JSON, or return `nil` for an empty list

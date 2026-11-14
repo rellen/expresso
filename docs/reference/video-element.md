@@ -28,6 +28,7 @@ end
 | `aspect` | A ratio, such as `"4/3"` | The ratio of the width to the height. The default is `"16/9"`. |
 | `loop` | `true` or `false` | Play the video again from the start at its end. The default is `true`. |
 | `controls` | `true` or `false` | Show the controls of the browser, so the presenter can turn the sound on. The default is `false`. |
+| `external` | `true` or `false` | Keep the file next to the document, in place of a data URI in the document. The default is `false`. See "A file next to the document". |
 | `at`, `on`, `effect`, `speed`, `easing` | See [the overlay options](overlay-options.md) | The steps of the video, as for each other element. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
@@ -51,10 +52,47 @@ and `controls true` lets the presenter turn the sound on.
 ## The document
 
 The renderer writes each file one time, as a data URI, into the element
-`expresso-videos`. Two video elements with the same file share it. Each copy of the slide
+`expresso-videos`. For a video with `external true`, it writes the address of a copy of
+the file. Two video elements with the same file share it. Each copy of the slide
 holds only a `video` element with `data-video`, the number of the file, and the poster
 under it. The presenter gives the `video` element of the present view its source the first
 time that it plays.
+
+## A file next to the document
+
+With `external true`, the document does not hold the video file. The render writes a
+copy of the file into a directory next to the output file, and the element
+`expresso-videos` holds the relative address of the copy:
+
+| Output file | Directory of the copies | Address in the document |
+| --- | --- | --- |
+| `talk.html` | `talk_files/` | `talk_files/run-3f2a1c9e.webm` |
+| `out/my talk.html` | `out/my talk_files/` | `my%20talk_files/run-3f2a1c9e.webm` |
+
+These rules apply:
+
+- The name of a copy holds the name of the file and eight digits of the SHA-256 of its
+  content. A changed file gets a new name, so a web host can keep a copy in its cache for
+  a long time.
+- Two elements with the same file and `external true` share one copy.
+- The browser asks for the file only when the video plays first, so the first slide does
+  not wait for it. The browser can go to a time of the video before the whole file
+  arrives.
+- The poster and the captions stay in the document, as data URIs.
+- The output must be a file. With `-`, the standard output, the document has no directory
+  for the copy, and the renderer raises an `ArgumentError` that names the video and the
+  option.
+- Send the directory with the document. A document with no copy shows the poster.
+- The render does not remove an old copy from the directory.
+
+Each tool writes the copies next to its document:
+
+| Tool | Where the copies go |
+| --- | --- |
+| `mix expresso talk.exs talk.html`, and the binary | `talk_files/`, next to `talk.html`. |
+| `--watch` | The watch server sends them, and a video can go to a time. With an output file, they also go next to that file. With no output file, the address starts with the name of the input file, such as `talk_files/` for `talk.exs`. |
+| `--check` | Next to the private document of a browser level, and next to the output file when the command has one. |
+| `--pdf` and `--png` | Next to the private documents of the export, and next to the output file when the command has one. |
 
 ## The captions
 
@@ -84,5 +122,14 @@ The compiler gives an error for:
 The renderer raises an `ArgumentError` for a captions file that it cannot read.
 
 The renderer raises an `ArgumentError` for a video file or a poster that it cannot read.
+
+The renderer raises an `ArgumentError` for a video with `external true` when the output is
+the standard output:
+
+```text
+the video "demo/demo.webm" has external true, so the render must write a copy of the file
+next to the document. This render has no output file, so it has no directory for the copy.
+Give an output file, or remove the external option.
+```
 
 For the steps, see [Show a video](../how-to/show-a-video.md).

@@ -122,19 +122,26 @@ defmodule Expresso.Export do
   @spec export(Path.t(), Path.t() | nil, options(), %{String.t() => String.t()}) ::
           {:ok, [String.t()]} | {:error, String.t()}
   def export(input, output, options, env \\ System.get_env()) do
+    # A file of an element with `external true` goes next to the output file,
+    # and into the private directory of the documents that the browser opens.
+    directory = Expresso.MediaFiles.directory(output || input)
+
     with {:ok, browser} <- Browser.find(env, @need, @guide),
          {:ok, deck} <- Expresso.load_file(input),
-         html = Expresso.Deck.render(deck),
-         :ok <- write(output, html, "output file") do
-      files(html, deck, browser, options)
+         {html, copies} =
+           Expresso.MediaFiles.collect(directory, fn -> Expresso.Deck.render(deck) end),
+         :ok <- write(output, html, "output file"),
+         :ok <- Expresso.MediaFiles.write(copies, output) do
+      files({html, copies}, deck, browser, options)
     end
   end
 
-  defp files(html, deck, browser, options) do
+  defp files({html, copies}, deck, browser, options) do
     private_dir = Expresso.PrivateDir.open!("export")
 
     try do
-      with {:ok, pdf} <- pdf(html, browser, private_dir.path, options),
+      with :ok <- Expresso.MediaFiles.write(copies, Path.join(private_dir.path, "deck.html")),
+           {:ok, pdf} <- pdf(html, browser, private_dir.path, options),
            {:ok, png} <- png(html, deck, browser, private_dir.path, options),
            do: {:ok, pdf ++ png}
     after

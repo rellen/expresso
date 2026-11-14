@@ -79,7 +79,12 @@ defmodule Expresso.E2E do
   def render(deck, tmp_dir, name \\ "deck") do
     {:ok, deck} = Expresso.to_deck(deck)
     path = Path.join(tmp_dir, name <> ".html")
-    File.write!(path, Expresso.Deck.render(deck))
+    directory = Expresso.MediaFiles.directory(path)
+    {html, files} = Expresso.MediaFiles.collect(directory, fn -> Expresso.Deck.render(deck) end)
+    File.write!(path, html)
+    # A `video` or an `audio` element with `external true` keeps its file next
+    # to the document.
+    :ok = Expresso.MediaFiles.write(files, path)
     "file://" <> path
   end
 

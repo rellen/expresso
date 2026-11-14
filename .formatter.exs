@@ -72,6 +72,7 @@ spark_locals_without_parens = [
   embed: 2,
   event: 3,
   event: 4,
+  external: 1,
   fallback: 1,
   fields: 1,
   fill: 1,
