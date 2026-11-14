@@ -301,6 +301,46 @@ Examples.OverlayAlert
 
 ![An outline fades in around the second box at step 2, and fades out at step 3](https://raw.githubusercontent.com/rellen/expresso/media/overlay-alert.gif)
 
+## Show a word at its own step
+
+A tag in the text of a text area or of an item takes the attribute `at`. The part of the
+text in the tag then has its own steps.
+
+```elixir
+defmodule Examples.TextParts do
+  use Expresso
+
+  slide "parts" do
+    heading "A question"
+
+    text_box do
+      text_area(
+        text: """
+        The answer is <span at="2-">42</span>.
+        It is <em at="3" state="alert">not</em> 41.
+        """
+      )
+    end
+
+    list do
+      item ~s(We asked <b at="4-">two times</b>.)
+    end
+  end
+end
+
+Examples.TextParts
+```
+
+![The number 42 shows at step 2, the word "not" changes its color at step 3, and two words of the item show at step 4](https://raw.githubusercontent.com/rellen/expresso/media/text-parts.gif)
+
+- `at="2-"` shows the part at step 2 and at each step after it. A hidden part keeps its
+  space, so the sentence does not move.
+- `at="3" state="alert"` shows the part at each step, and it gives the part the accent
+  color at step 3. `state="dim"` gives it the dimmed color.
+- `at="+-"` takes the next step of the slide, as `at [from: :next]` does for an element.
+
+See [A part of a text](../reference/overlay-options.md#a-part-of-a-text) for each form.
+
 ## Move an element at a step
 
 Write an `on` entity with `set: [x: ..., y: ...]` in the element. The element moves by that

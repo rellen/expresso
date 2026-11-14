@@ -12,6 +12,7 @@ defmodule Expresso.Element.TextArea do
               :class,
               :text,
               :goto,
+              elements: [],
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 
@@ -23,14 +24,18 @@ defmodule Expresso.Element.TextArea do
   `goto` option, or `nil`. The key `text` holds the text with the ids and the
   style rules of this copy in each inline SVG, from
   `Expresso.SvgCopy.copy_each/1`.
+
+  `elements` holds the parts of the text: an `Expresso.Element.TextPart` for
+  each tag with the attribute `at`. `Expresso.Overlay.Inline.render/2` writes
+  the steps of each part into its tag.
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
   def get_assigns(text_area) do
-    %__MODULE__{text: text, goto: goto} = text_area
+    %__MODULE__{text: text, goto: goto, elements: parts} = text_area
 
     %{
-      text: Expresso.SvgCopy.copy_each(text),
+      text: text |> Expresso.Overlay.Inline.render(parts) |> Expresso.SvgCopy.copy_each(),
       goto: goto,
       overlay: Expresso.Overlay.Render.attributes(text_area)
     }

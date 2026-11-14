@@ -51,6 +51,22 @@ runs commands. A link with the class `goto` runs only the commands that the comp
 for a link of the deck, and it ignores an attribute `data-commands`. A command that the
 presenter does not know stops the click with an error.
 
+## The parts of the text
+
+A tag in the text takes the attribute `at`, and the part of the text in the tag then shows
+at those steps:
+
+```elixir
+slide "the answer" do
+  text_box do
+    text_area(text: ~s(The answer is <span at="2-">42</span>.))
+  end
+end
+```
+
+With the attribute `state`, the part changes its color at those steps. See
+[A part of a text](overlay-options.md#a-part-of-a-text) for each form and each rule.
+
 ## A link
 
 With `goto`, the text goes into a link to a slide and a step of the deck. A click goes to

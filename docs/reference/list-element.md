@@ -49,6 +49,10 @@ end
 A list and an item each take the overlay options, such as `at`, `effect` and the `on`
 entity. See [the overlay options](overlay-options.md).
 
+A tag in the text of an item takes the attribute `at`, such as
+`item ~s(We asked <b at="2-">two times</b>.)`. The part of the text in the tag then shows
+at those steps. See [A part of a text](overlay-options.md#a-part-of-a-text).
+
 ## Nested lists
 
 An item holds one `list` after its text, and an item of that list can hold a list too.

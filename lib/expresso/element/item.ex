@@ -27,6 +27,11 @@ defmodule Expresso.Element.Item do
   `goto` option, or `nil`. The key `text` holds the text with the ids and the
   style rules of this copy in each inline SVG, from
   `Expresso.SvgCopy.copy_each/1`.
+
+  `elements` holds the nested lists of the item, and the parts of its text:
+  an `Expresso.Element.TextPart` for each tag with the attribute `at`.
+  `Expresso.Overlay.Inline.render/2` writes the steps of each part into its
+  tag, and the item renders only the nested lists.
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
@@ -34,9 +39,9 @@ defmodule Expresso.Element.Item do
     %__MODULE__{text: text, elements: elements, goto: goto} = item
 
     %{
-      text: Expresso.SvgCopy.copy_each(text),
+      text: text |> Expresso.Overlay.Inline.render(elements) |> Expresso.SvgCopy.copy_each(),
       goto: goto,
-      elements: elements,
+      elements: Expresso.Overlay.Inline.without_parts(elements),
       overlay: Expresso.Overlay.Render.attributes(item)
     }
   end

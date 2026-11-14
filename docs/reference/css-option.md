@@ -102,7 +102,8 @@ A rule of the deck can set or read these custom properties of the theme:
 
 - The timing: `--dur`, `--ease`, `--motion` and `--transition-dur`.
 - The overlays: `--x`, `--y`, `--scale`, `--rotate`, `--opacity`, `--color`, `--alert`,
-  `--dim`, `--dimmed`, `--dim-opacity`, `--dim-graphic-opacity` and `--shown`.
+  `--dim`, `--dimmed`, `--dim-opacity`, `--dim-graphic-opacity`, `--shown` and
+  `--text-part-alert-color`.
 - The font of the text, and of the text of a formula: `--font-text`.
 - The parts of the page: `--slide-padding`, `--progress-color`, `--progress-height`,
   `--slide-number-color`, `--slide-number-size`, `--slide-number-right`,

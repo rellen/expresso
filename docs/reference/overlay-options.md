@@ -80,6 +80,53 @@ a part of a diagram or of a formula. In a diagram, `x` and `y` are in the units 
 inside a `text` element of the file, such as a `tspan`, can fade, dim and change its
 color, and it cannot move or get an outline.
 
+## A part of a text
+
+A tag in the text of a `text_area` or of an `item` takes the attribute `at`. The part of
+the text in the tag then shows at those steps. With the attribute `state`, the part shows
+at each step, and it has the state at those steps.
+
+```elixir
+text_area(text: ~s(The answer is <span at="2-">42</span>. It is <em at="3" state="alert">not</em> 41.))
+```
+
+| Attribute | Effect |
+| --- | --- |
+| `at="2-"` | The part shows at step 2 and at each step after it. |
+| `at="3" state="alert"` | The part shows at each step. At step 3, its color changes to the accent color of the theme. |
+| `at="3" state="dim"` | The part shows at each step. At step 3, its color changes to the dimmed color of the text. |
+
+The value of `at` is a step specification in text:
+
+| Text | Steps | The form of the `at` option |
+| --- | --- | --- |
+| `2` | Step 2 only. | `2` |
+| `2-4` | Step 2 to step 4. | `2..4` |
+| `2-` | Step 2 and each step after it. | `[from: 2]` |
+| `+` | The current value of the counter of the slide. | `:next` |
+| `+-` | The current value of the counter, and each step after it. | `[from: :next]` |
+| `2,5-` | Step 2, and step 5 and each step after it. | `[2, from: 5]` |
+
+These rules apply:
+
+- Each tag takes the attributes, such as `span`, `b`, `em`, `code` and `a`. The tag keeps
+  its other attributes.
+- A part with steps fades in and out. A hidden part keeps its space in the line, so the
+  text around it does not move. The `effect` option does not change a part.
+- The counter of the slide goes through the element first, then through its parts in the
+  order of the text, then through the next element. Thus `+` in a part is the step after
+  the step of its element.
+- A part shows only at the steps of its element.
+- A step that the slide does not have is an error, as for an element.
+- A part of a later step is hidden from a screen reader until its step, as an element is.
+- To give a part steps and a state, put a tag with `state` in a tag with steps.
+
+The theme reads the custom property `--text-part-alert-color` for the color of the state
+`alert`. The default is `--accent`.
+
+The compiler gives an error for a value of `at` that is not one of the forms, for a state
+that is not `alert` or `dim`, and for a tag with `state` and no `at`.
+
 ### Move a part to another part
 
 `on 3, move_to: "station"` in a `part` moves the part at step 3, so its center is at the

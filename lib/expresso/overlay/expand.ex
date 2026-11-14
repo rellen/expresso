@@ -61,6 +61,12 @@ defmodule Expresso.Overlay.Expand do
   entity with the state after the expansion, with the steps of the child from
   that step. A child without steps does not dim.
 
+  A tag with the attribute `at` in the text of a text area or of an item is a
+  part of the text. `Expresso.Overlay.Inline.extract/1` makes a child of the
+  element for each part before the counter walk, so a part reads the counter
+  after the `at` option and the `on` entities of its element, in the order of
+  the text.
+
   The function gives an error when a specification has a step number that is
   more than the maximum. It gives the same error for a step of the `handout`
   option of the slide. That option does not change the maximum.
@@ -73,7 +79,12 @@ defmodule Expresso.Overlay.Expand do
   """
   @spec slide(Slide.t()) :: {:ok, Slide.t()} | {:error, String.t()}
   def slide(%Slide{} = slide) do
-    elements = auto_reveal(slide.elements || [], slide.auto_reveal)
+    with {:ok, elements} <- Overlay.Inline.extract(slide.elements || []),
+         do: slide(slide, elements)
+  end
+
+  defp slide(%Slide{} = slide, elements) do
+    elements = auto_reveal(elements, slide.auto_reveal)
     paused = pause_labels(elements, 1)
     {elements, _counter} = resolve(elements, 1)
     max = slide.steps || max_step(elements) || 1
