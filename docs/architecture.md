@@ -2223,6 +2223,11 @@ the row of the footer, after the footer of the deck template. The number therefo
 with each deck template. Slide 1 gets no number, because it is usually the title slide.
 The default deck template gives an empty footer, so a deck does not show two numbers.
 
+The numbers count only the slides of the talk. A slide with `hidden true` is not a part of
+the talk, so it gets no number. `Expresso.Deck.number_slides/1` writes two numbers into the
+metadata of each slide: `:slide_number`, its place in the deck, and `:talk_number`, its
+number in the talk, or `nil`. `docs/hidden-slides.md` gives the design.
+
 In the present view, the style sheet puts the number in the corner of the window.
 
 ### The transformer and the verifiers
@@ -2365,15 +2370,20 @@ the script can read it at load. The list holds the values that the script needs 
 deck:
 
 - `steps` has one entry for each step of each slide, in sequence. An entry gives the
-  slide, the step, `fraction`, `done` and the position text of the speaker view. The
-  position text ends with the label of the step, when the step has one.
+  slide, the step, `fraction`, `done`, the position text of the speaker view, and
+  `previous` and `next`. The position text ends with the label of the step, when the step
+  has one.
 - `slides` has one object for each slide. It gives the index of step 1 of the slide in
-  `steps`, the number of steps and the kind of the transition.
+  `steps`, the number of steps, the kind of the transition, and the number of the slide in
+  the talk, or `null` for a hidden slide.
 - `duration_ms` gives the length of the talk in milliseconds, or `null`.
 
-The state holds the index of the current step in `steps`. A move forward adds 1 to the
-index, and a move back subtracts 1. Each other value comes from the entry at the index, so
-the script calculates nothing from the deck. The script trusts the list, as it trusts the
+The state holds the index of the current step in `steps`. A move forward goes to the index
+in `next` of the current entry, and a move back goes to the index in `previous`. In a deck
+with no hidden slide, they are the index plus 1 and the index minus 1. A hidden slide is
+not a part of the talk, so `previous` and `next` go around it, and `fraction`, `done` and
+the numbers of the position text count only the talk. Each other value comes from the
+entry at the index, so the script calculates nothing from the deck. The script trusts the list, as it trusts the
 program of the next section. `validateDeck` in `assets/test/validate.ts` decodes each
 list of the fixture file.
 `docs/research/elixir-presenter-report.md` gives the reason for the list.

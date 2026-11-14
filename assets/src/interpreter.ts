@@ -14,7 +14,7 @@
 // The fragment of the address and the messages between the windows do not go
 // through the modes. `fromHash` and `follow` go to a slide and a step directly.
 
-import { indexOf } from "./deck.ts";
+import { indexOf, indexOfNumber, move } from "./deck.ts";
 import type { Deck, Kind } from "./deck.ts";
 import type {
   Builtin,
@@ -145,8 +145,12 @@ function apply(
       return event.kind === "key"
         ? { ...state, digits: state.digits + event.key }
         : state;
-    case "step":
-      return goto(state, state.index + command[1], deck);
+    case "step": {
+      // A move skips each hidden slide. A move past the first step or the
+      // last step of the talk makes no change.
+      const index = move(deck, state.index, command[1]);
+      return index === undefined ? state : { ...state, index };
+    }
     case "goto":
       return command[1] === null ? state : goto(state, command[1], deck);
     case "goto_slide":
@@ -173,7 +177,7 @@ function apply(
     case "go_typed":
       return state.digits === ""
         ? state
-        : gotoSlide({ ...state, digits: "" }, Number(state.digits), deck);
+        : gotoNumber({ ...state, digits: "" }, Number(state.digits), deck);
     case "builtin":
       return state;
     default: {
@@ -196,6 +200,13 @@ function goto(state: State, index: number, deck: Deck): State {
 
 function gotoSlide(state: State, slide: number, deck: Deck): State {
   const index = indexOf(deck, slide, 1);
+  return index === undefined ? state : { ...state, index };
+}
+
+// Go to step 1 of the slide of the talk with a number. A hidden slide has no
+// number, and a number that no slide has makes no change.
+function gotoNumber(state: State, number: number, deck: Deck): State {
+  const index = indexOfNumber(deck, number);
   return index === undefined ? state : { ...state, index };
 }
 

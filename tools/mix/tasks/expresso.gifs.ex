@@ -212,7 +212,12 @@ defmodule Mix.Tasks.Expresso.Gifs do
       actions: ["t"]
     },
     %{name: "layout-check", deck: "layout_check.exs", address: "?check", still: true},
-    %{name: "check-deck", deck: "check_deck.exs", still: true}
+    %{name: "check-deck", deck: "check_deck.exs", still: true},
+    %{
+      name: "backup-slides",
+      deck: "backup_slides.exs",
+      actions: ["j", "j", "o", "ArrowLeft", "Enter", "j"]
+    }
   ]
 
   # The examples of the presenter pages. The tour deck has ten

@@ -2614,7 +2614,9 @@ section[data-step] .part-copy[data-on][data-el] {
  * last page in the document can be a page that the view does not show.
  */
 .handout-page:not([data-omit]) ~ .handout-page:not([data-omit]),
-body[data-every="true"] .handout-page ~ .handout-page {
+body[data-every="true"]
+  .handout-page:not([data-omit="hidden"])
+  ~ .handout-page:not([data-omit="hidden"]) {
   break-before: page;
 }
 .notes {
@@ -2640,6 +2642,15 @@ body[data-view="handout"]:not([data-every="true"]) .handout-page[data-omit] {
   display: none;
 }
 /*
+ * The handout view and paper leave out each page of a hidden slide. Such a
+ * page has `data-omit="hidden"`, and the key `a` does not show it. The deck
+ * option `handout_hidden true` gives a hidden slide the pages of its handout
+ * option, so its pages do not have this value.
+ */
+body[data-view="handout"] .handout-page[data-omit="hidden"] {
+  display: none;
+}
+/*
  * On a screen, a line separates the pages of the handout view. Paper starts
  * a new sheet for each page, so the rule is for a screen only.
  */
@@ -2647,7 +2658,9 @@ body[data-view="handout"]:not([data-every="true"]) .handout-page[data-omit] {
   body[data-view="handout"]
     .handout-page:not([data-omit])
     ~ .handout-page:not([data-omit]),
-  body[data-view="handout"][data-every="true"] .handout-page ~ .handout-page,
+  body[data-view="handout"][data-every="true"]
+    .handout-page:not([data-omit="hidden"])
+    ~ .handout-page:not([data-omit="hidden"]),
   body[data-view="handout"] .sources {
     border-top: 1px solid currentColor;
   }
@@ -2681,7 +2694,8 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   .handout-page {
     height: 100vh;
   }
-  body:not([data-every="true"]) .handout-page[data-omit] {
+  body:not([data-every="true"]) .handout-page[data-omit],
+  .handout-page[data-omit="hidden"] {
     display: none;
   }
   /* The speaker view puts its four elements into the handout view. */
@@ -2848,6 +2862,18 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     outline: calc(4px / var(--overview-zoom, 1)) solid
       var(--overview-color, var(--accent));
   }
+  /*
+   * A hidden slide is not a part of the talk. The overview shows its page with
+   * a dashed outline and with the opacity `--hidden-slide-opacity`, so the
+   * mark does not use only the opacity. The outline of the selected page
+   * keeps its width and its color.
+   */
+  body[data-overview="true"] .handout-page[data-thumbnail][data-hidden] {
+    outline-style: dashed;
+  }
+  body[data-overview="true"] .handout-page[data-thumbnail][data-hidden] > * {
+    opacity: var(--hidden-slide-opacity, 0.45);
+  }
 }
 /*
  * The menu of the slides and their steps. `m` shows it in the present view
@@ -2924,6 +2950,13 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   .menu-slide:has(+ .menu-steps [data-current]) .menu-thumb {
     outline: calc(2px / var(--menu-zoom, 0.1)) solid
       var(--menu-color, var(--accent));
+  }
+  /* The menu shows the copy of a hidden slide as the overview shows its page. */
+  .menu-group[data-hidden] .menu-thumb {
+    outline-style: dashed;
+  }
+  .menu-group[data-hidden] .menu-thumb > * {
+    opacity: var(--hidden-slide-opacity, 0.45);
   }
   .menu-name {
     font-weight: 700;

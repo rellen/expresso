@@ -47,8 +47,8 @@ defmodule Expresso.Presenter.Commands do
   @spec step(integer()) :: Definition.command()
   def step(count), do: {:step, count}
 
-  @doc "Go to the step at an index in the deck, or to step 1 of `last_slide/0`"
-  @spec goto(non_neg_integer() | :last_slide) :: Definition.command()
+  @doc "Go to the step at an index in the deck, or to step 1 of `first_slide/0` or of `last_slide/0`"
+  @spec goto(non_neg_integer() | :first_slide | :last_slide) :: Definition.command()
   def goto(index), do: {:goto, index}
 
   @doc "Go to step 1 of a slide, or of the selected slide with `:selected`"
@@ -85,9 +85,21 @@ defmodule Expresso.Presenter.Commands do
   def builtin(name), do: {:builtin, name}
 
   @doc """
+  Return the symbol of the first slide of the talk
+
+  `Expresso.Presenter.Program` changes it into a number for each deck. The
+  talk does not hold a hidden slide.
+  """
+  @spec first_slide() :: :first_slide
+  def first_slide, do: :first_slide
+
+  @doc """
   Return the symbol of the last slide
 
-  `Expresso.Presenter.Program` changes it into a number for each deck.
+  `Expresso.Presenter.Program` changes it into a number for each deck. With
+  `goto/1`, it is the last slide of the talk, which is not a hidden slide.
+  With `select/1`, it is the last slide of the deck, because the overview
+  shows each slide.
   """
   @spec last_slide() :: :last_slide
   def last_slide, do: :last_slide

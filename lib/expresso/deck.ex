@@ -13,7 +13,13 @@ defmodule Expresso.Deck do
   The metadata can also hold `:slide_numbers`. The value `true` shows the
   number of each slide and the number of slides, such as `3 / 12`, in a
   corner of the slide. Slide 1 shows no number, because it is usually the
-  title slide. A deck without the key shows no number.
+  title slide. A deck without the key shows no number. The numbers count only
+  the slides of the talk, so a hidden slide shows no number.
+
+  The metadata can also hold `:handout_hidden`. The value `true` shows each
+  hidden slide in the handout view and on paper, in its place. A deck without
+  the key leaves the hidden slides out. `docs/hidden-slides.md` gives the
+  rules of a hidden slide.
 
   The metadata can also hold `:duration`, the length of the talk in minutes.
   The speaker view then shows the time left and the pace. A deck without the
@@ -82,24 +88,44 @@ defmodule Expresso.Deck do
   end
 
   @doc """
-  Write the number of each slide into the metadata of the slide
+  Write the two numbers of each slide into the metadata of the slide
 
-  The first slide is slide 1.
+  `:slide_number` is the place of the slide in the deck, and the first slide
+  is slide 1. The address of a step, a link of the `goto` option and each
+  `id` of the document use it. `:talk_number` is the number that the talk
+  shows: the place of the slide in the slides that are not hidden. A hidden
+  slide gets `nil`. In a deck with no hidden slide, the two numbers are the
+  same.
 
   A slide from the DSL holds `nil` in its metadata field. This function puts an
   empty map into that field first.
   """
   @spec number_slides(t()) :: t()
   def number_slides(%__MODULE__{slides: slides} = deck) do
-    numbered_slides =
+    {numbered_slides, _shown} =
       slides
       |> Enum.with_index(1)
-      |> Enum.map(fn {%Expresso.Slide{metadata: metadata} = slide, number} ->
-        %Expresso.Slide{slide | metadata: Map.put(metadata || %{}, :slide_number, number)}
+      |> Enum.map_reduce(0, fn {%Expresso.Slide{metadata: metadata} = slide, number}, shown ->
+        {talk, shown} =
+          if Expresso.Slide.hidden?(slide), do: {nil, shown}, else: {shown + 1, shown + 1}
+
+        metadata = Map.merge(metadata || %{}, %{slide_number: number, talk_number: talk})
+        {%Expresso.Slide{slide | metadata: metadata}, shown}
       end)
 
     %__MODULE__{deck | slides: numbered_slides}
   end
+
+  @doc """
+  Return the number of slides of the talk: the slides that are not hidden
+
+      iex> slides = [%Expresso.Slide{}, %Expresso.Slide{hidden: true}, %Expresso.Slide{}]
+      iex> Expresso.Deck.talk_length(%Expresso.Deck{slides: slides})
+      2
+  """
+  @spec talk_length(t()) :: non_neg_integer()
+  def talk_length(%__MODULE__{slides: slides}),
+    do: Enum.count(slides, &(not Expresso.Slide.hidden?(&1)))
 
   @doc """
   Validate the minimum contrast ratio of dimmed text

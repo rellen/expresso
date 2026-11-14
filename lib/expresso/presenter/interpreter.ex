@@ -236,10 +236,31 @@ defmodule Expresso.Presenter.Interpreter do
   defp command(_program, _event, :go_typed, %{digits: ""} = state), do: state
 
   defp command(program, _event, :go_typed, state),
-    do: goto_slide(program, %{state | digits: ""}, number(state.digits))
+    do: goto_number(program, %{state | digits: ""}, number(state.digits))
 
-  # A move past the first step or the last step makes no change.
-  defp step(program, state, by), do: goto(program, state, state.index + by)
+  # A move goes to the step before or the step after in the talk, one step at
+  # a time, so it skips each hidden slide. A move past the first step or the
+  # last step of the talk makes no change.
+  defp step(program, state, by) do
+    case move(program, state.index, by) do
+      nil -> state
+      index -> %{state | index: index}
+    end
+  end
+
+  defp move(_program, index, 0), do: index
+
+  defp move(program, index, by) when index < tuple_size(program.moves) do
+    {previous, next} = elem(program.moves, index)
+
+    case if(by > 0, do: next, else: previous) do
+      nil -> nil
+      index -> move(program, index, by - div(by, abs(by)))
+    end
+  end
+
+  # A deck with no slide has no step.
+  defp move(_program, _index, _by), do: nil
 
   defp goto(program, state, index)
        when is_integer(index) and index >= 0 and index < tuple_size(program.steps),
@@ -251,6 +272,18 @@ defmodule Expresso.Presenter.Interpreter do
     case first_index(program, slide) do
       nil -> state
       index -> %{state | index: index}
+    end
+  end
+
+  # Go to step 1 of the slide of the talk with a number. A hidden slide has no
+  # number, and a number that no slide has makes no change.
+  defp goto_number(program, state, number) do
+    program.slides
+    |> Tuple.to_list()
+    |> Enum.find(&(&1.number == number))
+    |> case do
+      nil -> state
+      %{first: first} -> %{state | index: first}
     end
   end
 

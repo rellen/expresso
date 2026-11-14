@@ -45,16 +45,18 @@ defmodule Expresso.Presenter.Definition do
     * `{:assign, :selected, {:entry, :slide}}` - selects the slide of the current
       step.
     * `{:append, :digits}` - adds the key to the typed digits.
-    * `{:step, count}` - moves forward or back by a number of steps. A move past
-      the first step or the last step makes no change.
+    * `{:step, count}` - moves forward or back by a number of steps of the talk.
+      A move skips each hidden slide, and a move past the first step or the
+      last step of the talk makes no change.
     * `{:goto, index}` - goes to the step at an index in the deck.
     * `{:goto_slide, slide}` - goes to step 1 of a slide. With `:selected`, it
       goes to step 1 of the selected slide.
     * `{:select, slide}` and `{:select_by, count}` - select a slide in the
       overview, or move the selection by a number of slides. A slide outside the
       deck makes no change.
-    * `:go_typed` - goes to step 1 of the slide that the typed digits give, and
-      removes the digits.
+    * `:go_typed` - goes to step 1 of the slide of the talk with the number
+      that the typed digits give, and removes the digits. A hidden slide has
+      no number.
     * `{:copy, to, from}` - sets a field that holds the index of a step to the
       value of another such field. The menu puts its cursor on the current
       step with `{:copy, :cursor, :index}`.
@@ -64,9 +66,9 @@ defmodule Expresso.Presenter.Definition do
     * `{:builtin, name}` - calls a built-in function of the browser:
       `:open_speaker`, `:fullscreen`, `:reset_timer` or `:switch_scheme`.
 
-  A definition can hold two symbols in place of a number: `:last_slide` and
-  `{:columns, sign}`. `Expresso.Presenter.Program` changes each symbol into a
-  number for the deck.
+  A definition can hold three symbols in place of a number: `:first_slide`,
+  `:last_slide` and `{:columns, sign}`. `Expresso.Presenter.Program` changes
+  each symbol into a number for the deck.
   """
 
   @typedoc "A field of the state"
@@ -92,7 +94,7 @@ defmodule Expresso.Presenter.Definition do
           | {:assign, :selected, {:entry, :slide}}
           | {:append, :digits}
           | {:step, integer()}
-          | {:goto, non_neg_integer() | :last_slide}
+          | {:goto, non_neg_integer() | :first_slide | :last_slide}
           | {:goto_slide, :selected | pos_integer()}
           | {:select, pos_integer() | :last_slide}
           | {:select_by, integer() | {:columns, 1 | -1}}

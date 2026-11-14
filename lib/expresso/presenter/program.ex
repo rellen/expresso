@@ -37,9 +37,12 @@ defmodule Expresso.Presenter.Program do
   @typedoc """
   The program of one deck
 
-  `steps` holds `{slide, step}` for each step. `slides` holds a map for each
-  slide: the index of its step 1, its number of steps and its transition. Both
-  are tuples, so the interpreter reads an entry by its index.
+  `steps` holds `{slide, step}` for each step. `moves` holds
+  `{previous, next}` for each step: the index of the step before it and of the
+  step after it in the talk, or `nil`. `slides` holds a map for each slide:
+  the index of its step 1, its number of steps, its transition and its number
+  in the talk. The three are tuples, so the interpreter reads an entry by its
+  index.
   """
   @type t :: %__MODULE__{
           state: map(),
@@ -48,10 +51,11 @@ defmodule Expresso.Presenter.Program do
           modes: [mode()],
           project: Projection.t(),
           steps: tuple(),
+          moves: tuple(),
           slides: tuple()
         }
 
-  @enforce_keys [:state, :sync, :reset, :modes, :project, :steps, :slides]
+  @enforce_keys [:state, :sync, :reset, :modes, :project, :steps, :moves, :slides]
   defstruct @enforce_keys
 
   @doc """
@@ -60,21 +64,49 @@ defmodule Expresso.Presenter.Program do
   The first value of the field `progress` comes from the deck: the deck option
   `progress false` hides the progress bar at the start. A deck from the
   imperative API with no such key in its metadata shows the bar.
+
+  The first value of the field `index` is step 1 of the first slide of the
+  talk, so a deck that starts with a hidden slide does not show that slide
+  first.
   """
   @spec compile(Definition.t(), Expresso.Deck.t()) :: t()
   def compile(definition, deck) do
     slides = Steps.slides(deck)
+    entries = Steps.entries(deck)
+
+    state =
+      definition.state
+      |> Map.put(:progress, progress(deck))
+      |> Map.put(:index, start(slides))
 
     %__MODULE__{
-      state: Map.put(definition.state, :progress, progress(deck)),
+      state: state,
       sync: definition.sync,
       reset: definition.reset,
       modes: Enum.map(definition.modes, &mode(&1, slides)),
       project: definition.project,
-      steps: deck |> Steps.entries() |> Enum.map(&{&1.slide, &1.step}) |> List.to_tuple(),
+      steps: entries |> Enum.map(&{&1.slide, &1.step}) |> List.to_tuple(),
+      moves: entries |> Enum.map(&{&1.previous, &1.next}) |> List.to_tuple(),
       slides: List.to_tuple(slides)
     }
   end
+
+  @doc """
+  Return the index of step 1 of the first slide of the talk
+
+  `slides` is the list of `Expresso.Steps.slides/1`. A deck with no slide of
+  the talk returns 0.
+
+      iex> Expresso.Presenter.Program.start([
+      ...>   %{first: 0, steps: 2, number: nil},
+      ...>   %{first: 2, steps: 1, number: 1}
+      ...> ])
+      2
+      iex> Expresso.Presenter.Program.start([])
+      0
+  """
+  @spec start([map()]) :: non_neg_integer()
+  def start(slides), do: slides |> Enum.find(& &1.number) |> first() || 0
 
   @doc """
   Return the program as JSON for the `script` element
@@ -262,9 +294,16 @@ defmodule Expresso.Presenter.Program do
 
   defp put_event(map, _mode, _kind, value, commands), do: Map.put(map, value, commands)
 
-  # A symbol becomes a number for the deck. A deck with no slide has no last
-  # slide, and a command with `nil` makes no change.
-  defp resolve({:goto, :last_slide}, slides), do: {:goto, slides |> List.last() |> first()}
+  # A symbol becomes a number for the deck. A deck with no slide of the talk
+  # has no first slide and no last slide, and a command with `nil` makes no
+  # change. The overview shows each slide, so its last slide is the last slide
+  # of the deck.
+  defp resolve({:goto, :first_slide}, slides),
+    do: {:goto, slides |> Enum.find(& &1.number) |> first()}
+
+  defp resolve({:goto, :last_slide}, slides),
+    do: {:goto, slides |> Enum.reverse() |> Enum.find(& &1.number) |> first()}
+
   defp resolve({:select, :last_slide}, slides), do: {:select, length(slides)}
 
   defp resolve({:select_by, {:columns, sign}}, slides),

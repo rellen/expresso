@@ -126,7 +126,7 @@ defmodule ExpressoTest do
       }
 
       assert deck |> Expresso.Deck.number_slides() |> Map.get(:slides) |> Enum.map(& &1.metadata) ==
-               [%{slide_number: 1}, %{slide_number: 2}]
+               [%{slide_number: 1, talk_number: 1}, %{slide_number: 2, talk_number: 2}]
     end
   end
 

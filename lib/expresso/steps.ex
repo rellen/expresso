@@ -10,17 +10,23 @@ defmodule Expresso.Steps do
   The JSON object has three keys:
 
     * `"steps"` - one entry for each step of each slide, in sequence. An entry
-      is `[slide, step, fraction, done, position]`. `entries/1` tells what each
-      value is.
+      is `[slide, step, fraction, done, position, previous, next]`. `entries/1`
+      tells what each value is.
     * `"slides"` - one object for each slide, in sequence. `slides/1` tells
       what each key is.
     * `"duration_ms"` - the length of the talk in milliseconds, or `null`.
       `duration/1` gives it.
 
+  A slide with the option `hidden true` is not a part of the talk. The list
+  holds its steps, because the presenter can go to it. The talk skips it:
+  `previous` and `next` of an entry go around each hidden slide, and
+  `fraction`, `done` and the numbers of the slides count only the slides of
+  the talk. `docs/hidden-slides.md` gives the design.
+
   `docs/research/elixir-presenter-report.md` gives the reason for the list.
   """
 
-  alias Expresso.Deck
+  alias Expresso.{Deck, Slide}
   alias Expresso.Overlay.Render
   alias Expresso.Presenter.Schema.Record
 
@@ -30,11 +36,18 @@ defmodule Expresso.Steps do
           step: pos_integer(),
           fraction: float(),
           done: float(),
-          position: String.t()
+          position: String.t(),
+          previous: non_neg_integer() | nil,
+          next: non_neg_integer() | nil
         }
 
   @typedoc "One slide of a deck"
-  @type slide :: %{first: non_neg_integer(), steps: pos_integer(), transition: String.t()}
+  @type slide :: %{
+          first: non_neg_integer(),
+          steps: pos_integer(),
+          transition: String.t(),
+          number: pos_integer() | nil
+        }
 
   # The number of decimal places of `fraction` and `done`. Four places are
   # sufficient for the width of the progress bar and for the pace.
@@ -43,47 +56,102 @@ defmodule Expresso.Steps do
   @doc """
   Return one entry for each step of each slide, in sequence
 
-  The first slide is slide 1, and the first step is step 1. An entry holds:
+  The first slide is slide 1, and the first step is step 1. `slide` is the
+  place of the slide in the deck, and a hidden slide has a place too. An
+  entry holds:
 
-    * `fraction` - the part of the deck before the step, from 0 at the first
-      step to 1 at the last step. The progress bar shows it. A deck with one
+    * `fraction` - the part of the talk before the step, from 0 at the first
+      step to 1 at the last step. The progress bar shows it. A talk with one
       step gets 0.
-    * `done` - the part of the steps before the step. The last step also has
-      its part, so the value is less than 1. The speaker view compares it with
-      the time of the talk.
+    * `done` - the part of the steps of the talk before the step. The last
+      step also has its part, so the value is less than 1. The speaker view
+      compares it with the time of the talk.
     * `position` - the text of the speaker view, such as
       `"Slide 4 of 13, step 2 of 3"`. A slide with one step gets no step part.
       A step with a label gets the label after a colon, such as
       `"Slide 4 of 13, step 2 of 3: The restart"`.
+    * `previous` and `next` - the index of the step that the key of the
+      previous step and the key of the next step go to, or `nil` at an end of
+      the talk.
+
+  The numbers of `position` count only the slides of the talk. A step of a
+  hidden slide gets `"Hidden slide after slide 4 of 13"`, and
+  `"Hidden slide before slide 1 of 13"` in front of the first slide of the
+  talk. Its `fraction` and its `done` are the values of the last step of the
+  talk before it, so the progress bar does not move on a hidden slide.
+
+  `previous` and `next` go to the nearest step of the same slide or of a
+  slide of the talk. Thus they skip each hidden slide, and on a hidden slide
+  they go through its steps and then back into the talk.
 
   The presenter adds ", black screen" or ", white screen" to the position
   while the screen is black or white.
   """
   @spec entries(Deck.t()) :: [entry()]
-  def entries(%Deck{slides: slides}) do
-    count = length(slides)
+  def entries(%Deck{slides: slides} = deck) do
+    count = Deck.talk_length(deck)
 
-    positions =
-      for {slide, number} <- Enum.with_index(slides, 1),
-          steps = Render.max_step(slide),
-          labels = (slide.metadata || %{})[:labels] || %{},
-          step <- 1..steps//1,
-          do: {number, step, steps, labels[step]}
+    # Each step with the number of its slide in the talk. A hidden slide holds
+    # the number of the slide of the talk before it, or 0.
+    {steps, _shown} =
+      slides
+      |> Enum.with_index(1)
+      |> Enum.flat_map_reduce(0, fn {slide, place}, shown ->
+        hidden = Slide.hidden?(slide)
+        number = if hidden, do: shown, else: shown + 1
+        max = Render.max_step(slide)
+        labels = (slide.metadata || %{})[:labels] || %{}
 
-    total = length(positions)
+        steps =
+          for step <- 1..max//1 do
+            %{slide: place, step: step, steps: max, label: labels[step], hidden: hidden}
+            |> Map.put(:number, number)
+          end
 
-    positions
-    |> Enum.with_index()
-    |> Enum.map(fn {{number, step, steps, label}, index} ->
-      %{
-        slide: number,
-        step: step,
-        fraction: part(index, total - 1),
-        done: part(index, total),
-        position: position(number, count, step, steps) <> label(label)
-      }
-    end)
+        {steps, number}
+      end)
+
+    total = Enum.count(steps, &(not &1.hidden))
+    places = steps |> Enum.map(&{&1.slide, &1.hidden}) |> List.to_tuple()
+
+    {entries, _before} =
+      steps
+      |> Enum.with_index()
+      |> Enum.map_reduce(0, fn {step, index}, before ->
+        # `before` is the number of steps of the talk in front of this step. A
+        # step of a hidden slide takes the place of the step of the talk
+        # before it.
+        place = if step.hidden, do: max(before - 1, 0), else: before
+
+        entry = %{
+          slide: step.slide,
+          step: step.step,
+          fraction: part(place, total - 1),
+          done: part(place, total),
+          position: position(step, count) <> step_part(step) <> label(step.label),
+          previous: move(places, index, -1),
+          next: move(places, index, 1)
+        }
+
+        {entry, if(step.hidden, do: before, else: before + 1)}
+      end)
+
+    entries
   end
+
+  # The index of the nearest step in a direction that is a step of the same
+  # slide or of a slide of the talk, or nil.
+  defp move(places, index, by) do
+    {slide, _hidden} = elem(places, index)
+
+    (index + by)
+    |> Stream.iterate(&(&1 + by))
+    |> Enum.find(&(&1 < 0 or &1 >= tuple_size(places) or stays?(elem(places, &1), slide)))
+    |> then(&if &1 >= 0 and &1 < tuple_size(places), do: &1)
+  end
+
+  defp stays?({slide, _hidden}, slide), do: true
+  defp stays?({_other, hidden}, _slide), do: not hidden
 
   @doc """
   Return one map for each slide, in sequence
@@ -95,13 +163,18 @@ defmodule Expresso.Steps do
     * `transition` - the kind of the transition into the slide, such as
       `"fade"` or `"wipe-down"`. The option of the slide comes first, then the
       option of the deck, then `"fade"`. `kind/1` gives the name.
+    * `number` - the number of the slide in the talk, or `nil` for a hidden
+      slide. The presenter goes to the slide with this number when the
+      presenter types the number.
   """
   @spec slides(Deck.t()) :: [slide()]
   def slides(%Deck{slides: slides} = deck) do
     {list, _next} =
-      Enum.map_reduce(slides, 0, fn slide, first ->
+      Enum.map_reduce(slides, {0, 0}, fn slide, {first, shown} ->
         steps = Render.max_step(slide)
-        {%{first: first, steps: steps, transition: transition(deck, slide)}, first + steps}
+        {number, shown} = if Slide.hidden?(slide), do: {nil, shown}, else: {shown + 1, shown + 1}
+        entry = %{first: first, steps: steps, transition: transition(deck, slide), number: number}
+        {entry, {first + steps, shown}}
       end)
 
     list
@@ -141,7 +214,12 @@ defmodule Expresso.Steps do
       "steps" => Enum.map(entries(deck), &Record.write(:written_entry, &1)),
       "slides" =>
         Enum.map(slides(deck), fn slide ->
-          %{"first" => slide.first, "steps" => slide.steps, "transition" => slide.transition}
+          %{
+            "first" => slide.first,
+            "number" => slide.number,
+            "steps" => slide.steps,
+            "transition" => slide.transition
+          }
         end),
       "duration_ms" => duration(deck)
     }
@@ -155,10 +233,15 @@ defmodule Expresso.Steps do
   defp label(nil), do: ""
   defp label(label), do: ": " <> label
 
-  defp position(number, count, _step, 1), do: "Slide #{number} of #{count}"
+  defp position(%{hidden: false, number: number}, count), do: "Slide #{number} of #{count}"
+  defp position(%{hidden: true}, 0), do: "Hidden slide"
+  defp position(%{hidden: true, number: 0}, count), do: "Hidden slide before slide 1 of #{count}"
 
-  defp position(number, count, step, steps),
-    do: "Slide #{number} of #{count}, step #{step} of #{steps}"
+  defp position(%{hidden: true, number: number}, count),
+    do: "Hidden slide after slide #{number} of #{count}"
+
+  defp step_part(%{steps: 1}), do: ""
+  defp step_part(%{step: step, steps: steps}), do: ", step #{step} of #{steps}"
 
   defp transition(deck, slide) do
     [(slide.metadata || %{})[:transition], (deck.metadata || %{})[:transition]]

@@ -126,7 +126,7 @@ defmodule Expresso.Renderer do
           for {slide, %{first: first, steps: steps}} <-
                 Enum.zip(@deck.slides, Expresso.Steps.slides(@deck)),
               labels = slide.metadata[:labels] || %{} do
-            li class: "menu-group", role: "none" do
+            li class: "menu-group", role: "none", data_hidden: Expresso.Slide.hidden?(slide) do
               div class: "menu-slide", data_commands: menu_commands(first) do
                 section class: Expresso.Element.classes("menu-thumb", slide.metadata[:class]),
                         data_step: steps,
@@ -135,8 +135,21 @@ defmodule Expresso.Renderer do
                   c(&slide_parts/1, deck: @deck, slide: slide)
                 end
 
+                # The number of the slide in the talk. A hidden slide has no
+                # number, so it shows a dash, and a screen reader reads
+                # "Hidden slide".
                 span class: "menu-number" do
-                  slide.metadata.slide_number
+                  if number = slide.metadata[:talk_number] do
+                    number
+                  else
+                    span class: "menu-hidden" do
+                      "Hidden slide"
+                    end
+
+                    span aria_hidden: "true" do
+                      "–"
+                    end
+                  end
                 end
 
                 span class: "menu-name", id: "menu-name-#{slide.metadata.slide_number}" do
@@ -197,8 +210,25 @@ defmodule Expresso.Renderer do
     if math?, do: "\n" <> Expresso.Element.Math.Font.css(font), else: ""
   end
 
-  defp menu_name(slide),
-    do: slide.metadata[:heading] || slide.name || "Slide #{slide.metadata.slide_number}"
+  defp menu_name(slide), do: slide.metadata[:heading] || slide.name || number_name(slide)
+
+  # The name of a slide with no heading and no name: its number in the talk.
+  # A hidden slide has no number.
+  defp number_name(slide) do
+    case slide.metadata[:talk_number] do
+      nil -> "Hidden slide"
+      number -> "Slide #{number}"
+    end
+  end
+
+  # The place of a slide for a screen reader, such as "Slide 3 of 12". The
+  # numbers count only the slides of the talk.
+  defp place(deck, slide) do
+    case slide.metadata[:talk_number] do
+      nil -> "Hidden slide"
+      number -> "Slide #{number} of #{Expresso.Deck.talk_length(deck)}"
+    end
+  end
 
   # The name of a slide for a screen reader, such as "Slide 3 of 12: Supervisors"
   # or, on a page of the handout view, "Slide 3 of 12, step 2 of 4: Supervisors".
@@ -214,8 +244,7 @@ defmodule Expresso.Renderer do
         nil
 
       true ->
-        slide.metadata[:heading] || slide.name ||
-          "Slide #{slide.metadata.slide_number} of #{length(deck.slides)}"
+        slide.metadata[:heading] || slide.name || place(deck, slide)
     end
   end
 
@@ -229,7 +258,7 @@ defmodule Expresso.Renderer do
   end
 
   defp slide_label(deck, slide, step) do
-    position = "Slide #{slide.metadata.slide_number} of #{length(deck.slides)}"
+    position = place(deck, slide)
 
     position =
       case step do
@@ -283,14 +312,38 @@ defmodule Expresso.Renderer do
 
   # The text of the number of a slide, such as "3 / 12", or nil. A deck shows
   # the numbers only with `slide_numbers: true`, and slide 1 shows no number.
+  # The numbers count only the slides of the talk, so a hidden slide shows no
+  # number.
   defp slide_number(deck, slide) do
-    number = slide.metadata.slide_number
+    case {deck.metadata, slide.metadata[:talk_number]} do
+      {%{slide_numbers: true}, number} when is_integer(number) and number > 1 ->
+        "#{number} / #{Expresso.Deck.talk_length(deck)}"
 
-    case deck.metadata do
-      %{slide_numbers: true} when number > 1 -> "#{number} / #{length(deck.slides)}"
-      _other -> nil
+      _other ->
+        nil
     end
   end
+
+  # The value of `data-omit` on a page of the handout view. A page of a hidden
+  # slide gets "hidden", and the key `a` does not show it. The deck option
+  # `handout_hidden true` gives a hidden slide the pages of its handout option.
+  defp omit(deck, slide, step, printed) do
+    cond do
+      Expresso.Slide.hidden?(slide) and (deck.metadata || %{})[:handout_hidden] != true ->
+        "hidden"
+
+      step not in printed ->
+        true
+
+      true ->
+        false
+    end
+  end
+
+  # The index of the slide that the present view shows before the script
+  # starts: the first slide of the talk.
+  defp first_shown(deck),
+    do: Enum.find_index(deck.slides, &(not Expresso.Slide.hidden?(&1))) || 0
 
   # `Expresso.Deck.render/1` writes the doctype. Floki drops a doctype node, and the
   # deck function writes this tree with Floki. Therefore the doctype cannot come
@@ -410,7 +463,11 @@ defmodule Expresso.Renderer do
   defp slide_sources(assigns) do
     temple do
       h3 do
-        "#{@slide.metadata.slide_number}. #{menu_name(@slide)}"
+        case {@slide.metadata[:talk_number], @slide.metadata[:heading] || @slide.name} do
+          {nil, nil} -> "Hidden slide"
+          {nil, name} -> "Hidden slide: #{name}"
+          {number, _name} -> "#{number}. #{menu_name(@slide)}"
+        end
       end
 
       ol do
@@ -426,8 +483,11 @@ defmodule Expresso.Renderer do
   end
 
   # The slides with footnotes, each with its footnotes.
+  # The page of the sources leaves out a hidden slide, as the handout view
+  # does, except with the deck option `handout_hidden true`.
   defp footnoted(deck) do
     for slide <- deck.slides,
+        not Expresso.Slide.hidden?(slide) or (deck.metadata || %{})[:handout_hidden] == true,
         footnotes = Footnote.of_slide(slide),
         footnotes != [],
         do: {slide, footnotes}
@@ -659,7 +719,7 @@ defmodule Expresso.Renderer do
           # The element takes no box, so the views keep their layout.
           main class: "views" do
             div class: "screen" do
-              for {slide, index} <- Enum.with_index(@deck.slides) do
+              for {slide, index} <- Enum.with_index(@deck.slides), shown = first_shown(@deck) do
                 section id: "slide-#{slide.metadata.slide_number}",
                         class: Expresso.Element.classes("slide", slide.metadata[:class]),
                         role: "group",
@@ -669,7 +729,7 @@ defmodule Expresso.Renderer do
                         data_max_step: Expresso.Overlay.Render.max_step(slide),
                         data_morph: morph(@deck, slide),
                         style:
-                          "height: 100%; display: #{if index == 0, do: "flex", else: "none"}; flex-direction: column; justify-content: stretch" do
+                          "height: 100%; display: #{if index == shown, do: "flex", else: "none"}; flex-direction: column; justify-content: stretch" do
                   c(&slide_parts/1, deck: @deck, slide: slide)
                 end
               end
@@ -681,7 +741,9 @@ defmodule Expresso.Renderer do
               # `data-omit`, and the style sheet hides it in the handout view and
               # on paper. The overview shows the page of the last step of each
               # slide, which has `data-thumbnail`, and a click on that page runs
-              # its `data-commands`. That page also holds the name of its slide
+              # its `data-commands`. A page of a hidden slide has `data-hidden`,
+              # and the overview shows it with a mark. `omit/4` tells when the
+              # handout view and paper leave it out. That page also holds the name of its slide
               # with no step in `data-overview-label`, because Enter in the
               # overview goes to step 1. The script tells a screen reader that
               # name when the overview selects the slide. `data-index` is the
@@ -698,7 +760,8 @@ defmodule Expresso.Renderer do
                         data_step: step,
                         data_slide: slide.metadata.slide_number,
                         data_index: first + step - 1,
-                        data_omit: step not in printed,
+                        data_omit: omit(@deck, slide, step, printed),
+                        data_hidden: Expresso.Slide.hidden?(slide),
                         data_thumbnail: step == max,
                         data_commands: step == max && page_commands(slide),
                         data_overview_label: step == max && slide_label(@deck, slide, nil) do

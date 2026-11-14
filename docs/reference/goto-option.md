@@ -44,6 +44,11 @@ The slide is a positive integer or the name of a slide. The first slide is slide
 name of a slide is the first argument of `slide`, such as `slide "end" do`. The step is a
 positive integer.
 
+A number is the place of the slide in the deck, and a slide with
+[the hidden option](hidden-option.md) has a place too. Thus in a deck with a hidden slide,
+the number of a link can be different from the number that the slide shows. A link can go
+to a hidden slide.
+
 A link by name goes to the slide with that name. A new slide in front of the target does
 not change the target of a link by name. It changes the target of a link by number, and
 the compiler gives no error for that change.

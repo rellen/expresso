@@ -37,6 +37,7 @@ GitHub.
 - `docs/overlays.md` — the design for overlays, and its decisions.
 - `docs/typescript.md` — the plan for the presenter script in TypeScript, and its result.
 - `docs/dim-state.md` — the design for a dim state with a color for each role.
+- `docs/hidden-slides.md` — the design for a slide that the talk skips, and its result.
 - `docs/tree.md` — the design for the element `tree`, and its result.
 - `docs/graph-diagrams.md` — the design for a diagram from Graphviz or D2, and its result.
 - `docs/scatter-plots.md` — the design for a scatter plot, and its result.

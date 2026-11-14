@@ -26,6 +26,7 @@ end
 | `slide_numbers true` | Show the number of each slide, such as `3 / 12`. |
 | `handout :last` | The pages of the handout view: `:last` or `:all`. |
 | `print_notes false` | Leave the notes out of the handout view and of the print. |
+| `handout_hidden true` | Show each hidden slide in the handout view and on paper, in its place. The default leaves the hidden slides out. See [the hidden option](hidden-option.md). |
 | `css "deck.css"` | A style sheet, or the path of one. It applies after the theme. |
 | `effect`, `speed`, `easing` | The animation of each overlay. See [Animate elements in a slide](../how-to/animate-elements.md). |
 | `root __DIR__` | The directory of each relative path of the deck. See [the root option](root-option.md). |

@@ -119,13 +119,13 @@ defmodule Expresso.StepsTest do
     test "gives the steps as arrays, the slides as objects and the duration" do
       assert JSON.decode!(Steps.json(deck([1, 2], %{duration: 5}))) == %{
                "steps" => [
-                 [1, 1, 0.0, 0.0, "Slide 1 of 2"],
-                 [2, 1, 0.5, 0.3333, "Slide 2 of 2, step 1 of 2"],
-                 [2, 2, 1.0, 0.6667, "Slide 2 of 2, step 2 of 2"]
+                 [1, 1, 0.0, 0.0, "Slide 1 of 2", nil, 1],
+                 [2, 1, 0.5, 0.3333, "Slide 2 of 2, step 1 of 2", 0, 2],
+                 [2, 2, 1.0, 0.6667, "Slide 2 of 2, step 2 of 2", 1, nil]
                ],
                "slides" => [
-                 %{"first" => 0, "steps" => 1, "transition" => "fade"},
-                 %{"first" => 1, "steps" => 2, "transition" => "fade"}
+                 %{"first" => 0, "number" => 1, "steps" => 1, "transition" => "fade"},
+                 %{"first" => 1, "number" => 2, "steps" => 2, "transition" => "fade"}
                ],
                "duration_ms" => 300_000
              }
@@ -133,8 +133,8 @@ defmodule Expresso.StepsTest do
 
     test "gives the keys of each object in alphabetical order" do
       assert Steps.json(deck([1])) ==
-               ~s({"duration_ms":null,"slides":[{"first":0,"steps":1,"transition":"fade"}],) <>
-                 ~s("steps":[[1,1,0.0,0.0,"Slide 1 of 1"]]})
+               ~s({"duration_ms":null,"slides":[{"first":0,"number":1,"steps":1,) <>
+                 ~s("transition":"fade"}],"steps":[[1,1,0.0,0.0,"Slide 1 of 1",null,null]]})
     end
 
     test "gives null for a deck with no duration, and empty lists for a deck with no slide" do
