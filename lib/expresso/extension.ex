@@ -1733,6 +1733,11 @@ defmodule Expresso.Extension do
         doc:
           "The minimum contrast ratio of dimmed text on its background, from 3 to 7. The default is 3. Give 4.5 to meet WCAG 2.2 criterion 1.4.3 for normal text. See docs/reference/dim-contrast-option.md."
       ],
+      dim_graphic_opacity: [
+        type: {:custom, Expresso.Deck, :dim_graphic_opacity, []},
+        doc:
+          "The opacity of a dimmed image, SVG file, embed and video, from more than 0 to 1, such as 0.5. Without the option, a graphic dims with the opacity that keeps each role of text at the dim_contrast. See docs/reference/dim-graphic-opacity-option.md."
+      ],
       math_font: [
         type: {:in, Expresso.Element.Math.Font.names()},
         default: Expresso.Element.Math.Font.default(),

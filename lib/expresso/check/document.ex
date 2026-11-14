@@ -30,7 +30,7 @@ defmodule Expresso.Check.Document do
 
   The problems are the warnings of `Expresso.ThemeVerifier.messages/1`. A
   built-in theme has no problem. The notes are the warnings of
-  `Expresso.ThemeVerifier.dim_messages/2`: a deck that does not dim can be
+  `Expresso.ThemeVerifier.dim_messages/3`: a deck that does not dim can be
   correct, so they do not change the exit status.
   """
   @spec theme(Expresso.Deck.t()) :: result()
@@ -41,7 +41,10 @@ defmodule Expresso.Check.Document do
 
     notes =
       theme
-      |> Expresso.ThemeVerifier.dim_messages(metadata[:dim_contrast])
+      |> Expresso.ThemeVerifier.dim_messages(
+        metadata[:dim_contrast],
+        metadata[:dim_graphic_opacity]
+      )
       |> Enum.map(&("Theme: " <> &1))
 
     %{problems: problems, notes: notes}

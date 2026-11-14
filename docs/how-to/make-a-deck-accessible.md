@@ -195,6 +195,16 @@ A light built-in theme does not dim at 4.5, and the compiler gives a warning. Fo
 theme, give `dim_contrast 4`, or give a theme with more contrast. See
 [A theme that does not dim](../reference/dim-contrast-option.md#a-theme-that-does-not-dim).
 
+A dimmed image, diagram, embed and video then do not dim either. To dim them and keep
+4.5:1 for the text, give the opacity of a dimmed graphic:
+
+```elixir
+dim_contrast 4.5
+dim_graphic_opacity 0.5
+```
+
+See [the dim_graphic_opacity option](../reference/dim-graphic-opacity-option.md).
+
 ## Make sure of the result
 
 1. Open the deck in a browser with a screen reader, such as VoiceOver on macOS or NVDA on

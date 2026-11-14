@@ -2413,9 +2413,10 @@ math.math-copy:not([data-placed]) {
  * A graphic has colors that the palette does not know: an image, an SVG file,
  * an embed and a video. A graphic inside a dimmed element dims with the
  * opacity `--dim-opacity` of the theme, the strongest opacity that keeps each
- * role of text at 3:1 and at Lc 30. The rule applies only on a slide, on a
- * page of the handout view and on a copy of a slide in the menu, so the
- * presenter keeps its own icons.
+ * role of text at 3:1 and at Lc 30. The `dim_graphic_opacity` option of a
+ * deck gives `--dim-graphic-opacity`, which replaces that opacity for a
+ * graphic. The rule applies only on a slide, on a page of the handout view
+ * and on a copy of a slide in the menu, so the presenter keeps its own icons.
  *
  * An icon, the icon of a callout and a line of a shape draw with
  * `currentColor`, and they dim with the color of their role. Therefore the
@@ -2435,19 +2436,30 @@ math.math-copy:not([data-placed]) {
     iframe,
     video
   ) {
-  filter: opacity(calc(1 - var(--dimmed) * (1 - var(--dim-opacity))));
+  filter: opacity(
+    calc(
+      1 - var(--dimmed) * (1 - var(--dim-graphic-opacity, var(--dim-opacity)))
+    )
+  );
 }
 /*
  * A part of a diagram is in an SVG file, and its colors are the colors of the
- * file. It dims with `--dim-opacity` when it has the state `dim` itself. A
- * part inside a dimmed diagram does not dim again, because the SVG dims. The
+ * file. It dims with the opacity of a graphic, `--dim-graphic-opacity` or
+ * `--dim-opacity`, when it has the state `dim` itself. A part inside a
+ * dimmed diagram does not dim again, because the SVG dims. The
  * color of the part changes only with `set: [color: ...]`.
  */
 svg [data-el] {
   color: var(--color, currentColor);
   filter: blur(calc((1 - var(--shown)) * var(--enter-blur)))
     opacity(
-      calc(var(--opacity) * (1 - var(--dim, 0) * (1 - var(--dim-opacity))))
+      calc(
+        var(--opacity) *
+          (
+            1 - var(--dim, 0) *
+              (1 - var(--dim-graphic-opacity, var(--dim-opacity)))
+          )
+      )
     );
 }
 /*

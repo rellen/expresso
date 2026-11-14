@@ -37,6 +37,9 @@ The option changes each dimmed color of [the theme](theme-option.md), such as
 SVG file, embed and video. Each variant of a theme with two variants, and the colors of paper,
 follow the option.
 
+[The dim_graphic_opacity option](dim-graphic-opacity-option.md) gives a dimmed graphic an
+opacity of its own. A graphic then does not follow `--dim-opacity`.
+
 A higher ratio dims less. A role of text near 4.5:1, such as the numbers of the default
 theme, then does not dim at 4.5. The focus of the `highlight` option of a code
 element still shows, because the lines in focus get a bar in the color `--accent`.
@@ -47,7 +50,8 @@ A theme does not dim when one role of text is near the ratio of the option. No o
 1.0 then keeps that role at the ratio, so `--dim-opacity` is 1.0. These are the results:
 
 - A dimmed image, SVG file, embed and video do not dim, because the style sheet dims them
-  with `--dim-opacity`.
+  with `--dim-opacity`. A deck with
+  [the dim_graphic_opacity option](dim-graphic-opacity-option.md) does not have this result.
 - Each role near the ratio keeps its color in the state `dim`.
 - With `:solarized_light` at 4.5, no role of text dims, so the state `dim` does nothing to text.
 
@@ -69,7 +73,7 @@ still compiles. `--check` gives the same text as a note. This is the warning for
 theme at 4.5:
 
 ```text
-at a dim contrast of 4.5:1, the theme gives --dim-opacity 1.0, so a dimmed image, SVG file, embed and video do not dim, and the roles warning, success, argument, code_number, code_string, code_support do not dim. Give a lower dim_contrast or a theme with more contrast. See docs/reference/dim-contrast-option.md
+at a dim contrast of 4.5:1, the theme gives --dim-opacity 1.0, so a dimmed image, SVG file, embed and video do not dim, and the roles warning, success, argument, code_number, code_string, code_support do not dim. Give a lower dim_contrast or a theme with more contrast, or give dim_graphic_opacity for the graphics. See docs/reference/dim-contrast-option.md
 ```
 
 To get the dimming again, do one of these steps:
@@ -78,8 +82,13 @@ To get the dimming again, do one of these steps:
 - Give a dark theme, such as `:dracula`, which dims at 4.5.
 - Give a theme of 16 colors with more contrast for each role that the warning names.
 
+To dim only the graphics, give `dim_graphic_opacity`, such as `dim_graphic_opacity 0.5`.
+The roles of text that the warning names still keep their colors, and the warning then
+names only those roles.
+
 The colors of paper use the default theme, so at 4.5 a printed page does not dim either.
-The compiler gives no warning for paper.
+The compiler gives no warning for paper. The `dim_graphic_opacity` option applies to paper
+too.
 
 ## When to give it
 

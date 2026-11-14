@@ -17,7 +17,7 @@ defmodule Expresso.ThemeVerifier do
   gives a warning too.
 
   The verifier also gives a warning for each variant that does not dim at the
-  `dim_contrast` option of the deck. `dim_messages/2` gives the rules.
+  `dim_contrast` option of the deck. `dim_messages/3` gives the rules.
   """
 
   use Spark.Dsl.Verifier
@@ -33,7 +33,8 @@ defmodule Expresso.ThemeVerifier do
   def verify(dsl_state) do
     theme = Verifier.get_option(dsl_state, [:deck], :theme, :default)
     ratio = Verifier.get_option(dsl_state, [:deck], :dim_contrast)
-    warnings = messages(theme) ++ dim_messages(theme, ratio)
+    graphic = Verifier.get_option(dsl_state, [:deck], :dim_graphic_opacity)
+    warnings = messages(theme) ++ dim_messages(theme, ratio, graphic)
     if warnings == [], do: :ok, else: {:warn, warnings}
   end
 
@@ -64,6 +65,10 @@ defmodule Expresso.ThemeVerifier do
   dims them with `--dim-opacity`. The warning also names each role of text
   that keeps its color in the state `dim`.
 
+  `graphic` is the `dim_graphic_opacity` option of the deck, or `nil`. With
+  the option, a graphic dims to that opacity, so the warning names only the
+  roles of text.
+
   A variant that fails a minimum of `messages/1` gets no warning here,
   because its warnings of contrast tell the cause.
 
@@ -72,17 +77,20 @@ defmodule Expresso.ThemeVerifier do
       iex> [message] = Expresso.ThemeVerifier.dim_messages(:solarized_light, 4.5)
       iex> message =~ "no role of text dims"
       true
+      iex> [message] = Expresso.ThemeVerifier.dim_messages(:solarized_light, 4.5, 0.5)
+      iex> message =~ "image"
+      false
   """
-  @spec dim_messages(term(), number() | nil) :: [String.t()]
-  def dim_messages(theme, ratio) do
+  @spec dim_messages(term(), number() | nil, number() | nil) :: [String.t()]
+  def dim_messages(theme, ratio, graphic \\ nil) do
     for {name, palette} <- Palette.variants(theme),
         Palette.problems(palette) == [],
         dimmed = Palette.with_dim_contrast(palette, ratio),
         dimmed.dim_opacity == 1.0,
-        do: dim_warning(dimmed, subject(name))
+        do: dim_warning(dimmed, subject(name), graphic)
   end
 
-  defp dim_warning(%Palette{dimmed: dimmed, dim_ratio: ratio}, subject) do
+  defp dim_warning(%Palette{dimmed: dimmed, dim_ratio: ratio}, subject, graphic) do
     roles = for {role, {_slot, on}} <- Palette.roles(), on != nil, do: role
     full = Enum.filter(roles, fn role -> elem(dimmed[role], 0) == 1.0 end)
 
@@ -93,9 +101,16 @@ defmodule Expresso.ThemeVerifier do
         _ -> "the roles #{Enum.join(full, ", ")} do not dim"
       end
 
-    "at a dim contrast of #{ratio_text(ratio)}:1, #{subject} gives --dim-opacity 1.0, so a " <>
-      "dimmed image, SVG file, embed and video do not dim, and #{text}. Give a lower " <>
-      "dim_contrast or a theme with more contrast. See docs/reference/dim-contrast-option.md"
+    start = "at a dim contrast of #{ratio_text(ratio)}:1, #{subject} gives --dim-opacity 1.0, so "
+    advice = "Give a lower dim_contrast or a theme with more contrast"
+
+    if graphic == nil do
+      start <>
+        "a dimmed image, SVG file, embed and video do not dim, and #{text}. #{advice}, or give " <>
+        "dim_graphic_opacity for the graphics. See docs/reference/dim-contrast-option.md"
+    else
+      start <> "#{text}. #{advice}. See docs/reference/dim-contrast-option.md"
+    end
   end
 
   defp ratio_text(ratio) when ratio == trunc(ratio), do: Integer.to_string(trunc(ratio))
