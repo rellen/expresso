@@ -61,6 +61,17 @@ defmodule Expresso.BinaryTest do
     System.cmd("sh", ["-c", ~s(exec "$@" 2>/dev/null), "sh" | command], env: context.env)
   end
 
+  # The standard output, the standard error and the exit status of a run. The
+  # shell writes the standard error to a file in `dir`, so a test can show the
+  # error of a run that fails.
+  defp outputs(context, dir, args) do
+    file = Path.join(dir, "stderr.txt")
+    command = [context.timeout_command, @timeout, context.binary | args]
+    script = ~s(file="$1"; shift; exec "$@" 2> "$file")
+    {output, status} = System.cmd("sh", ["-c", script, "sh", file | command], env: context.env)
+    {output, File.read!(file), status}
+  end
+
   # The exit status of a run, and the standard output that the shell writes to a
   # file. The launcher of Burrito 1.6 stops the VM when a write to the standard
   # output fails, also for EAGAIN. A port of `System.cmd/3` can give a pipe
@@ -290,8 +301,10 @@ defmodule Expresso.BinaryTest do
     pdf = Path.join(dir, "deck.pdf")
     png = Path.join(dir, "slides")
 
-    assert {output, 0} =
-             standard_output(context, ["examples/dsl_deck.exs", "--pdf", pdf, "--png", png])
+    {output, error, status} =
+      outputs(context, dir, ["examples/dsl_deck.exs", "--pdf", pdf, "--png", png])
+
+    assert status == 0, "The binary gave the exit status #{status}, with this error:\n#{error}"
 
     assert [_all, pages, files] =
              Regex.run(

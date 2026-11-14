@@ -86,7 +86,8 @@ The code follows the plan, with these changes:
    same search for the size of the window, so the two functions are public.
 5. **The job `binary` of the workflow installs a browser.** One test of `test/release/`
    exports a deck with the binary. The binary gets a new home directory for each run, so
-   the test gives it the path of the browser.
+   the test gives it the path of the browser. The job runs on x86_64 and on aarch64, so
+   the key of the cache of the browser holds the architecture of the runner.
 
 `docs/reference/export-options.md` gives the options, and `docs/how-to/export-a-deck.md`
 gives the steps.
