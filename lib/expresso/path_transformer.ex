@@ -7,7 +7,8 @@ defmodule Expresso.PathTransformer do
   joins each relative path of the deck to that directory: the `src` of an
   image, a diagram, a code element, a local embed, a video and a sound, the
   `fallback` of an embed, the `poster` of a video, the `image` of a node of a
-  tree, and the `css` option when it is a path. An absolute path and the address of an embed stay as they
+  tree, the image of the `background` option of a slide and of the deck, and
+  the `css` option when it is a path. An absolute path and the address of an embed stay as they
   are. The option itself becomes an absolute
   path, so the renderer can resolve a `url()` of an inline style sheet.
 
@@ -55,9 +56,21 @@ defmodule Expresso.PathTransformer do
 
   defp put_root(dsl_state, root) do
     css = Transformer.get_option(dsl_state, [:deck], :css)
+    background = Transformer.get_option(dsl_state, [:deck], :background)
 
     dsl_state
     |> Transformer.set_option([:deck], :root, root)
+    |> then(fn state ->
+      if background == nil,
+        do: state,
+        else:
+          Transformer.set_option(
+            state,
+            [:deck],
+            :background,
+            Expresso.Background.put_root(background, root)
+          )
+    end)
     |> then(fn state ->
       if css == nil or Expresso.Css.inline?(css),
         do: state,
@@ -66,8 +79,10 @@ defmodule Expresso.PathTransformer do
   end
 
   defp slide(%{elements: elements} = slide, root) do
-    with {:ok, elements} <- Tree.map_ok(elements, &own(&1, root)),
-         do: {:ok, %{slide | elements: elements}}
+    with {:ok, elements} <- Tree.map_ok(elements, &own(&1, root)) do
+      background = Expresso.Background.put_root(Map.get(slide, :background), root)
+      {:ok, %{slide | elements: elements} |> Map.replace(:background, background)}
+    end
   end
 
   defp slide(entity, _root), do: {:ok, entity}

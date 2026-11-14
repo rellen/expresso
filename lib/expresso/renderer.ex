@@ -368,6 +368,9 @@ defmodule Expresso.Renderer do
       })
 
     temple do
+      # The background of the slide comes first, behind each other part.
+      c(&background/1, background: Expresso.Background.of(@deck, @slide))
+
       # A screen reader moves from heading to heading, so each slide gets an
       # h1. A slide template that writes no h1 gets one that the style sheet
       # hides from the eye.
@@ -407,6 +410,36 @@ defmodule Expresso.Renderer do
         if number = slide_number(@deck, @slide) do
           span class: "slide-number" do
             number
+          end
+        end
+      end
+    end
+  end
+
+  # The background of a slide: an image or a layer of color, and the dim
+  # layer over it. The style sheet puts the element behind the content of the
+  # slide. A screen reader gets no element, because the background is
+  # decoration. `Expresso.Assets.dedupe/1` keeps one copy of the data URI of
+  # the image for the copies of the slide.
+  defp background(assigns) do
+    temple do
+      if @background do
+        div class: "slide-background",
+            aria_hidden: "true",
+            data_background: @background.kind do
+          if @background.kind == :image do
+            img class: "slide-background-image",
+                src: Expresso.Image.data_uri!(@background.image),
+                alt: "",
+                style: Expresso.Background.fit(@background)
+          else
+            div class: "slide-background-fill", style: Expresso.Background.fill(@background) do
+            end
+          end
+
+          if @background.dim > 0 do
+            div class: "slide-background-dim", style: "opacity: #{@background.dim};" do
+            end
           end
         end
       end

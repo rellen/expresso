@@ -29,6 +29,10 @@ Read these documents before you change the code:
 - `docs/hidden-slides.md` — the design for a slide that the talk skips, such as a backup
   slide. The code contains this design. The document records twelve decisions, and each is
   settled. Its last section, "The result", tells what changed during the work.
+- `docs/slide-backgrounds.md` — the design for the background of a slide: an image, a color
+  or a gradient behind its content. The code contains this design. The document records ten
+  decisions, and each is settled. Its last section, "The result", tells what changed during
+  the work.
 - `docs/graph-diagrams.md` — the design for a `diagram` from the source of a graph, in the
   language of Graphviz or of D2. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during

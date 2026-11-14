@@ -213,6 +213,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     },
     %{name: "layout-check", deck: "layout_check.exs", address: "?check", still: true},
     %{name: "check-deck", deck: "check_deck.exs", still: true},
+    %{name: "background", deck: "background.exs", actions: ["j", "j"]},
     %{
       name: "backup-slides",
       deck: "backup_slides.exs",

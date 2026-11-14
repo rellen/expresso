@@ -16,6 +16,10 @@ defmodule Expresso.Deck do
   title slide. A deck without the key shows no number. The numbers count only
   the slides of the talk, so a hidden slide shows no number.
 
+  The metadata can also hold `:background`, a struct of `Expresso.Background`:
+  the image, the color or the gradient behind the content of each slide that
+  has no `background` of its own. A deck without the key has no background.
+
   The metadata can also hold `:handout_hidden`. The value `true` shows each
   hidden slide in the handout view and on paper, in its place. A deck without
   the key leaves the hidden slides out. `docs/hidden-slides.md` gives the

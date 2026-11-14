@@ -1674,6 +1674,11 @@ defmodule Expresso.Extension do
         default: false,
         doc: "Show each element of the slide one after the other. See docs/overlays.md."
       ],
+      background: [
+        type: {:custom, Expresso.Background, :option, []},
+        doc:
+          "The background of the slide: the path of an image, a keyword list with image, color or gradient, such as [image: \"photo.jpg\", dim: 0.4], or :none. The default is the background of the deck. See docs/reference/background-option.md."
+      ],
       hidden: [
         type: :boolean,
         default: false,
@@ -1803,6 +1808,11 @@ defmodule Expresso.Extension do
         default: true,
         doc:
           "Print the notes of the speaker under each page. The value false leaves them out of the handout view and of the print."
+      ],
+      background: [
+        type: {:custom, Expresso.Background, :option, []},
+        doc:
+          "The background of each slide that has no background option: the path of an image, or a keyword list with image, color or gradient. See docs/reference/background-option.md."
       ],
       handout_hidden: [
         type: :boolean,

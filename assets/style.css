@@ -1387,6 +1387,43 @@ body[data-view="handout"] .chart-frames {
   pointer-events: none;
   overflow: hidden;
 }
+/*
+ * The background of a slide, from the `background` option: an image, a
+ * color or a gradient, and a dim layer in the background color of the theme.
+ * The slide is a stacking context, so the negative `z-index` puts the
+ * background behind the content of the slide and in front of the color of the
+ * slide. A printer does not print a background color by default, so the
+ * layers ask for their exact colors.
+ */
+:is(.slide, .handout-page, .menu-thumb):has(> .slide-background) {
+  isolation: isolate;
+}
+.slide-background {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.slide-background > * {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.slide-background-dim {
+  background-color: var(--background);
+}
+/*
+ * The notes of a page of the handout view are under the slide, in the same
+ * page. They get the background color of the theme, so the background of the
+ * slide does not show behind their text.
+ */
+.slide-background ~ .notes {
+  background-color: var(--background);
+}
 .shape {
   --color: var(--shape-color, var(--accent));
   position: absolute;
