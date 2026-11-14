@@ -31,7 +31,7 @@ For the steps and the installation of the tools, see
 | --- | --- |
 | `--check` | The render, the theme, the size of the document, and the text for a screen reader |
 | `--check=layout` | The checks of `--check`, and [the layout check](layout-check.md) at each step |
-| `--check=a11y` | The checks of `--check=layout`, and the rules of axe-core at each step and in each view |
+| `--check=a11y` | The checks of `--check=layout`, the rules of axe-core at each step and in each view, and the contrast of each text on [the background of its slide](background-option.md#the-contrast-of-the-text) |
 | `--check=browser` | The checks of `--check=a11y` in Playwright, and the keys of the presenter |
 
 ### The checks with no tool

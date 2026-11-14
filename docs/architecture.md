@@ -311,6 +311,13 @@ These are the reasons for its design:
   with only the rules of the WCAG tags, or with `color-contrast` only at the later steps
   of a slide, was not faster, because the fixed cost stays. Each of the 80 example decks
   gave the same findings before and after.
+- **The page measures the text on the background of a slide.** axe-core gives no contrast
+  for a text on an image or on a gradient. At each step, `measure` in `background.ts`
+  draws the layers of the `background` option on a canvas, and it compares the color of
+  each text with the pixels behind it. A text under its minimum is a finding with the rule
+  `background-contrast`. The function does not wait for a promise, because the virtual
+  clock of the browser does not wait for the decode of an image. `docs/slide-backgrounds.md`
+  gives the design.
 
 ## The watch mode
 
@@ -484,6 +491,8 @@ html               lang "en", and data-variants for a theme with two variants
                      data-step "1", data-max-step from the slide, data-morph
                      from the slide or the deck, role "group",
                      aria-roledescription "slide" and aria-label
+          div        the background of the slide, class "slide-background", with
+                     the background option of the slide or of the deck
           div        the header, from the deck template
           div        the body, from the slide template
           ol         the footnotes of the slide, class "footnotes", when it has some
@@ -2351,6 +2360,8 @@ The TypeScript part is under `assets/src/`. It has these modules:
   measures the elements of the slide, and it writes a report into the document.
 - `check.ts` runs axe-core for `?check=a11y`, and it writes the result of the two checks
   for the check mode. See "The check mode".
+- `background.ts` measures the contrast of each text on the background of its slide, for
+  `?check=a11y`.
 - `search.ts` filters the list of keys, and `scheme.ts` changes the variant of a theme.
 - `morph.ts` finds the elements that two slides share. See "The morph".
 - `chart.ts` writes the numbers that count, of a chart and of a stat.

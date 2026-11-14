@@ -4,6 +4,10 @@ This guide shows how to use a picture or a font of your own in a rule of the dec
 document holds the file, so the deck needs no network. For each rule, see
 [Files in the style sheet](../reference/css-option.md#files-in-the-style-sheet).
 
+For a picture behind a whole slide, use the `background` option. It needs no rule, and the
+check measures the contrast of the text on the picture. See
+[Put a picture behind a slide](put-a-picture-behind-a-slide.md).
+
 ## Use a file in a CSS file
 
 1. Put the rules of the deck in a CSS file, such as `styles/deck.css`.

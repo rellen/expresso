@@ -94,7 +94,9 @@ defmodule Expresso.Check.Document do
   The function reads the present view of each slide in the HTML, and it gives
   a note for:
 
-    * an image with an empty `alt`. A screen reader skips such an image.
+    * an image with an empty `alt`. A screen reader skips such an image. The
+      image of the `background` option of a slide is decoration, so it gives
+      no note.
     * a diagram with no `alt` option. A screen reader reads the text of its SVG.
     * a slide with only a hidden heading. A screen reader reads the heading,
       but the slide shows no title.
@@ -115,7 +117,11 @@ defmodule Expresso.Check.Document do
     "slide-" <> number = attributes |> List.keyfind("id", 0) |> elem(1)
 
     [
-      count(section, ~s(img[alt=""]), "an image with no alt text, so a screen reader skips it"),
+      count(
+        section,
+        ~s{img[alt=""]:not(.slide-background-image)},
+        "an image with no alt text, so a screen reader skips it"
+      ),
       count(
         section,
         ".diagram:not([aria-label])",

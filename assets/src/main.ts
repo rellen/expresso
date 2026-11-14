@@ -89,6 +89,7 @@ import type { Pair } from "./morph.ts";
 import { search } from "./search.ts";
 import { audit, report, sentence } from "./layout.ts";
 import { accessibility, engine, write } from "./check.ts";
+import { measure } from "./background.ts";
 import { clock, left, pace, talkLength } from "./speaker.ts";
 import {
   accepts,
@@ -384,7 +385,14 @@ function check(): void {
       const findings =
         axe === undefined
           ? null
-          : await accessibility(deck.steps, show, views(), axe);
+          : await accessibility(
+              deck.steps,
+              show,
+              views(),
+              axe,
+              undefined,
+              measure,
+            );
       apply(state, deck, program);
       write({
         width: window.innerWidth,

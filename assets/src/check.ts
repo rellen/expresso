@@ -8,6 +8,7 @@
 // the two checks as JSON into an element `check-result`, and the browser
 // writes the document to its standard output.
 
+import { HELP, RULE } from "./background.ts";
 import { owner } from "./layout.ts";
 
 // A violation of a rule of axe-core. `where` names the step or the view,
@@ -124,12 +125,18 @@ export function detach(): () => void {
 //
 // During the steps, the parts of `ASIDE` are out of the document. A step
 // shows only its slide, so the parts change nothing for its run.
+//
+// axe-core gives no contrast for a text on an image or on a gradient. Thus
+// `background` measures each text of a slide on the background of the slide,
+// at each step, and it returns the name of each element that fails.
+// `background.ts` has the function for the browser.
 export async function accessibility(
   steps: readonly { slide: number; step: number }[],
   show: (index: number) => void,
   views: readonly (readonly [string, () => void])[],
   axe: Axe,
   name: (selector: string) => string = describe,
+  background: (slide: Element) => string[] = () => [],
 ): Promise<Finding[]> {
   const root = document.documentElement.style;
   root.setProperty("--dur", "0s");
@@ -157,6 +164,15 @@ export async function accessibility(
         const element = document.getElementById(`slide-${slide}`);
         if (element !== null) {
           await read(`Slide ${slide}, step ${step}`, element);
+          const elements = background(element);
+          if (elements.length > 0) {
+            findings.push({
+              where: `Slide ${slide}, step ${step}`,
+              rule: RULE,
+              help: HELP,
+              elements,
+            });
+          }
         }
       }
     } finally {

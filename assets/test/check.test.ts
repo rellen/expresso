@@ -9,6 +9,7 @@ import {
   write,
 } from "../src/check.ts";
 import type { Axe, Finding } from "../src/check.ts";
+import { HELP } from "../src/background.ts";
 
 // A stub of the parts of the document that the check reads: the style of the
 // root, the slides by id, and the `body` for the result.
@@ -197,6 +198,44 @@ test("accessibility reads the slide of each step, then the document in each view
     },
   ]);
   assert.equal(properties.has("--dur"), false);
+});
+
+test("accessibility gives a finding for each step with a text that fails on the background of its slide", async () => {
+  stubDocument();
+  const axe: Axe = { run: () => Promise.resolve({ violations: [] }) };
+  const measured: unknown[] = [];
+
+  const findings = await accessibility(
+    [
+      { slide: 1, step: 1 },
+      { slide: 2, step: 1 },
+      { slide: 2, step: 2 },
+    ],
+    () => undefined,
+    [],
+    axe,
+    (selector) => selector,
+    (slide) => {
+      measured.push(slide);
+      const id = (slide as { id?: string }).id;
+      return id === "slide-2" ? ["the heading “Dark on dark”"] : [];
+    },
+  );
+
+  assert.deepEqual(measured, [
+    { id: "slide-1" },
+    { id: "slide-2" },
+    { id: "slide-2" },
+  ]);
+  // The same element at the next step of the slide gives no second finding.
+  assert.deepEqual(findings, [
+    {
+      where: "Slide 2, step 1",
+      rule: "background-contrast",
+      help: HELP,
+      elements: ["the heading “Dark on dark”"],
+    },
+  ]);
 });
 
 test("write puts the result into an element, and escapes each <", () => {
