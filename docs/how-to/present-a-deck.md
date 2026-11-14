@@ -45,6 +45,10 @@ Use one of these methods:
 - Press `o` for the overview. Select a slide with the arrow keys, then press `Enter`.
 - Press `m` for the menu. Move the cursor to a step, then press `Enter`.
 
+A slide with `hidden true`, such as a backup slide, has no number, and the keys of the next
+step skip it. The overview and the menu go to it. See
+[Keep backup slides for the questions](keep-backup-slides.md).
+
 In the speaker view, only the speaker window shows the overview and the menu. The step of the
 audience changes only at `Enter` or at a click.
 

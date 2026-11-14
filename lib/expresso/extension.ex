@@ -1674,6 +1674,12 @@ defmodule Expresso.Extension do
         default: false,
         doc: "Show each element of the slide one after the other. See docs/overlays.md."
       ],
+      hidden: [
+        type: :boolean,
+        default: false,
+        doc:
+          "Keep the slide out of the talk: the keys of the next step and of the previous step skip it, and the menu, the overview and a link still go to it. See docs/reference/hidden-option.md."
+      ],
       transition: [
         type: :atom,
         doc:
@@ -1797,6 +1803,11 @@ defmodule Expresso.Extension do
         default: true,
         doc:
           "Print the notes of the speaker under each page. The value false leaves them out of the handout view and of the print."
+      ],
+      handout_hidden: [
+        type: :boolean,
+        doc:
+          "Show each hidden slide in the handout view and on paper, in its place. The default leaves the hidden slides out. See docs/reference/hidden-option.md."
       ],
       progress: [
         type: :boolean,

@@ -3,7 +3,7 @@
 // `interpreter.ts` does not touch the document, and this module does not
 // decide the next state. `main.ts` connects the two.
 
-import { parse } from "./deck.ts";
+import { move, parse } from "./deck.ts";
 import type { Deck } from "./deck.ts";
 import { helpMode } from "./interpreter.ts";
 import { search } from "./search.ts";
@@ -203,8 +203,12 @@ function project(rules: Projections, state: State, deck: Deck): void {
     let first: Element | null = null;
     for (const element of document.querySelectorAll(selector)) {
       const number = Number(element.getAttribute(`data-${key}`));
-      const found = values.find(
-        ([, field, offset]) => Number(state[field]) + offset === number,
+      // An offset of a step counts the steps of the talk, so the mark of the
+      // next step skips each hidden slide.
+      const found = values.find(([, field, offset]) =>
+        key === "index" && offset !== 0
+          ? move(deck, Number(state[field]), offset) === number
+          : Number(state[field]) + offset === number,
       );
       if (found === undefined) {
         element.removeAttribute(attribute);

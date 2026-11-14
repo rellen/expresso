@@ -17,6 +17,8 @@ defmodule Expresso.Test.PresenterFixtures do
     * `"decks"` - the list of the steps and the program of each deck that a test
       uses. The key of a deck is the number of steps of each slide, such as
       `"1,3,2"`, and the kinds of its transitions after a space when it has them.
+      A deck with a hidden slide has the place of each hidden slide after the
+      word `hidden`, such as `"1,3,2 hidden 2"`.
     * `"cases"` - random events on random decks, and the result of the Elixir
       interpreter after each event.
 
@@ -38,13 +40,15 @@ defmodule Expresso.Test.PresenterFixtures do
 
   # The decks of the tests of `main.ts`.
   @decks [
-    {[1, 2], []},
-    {[1, 1], []},
-    {[2, 1], []},
-    {[1, 1, 1], []},
-    {[1, 1, 1, 1], []},
-    {[1, 3, 2, 1, 1], []},
-    {[1, 2, 1, 1], [:fade, :slide, :none, :zoom]}
+    {[1, 2], [], []},
+    {[1, 1], [], []},
+    {[2, 1], [], []},
+    {[1, 1, 1], [], []},
+    {[1, 1, 1, 1], [], []},
+    {[1, 3, 2, 1, 1], [], []},
+    {[1, 2, 1, 1], [:fade, :slide, :none, :zoom], []},
+    {[1, 2, 1, 2], [], [2]},
+    {[2, 1, 1], [], [1]}
   ]
 
   @keys ~w(j k ArrowRight ArrowLeft ArrowUp ArrowDown PageDown PageUp Home End Enter b w d m p s r f g a o ? / Escape x Tab) ++
@@ -96,20 +100,37 @@ defmodule Expresso.Test.PresenterFixtures do
   end
 
   # A deck of 0 to 8 slides with 1 to 5 steps each, and a kind for each slide.
+  # One slide in four is hidden.
   defp random_deck(r) do
     {size, r} = uniform(9, r)
     {counts, r} = Enum.map_reduce(1..(size - 1)//1, r, fn _slide, r -> uniform(5, r) end)
     {kinds, r} = Enum.map_reduce(counts, r, fn _count, r -> pick(@kinds, r) end)
-    {{counts, kinds}, r}
+
+    {hidden, r} =
+      counts
+      |> Enum.with_index(1)
+      |> Enum.flat_map_reduce(r, fn {_count, place}, r ->
+        {n, r} = uniform(4, r)
+        {if(n == 1, do: [place], else: []), r}
+      end)
+
+    {{counts, kinds, hidden}, r}
   end
 
   @doc "Return the key of a deck in the fixture file"
-  @spec key({[pos_integer()], [atom()]}) :: String.t()
-  def key({counts, []}), do: Enum.join(counts, ",")
-  def key({counts, kinds}), do: Enum.join(counts, ",") <> " " <> Enum.join(kinds, ",")
+  @spec key({[pos_integer()], [atom()], [pos_integer()]}) :: String.t()
+  def key({counts, kinds, hidden}) do
+    [
+      Enum.join(counts, ","),
+      if(kinds != [], do: Enum.join(kinds, ",")),
+      if(hidden != [], do: "hidden " <> Enum.join(hidden, ","))
+    ]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
+  end
 
-  defp deck_json({counts, kinds} = shape) do
-    deck = deck(counts, kinds)
+  defp deck_json({counts, kinds, hidden} = shape) do
+    deck = deck(counts, kinds, hidden)
     program = Program.compile(Definition.presenter(), deck)
 
     JSON.encode!(key(shape)) <>
@@ -120,18 +141,18 @@ defmodule Expresso.Test.PresenterFixtures do
       })
   end
 
-  defp deck(counts, kinds) do
+  defp deck(counts, kinds, hidden) do
     counts
     |> Enum.with_index(1)
     |> Enum.map(fn {steps, number} ->
       transition = for kind <- [Enum.at(kinds, number - 1)], kind, do: {:transition, kind}
-      Builder.slide("slide #{number}", [steps: steps] ++ transition)
+      Builder.slide("slide #{number}", [steps: steps, hidden: number in hidden] ++ transition)
     end)
     |> Builder.deck(name: "deck")
   end
 
   # The random part of a case: the options of the start, and the events.
-  defp plan({counts, _kinds} = shape, r) do
+  defp plan({counts, _kinds, _hidden} = shape, r) do
     {view, r} = pick([:present, :speaker], r)
     {progress, r} = pick([true, false], r)
     {every, r} = pick([true, false], r)
@@ -139,8 +160,8 @@ defmodule Expresso.Test.PresenterFixtures do
     {{shape, %{view: view, progress: progress, every: every}, events}, r}
   end
 
-  defp case_of({{counts, kinds} = shape, options, events}) do
-    program = Program.compile(Definition.presenter(), deck(counts, kinds))
+  defp case_of({{counts, kinds, hidden} = shape, options, events}) do
+    program = Program.compile(Definition.presenter(), deck(counts, kinds, hidden))
     start = Interpreter.initial(program, options)
 
     {results, _state} =

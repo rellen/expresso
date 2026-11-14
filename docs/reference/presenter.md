@@ -51,6 +51,10 @@ The present view knows these keys:
 To go to a slide, type its number, then press `Enter`. For example, `1` `2` `Enter` goes
 to slide 12. The number shows in the top right corner until `Enter`.
 
+A slide with `hidden true` is not a part of the talk. The keys above skip it, and the
+numbers count only the slides of the talk. The overview, the menu and a link go to it. See
+[the hidden option](hidden-option.md).
+
 A presentation remote sends `Page Down` and `Page Up`, so it works with the deck.
 
 ![Three steps forward, one step back, a black screen, and the last slide](https://raw.githubusercontent.com/rellen/expresso/media/present-keys.gif)
@@ -64,8 +68,9 @@ its slide and step. A click on another link goes to the link.
 
 ## The overview
 
-The overview shows each slide at its last step, in a grid that fits the window. In the
-speaker view, only the speaker window shows the overview. The overview knows these keys:
+The overview shows each slide at its last step, in a grid that fits the window. A hidden
+slide has a dashed outline and a lower opacity. In the speaker view, only the speaker
+window shows the overview. The overview knows these keys:
 
 <!-- keys overview -->
 
@@ -90,6 +95,7 @@ speaker view, only the speaker window shows the overview. The overview knows the
 
 The menu lists each slide with a small picture of its last step, and the steps of each
 slide under it. A step shows its number and its label. See [Step labels](step-labels.md).
+A hidden slide shows a dash in the place of its number.
 `m` opens the menu with the cursor at the current step, and the step of the audience
 changes only at `Enter` or at a click. In the speaker view, only the speaker window shows
 the menu. The menu knows these keys:
@@ -192,6 +198,10 @@ same pages as the paper. The speaker view still shows each step.
 `a` shows each step of each slide, whatever the `handout` options select. A print or a PDF
 from that window gets the same pages. A second `a` shows the selection again.
 
+The handout view and paper leave out each hidden slide, and `a` does not show it. The deck
+option `handout_hidden true` puts each hidden slide in. See
+[the hidden option](hidden-option.md#the-handout-view-and-paper).
+
 ## The address
 
 The address of the document holds the slide and the step, and it can hold these
@@ -199,7 +209,7 @@ parameters:
 
 | Part | Example | Effect |
 | --- | --- | --- |
-| `#<slide>.<step>` | `deck.html#4.2` | Step 2 of slide 4. A reload shows the same step. |
+| `#<slide>.<step>` | `deck.html#4.2` | Step 2 of slide 4. A reload shows the same step. The slide is the place of the slide in the deck, so a hidden slide counts. |
 | `?scheme=` | `deck.html?scheme=dark` | The `dark` or the `light` variant of a theme. See [Give a deck a light and a dark variant](../how-to/give-a-deck-two-variants.md). |
 | `?duration=` | `deck.html?duration=15` | The length of the talk in minutes. It replaces the `duration` option of the deck. |
 | `?all` | `deck.html?all` | The handout view with each step, as after `a`. |
@@ -210,8 +220,8 @@ still opens the right slide after the slide loses a step.
 
 ## The progress bar
 
-A thin bar at the bottom of the present view shows the part of the deck that is done. Each
-step of each slide counts one time. Write `progress false` in the deck to hide the bar at
+A thin bar at the bottom of the present view shows the part of the talk that is done. Each
+step of each slide of the talk counts one time, and a hidden slide does not count. Write `progress false` in the deck to hide the bar at
 the start. The key `g` can still show it.
 
 ![The bar at the bottom grows with each step](https://raw.githubusercontent.com/rellen/expresso/media/present-progress.gif)
@@ -221,7 +231,8 @@ the start. The key `g` can still show it.
 Write `slide_numbers true` in the deck to show the slide numbers. The right corner at the
 bottom then shows the number of the slide and the number of slides, such as `3 / 12`.
 Slide 1 shows no number, because it is usually the title slide. The handout view and the
-print show the numbers too.
+print show the numbers too. The numbers count only the slides of the talk, so a hidden
+slide shows no number.
 
 ![Slide 3 of 6, with the number in the right corner at the bottom](https://raw.githubusercontent.com/rellen/expresso/media/present-slide-numbers.png)
 
@@ -261,3 +272,4 @@ A theme can set these custom properties:
 | `--slide-number-right`, `--slide-number-bottom` | The position of the slide number. |
 | `--goto-color` | The color of a link of the `goto` option. |
 | `--digits-color`, `--digits-background` | The colors of the slide number that the presenter types. |
+| `--hidden-slide-opacity` | The opacity of the content of a hidden slide in the overview and in the menu. The default is 0.45. |

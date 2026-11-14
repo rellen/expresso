@@ -300,35 +300,40 @@ export const decodeWrittenProgram: Decoder<WrittenProgram> = /* @__PURE__ */ obj
 export type Kind = string;
 export const decodeKind: Decoder<Kind> = /* @__PURE__ */ string(/^[A-Za-z0-9-]+$/);
 
-// One slide of the deck: the index of its step 1, its number of steps, and the
-// transition into it.
+// One slide of the deck: the index of its step 1, its number of steps, the
+// transition into it, and its number in the talk, or null for a hidden slide.
 export type Slide = Readonly<{
   first: number;
   steps: number;
   transition: Kind;
+  number: number | null;
 }>;
 export const decodeSlide: Decoder<Slide> = /* @__PURE__ */ object({
   first: /* @__PURE__ */ integer(0),
   steps: /* @__PURE__ */ integer(1),
   transition: decodeKind,
+  number: /* @__PURE__ */ nullable(/* @__PURE__ */ integer(1)),
 });
 
 // One step of the deck as the renderer writes it: the slide, the step, the
-// fraction, the done part and the position.
-export type WrittenEntry = readonly [number, number, number, number, string];
-export const decodeWrittenEntry: Decoder<WrittenEntry> = /* @__PURE__ */ tuple(/* @__PURE__ */ integer(1), /* @__PURE__ */ integer(1), /* @__PURE__ */ number(0, 1), /* @__PURE__ */ number(0, 1), /* @__PURE__ */ string());
+// fraction, the done part, the position, and the index of the step before it
+// and of the step after it in the talk, or null.
+export type WrittenEntry = readonly [number, number, number, number, string, number | null, number | null];
+export const decodeWrittenEntry: Decoder<WrittenEntry> = /* @__PURE__ */ tuple(/* @__PURE__ */ integer(1), /* @__PURE__ */ integer(1), /* @__PURE__ */ number(0, 1), /* @__PURE__ */ number(0, 1), /* @__PURE__ */ string(), /* @__PURE__ */ nullable(/* @__PURE__ */ integer(0)), /* @__PURE__ */ nullable(/* @__PURE__ */ integer(0)));
 export type Entry = Readonly<{
   slide: number;
   step: number;
   fraction: number;
   done: number;
   position: string;
+  previous: number | null;
+  next: number | null;
 }>;
-export function fromWrittenEntry([slide, step, fraction, done, position]: WrittenEntry): Entry {
-  return { slide, step, fraction, done, position };
+export function fromWrittenEntry([slide, step, fraction, done, position, previous, next]: WrittenEntry): Entry {
+  return { slide, step, fraction, done, position, previous, next };
 }
-export function toWrittenEntry({ slide, step, fraction, done, position }: Entry): WrittenEntry {
-  return [slide, step, fraction, done, position];
+export function toWrittenEntry({ slide, step, fraction, done, position, previous, next }: Entry): WrittenEntry {
+  return [slide, step, fraction, done, position, previous, next];
 }
 
 // The steps and the slides of a deck, as the renderer writes them.

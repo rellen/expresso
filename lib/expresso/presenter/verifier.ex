@@ -220,6 +220,7 @@ defmodule Expresso.Presenter.Verifier do
   defp command?({:copy, to, from}), do: @fields[to] == :index and @fields[from] == :index
   defp command?({:move, field, count}), do: @fields[field] == :index and is_integer(count)
   defp command?({:go, field}), do: @fields[field] == :index
+  defp command?({:goto, :first_slide}), do: true
   defp command?({:goto, :last_slide}), do: true
   defp command?({:goto, index}), do: type?(:index, index)
   defp command?({:goto_slide, :selected}), do: true

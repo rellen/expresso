@@ -55,7 +55,8 @@ defmodule Expresso.Presenter.Projection do
 
     `key` names the number of an element: `:slide` reads `data-slide`, and
     `:index` reads `data-index`. Each value holds the text of the attribute, a
-    field of the state and an offset.
+    field of the state and an offset. An offset of an `:index` counts the steps
+    of the talk, so the mark of the next step skips each hidden slide.
     """
     @type t :: %__MODULE__{
             attribute: String.t(),

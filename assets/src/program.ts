@@ -53,8 +53,9 @@ export type Mode = Readonly<{
 // field is true. A property writes a value of the current entry into a custom
 // property of the `body`. A mark writes an attribute on each element of a
 // selector whose `data-slide` or `data-index` agrees with a field plus an
-// offset. With `scroll`, `dom.ts` scrolls the first marked element into the
-// view of its container. `schema.ts` declares `Attribute`, `Property` and
+// offset. An offset of a `data-index` counts the steps of the talk, so it
+// skips each hidden slide. With `scroll`, `dom.ts` scrolls the first marked
+// element into the view of its container. `schema.ts` declares `Attribute`, `Property` and
 // `Mark`, and their forms give the order of their values.
 export type { Attribute, Mark, Property } from "./schema.ts";
 export type Projections = Readonly<{

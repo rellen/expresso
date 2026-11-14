@@ -16,6 +16,7 @@ defmodule Expresso.Slide do
           :labels => [String.t() | nil] | nil,
           :handout => Expresso.Handout.t() | nil,
           :auto_reveal => boolean() | nil,
+          :hidden => boolean() | nil,
           :transition => atom() | nil,
           :morph => :auto | :named | :off | nil,
           :effect => atom() | nil,
@@ -38,6 +39,7 @@ defmodule Expresso.Slide do
     :labels,
     :handout,
     :auto_reveal,
+    :hidden,
     :transition,
     :morph,
     :effect,
@@ -67,12 +69,31 @@ defmodule Expresso.Slide do
     :notes,
     :meta,
     :handout,
+    :hidden,
     :transition,
     :morph,
     :effect,
     :speed,
     :easing
   ]
+
+  @doc """
+  Tell if a slide is hidden
+
+  A hidden slide is not a part of the talk. `docs/hidden-slides.md` gives the
+  rules.
+
+      iex> Expresso.Slide.hidden?(%Expresso.Slide{metadata: %{hidden: true}})
+      true
+      iex> Expresso.Slide.hidden?(%Expresso.Slide{hidden: true})
+      true
+      iex> Expresso.Slide.hidden?(%Expresso.Slide{metadata: %{}})
+      false
+  """
+  @spec hidden?(t()) :: boolean()
+  def hidden?(%__MODULE__{hidden: true}), do: true
+  def hidden?(%__MODULE__{metadata: %{hidden: true}}), do: true
+  def hidden?(%__MODULE__{}), do: false
 
   @doc """
   Write the options of the DSL into the metadata of the slide

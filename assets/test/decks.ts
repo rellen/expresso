@@ -14,6 +14,8 @@ type Options = {
   kinds?: readonly Kind[] | undefined;
   // The length of the talk in milliseconds.
   duration?: number | null;
+  // The place of each hidden slide in the deck. The first slide is 1.
+  hidden?: readonly number[];
 };
 
 // Four decimal places, as `Expresso.Steps` gives.
@@ -21,31 +23,78 @@ function round(value: number): number {
   return Math.round(value * 10_000) / 10_000;
 }
 
-// A deck with the number of steps of each slide, in slide order.
+// The index of the nearest step in a direction that is a step of the same
+// slide or of a slide of the talk, or null. `Expresso.Steps` has the same
+// rule.
+function near(
+  places: readonly { slide: number; hidden: boolean }[],
+  index: number,
+  by: 1 | -1,
+): number | null {
+  const slide = places[index]?.slide;
+  for (let at = index + by; at >= 0 && at < places.length; at += by) {
+    const place = places[at];
+    if (place !== undefined && (place.slide === slide || !place.hidden)) {
+      return at;
+    }
+  }
+  return null;
+}
+
+// A deck with the number of steps of each slide, in slide order. A hidden
+// slide is not a part of the talk, as in `Expresso.Steps`.
 export function deckOf(counts: readonly number[], options: Options = {}): Deck {
-  const total = counts.reduce((sum, steps) => sum + steps, 0);
+  const hidden = (index: number) =>
+    options.hidden?.includes(index + 1) ?? false;
+  const shown = counts.filter((_count, index) => !hidden(index));
+  const count = shown.length;
+  const total = shown.reduce((sum, steps) => sum + steps, 0);
+  const places = counts.flatMap((steps, index) =>
+    Array.from({ length: steps }, () => ({
+      slide: index + 1,
+      hidden: hidden(index),
+    })),
+  );
   const steps: Entry[] = [];
-  counts.forEach((count, index) => {
-    for (let step = 1; step <= count; step++) {
-      const before = steps.length;
-      const slide = `Slide ${index + 1} of ${counts.length}`;
+  // The number of slides and of steps of the talk in front of the step.
+  let number = 0;
+  let before = 0;
+  counts.forEach((steps_of_slide, index) => {
+    const slide = hidden(index)
+      ? count === 0
+        ? "Hidden slide"
+        : number === 0
+          ? `Hidden slide before slide 1 of ${count}`
+          : `Hidden slide after slide ${number} of ${count}`
+      : `Slide ${number + 1} of ${count}`;
+    for (let step = 1; step <= steps_of_slide; step++) {
+      const place = hidden(index) ? Math.max(before - 1, 0) : before;
       steps.push({
         slide: index + 1,
         step,
-        fraction: total > 1 ? round(before / (total - 1)) : 0,
-        done: round(before / total),
-        position: count > 1 ? `${slide}, step ${step} of ${count}` : slide,
+        fraction: total > 1 ? round(place / (total - 1)) : 0,
+        done: total > 0 ? round(place / total) : 0,
+        position:
+          steps_of_slide > 1
+            ? `${slide}, step ${step} of ${steps_of_slide}`
+            : slide,
+        previous: near(places, steps.length, -1),
+        next: near(places, steps.length, 1),
       });
+      before += hidden(index) ? 0 : 1;
     }
+    number += hidden(index) ? 0 : 1;
   });
   let first = 0;
-  const slides = counts.map((count, index) => {
+  let talk = 0;
+  const slides = counts.map((steps_of_slide, index) => {
     const slide = {
       first,
-      steps: count,
+      steps: steps_of_slide,
       transition: options.kinds?.[index] ?? "fade",
+      number: hidden(index) ? null : ++talk,
     };
-    first += count;
+    first += steps_of_slide;
     return slide;
   });
   return { steps, slides, duration: options.duration ?? null };

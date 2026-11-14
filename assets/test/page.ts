@@ -111,6 +111,8 @@ type Options = {
   // The kind of the transition of each slide, in slide order. A slide without
   // an entry fades.
   transitions?: Kind[];
+  // The place of each hidden slide in the deck. The first slide is 1.
+  hidden?: number[];
   // True for a browser with the View Transitions API.
   viewTransitions?: boolean;
   // True for a document with a light and a dark variant of its theme.
@@ -242,7 +244,7 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   );
   // The list of the steps and the program that the renderer writes for the
   // deck. They come from the fixture file.
-  const found = texts(key(maxSteps, options.transitions));
+  const found = texts(key(maxSteps, options.transitions, options.hidden));
   const steps = JSON.parse(found.deck);
   steps.duration_ms =
     options.duration === undefined ? null : options.duration * 60_000;

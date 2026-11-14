@@ -121,7 +121,7 @@ defmodule Expresso.Presenter.Default do
         "Previous step, or the last step of the previous slide",
         group: @move
 
-    key "Home", goto(0), "First slide", group: @move
+    key "Home", goto(first_slide()), "First slide", group: @move
     key "End", goto(last_slide()), "Step 1 of the last slide", group: @move
 
     key @digits, append(:digits), "Type a slide number",
@@ -194,7 +194,7 @@ defmodule Expresso.Presenter.Default do
         "Previous step, or the last step of the previous slide",
         group: @move
 
-    key "Home", goto(0), "First slide", group: @move
+    key "Home", goto(first_slide()), "First slide", group: @move
     key "End", goto(last_slide()), "Step 1 of the last slide", group: @move
 
     key @digits, append(:digits), "Type a slide number",
