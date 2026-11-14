@@ -63,6 +63,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "transition-custom", deck: "transition_custom.exs", actions: ["j", "k"]},
     %{name: "overlay-at", deck: "overlay_at.exs", actions: ["j", "j"]},
     %{name: "overlay-alert", deck: "overlay_alert.exs", actions: ["j", "j"]},
+    %{name: "text-parts", deck: "text_parts.exs", actions: ["j", "j", "j"]},
     %{name: "overlay-move", deck: "overlay_move.exs", actions: ["j"]},
     %{name: "overlay-list", deck: "overlay_list.exs", actions: ["j", "j"]},
     %{name: "overlay-code", deck: "overlay_code.exs", actions: ["j"]},

@@ -2539,6 +2539,25 @@ svg [data-el] {
     --highlight var(--dur) var(--ease);
 }
 /*
+ * A part of a text: a tag with the attribute `at` in the text of a text area
+ * or of an item. The renderer writes `data-text-part` into the tag. A part
+ * with steps is an element with `data-on`, so the rules above show it and
+ * hide it, and a hidden part keeps its space in the line.
+ *
+ * A part with the attribute `state` has an identity. The state `dim` moves
+ * its color to the dimmed color, as for each element with an identity. The
+ * state `alert` moves its color to `--text-part-alert-color`, which is the
+ * accent color of the theme by default. A part is in a line of text, so it
+ * gets no outline.
+ */
+[data-text-part][data-el] {
+  --color: color-mix(
+    in srgb,
+    var(--text-part-alert-color, var(--accent)) calc(var(--alert, 0) * 100%),
+    currentColor
+  );
+}
+/*
  * A copy of a part fades in at its source at its first step, and then it
  * moves to its target. The rule of the first step sets `--move-delay` to the
  * time of the fade, and this list delays the transform by it. The reveal

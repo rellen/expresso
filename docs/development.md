@@ -38,6 +38,7 @@ GitHub.
 - `docs/typescript.md` — the plan for the presenter script in TypeScript, and its result.
 - `docs/dim-state.md` — the design for a dim state with a color for each role.
 - `docs/hidden-slides.md` — the design for a slide that the talk skips, and its result.
+- `docs/inline-steps.md` — the design for the steps of a part of a text, and its result.
 - `docs/slide-backgrounds.md` — the design for the background of a slide, and its result.
 - `docs/tree.md` — the design for the element `tree`, and its result.
 - `docs/graph-diagrams.md` — the design for a diagram from Graphviz or D2, and its result.

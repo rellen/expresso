@@ -241,6 +241,14 @@ These rules apply with the option:
 The option does not need `reveal`. It reads the steps of the children, and a child with an
 `at` option has steps too.
 
+## A part of a text
+
+A tag in the text of a text area or of an item takes the attribute `at`, such as
+`<span at="2-">42</span>`. The part of the text in the tag then has its own steps.
+`Expresso.Overlay.Inline` makes a child of the text element for each part, so each rule of
+this document applies to a part as it applies to an element. `docs/inline-steps.md` gives
+the design and its decisions.
+
 ## Per-step state
 
 The `on` entity gives a state to an element for a set of steps. The `on` entity accepts
