@@ -779,10 +779,13 @@ text at 3:1 and at Lc 30.
 
 At a higher `dim_contrast`, a role near the ratio can need the opacity 1.0, and then
 `--dim-opacity` is 1.0 too. Each light built-in theme has this result at 4.5. A graphic
-then does not dim. `Expresso.ThemeVerifier.dim_messages/2` gives a warning for each such
-variant, and `--check` gives it as a note. Issue #335 recorded the case. A separate
-opacity for graphics changes the design of `docs/dim-state.md`, so it needs its own
-decision.
+then does not dim. `Expresso.ThemeVerifier.dim_messages/3` gives a warning for each such
+variant, and `--check` gives it as a note. Issue #335 recorded the case.
+
+The `dim_graphic_opacity` option of a deck gives a graphic an opacity of its own. The
+renderer writes it as `--dim-graphic-opacity` in one `:root` rule, and the style sheet reads
+`var(--dim-graphic-opacity, var(--dim-opacity))`. A deck without the option has no such
+rule, so it renders as before. Decision 5 of `docs/dim-state.md` gives the reasons.
 
 A series of a chart dims in a different way. Its marks fade to `--chart-dim-opacity`, 0.3
 by default, and its texts take the dimmed color of the text. A colored bar at

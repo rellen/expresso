@@ -64,7 +64,19 @@ defmodule Expresso.Renderer do
             ":root[data-scheme=\"dark\"] { #{declarations(dark)} }"
       end
 
-    roles <> "\n@media print { :root, :root[data-scheme] { #{declarations(print)} } }"
+    roles <>
+      "\n@media print { :root, :root[data-scheme] { #{declarations(print)} } }" <>
+      graphic_opacity(deck)
+  end
+
+  # The `dim_graphic_opacity` option of the deck, as a rule for each variant
+  # and for paper. The style sheet reads `--dim-graphic-opacity` before
+  # `--dim-opacity`, so a deck without the option has no rule.
+  defp graphic_opacity(deck) do
+    case (deck.metadata || %{})[:dim_graphic_opacity] do
+      nil -> ""
+      opacity -> "\n:root { --dim-graphic-opacity: #{opacity}; }"
+    end
   end
 
   # Each variant dims to the minimum of the `dim_contrast` option of the deck.

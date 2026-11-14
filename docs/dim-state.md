@@ -2,8 +2,8 @@
 
 This document gives a plan for the state `dim`, and the record of its result. The code
 contains this plan. The plan depends on pull request #128, which adds the APCA minimums to
-each theme. The document ends with four decisions, and each is settled. "The result"
-gives the four places where the code is different from the plan.
+each theme. The document ends with five decisions, and each is settled. "The result"
+gives the five places where the code is different from the plan.
 
 ## The problem
 
@@ -99,10 +99,24 @@ Each decision is settled.
    carries the state to each element inside a dimmed element. A nested element with the
    state `dim` stays at the dimmed colors. The dimmed colors are the minimums, so a second
    multiplication would make the text unreadable.
+5. **A deck can give a graphic an opacity of its own.** Issue #358 asked for this decision.
+   `--dim-opacity` comes from the weakest role of text. At a `dim_contrast` of 4.5, each
+   light built-in theme has a role near 4.5:1, so the opacity is 1.0 and no graphic dims.
+   The `dim_contrast` option gives a minimum for text, and a graphic has no contrast of
+   text that the option can measure. We compared three designs:
+
+   | Design | Effect | Cost |
+   | --- | --- | --- |
+   | A. No change | A graphic dims only when each role of text dims. | Graphics do not dim with a light theme at 4.5. |
+   | B. A value in each theme | A theme gives a fixed opacity for graphics. | Each deck changes, and a graphic with text in it can fall below the minimum. |
+   | C. An option of the deck | `dim_graphic_opacity 0.5` gives the opacity. | One more option. |
+
+   We selected design C. A deck without the option renders as before, and the user who
+   gives the option accepts the opacity for the text in a graphic.
 
 ## The result
 
-The code follows the plan, with four changes:
+The code follows the plan, with five changes:
 
 1. **The state also reads `--dim`.** The color of a dimmed element mixes with
    `max(var(--dim, 0), var(--dimmed))`. Without a rule that reads `--dim`, the verifier of
@@ -125,6 +139,13 @@ The code follows the plan, with four changes:
    `currentColor`. They take the dimmed color of their role, and the opacity rule does
    not apply to them, so they do not dim two times. The rule has no specificity, so the
    filter of an element with an `on` entity replaces it on the root of an element.
+
+5. **`--dim-graphic-opacity` replaces `--dim-opacity` for a graphic.** The renderer writes
+   the `dim_graphic_opacity` option as one `:root` rule after the rules of the theme. The
+   rule of a graphic and the rule of a part of a diagram read
+   `var(--dim-graphic-opacity, var(--dim-opacity))`. The rule applies to each variant of the
+   theme and to paper. The warning for a theme that does not dim then names only the roles
+   of text. `docs/reference/dim-graphic-opacity-option.md` gives the option.
 
 A rule of a deck that gives a color to text does not dim by itself. "Make a color of your
 own dim" in `docs/how-to/style-one-slide.md` gives the steps for such a rule.

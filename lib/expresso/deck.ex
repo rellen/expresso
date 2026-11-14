@@ -40,6 +40,11 @@ defmodule Expresso.Deck do
   dimmed text, from 3 to 7. A deck without the key, or with `nil`, dims to
   3:1. `Expresso.Palette.with_dim_contrast/2` gives the rules.
 
+  The metadata can also hold `:dim_graphic_opacity`, the opacity of a dimmed
+  image, SVG file, embed and video, from more than 0 to 1. The renderer then
+  writes it as `--dim-graphic-opacity`. A deck without the key dims a graphic
+  with the dim opacity of the palette.
+
   The metadata can also hold `:math_font`, the font of each math element, one
   of `Expresso.Element.Math.Font.names/0`. A deck without the key gets
   `:latin_modern`. The renderer puts the font into a document with a math
@@ -114,6 +119,27 @@ defmodule Expresso.Deck do
     do:
       {:error,
        "the dim_contrast option must be a number from 3 to 7, such as 4.5, and not #{inspect(value)}"}
+
+  @doc """
+  Validate the opacity of a dimmed graphic
+
+  The value is a number that is more than 0 and not more than 1. A graphic
+  with the opacity 0 does not show, and that is not a dimmed graphic.
+
+      iex> Expresso.Deck.dim_graphic_opacity(0.5)
+      {:ok, 0.5}
+      iex> Expresso.Deck.dim_graphic_opacity(0)
+      {:error, "the dim_graphic_opacity option must be a number that is more than 0 and not more than 1, such as 0.5, and not 0"}
+  """
+  @spec dim_graphic_opacity(term()) :: {:ok, number()} | {:error, String.t()}
+  def dim_graphic_opacity(value) when is_number(value) and value > 0 and value <= 1,
+    do: {:ok, value}
+
+  def dim_graphic_opacity(value),
+    do:
+      {:error,
+       "the dim_graphic_opacity option must be a number that is more than 0 and not more than 1, " <>
+         "such as 0.5, and not #{inspect(value)}"}
 
   @doc """
   Validate the language of a deck
