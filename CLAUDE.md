@@ -37,6 +37,10 @@ Read these documents before you change the code:
   or a gradient behind its content. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during
   the work.
+- `docs/typewriter-effect.md` — the design for the effect `:type`, which shows the text of
+  an element one character at a time. The code contains this design. The document records
+  ten decisions, and each is settled. Its last section, "The result", tells what changed
+  during the work.
 - `docs/graph-diagrams.md` — the design for a `diagram` from the source of a graph, in the
   language of Graphviz or of D2. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during

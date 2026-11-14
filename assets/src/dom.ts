@@ -155,7 +155,8 @@ function slide(number: number): HTMLElement {
 // program, and `Expresso.Presenter.Projection` tells what each projection
 // does. It shows the slide of the current step at that step, and it hides each
 // other slide. The generated style block reads `data-step`, and
-// docs/overlays.md gives the CSS contract. A deck with no slide gets the
+// docs/overlays.md gives the CSS contract. The slide gets `data-back` after a
+// step back on it, and it loses the attribute at the next change. A deck with no slide gets the
 // projections only. The list of keys shows the rows of the mode under it, and
 // the speaker view writes the texts of its elements.
 export function apply(state: State, deck: Deck, program: Program): void {
@@ -163,17 +164,25 @@ export function apply(state: State, deck: Deck, program: Program): void {
   progress(current(state, deck)?.fraction ?? 0);
   menu(state.menu);
   help(state.help ? helpMode(program, state) : undefined);
-  for (let number = 1; number <= deck.slides.length; number++) {
-    slide(number).style.display = "none";
-  }
   // A deck can hold no slide. The view still changes, and the function must
   // not read a slide that the document does not have.
   const entry = current(state, deck);
-  if (entry === undefined) {
+  const shown = entry === undefined ? undefined : slide(entry.slide);
+  // A step back on the slide that shows. The style sheet reads `data-back`,
+  // and a text with the effect `type` then shows at once.
+  const back =
+    entry !== undefined &&
+    shown !== undefined &&
+    shown.style.display !== "none" &&
+    Number(shown.dataset.step) > entry.step;
+  for (let number = 1; number <= deck.slides.length; number++) {
+    slide(number).style.display = "none";
+  }
+  if (entry === undefined || shown === undefined) {
     return;
   }
-  const shown = slide(entry.slide);
   shown.dataset.step = String(entry.step);
+  shown.toggleAttribute("data-back", back);
   shown.style.display = "flex";
   if (state.view === "speaker") {
     speaker(state, deck);

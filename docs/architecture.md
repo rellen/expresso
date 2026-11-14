@@ -494,7 +494,9 @@ html               lang "en", and data-variants for a theme with two variants
           div        the background of the slide, class "slide-background", with
                      the background option of the slide or of the deck
           div        the header, from the deck template
-          div        the body, from the slide template
+          div        the body, from the slide template. Each character of an
+                     element with effect :type is in its own span, from
+                     Expresso.Overlay.Typewriter
           ol         the footnotes of the slide, class "footnotes", when it has some
           div        the shapes of the slide, class "shapes", when it has some
           div        the footer, from the deck template
@@ -2353,7 +2355,8 @@ The TypeScript part is under `assets/src/`. It has these modules:
 - `speaker.ts` makes the texts of the speaker view.
 - `dom.ts` reads the document. It applies a state with the projections of the program,
   and it shows the slide of the current step with the inline `style.display` property and
-  the `data-step` attribute.
+  the `data-step` attribute. After a step back on the slide that shows, it writes
+  `data-back` on the slide, and the effect `:type` then shows its text at once.
 - `main.ts` connects the modules. It sends each event to the interpreter, and it writes
   the fragment of the address.
 - `layout.ts` makes the layout check of `?check`. It shows each step with `dom.ts`, it

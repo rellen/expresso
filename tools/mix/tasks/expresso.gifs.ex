@@ -67,6 +67,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "overlay-move", deck: "overlay_move.exs", actions: ["j"]},
     %{name: "overlay-list", deck: "overlay_list.exs", actions: ["j", "j"]},
     %{name: "overlay-code", deck: "overlay_code.exs", actions: ["j"]},
+    %{name: "typewriter", deck: "typewriter.exs", actions: ["j", "j", "j"]},
     %{name: "overlay-scale", deck: "overlay_scale.exs", actions: ["j", "j"]},
     %{name: "overlay-color", deck: "overlay_color.exs", actions: ["j", "j"]},
     %{name: "overlay-dim", deck: "overlay_dim.exs", actions: ["j", "j"]},

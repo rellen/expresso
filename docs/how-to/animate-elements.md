@@ -555,6 +555,55 @@ Examples.OverlayCode
 
 ![The last two lines of the code fade in at step 2](https://raw.githubusercontent.com/rellen/expresso/media/overlay-code.gif)
 
+## Type a text or a line of code
+
+Write `effect :type` in an element with steps. Its text then shows one character at a
+time, with a cursor after the newest character. In a code element with `reveal`, the
+lines of each group type one after the other.
+
+```elixir
+defmodule Examples.Typewriter do
+  use Expresso
+
+  slide "type" do
+    heading "A function"
+    pause()
+
+    text_box do
+      at from: :next
+      effect :type
+      text_area(text: "Give the function a name, then call it.")
+    end
+
+    code "elixir" do
+      reveal [1..3, 5]
+      effect :type
+
+      text ~S"""
+      def greet(name) do
+        "Hello, #{name}!"
+      end
+
+      greet("world")
+      """
+    end
+  end
+end
+
+Examples.Typewriter
+```
+
+![A sentence types at step 2, the three lines of a function type at step 3, and a call types at step 4](https://raw.githubusercontent.com/rellen/expresso/media/typewriter.gif)
+
+- `pause()` moves the first text to step 2. The text of step 1 shows with the slide, and
+  it does not type.
+- Each character takes 40 ms. `speed :slow` and `speed :fast` change that time, and a
+  number, such as `speed 1500`, is the time of the whole text in milliseconds.
+- After a step back, the text shows at once. A reader who asks for reduced motion also
+  sees the whole text at once.
+
+See [The effect `:type`](../reference/overlay-options.md#the-effect-type) for each rule.
+
 ## Dim the earlier items of a list
 
 Write `dim true` in the list, with `reveal true`. Each item dims when the next item shows,

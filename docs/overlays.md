@@ -783,6 +783,13 @@ element from left to right. `visibility` hides the element when the clip is clos
 clip is 1rem larger than the element on each side, so it does not cut the outline of
 `alert` or the marker of an item.
 
+The effect `type` does not fade. `Expresso.Overlay.Typewriter` puts each character of the
+element into its own `span` in the present view, and the theme moves the registered
+property `--type` from 0 to 1 when the element shows. A character shows when the property
+passes its position. The change has no time when the element hides, and after a step
+back, for which the presenter script writes `data-back` on the slide.
+`docs/typewriter-effect.md` gives the design and its decisions.
+
 An effect can also play `@keyframes`. The reveal rule sets `animation-name` to
 `--enter-animation`, and the base rule of a hidden element sets it to `--exit-animation`.
 The change of the name starts the animation. The theme registers both properties as

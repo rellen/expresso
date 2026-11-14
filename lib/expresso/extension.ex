@@ -12,7 +12,7 @@ defmodule Expresso.Extension do
   # schema into its own. `docs/overlays.md` gives the forms.
   # The ways in which an element shows and hides at the steps of its `at`
   # option. The slide and the deck take the same values.
-  @effects [:fade, :grow, :fly_up, :fly_down, :fly_left, :fly_right, :wipe, :blur]
+  @effects [:fade, :grow, :fly_up, :fly_down, :fly_left, :fly_right, :wipe, :blur, :type]
 
   # The time and the easing of the animations of an element. A speed is a
   # preset of the theme or a number of milliseconds.

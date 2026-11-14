@@ -176,6 +176,9 @@ that line. Texts are found inside the text of the element, with the rules of
 [lines from a text](#lines-from-a-text): the `from` text must be in it one time, and the
 `to` text must come after it. The forms can mix in one option.
 
+With `effect :type`, the lines of a group of `reveal` type one after the other, one
+character at a time. See [The effect `:type`](overlay-options.md#the-effect-type).
+
 ## Long lines
 
 A line that is too long for the element breaks at the edge. Two options help:

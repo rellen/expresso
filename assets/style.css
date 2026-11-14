@@ -2558,6 +2558,120 @@ svg [data-el] {
   );
 }
 /*
+ * The effect `type` shows the text of an element one character at a time.
+ * `Expresso.Overlay.Typewriter` puts each character into a `span` with its
+ * position in `--i`, and it writes the number of the characters into
+ * `--type-n` on the element. `docs/typewriter-effect.md` gives the design.
+ *
+ * The element does not fade. `--type` goes from 0 to 1 when the element
+ * shows, and it inherits to each character. The time of that change is the
+ * time of one character, `--type-char`, for each character. It is zero when
+ * the element hides, with reduced motion, and after a step back, for which
+ * the presenter script writes `data-back` on the slide. The text then shows
+ * or hides at once.
+ *
+ * The `speed` option changes the time. `fast` gives one half of
+ * `--type-char` to each character and `slow` gives two times that time. A
+ * number of milliseconds is the time of the whole text. Each other change of
+ * the element, such as a state, keeps the time of its parent.
+ */
+@property --type {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+:root {
+  --type-char: 40ms;
+}
+section[data-back] {
+  --type-forward: 0;
+}
+[data-on][data-effect="type"] {
+  opacity: 1;
+  --dur: inherit;
+  --type: var(--shown);
+  --type-time: calc(var(--type-char) * var(--type-n, 0));
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility 0s linear var(--dur),
+    transform var(--dur) var(--ease),
+    outline-width var(--dur) var(--ease),
+    filter var(--dur) var(--ease),
+    clip-path var(--dur) var(--ease),
+    --type
+      calc(
+        var(--shown) * var(--type-time) * var(--motion) * var(--type-forward, 1)
+      )
+      linear;
+}
+[data-on][data-el][data-effect="type"] {
+  transition:
+    opacity var(--dur) var(--ease),
+    visibility 0s linear var(--dur),
+    transform var(--dur) var(--ease),
+    outline-width var(--dur) var(--ease),
+    filter var(--dur) var(--ease),
+    clip-path var(--dur) var(--ease),
+    color var(--dur) var(--ease),
+    --dimmed var(--dur) var(--ease),
+    --highlight var(--dur) var(--ease),
+    --type
+      calc(
+        var(--shown) * var(--type-time) * var(--motion) * var(--type-forward, 1)
+      )
+      linear;
+}
+[data-on][data-effect="type"][data-speed] {
+  --type-time: var(--speed);
+}
+[data-on][data-effect="type"][data-speed="fast"] {
+  --type-time: calc(var(--type-char) * var(--type-n, 0) / 2);
+}
+[data-on][data-effect="type"][data-speed="normal"] {
+  --type-time: calc(var(--type-char) * var(--type-n, 0));
+}
+[data-on][data-effect="type"][data-speed="slow"] {
+  --type-time: calc(var(--type-char) * var(--type-n, 0) * 2);
+}
+/*
+ * One character of an element with the effect `type`. It shows when `--type`
+ * passes its position. The newest character has a cursor on its right side
+ * while the text types: a shadow with no blur, in the color of the text. The
+ * cursor stays on the character at the moment when the next character
+ * comes, so a picture at that moment shows it. It goes away at the end of
+ * the text. A deck can set `--type-cursor-width` and `--type-cursor-color`,
+ * and the width 0 gives no cursor.
+ */
+.type-char {
+  opacity: clamp(0, (var(--type) * var(--type-n, 0) - var(--i)) * 1000, 1);
+  box-shadow: var(--type-cursor-width, 0.08em) 0 0 0
+    color-mix(
+      in srgb,
+      var(--type-cursor-color, currentColor)
+        calc(
+          clamp(
+              0,
+              (var(--i) + 1 - var(--type) * var(--type-n, 0)) * 1000 + 1,
+              1
+            ) *
+            clamp(0, (1 - var(--type)) * 1000000, 1) * 100%
+        ),
+      transparent
+    );
+}
+/*
+ * The whole text of a run of characters. It has no size and no line height,
+ * so the eye does not see it and it takes no space in the line. A screen
+ * reader reads it, and it does not read the characters, which have
+ * `aria-hidden`.
+ */
+.type-text {
+  font-size: 0;
+  line-height: 0;
+  white-space: nowrap;
+  user-select: none;
+}
+/*
  * A copy of a part fades in at its source at its first step, and then it
  * moves to its target. The rule of the first step sets `--move-delay` to the
  * time of the fade, and this list delays the transform by it. The reveal

@@ -42,6 +42,7 @@ The way in which an element shows and hides at the steps of its `at` option.
 | `:fly_right` | The element fades in and moves right by 1rem to its place. |
 | `:wipe` | A clip opens the element from left to right. The element does not fade. |
 | `:blur` | The element fades in from a blur of 0.2rem to sharp. |
+| `:type` | The text of the element shows one character at a time. The element does not fade. See [The effect `:type`](#the-effect-type). |
 
 An element, a slide and the deck take the option. An element uses the nearest value: its
 own value, then the value of the nearest parent, then the slide, then the deck. A list
@@ -49,14 +50,63 @@ with `reveal true` and `effect :fly_up` therefore flies each item in. An item wi
 `effect :fade` in that list fades.
 
 At the last step of the element, the same effect runs in the other direction. An element
-with `:grow` then gets smaller, and an element with `:fly_up` moves down. An element
-without an `at` option shows at each step, so its effect has no result.
+with `:grow` then gets smaller, and an element with `:fly_up` moves down. An element with
+`:type` hides at once. An element without an `at` option shows at each step, so its effect
+has no result.
 
 The `css` option of the deck can give more effects. See [The css option](css-option.md).
 
 ![Five boxes, each with a different effect](https://raw.githubusercontent.com/rellen/expresso/media/overlay-effects.gif)
 
 ![The items of a list fly up one after the other, and the last item flies out after a step back](https://raw.githubusercontent.com/rellen/expresso/media/overlay-effect-list.gif)
+
+### The effect `:type`
+
+`effect :type` shows the text of an element one character at a time, with a cursor after
+the newest character. For the design, see [The typewriter effect](../typewriter-effect.md).
+
+```elixir
+slide "type" do
+  heading "A call"
+  pause()
+
+  code "elixir" do
+    at from: :next
+    effect :type
+    text ~s|IO.puts("Hello, world!")|
+  end
+end
+```
+
+| Element | What types |
+| --- | --- |
+| a `text_area`, an `item`, a `list` and each other element with text | The text of the element, in the order of the document. |
+| a `code` element with `at` | Each line of the code, one after the other. |
+| a `code` element with `reveal` | The lines of one group, one after the other, at the step of the group. |
+| a `list` with `reveal true` | Each item, at its own step. |
+| a tag with `at` in a text with the effect | The part of the text, at its own steps. |
+
+These rules apply:
+
+- The time is 40 ms for each character. White space takes no time.
+- `speed :fast` gives 20 ms to each character, and `speed :slow` gives 80 ms. A number,
+  such as `speed 1500`, is the time of the whole text in milliseconds. The `easing` option
+  does not change the effect.
+- The text of step 1 shows with the slide. Put `pause()` in front of the element, and the
+  text then types at step 2.
+- The text hides at once at the last step of the element. After a step back, a text that
+  shows again is complete at once.
+- An element inside with its own steps is not part of the text. It shows at its own
+  steps, with its own effect.
+- A picture, a formula, an icon and the number of a line of code show at once. An element
+  with no text fades.
+- A screen reader reads the whole text at once. A reader who asks for reduced motion sees
+  the whole text at once. A page of the handout view and paper show the whole text.
+- The custom property `--type-char` gives the time of one character, and
+  `--type-cursor-width` and `--type-cursor-color` change the cursor. See
+  [The css option](css-option.md).
+
+![A sentence types, and then two groups of lines of code type](https://raw.githubusercontent.com/rellen/expresso/media/typewriter.gif)
 
 ## `on`
 
@@ -112,7 +162,8 @@ These rules apply:
 - Each tag takes the attributes, such as `span`, `b`, `em`, `code` and `a`. The tag keeps
   its other attributes.
 - A part with steps fades in and out. A hidden part keeps its space in the line, so the
-  text around it does not move. The `effect` option does not change a part.
+  text around it does not move. The `effect` option does not change a part, with one
+  exception: a part of a text with `effect :type` types.
 - The counter of the slide goes through the element first, then through its parts in the
   order of the text, then through the next element. Thus `+` in a part is the step after
   the step of its element.
@@ -311,6 +362,9 @@ and the state `dim`.
 | `:normal` | 300 ms, the time of the theme without the option |
 | `:slow` | 600 ms |
 | a number, such as `1200` | That number of milliseconds |
+
+An element with `effect :type` reads the option in a different way. See
+[The effect `:type`](#the-effect-type).
 
 ![Four boxes that move with different speeds](https://raw.githubusercontent.com/rellen/expresso/media/overlay-speed.gif)
 

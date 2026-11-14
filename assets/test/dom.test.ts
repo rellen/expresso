@@ -23,6 +23,9 @@ type FakeElement = {
   dataset: Record<string, string | undefined>;
   style: { display: string };
   textContent?: string;
+  // The attributes with no value that `toggleAttribute` wrote.
+  flags?: Set<string>;
+  toggleAttribute?: (name: string, on: boolean) => void;
 };
 
 type FakeDocument = {
@@ -37,11 +40,19 @@ type FakeDocument = {
 // A document with a section for each slide, and the list of the steps that
 // the renderer writes for the same slides.
 function fakeDocument(maxSteps: number[]): FakeDocument {
-  const slides: FakeElement[] = maxSteps.map((max, index) => ({
-    id: `slide-${index + 1}`,
-    dataset: { maxStep: String(max) },
-    style: { display: "none" },
-  }));
+  const slides: FakeElement[] = maxSteps.map((max, index) => {
+    const flags = new Set<string>();
+    return {
+      id: `slide-${index + 1}`,
+      dataset: { maxStep: String(max) },
+      style: { display: "none" },
+      flags,
+      toggleAttribute: (name: string, on: boolean) => {
+        if (on) flags.add(name);
+        else flags.delete(name);
+      },
+    };
+  });
   const list: FakeElement = {
     id: "expresso-deck",
     dataset: {},
@@ -113,6 +124,36 @@ test("apply writes the step of the state on the slide of the state", () => {
 
   assert.equal(nth(doc.slides, 1).dataset.step, "3");
   assert.equal(nth(doc.slides, 0).dataset.step, undefined);
+});
+
+test("apply writes data-back on the slide after a step back on it", () => {
+  const doc = fakeDocument([1, 3]);
+  const list = deck();
+  const back = () => nth(doc.slides, 1).flags?.has("data-back");
+
+  apply(at(list, 2, 2), list, program);
+  assert.equal(back(), false);
+
+  apply(at(list, 2, 3), list, program);
+  assert.equal(back(), false);
+
+  apply(at(list, 2, 2), list, program);
+  assert.equal(back(), true);
+
+  // A change with no move, such as the menu, removes the attribute.
+  apply(at(list, 2, 2), list, program);
+  assert.equal(back(), false);
+});
+
+test("apply writes no data-back on a slide that comes from a later slide", () => {
+  const doc = fakeDocument([3, 1]);
+  const list = deck();
+
+  apply(at(list, 1, 3), list, program);
+  apply(at(list, 2, 1), list, program);
+  apply(at(list, 1, 2), list, program);
+
+  assert.equal(nth(doc.slides, 0).flags?.has("data-back"), false);
 });
 
 test("apply writes the view on the body", () => {
