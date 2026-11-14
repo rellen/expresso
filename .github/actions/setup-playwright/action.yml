@@ -2,8 +2,14 @@
 # Node of `.tool-versions`, the packages of `package-lock.json`, and the
 # headless Chromium of the Playwright version of that file.
 #
-# The cache holds the browser, and its key holds the version of Playwright.
-# With a hit, `playwright install` finds the browser and downloads nothing.
+# The cache holds the browser, and its key holds the version of Playwright and
+# the architecture of the runner. With a hit, `playwright install` finds the
+# browser and downloads nothing.
+#
+# The job `binary` runs on x86_64 and on aarch64. The directory of a browser
+# has the same name on each architecture, so a key with no architecture gave
+# the job on aarch64 the browser of x86_64. `playwright install` then
+# downloaded nothing, and the browser did not start.
 #
 # The step installs no system package. The option `--with-deps` ran `apt-get`
 # for about 13 seconds in each job, and it only added fonts and an upgrade of
@@ -38,7 +44,7 @@ runs:
       uses: actions/cache@v6
       with:
         path: ${{ runner.os == 'macOS' && '~/Library/Caches/ms-playwright' || '~/.cache/ms-playwright' }}
-        key: playwright-${{ runner.os }}-${{ steps.version.outputs.playwright }}
+        key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.version.outputs.playwright }}
 
     - name: Install the headless Chromium
       shell: bash
