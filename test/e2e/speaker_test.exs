@@ -92,7 +92,8 @@ defmodule Expresso.E2E.SpeakerTest do
     audience: audience,
     speaker: speaker
   } do
-    speaker |> press("f")
+    # The presenter presses f in the speaker view, so that window has the focus.
+    speaker |> front() |> press("f")
 
     wait_for(speaker, "document.fullscreenElement === document.documentElement")
     assert js(audience, "document.fullscreenElement") == nil
