@@ -316,6 +316,10 @@ export type Transition = Readonly<{
 // A transition belongs to the border between two slides, so in the two
 // directions the kind comes from the slide with the higher number. The style
 // sheet plays a move back in reverse. The kind `none` has no transition.
+//
+// With the option `loop` of the deck, the step after the last step of the
+// talk is the first step of the talk. That move goes forward, and its kind
+// comes from the slide that it goes to.
 export function transition(
   before: State,
   after: State,
@@ -332,9 +336,11 @@ export function transition(
   if (from === to || quiet(before) || quiet(after)) {
     return null;
   }
-  const kind: Kind = deck.slides[Math.max(from, to) - 1]?.transition ?? "fade";
+  const loop = to < from && deck.steps[before.index]?.next === after.index;
+  const border = loop ? to : Math.max(from, to);
+  const kind: Kind = deck.slides[border - 1]?.transition ?? "fade";
   if (kind === "none") {
     return null;
   }
-  return { kind, direction: to > from ? "forward" : "back" };
+  return { kind, direction: to > from || loop ? "forward" : "back" };
 }

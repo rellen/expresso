@@ -22,6 +22,9 @@ defmodule Expresso.Export do
   sheet of the theme reads them in its rules for paper. For each PNG file, the
   browser opens the present view at the step and takes a picture of the
   window. `docs/export.md` gives the design.
+
+  Each address has `?paused`, so the clock of a deck with the `advance`
+  option does not go to a different step before the picture.
   """
 
   alias Expresso.Check.Browser
@@ -153,7 +156,7 @@ defmodule Expresso.Export do
       "--no-pdf-header-footer",
       "--virtual-time-budget=#{@budget}",
       "--print-to-pdf=#{file}",
-      "file://#{page}"
+      "file://#{page}?paused"
     ]
 
     with {:ok, _output} <- Browser.command(browser, args, directory, timeout: @timeout),
@@ -328,7 +331,7 @@ defmodule Expresso.Export do
       "--force-prefers-reduced-motion",
       "--virtual-time-budget=#{@budget}",
       "--screenshot=#{file}",
-      "file://#{page}##{slide}.#{step}"
+      "file://#{page}?paused##{slide}.#{step}"
     ]
 
     opts = [timeout: @timeout, profile: "profile-#{slide}-#{step}"]

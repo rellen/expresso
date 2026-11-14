@@ -16,6 +16,12 @@ type Options = {
   duration?: number | null;
   // The place of each hidden slide in the deck. The first slide is 1.
   hidden?: readonly number[];
+  // The time of each step of each slide in milliseconds, in slide order. A
+  // slide without an entry, or with null, has no time.
+  advance?: readonly (number | null)[];
+  // True for a deck with the option `loop`: the step after the last step of
+  // the talk is the first step of the talk.
+  loop?: boolean;
 };
 
 // Four decimal places, as `Expresso.Steps` gives.
@@ -55,6 +61,10 @@ export function deckOf(counts: readonly number[], options: Options = {}): Deck {
       hidden: hidden(index),
     })),
   );
+  // With the option `loop`, the first step of the talk comes after the last
+  // step. `Expresso.Steps` has the same rule.
+  const start = places.findIndex((place) => !place.hidden);
+  const again = options.loop === true && start >= 0 ? start : null;
   const steps: Entry[] = [];
   // The number of slides and of steps of the talk in front of the step.
   let number = 0;
@@ -79,7 +89,8 @@ export function deckOf(counts: readonly number[], options: Options = {}): Deck {
             ? `${slide}, step ${step} of ${steps_of_slide}`
             : slide,
         previous: near(places, steps.length, -1),
-        next: near(places, steps.length, 1),
+        next: near(places, steps.length, 1) ?? again,
+        advance: options.advance?.[index] ?? null,
       });
       before += hidden(index) ? 0 : 1;
     }

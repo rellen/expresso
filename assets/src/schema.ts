@@ -30,13 +30,13 @@ export const VIEWS: readonly View[] = ["present", "handout", "speaker"];
 export const decodeView: Decoder<View> = /* @__PURE__ */ oneOf(VIEWS);
 
 // A field of the state.
-export type Field = "index" | "view" | "blank" | "white" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim" | "menu" | "cursor" | "laser" | "draw" | "highlighter" | "zoom";
-export const FIELDS: readonly Field[] = ["index", "view", "blank", "white", "digits", "help", "progress", "every", "overview", "selected", "undim", "menu", "cursor", "laser", "draw", "highlighter", "zoom"];
+export type Field = "index" | "view" | "blank" | "white" | "digits" | "help" | "progress" | "every" | "overview" | "selected" | "undim" | "menu" | "cursor" | "laser" | "draw" | "highlighter" | "zoom" | "paused";
+export const FIELDS: readonly Field[] = ["index", "view", "blank", "white", "digits", "help", "progress", "every", "overview", "selected", "undim", "menu", "cursor", "laser", "draw", "highlighter", "zoom", "paused"];
 export const decodeField: Decoder<Field> = /* @__PURE__ */ oneOf(FIELDS);
 
 // A field of the state that holds true or false.
-export type BooleanField = "blank" | "white" | "help" | "progress" | "every" | "overview" | "undim" | "menu" | "laser" | "draw" | "highlighter" | "zoom";
-export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "white", "help", "progress", "every", "overview", "undim", "menu", "laser", "draw", "highlighter", "zoom"];
+export type BooleanField = "blank" | "white" | "help" | "progress" | "every" | "overview" | "undim" | "menu" | "laser" | "draw" | "highlighter" | "zoom" | "paused";
+export const BOOLEAN_FIELDS: readonly BooleanField[] = ["blank", "white", "help", "progress", "every", "overview", "undim", "menu", "laser", "draw", "highlighter", "zoom", "paused"];
 export const decodeBooleanField: Decoder<BooleanField> = /* @__PURE__ */ oneOf(BOOLEAN_FIELDS);
 
 // A field of the state that holds a number.
@@ -68,6 +68,7 @@ export type State = Readonly<{
   draw: boolean;
   highlighter: boolean;
   zoom: boolean;
+  paused: boolean;
 }>;
 export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   index: /* @__PURE__ */ integer(0),
@@ -87,6 +88,7 @@ export const decodeState: Decoder<State> = /* @__PURE__ */ object({
   draw: boolean,
   highlighter: boolean,
   zoom: boolean,
+  paused: boolean,
 });
 
 // A built-in function of the browser.
@@ -124,6 +126,7 @@ export type Command =
   | readonly ["set", "draw", boolean]
   | readonly ["set", "highlighter", boolean]
   | readonly ["set", "zoom", boolean]
+  | readonly ["set", "paused", boolean]
   | readonly ["toggle", BooleanField]
   | readonly ["clear", Field]
   | readonly ["assign", "selected", readonly ["entry", "slide"]]
@@ -157,6 +160,7 @@ export const decodeCommand: Decoder<Command> = /* @__PURE__ */ union(
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("draw"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("highlighter"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("zoom"), boolean),
+  /* @__PURE__ */ tuple(/* @__PURE__ */ literal("set"), /* @__PURE__ */ literal("paused"), boolean),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("toggle"), decodeBooleanField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("clear"), decodeField),
   /* @__PURE__ */ tuple(/* @__PURE__ */ literal("assign"), /* @__PURE__ */ literal("selected"), /* @__PURE__ */ tuple(/* @__PURE__ */ literal("entry"), /* @__PURE__ */ literal("slide"))),
@@ -199,6 +203,7 @@ export type WrittenMode = Readonly<{
     draw?: boolean;
     highlighter?: boolean;
     zoom?: boolean;
+    paused?: boolean;
   }>;
   any: Commands | null;
   other: Commands | null;
@@ -227,6 +232,7 @@ export const decodeWrittenMode: Decoder<WrittenMode> = /* @__PURE__ */ object({
     draw: boolean,
     highlighter: boolean,
     zoom: boolean,
+    paused: boolean,
   }),
   any: /* @__PURE__ */ nullable(decodeCommands),
   other: /* @__PURE__ */ nullable(decodeCommands),
@@ -340,10 +346,11 @@ export const decodeSlide: Decoder<Slide> = /* @__PURE__ */ object({
 });
 
 // One step of the deck as the renderer writes it: the slide, the step, the
-// fraction, the done part, the position, and the index of the step before it
-// and of the step after it in the talk, or null.
-export type WrittenEntry = readonly [number, number, number, number, string, number | null, number | null];
-export const decodeWrittenEntry: Decoder<WrittenEntry> = /* @__PURE__ */ tuple(/* @__PURE__ */ integer(1), /* @__PURE__ */ integer(1), /* @__PURE__ */ number(0, 1), /* @__PURE__ */ number(0, 1), /* @__PURE__ */ string(), /* @__PURE__ */ nullable(/* @__PURE__ */ integer(0)), /* @__PURE__ */ nullable(/* @__PURE__ */ integer(0)));
+// fraction, the done part, the position, the index of the step before it and of
+// the step after it in the talk, or null, and the time of the step in
+// milliseconds, or null for a step that waits for a key.
+export type WrittenEntry = readonly [number, number, number, number, string, number | null, number | null, number | null];
+export const decodeWrittenEntry: Decoder<WrittenEntry> = /* @__PURE__ */ tuple(/* @__PURE__ */ integer(1), /* @__PURE__ */ integer(1), /* @__PURE__ */ number(0, 1), /* @__PURE__ */ number(0, 1), /* @__PURE__ */ string(), /* @__PURE__ */ nullable(/* @__PURE__ */ integer(0)), /* @__PURE__ */ nullable(/* @__PURE__ */ integer(0)), /* @__PURE__ */ nullable(/* @__PURE__ */ integer(1)));
 export type Entry = Readonly<{
   slide: number;
   step: number;
@@ -352,12 +359,13 @@ export type Entry = Readonly<{
   position: string;
   previous: number | null;
   next: number | null;
+  advance: number | null;
 }>;
-export function fromWrittenEntry([slide, step, fraction, done, position, previous, next]: WrittenEntry): Entry {
-  return { slide, step, fraction, done, position, previous, next };
+export function fromWrittenEntry([slide, step, fraction, done, position, previous, next, advance]: WrittenEntry): Entry {
+  return { slide, step, fraction, done, position, previous, next, advance };
 }
-export function toWrittenEntry({ slide, step, fraction, done, position, previous, next }: Entry): WrittenEntry {
-  return [slide, step, fraction, done, position, previous, next];
+export function toWrittenEntry({ slide, step, fraction, done, position, previous, next, advance }: Entry): WrittenEntry {
+  return [slide, step, fraction, done, position, previous, next, advance];
 }
 
 // The steps and the slides of a deck, as the renderer writes them.
@@ -428,6 +436,7 @@ export type Message = Readonly<{
     draw?: boolean;
     highlighter?: boolean;
     zoom?: boolean;
+    paused?: boolean;
   }>;
   scheme: Scheme;
   time: number;
@@ -454,6 +463,7 @@ export const decodeMessage: Decoder<Message> = /* @__PURE__ */ openObject({
     draw: boolean,
     highlighter: boolean,
     zoom: boolean,
+    paused: boolean,
   }),
   scheme: decodeScheme,
   time: /* @__PURE__ */ number(),

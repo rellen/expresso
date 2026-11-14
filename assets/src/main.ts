@@ -75,6 +75,12 @@
 // same. `Escape` and a change of the step show the full slide. `zoom.ts`
 // gives the rules.
 //
+// The option `advance` of a slide or of the deck gives each step a time. The
+// present view goes to the next step when the time ends, and the speaker
+// view shows the time left. The key `a` stops and starts the clock, and
+// `?paused` in the address stops it at the load. `advance.ts` gives the
+// rules.
+//
 // `?check` in the address of the present view runs the layout check after the
 // load of the document and of its fonts. The check shows each step, finds the
 // elements that go past an edge of the window and the lines of code that
@@ -107,6 +113,14 @@ import { accessibility, engine, write } from "./check.ts";
 import { measure } from "./background.ts";
 import { clock, left, pace, talkLength } from "./speaker.ts";
 import {
+  due,
+  left as stepTime,
+  runs,
+  start as startClock,
+  text as stepText,
+  update as updateClock,
+} from "./advance.ts";
+import {
   accepts,
   current,
   isMessage,
@@ -130,12 +144,14 @@ import {
   isSlideBox,
   laser,
   link,
+  mediaPlays,
   program as readProgram,
   scheme,
   showDrawing,
   showScheme,
   showZoom,
   slideBox,
+  stepLeft,
   text,
   timeLeft,
 } from "./dom.ts";
@@ -179,11 +195,12 @@ const program = readProgram();
 const parameters = new URLSearchParams(location.search);
 const isSpeaker = parameters.has("speaker");
 // The program holds the first state, with the `progress` of the deck. The
-// address gives the view and `every`.
+// address gives the view, `every` and `paused`.
 let state: State = {
   ...program.state,
   view: isSpeaker ? "speaker" : "present",
   every: parameters.has("all"),
+  paused: parameters.has("paused"),
 };
 
 // The other window. The speaker view gets it from `window.opener`, and the
@@ -210,6 +227,9 @@ let stroke: Line | null = null;
 // so the value is here.
 let zoomed: Area | null = null;
 
+// The clock of the step that shows. `advance.ts` gives the rules.
+let stepClock = startClock(state.index, runs(state), Date.now());
+
 // The length of the talk, from the list of the steps or the address
 // parameter `?duration=`. The speaker view opens with the address of the
 // present view, so it gets the same parameter.
@@ -222,6 +242,28 @@ function tick(): void {
   if (total !== null) {
     const done = current(state, deck)?.done ?? 0;
     timeLeft(left(elapsed, total), pace(elapsed, total, done));
+  }
+  const remaining = stepTime(stepClock, current(state, deck), Date.now());
+  stepLeft(stepText(remaining, runs(state)));
+}
+
+// Go to the next step when the time of the step ended. The present view
+// calls this function four times each second, so a clock that the computer
+// stopped for some time, such as in a window that does not show, also
+// moves. The move is the move of a fragment of the address, so it gives each
+// field of the option `reset` its first value, as each change of the step
+// does. A step does not end while a video or a sound of its slide plays, so
+// a clip that is longer than the time of its step plays to its end.
+function advance(): void {
+  const entry = current(state, deck);
+  const next = entry?.next == null ? undefined : deck.steps[entry.next];
+  if (
+    entry !== undefined &&
+    next !== undefined &&
+    due(stepClock, entry, Date.now()) &&
+    !mediaPlays(entry.slide)
+  ) {
+    show(fromHash(program, state, `#${next.slide}.${next.step}`, deck));
   }
 }
 
@@ -270,6 +312,7 @@ function show(changed: State, local = true): void {
   const change = transition(state, changed, deck);
   const pairs = change === null ? [] : morphs(state, changed);
   state = changed;
+  stepClock = updateClock(stepClock, state.index, runs(state), Date.now());
   // The browser runs the update of a transition later. The update then reads
   // the state of that time, so a fast second key does not show an old state.
   animate(
@@ -406,6 +449,16 @@ if (isSpeaker) {
   document.title = `Speaker view: ${document.title}`;
   tick();
   setInterval(tick, 250);
+}
+
+// The present view moves the steps of a deck with a time. The layout check
+// shows each step itself, so it runs with no clock.
+if (
+  !isSpeaker &&
+  !parameters.has("check") &&
+  deck.steps.some((step) => step.advance !== null)
+) {
+  setInterval(advance, 250);
 }
 
 // The first application of the state gives the progress bar its width. The

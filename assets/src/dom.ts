@@ -576,6 +576,30 @@ function help(name: string | undefined): void {
   dialog.showModal();
 }
 
+// Tell if a video or a sound of a slide of the present view plays now. A
+// medium with the `loop` option does not end, so it does not count. The
+// clock of the steps does not end a step while this function is true, so a
+// clip plays to its end. `advance.ts` gives the rules of the clock.
+export function mediaPlays(slide: number): boolean {
+  const media = document
+    .getElementById(`slide-${slide}`)
+    ?.querySelectorAll?.("video, audio");
+  return Array.from(media ?? []).some((each) => {
+    const medium = each as HTMLMediaElement;
+    return !medium.paused && !medium.ended && !medium.loop;
+  });
+}
+
+// Write the time left of the step into the element `speaker-advance`. The
+// text is empty for a step that waits for a key, and the element then does
+// not show. `advance.ts` gives the text.
+export function stepLeft(text: string): void {
+  const element = document.getElementById("speaker-advance");
+  if (element !== null && element.textContent !== text) {
+    element.textContent = text;
+  }
+}
+
 // Write the time left and the pace into the element `speaker-left`. The style
 // sheet gives the pace its color. A talk with no length gets no text, and the
 // style sheet then hides the element.

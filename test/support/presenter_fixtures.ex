@@ -18,7 +18,8 @@ defmodule Expresso.Test.PresenterFixtures do
       uses. The key of a deck is the number of steps of each slide, such as
       `"1,3,2"`, and the kinds of its transitions after a space when it has them.
       A deck with a hidden slide has the place of each hidden slide after the
-      word `hidden`, such as `"1,3,2 hidden 2"`.
+      word `hidden`, such as `"1,3,2 hidden 2"`. A deck with the option `loop`
+      has the word `loop` at the end.
     * `"cases"` - random events on random decks, and the result of the Elixir
       interpreter after each event.
 
@@ -40,15 +41,17 @@ defmodule Expresso.Test.PresenterFixtures do
 
   # The decks of the tests of `main.ts`.
   @decks [
-    {[1, 2], [], []},
-    {[1, 1], [], []},
-    {[2, 1], [], []},
-    {[1, 1, 1], [], []},
-    {[1, 1, 1, 1], [], []},
-    {[1, 3, 2, 1, 1], [], []},
-    {[1, 2, 1, 1], [:fade, :slide, :none, :zoom], []},
-    {[1, 2, 1, 2], [], [2]},
-    {[2, 1, 1], [], [1]}
+    {[1, 2], [], [], false},
+    {[1, 1], [], [], false},
+    {[2, 1], [], [], false},
+    {[1, 1, 1], [], [], false},
+    {[1, 1, 1, 1], [], [], false},
+    {[1, 3, 2, 1, 1], [], [], false},
+    {[1, 2, 1, 1], [:fade, :slide, :none, :zoom], [], false},
+    {[1, 2, 1, 2], [], [2], false},
+    {[2, 1, 1], [], [1], false},
+    {[2, 1], [], [], true},
+    {[1, 2, 1], [:slide, :fade, :zoom], [], true}
   ]
 
   @keys ~w(j k ArrowRight ArrowLeft ArrowUp ArrowDown PageDown PageUp Home End Enter b w d m p s r f g a o ? / Escape x Tab) ++
@@ -100,7 +103,7 @@ defmodule Expresso.Test.PresenterFixtures do
   end
 
   # A deck of 0 to 8 slides with 1 to 5 steps each, and a kind for each slide.
-  # One slide in four is hidden.
+  # One slide in four is hidden, and one deck in four has the option `loop`.
   defp random_deck(r) do
     {size, r} = uniform(9, r)
     {counts, r} = Enum.map_reduce(1..(size - 1)//1, r, fn _slide, r -> uniform(5, r) end)
@@ -114,23 +117,25 @@ defmodule Expresso.Test.PresenterFixtures do
         {if(n == 1, do: [place], else: []), r}
       end)
 
-    {{counts, kinds, hidden}, r}
+    {loop, r} = uniform(4, r)
+    {{counts, kinds, hidden, loop == 1}, r}
   end
 
   @doc "Return the key of a deck in the fixture file"
-  @spec key({[pos_integer()], [atom()], [pos_integer()]}) :: String.t()
-  def key({counts, kinds, hidden}) do
+  @spec key({[pos_integer()], [atom()], [pos_integer()], boolean()}) :: String.t()
+  def key({counts, kinds, hidden, loop}) do
     [
       Enum.join(counts, ","),
       if(kinds != [], do: Enum.join(kinds, ",")),
-      if(hidden != [], do: "hidden " <> Enum.join(hidden, ","))
+      if(hidden != [], do: "hidden " <> Enum.join(hidden, ",")),
+      if(loop, do: "loop")
     ]
     |> Enum.reject(&is_nil/1)
     |> Enum.join(" ")
   end
 
-  defp deck_json({counts, kinds, hidden} = shape) do
-    deck = deck(counts, kinds, hidden)
+  defp deck_json(shape) do
+    deck = deck(shape)
     program = Program.compile(Definition.presenter(), deck)
 
     JSON.encode!(key(shape)) <>
@@ -141,18 +146,18 @@ defmodule Expresso.Test.PresenterFixtures do
       })
   end
 
-  defp deck(counts, kinds, hidden) do
+  defp deck({counts, kinds, hidden, loop}) do
     counts
     |> Enum.with_index(1)
     |> Enum.map(fn {steps, number} ->
       transition = for kind <- [Enum.at(kinds, number - 1)], kind, do: {:transition, kind}
       Builder.slide("slide #{number}", [steps: steps, hidden: number in hidden] ++ transition)
     end)
-    |> Builder.deck(name: "deck")
+    |> Builder.deck(name: "deck", loop: loop)
   end
 
   # The random part of a case: the options of the start, and the events.
-  defp plan({counts, _kinds, _hidden} = shape, r) do
+  defp plan({counts, _kinds, _hidden, _loop} = shape, r) do
     {view, r} = pick([:present, :speaker], r)
     {progress, r} = pick([true, false], r)
     {every, r} = pick([true, false], r)
@@ -160,8 +165,8 @@ defmodule Expresso.Test.PresenterFixtures do
     {{shape, %{view: view, progress: progress, every: every}, events}, r}
   end
 
-  defp case_of({{counts, kinds, hidden} = shape, options, events}) do
-    program = Program.compile(Definition.presenter(), deck(counts, kinds, hidden))
+  defp case_of({shape, options, events}) do
+    program = Program.compile(Definition.presenter(), deck(shape))
     start = Interpreter.initial(program, options)
 
     {results, _state} =

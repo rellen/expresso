@@ -537,8 +537,9 @@ html               lang "en", and data-variants for a theme with two variants
                      with a div of the class "note" for each note
         section      the page of the sources, class "sources", when a slide has
                      footnotes
-        div          the four elements of the speaker view: speaker-notes,
-                     speaker-position, speaker-timer and speaker-left
+        div          the five elements of the speaker view: speaker-notes,
+                     speaker-position, speaker-timer, speaker-left and
+                     speaker-advance
       div            the progress bar, id "progress", role "progressbar"
       div            the dot of the laser pointer, id "laser", aria-hidden
       svg            the drawing of the presenter, id "drawing", aria-hidden,
@@ -2405,6 +2406,9 @@ The TypeScript part is under `assets/src/`. It has these modules:
 - `zoom.ts` holds the rules of the zoom: the area of a click as a part of the slide, the
   scale and the move of the slide for an area, and the message `zoom` between the
   windows. It does not touch the document.
+- `advance.ts` holds the rules of the clock of the steps: the time that a step used, the
+  time left of a step with a time of the `advance` option, and the text of the speaker
+  view. It does not touch the document.
 - `main.ts` connects the modules. It sends each event to the interpreter, and it writes
   the fragment of the address.
 - `layout.ts` makes the layout check of `?check`. It shows each step with `dom.ts`, it
@@ -2432,9 +2436,10 @@ the script can read it at load. The list holds the values that the script needs 
 deck:
 
 - `steps` has one entry for each step of each slide, in sequence. An entry gives the
-  slide, the step, `fraction`, `done`, the position text of the speaker view, and
-  `previous` and `next`. The position text ends with the label of the step, when the step
-  has one.
+  slide, the step, `fraction`, `done`, the position text of the speaker view, `previous`
+  and `next`, and `advance`. The position text ends with the label of the step, when the
+  step has one. `advance` is the time of the step in milliseconds, from the `advance`
+  option of the slide or of the deck, or `null` for a step that waits for a key.
 - `slides` has one object for each slide. It gives the index of step 1 of the slide in
   `steps`, the number of steps, the kind of the transition, and the number of the slide in
   the talk, or `null` for a hidden slide.
@@ -2445,7 +2450,9 @@ in `next` of the current entry, and a move back goes to the index in `previous`.
 with no hidden slide, they are the index plus 1 and the index minus 1. A hidden slide is
 not a part of the talk, so `previous` and `next` go around it, and `fraction`, `done` and
 the numbers of the position text count only the talk. Each other value comes from the
-entry at the index, so the script calculates nothing from the deck. The script trusts the list, as it trusts the
+entry at the index, so the script calculates nothing from the deck. With the deck option
+`loop true`, the `next` of the last step of the talk is the first step of the talk, so the
+interpreters need no rule for the loop. The script trusts the list, as it trusts the
 program of the next section. `validateDeck` in `assets/test/validate.ts` decodes each
 list of the fixture file.
 `docs/research/elixir-presenter-report.md` gives the reason for the list.
@@ -2538,7 +2545,7 @@ the script does not change. `Expresso.Presenter.Verifier` refuses a projection w
 unknown field or a wrong name.
 
 The renderer writes each part that does not change during the talk. Examples are
-`data-thumbnail`, the sizes of the overview and the four elements of the speaker view.
+`data-thumbnail`, the sizes of the overview and the five elements of the speaker view.
 The script still writes the parts that need the document: the slide of the current step,
 the list of keys of the mode, and the texts of the speaker view.
 
@@ -2632,6 +2639,15 @@ The tables do not give these rules:
   change of the step shows the full slide. `docs/zoom.md` gives the design.
 - `Escape` sets `zoom` to `false`, and it calls the built-in function `zoom_out`, which
   shows the full slide in the two windows.
+- `a` toggles the field `paused`, which stops the clock of the steps. The field is in the
+  option `sync`, and `?paused` in the address gives it the value `true` at the load.
+  `main.ts` keeps the clock of the step that shows, and `update` in `advance.ts` gives
+  the clock after each change of the state. The clock runs while `paused` and `blank` are
+  false in the present view or in the speaker view. The present view calls `advance` four
+  times each second. When the time of the step ended, and no video or sound of the slide
+  plays, the function goes to the `next` of the entry with `fromHash`, as a fragment of
+  the address does. The speaker view writes the time left into the element
+  `speaker-advance`. `docs/timed-advance.md` gives the design.
 
 ### The list of keys
 
@@ -2765,7 +2781,9 @@ move to a different slide in the present view has one. A change of the step, a b
 screen, the overview, the menu and the list of keys have none. A transition belongs to the
 border between two slides, so the slide with the higher number gives the kind in the two
 directions. A move forward uses the kind of the next slide. A move back uses the kind of
-the slide that it leaves, and the direction `back` plays it in reverse.
+the slide that it leaves, and the direction `back` plays it in reverse. With the deck
+option `loop true`, the `next` of the last step is the first step. A move to that `next`
+goes to a slide with a lower number, and it goes forward with the kind of that slide.
 
 `animate` in `dom.ts` writes `data-transition` and `data-direction` on the `html` element,
 and it applies the new state inside `document.startViewTransition`. The browser runs the
@@ -3020,6 +3038,10 @@ fourth element of the speaker view, `speaker-left`, and the speaker view writes 
 left into it. `pace` gives its value of `data-pace`: `on`, `behind` or `over`. For a talk
 with no length, the element has no text, and the style sheet hides it.
 
+A fifth element, `speaker-advance`, holds the time left of a step with a time of the
+`advance` option. `text` in `advance.ts` gives its text, and a step that waits for a key
+gives no text.
+
 The pace compares the time used with the `done` of the current entry: the part of the
 steps before the current step. The speaker is `behind` when the time used is more than one minute longer than
 that part of the time. `done` is not `fraction`, because `fraction` is 1 at the last step,
@@ -3106,7 +3128,7 @@ view, so it keeps `?all`.
 Each page that shows, except the first, starts a new sheet with `break-before`. With
 `data-every="true"`, each page except the first does. A rule of `break-after` on the last
 page cannot do this, because the last page of the document can be a page with
-`data-omit`. The print block also hides the four elements of the speaker view, so a print
+`data-omit`. The print block also hides the five elements of the speaker view, so a print
 from that window gives the same pages.
 
 A page of the handout view takes the full height of the screen, or of the paper. The

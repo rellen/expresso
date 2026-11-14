@@ -123,9 +123,17 @@ defmodule Expresso.Presenter.InterpreterTest do
       every = key(at(2, 2, :handout), "a")
       assert every == %{at(2, 2, :handout) | every: true}
       assert key(every, "a") == at(2, 2, :handout)
+    end
 
+    test "a in the present view and in the speaker view stops and starts the clock of the steps" do
       for view <- [:present, :speaker] do
-        assert key(at(2, 2, view), "a") == at(2, 2, view), inspect(view)
+        stopped = key(at(2, 2, view), "a")
+        assert stopped == %{at(2, 2, view) | paused: true}, inspect(view)
+        assert key(stopped, "a") == at(2, 2, view), inspect(view)
+
+        # The clock stays stopped at a change of the step.
+        moved = key(stopped, "j")
+        assert moved.paused and moved.index == stopped.index + 1, inspect(view)
       end
     end
   end

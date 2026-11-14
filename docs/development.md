@@ -47,6 +47,8 @@ GitHub.
   result.
 - `docs/drawing.md` — the design for the drawing of the presenter, and its result.
 - `docs/zoom.md` — the design for the zoom of the presenter, and its result.
+- `docs/timed-advance.md` — the design for a deck that goes to the next step after a time,
+  and its result.
 - `docs/tree.md` — the design for the element `tree`, and its result.
 - `docs/graph-diagrams.md` — the design for a diagram from Graphviz or D2, and its result.
 - `docs/scatter-plots.md` — the design for a scatter plot, and its result.

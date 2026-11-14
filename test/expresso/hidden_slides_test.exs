@@ -309,7 +309,7 @@ defmodule Expresso.HiddenSlidesTest do
 
       assert Enum.map(steps["slides"], & &1["number"]) == [1, nil, 2, 3]
 
-      assert Enum.map(steps["steps"], &Enum.take(&1, -2)) ==
+      assert Enum.map(steps["steps"], &Enum.slice(&1, 5, 2)) ==
                [[nil, 3], [0, 2], [1, 3], [0, 4], [3, 5], [4, nil]]
     end
   end

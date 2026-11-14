@@ -22,6 +22,8 @@ end
 | `transition :slide` | How each slide comes in: `:fade`, `:slide`, `:zoom`, `:none` or a transition of the `css` option. The default is `:fade`. |
 | `morph :named` | Which elements move from one slide to the next: `:auto`, `:named` or `:off`. The default is `:auto`. See [the morph option](morph-option.md). |
 | `duration 20` | The length of the talk in minutes. The speaker view then shows the time left. |
+| `advance 20_000` | The time of each step in milliseconds. The present view then goes to the next step after that time. A slide can replace it. See [the advance option](advance-option.md). |
+| `loop true` | Go from the last step of the talk to the first slide. See [the loop option](advance-option.md#the-values-of-loop). |
 | `progress false` | Hide the progress bar at the start. |
 | `slide_numbers true` | Show the number of each slide, such as `3 / 12`. |
 | `handout :last` | The pages of the handout view: `:last` or `:all`. |

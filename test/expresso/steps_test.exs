@@ -115,13 +115,146 @@ defmodule Expresso.StepsTest do
     end
   end
 
+  describe "the advance option" do
+    test "the time of the deck is the time of each step" do
+      assert Enum.map(Steps.entries(deck(@three, %{advance: 15_000})), & &1.advance) ==
+               List.duplicate(15_000, 6)
+    end
+
+    test "a deck with no time gives no time to a step" do
+      assert Enum.map(Steps.entries(deck(@three)), & &1.advance) == List.duplicate(nil, 6)
+    end
+
+    test "the time of a slide replaces the time of the deck, and false gives no time" do
+      slides = [
+        slide("one", %{max_step: 1, advance: false}),
+        slide("two", %{max_step: 2, advance: 5_000}),
+        slide("three", %{max_step: 1})
+      ]
+
+      deck = "deck" |> Deck.new(%{advance: 20_000}, slides) |> Deck.number_slides()
+
+      assert Enum.map(Steps.entries(deck), & &1.advance) == [nil, 5_000, 5_000, 20_000]
+    end
+
+    test "a value that is not a positive integer gives no time" do
+      for advance <- [0, -5, "15", 1.5, true] do
+        assert Enum.map(Steps.entries(deck([1], %{advance: advance})), & &1.advance) == [nil]
+      end
+    end
+
+    test "the DSL takes the option of the deck and of a slide" do
+      defmodule TimedDeck do
+        use Expresso
+
+        name "timed"
+        advance 20_000
+        loop true
+
+        slide "title" do
+          advance false
+        end
+
+        slide "short" do
+          advance 5_000
+        end
+
+        slide "other" do
+        end
+      end
+
+      deck = Expresso.parse(TimedDeck)
+
+      assert Enum.map(Steps.entries(deck), &{&1.advance, &1.next}) ==
+               [{nil, 1}, {5_000, 2}, {20_000, 0}]
+    end
+
+    test "the DSL refuses a time that is not a positive integer" do
+      message = ~r/advance/
+
+      assert_raise Spark.Error.DslError, message, fn ->
+        defmodule NoTime do
+          use Expresso
+
+          name "no time"
+          advance 0
+        end
+      end
+
+      assert_raise Spark.Error.DslError, message, fn ->
+        defmodule TrueTime do
+          use Expresso
+
+          name "true time"
+
+          slide "one" do
+            advance true
+          end
+        end
+      end
+    end
+
+    test "the builder takes the two options" do
+      deck =
+        Expresso.Builder.deck(
+          [
+            Expresso.Builder.slide("one", advance: 3_000),
+            Expresso.Builder.slide("two", [])
+          ],
+          name: "built",
+          advance: 8_000,
+          loop: true
+        )
+
+      assert Enum.map(Steps.entries(deck), &{&1.advance, &1.next}) == [{3_000, 1}, {8_000, 0}]
+    end
+  end
+
+  describe "the loop option" do
+    test "the step after the last step is the first step of the talk" do
+      entries = Steps.entries(deck(@three, %{loop: true}))
+
+      assert Enum.map(entries, & &1.next) == [1, 2, 3, 4, 5, 0]
+      # The option does not change the step before the first step.
+      assert Enum.map(entries, & &1.previous) == [nil, 0, 1, 2, 3, 4]
+    end
+
+    test "a deck with no loop has no step after the last step" do
+      for metadata <- [%{}, %{loop: false}, %{loop: nil}] do
+        assert List.last(Steps.entries(deck(@three, metadata))).next == nil
+      end
+    end
+
+    test "the first step of the talk is not a step of a hidden slide" do
+      slides = [
+        slide("backup", %{max_step: 2, hidden: true}),
+        slide("one", %{max_step: 1}),
+        slide("two", %{max_step: 1}),
+        slide("more", %{max_step: 1, hidden: true})
+      ]
+
+      deck = "deck" |> Deck.new(%{loop: true}, slides) |> Deck.number_slides()
+
+      # The talk is the steps 2 and 3. The last step of each hidden slide
+      # goes back into the talk.
+      assert Enum.map(Steps.entries(deck), & &1.next) == [1, 2, 3, 2, 2]
+    end
+
+    test "a deck with only hidden slides has no first step of the talk" do
+      slides = [slide("backup", %{max_step: 2, hidden: true})]
+      deck = "deck" |> Deck.new(%{loop: true}, slides) |> Deck.number_slides()
+
+      assert Enum.map(Steps.entries(deck), & &1.next) == [1, nil]
+    end
+  end
+
   describe "json/1" do
     test "gives the steps as arrays, the slides as objects and the duration" do
       assert JSON.decode!(Steps.json(deck([1, 2], %{duration: 5}))) == %{
                "steps" => [
-                 [1, 1, 0.0, 0.0, "Slide 1 of 2", nil, 1],
-                 [2, 1, 0.5, 0.3333, "Slide 2 of 2, step 1 of 2", 0, 2],
-                 [2, 2, 1.0, 0.6667, "Slide 2 of 2, step 2 of 2", 1, nil]
+                 [1, 1, 0.0, 0.0, "Slide 1 of 2", nil, 1, nil],
+                 [2, 1, 0.5, 0.3333, "Slide 2 of 2, step 1 of 2", 0, 2, nil],
+                 [2, 2, 1.0, 0.6667, "Slide 2 of 2, step 2 of 2", 1, nil, nil]
                ],
                "slides" => [
                  %{"first" => 0, "number" => 1, "steps" => 1, "transition" => "fade"},
@@ -134,7 +267,7 @@ defmodule Expresso.StepsTest do
     test "gives the keys of each object in alphabetical order" do
       assert Steps.json(deck([1])) ==
                ~s({"duration_ms":null,"slides":[{"first":0,"number":1,"steps":1,) <>
-                 ~s("transition":"fade"}],"steps":[[1,1,0.0,0.0,"Slide 1 of 1",null,null]]})
+                 ~s("transition":"fade"}],"steps":[[1,1,0.0,0.0,"Slide 1 of 1",null,null,null]]})
     end
 
     test "gives null for a deck with no duration, and empty lists for a deck with no slide" do

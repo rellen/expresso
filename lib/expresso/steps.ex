@@ -10,8 +10,8 @@ defmodule Expresso.Steps do
   The JSON object has three keys:
 
     * `"steps"` - one entry for each step of each slide, in sequence. An entry
-      is `[slide, step, fraction, done, position, previous, next]`. `entries/1`
-      tells what each value is.
+      is `[slide, step, fraction, done, position, previous, next, advance]`.
+      `entries/1` tells what each value is.
     * `"slides"` - one object for each slide, in sequence. `slides/1` tells
       what each key is.
     * `"duration_ms"` - the length of the talk in milliseconds, or `null`.
@@ -22,6 +22,10 @@ defmodule Expresso.Steps do
   `previous` and `next` of an entry go around each hidden slide, and
   `fraction`, `done` and the numbers of the slides count only the slides of
   the talk. `docs/hidden-slides.md` gives the design.
+
+  The `advance` option of a slide or of the deck gives each step a time, and
+  the `loop` option of the deck makes the first step of the talk the step
+  after the last one. `docs/timed-advance.md` gives the design.
 
   `docs/research/elixir-presenter-report.md` gives the reason for the list.
   """
@@ -38,7 +42,8 @@ defmodule Expresso.Steps do
           done: float(),
           position: String.t(),
           previous: non_neg_integer() | nil,
-          next: non_neg_integer() | nil
+          next: non_neg_integer() | nil,
+          advance: pos_integer() | nil
         }
 
   @typedoc "One slide of a deck"
@@ -72,7 +77,11 @@ defmodule Expresso.Steps do
       `"Slide 4 of 13, step 2 of 3: The restart"`.
     * `previous` and `next` - the index of the step that the key of the
       previous step and the key of the next step go to, or `nil` at an end of
-      the talk.
+      the talk. With the option `loop true` of the deck, the `next` of the
+      last step is the first step of the talk.
+    * `advance` - the time of the step in milliseconds, or `nil` for a step
+      that waits for a key. The option `advance` of the slide gives it, then
+      the option of the deck. The value `false` of a slide gives `nil`.
 
   The numbers of `position` count only the slides of the talk. A step of a
   hidden slide gets `"Hidden slide after slide 4 of 13"`, and
@@ -88,31 +97,12 @@ defmodule Expresso.Steps do
   while the screen is black or white.
   """
   @spec entries(Deck.t()) :: [entry()]
-  def entries(%Deck{slides: slides} = deck) do
+  def entries(%Deck{} = deck) do
     count = Deck.talk_length(deck)
-
-    # Each step with the number of its slide in the talk. A hidden slide holds
-    # the number of the slide of the talk before it, or 0.
-    {steps, _shown} =
-      slides
-      |> Enum.with_index(1)
-      |> Enum.flat_map_reduce(0, fn {slide, place}, shown ->
-        hidden = Slide.hidden?(slide)
-        number = if hidden, do: shown, else: shown + 1
-        max = Render.max_step(slide)
-        labels = (slide.metadata || %{})[:labels] || %{}
-
-        steps =
-          for step <- 1..max//1 do
-            %{slide: place, step: step, steps: max, label: labels[step], hidden: hidden}
-            |> Map.put(:number, number)
-          end
-
-        {steps, number}
-      end)
-
+    steps = steps(deck)
     total = Enum.count(steps, &(not &1.hidden))
     places = steps |> Enum.map(&{&1.slide, &1.hidden}) |> List.to_tuple()
+    first = first(deck, steps)
 
     {entries, _before} =
       steps
@@ -130,7 +120,8 @@ defmodule Expresso.Steps do
           done: part(place, total),
           position: position(step, count) <> step_part(step) <> label(step.label),
           previous: move(places, index, -1),
-          next: move(places, index, 1)
+          next: move(places, index, 1) || first,
+          advance: step.advance
         }
 
         {entry, if(step.hidden, do: before, else: before + 1)}
@@ -138,6 +129,39 @@ defmodule Expresso.Steps do
 
     entries
   end
+
+  # Each step of a deck with the number of its slide in the talk. A hidden
+  # slide holds the number of the slide of the talk before it, or 0.
+  defp steps(%Deck{slides: slides} = deck) do
+    {steps, _shown} =
+      slides
+      |> Enum.with_index(1)
+      |> Enum.flat_map_reduce(0, fn {slide, place}, shown ->
+        hidden = Slide.hidden?(slide)
+        number = if hidden, do: shown, else: shown + 1
+        max = Render.max_step(slide)
+        labels = (slide.metadata || %{})[:labels] || %{}
+        advance = advance(deck, slide)
+
+        steps =
+          for step <- 1..max//1 do
+            %{slide: place, step: step, steps: max, label: labels[step], hidden: hidden}
+            |> Map.merge(%{number: number, advance: advance})
+          end
+
+        {steps, number}
+      end)
+
+    steps
+  end
+
+  # With the option `loop`, the step after the last step is the first step of
+  # the talk. The function returns its index, or nil for a deck with no loop
+  # and for a deck with no slide of the talk.
+  defp first(%Deck{metadata: %{loop: true}}, steps),
+    do: Enum.find_index(steps, &(not &1.hidden))
+
+  defp first(_deck, _steps), do: nil
 
   # The index of the nearest step in a direction that is a step of the same
   # slide or of a slide of the talk, or nil.
@@ -242,6 +266,19 @@ defmodule Expresso.Steps do
 
   defp step_part(%{steps: 1}), do: ""
   defp step_part(%{step: step, steps: steps}), do: ", step #{step} of #{steps}"
+
+  # The time of each step of a slide: the option of the slide, then the
+  # option of the deck. The value `false` of a slide gives no time.
+  defp advance(deck, slide) do
+    case Map.fetch(slide.metadata || %{}, :advance) do
+      {:ok, false} -> nil
+      {:ok, time} when is_integer(time) and time > 0 -> time
+      _no_option -> positive(deck.metadata[:advance])
+    end
+  end
+
+  defp positive(time) when is_integer(time) and time > 0, do: time
+  defp positive(_other), do: nil
 
   defp transition(deck, slide) do
     [(slide.metadata || %{})[:transition], (deck.metadata || %{})[:transition]]

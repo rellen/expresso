@@ -186,11 +186,16 @@ defmodule Expresso.Presenter.DocumentTest do
       assert style =~ "--overview-zoom: 0.32;"
     end
 
-    test "the handout view holds the four empty elements of the speaker view" do
+    test "the handout view holds the five empty elements of the speaker view" do
       elements = LazyHTML.query(with_steps(), ".handout > div")
 
-      assert Enum.map(elements, &LazyHTML.attribute(&1, "id")) ==
-               [["speaker-notes"], ["speaker-position"], ["speaker-timer"], ["speaker-left"]]
+      assert Enum.map(elements, &LazyHTML.attribute(&1, "id")) == [
+               ["speaker-notes"],
+               ["speaker-position"],
+               ["speaker-timer"],
+               ["speaker-left"],
+               ["speaker-advance"]
+             ]
 
       assert Enum.all?(elements, &(LazyHTML.text(&1) == ""))
     end

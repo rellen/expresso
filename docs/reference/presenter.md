@@ -31,6 +31,7 @@ The present view knows these keys:
 | `End` | Step 1 of the last slide |
 | 0 to 9 | Type a slide number |
 | `Enter` | Step 1 of the slide that you typed |
+| `a` | Stop or start the clock of the steps, in the two windows. A step with a time of the advance option goes to the next step only while the clock runs. |
 | `o` | Overview of the slides. Only this window shows it. |
 | `m` | Menu of the slides and their steps. Only this window shows it. |
 | `b` | Black screen. The next key shows the slide again. |
@@ -141,6 +142,7 @@ or click closes it. The speaker view knows these keys:
 | `End` | Step 1 of the last slide |
 | 0 to 9 | Type a slide number |
 | `Enter` | Step 1 of the slide that you typed |
+| `a` | Stop or start the clock of the steps, in the two windows. A step with a time of the advance option goes to the next step only while the clock runs. |
 | `o` | Overview of the slides. Only this window shows it. |
 | `m` | Menu of the slides and their steps. Only this window shows it. |
 | `b` | Black screen. The next key shows the slide again. |
@@ -230,10 +232,31 @@ parameters:
 | `?scheme=` | `deck.html?scheme=dark` | The `dark` or the `light` variant of a theme. See [Give a deck a light and a dark variant](../how-to/give-a-deck-two-variants.md). |
 | `?duration=` | `deck.html?duration=15` | The length of the talk in minutes. It replaces the `duration` option of the deck. |
 | `?all` | `deck.html?all` | The handout view with each step, as after `a`. |
+| `?paused` | `deck.html?paused` | The clock of the steps is stopped at the load, as after `a`. See [the advance option](advance-option.md). |
 | `?check` | `deck.html?check` | The layout check. See [the layout check](layout-check.md). |
 
 A step that the slide does not have shows the nearest step of that slide, so an old link
 still opens the right slide after the slide loses a step.
+
+## The clock of the steps
+
+A deck with [the advance option](advance-option.md) gives each step a time, and the
+present view goes to the next step when that time ends. For the design, see
+[The timed advance](../timed-advance.md).
+
+| Key | Effect |
+| --- | --- |
+| `a` | Stop or start the clock, in the two windows. |
+
+These rules apply:
+
+- A new step starts its time from zero, after a move of the clock and after a key.
+- A clock that starts again continues the time of its step.
+- A black screen stops the clock until the slide shows again.
+- The speaker view shows the time left of the step, such as `Next step in 0:12`.
+- With the deck option `loop true`, the clock and the keys of the next step go from the
+  last slide to the first slide.
+- In a deck with no `advance` option, the key `a` has no effect that you can see.
 
 ## The laser pointer
 
@@ -374,6 +397,7 @@ A theme can set these custom properties:
 | `--goto-color` | The color of a link of the `goto` option. |
 | `--digits-color`, `--digits-background` | The colors of the slide number that the presenter types. |
 | `--hidden-slide-opacity` | The opacity of the content of a hidden slide in the overview and in the menu. The default is 0.45. |
+| `--clock-stopped-color` | The color of the time left of a step in the speaker view while the key `a` has the clock stopped. The default is the role `warning`. |
 | `--laser-color`, `--laser-size` | The color and the size of the dot of the laser pointer. The defaults are the role `danger` and `0.4rem`. |
 | `--draw-pen-color`, `--draw-pen-width` | The color and the width of a line of the pen. The defaults are the role `danger` and `0.12rem`. |
 | `--draw-highlighter-color`, `--draw-highlighter-width`, `--draw-highlighter-opacity` | The color, the width and the opacity of a line of the highlighter. The defaults are the role `warning`, `0.7rem` and 0.4. |

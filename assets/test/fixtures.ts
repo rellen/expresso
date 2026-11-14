@@ -27,17 +27,20 @@ export const raw: Raw = JSON.parse(
   readFileSync(new URL("./fixtures/presenter.json", import.meta.url), "utf8"),
 );
 
-// The key of a deck in the fixture file, such as `1,3,2`, `1,2 fade,zoom` or
-// `1,3,2 hidden 2` for a deck whose slide 2 is hidden.
+// The key of a deck in the fixture file, such as `1,3,2`, `1,2 fade,zoom`,
+// `1,3,2 hidden 2` for a deck whose slide 2 is hidden, or `2,1 loop` for a
+// deck with the option `loop`.
 export function key(
   counts: readonly number[],
   kinds: readonly string[] = [],
   hidden: readonly number[] = [],
+  loop = false,
 ) {
   return [
     counts.join(","),
     ...(kinds.length === 0 ? [] : [kinds.join(",")]),
     ...(hidden.length === 0 ? [] : [`hidden ${hidden.join(",")}`]),
+    ...(loop ? ["loop"] : []),
   ].join(" ");
 }
 

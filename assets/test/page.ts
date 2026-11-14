@@ -135,6 +135,11 @@ type Options = {
   transitions?: Kind[];
   // The place of each hidden slide in the deck. The first slide is 1.
   hidden?: number[];
+  // The time of each step of each slide in milliseconds, in slide order, as
+  // the `advance` option gives it. A slide without an entry has no time.
+  advance?: (number | null)[];
+  // True for a deck with the option `loop`.
+  loop?: boolean;
   // True for a browser with the View Transitions API.
   viewTransitions?: boolean;
   // True for a document with a light and a dark variant of its theme.
@@ -292,10 +297,17 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
   );
   // The list of the steps and the program that the renderer writes for the
   // deck. They come from the fixture file.
-  const found = texts(key(maxSteps, options.transitions, options.hidden));
+  const found = texts(
+    key(maxSteps, options.transitions, options.hidden, options.loop),
+  );
   const steps = JSON.parse(found.deck);
   steps.duration_ms =
     options.duration === undefined ? null : options.duration * 60_000;
+  // An entry is an array, and its first value is the slide. Its last value
+  // is the time of the step.
+  for (const entry of steps.steps as (number | string | null)[][]) {
+    entry[7] = options.advance?.[Number(entry[0]) - 1] ?? null;
+  }
   const list = element("expresso-deck");
   list.textContent = JSON.stringify(steps);
   const links = element("expresso-links");
@@ -388,13 +400,14 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     first += max;
   });
   const pages = [...handout.children];
-  // The renderer writes the four elements of the speaker view into the
+  // The renderer writes the five elements of the speaker view into the
   // handout view.
   for (const id of [
     "speaker-notes",
     "speaker-position",
     "speaker-timer",
     "speaker-left",
+    "speaker-advance",
   ]) {
     handout.appendChild(element(id));
   }

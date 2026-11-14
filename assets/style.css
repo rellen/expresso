@@ -2919,11 +2919,12 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   .handout-page[data-omit="hidden"] {
     display: none;
   }
-  /* The speaker view puts its four elements into the handout view. */
+  /* The speaker view puts its five elements into the handout view. */
   #speaker-notes,
   #speaker-position,
   #speaker-timer,
-  #speaker-left {
+  #speaker-left,
+  #speaker-advance {
     display: none;
   }
   body[data-print-notes="false"] .notes {
@@ -3014,12 +3015,13 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     padding: 1vh 1vw;
     gap: 1vh 1vw;
     grid-template-columns: 60vw 1fr;
-    grid-template-rows: 60vh auto auto 1fr;
+    grid-template-rows: 60vh auto auto auto 1fr;
     grid-template-areas:
       "current next"
       "current position"
       "notes timer"
-      "notes left";
+      "notes left"
+      "notes advance";
     overflow: hidden;
   }
   body[data-view="speaker"] .handout-page,
@@ -3080,10 +3082,29 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   #speaker-left[data-pace="over"] {
     color: var(--pace-over-color, var(--danger));
   }
+  /*
+   * The time left of a step with a time of the `advance` option. A step
+   * that waits for a key gives no text, and the element then does not show.
+   * While the key `a` has the clock stopped, the text has the color
+   * `--warning`, and a deck can set `--clock-stopped-color`.
+   */
+  #speaker-advance {
+    grid-area: advance;
+    align-self: start;
+    font-size: 0.6rem;
+    font-variant-numeric: tabular-nums;
+  }
+  #speaker-advance:empty {
+    display: none;
+  }
+  body[data-paused="true"] #speaker-advance {
+    color: var(--clock-stopped-color, var(--warning));
+  }
   body:not([data-view="speaker"]) #speaker-notes,
   body:not([data-view="speaker"]) #speaker-position,
   body:not([data-view="speaker"]) #speaker-timer,
-  body:not([data-view="speaker"]) #speaker-left {
+  body:not([data-view="speaker"]) #speaker-left,
+  body:not([data-view="speaker"]) #speaker-advance {
     display: none;
   }
 }
@@ -3099,6 +3120,7 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   body[data-overview="true"] #speaker-position,
   body[data-overview="true"] #speaker-timer,
   body[data-overview="true"] #speaker-left,
+  body[data-overview="true"] #speaker-advance,
   body[data-overview="true"] .handout-page:not([data-thumbnail]),
   body[data-overview="true"] .handout-page .notes,
   body[data-overview="true"] .sources {

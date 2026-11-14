@@ -90,6 +90,7 @@ defmodule Expresso.Presenter.Definition do
           | :draw
           | :highlighter
           | :zoom
+          | :paused
 
   @typedoc "A command of a definition. The section \"The commands\" of the module documentation tells what each command does."
   @type command ::

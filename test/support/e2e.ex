@@ -154,6 +154,24 @@ defmodule Expresso.E2E do
   end
 
   @doc """
+  Set the clock of each page of a browser context to a fixed time
+
+  `time` is a number of milliseconds from the start of 1970. The timers of a
+  page run as before, and `Date.now()` returns the fixed time. A test moves
+  the clock with a second call. The recorder of the GIFs does the same.
+  """
+  @spec fix_clock(map(), non_neg_integer()) :: map()
+  def fix_clock(context, time) do
+    case PlaywrightEx.send(
+           %{guid: context.guid, method: :clock_set_fixed_time, params: %{time_number: time}},
+           timeout: @timeout
+         ) do
+      %{error: error} -> raise "clock_set_fixed_time failed: #{inspect(error)}"
+      _response -> context
+    end
+  end
+
+  @doc """
   Tap a point of the viewport of a page with a finger
 
   The context of the page must have `has_touch: true`.

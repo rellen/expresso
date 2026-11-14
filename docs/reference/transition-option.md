@@ -77,6 +77,9 @@ For the steps and a complete deck, see
 - A transition belongs to the border between two slides. The slide with the higher number
   gives the kind in the two directions. A jump, such as `Home`, uses the kind of the slide
   with the higher number of the two.
+- With the deck option `loop true`, the move from the last slide to the first slide goes
+  forward, and the first slide gives the kind. See
+  [the loop option](advance-option.md#the-values-of-loop).
 - The browser must have the View Transitions API. A browser without it shows the next slide at
   once.
 - A reader who asks for reduced motion gets no transition.

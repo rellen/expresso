@@ -5,7 +5,7 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
 
-  import Expresso.Test.Presenter, only: [program: 2, run: 3, where: 2]
+  import Expresso.Test.Presenter, only: [program: 2, program: 3, run: 3, where: 2]
 
   alias Expresso.Presenter.{Interpreter, Program}
 
@@ -234,6 +234,56 @@ defmodule Expresso.Presenter.InterpreterPropertyTest do
       moves = from != to and not quiet?.(a) and not quiet?.(b) and kind != "none"
 
       assert Interpreter.transition(program, a, b) != nil == moves
+    end
+  end
+
+  property "with the option loop, the step after the last step is the first step, and the move goes forward" do
+    check all slides <-
+                list_of(tuple({integer(1..6), member_of(@kinds)}), min_length: 2, max_length: 8),
+              key <- member_of(@forward),
+              max_runs: @runs do
+      {counts, kinds} = Enum.unzip(slides)
+      program = program(counts, kinds, loop: true)
+      last = Interpreter.initial(program, %{index: tuple_size(program.steps) - 1})
+      first = run(program, last, {:key, key})
+
+      assert where(program, first) == {1, 1}
+
+      # The kind comes from the first slide, which the move goes to.
+      case elem(program.slides, 0).transition do
+        "none" ->
+          assert Interpreter.transition(program, last, first) == nil
+
+        kind ->
+          assert Interpreter.transition(program, last, first) ==
+                   %{kind: kind, direction: :forward}
+      end
+
+      # The key of the previous step does not go from the first step to the
+      # last step.
+      assert run(program, first, {:key, "k"}) == first
+    end
+  end
+
+  property "with no option loop, the key of the next step makes no change at the last step" do
+    check all program <- decks(),
+              key <- member_of(@forward),
+              max_runs: @runs do
+      last = Interpreter.initial(program, %{index: tuple_size(program.steps) - 1})
+      assert run(program, last, {:key, key}) == last
+    end
+  end
+
+  property "a stops and starts the clock of the steps, and each other key keeps it" do
+    check all {program, state} <- shown(),
+              paused <- boolean(),
+              key <- member_of(["j", "k", "Home", "End", "a", "b", "l"]),
+              view <- member_of([:present, :speaker]),
+              max_runs: @runs do
+      state = %{state | paused: paused, view: view, blank: false, help: false, overview: false}
+      after_key = run(program, state, {:key, key})
+
+      assert after_key.paused == if(key == "a", do: not paused, else: paused)
     end
   end
 

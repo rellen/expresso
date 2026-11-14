@@ -883,10 +883,11 @@ defmodule Expresso.Renderer do
 
               c(&sources/1, slides: footnoted(@deck))
 
-              # The four elements of the speaker view. They go into the handout
+              # The five elements of the speaker view. They go into the handout
               # view, because the style sheet places them in the grid of that
               # view. The style sheet hides them in each other view and on paper.
-              for id <- ~w(speaker-notes speaker-position speaker-timer speaker-left) do
+              for id <-
+                    ~w(speaker-notes speaker-position speaker-timer speaker-left speaker-advance) do
                 div id: id do
                 end
               end

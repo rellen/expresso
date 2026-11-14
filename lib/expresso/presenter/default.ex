@@ -50,6 +50,12 @@ defmodule Expresso.Presenter.Default do
           "the Alt key does the same while the zoom is off."
   @zoom_out "Show the full slide again after a zoom, in the two windows"
 
+  # The clock of the steps. A step with a time of the option `advance` goes
+  # to the next step when its time ends. While the field `paused` is true,
+  # the clock does not run. `docs/timed-advance.md` gives the design.
+  @clock "Stop or start the clock of the steps, in the two windows. A step with a time of " <>
+           "the advance option goes to the next step only while the clock runs."
+
   state index: 0,
         view: :present,
         blank: false,
@@ -66,9 +72,10 @@ defmodule Expresso.Presenter.Default do
         laser: false,
         draw: false,
         highlighter: false,
-        zoom: false
+        zoom: false,
+        paused: false
 
-  sync [:blank, :white, :undim, :laser, :draw, :highlighter, :zoom]
+  sync [:blank, :white, :undim, :laser, :draw, :highlighter, :zoom, :paused]
   reset [:undim, :laser, :zoom]
 
   # The attributes of the `body`. The style sheet reads them.
@@ -86,6 +93,7 @@ defmodule Expresso.Presenter.Default do
   attribute :draw, "data-draw", flag: true
   attribute :highlighter, "data-highlighter", flag: true
   attribute :zoom, "data-zoom", flag: true
+  attribute :paused, "data-paused", flag: true
 
   # The style sheet sets the width of the progress bar from the part of the
   # deck before the current step.
@@ -164,6 +172,7 @@ defmodule Expresso.Presenter.Default do
       group: @move
 
     key "Enter", go_typed(), "Step 1 of the slide that you typed", each: false, group: @move
+    key "a", toggle(:paused), @clock, group: @move
 
     key "o",
         [set(:overview, true), assign(:selected, entry(:slide))],
@@ -244,6 +253,7 @@ defmodule Expresso.Presenter.Default do
       group: @move
 
     key "Enter", go_typed(), "Step 1 of the slide that you typed", each: false, group: @move
+    key "a", toggle(:paused), @clock, group: @move
 
     key "o",
         [set(:overview, true), assign(:selected, entry(:slide))],

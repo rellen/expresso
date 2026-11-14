@@ -149,18 +149,29 @@ defmodule Expresso.Presenter.Interpreter do
   a move from them or to them has no transition. In the two directions, the
   kind comes from the slide with the higher number. The kind `"none"` has no
   transition.
+
+  With the option `loop` of the deck, the step after the last step of the
+  talk is the first step of the talk. That move goes forward, and its kind
+  comes from the slide that it goes to.
   """
   @spec transition(Program.t(), state(), state()) :: transition() | nil
   def transition(program, before, after_event) do
     from = slide(program, before)
     to = slide(program, after_event)
+    loop = to < from and next(program, before.index) == after_event.index
+    border = if loop, do: to, else: max(from, to)
 
     with false <- from == to or quiet?(before) or quiet?(after_event),
-         kind when kind != "none" <- kind(program, max(from, to)) do
-      %{kind: kind, direction: if(to > from, do: :forward, else: :back)}
+         kind when kind != "none" <- kind(program, border) do
+      %{kind: kind, direction: if(to > from or loop, do: :forward, else: :back)}
     else
       _no_transition -> nil
     end
+  end
+
+  # The index of the step after a step in the talk, or nil.
+  defp next(program, index) do
+    if index < tuple_size(program.moves), do: program.moves |> elem(index) |> elem(1)
   end
 
   defp quiet?(state) do

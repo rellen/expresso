@@ -37,6 +37,9 @@ a light room. The next key shows the slide again.
    more than one minute behind. Red tells you that the time is at its end.
 3. Press `r` to set the timer to 0:00 before the talk starts.
 
+For a talk with a fixed time for each slide, see [Run a deck by time](run-a-deck-by-time.md).
+The deck then goes to each next step by itself, and the key `a` stops and starts its clock.
+
 ## Go to a slide
 
 Use one of these methods:

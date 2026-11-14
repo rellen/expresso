@@ -286,9 +286,10 @@ defmodule Expresso.Check.Session do
     end
   end
 
-  # Press the keys of the presenter, and return the problems.
+  # Press the keys of the presenter, and return the problems. The address has
+  # `?paused`, so a step with a time of the `advance` option waits for the key.
   defp keys(frame, url, deck) do
-    {:ok, _response} = PlaywrightEx.Frame.goto(frame.frame, options(url: url))
+    {:ok, _response} = PlaywrightEx.Frame.goto(frame.frame, options(url: url <> "?paused"))
     program = Program.compile(Definition.presenter(), deck)
     steps = deck |> Expresso.Steps.entries() |> Enum.map(&"#{&1.slide}.#{&1.step}")
 

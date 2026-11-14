@@ -101,7 +101,8 @@ defmodule Expresso.Presenter.Schema do
     laser: :boolean,
     draw: :boolean,
     highlighter: :boolean,
-    zoom: :boolean
+    zoom: :boolean,
+    paused: :boolean
   ]
 
   @views [:present, :handout, :speaker]
@@ -235,7 +236,7 @@ defmodule Expresso.Presenter.Schema do
         transition: {:ref, :kind},
         number: {:nullable, {:integer, 1}}}},
       {:written_entry,
-       "One step of the deck as the renderer writes it: the slide, the step, the fraction, the done part, the position, and the index of the step before it and of the step after it in the talk, or null.",
+       "One step of the deck as the renderer writes it: the slide, the step, the fraction, the done part, the position, the index of the step before it and of the step after it in the talk, or null, and the time of the step in milliseconds, or null for a step that waits for a key.",
        {:record,
         [
           slide: {:integer, 1},
@@ -244,7 +245,8 @@ defmodule Expresso.Presenter.Schema do
           done: {:number, 0, 1},
           position: :string,
           previous: {:nullable, {:integer, 0}},
-          next: {:nullable, {:integer, 0}}
+          next: {:nullable, {:integer, 0}},
+          advance: {:nullable, {:integer, 1}}
         ]}},
       {:written_deck, "The steps and the slides of a deck, as the renderer writes them.",
        {:object,

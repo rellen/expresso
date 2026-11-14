@@ -36,7 +36,9 @@ defmodule Expresso.Recorder do
   @typedoc """
   A key, such as `"j"`, a move of the clock of the page by a number of
   milliseconds, or a move of the mouse to a part of the window. The speaker
-  view shows a later time after a move of the clock. `{:point, 0.25, 0.5}`
+  view shows a later time after a move of the clock, and the present view of
+  a deck with the `advance` option goes to the next step when the time of its
+  step ends. A move of the clock must change one of the two. `{:point, 0.25, 0.5}`
   puts the mouse at a quarter of the width and at one half of the height, as
   for the laser pointer. `{:drag, [{0.2, 0.3}, {0.6, 0.3}]}` presses the main
   button at the first point, moves the mouse through each next point, and
@@ -177,10 +179,13 @@ defmodule Expresso.Recorder do
     end
   end
 
-  defp act(recorder, page, _height, {:advance, milliseconds}, now) do
+  # A move of the clock can end the time of a step of a deck with the
+  # `advance` option. The present view then goes to the next step, so the
+  # recorder takes the frames of that change.
+  defp act(recorder, page, height, {:advance, milliseconds}, now) do
     now = now + milliseconds
     advance(recorder, page, now)
-    {[], now}
+    {animation(page, height), now}
   end
 
   # The window is 1280 pixels wide. Its height is 720 pixels, also for an
@@ -353,19 +358,15 @@ defmodule Expresso.Recorder do
     wait_for(page, "() => document.getAnimations().length === 0", nil)
   end
 
-  # Move the clock of the page, and wait until the timer of the speaker view
-  # shows the new time. The timer reads the clock one time each second.
+  # Move the clock of the page, and wait until the page shows the new time:
+  # the timer of the speaker view has a new text, or the present view shows a
+  # different step. The speaker view and the present view each read the clock
+  # four times each second.
   defp advance(recorder, page, now) do
-    before =
-      evaluate(page, ~s|() => document.getElementById("speaker-timer")?.textContent ?? null|)
-
+    shown = ~s|document.getElementById("speaker-timer")?.textContent + location.hash|
+    before = evaluate(page, "() => #{shown}")
     fix_clock(recorder, now)
-
-    wait_for(
-      page,
-      ~s|(before) => document.getElementById("speaker-timer")?.textContent !== before|,
-      before
-    )
+    wait_for(page, "(before) => #{shown} !== before", before)
   end
 
   defp evaluate(page, function, arg \\ nil) do

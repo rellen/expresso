@@ -33,6 +33,7 @@ const state: State = {
   draw: false,
   highlighter: false,
   zoom: false,
+  paused: false,
 };
 
 // The box of a slide of 1000 by 500 pixels at the point 100, 50.

@@ -24,9 +24,9 @@ test("parse reads the text of the renderer for a deck of two slides", () => {
   const text =
     '{"duration_ms":300000,"slides":[{"first":0,"number":1,"steps":1,"transition":"fade"},' +
     '{"first":1,"number":2,"steps":2,"transition":"fade"}],' +
-    '"steps":[[1,1,0.0,0.0,"Slide 1 of 2",null,1],' +
-    '[2,1,0.5,0.3333,"Slide 2 of 2, step 1 of 2",0,2],' +
-    '[2,2,1.0,0.6667,"Slide 2 of 2, step 2 of 2",1,null]]}';
+    '"steps":[[1,1,0.0,0.0,"Slide 1 of 2",null,1,null],' +
+    '[2,1,0.5,0.3333,"Slide 2 of 2, step 1 of 2",0,2,null],' +
+    '[2,2,1.0,0.6667,"Slide 2 of 2, step 2 of 2",1,null,null]]}';
 
   assert.deepEqual(parse(text), deckOf([1, 2], { duration: 300_000 }));
 });
@@ -39,12 +39,12 @@ test("deckOf makes the list of Expresso.Steps for a deck with a hidden slide", (
     '{"first":1,"number":null,"steps":2,"transition":"fade"},' +
     '{"first":3,"number":2,"steps":1,"transition":"fade"},' +
     '{"first":4,"number":3,"steps":2,"transition":"fade"}],' +
-    '"steps":[[1,1,0.0,0.0,"Slide 1 of 3",null,3],' +
-    '[2,1,0.0,0.0,"Hidden slide after slide 1 of 3, step 1 of 2",0,2],' +
-    '[2,2,0.0,0.0,"Hidden slide after slide 1 of 3, step 2 of 2",1,3],' +
-    '[3,1,0.3333,0.25,"Slide 2 of 3",0,4],' +
-    '[4,1,0.6667,0.5,"Slide 3 of 3, step 1 of 2",3,5],' +
-    '[4,2,1.0,0.75,"Slide 3 of 3, step 2 of 2",4,null]]}';
+    '"steps":[[1,1,0.0,0.0,"Slide 1 of 3",null,3,null],' +
+    '[2,1,0.0,0.0,"Hidden slide after slide 1 of 3, step 1 of 2",0,2,null],' +
+    '[2,2,0.0,0.0,"Hidden slide after slide 1 of 3, step 2 of 2",1,3,null],' +
+    '[3,1,0.3333,0.25,"Slide 2 of 3",0,4,null],' +
+    '[4,1,0.6667,0.5,"Slide 3 of 3, step 1 of 2",3,5,null],' +
+    '[4,2,1.0,0.75,"Slide 3 of 3, step 2 of 2",4,null,null]]}';
 
   assert.deepEqual(parse(text), deckOf([1, 2, 1, 2], { hidden: [2] }));
 });
@@ -53,11 +53,39 @@ test("deckOf makes the list of Expresso.Steps for a deck that starts with a hidd
   const text =
     '{"duration_ms":null,"slides":[{"first":0,"number":null,"steps":2,"transition":"fade"},' +
     '{"first":2,"number":1,"steps":1,"transition":"fade"}],' +
-    '"steps":[[1,1,0.0,0.0,"Hidden slide before slide 1 of 1, step 1 of 2",null,1],' +
-    '[1,2,0.0,0.0,"Hidden slide before slide 1 of 1, step 2 of 2",0,2],' +
-    '[2,1,0.0,0.0,"Slide 1 of 1",null,null]]}';
+    '"steps":[[1,1,0.0,0.0,"Hidden slide before slide 1 of 1, step 1 of 2",null,1,null],' +
+    '[1,2,0.0,0.0,"Hidden slide before slide 1 of 1, step 2 of 2",0,2,null],' +
+    '[2,1,0.0,0.0,"Slide 1 of 1",null,null,null]]}';
 
   assert.deepEqual(parse(text), deckOf([2, 1], { hidden: [1] }));
+});
+
+test("deckOf makes the list of Expresso.Steps for a deck with the options advance and loop", () => {
+  // The text that `Expresso.Steps.json/1` gives for three slides of 1, 2
+  // and 1 steps. The deck has `advance 20_000` and `loop true`, slide 1 has
+  // `advance false`, and slide 2 has `advance 5_000`.
+  const text =
+    '{"duration_ms":null,"slides":[{"first":0,"number":1,"steps":1,"transition":"fade"},' +
+    '{"first":1,"number":2,"steps":2,"transition":"fade"},' +
+    '{"first":3,"number":3,"steps":1,"transition":"fade"}],' +
+    '"steps":[[1,1,0.0,0.0,"Slide 1 of 3",null,1,null],' +
+    '[2,1,0.3333,0.25,"Slide 2 of 3, step 1 of 2",0,2,5000],' +
+    '[2,2,0.6667,0.5,"Slide 2 of 3, step 2 of 2",1,3,5000],' +
+    '[3,1,1.0,0.75,"Slide 3 of 3",2,0,20000]]}';
+
+  assert.deepEqual(
+    parse(text),
+    deckOf([1, 2, 1], { advance: [null, 5000, 20_000], loop: true }),
+  );
+});
+
+test("move goes from the last step to the first step of a deck with the option loop", () => {
+  const deck = deckOf([1, 2, 1], { loop: true });
+
+  assert.equal(move(deck, 3, 1), 0);
+  assert.equal(move(deck, 2, 3), 1);
+  // The option does not change the step before the first step.
+  assert.equal(move(deck, 0, -1), undefined);
 });
 
 test("move skips each hidden slide, and it goes through the steps of a hidden slide", () => {

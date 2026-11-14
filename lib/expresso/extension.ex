@@ -1706,6 +1706,11 @@ defmodule Expresso.Extension do
         doc:
           "Keep the slide out of the talk: the keys of the next step and of the previous step skip it, and the menu, the overview and a link still go to it. See docs/reference/hidden-option.md."
       ],
+      advance: [
+        type: {:or, [:pos_integer, {:in, [false]}]},
+        doc:
+          "The time of each step of the slide in milliseconds, such as 15_000. The present view then goes to the next step after that time. The value false gives the slide no time, so it waits for a key. The default is the advance option of the deck. See docs/reference/advance-option.md."
+      ],
       transition: [
         type: :atom,
         doc:
@@ -1817,6 +1822,16 @@ defmodule Expresso.Extension do
         type: :pos_integer,
         doc:
           "The length of the talk in minutes. The speaker view then shows the time left and the pace. The address parameter `?duration=` replaces it."
+      ],
+      advance: [
+        type: :pos_integer,
+        doc:
+          "The time of each step in milliseconds, such as 15_000. The present view then goes to the next step after that time. A slide can replace it. See docs/reference/advance-option.md."
+      ],
+      loop: [
+        type: :boolean,
+        doc:
+          "Go from the last step of the talk to the first slide: the key of the next step, and the time of the advance option. The default is false. See docs/reference/advance-option.md."
       ],
       handout: [
         type: {:in, [:all, :last]},

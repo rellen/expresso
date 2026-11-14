@@ -62,6 +62,10 @@ Read these documents before you change the code:
   the window during the talk. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed
   during the work.
+- `docs/timed-advance.md` — the design for a deck that goes to the next step after a time:
+  the `advance` option, the `loop` option and the clock of the steps. The code contains
+  this design. The document records ten decisions, and each is settled. Its last section,
+  "The result", tells what changed during the work.
 - `docs/graph-diagrams.md` — the design for a `diagram` from the source of a graph, in the
   language of Graphviz or of D2. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during

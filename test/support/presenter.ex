@@ -11,16 +11,20 @@ defmodule Expresso.Test.Presenter do
   alias Expresso.Builder
   alias Expresso.Presenter.{Definition, Interpreter, Program}
 
-  @doc "Return the program of a deck from the number of steps and the kind of each slide"
-  @spec program([pos_integer()], [atom()]) :: Program.t()
-  def program(counts, kinds \\ []) do
+  @doc """
+  Return the program of a deck from the number of steps and the kind of each slide
+
+  `options` holds more options of the deck, such as `loop: true`.
+  """
+  @spec program([pos_integer()], [atom()], keyword()) :: Program.t()
+  def program(counts, kinds \\ [], options \\ []) do
     counts
     |> Enum.with_index(1)
     |> Enum.map(fn {steps, number} ->
       transition = for kind <- [Enum.at(kinds, number - 1)], kind, do: {:transition, kind}
       Builder.slide("slide #{number}", [steps: steps] ++ transition)
     end)
-    |> Builder.deck(name: "deck")
+    |> Builder.deck([name: "deck"] ++ options)
     |> then(&Program.compile(Definition.presenter(), &1))
   end
 
