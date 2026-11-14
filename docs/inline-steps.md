@@ -63,7 +63,9 @@ Each decision is settled.
    the step, as a hidden line of code keeps its place.
 9. **A part fades, and the `effect` option does not change it.** The effects move an
    element or change its size with a transform, and a transform does not apply to an
-   inline box. An inline block takes a transform, but it cannot break into two lines.
+   inline box. An inline block takes a transform, but it cannot break into two lines. The
+   effect `:type` of `docs/typewriter-effect.md` came later. It uses no transform, so a
+   part of a text with that effect types.
 10. **A screen reader reads a part at its steps.** A part of a later step is hidden with
     `visibility: hidden`, as an element of a later step is, so a screen reader reads the
     sentence as the audience sees it. The issue asked for the whole sentence at each step.

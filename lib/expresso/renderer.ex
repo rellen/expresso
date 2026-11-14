@@ -358,8 +358,14 @@ defmodule Expresso.Renderer do
   # and `Expresso.Presenter.Program.json/1` escape each `<`.
   # The three parts of a slide. The present view and the handout view show the
   # same parts, and each view gives its own container.
+  #
+  # The present view gives `typed: true`. The body then holds each character
+  # of an element with `effect :type` in its own `span`, from
+  # `Expresso.Overlay.Typewriter.wrap/1`. A page of the handout view and a
+  # copy in the menu do not move, so they keep the text as it is.
   defp slide_parts(assigns) do
     body = Expresso.Template.render_slide_template(%{deck: assigns.deck, slide: assigns.slide})
+    body = if assigns[:typed], do: typed(body), else: body
 
     assigns =
       Map.merge(assigns, %{
@@ -414,6 +420,18 @@ defmodule Expresso.Renderer do
         end
       end
     end
+  end
+
+  # The body of a slide with the characters of each element with
+  # `effect :type`. The HTML comes from the render functions of the
+  # elements, and the function adds only tags of its own.
+  # sobelow_skip ["XSS.Raw"]
+  defp typed(body) do
+    html = Phoenix.HTML.safe_to_string(body)
+
+    if Expresso.Overlay.Typewriter.typed?(html),
+      do: Phoenix.HTML.raw(Expresso.Overlay.Typewriter.wrap(html)),
+      else: body
   end
 
   # The background of a slide: an image or a layer of color, and the dim
@@ -763,7 +781,7 @@ defmodule Expresso.Renderer do
                         data_morph: morph(@deck, slide),
                         style:
                           "height: 100%; display: #{if index == shown, do: "flex", else: "none"}; flex-direction: column; justify-content: stretch" do
-                  c(&slide_parts/1, deck: @deck, slide: slide)
+                  c(&slide_parts/1, deck: @deck, slide: slide, typed: true)
                 end
               end
             end

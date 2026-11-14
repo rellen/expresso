@@ -104,6 +104,10 @@ A rule of the deck can set or read these custom properties of the theme:
 - The overlays: `--x`, `--y`, `--scale`, `--rotate`, `--opacity`, `--color`, `--alert`,
   `--dim`, `--dimmed`, `--dim-opacity`, `--dim-graphic-opacity`, `--shown` and
   `--text-part-alert-color`.
+- The effect `:type`: `--type-char`, the time of one character, which is `40ms` in the
+  theme, `--type-cursor-width`, which is `0.08em`, and `--type-cursor-color`, which is the
+  color of the text. The width `0` gives no cursor. See
+  [The effect `:type`](overlay-options.md#the-effect-type).
 - The font of the text, and of the text of a formula: `--font-text`.
 - The parts of the page: `--slide-padding`, `--progress-color`, `--progress-height`,
   `--slide-number-color`, `--slide-number-size`, `--slide-number-right`,

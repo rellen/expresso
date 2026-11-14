@@ -94,6 +94,7 @@ part of the deck before the current step, from 0 to 100, as the width of the bar
 | `table` | The `caption` option as the name of the table. Each header cell is a `th` with a `scope`: `col` in the `header` row, and `row` for the first cell of a row with `row_header`. |
 | An element of a later step | Nothing. The style sheet hides it with `visibility: hidden` until its step. |
 | A part of a text of a later step | Nothing, as for an element. A part with a state shows at each step, and a screen reader reads it at each step. |
+| A text with `effect :type` | The whole text at once, at the step of the element. The characters that the eye sees have `aria-hidden`, so a screen reader does not read one letter at a time. |
 
 ## The language
 

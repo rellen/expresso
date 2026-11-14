@@ -36,6 +36,9 @@ export type FakeElement = {
   setAttribute: (name: string, value: string) => void;
   getAttribute: (name: string) => string | null;
   removeAttribute: (name: string) => void;
+  // Write an attribute with no value, or remove it. The value is the empty
+  // text.
+  toggleAttribute: (name: string, on: boolean) => void;
 };
 
 // The key in `dataset` of an attribute `data-*`, such as `speakerNext` for
@@ -233,6 +236,10 @@ export function element(
       } else {
         delete self.attributes[name];
       }
+    },
+    toggleAttribute: (name, on) => {
+      if (on) self.setAttribute(name, "");
+      else self.removeAttribute(name);
     },
   };
   return self;

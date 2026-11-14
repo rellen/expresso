@@ -40,6 +40,7 @@ GitHub.
 - `docs/hidden-slides.md` — the design for a slide that the talk skips, and its result.
 - `docs/inline-steps.md` — the design for the steps of a part of a text, and its result.
 - `docs/slide-backgrounds.md` — the design for the background of a slide, and its result.
+- `docs/typewriter-effect.md` — the design for the effect `:type`, and its result.
 - `docs/tree.md` — the design for the element `tree`, and its result.
 - `docs/graph-diagrams.md` — the design for a diagram from Graphviz or D2, and its result.
 - `docs/scatter-plots.md` — the design for a scatter plot, and its result.
