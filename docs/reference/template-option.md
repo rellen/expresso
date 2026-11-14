@@ -88,7 +88,8 @@ defmodule MySlideTemplate do
 end
 ```
 
-`@metadata` holds the options of the slide, such as `:heading` and `:notes`. It also holds
+`@metadata` holds the options of the slide, such as `:heading` and `:notes`. The value of
+`:notes` is the Markdown text of the `notes` option. `@metadata` also holds
 `:section`, the title of the section of the slide, from the `section` option of this slide
 or of an earlier slide. See [the toc element](toc-element.md). The default slide template
 writes the heading, then the elements.

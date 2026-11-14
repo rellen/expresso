@@ -3,7 +3,10 @@ defmodule Expresso.BinaryTest do
   # person does, from the root of the repository. `mix test --only release` runs
   # them, and `EXPRESSO_BINARY` gives the path of the binary. `mix test` does not
   # run them. `docs/development/release.md` gives the commands.
-  use ExUnit.Case, async: true
+  #
+  # One test changes the application environment, so the module does not run
+  # with other modules.
+  use ExUnit.Case, async: false
 
   import ExUnit.CaptureIO
   import Expresso.Test.HTTP
@@ -94,10 +97,16 @@ defmodule Expresso.BinaryTest do
   end
 
   # The deck has a code block, so the group ids of Makeup are a part of the
-  # comparison.
+  # comparison. The deck also has notes of the speaker. The binary does not
+  # hold MDEx, so its notes have no Markdown, and the setting `notes_markdown`
+  # gives the same notes to `Expresso.main/2`. `docs/speaker-notes.md` gives
+  # the reason.
   test "writes the same HTML as Expresso.main/2", %{tmp_dir: dir} = context do
     expected = Path.join(dir, "expected.html")
     actual = Path.join(dir, "actual.html")
+
+    Application.put_env(:expresso, :notes_markdown, false)
+    on_exit(fn -> Application.delete_env(:expresso, :notes_markdown) end)
 
     assert Expresso.main("examples/dsl_deck.exs", expected) == :ok
     assert {_output, 0} = run(context, ["examples/dsl_deck.exs", actual])
@@ -223,6 +232,46 @@ defmodule Expresso.BinaryTest do
     assert output =~ "Check of examples/demo.exs: "
     assert String.ends_with?(output, "\nNo problems.\n")
     assert "<!DOCTYPE html>" <> _ = File.read!(html)
+  end
+
+  # The precompiled library of MDEx does not load in the ERTS of the binary,
+  # so the release does not hold MDEx. A start of the binary then writes no
+  # warning about the library.
+  test "shows the notes of the speaker as plain text, and tells it in --check",
+       %{tmp_dir: dir} = context do
+    script =
+      write_script(dir, "notes.exs", """
+      defmodule Release.Notes do
+        use Expresso
+
+        slide "one" do
+          notes "Say **hello**."
+
+          text_box do
+            text_area(text: "A box")
+          end
+
+          note "Then `wait`.", at: 1
+        end
+      end
+
+      Release.Notes
+      """)
+
+    html = Path.join(dir, "notes.html")
+
+    assert {output, 0} = run(context, [script, html])
+    refute output =~ "MDEx"
+    refute output =~ "NIF"
+
+    assert {report, 0} = standard_output(context, [script, "--check"])
+
+    assert report =~
+             "The notes of the speaker show as plain text, because MDEx is not available."
+
+    document = File.read!(html)
+    assert document =~ ~s(<p class="note-plain">Say **hello**.</p>)
+    assert document =~ ~s(<p class="note-plain">Then `wait`.</p>)
   end
 
   test "gives the exit status 1 for a level of --check that it does not know", context do

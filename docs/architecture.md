@@ -510,7 +510,8 @@ html               lang "en", and data-variants for a theme with two variants
                      the step, data-thumbnail and data-commands on the page of
                      the last step of the slide
           div        the same parts as a slide of the present view
-          aside      the notes of the slide, class "notes", when the slide has notes
+          aside      the notes of the page, class "notes", when the step has notes,
+                     with a div of the class "note" for each note
         section      the page of the sources, class "sources", when a slide has
                      footnotes
         div          the four elements of the speaker view: speaker-notes,
@@ -2216,15 +2217,28 @@ each slide into its metadata.
 
 ### The notes
 
-The `notes` option holds the notes of the speaker. The handout view shows them in an
-`aside` element under each page of the slide, and the present view does not show them.
-The text is not HTML, and a line break in the text gives a line break on the page.
+The `notes` option holds the notes of the speaker for each step of a slide, and a `note`
+entity holds a note for the steps of its `at` option. `Expresso.Element.Note` is the struct
+of the entity. It is an element at the level of the slide that shows nothing there, as a
+footnote is. `Expresso.Overlay.Expand.slide/1` gives it its step numbers, and it adds no
+step to the slide.
+
+The text of a note is Markdown. `Expresso.Notes.html/1` makes its HTML with MDEx, with a
+line break for each line break of the text, and with the HTML of the text as text. MDEx is
+a dependency with `runtime: false`, because its library does not load in the binary of
+Burrito. Without MDEx, the function returns the text in one paragraph.
+
+The handout view shows the notes in an `aside` element under each page of the slide, and
+the present view does not show them. `Expresso.Notes.of_page/3` gives the notes of the page
+of a step: the notes for each step, then the notes of that step. A page that the handout
+option selects also holds the notes of each earlier step with no page, with `data-covered`
+and a label. `docs/speaker-notes.md` gives the design.
 
 The `print_notes` option of the deck leaves the notes out of the handout view and of the
 print. The renderer writes `data-print-notes` on the `body` from the metadata of the
 deck: `false` for `print_notes: false`, and `true` otherwise. The style sheet then hides
 each `aside` in the handout view and on paper. The renderer still writes each `aside`,
-because the speaker view reads the text of the notes from the page of the current step.
+because the speaker view takes a copy of the notes of the page of the current step.
 
 ### The slide numbers
 
@@ -2929,8 +2943,8 @@ when the key changes the state or calls a built-in function.
 The speaker view is the same document in a second window, with `?speaker` in the address.
 It shows two pages of the handout view: the page of the current step and the page of the
 next step. A mark writes `data-speaker` on these two pages, and the style sheet puts them
-in a grid and scales them with `zoom`. The notes of the current page, the position and a
-timer go into three elements that the renderer writes into the handout view. The style
+in a grid and scales them with `zoom`. A copy of each note of the current page, the
+position and a timer go into three elements that the renderer writes into the handout view. The style
 sheet hides them in each other view and on paper. The speaker view knows the keys of the
 present view, but `p`, `s` and `g` have no function in it. The timer starts at the first
 change of the step after the load. The step of the address at the load is not such a

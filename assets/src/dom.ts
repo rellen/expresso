@@ -324,11 +324,27 @@ function speaker(state: State, deck: Deck): void {
   const page = pages().find(
     (each) => Number(each.dataset.index) === state.index,
   );
-  text("speaker-notes", page?.querySelector(".notes")?.textContent ?? "");
+  notes(page?.querySelector(".notes") ?? null);
   text(
     "speaker-position",
     position(current(state, deck), state.blank, state.white),
   );
+}
+
+// Put a copy of each note of a page into the element `speaker-notes`. The
+// renderer writes each note as HTML into the `aside` of the page, from the
+// Markdown of the deck. A note with `data-covered` is a note of an earlier
+// step, which the page shows only on paper, so the speaker view leaves it
+// out. A page with no notes gives an empty element.
+function notes(aside: Element | null): void {
+  const target = document.getElementById("speaker-notes");
+  if (target === null) {
+    return;
+  }
+  const copies = Array.from(aside?.children ?? [])
+    .filter((note) => !note.hasAttribute("data-covered"))
+    .map((note) => note.cloneNode(true));
+  target.replaceChildren(...copies);
 }
 
 // Open the list of keys at the section of a mode, or close it with no mode.

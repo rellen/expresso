@@ -11,7 +11,11 @@ defmodule Expresso.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       releases: releases(),
-      dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix]],
+      # MDEx has `runtime: false`, so it is not an application of Expresso.
+      # The compiler then gives a warning for a call to it, and Dialyzer does
+      # not know it. `Expresso.Notes` makes sure that MDEx is available.
+      elixirc_options: [no_warn_undefined: [MDEx]],
+      dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix, :mdex]],
       docs: docs()
     ]
   end
@@ -67,6 +71,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/add-icons-to-a-slide.md",
         "docs/how-to/move-elements-between-slides.md",
         "docs/how-to/keep-backup-slides.md",
+        "docs/how-to/write-notes-for-the-speaker.md",
         "docs/how-to/make-a-deck-accessible.md",
         "docs/how-to/make-templates.md",
         "docs/how-to/use-colors-of-your-own.md",
@@ -101,6 +106,7 @@ defmodule Expresso.MixProject do
         "docs/reference/diagram-element.md",
         "docs/reference/qr-code-element.md",
         "docs/reference/footnote-element.md",
+        "docs/reference/note-element.md",
         "docs/reference/callout-element.md",
         "docs/reference/toc-element.md",
         "docs/reference/stat-element.md",
@@ -190,6 +196,14 @@ defmodule Expresso.MixProject do
       {:floki, "~> 0.38"},
       {:phoenix_html, "~> 4.3"},
       {:temple, "~> 0.14"},
+
+      # the Markdown of the notes of the speaker. MDEx is a NIF in Rust, and
+      # RustlerPrecompiled gets its library from a release of MDEx on GitHub.
+      # The library does not load in the ERTS of a Burrito binary, so the
+      # dependency has `runtime: false`, and a release does not hold it.
+      # `Expresso.Notes` calls MDEx only when it is available. See
+      # docs/speaker-notes.md.
+      {:mdex, "~> 0.14", runtime: false},
 
       # releasing
       {:burrito, "~> 1.6"},

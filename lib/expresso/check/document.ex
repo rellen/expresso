@@ -51,6 +51,31 @@ defmodule Expresso.Check.Document do
   end
 
   @doc """
+  Return a note for a deck whose notes of the speaker show with no Markdown
+
+  The notes of a slide are Markdown, and MDEx makes their HTML.
+  `Expresso.Notes.markdown?/0` tells if MDEx is available. The binary of
+  Expresso does not hold MDEx, so the notes there show as plain text. A deck
+  with no notes gets no note.
+  """
+  @spec notes(Expresso.Deck.t()) :: result()
+  def notes(deck) do
+    noted? = Enum.any?(deck.slides, &(Expresso.Notes.of_slide(&1) != []))
+
+    notes =
+      if noted? and not Expresso.Notes.markdown?() do
+        [
+          "The notes of the speaker show as plain text, because MDEx is not available. " <>
+            "See docs/reference/note-element.md."
+        ]
+      else
+        []
+      end
+
+    %{problems: [], notes: notes}
+  end
+
+  @doc """
   Return a note with the size of the document, and with the size and the type of its largest files
 
   A file is a data URI in a `src`, an `href` or an `xlink:href` attribute, or

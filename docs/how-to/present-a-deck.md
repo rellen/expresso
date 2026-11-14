@@ -15,7 +15,8 @@ the right two thirds of the window also goes to the next step.
 
 ## Use the speaker view on a second screen
 
-The speaker view shows the current step, the next step, the notes of the slide and a timer.
+The speaker view shows the current step, the next step, the notes of the current step and
+a timer. To write the notes, see [Write notes for the speaker](write-notes-for-the-speaker.md).
 
 1. Press `s` in the present view. If the browser blocks the second window, let the
    document open windows.

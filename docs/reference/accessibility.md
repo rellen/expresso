@@ -10,7 +10,7 @@ give. For the steps, see [Make a deck accessible](../how-to/make-a-deck-accessib
 | `main.views` | `main` | The present view, the handout view, the progress bar and the live region. |
 | `nav#menu` | `navigation`, with the name "Slides and steps" | The menu. |
 | `dialog#help` | `dialog`, with the title of the list | The list of keys. |
-| `aside.notes` | `complementary`, with the name "Notes: " and the name of the page | The notes of a page of the handout view. |
+| `aside.notes` | `complementary`, with the name "Notes: " and the name of the page | The notes of a page of the handout view. The speaker view holds the notes of the current step as paragraphs and lists, with no live region. |
 
 The `main` element takes no box, so the views keep their layout.
 

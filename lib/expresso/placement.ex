@@ -35,6 +35,7 @@ defmodule Expresso.Placement do
     Math,
     MathLine,
     Node,
+    Note,
     Part,
     Pause,
     Point,
@@ -80,7 +81,9 @@ defmodule Expresso.Placement do
   # The children of each element, for each key that holds children. An element
   # that is not in the map holds no children.
   @children %{
-    Slide => [elements: [TextBox, Columns, Callout, Toc] ++ @inner ++ [Footnote, Shape, Pause]],
+    Slide => [
+      elements: [TextBox, Columns, Callout, Toc] ++ @inner ++ [Footnote, Shape, Note, Pause]
+    ],
     TextBox => [elements: @inner ++ [Columns, Callout, Toc]],
     Columns => [elements: [Column]],
     Column => [elements: @inner ++ [Callout, Toc]],

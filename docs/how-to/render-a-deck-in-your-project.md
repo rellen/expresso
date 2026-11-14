@@ -48,6 +48,9 @@ The deck then renders from any directory.
    mix deps.get
    ```
 
+   The first compile gets the library of MDEx, which makes the notes of the speaker,
+   from GitHub.
+
 3. Render the deck from the directory of your project:
 
    ```sh

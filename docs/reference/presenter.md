@@ -117,8 +117,9 @@ the menu. The menu knows these keys:
 
 ## The speaker view
 
-The speaker view shows the current step, the next step, the notes of the slide, the
-position and a timer. The position ends with the label of the step, when the slide gives
+The speaker view shows the current step, the next step, the notes of the current step,
+the position and a timer. The notes are the `notes` option of the slide and each `note` of
+the step, with their Markdown. See [The note element](note-element.md). The position ends with the label of the step, when the slide gives
 one. The keys operate in either window, and the two windows show the same step. `b` in the
 speaker view gives a black screen to the audience, and `w` gives a white screen. A white
 screen follows each rule of a black screen: it pauses a video and a sound, and the next key

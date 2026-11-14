@@ -105,6 +105,9 @@ Render the deck, open it, and press `s`. A second window opens with the speaker 
 shows the current step, the next step, your note and a timer. If the browser blocks the
 window, let the document open windows.
 
+The text of a note is Markdown, so `**slow**` gives bold text. A step can also have its
+own note. See [Write notes for the speaker](../how-to/write-notes-for-the-speaker.md).
+
 ## Check the deck
 
 Run the check before a talk:

@@ -2796,7 +2796,58 @@ body[data-every="true"]
   border-top: 1px dashed currentColor;
   font-size: 0.5rem;
   text-align: left;
+}
+/*
+ * The notes of a page, and their copy in the speaker view. Each note is an
+ * element with the class `note`, and it holds the HTML that
+ * `Expresso.Notes` makes from the Markdown of the deck. The rules give each
+ * block a small space, so a note with a list is not much higher than the
+ * text was. A note with no Markdown is one paragraph with the class
+ * `note-plain`, and it keeps each line break of its text.
+ *
+ * A note with `data-covered` is a note of an earlier step that has no page
+ * in the handout view. It has a label with its steps. With each page in
+ * view, the page of that step shows the note, so the copy does not show.
+ */
+.note + .note {
+  margin-top: 0.5em;
+}
+.note :is(p, ul, ol, pre, blockquote) {
+  margin: 0 0 0.4em;
+}
+.note > :last-child {
+  margin-bottom: 0;
+}
+.note :is(ul, ol) {
+  padding-left: 1.4em;
+}
+.note li {
+  margin: 0;
+}
+.note :is(code, pre) {
+  font-family: monospace;
+  font-size: 0.9em;
+}
+.note pre {
+  white-space: pre-wrap;
+}
+.note blockquote {
+  padding-left: 0.6em;
+  border-left: 0.15em solid currentColor;
+}
+.note a {
+  color: inherit;
+  text-decoration: underline;
+}
+.note-plain {
   white-space: pre-line;
+}
+.note-step {
+  display: block;
+  font-weight: bold;
+}
+body[data-every="true"] .note[data-covered] {
+  display: none;
 }
 body[data-view="handout"] .screen {
   display: none;
@@ -2943,7 +2994,6 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     grid-area: notes;
     overflow: auto;
     font-size: 0.6rem;
-    white-space: pre-line;
   }
   #speaker-position {
     grid-area: position;

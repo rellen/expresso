@@ -422,6 +422,41 @@ defmodule Expresso.Renderer do
     end
   end
 
+  # The notes of one page of the handout view. A note of an earlier step
+  # that has no page of its own has `data-covered` and a label with its
+  # steps. The speaker view leaves such a note out. `Expresso.Notes.html/1`
+  # makes the HTML of a note, and it escapes the HTML of the deck.
+  defp notes(assigns) do
+    temple do
+      if @notes != [] do
+        aside class: "notes", aria_label: @label do
+          for note <- @notes do
+            c(&note/1, note: note)
+          end
+        end
+      end
+    end
+  end
+
+  # One note of a page. `label` is a tag in a Temple block, so the label of
+  # the steps has a different name here.
+  # sobelow_skip ["XSS.Raw"]
+  defp note(%{note: %{html: html, label: steps}}) do
+    assigns = %{html: html, steps: steps}
+
+    temple do
+      div class: "note", data_covered: @steps != nil do
+        if @steps do
+          span class: "note-step" do
+            @steps
+          end
+        end
+
+        Phoenix.HTML.raw(@html)
+      end
+    end
+  end
+
   # The body of a slide with the characters of each element with
   # `effect :type`. The HTML comes from the render functions of the
   # elements, and the function adds only tags of its own.
@@ -802,6 +837,7 @@ defmodule Expresso.Renderer do
               # marks pages by it.
               for {slide, %{first: first}} <- Enum.zip(@deck.slides, Expresso.Steps.slides(@deck)),
                   printed <- [Expresso.Handout.printed(@deck, slide)],
+                  notes <- [Expresso.Notes.of_slide(slide)],
                   max = Expresso.Overlay.Render.max_step(slide),
                   step <- 1..max//1 do
                 section class: Expresso.Element.classes("handout-page", slide.metadata[:class]),
@@ -819,15 +855,12 @@ defmodule Expresso.Renderer do
                   c(&slide_parts/1, deck: @deck, slide: slide)
 
                   # The notes of the speaker go under each page of the slide, and
-                  # the present view does not show them. The text is not HTML.
-                  if notes = slide.metadata[:notes] do
-                    aside class: "notes",
-                          aria_label: "Notes: " <> slide_label(@deck, slide, {step, max}) do
-                      div do
-                        notes
-                      end
-                    end
-                  end
+                  # the present view does not show them. `Expresso.Notes` gives
+                  # the notes of the page and their HTML.
+                  c(&notes/1,
+                    notes: Expresso.Notes.of_page(notes, step, printed),
+                    label: "Notes: " <> slide_label(@deck, slide, {step, max})
+                  )
                 end
               end
 
