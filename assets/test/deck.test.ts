@@ -22,8 +22,8 @@ test("parse reads the text of the renderer for a deck of two slides", () => {
   // The text that `Expresso.Steps.json/1` gives for the test "gives the steps
   // as arrays, the slides as objects and the duration".
   const text =
-    '{"duration_ms":300000,"slides":[{"first":0,"number":1,"steps":1,"transition":"fade"},' +
-    '{"first":1,"number":2,"steps":2,"transition":"fade"}],' +
+    '{"duration_ms":300000,"slides":[{"first":0,"name":"slide 1","number":1,"steps":1,"transition":"fade"},' +
+    '{"first":1,"name":"slide 2","number":2,"steps":2,"transition":"fade"}],' +
     '"steps":[[1,1,0.0,0.0,"Slide 1 of 2",null,1,null],' +
     '[2,1,0.5,0.3333,"Slide 2 of 2, step 1 of 2",0,2,null],' +
     '[2,2,1.0,0.6667,"Slide 2 of 2, step 2 of 2",1,null,null]]}';
@@ -35,10 +35,10 @@ test("deckOf makes the list of Expresso.Steps for a deck with a hidden slide", (
   // The text that `Expresso.Steps.json/1` gives for four slides of 1, 2, 1
   // and 2 steps, with slide 2 hidden.
   const text =
-    '{"duration_ms":null,"slides":[{"first":0,"number":1,"steps":1,"transition":"fade"},' +
-    '{"first":1,"number":null,"steps":2,"transition":"fade"},' +
-    '{"first":3,"number":2,"steps":1,"transition":"fade"},' +
-    '{"first":4,"number":3,"steps":2,"transition":"fade"}],' +
+    '{"duration_ms":null,"slides":[{"first":0,"name":"slide 1","number":1,"steps":1,"transition":"fade"},' +
+    '{"first":1,"name":"slide 2","number":null,"steps":2,"transition":"fade"},' +
+    '{"first":3,"name":"slide 3","number":2,"steps":1,"transition":"fade"},' +
+    '{"first":4,"name":"slide 4","number":3,"steps":2,"transition":"fade"}],' +
     '"steps":[[1,1,0.0,0.0,"Slide 1 of 3",null,3,null],' +
     '[2,1,0.0,0.0,"Hidden slide after slide 1 of 3, step 1 of 2",0,2,null],' +
     '[2,2,0.0,0.0,"Hidden slide after slide 1 of 3, step 2 of 2",1,3,null],' +
@@ -51,8 +51,8 @@ test("deckOf makes the list of Expresso.Steps for a deck with a hidden slide", (
 
 test("deckOf makes the list of Expresso.Steps for a deck that starts with a hidden slide", () => {
   const text =
-    '{"duration_ms":null,"slides":[{"first":0,"number":null,"steps":2,"transition":"fade"},' +
-    '{"first":2,"number":1,"steps":1,"transition":"fade"}],' +
+    '{"duration_ms":null,"slides":[{"first":0,"name":"slide 1","number":null,"steps":2,"transition":"fade"},' +
+    '{"first":2,"name":"slide 2","number":1,"steps":1,"transition":"fade"}],' +
     '"steps":[[1,1,0.0,0.0,"Hidden slide before slide 1 of 1, step 1 of 2",null,1,null],' +
     '[1,2,0.0,0.0,"Hidden slide before slide 1 of 1, step 2 of 2",0,2,null],' +
     '[2,1,0.0,0.0,"Slide 1 of 1",null,null,null]]}';
@@ -65,9 +65,9 @@ test("deckOf makes the list of Expresso.Steps for a deck with the options advanc
   // and 1 steps. The deck has `advance 20_000` and `loop true`, slide 1 has
   // `advance false`, and slide 2 has `advance 5_000`.
   const text =
-    '{"duration_ms":null,"slides":[{"first":0,"number":1,"steps":1,"transition":"fade"},' +
-    '{"first":1,"number":2,"steps":2,"transition":"fade"},' +
-    '{"first":3,"number":3,"steps":1,"transition":"fade"}],' +
+    '{"duration_ms":null,"slides":[{"first":0,"name":"slide 1","number":1,"steps":1,"transition":"fade"},' +
+    '{"first":1,"name":"slide 2","number":2,"steps":2,"transition":"fade"},' +
+    '{"first":3,"name":"slide 3","number":3,"steps":1,"transition":"fade"}],' +
     '"steps":[[1,1,0.0,0.0,"Slide 1 of 3",null,1,null],' +
     '[2,1,0.3333,0.25,"Slide 2 of 3, step 1 of 2",0,2,5000],' +
     '[2,2,0.6667,0.5,"Slide 2 of 3, step 2 of 2",1,3,5000],' +

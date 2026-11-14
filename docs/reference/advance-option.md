@@ -33,11 +33,17 @@ end
 | The deck | `advance 20_000` | Each step of each slide has 20 seconds. The time is in milliseconds. |
 | The deck | No option | A step has no time, and it waits for a key. This is the default. |
 | A slide | `advance 10_000` | Each step of the slide has 10 seconds. It replaces the time of the deck. |
+| A slide | `advance [12_000, 8_000]` | Step 1 of the slide has 12 seconds, and step 2 has 8 seconds. |
 | A slide | `advance false` | The slide has no time, so it waits for a key. |
 | A slide | No option | The slide has the time of the deck. |
 
 The time is the time of one step. A slide with three steps and `advance 10_000` shows for
 30 seconds.
+
+A list gives the time of each step in sequence. A step after the end of the list takes
+the last time of the list, and a time after the last step has no effect. The speaker view
+makes such lines from a rehearsal. See
+[Rehearse a talk and record the time of each slide](../how-to/rehearse-a-talk.md).
 
 ## The values of loop
 
@@ -90,6 +96,9 @@ deck.html?paused
 
 Press `a` to start the clock. The time of the step starts then.
 
+`?rehearse` in the address is a rehearsal. The present view then has no clock, and the key
+`a` does not start one. See [The time of each slide](presenter.md#the-time-of-each-slide).
+
 ## The tools
 
 | Tool | With a time |
@@ -107,7 +116,6 @@ Press `a` to start the clock. The time of the step starts then.
 
 ## The limits
 
-- The time is the same for each step of a slide.
 - A deck with one step and `loop true` has no step to go to, so its step has no time.
 - The speaker view does not know when the present view shows its handout view. Its time
   left then continues to count.

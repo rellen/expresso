@@ -1707,9 +1707,9 @@ defmodule Expresso.Extension do
           "Keep the slide out of the talk: the keys of the next step and of the previous step skip it, and the menu, the overview and a link still go to it. See docs/reference/hidden-option.md."
       ],
       advance: [
-        type: {:or, [:pos_integer, {:in, [false]}]},
+        type: {:or, [:pos_integer, {:in, [false]}, {:list, :pos_integer}]},
         doc:
-          "The time of each step of the slide in milliseconds, such as 15_000. The present view then goes to the next step after that time. The value false gives the slide no time, so it waits for a key. The default is the advance option of the deck. See docs/reference/advance-option.md."
+          "The time of each step of the slide in milliseconds, such as 15_000, or a list with the time of each step in sequence, such as [12_000, 8_000]. The present view then goes to the next step after that time. The value false gives the slide no time, so it waits for a key. The default is the advance option of the deck. See docs/reference/advance-option.md."
       ],
       transition: [
         type: :atom,

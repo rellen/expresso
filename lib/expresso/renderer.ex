@@ -669,6 +669,51 @@ defmodule Expresso.Renderer do
     end
   end
 
+  # The time of each slide: a `dialog` that the key `e` of the speaker view
+  # opens. The speaker view records the time of each step, and the script
+  # writes a row for each slide into the table, and the lines of the
+  # `advance` option into the `code` element. `docs/rehearsal.md` gives the
+  # design.
+  defp times(_assigns) do
+    temple do
+      dialog id: "times", aria_labelledby: "times-title", closedby: "any" do
+        h2 id: "times-title" do
+          "The time of each slide"
+        end
+
+        p id: "times-total" do
+        end
+
+        table do
+          thead do
+            tr do
+              th(scope: "col", do: "Slide")
+              th(scope: "col", do: "Steps")
+              th(scope: "col", do: "Time")
+            end
+          end
+
+          tbody id: "times-rows" do
+          end
+        end
+
+        p do
+          "Copy these lines into the slides of the deck. The deck then moves by these times."
+        end
+
+        pre tabindex: "0", aria_label: "The lines of the advance option" do
+          code id: "times-code" do
+          end
+        end
+
+        p class: "help-footer" do
+          kbd(do: "Esc")
+          " closes the table."
+        end
+      end
+    end
+  end
+
   # A group holds its heading and its rows, so the style sheet hides the two
   # together when no row matches the search.
   defp help_group(assigns) do
@@ -925,6 +970,7 @@ defmodule Expresso.Renderer do
           c(&menu/1, deck: @deck)
 
           c(&help_lists/1, groups: Help.groups(Definition.presenter()))
+          c(&times/1, [])
 
           # The list of the steps. The presenter reads it at load, so it comes
           # before the script.

@@ -56,6 +56,10 @@ defmodule Expresso.Presenter.Default do
   @clock "Stop or start the clock of the steps, in the two windows. A step with a time of " <>
            "the advance option goes to the next step only while the clock runs."
 
+  # The speaker view records the time of each step while its timer runs.
+  # `docs/rehearsal.md` gives the design.
+  @times "The time of each slide of this talk, with the lines of the advance option for the deck"
+
   state index: 0,
         view: :present,
         blank: false,
@@ -283,7 +287,12 @@ defmodule Expresso.Presenter.Default do
       group: @screen
 
     key "f", builtin(:fullscreen), "Full screen on or off", group: @screen
-    key "r", builtin(:reset_timer), "Set the timer to 0:00", group: @views
+
+    key "r",
+        builtin(:reset_timer),
+        "Set the timer to 0:00, and remove the recorded time of each slide", group: @views
+
+    key "e", builtin(:show_times), @times, group: @views
     key ["?", "/"], set(:help, true), @help, group: @views
 
     event [click: :right, swipe: :left], step(1), "Next step",

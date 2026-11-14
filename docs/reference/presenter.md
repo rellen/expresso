@@ -150,7 +150,8 @@ or click closes it. The speaker view knows these keys:
 | `d` | Code and charts in full color until the next step, in the two windows |
 | `t` | Light or dark variant of the theme, in the two windows |
 | `f` | Full screen on or off |
-| `r` | Set the timer to 0:00 |
+| `r` | Set the timer to 0:00, and remove the recorded time of each slide |
+| `e` | The time of each slide of this talk, with the lines of the advance option for the deck |
 | `?`, `/` | The search of the keys and commands. Esc closes it. |
 | Click or tap the right two thirds, or swipe left | Next step |
 | Click or tap the left third, or swipe right | Previous step |
@@ -233,6 +234,7 @@ parameters:
 | `?duration=` | `deck.html?duration=15` | The length of the talk in minutes. It replaces the `duration` option of the deck. |
 | `?all` | `deck.html?all` | The handout view with each step, as after `a`. |
 | `?paused` | `deck.html?paused` | The clock of the steps is stopped at the load, as after `a`. See [the advance option](advance-option.md). |
+| `?rehearse` | `deck.html?rehearse` | A rehearsal: the clock of the steps does not run. See [The time of each slide](#the-time-of-each-slide). |
 | `?check` | `deck.html?check` | The layout check. See [the layout check](layout-check.md). |
 
 A step that the slide does not have shows the nearest step of that slide, so an old link
@@ -257,6 +259,35 @@ These rules apply:
 - With the deck option `loop true`, the clock and the keys of the next step go from the
   last slide to the first slide.
 - In a deck with no `advance` option, the key `a` has no effect that you can see.
+
+## The time of each slide
+
+The speaker view records the time that each step used, while its timer runs. The key `e`
+in the speaker view shows a table with the time of each slide, and the lines of
+[the advance option](advance-option.md) for those times. For the design, see
+[The rehearsal](../rehearsal.md).
+
+![The speaker view shows a table with the time of each of four slides, and the lines of the advance option under it](https://raw.githubusercontent.com/rellen/expresso/media/rehearsal.png)
+
+| Key or address | Effect |
+| --- | --- |
+| `e` | The table of the time of each slide, in the speaker view. `Esc` or a click outside the table closes it. |
+| `r` | Set the timer to 0:00, and start a new record. |
+| `?rehearse` | A rehearsal: the clock of the steps does not run, in the two windows. |
+
+These rules apply:
+
+- The record starts with the timer, at the first change of the step. The step that shows
+  before that change has no time.
+- A step that shows a second time adds to its time.
+- The table shows the sum of the steps of each slide, and `No time` for a slide that did
+  not show while the timer ran. A hidden slide has the word `hidden` after its name.
+- The lines give each slide its `advance` option, under a comment with the name of the
+  slide. One click on the lines selects each of them.
+- A time in the lines is the nearest full second, and one second at least. A slide with
+  no time gets `advance false`. A slide whose steps have different times gets a list.
+- While the table shows, a key goes to the browser, so the step does not change.
+- A reload of the speaker view starts a new record.
 
 ## The laser pointer
 

@@ -65,7 +65,7 @@ defmodule Expresso.Presenter.Definition do
     * `{:go, field}` - goes to the step at the index that a field holds.
     * `{:builtin, name}` - calls a built-in function of the browser:
       `:open_speaker`, `:fullscreen`, `:reset_timer`, `:switch_scheme`,
-      `:clear_drawing` or `:zoom_out`.
+      `:clear_drawing`, `:zoom_out` or `:show_times`.
 
   A definition can hold three symbols in place of a number: `:first_slide`,
   `:last_slide` and `{:columns, sign}`. `Expresso.Presenter.Program` changes
@@ -114,7 +114,8 @@ defmodule Expresso.Presenter.Definition do
              | :reset_timer
              | :switch_scheme
              | :clear_drawing
-             | :zoom_out}
+             | :zoom_out
+             | :show_times}
 
   @typedoc "An event of a binding"
   @type event ::

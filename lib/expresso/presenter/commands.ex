@@ -87,6 +87,7 @@ defmodule Expresso.Presenter.Commands do
           | :switch_scheme
           | :clear_drawing
           | :zoom_out
+          | :show_times
         ) :: Definition.command()
   def builtin(name), do: {:builtin, name}
 

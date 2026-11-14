@@ -66,6 +66,10 @@ Read these documents before you change the code:
   the `advance` option, the `loop` option and the clock of the steps. The code contains
   this design. The document records ten decisions, and each is settled. Its last section,
   "The result", tells what changed during the work.
+- `docs/rehearsal.md` — the design for the rehearsal: the speaker view records the time
+  of each slide, and it gives the lines of the `advance` option. The code contains this
+  design. The document records ten decisions, and each is settled. Its last section, "The
+  result", tells what changed during the work.
 - `docs/graph-diagrams.md` — the design for a `diagram` from the source of a graph, in the
   language of Graphviz or of D2. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during

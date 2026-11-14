@@ -81,6 +81,11 @@
 // `?paused` in the address stops it at the load. `advance.ts` gives the
 // rules.
 //
+// The speaker view records the time that each step used while its timer
+// runs, and the key `e` shows a table of the time of each slide, with the
+// lines of the `advance` option. `?rehearse` in the address is a rehearsal:
+// the clock of the steps does not run. `rehearse.ts` gives the rules.
+//
 // `?check` in the address of the present view runs the layout check after the
 // load of the document and of its fonts. The check shows each step, finds the
 // elements that go past an edge of the window and the lines of code that
@@ -149,6 +154,7 @@ import {
   scheme,
   showDrawing,
   showScheme,
+  showTimes,
   showZoom,
   slideBox,
   stepLeft,
@@ -183,6 +189,16 @@ import {
   zooming,
 } from "./zoom.ts";
 import type { Area } from "./zoom.ts";
+import {
+  begin,
+  code as advanceLines,
+  counted,
+  HINT,
+  move as moveTimes,
+  rows,
+  summary,
+  waiting,
+} from "./rehearse.ts";
 import { fromAddress, next } from "./scheme.ts";
 import { restore as restoreAssets } from "./assets.ts";
 import { COMMAND_HOLDERS } from "./schema.ts";
@@ -230,6 +246,14 @@ let zoomed: Area | null = null;
 // The clock of the step that shows. `advance.ts` gives the rules.
 let stepClock = startClock(state.index, runs(state), Date.now());
 
+// True for a rehearsal: the clock of the steps does not run, so each step
+// shows until the presenter presses a key.
+const rehearsing = parameters.has("rehearse");
+
+// The time that each step used while the timer of the speaker view runs.
+// `rehearse.ts` gives the rules.
+let times = waiting(state.index);
+
 // The length of the talk, from the list of the steps or the address
 // parameter `?duration=`. The speaker view opens with the address of the
 // present view, so it gets the same parameter.
@@ -244,7 +268,7 @@ function tick(): void {
     timeLeft(left(elapsed, total), pace(elapsed, total, done));
   }
   const remaining = stepTime(stepClock, current(state, deck), Date.now());
-  stepLeft(stepText(remaining, runs(state)));
+  stepLeft(rehearsing ? HINT : stepText(remaining, runs(state)));
 }
 
 // Go to the next step when the time of the step ended. The present view
@@ -313,6 +337,9 @@ function show(changed: State, local = true): void {
   const pairs = change === null ? [] : morphs(state, changed);
   state = changed;
   stepClock = updateClock(stepClock, state.index, runs(state), Date.now());
+  if (moved) {
+    times = moveTimes(times, state.index, Date.now());
+  }
   // The browser runs the update of a transition later. The update then reads
   // the state of that time, so a fast second key does not show an old state.
   animate(
@@ -371,6 +398,7 @@ function show(changed: State, local = true): void {
   videos();
   if (isSpeaker && loaded && moved && started === null) {
     started = Date.now();
+    times = begin(state.index, started);
     tick();
   }
 }
@@ -455,6 +483,7 @@ if (isSpeaker) {
 // shows each step itself, so it runs with no clock.
 if (
   !isSpeaker &&
+  !rehearsing &&
   !parameters.has("check") &&
   deck.steps.some((step) => step.advance !== null)
 ) {
@@ -575,6 +604,7 @@ function call(builtin: Builtin): void {
       break;
     case "reset_timer":
       started = null;
+      times = waiting(state.index);
       tick();
       break;
     case "switch_scheme":
@@ -588,6 +618,11 @@ function call(builtin: Builtin): void {
     case "zoom_out":
       zoomTo(null);
       break;
+    case "show_times": {
+      const table = rows(deck, counted(times, Date.now()));
+      showTimes(table, summary(table), advanceLines(table));
+      break;
+    }
     default: {
       // The type check finds each built-in function that has no branch. The
       // program comes from the renderer with no examination, so a function
@@ -620,13 +655,16 @@ function handle(input: Event, event?: UIEvent): void {
 // field of text, such as the search of the list of keys. A key on an element
 // inside the list of keys also goes to the browser, so `Tab` moves the focus
 // to a section, and `Enter` or the space bar opens it. `Escape` in the list
-// closes the dialog, and the browser then sends `close`.
+// closes the dialog, and the browser then sends `close`. A key in the table
+// of the times goes to the browser too, so the step does not change under
+// the table, and `Escape` closes it.
 document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (event.ctrlKey || event.altKey || event.metaKey) {
     return;
   }
   const target = event.target as Element | null;
-  if (target?.closest?.(EDITABLE) || target?.closest?.("#help")) {
+  const inside = (selector: string) => target?.closest?.(selector) != null;
+  if (inside(EDITABLE) || inside("#help") || inside("#times")) {
     return;
   }
   handle({ kind: "key", key: event.key }, event);
@@ -674,6 +712,11 @@ function ignores(event: MouseEvent): boolean {
   // backdrop has the dialog itself as its target, and it closes the list.
   const list = target?.closest?.("#help");
   if (list && list !== target) {
+    return true;
+  }
+  // A click in the table of the times selects its text, and a click on its
+  // backdrop closes it. The two do not change the step.
+  if (target?.closest?.("#times")) {
     return true;
   }
   const interactive = target?.closest?.(INTERACTIVE);

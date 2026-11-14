@@ -15,9 +15,11 @@ import type { Pair } from "./morph.ts";
 import { links as linkCommands, parse as parseProgram } from "./program.ts";
 import type { Program, Projections } from "./program.ts";
 import type { Commands, WrittenLinks } from "./schema.ts";
+import { label } from "./rehearse.ts";
+import type { Row } from "./rehearse.ts";
 import { fromAddress } from "./scheme.ts";
 import type { Scheme } from "./scheme.ts";
-import { position } from "./speaker.ts";
+import { clock, position } from "./speaker.ts";
 import type { Pace } from "./speaker.ts";
 import { current } from "./state.ts";
 import type { State, View } from "./state.ts";
@@ -573,6 +575,50 @@ function help(name: string | undefined): void {
     section.open = current;
     section.toggleAttribute("data-current", current);
   }
+  dialog.showModal();
+}
+
+// Open the dialog `times` with a row for each slide and the lines of the
+// `advance` option, or close an open dialog. The renderer writes the dialog
+// with an empty table. `showModal` makes the slide inert, and the browser
+// closes the dialog at `Escape`. `rehearse.ts` gives the rows and the lines.
+export function showTimes(
+  table: readonly Row[],
+  summary: string,
+  lines: string,
+): void {
+  const dialog = document.getElementById("times") as HTMLDialogElement | null;
+  const body = document.getElementById("times-rows");
+  if (dialog === null || body === null || dialog.showModal === undefined) {
+    return;
+  }
+  if (dialog.open) {
+    dialog.close();
+    return;
+  }
+  text("times-total", summary);
+  text("times-code", lines);
+  body.replaceChildren(
+    ...table.map((row) => {
+      const cells = [
+        row.number === null ? `${label(row)}, hidden` : label(row),
+        String(row.steps.length),
+        row.time > 0 ? clock(row.time) : "No time",
+      ];
+      const line = document.createElement("tr");
+      line.replaceChildren(
+        ...cells.map((value, index) => {
+          const cell = document.createElement(index === 0 ? "th" : "td");
+          if (index === 0) {
+            cell.setAttribute("scope", "row");
+          }
+          cell.textContent = value;
+          return cell;
+        }),
+      );
+      return line;
+    }),
+  );
   dialog.showModal();
 }
 

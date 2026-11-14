@@ -3328,7 +3328,8 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   display: flex;
   flex-direction: column;
 }
-#help::backdrop {
+#help::backdrop,
+#times::backdrop {
   background-color: rgba(0, 0, 0, 0.4);
 }
 .help-hidden {
@@ -3447,6 +3448,70 @@ body[data-view="handout"][data-print-notes="false"] .notes {
 @media print {
   #help,
   #help[open] {
+    display: none;
+  }
+}
+/*
+ * The time of each slide. The key `e` of the speaker view opens this
+ * `dialog`. The presenter script writes a row for each slide into the table,
+ * and the lines of the `advance` option into the `code` element. One click
+ * on the lines selects each of them, so the presenter can copy them. The
+ * dialog has the colors, the size and the backdrop of the list of keys, and
+ * it does not print.
+ */
+#times {
+  box-sizing: border-box;
+  width: min(90vw, 17rem);
+  max-height: 88vh;
+  padding: 0.25rem 0.35rem 0;
+  overflow: auto;
+  font-size: 0.36rem;
+  color: var(--text);
+  background-color: var(--background);
+  border: 2px solid var(--text);
+  border-radius: 0.15rem;
+}
+#times h2 {
+  margin: 0 0 0.1rem;
+  font-size: 1.2em;
+}
+#times p {
+  margin: 0.1rem 0;
+}
+#times table {
+  width: 100%;
+  margin: 0.15rem 0;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+#times th,
+#times td {
+  padding: 0.05rem 0.15rem;
+  font-weight: normal;
+  text-align: right;
+  border-bottom: 1px solid var(--muted);
+}
+#times thead th {
+  font-weight: bold;
+}
+#times th:first-child {
+  text-align: left;
+}
+#times pre {
+  margin: 0.15rem 0;
+  padding: 0.15rem;
+  overflow-x: auto;
+  font-size: 0.9em;
+  text-align: left;
+  border: 1px solid var(--muted);
+  user-select: all;
+}
+#times .help-footer {
+  margin: 0.15rem -0.35rem 0;
+}
+@media print {
+  #times,
+  #times[open] {
     display: none;
   }
 }

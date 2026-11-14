@@ -104,6 +104,7 @@ export function deckOf(counts: readonly number[], options: Options = {}): Deck {
       steps: steps_of_slide,
       transition: options.kinds?.[index] ?? "fade",
       number: hidden(index) ? null : ++talk,
+      name: `slide ${index + 1}`,
     };
     first += steps_of_slide;
     return slide;

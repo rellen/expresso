@@ -24,9 +24,9 @@ import type { Entry, Slide, WrittenDeck } from "./schema.ts";
 export type { Entry } from "./schema.ts";
 
 // `Slide` is one slide of the deck: `first` is the index of its step 1 in
-// `steps`, `transition` is the kind of the transition into the slide, and
-// `number` is its number in the talk, or null for a hidden slide.
-// `schema.ts` declares it and `Kind`.
+// `steps`, `transition` is the kind of the transition into the slide,
+// `number` is its number in the talk, or null for a hidden slide, and `name`
+// is its name, or null. `schema.ts` declares it and `Kind`.
 export type { Kind, Slide } from "./schema.ts";
 
 // `duration` is the length of the talk in milliseconds, or null.

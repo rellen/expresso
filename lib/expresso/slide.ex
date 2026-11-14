@@ -18,7 +18,7 @@ defmodule Expresso.Slide do
           :auto_reveal => boolean() | nil,
           :hidden => boolean() | nil,
           :background => Expresso.Background.t() | :none | nil,
-          :advance => pos_integer() | false | nil,
+          :advance => pos_integer() | [pos_integer()] | false | nil,
           :transition => atom() | nil,
           :morph => :auto | :named | :off | nil,
           :effect => atom() | nil,

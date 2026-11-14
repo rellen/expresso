@@ -554,6 +554,9 @@ html               lang "en", and data-variants for a theme with two variants
           div        one for each group of bindings, class "help-set"
             ul
               li     one for each binding, data-words with the words of the search
+      dialog         the time of each slide, id "times", with an empty table and
+                     an empty code element. The key e of the speaker view fills
+                     them.
       script         the list of the steps as JSON, id "expresso-deck",
                      type "application/json", from Expresso.Steps
       script         the program of the presenter as JSON, id "expresso-program",
@@ -2409,6 +2412,9 @@ The TypeScript part is under `assets/src/`. It has these modules:
 - `advance.ts` holds the rules of the clock of the steps: the time that a step used, the
   time left of a step with a time of the `advance` option, and the text of the speaker
   view. It does not touch the document.
+- `rehearse.ts` holds the rules of the rehearsal: the record of the time that each step
+  used, the rows of the table of the slides, and the lines of the `advance` option. It
+  does not touch the document.
 - `main.ts` connects the modules. It sends each event to the interpreter, and it writes
   the fragment of the address.
 - `layout.ts` makes the layout check of `?check`. It shows each step with `dom.ts`, it
@@ -2441,8 +2447,8 @@ deck:
   step has one. `advance` is the time of the step in milliseconds, from the `advance`
   option of the slide or of the deck, or `null` for a step that waits for a key.
 - `slides` has one object for each slide. It gives the index of step 1 of the slide in
-  `steps`, the number of steps, the kind of the transition, and the number of the slide in
-  the talk, or `null` for a hidden slide.
+  `steps`, the number of steps, the kind of the transition, the number of the slide in
+  the talk, or `null` for a hidden slide, and the name of the slide.
 - `duration_ms` gives the length of the talk in milliseconds, or `null`.
 
 The state holds the index of the current step in `steps`. A move forward goes to the index
@@ -2470,7 +2476,7 @@ and the modes. For each key, click and swipe, `run` in `interpreter.ts` does the
 
 A command changes a field of the state, goes to a step or a slide, or calls a built-in
 function. The built-in functions are `open_speaker`, `fullscreen`, `reset_timer`,
-`switch_scheme`, `clear_drawing` and `zoom_out`, and `main.ts` calls them. `main.ts` stops the default
+`switch_scheme`, `clear_drawing`, `zoom_out` and `show_times`, and `main.ts` calls them. `main.ts` stops the default
 operation of the browser when the state changes or when the event calls a built-in function. The fragment of the address and the
 messages between the windows do not go through the modes.
 
@@ -3041,6 +3047,15 @@ with no length, the element has no text, and the style sheet hides it.
 A fifth element, `speaker-advance`, holds the time left of a step with a time of the
 `advance` option. `text` in `advance.ts` gives its text, and a step that waits for a key
 gives no text.
+
+The speaker view also keeps a record of the time that each step used. The record starts
+with the timer, `move` in `rehearse.ts` gives it at each change of the step, and `r`
+starts a new one. The key `e` calls the built-in function `show_times`. `showTimes` in
+`dom.ts` then writes a row for each slide into the table of the dialog `times`, and the
+lines of the `advance` option into its `code` element, and it opens the dialog. The
+renderer writes the dialog into each document, as it writes the list of keys. `?rehearse`
+in the address gives the present view no clock of the steps, and the speaker view then
+shows a text in `speaker-advance`. `docs/rehearsal.md` gives the design.
 
 The pace compares the time used with the `done` of the current entry: the part of the
 steps before the current step. The speaker is `behind` when the time used is more than one minute longer than

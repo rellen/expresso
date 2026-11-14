@@ -92,8 +92,8 @@ export const decodeState: Decoder<State> = /* @__PURE__ */ object({
 });
 
 // A built-in function of the browser.
-export type Builtin = "open_speaker" | "fullscreen" | "reset_timer" | "switch_scheme" | "clear_drawing" | "zoom_out";
-export const BUILTINS: readonly Builtin[] = ["open_speaker", "fullscreen", "reset_timer", "switch_scheme", "clear_drawing", "zoom_out"];
+export type Builtin = "open_speaker" | "fullscreen" | "reset_timer" | "switch_scheme" | "clear_drawing" | "zoom_out" | "show_times";
+export const BUILTINS: readonly Builtin[] = ["open_speaker", "fullscreen", "reset_timer", "switch_scheme", "clear_drawing", "zoom_out", "show_times"];
 export const decodeBuiltin: Decoder<Builtin> = /* @__PURE__ */ oneOf(BUILTINS);
 
 // A part of the window under a click.
@@ -331,18 +331,21 @@ export type Kind = string;
 export const decodeKind: Decoder<Kind> = /* @__PURE__ */ string(/^[A-Za-z0-9-]+$/);
 
 // One slide of the deck: the index of its step 1, its number of steps, the
-// transition into it, and its number in the talk, or null for a hidden slide.
+// transition into it, its number in the talk, or null for a hidden slide, and
+// its name, or null.
 export type Slide = Readonly<{
   first: number;
   steps: number;
   transition: Kind;
   number: number | null;
+  name: string | null;
 }>;
 export const decodeSlide: Decoder<Slide> = /* @__PURE__ */ object({
   first: /* @__PURE__ */ integer(0),
   steps: /* @__PURE__ */ integer(1),
   transition: decodeKind,
   number: /* @__PURE__ */ nullable(/* @__PURE__ */ integer(1)),
+  name: /* @__PURE__ */ nullable(/* @__PURE__ */ string()),
 });
 
 // One step of the deck as the renderer writes it: the slide, the step, the

@@ -137,6 +137,58 @@ defmodule Expresso.StepsTest do
       assert Enum.map(Steps.entries(deck), & &1.advance) == [nil, 5_000, 5_000, 20_000]
     end
 
+    test "a list gives the time of each step in sequence" do
+      slides = [slide("one", %{max_step: 3, advance: [12_000, 8_000, 5_000]})]
+      deck = "deck" |> Deck.new(%{advance: 20_000}, slides) |> Deck.number_slides()
+
+      assert Enum.map(Steps.entries(deck), & &1.advance) == [12_000, 8_000, 5_000]
+    end
+
+    test "a step after the end of a list takes the last time of the list" do
+      slides = [
+        slide("short", %{max_step: 3, advance: [12_000, 8_000]}),
+        slide("long", %{max_step: 1, advance: [3_000, 4_000]})
+      ]
+
+      deck = "deck" |> Deck.new(%{}, slides) |> Deck.number_slides()
+
+      assert Enum.map(Steps.entries(deck), & &1.advance) == [12_000, 8_000, 8_000, 3_000]
+    end
+
+    test "an empty list gives the time of the deck" do
+      slides = [slide("one", %{max_step: 2, advance: []})]
+      deck = "deck" |> Deck.new(%{advance: 20_000}, slides) |> Deck.number_slides()
+
+      assert Enum.map(Steps.entries(deck), & &1.advance) == [20_000, 20_000]
+    end
+
+    test "the DSL takes a list of times, and it refuses a list with a different value" do
+      defmodule ListDeck do
+        use Expresso
+
+        name "list"
+
+        slide "one" do
+          steps 2
+          advance [12_000, 8_000]
+        end
+      end
+
+      assert Enum.map(Steps.entries(Expresso.parse(ListDeck)), & &1.advance) == [12_000, 8_000]
+
+      assert_raise Spark.Error.DslError, ~r/advance/, fn ->
+        defmodule ZeroList do
+          use Expresso
+
+          name "zero list"
+
+          slide "one" do
+            advance [12_000, 0]
+          end
+        end
+      end
+    end
+
     test "a value that is not a positive integer gives no time" do
       for advance <- [0, -5, "15", 1.5, true] do
         assert Enum.map(Steps.entries(deck([1], %{advance: advance})), & &1.advance) == [nil]
@@ -248,6 +300,15 @@ defmodule Expresso.StepsTest do
     end
   end
 
+  describe "the name of a slide" do
+    test "slides/1 gives the name of each slide, and nil for a slide with no name" do
+      slides = [slide("intro", %{max_step: 1}), slide(nil, %{max_step: 1})]
+      deck = "deck" |> Deck.new(%{}, slides) |> Deck.number_slides()
+
+      assert Enum.map(Steps.slides(deck), & &1.name) == ["intro", nil]
+    end
+  end
+
   describe "json/1" do
     test "gives the steps as arrays, the slides as objects and the duration" do
       assert JSON.decode!(Steps.json(deck([1, 2], %{duration: 5}))) == %{
@@ -257,8 +318,20 @@ defmodule Expresso.StepsTest do
                  [2, 2, 1.0, 0.6667, "Slide 2 of 2, step 2 of 2", 1, nil, nil]
                ],
                "slides" => [
-                 %{"first" => 0, "number" => 1, "steps" => 1, "transition" => "fade"},
-                 %{"first" => 1, "number" => 2, "steps" => 2, "transition" => "fade"}
+                 %{
+                   "first" => 0,
+                   "name" => "slide 1",
+                   "number" => 1,
+                   "steps" => 1,
+                   "transition" => "fade"
+                 },
+                 %{
+                   "first" => 1,
+                   "name" => "slide 2",
+                   "number" => 2,
+                   "steps" => 2,
+                   "transition" => "fade"
+                 }
                ],
                "duration_ms" => 300_000
              }
@@ -266,7 +339,7 @@ defmodule Expresso.StepsTest do
 
     test "gives the keys of each object in alphabetical order" do
       assert Steps.json(deck([1])) ==
-               ~s({"duration_ms":null,"slides":[{"first":0,"number":1,"steps":1,) <>
+               ~s({"duration_ms":null,"slides":[{"first":0,"name":"slide 1","number":1,"steps":1,) <>
                  ~s("transition":"fade"}],"steps":[[1,1,0.0,0.0,"Slide 1 of 1",null,null,null]]})
     end
 

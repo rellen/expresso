@@ -176,6 +176,21 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "dim-contrast", deck: "dim_contrast.exs", address: "#1.2", still: true},
     %{name: "export-deck", deck: "export_deck.exs", address: "#1.3", still: true},
     %{
+      name: "rehearsal",
+      deck: "timed_deck.exs",
+      address: "?speaker&rehearse",
+      actions: [
+        "j",
+        {:advance, 24_000},
+        "j",
+        {:advance, 31_000},
+        "j",
+        {:advance, 18_000},
+        "e"
+      ],
+      still: true
+    },
+    %{
       name: "timed-deck",
       deck: "timed_deck.exs",
       actions: [

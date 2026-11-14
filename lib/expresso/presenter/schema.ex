@@ -112,7 +112,8 @@ defmodule Expresso.Presenter.Schema do
     :reset_timer,
     :switch_scheme,
     :clear_drawing,
-    :zoom_out
+    :zoom_out,
+    :show_times
   ]
   @transitions [:none, :fade, :slide, :zoom]
   @regions [:left_third, :right]
@@ -229,12 +230,13 @@ defmodule Expresso.Presenter.Schema do
        "The kind of the transition into a slide: a built-in kind, or a transition of the CSS of the deck.",
        {:string, "^[A-Za-z0-9-]+$"}},
       {:slide,
-       "One slide of the deck: the index of its step 1, its number of steps, the transition into it, and its number in the talk, or null for a hidden slide.",
+       "One slide of the deck: the index of its step 1, its number of steps, the transition into it, its number in the talk, or null for a hidden slide, and its name, or null.",
        {:object,
         first: {:integer, 0},
         steps: {:integer, 1},
         transition: {:ref, :kind},
-        number: {:nullable, {:integer, 1}}}},
+        number: {:nullable, {:integer, 1}},
+        name: {:nullable, :string}}},
       {:written_entry,
        "One step of the deck as the renderer writes it: the slide, the step, the fraction, the done part, the position, the index of the step before it and of the step after it in the talk, or null, and the time of the step in milliseconds, or null for a step that waits for a key.",
        {:record,

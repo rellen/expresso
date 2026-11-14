@@ -359,6 +359,20 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     querySelectorAll: (selector: string) =>
       selector === "details[data-mode]" ? panels : [],
   });
+  // The renderer writes the dialog of the time of each slide, with an empty
+  // table.
+  const times = Object.assign(element("times"), {
+    open: false,
+    showModal: () => {
+      times.open = true;
+    },
+    close: () => {
+      times.open = false;
+    },
+  });
+  const timesParts = ["times-total", "times-rows", "times-code"].map((id) =>
+    element(id),
+  );
   for (const panel of panels) {
     help.appendChild(panel);
   }
@@ -427,6 +441,8 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
     ...(options.links === undefined ? [] : [links]),
     program,
     help,
+    times,
+    ...timesParts,
     ...slides,
     handout,
     ...handout.children,

@@ -201,6 +201,38 @@ defmodule Expresso.Presenter.DocumentTest do
     end
   end
 
+  describe "the time of each slide" do
+    test "the document holds a dialog with an empty table and an empty code element" do
+      [dialog] = with_steps() |> LazyHTML.query("dialog#times") |> Enum.to_list()
+
+      assert LazyHTML.attribute(dialog, "aria-labelledby") == ["times-title"]
+
+      assert dialog |> LazyHTML.query("#times-title") |> LazyHTML.text() ==
+               "The time of each slide"
+
+      assert dialog |> LazyHTML.query("thead th[scope=col]") |> Enum.map(&LazyHTML.text/1) ==
+               ["Slide", "Steps", "Time"]
+
+      for id <- ["times-total", "times-rows", "times-code"] do
+        assert dialog |> LazyHTML.query("#" <> id) |> LazyHTML.text() == "", id
+      end
+
+      # The presenter can move the focus to the lines, and a screen reader
+      # reads their name.
+      assert dialog |> LazyHTML.query("pre") |> LazyHTML.attribute("tabindex") == ["0"]
+    end
+
+    test "the list of the steps holds the name of each slide" do
+      steps =
+        with_steps([1, 2])
+        |> LazyHTML.query("script#expresso-deck")
+        |> LazyHTML.text()
+        |> JSON.decode!()
+
+      assert Enum.map(steps["slides"], & &1["name"]) == ["slide 1", "slide 2"]
+    end
+  end
+
   describe "the pages of the handout" do
     test "only the page of the last step of each slide holds the commands of a click in the overview" do
       pages =

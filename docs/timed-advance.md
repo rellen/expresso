@@ -94,6 +94,7 @@ The code follows the plan, with these changes:
 
 - The handout view of the present view stops the clock, and the speaker view does not
   know this. Its time left then continues to count.
-- The time is the same for each step of a slide. The rehearsal of the second pull request
-  records a time for each slide.
+- The option of the deck gives the same time to each step. The option of a slide also
+  takes a list with a time for each step, which the rehearsal added. `docs/rehearsal.md`
+  gives that design.
 - A deck with one step and `loop true` has no step to go to, so its step has no time.

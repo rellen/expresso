@@ -143,6 +143,15 @@ defmodule Expresso.E2E do
     key(page, :keyboard_up, "Alt")
   end
 
+  @doc """
+  Press one key in the element of a page that has the focus
+
+  `press/2` sends a key to the `body`. This function sends it to the element
+  with the focus, such as an element in a dialog.
+  """
+  @spec press_focused(map(), String.t()) :: map()
+  def press_focused(page, key), do: key(page, :keyboard_press, key)
+
   # Press or release one key of the keyboard of a page.
   defp key(page, method, key) do
     case PlaywrightEx.send(%{guid: page.guid, method: method, params: %{key: key}},

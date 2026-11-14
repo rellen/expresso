@@ -73,6 +73,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/move-elements-between-slides.md",
         "docs/how-to/keep-backup-slides.md",
         "docs/how-to/run-a-deck-by-time.md",
+        "docs/how-to/rehearse-a-talk.md",
         "docs/how-to/write-notes-for-the-speaker.md",
         "docs/how-to/make-a-deck-accessible.md",
         "docs/how-to/make-templates.md",
