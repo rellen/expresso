@@ -7,6 +7,8 @@ defmodule Mix.Tasks.Expresso do
       $ mix expresso <input> [output]
       $ mix expresso <input> [output] --watch [--port <port>]
       $ mix expresso <input> [output] --check[=layout | =a11y | =browser] [--size <size>]...
+      $ mix expresso <input> [output] --pdf <file> [--pdf-pages <pages>] [--pdf-steps all]
+      $ mix expresso <input> [output] --png <directory> [--png-steps all] [--size <size>]
 
   `<input>` is the Elixir script of the deck, or `-` for the standard input.
   The script returns an `Expresso.Deck` struct, or a module that uses the DSL
@@ -56,6 +58,30 @@ defmodule Mix.Tasks.Expresso do
   browser of the browser levels into a directory of the user.
   `docs/how-to/check-a-deck.md` tells how to install each tool.
 
+  ## Export
+
+  With `--pdf <file>`, the task renders the deck, and a headless Chrome or
+  Chromium writes a PDF of it. With `--png <directory>`, the browser writes a
+  PNG file of each slide into that directory. The two options can go
+  together. With `[output]`, the task also writes the document to that file.
+  The task writes a line for each export to the standard output.
+
+    * `--pdf deck.pdf` - one page for each slide, as the present view shows
+      its last step, with the theme of the deck. The page has the size of
+      `--size`, or 1920 × 1080.
+    * `--pdf-pages handout` - the pages of the handout view, as the print
+      dialog of the browser gives them, with the notes and the theme of
+      paper. `--pdf-paper letter` gives letter paper, and the default is A4.
+    * `--pdf-steps all` - a page for each step.
+    * `--png slides` - one file for the last step of each slide, such as
+      `slides/slide-3.png`, at the size of `--size`, or 1920 × 1080.
+    * `--png-steps all` - one file for each step, such as
+      `slides/slide-3-step-2.png`.
+
+  The export needs the browser of `--check=layout`. Give its path in
+  `EXPRESSO_CHROMIUM` when the task does not find it.
+  `docs/how-to/export-a-deck.md` gives the steps.
+
   ## Options
 
     * `--watch` - serve the deck, and render it again after each change
@@ -64,7 +90,16 @@ defmodule Mix.Tasks.Expresso do
     * `--check`, `--check=layout`, `--check=a11y`, `--check=browser` - check
       the deck, and write a report
     * `--size <width>x<height>` - a size of the page for a browser level of
-      `--check`, such as `1024x768`. The default is 1920 × 1080.
+      `--check`, such as `1024x768`, or the size of the export. The default
+      is 1920 × 1080.
+    * `--pdf <file>` - write a PDF of the deck
+    * `--pdf-pages slides`, `--pdf-pages handout` - the form of the pages of
+      the PDF. The default is `slides`.
+    * `--pdf-steps all` - a page of the PDF for each step
+    * `--pdf-paper a4`, `--pdf-paper letter` - the paper of the handout form.
+      The default is `a4`.
+    * `--png <directory>` - write a PNG file of each slide
+    * `--png-steps all` - a PNG file for each step
     * `-h`, `--help` - show this help
     * `--version` - show the version of Expresso
     * `--install-check-tools` - install the tools of the browser levels of
@@ -78,7 +113,8 @@ defmodule Mix.Tasks.Expresso do
 
   The task writes the usage text and each error message to the standard
   error, and the exit status is then 1. With `--check`, a problem in the
-  report also gives the exit status 1. When the standard output closes
+  report also gives the exit status 1. An export that cannot write a file
+  gives the exit status 1 too. When the standard output closes
   before the task writes all the HTML, as for `| head`, the task stops with no
   message, and the exit status is 0.
   """

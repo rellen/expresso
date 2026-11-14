@@ -97,7 +97,25 @@ defmodule Expresso.BurritoEntryPoint do
                          It needs Node and the npm package playwright.
           --size <size>  A size of the page for a browser level of --check,
                          such as 1024x768. Give it more than one time for
-                         more sizes. The default is 1920x1080.
+                         more sizes. The default is 1920x1080. It is also
+                         the size of the export.
+          --pdf <file>   Write a PDF of the deck in a headless Chrome or
+                         Chromium: one page for each slide, with the theme of
+                         the deck. EXPRESSO_CHROMIUM gives the path of the
+                         browser.
+          --pdf-pages handout
+                         Write the pages of the handout view into the PDF,
+                         with the notes and the theme of paper.
+          --pdf-steps all
+                         Write a page of the PDF for each step.
+          --pdf-paper <paper>
+                         The paper of the handout form: a4 or letter. The
+                         default is a4.
+          --png <directory>
+                         Write a PNG file of the last step of each slide into
+                         the directory, such as slide-3.png.
+          --png-steps all
+                         Write a PNG file for each step.
       -h, --help         Show this help.
           --version      Show the version of Expresso.
           --install-check-tools
@@ -105,7 +123,7 @@ defmodule Expresso.BurritoEntryPoint do
                          and the Chromium of Playwright, for --check. It
                          needs Node and npm.
 
-    The exit status is 0 when the command writes the HTML, and 1 for an error
+    The exit status is 0 when the command writes its files, and 1 for an error
     or for a problem of --check.
     """
   end

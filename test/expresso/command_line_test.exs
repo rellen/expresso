@@ -183,7 +183,8 @@ defmodule Expresso.CommandLineTest do
 
       for args <- [["deck.exs", "--size", "1280x720"], ["deck.exs", "--check", "--size=1280x720"]] do
         assert CommandLine.parse(args) ==
-                 {:error, "--size needs --check=layout, --check=a11y or --check=browser"}
+                 {:error,
+                  "--size needs --check=layout, --check=a11y, --check=browser, --pdf or --png"}
       end
     end
 
@@ -206,6 +207,175 @@ defmodule Expresso.CommandLineTest do
 
       assert CommandLine.parse(["deck.exs", "--check", "--port", "4200"]) ==
                {:error, "--port needs --watch"}
+    end
+  end
+
+  describe "parse/1 with --pdf and --png" do
+    alias Expresso.Export
+
+    test "gives the path of the PDF, with one page for each slide" do
+      assert CommandLine.parse(["deck.exs", "--pdf", "deck.pdf"]) ==
+               {:export, "deck.exs", nil, %{Export.defaults() | pdf: "deck.pdf"}}
+
+      assert CommandLine.parse(["--pdf=out/deck.pdf", "deck.exs", "deck.html"]) ==
+               {:export, "deck.exs", "deck.html", %{Export.defaults() | pdf: "out/deck.pdf"}}
+    end
+
+    test "reads the pages, the steps and the paper of the PDF in two forms" do
+      expected = %{
+        Export.defaults()
+        | pdf: "deck.pdf",
+          pdf_pages: :handout,
+          pdf_steps: :all,
+          pdf_paper: :letter
+      }
+
+      assert CommandLine.parse([
+               "deck.exs",
+               "--pdf",
+               "deck.pdf",
+               "--pdf-pages",
+               "handout",
+               "--pdf-steps",
+               "all",
+               "--pdf-paper",
+               "letter"
+             ]) == {:export, "deck.exs", nil, expected}
+
+      assert CommandLine.parse([
+               "--pdf-paper=letter",
+               "--pdf-steps=all",
+               "--pdf-pages=handout",
+               "--pdf=deck.pdf",
+               "deck.exs"
+             ]) == {:export, "deck.exs", nil, expected}
+
+      assert {:export, "deck.exs", nil, %{pdf_pages: :slides, pdf_steps: :all}} =
+               CommandLine.parse([
+                 "deck.exs",
+                 "--pdf",
+                 "deck.pdf",
+                 "--pdf-pages",
+                 "slides",
+                 "--pdf-steps=all"
+               ])
+    end
+
+    test "gives the directory and the steps of the PNG files, and one size" do
+      assert CommandLine.parse(["deck.exs", "--png", "slides"]) ==
+               {:export, "deck.exs", nil, %{Export.defaults() | png: "slides"}}
+
+      assert CommandLine.parse([
+               "deck.exs",
+               "--png=slides",
+               "--png-steps",
+               "all",
+               "--size=1280x720"
+             ]) ==
+               {:export, "deck.exs", nil,
+                %{Export.defaults() | png: "slides", png_steps: :all, size: {1280, 720}}}
+    end
+
+    test "takes --pdf and --png together" do
+      assert CommandLine.parse([
+               "deck.exs",
+               "--pdf",
+               "deck.pdf",
+               "--png",
+               "slides",
+               "--size",
+               "1024x768"
+             ]) ==
+               {:export, "deck.exs", nil,
+                %{Export.defaults() | pdf: "deck.pdf", png: "slides", size: {1024, 768}}}
+    end
+
+    test "gives an error for an option with no value or with a wrong value" do
+      for name <- ~w(--pdf --pdf-pages --pdf-steps --pdf-paper --png --png-steps) do
+        assert CommandLine.parse(["deck.exs", name]) == {:error, "#{name} needs a value"}
+      end
+
+      assert CommandLine.parse(["deck.exs", "--pdf", "deck.pdf", "--pdf-pages", "notes"]) ==
+               {:error, "Unknown value of --pdf-pages: notes. Give slides or handout."}
+
+      assert CommandLine.parse(["deck.exs", "--pdf", "deck.pdf", "--pdf-paper=a3"]) ==
+               {:error, "Unknown value of --pdf-paper: a3. Give a4 or letter."}
+
+      assert CommandLine.parse(["deck.exs", "--pdf", "deck.pdf", "--pdf-steps", "last"]) ==
+               {:error, "Unknown value of --pdf-steps: last. Give all."}
+
+      assert CommandLine.parse(["deck.exs", "--png", "slides", "--png-steps=2"]) ==
+               {:error, "Unknown value of --png-steps: 2. Give all."}
+    end
+
+    test "gives an error for the standard output, an option or no text as the path" do
+      for value <- ["-", "--png", ""] do
+        assert CommandLine.parse(["deck.exs", "--pdf", value]) ==
+                 {:error, "--pdf needs a file, such as deck.pdf"}
+
+        assert CommandLine.parse(["deck.exs", "--png=#{value}"]) ==
+                 {:error, "--png needs a directory, such as slides"}
+      end
+    end
+
+    test "gives an error for an option of the PDF without --pdf, and of the PNG files without --png" do
+      assert CommandLine.parse(["deck.exs", "--pdf-pages", "handout"]) ==
+               {:error, "--pdf-pages needs --pdf"}
+
+      assert CommandLine.parse(["deck.exs", "--png", "slides", "--pdf-steps", "all"]) ==
+               {:error, "--pdf-steps needs --pdf"}
+
+      assert CommandLine.parse(["deck.exs", "--pdf-paper=a4"]) ==
+               {:error, "--pdf-paper needs --pdf"}
+
+      assert CommandLine.parse(["deck.exs", "--pdf", "deck.pdf", "--png-steps", "all"]) ==
+               {:error, "--png-steps needs --png"}
+    end
+
+    test "gives an error for the paper with the pages of the slides" do
+      assert CommandLine.parse(["deck.exs", "--pdf", "deck.pdf", "--pdf-paper", "a4"]) ==
+               {:error, "--pdf-paper needs --pdf-pages handout"}
+    end
+
+    test "gives an error with --watch, with --check and with --port" do
+      for option <- ["--watch", "--check", "--check=layout"] do
+        assert CommandLine.parse(["deck.exs", "--pdf", "deck.pdf", option]) ==
+                 {:error, "--pdf and --png do not go with --watch or --check"}
+      end
+
+      assert CommandLine.parse(["deck.exs", "--png", "slides", "--port", "4200"]) ==
+               {:error, "--port needs --watch"}
+    end
+
+    test "gives an error for a second size, without an input, and for the standard output" do
+      assert CommandLine.parse([
+               "deck.exs",
+               "--png",
+               "slides",
+               "--size",
+               "1280x720",
+               "--size",
+               "1024x768"
+             ]) ==
+               {:error, "--pdf and --png take one --size"}
+
+      assert CommandLine.parse(["--pdf", "deck.pdf"]) == {:error, "--pdf and --png need an input"}
+
+      assert {:error, "--pdf and --png write a line to the standard output" <> _} =
+               CommandLine.parse(["deck.exs", "-", "--pdf", "deck.pdf"])
+    end
+
+    test "gives an unknown option and a third path before the export" do
+      assert CommandLine.parse(["deck.exs", "--pdf", "deck.pdf", "--verbose"]) ==
+               {:error, "Unknown option: --verbose"}
+
+      assert CommandLine.parse(["deck.exs", "deck.html", "more.html", "--pdf", "deck.pdf"]) ==
+               {:error, "Unexpected argument: more.html"}
+    end
+
+    test "gives :help and :version before the export" do
+      assert CommandLine.parse(["deck.exs", "--pdf", "deck.pdf", "-h"]) == :help
+      assert CommandLine.parse(["--version", "--png", "slides"]) == :version
     end
   end
 

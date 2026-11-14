@@ -250,7 +250,11 @@ defmodule Expresso.ThemeOptionTest do
       assert html =~ "@media (prefers-color-scheme: dark) { :root { #{dracula} } }"
       assert html =~ ~s(:root[data-scheme="light"] { #{default} })
       assert html =~ ~s(:root[data-scheme="dark"] { #{dracula} })
-      assert html =~ "@media print { :root, :root[data-scheme] { #{default} } }"
+      # A document of `--pdf` with one page for each slide has
+      # `data-print="slides"`, and it keeps the theme of the deck on paper.
+      paper = ~s|:root:where(:not([data-print="slides"]))|
+
+      assert html =~ "@media print { #{paper}, #{paper}[data-scheme] { #{default} } }"
       assert html =~ ~s(<html lang="en" data-variants="data-variants">)
     end
 

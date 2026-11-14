@@ -174,6 +174,7 @@ defmodule Mix.Tasks.Expresso.Gifs do
     %{name: "callout-kinds", deck: "callout_kinds.exs", still: true},
     %{name: "accessible", deck: "accessible.exs", actions: ["j", "m", "j", "j"]},
     %{name: "dim-contrast", deck: "dim_contrast.exs", address: "#1.2", still: true},
+    %{name: "export-deck", deck: "export_deck.exs", address: "#1.3", still: true},
     %{name: "toc", deck: "toc.exs", actions: ["j", "j", "j"]},
     %{name: "toc-recap", deck: "toc_recap.exs", actions: ["j", "j", "j"]},
     %{name: "toc-progress", deck: "toc_progress.exs", address: "#3", still: true},

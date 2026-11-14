@@ -274,6 +274,49 @@ defmodule Expresso.BinaryTest do
     assert document =~ ~s(<p class="note-plain">Then `wait`.</p>)
   end
 
+  # The export needs Chrome or Chromium. The binary gets a new home directory
+  # for each run, so it does not find the browsers of Playwright there.
+  # Therefore the test gives the path of the browser: `EXPRESSO_CHROMIUM`, or
+  # the headless shell of Playwright that the test finds.
+  test "writes a PDF and the PNG files of a deck with --pdf and --png",
+       %{tmp_dir: dir} = context do
+    browser =
+      System.get_env("EXPRESSO_CHROMIUM") || Expresso.Check.Browser.playwright() ||
+        flunk(
+          "The test of the export needs EXPRESSO_CHROMIUM or the headless shell of Playwright."
+        )
+
+    context = %{context | env: [{"EXPRESSO_CHROMIUM", browser} | context.env]}
+    pdf = Path.join(dir, "deck.pdf")
+    png = Path.join(dir, "slides")
+
+    assert {output, 0} =
+             standard_output(context, ["examples/dsl_deck.exs", "--pdf", pdf, "--png", png])
+
+    assert [_all, pages, files] =
+             Regex.run(
+               ~r/\AWrote .+deck\.pdf: (\d+) pages\.\nWrote (\d+) PNG files to .+slides\.\n\z/,
+               output
+             )
+
+    # The deck has no hidden slide, so each slide has a page and a file.
+    slides = length(Expresso.load_file("examples/dsl_deck.exs") |> elem(1) |> Map.fetch!(:slides))
+    assert String.to_integer(pages) == slides
+    assert String.to_integer(files) == slides
+
+    assert "%PDF-" <> _rest = bytes = File.read!(pdf)
+    assert Expresso.Export.pages(bytes) == slides
+    assert length(File.ls!(png)) == slides
+  end
+
+  test "gives the exit status 1 for an export with no browser", %{tmp_dir: dir} = context do
+    context = %{context | env: [{"EXPRESSO_CHROMIUM", Path.join(dir, "none")} | context.env]}
+
+    assert {output, 1} = run(context, ["examples/demo.exs", "--pdf", Path.join(dir, "deck.pdf")])
+    assert output =~ "EXPRESSO_CHROMIUM gives"
+    refute File.exists?(Path.join(dir, "deck.pdf"))
+  end
+
   test "gives the exit status 1 for a level of --check that it does not know", context do
     assert {output, 1} = run(context, ["examples/demo.exs", "--check=all"])
     assert output =~ "Unknown level of --check: all. Give layout, a11y or browser.\n"

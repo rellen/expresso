@@ -785,10 +785,10 @@ body[data-view="handout"] .tree-frames {
   display: grid;
 }
 @media print {
-  .tree:has(.tree-frames) > svg {
+  :root:not([data-print="slides"]) .tree:has(.tree-frames) > svg {
     display: none;
   }
-  .tree-frames {
+  :root:not([data-print="slides"]) .tree-frames {
     display: grid;
   }
 }
@@ -1362,10 +1362,10 @@ body[data-view="handout"] .chart-frames {
   display: grid;
 }
 @media print {
-  .chart:has(.chart-frames) > svg {
+  :root:not([data-print="slides"]) .chart:has(.chart-frames) > svg {
     display: none;
   }
-  .chart-frames {
+  :root:not([data-print="slides"]) .chart-frames {
     display: grid;
   }
 }
@@ -2927,6 +2927,61 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     display: none;
   }
   body[data-print-notes="false"] .notes {
+    display: none;
+  }
+}
+/*
+ * The export of `--pdf`. `Expresso.Export` prints a copy of the document, and
+ * it writes `data-print` and `data-print-steps` on the `html` element of the
+ * copy, with a rule for the size of the page. The presenter script does not
+ * change these attributes. `docs/export.md` gives the design.
+ *
+ * `data-print="slides"` gives one page for each slide, as the present view
+ * shows it: the page has the size of the window, with no margin, so the text
+ * keeps the size of the screen. The page holds the last step of the slide,
+ * and no notes. The colors are the colors of the deck, because the renderer
+ * gives the theme of paper only to a document with no such attribute. A
+ * chart and a tree with frames show the frame of the step, as on the screen.
+ *
+ * `data-print-steps="all"` gives a page to each step, as the key `a` does.
+ * The handout view and paper leave out a hidden slide in each form.
+ */
+@media print {
+  :root[data-print="slides"] {
+    font-size: 48px;
+    print-color-adjust: exact;
+  }
+  :root[data-print="slides"] .handout-page {
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+    break-before: auto;
+    break-inside: avoid;
+  }
+  :root[data-print="slides"] .handout-page:not([data-thumbnail]) {
+    display: none;
+  }
+  :root[data-print="slides"]
+    .handout-page[data-thumbnail]:not([data-omit="hidden"]) {
+    display: flex;
+  }
+  :root[data-print="slides"]
+    .handout-page[data-thumbnail]:not([data-omit="hidden"])
+    ~ .handout-page[data-thumbnail]:not([data-omit="hidden"]) {
+    break-before: page;
+  }
+  :root[data-print-steps="all"] .handout-page:not([data-omit="hidden"]) {
+    display: flex;
+  }
+  :root[data-print-steps="all"]
+    .handout-page:not([data-omit="hidden"])
+    ~ .handout-page:not([data-omit="hidden"]) {
+    break-before: page;
+  }
+  :root[data-print-steps="all"] .note[data-covered] {
+    display: none;
+  }
+  :root[data-print="slides"] :is(.notes, .sources) {
     display: none;
   }
 }

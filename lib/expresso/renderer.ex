@@ -46,6 +46,13 @@ defmodule Expresso.Renderer do
   # writes `data-scheme` on the `html` element, and that attribute wins over
   # the scheme of the screen. The rule of paper names the attribute too, so it
   # wins over each variant.
+  #
+  # The export of `--pdf` with one page for each slide writes
+  # `data-print="slides"` on the `html` element, and such a document keeps
+  # the theme of the deck on paper. `:where` gives the condition no weight,
+  # so the rule of paper has the weight that it had before.
+  @paper ~s|:root:where(:not([data-print="slides"]))|
+
   defp theme(deck) do
     print =
       :default
@@ -65,7 +72,7 @@ defmodule Expresso.Renderer do
       end
 
     roles <>
-      "\n@media print { :root, :root[data-scheme] { #{declarations(print)} } }" <>
+      "\n@media print { #{@paper}, #{@paper}[data-scheme] { #{declarations(print)} } }" <>
       graphic_opacity(deck)
   end
 
