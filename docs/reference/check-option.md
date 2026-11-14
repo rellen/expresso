@@ -21,7 +21,7 @@ For the steps and the installation of the tools, see
 | --- | --- |
 | `<input>` | The deck file, or `-` for the standard input. The check needs it. |
 | `[output]` | The file for the HTML. Without it, the check writes no HTML. `-` is an error, because the report goes to the standard output. |
-| `--size <width>x<height>` | A size of the page for a browser level, such as `1024x768`. Each side is from 200 to 8000 pixels. Give the option more than one time for more sizes. The default is `1920x1080`. `--size` with `--check` alone, or with no `--check`, is an error. |
+| `--size <width>x<height>` | A size of the page for a browser level, such as `1024x768`. Each side is from 200 to 8000 pixels. Give the option more than one time for more sizes. The default is `1920x1080`. `--size` with `--check` alone is an error, and so is `--size` with no `--check` and no export. See [The export options](export-options.md). |
 
 `--check` with `--watch` is an error, and so is a level that is not `layout`, `a11y` or `browser`.
 

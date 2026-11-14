@@ -5,6 +5,8 @@ defmodule Expresso.CommandLine do
   The two commands take the same arguments:
 
       <input> [output] [--watch [--port <port>] | --check[=<level>] [--size <size>]...]
+              [--pdf <file> [--pdf-pages <pages>] [--pdf-steps all] [--pdf-paper <paper>]]
+              [--png <directory> [--png-steps all]] [--size <size>]
               [--help | -h] [--version] [--install-check-tools]
 
   `parse/1` reads the arguments, and `run/3` runs them. The mix task and the
@@ -21,6 +23,9 @@ defmodule Expresso.CommandLine do
   # The port of the watch mode without `--port`. Phoenix uses 4000, so a
   # Phoenix application and a deck can run at the same time.
   @default_port 4100
+
+  # The options of the export that take a value.
+  @export_options ~w(--pdf --pdf-pages --pdf-steps --pdf-paper --png --png-steps)
 
   @doc """
   Read the arguments of a command line
@@ -44,6 +49,13 @@ defmodule Expresso.CommandLine do
       error for the output. `sizes` holds a tuple `{width, height}` for each
       `--size 1280x720` or `--size=1280x720`, in sequence, and it is `[]`
       without the option. `--size` needs a browser level.
+    * `{:export, input, output, options}` for `--pdf` or `--png`. `options`
+      holds the options of `Expresso.Export`: the path of the PDF, the
+      directory of the PNG files, and the values of `--pdf-pages`,
+      `--pdf-steps`, `--pdf-paper`, `--png-steps` and `--size`. The export
+      needs an input, and it writes a line for each export to the standard
+      output, so `-` is an error for the output. `--watch` and `--check` are
+      errors with an export, and so is a second `--size`.
     * `{:watch, input, output, port}` for `--watch`. The port comes from
       `--port 4200` or `--port=4200`, and it is 4100 without that option. The
       watch mode needs an input file, and it does not write to the standard
@@ -69,6 +81,19 @@ defmodule Expresso.CommandLine do
       iex> Expresso.CommandLine.parse(["deck.exs", "--check=layout", "--size", "1280x720"])
       {:check, :layout, "deck.exs", nil, [{1280, 720}]}
 
+      iex> {:export, "deck.exs", nil, options} =
+      ...>   Expresso.CommandLine.parse(["deck.exs", "--pdf", "deck.pdf", "--size", "1280x720"])
+      iex> {options.pdf, options.pdf_pages, options.size}
+      {"deck.pdf", :slides, {1280, 720}}
+
+      iex> {:export, "deck.exs", "deck.html", options} =
+      ...>   Expresso.CommandLine.parse(["deck.exs", "deck.html", "--png=slides", "--png-steps", "all"])
+      iex> {options.png, options.png_steps}
+      {"slides", :all}
+
+      iex> Expresso.CommandLine.parse(["deck.exs", "--pdf-pages", "handout"])
+      {:error, "--pdf-pages needs --pdf"}
+
       iex> Expresso.CommandLine.parse(["deck.exs", "-h"])
       :help
 
@@ -92,6 +117,7 @@ defmodule Expresso.CommandLine do
           | {:watch, String.t(), String.t() | nil, :inet.port_number()}
           | {:check, Expresso.Check.level(), String.t(), String.t() | nil,
              [Expresso.Check.size()]}
+          | {:export, String.t(), String.t() | nil, Expresso.Export.options()}
           | {:error, String.t()}
   def parse(args) do
     cond do
@@ -108,12 +134,21 @@ defmodule Expresso.CommandLine do
         {:error, "--install-check-tools takes no other argument"}
 
       true ->
-        args |> take_options(%{watch: false, port: nil, check: nil, sizes: []}, []) |> command()
+        options = %{
+          watch: false,
+          port: nil,
+          check: nil,
+          sizes: [],
+          export: Expresso.Export.defaults(),
+          given: []
+        }
+
+        args |> take_options(options, []) |> command()
     end
   end
 
-  # Take `--watch`, `--port`, `--check` and `--size` out of the arguments. The
-  # other arguments keep their order.
+  # Take `--watch`, `--port`, `--check`, `--size` and the options of the
+  # export out of the arguments. The other arguments keep their order.
   defp take_options(["--watch" | rest], options, args),
     do: take_options(rest, %{options | watch: true}, args)
 
@@ -144,8 +179,18 @@ defmodule Expresso.CommandLine do
   defp take_options(["--size=" <> value | rest], options, args),
     do: take_size(value, rest, options, args)
 
-  defp take_options([arg | rest], options, args),
-    do: take_options(rest, options, [arg | args])
+  defp take_options([name, value | rest], options, args) when name in @export_options,
+    do: take_export(name, value, rest, options, args)
+
+  defp take_options([name], _options, _args) when name in @export_options,
+    do: {:error, "#{name} needs a value"}
+
+  defp take_options([arg | rest], options, args) do
+    case String.split(arg, "=", parts: 2) do
+      [name, value] when name in @export_options -> take_export(name, value, rest, options, args)
+      _other -> take_options(rest, options, [arg | args])
+    end
+  end
 
   defp take_options([], options, args), do: {options, Enum.reverse(args)}
 
@@ -169,6 +214,54 @@ defmodule Expresso.CommandLine do
          "Invalid size: #{value}. Give a width and a height from 200 to 8000, such as 1280x720."}
     end
   end
+
+  # One option of the export. `given` holds the name of each such option,
+  # so `mode/3` can find an option with no `--pdf` or no `--png`.
+  defp take_export(name, value, rest, options, args) do
+    case export_value(name, value) do
+      {:ok, key, value} ->
+        options = %{
+          options
+          | export: Map.put(options.export, key, value),
+            given: [name | options.given]
+        }
+
+        take_options(rest, options, args)
+
+      {:error, message} ->
+        {:error, message}
+    end
+  end
+
+  defp export_value("--pdf", path),
+    do: export_path(:pdf, path, "--pdf needs a file, such as deck.pdf")
+
+  defp export_value("--png", path),
+    do: export_path(:png, path, "--png needs a directory, such as slides")
+
+  defp export_value("--pdf-pages", "slides"), do: {:ok, :pdf_pages, :slides}
+  defp export_value("--pdf-pages", "handout"), do: {:ok, :pdf_pages, :handout}
+
+  defp export_value("--pdf-pages", value),
+    do: {:error, "Unknown value of --pdf-pages: #{value}. Give slides or handout."}
+
+  defp export_value("--pdf-paper", "a4"), do: {:ok, :pdf_paper, :a4}
+  defp export_value("--pdf-paper", "letter"), do: {:ok, :pdf_paper, :letter}
+
+  defp export_value("--pdf-paper", value),
+    do: {:error, "Unknown value of --pdf-paper: #{value}. Give a4 or letter."}
+
+  defp export_value("--pdf-steps", "all"), do: {:ok, :pdf_steps, :all}
+  defp export_value("--png-steps", "all"), do: {:ok, :png_steps, :all}
+
+  defp export_value(name, value) when name in ["--pdf-steps", "--png-steps"],
+    do: {:error, "Unknown value of #{name}: #{value}. Give all."}
+
+  # A path of the export. The export writes no file to the standard output,
+  # and a value that starts with `-` is an option with no path in front of it.
+  defp export_path(_key, "", message), do: {:error, message}
+  defp export_path(_key, "-" <> _rest, message), do: {:error, message}
+  defp export_path(key, path, _message), do: {:ok, key, path}
 
   # Make the result of `parse/1` from the watch options and the other
   # arguments.
@@ -204,11 +297,13 @@ defmodule Expresso.CommandLine do
   end
 
   # The mode of the command, from the options that `take_options/3` found.
+  defp mode(%{given: [_ | _]} = options, input, output), do: export(options, input, output)
+
   defp mode(%{watch: true, check: level}, _input, _output) when level != nil,
     do: {:error, "--check and --watch do not go together"}
 
   defp mode(%{check: level, sizes: [_ | _]}, _input, _output) when level in [nil, :basic],
-    do: {:error, "--size needs --check=layout, --check=a11y or --check=browser"}
+    do: {:error, "--size needs --check=layout, --check=a11y, --check=browser, --pdf or --png"}
 
   defp mode(%{check: level, port: nil, sizes: sizes}, input, output) when level != nil,
     do: check(level, input, output, sizes)
@@ -239,6 +334,53 @@ defmodule Expresso.CommandLine do
 
   defp check(level, input, output, sizes), do: {:check, level, input, output, sizes}
 
+  # The export. Each option of the PDF needs `--pdf`, and `--png-steps` needs
+  # `--png`. The export takes one size.
+  defp export(%{export: export} = options, input, output) do
+    case export_error(options, input, output) do
+      nil -> {:export, input, output, %{export | size: List.first(options.sizes)}}
+      message -> {:error, message}
+    end
+  end
+
+  # The first error of an export, or nil. Each pair holds a condition and the
+  # message of its error.
+  defp export_error(options, input, output) do
+    Enum.find_value(
+      [
+        {options.watch, "--pdf and --png do not go with --watch or --check"},
+        {options.check != nil, "--pdf and --png do not go with --watch or --check"},
+        {options.port != nil, "--port needs --watch"},
+        {missing(options), missing(options)},
+        {length(options.sizes) > 1, "--pdf and --png take one --size"},
+        {input == nil, "--pdf and --png need an input"},
+        {output == "-",
+         "--pdf and --png write a line to the standard output, so give a file for the HTML"}
+      ],
+      fn {error?, message} -> if error?, do: message end
+    )
+  end
+
+  # The error of an option of the export that needs a different option, or
+  # nil.
+  defp missing(%{export: export, given: given}) do
+    pdf_options = Enum.filter(given, &(&1 in ["--pdf-pages", "--pdf-steps", "--pdf-paper"]))
+
+    cond do
+      export.pdf == nil and pdf_options != [] ->
+        "#{List.last(pdf_options)} needs --pdf"
+
+      export.png == nil and "--png-steps" in given ->
+        "--png-steps needs --png"
+
+      export.pdf_pages == :slides and "--pdf-paper" in given ->
+        "--pdf-paper needs --pdf-pages handout"
+
+      true ->
+        nil
+    end
+  end
+
   @doc """
   Run a command line, and return its exit status
 
@@ -262,6 +404,8 @@ defmodule Expresso.CommandLine do
       function returns only for an error, so the exit status is 1.
     * `{:check, level, input, output, sizes}` calls `Expresso.Check.run/4`. The exit
       status is 1 for a problem or an error, and 0 otherwise.
+    * `{:export, input, output, options}` calls `Expresso.Export.run/3`. The
+      exit status is 1 for an error, and 0 otherwise.
 
   The function does not catch an exception from the deck. The binary catches
   it and writes the message, and Mix writes it for the mix task.
@@ -288,18 +432,26 @@ defmodule Expresso.CommandLine do
         IO.puts(:stderr, usage(program))
         1
 
-      {:paths, input_path, output_path} ->
-        input_path |> Expresso.main(output_path) |> status()
-
-      # The watch mode returns only for an error, and it writes the message.
-      {:watch, input_path, output_path, port} ->
-        {:error, _message} = Expresso.Watch.run(input_path, output_path, port: port)
-        1
-
-      {:check, level, input_path, output_path, sizes} ->
-        Expresso.Check.run(input_path, output_path, level, sizes)
+      command ->
+        execute(command)
     end
   end
+
+  # Run a command with an input, and return its exit status.
+  defp execute({:paths, input_path, output_path}),
+    do: input_path |> Expresso.main(output_path) |> status()
+
+  # The watch mode returns only for an error, and it writes the message.
+  defp execute({:watch, input_path, output_path, port}) do
+    {:error, _message} = Expresso.Watch.run(input_path, output_path, port: port)
+    1
+  end
+
+  defp execute({:check, level, input_path, output_path, sizes}),
+    do: Expresso.Check.run(input_path, output_path, level, sizes)
+
+  defp execute({:export, input_path, output_path, options}),
+    do: Expresso.Export.run(input_path, output_path, options)
 
   defp install_check_tools do
     case Expresso.Check.Tools.install() do

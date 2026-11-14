@@ -65,6 +65,13 @@ mix expresso my_deck.exs --watch   # serve the deck, and reload it after each ch
 mix expresso my_deck.exs --check   # check the deck, and write a report
 ```
 
+Two options write the slides in a different form, with Chrome or Chromium:
+
+```sh
+mix expresso my_deck.exs --pdf my_deck.pdf   # a PDF with one page for each slide
+mix expresso my_deck.exs --png slides        # a PNG file of each slide
+```
+
 `mix expresso --help` shows each option. The page of
 [the mix task](https://rellen.github.io/expresso/Mix.Tasks.Expresso.html) gives the same
 text. [Make your first deck](docs/tutorials/make-your-first-deck.md) takes you through

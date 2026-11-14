@@ -34,7 +34,8 @@ a keyword list with an unknown key, a key two times, or a form other than `color
 or `dark` with `light`.
 
 Paper always gets the default theme. A printer gives a white sheet, and a dark theme on
-it wastes ink.
+it wastes ink. A PDF of `--pdf` with one page for each slide is not for paper, and it
+keeps the theme of the deck. See [The export options](export-options.md).
 
 ## The built-in themes
 

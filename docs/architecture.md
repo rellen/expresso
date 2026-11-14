@@ -179,6 +179,7 @@ help text, so the two commands take the same arguments. `run/3` reads the argume
 | `<input> [output]` | Calls `Expresso.main/2`. | 0, or 1 for an error |
 | `<input> [output] --watch` | Calls `Expresso.Watch.run/3`. See "The watch mode". | 1, after an error |
 | `<input> [output] --check[=<level>]` | Calls `Expresso.Check.run/3`. See "The check mode". | 0, or 1 for a problem or an error |
+| `<input> [output] --pdf <file>` or `--png <directory>` | Calls `Expresso.Export.run/3`. See "The export". | 0, or 1 for an error |
 
 Each argument that starts with `-` is an option, except `-` alone. `-` is a path, and
 `Expresso.main/2` reads it as the standard input or the standard output. A path that
@@ -318,6 +319,28 @@ These are the reasons for its design:
   `background-contrast`. The function does not wait for a promise, because the virtual
   clock of the browser does not wait for the decode of an image. `docs/slide-backgrounds.md`
   gives the design.
+
+## The export
+
+`mix expresso deck.exs --pdf deck.pdf` writes a PDF of the deck, and `--png slides` writes
+a PNG file of each slide. `Expresso.Export.run/3` renders the deck, and a headless Chrome
+or Chromium writes the files. The export uses three functions of
+`Expresso.Check.Browser`: `find/3` finds the browser, `command/4` runs it with a time
+limit, and `window/4` finds the size of the window that gives a page of a size.
+
+- **The PDF.** `Expresso.Export.print_document/2` makes a copy of the document with
+  `data-print` and `data-print-steps` on its `html` element, and with a rule `@page` for
+  the size of the page. The browser prints the copy with `--print-to-pdf`. The rules of
+  the style sheet for paper read the attributes: `data-print="slides"` gives one page for
+  each slide with the size of the window and the theme of the deck, and no attribute
+  gives the handout view. The presenter script does not know the attributes.
+- **The PNG files.** `Expresso.Export.shots/2` returns the slide, the step and the name
+  of each file. For each one, the browser opens the present view at the address of the
+  step, such as `#3.2`, and takes a picture with `--screenshot`. Each run has its own
+  profile, so the runs go at the same time.
+
+The browser writes each file into a private directory, and the export then writes it to
+its path. `docs/export.md` gives the design.
 
 ## The watch mode
 

@@ -85,7 +85,9 @@ new behavior. A look at the slides is still necessary after a change to
 a line of code that breaks, and small text in a chart or a diagram. `test/e2e/layout_check_test.exs` runs it on
 `examples/line4/line4.exs` at 1920 × 1080, and on each example deck of the GIFs at
 1280 × 720. `mix expresso deck.exs --check=a11y` runs the layout check and axe-core on a
-deck with no window, and `test/e2e/check_test.exs` tests it. The checks do not see an
+deck with no window, and `test/e2e/check_test.exs` tests it. `test/e2e/export_test.exs`
+tests `--pdf` and `--png` in the same way: it reads the number and the size of the pages
+of each PDF, and the size of each PNG file. The checks do not see an
 order or a size that is wrong, so look at the slides too. A remote container has no display,
 but it has Chromium, and `npm install` gives Playwright. The browser is at
 `/opt/pw-browsers/chromium`. This path is not the default path of Playwright, so give it

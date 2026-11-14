@@ -76,11 +76,20 @@ defmodule Expresso.Check.Browser do
      Chromium. The function skips a command that installs a snap, such as
      `chromium` on Ubuntu, because that command does not end.
   3. The usual places of Chrome and Chromium on macOS.
+
+  The error names `need`, the option that needs the browser, and `guide`,
+  the document that tells how to install it. Without them, the error is the
+  error of `--check`.
   """
-  @spec find(%{String.t() => String.t()}) :: {:ok, Path.t()} | {:error, String.t()}
-  def find(env \\ System.get_env()) do
+  @spec find(%{String.t() => String.t()}, String.t(), Path.t()) ::
+          {:ok, Path.t()} | {:error, String.t()}
+  def find(
+        env \\ System.get_env(),
+        need \\ "This level of --check needs",
+        guide \\ "docs/how-to/check-a-deck.md"
+      ) do
     case env["EXPRESSO_CHROMIUM"] do
-      nil -> search(env)
+      nil -> search(env, need, guide)
       path -> given(path)
     end
   end
@@ -91,7 +100,7 @@ defmodule Expresso.Check.Browser do
       else: {:error, "EXPRESSO_CHROMIUM gives #{path}, and that file does not exist."}
   end
 
-  defp search(env) do
+  defp search(env, need, guide) do
     found =
       playwright(env) ||
         Enum.find_value(@names, &on_path/1) ||
@@ -101,8 +110,8 @@ defmodule Expresso.Check.Browser do
       do: {:ok, found},
       else:
         {:error,
-         "This level of --check needs Chrome or Chromium. Install one of them, or give its " <>
-           "path in EXPRESSO_CHROMIUM. docs/how-to/check-a-deck.md tells how."}
+         "#{need} Chrome or Chromium. Install one of them, or give its " <>
+           "path in EXPRESSO_CHROMIUM. #{guide} tells how."}
   end
 
   # A command on the `PATH` that is not a command of snap.
@@ -345,7 +354,24 @@ defmodule Expresso.Check.Browser do
   # writes its size, and the window grows by the difference. Then run the
   # check one time in a window of that size.
   # sobelow_skip ["Traversal"]
-  defp measure(browser, url, directory, {width, height} = window, {probe_timeout, timeout}) do
+  defp measure(browser, url, directory, size, {probe_timeout, timeout}) do
+    with {:ok, window} <- window(browser, directory, size, probe_timeout),
+         {:ok, dom} <- browse(browser, url, directory, window, timeout),
+         {:ok, page} <- result(dom),
+         do: same_size(page, size, browser)
+  end
+
+  @doc """
+  Find the size of the window that gives a page of a size
+
+  The browser opens a small page in `directory`, in a window of `size`. The
+  page writes its own size, and the function returns the size of the window
+  with the difference. `timeout` is the time in milliseconds for the browser.
+  """
+  @spec window(Path.t(), Path.t(), {pos_integer(), pos_integer()}, pos_integer()) ::
+          {:ok, {integer(), integer()}} | {:error, String.t()}
+  # sobelow_skip ["Traversal"]
+  def window(browser, directory, {width, height} = size, timeout \\ @probe_timeout) do
     probe = Path.join(directory, "size.html")
 
     File.write!(
@@ -353,13 +379,9 @@ defmodule Expresso.Check.Browser do
       "<body><script>document.body.dataset.size = innerWidth + \" \" + innerHeight</script></body>"
     )
 
-    with {:ok, dom} <- browse(browser, "file://#{probe}", directory, window, probe_timeout),
+    with {:ok, dom} <- browse(browser, "file://#{probe}", directory, size, timeout),
          [w, h] <- Regex.run(~r/data-size="(\d+) (\d+)"/, dom, capture: :all_but_first) do
-      larger = {2 * width - String.to_integer(w), 2 * height - String.to_integer(h)}
-
-      with {:ok, dom} <- browse(browser, url, directory, larger, timeout),
-           {:ok, page} <- result(dom),
-           do: same_size(page, window, browser)
+      {:ok, {2 * width - String.to_integer(w), 2 * height - String.to_integer(h)}}
     else
       {:error, _message} = error -> error
       nil -> {:error, "The browser #{browser} did not run the script of a page."}
@@ -397,19 +419,46 @@ defmodule Expresso.Check.Browser do
   end
 
   defp browse(browser, url, directory, {width, height}, timeout) do
-    args = [
-      "--headless",
-      "--no-sandbox",
-      "--disable-gpu",
-      "--hide-scrollbars",
-      "--mute-audio",
-      "--no-first-run",
-      "--user-data-dir=#{Path.join(directory, "profile")}",
-      "--window-size=#{width},#{height}",
-      "--virtual-time-budget=#{@budget}",
-      "--dump-dom",
-      url
-    ]
+    command(
+      browser,
+      [
+        "--window-size=#{width},#{height}",
+        "--virtual-time-budget=#{@budget}",
+        "--dump-dom",
+        url
+      ],
+      directory,
+      timeout: timeout
+    )
+  end
+
+  @doc """
+  Run the headless browser with arguments, and return its standard output
+
+  The function gives the browser the arguments that each run needs, such as
+  `--headless`, and then `args`. `directory` holds the profile of the
+  browser. The option `:profile` gives the name of that profile, so two runs
+  at the same time do not use the same profile. The option `:timeout` is the
+  time in milliseconds that the run can take, 600 000 by default. A browser
+  that does not end in this time is stopped, and the function returns an
+  error.
+  """
+  @spec command(Path.t(), [String.t()], Path.t(), keyword()) ::
+          {:ok, binary()} | {:error, String.t()}
+  def command(browser, args, directory, opts \\ []) do
+    timeout = Keyword.get(opts, :timeout, @timeout)
+    profile = Keyword.get(opts, :profile, "profile")
+
+    args =
+      [
+        "--headless",
+        "--no-sandbox",
+        "--disable-gpu",
+        "--hide-scrollbars",
+        "--mute-audio",
+        "--no-first-run",
+        "--user-data-dir=#{Path.join(directory, profile)}"
+      ] ++ args
 
     # The browser writes its own log to the standard error. The shell drops
     # that log, so the output of the command holds only the document. The

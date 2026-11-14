@@ -199,6 +199,10 @@ same pages as the paper. The speaker view still shows each step.
 `a` shows each step of each slide, whatever the `handout` options select. A print or a PDF
 from that window gets the same pages. A second `a` shows the selection again.
 
+The command line writes the same PDF with no window:
+`mix expresso deck.exs --pdf handout.pdf --pdf-pages handout`. See
+[The export options](export-options.md).
+
 The handout view and paper leave out each hidden slide, and `a` does not show it. The deck
 option `handout_hidden true` puts each hidden slide in. See
 [the hidden option](hidden-option.md#the-handout-view-and-paper).

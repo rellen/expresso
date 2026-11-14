@@ -46,6 +46,10 @@ Read these documents before you change the code:
   ten decisions. Nine are settled, and decision 2 has a question for the maintainer: the
   binary shows the notes as plain text, because it does not hold MDEx. Its last section,
   "The result", tells what changed during the work.
+- `docs/export.md` — the design for the export from the command line: a PDF of a deck, and
+  a PNG file of each slide, from a headless Chrome or Chromium. The code contains this
+  design. The document records ten decisions, and each is settled. Its last section, "The
+  result", tells what changed during the work.
 - `docs/graph-diagrams.md` — the design for a `diagram` from the source of a graph, in the
   language of Graphviz or of D2. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during

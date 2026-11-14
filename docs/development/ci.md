@@ -25,7 +25,8 @@ The jobs run in parallel on Linux, so the slowest of them gives their time:
   `binary (linux_x86)` runs on x86_64, and the job `binary (linux_arm)` runs on an arm64
   runner. Each job makes the binary for its own architecture, so it can run the binary.
   Neither job publishes the binary. `.github/actions/setup-zig` installs Zig, as "Zig in
-  the workflow" below tells.
+  the workflow" below tells. `.github/actions/setup-playwright` installs the headless
+  Chromium, because one release test exports a deck with `--pdf` and `--png`.
 
 Together they run each tool of `mix check`, with the four npm commands, the browser tests,
 the tests of the graph tools and the release tests. They make and test the binary for `linux_x86` and `linux_arm`. No job

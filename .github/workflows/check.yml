@@ -312,6 +312,10 @@ jobs:
   # does not keep it. The job does not publish the binary: the runner discards
   # it after the tests.
   #
+  # One test of the binary exports a deck with `--pdf` and `--png`, which need
+  # a browser. `.github/actions/setup-playwright` installs the headless
+  # Chromium of Playwright, and the test gives its path to the binary.
+  #
   # Each target has its own cache. The two jobs run at the same time, and with
   # one key only one of them can save its cache. No job makes a binary for
   # macOS.
@@ -329,6 +333,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-playwright
       - uses: ./.github/actions/setup-elixir
         with:
           cache: binary-${{ matrix.target }}
