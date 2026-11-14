@@ -110,6 +110,18 @@ defmodule Expresso.E2E do
   def keys(page, keys), do: Enum.reduce(keys, page, &press(&2, &1))
 
   @doc """
+  Give the focus to the window of a page, as the presenter does before a key
+
+  `press/2` sends a key to a page that does not have the focus. Chrome Headless
+  Shell 159 and later refuse full screen to a window without the focus.
+  """
+  @spec front(map()) :: map()
+  def front(page) do
+    {:ok, _result} = Page.bring_to_front(page.guid, timeout: @timeout)
+    page
+  end
+
+  @doc """
   Click the main mouse button at a point of the viewport of a page
   """
   @spec click(map(), number(), number()) :: map()
