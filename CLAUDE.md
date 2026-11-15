@@ -46,6 +46,11 @@ Read these documents before you change the code:
   ten decisions. Nine are settled, and decision 2 has a question for the maintainer: the
   binary shows the notes as plain text, because it does not hold MDEx. Its last section,
   "The result", tells what changed during the work.
+- `docs/accessibility-preferences.md` — an investigation of a deck in forced colors, with
+  the preference for more contrast, and against three new criteria of WCAG 2.2. It records
+  the state on 2026-11-15 and a proposal for each defect. No code changed. It has two
+  questions for the maintainer: the colors of a slide in forced colors, and the effect of
+  `prefers-contrast: more`.
 - `docs/export.md` — the design for the export from the command line: a PDF of a deck, and
   a PNG file of each slide, from a headless Chrome or Chromium. The code contains this
   design. The document records ten decisions, and each is settled. Its last section, "The
