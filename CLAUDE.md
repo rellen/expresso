@@ -394,6 +394,12 @@ _Fast and extensible Markdown for Elixir_
 
 [mdex usage rules](deps/mdex/usage-rules.md)
 <!-- mdex-end -->
+<!-- shoddy-start -->
+## shoddy usage
+_Small functions for tasks that occur frequently in Elixir code._
+
+[shoddy usage rules](deps/shoddy/usage-rules.md)
+<!-- shoddy-end -->
 <!-- sobelow-start -->
 ## sobelow usage
 _Security-focused static analysis for Elixir & the Phoenix framework_
