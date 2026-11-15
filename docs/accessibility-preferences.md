@@ -186,3 +186,18 @@ The investigation gives four issues. Two of them wait for an answer to a questio
 | Give the step rows of the menu and the search field a height of 24 pixels | Criterion 2.5.8 | Nothing. |
 | Make the content of a slide readable in forced colors | F1, F2, F6, F7, F8 | Question 1. |
 | Give more contrast for `prefers-contrast: more` | The table of the roles | Question 2. |
+
+## The result
+
+The maintainer answered the two questions on 2026-11-15:
+
+1. **Question 1:** alternative C. The text takes the colors of the system, and each graphic
+   keeps its colors on a plate with the background color of the theme.
+2. **Question 2:** the proposal. The preference for more contrast gives the dimmed roles
+   7:1, gives a text with the accent color the text color, and makes the outlines wider.
+
+The code changed in one pull request for each issue:
+
+| Issue | Change |
+| --- | --- |
+| #580 | A step row of the menu and the search field of the list of keys have a minimum height of 24 pixels, in pixels and not in a unit of the font size. A browser test measures them in three window sizes. |

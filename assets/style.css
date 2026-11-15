@@ -3282,9 +3282,15 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   .menu-steps {
     margin: 0 0 0.1rem 2.2em;
   }
+  /* A step row is a control that a click selects. Criterion 2.5.8 of WCAG 2.2
+   * gives a control a minimum of 24 by 24 CSS pixels. The height of the row
+   * comes from the font size, which comes from the window, so the minimum is
+   * in pixels. */
   .menu-step {
     display: flex;
+    align-items: center;
     gap: 0.2rem;
+    min-height: 24px;
     padding: 0.05rem 0.1rem;
     border-radius: 0.1rem;
     cursor: pointer;
@@ -3344,9 +3350,12 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   padding: 0.25rem 0.35rem;
   border-bottom: 1px solid var(--muted);
 }
+/* The minimum height is the minimum of a control in criterion 2.5.8 of WCAG
+ * 2.2. It is in pixels, because the font size comes from the window. */
 .help-search input {
   flex: 1;
   min-width: 0;
+  min-height: 24px;
   font: inherit;
   color: inherit;
   background: transparent;

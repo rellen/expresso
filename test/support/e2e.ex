@@ -72,6 +72,29 @@ defmodule Expresso.E2E do
   end
 
   @doc """
+  Make a page with its own browser context, for a test that needs a window
+  size or a preference of the user that is not the one of `setup`
+
+  The options are the options of a context of Playwright, such as
+  `viewport: %{width: 640, height: 360}`, `forced_colors: "active"`,
+  `color_scheme: "dark"` or `contrast: "more"`. The context closes at the end
+  of the test.
+  """
+  @spec new_page(map(), keyword()) :: map()
+  def new_page(browser, options) do
+    defaults = [
+      timeout: @timeout,
+      viewport: %{width: 1280, height: 720},
+      reduced_motion: "reduce"
+    ]
+
+    {:ok, context} = Browser.new_context(browser.guid, Keyword.merge(defaults, options))
+    ExUnit.Callbacks.on_exit(fn -> BrowserContext.close(context.guid, timeout: @timeout) end)
+    {:ok, page} = BrowserContext.new_page(context.guid, timeout: @timeout)
+    page
+  end
+
+  @doc """
   Render a deck to an HTML file in the directory of the test, and give its
   address. The deck is a module of the DSL or an `Expresso.Deck` struct.
   """
