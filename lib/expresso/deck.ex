@@ -25,6 +25,11 @@ defmodule Expresso.Deck do
   element has `external false`. A deck without the key keeps each file in the
   document. `Expresso.MediaFiles` gives the rules.
 
+  The metadata can also hold `:description` and `:author`: a summary of the
+  deck, and the name of its author. The document then has a `meta` element
+  for each. A deck without a key has no such element.
+  `docs/document-tags.md` gives the rules.
+
   The metadata can also hold `:handout_hidden`. The value `true` shows each
   hidden slide in the handout view and on paper, in its place. A deck without
   the key leaves the hidden slides out. `docs/hidden-slides.md` gives the

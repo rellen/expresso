@@ -2,8 +2,9 @@ defmodule Expresso.E2E.TargetSizeTest do
   use Expresso.E2E, async: false
 
   # Criterion 2.5.8 of WCAG 2.2, Target Size (Minimum): a control is 24 by 24
-  # CSS pixels or larger. The font size of the document comes from the window,
-  # so a small window gives small controls.
+  # CSS pixels or larger. The font size of the document is the same in each
+  # window, and the tests make sure that a small window does not make a
+  # control smaller.
   defmodule Deck do
     use Expresso
 

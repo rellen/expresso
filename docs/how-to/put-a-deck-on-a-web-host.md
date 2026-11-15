@@ -68,6 +68,38 @@ deck does not send the photographs again.
 To keep one small file in the document, give `external false` to its element. See
 [the external option](../reference/external-option.md).
 
+## Give the deck a description
+
+A search engine shows the title of a page and a description under it. The title is the
+`name` option of the deck. Give the description with the `description` option:
+
+```elixir
+defmodule Talk do
+  use Expresso
+
+  name "Supervision trees in practice"
+  description "How a supervision tree starts a process again after a failure, in ten slides."
+  author "Ada Lovelace"
+
+  slide do
+    heading "Supervision trees in practice"
+  end
+end
+```
+
+1. Write one or two sentences that tell what the talk is about. A search engine shows
+   approximately 155 characters.
+2. Render the deck again.
+3. Make sure that the document has the tag:
+
+   ```sh
+   grep -o '<meta name="description"[^>]*>' site/index.html
+   ```
+
+A deck with no `description` option has no description, and Lighthouse then gives 90 for
+SEO, and not 100. See
+[the description and author options](../reference/description-option.md).
+
 ## Make sure that the host compresses the document
 
 The document is text, and compression makes it approximately half as large.

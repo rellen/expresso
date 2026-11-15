@@ -142,9 +142,9 @@ with no effect?
 | 2.5.7 Dragging Movements | No defect found. | The script reads a drag for the drawing only, where the drag is the function. A swipe has a key and a tap as alternatives. The laser pointer and the zoom use no drag. |
 | 2.5.8 Target Size (Minimum) | Two controls are 1 pixel too low. | A step row of the menu is 521 by 23 pixels: 10 of the 14 options of `dsl_deck.exs`. The search field of the list of keys is 778 by 23 pixels. The minimum is 24 by 24. |
 
-The sizes come from a window of 1280 by 720 pixels. The font size of the document depends
-on the window, so a smaller window gives smaller controls. The proposal is a minimum
-height of 24 pixels for the two controls.
+The sizes come from a window of 1280 by 720 pixels. The font size of the document is 48
+pixels in each window, so a different window gives the same sizes. The proposal is a
+minimum height of 24 pixels for the two controls.
 
 The present view, the overview, the handout view and the speaker view have no control
 that takes the focus. The presenter script reads each key from the document.
@@ -218,3 +218,9 @@ Issue #582 had two more questions, with these answers:
    of the `highlight` option still shows the lines in focus.
 2. The preference replaces the `dim_contrast` option of the deck, because 7 is the
    highest value of the option.
+
+
+The first text of this document told that the font size depends on the window. That was
+not correct. A measurement for issue #566 gave 48 pixels for the `html` element, and 22.8
+pixels for a step row, in windows from 320 to 1920 pixels wide. The section about
+criterion 2.5.8 has the correct text now.

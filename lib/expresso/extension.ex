@@ -1780,6 +1780,16 @@ defmodule Expresso.Extension do
         doc:
           "The language of the text of the deck, as a language tag, such as \"de\" or \"pt-BR\". A screen reader selects its voice from it. The default is \"en\". See docs/reference/lang-option.md."
       ],
+      description: [
+        type: :string,
+        doc:
+          "A summary of the deck in one or two sentences. A search engine shows it under the title of the deck. The document then has a meta element with the name description. See docs/reference/description-option.md."
+      ],
+      author: [
+        type: :string,
+        doc:
+          "The name of the author of the deck. The document then has a meta element with the name author. See docs/reference/description-option.md."
+      ],
       external: [
         type: :boolean,
         doc:

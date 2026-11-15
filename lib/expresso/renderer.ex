@@ -76,6 +76,7 @@ defmodule Expresso.Renderer do
     roles <>
       more_contrast(deck) <>
       "\n@media print { #{@paper}, #{@paper}[data-scheme] { #{declarations(print)} } }" <>
+      scheme_rules(deck) <>
       graphic_opacity(deck)
   end
 
@@ -293,6 +294,76 @@ defmodule Expresso.Renderer do
   # The title of the document: the name of the deck, or else the heading of
   # its first slide. A screen reader reads the title first, so it is never
   # empty.
+  # The `meta` elements of the head, as a name, a content and a media query
+  # or `nil`. `docs/document-tags.md` gives the decision for each tag. No tag
+  # holds an address, so the document names no address of a network.
+  #
+  #   * `description` and `author` come from the options of the deck. A deck
+  #     without an option has no such tag, so the document shows no text
+  #     that the user did not write.
+  #   * `generator` names Expresso and its version.
+  #   * `color-scheme` tells the browser the variants of the theme, so the
+  #     scroll bars and the colors of the system agree with the slides.
+  #   * `theme-color` is the background color of the theme. A browser on a
+  #     phone can give its bar that color. A theme with two variants gets a
+  #     tag for each scheme of the screen.
+  defp head_tags(deck) do
+    metadata = deck.metadata || %{}
+    variants = variants(deck)
+
+    text =
+      for {name, key} <- [{"description", :description}, {"author", :author}],
+          content = one_line(metadata[key]),
+          content != "",
+          do: {name, content, nil}
+
+    scheme = Enum.map_join(variants, " ", fn {_name, palette} -> palette.variant end)
+
+    colors =
+      case variants do
+        [{nil, palette}] ->
+          [{"theme-color", palette.roles.background, nil}]
+
+        variants ->
+          for {name, palette} <- variants,
+              do: {"theme-color", palette.roles.background, "(prefers-color-scheme: #{name})"}
+      end
+
+    text ++
+      [{"generator", Expresso.CommandLine.version(), nil}, {"color-scheme", scheme, nil}] ++
+      colors
+  end
+
+  # The text of an option on one line. A text of more than one line, such as
+  # a heredoc, gets one space in place of each sequence of white space.
+  defp one_line(nil), do: ""
+  defp one_line(text), do: text |> String.split() |> Enum.join(" ")
+
+  # The `color-scheme` property for the parts that the `meta` element cannot
+  # tell. The key `t` writes `data-scheme` on the `html` element, and the
+  # scheme of the browser must then follow the variant that shows. Paper has
+  # the default theme, which is light.
+  defp scheme_rules(deck) do
+    variants = variants(deck)
+
+    switch =
+      if length(variants) == 2 do
+        "\n:root[data-scheme=\"light\"] { color-scheme: light; }" <>
+          "\n:root[data-scheme=\"dark\"] { color-scheme: dark; }"
+      else
+        ""
+      end
+
+    paper =
+      if Enum.any?(variants, fn {_name, palette} -> palette.variant == :dark end) do
+        "\n@media print { #{@paper}, #{@paper}[data-scheme] { color-scheme: light; } }"
+      else
+        ""
+      end
+
+    switch <> paper
+  end
+
   defp document_title(%{name: name}) when is_binary(name) and name != "", do: name
 
   defp document_title(deck) do
@@ -871,6 +942,10 @@ defmodule Expresso.Renderer do
           # `Expresso.Deck.new/3` takes `nil`. The title then comes from the
           # first heading of the deck.
           title(do: document_title(@deck))
+
+          for {name, content, media} <- head_tags(@deck) do
+            meta name: name, content: content, media: media
+          end
 
           style do
             Phoenix.HTML.raw(fonts())

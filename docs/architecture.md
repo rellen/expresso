@@ -509,6 +509,9 @@ html               lang "en", and data-variants for a theme with two variants
   head
     meta             charset "utf-8"
     title            the name of the deck
+    meta             name "description" and name "author", from the options of
+                     the deck, then "generator", "color-scheme" and
+                     "theme-color". See docs/document-tags.md
     style            assets/fonts.css, with the bytes of each font file in it
     style            the roles of the theme, then assets/style.css
     style            the rules of the token classes of a code element, from Makeup

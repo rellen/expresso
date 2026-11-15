@@ -80,6 +80,10 @@ Read these documents before you change the code:
   `external` option of the deck. The code contains this design. The document records ten
   decisions, and each is settled. Its section "The result" tells what changed during the
   work, and what a later change added.
+- `docs/document-tags.md` — the design for the `meta` elements of the document: the
+  description, the author, the generator, the color scheme and the theme color. The code
+  contains these tags. The document records a decision for each of 13 tags. Issues #589
+  and #590 hold the tags that need an address, and the viewport tag.
 - `docs/graph-diagrams.md` — the design for a `diagram` from the source of a graph, in the
   language of Graphviz or of D2. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during
