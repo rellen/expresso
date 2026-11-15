@@ -3868,3 +3868,26 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     border-bottom: calc(var(--highlight, 0) * 0.12em) solid CanvasText;
   }
 }
+/*
+ * More contrast. A user can ask the system for more contrast, and the media
+ * query `prefers-contrast: more` is then true. The renderer writes the
+ * colors: each role of text of the theme gets 7:1 on its background, and
+ * each dimmed role keeps 7:1. `Expresso.Palette.with_more_contrast/1` gives
+ * the rules.
+ *
+ * The style sheet makes each outline that shows the focus or the selected
+ * element 3px wide. The outline of the selected page of the overview is
+ * 4px wide, so it does not change. The search field of the list of keys has
+ * no outline in the usual mode, because its text cursor shows the focus.
+ */
+@media screen and (prefers-contrast: more) {
+  .menu-slide:has(+ .menu-steps [data-current]) .menu-thumb {
+    outline-width: calc(3px / var(--menu-zoom, 0.1));
+  }
+  .menu-step[data-cursor] {
+    outline-width: 3px;
+  }
+  .help-search input:focus-visible {
+    outline: 3px solid currentColor;
+  }
+}

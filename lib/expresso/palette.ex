@@ -170,6 +170,47 @@ defmodule Expresso.Palette do
     }
   end
 
+  # The enhanced minimum of WCAG 2.2 for normal text, criterion 1.4.6.
+  @more_ratio 7.0
+
+  @doc """
+  Give each role of text the contrast of a user who asks for more contrast
+
+  A role of text with less than 7:1 on its background becomes lighter on a
+  dark background, or darker on a light background, until it has 7:1.
+  `Expresso.Color.adjust/3` makes the change, so the role keeps its hue. A
+  role that no lightness brings to 7:1 stays as it is. Each role then dims
+  only as far as it keeps 7:1, as `with_dim_contrast/2` does with 7.
+
+  The renderer writes the result for the media query `prefers-contrast: more`.
+  See `more_contrast_declarations/1`.
+
+      iex> palette = Expresso.Palette.Builtin.fetch!(:default)
+      iex> Expresso.Color.contrast(palette.roles.accent, palette.roles.background) < 7
+      true
+      iex> more = Expresso.Palette.with_more_contrast(palette)
+      iex> Expresso.Color.contrast(more.roles.accent, more.roles.background) >= 7
+      true
+      iex> more.roles.text == palette.roles.text
+      true
+  """
+  @spec with_more_contrast(t()) :: t()
+  def with_more_contrast(%__MODULE__{roles: roles} = palette) do
+    roles =
+      Map.new(@roles, fn
+        {role, {_slot, nil}} ->
+          {role, roles[role]}
+
+        {role, {_slot, on}} ->
+          case Color.adjust(roles[role], roles[on], @more_ratio) do
+            {:ok, color, _change} -> {role, color}
+            :error -> {role, roles[role]}
+          end
+      end)
+
+    with_dim_contrast(%{palette | roles: roles}, @more_ratio)
+  end
+
   @doc """
   Return each role that does not meet a minimum, with the measure, its value and the minimum
 
@@ -307,7 +348,34 @@ defmodule Expresso.Palette do
       true
   """
   @spec declarations(t()) :: String.t()
-  def declarations(%__MODULE__{roles: roles, dimmed: dimmed, dim_opacity: opacity} = palette) do
+  def declarations(%__MODULE__{} = palette), do: palette |> properties() |> Enum.join(" ")
+
+  @doc """
+  Return the CSS custom properties that change for a user who asks for more contrast
+
+  The declarations are those of `with_more_contrast/1` that are different from
+  the declarations of the palette. The renderer writes them in the media query
+  `prefers-contrast: more`, after the declarations of the palette.
+
+      iex> palette = Expresso.Palette.Builtin.fetch!(:default)
+      iex> more = Expresso.Palette.more_contrast_declarations(palette)
+      iex> more =~ "--accent: #"
+      true
+      iex> more =~ "--text: #"
+      false
+  """
+  @spec more_contrast_declarations(t()) :: String.t()
+  def more_contrast_declarations(%__MODULE__{} = palette) do
+    usual = properties(palette)
+
+    palette
+    |> with_more_contrast()
+    |> properties()
+    |> Enum.reject(&(&1 in usual))
+    |> Enum.join(" ")
+  end
+
+  defp properties(%__MODULE__{roles: roles, dimmed: dimmed, dim_opacity: opacity} = palette) do
     colors = for {role, _slot} <- @roles, do: "--#{property(role)}: #{roles[role]};"
 
     dimmed =
@@ -315,7 +383,7 @@ defmodule Expresso.Palette do
           Map.has_key?(dimmed, role),
           do: "--#{property(role)}-dim: #{elem(dimmed[role], 1)};"
 
-    Enum.join(colors ++ dimmed ++ ["--dim-opacity: #{opacity};"] ++ chart(palette), " ")
+    colors ++ dimmed ++ ["--dim-opacity: #{opacity};"] ++ chart(palette)
   end
 
   # The colors of the series of a chart, in a fixed order. The colors of a

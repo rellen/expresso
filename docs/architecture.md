@@ -818,6 +818,30 @@ sees. `main.ts` therefore keeps the choice outside the state:
 The default presenter binds `t` in the present view and in the speaker view.
 `scheme.ts` holds the rules, and `dom.ts` reads and writes the attribute.
 
+#### More contrast
+
+A user can ask the system for more contrast, and the media query `prefers-contrast: more`
+is then true. `Expresso.Palette.with_more_contrast/1` returns the palette for such a user:
+`Expresso.Color.adjust/3` brings each role of text with less than 7:1 to 7:1, and each
+role then dims as with `dim_contrast 7`. The renderer writes
+`Expresso.Palette.more_contrast_declarations/1`, which holds only the properties that
+change:
+
+1. `@media (prefers-contrast: more)` gives `:root` the properties of a theme with one
+   variant.
+2. With two variants, a rule for each scheme of the screen names the scheme, such as
+   `@media (prefers-contrast: more) and (prefers-color-scheme: light)`. A rule of the light
+   variant with no scheme applies to a dark screen too, and it replaces a property of the
+   dark variant that needs no change.
+3. With two variants, `:root[data-scheme="light"]` and `:root[data-scheme="dark"]` get a
+   rule each, for the key `t`.
+4. Each rule comes after the rule that it replaces, and in front of the rule of paper. Paper
+   does not change.
+
+The change is a second set of values and not a rule of the style sheet, because the
+renderer calculates the dimmed colors for each deck. `assets/style.css` holds only the
+rule that makes the outlines of the menu and of the search field 3 pixels wide.
+
 #### The dimmed colors
 
 An opacity `o` changes each channel of a color to `o × color + (1 - o) × background`, and

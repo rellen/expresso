@@ -203,3 +203,18 @@ The code changed in one pull request for each issue:
 | #580 | A step row of the menu and the search field of the list of keys have a minimum height of 24 pixels, in pixels and not in a unit of the font size. A browser test measures them in three window sizes. |
 | #579 | In forced colors, the progress bar and a line of the pen have the color `CanvasText`, and the dot of the laser pointer and a line of the highlighter have the color `Highlight`. The dot has a ring of `CanvasText`. The progress bar and the pen then have 21:1 on the canvas, and the dot has 8.7:1 or more. A line of the highlighter has 2.1:1 with its opacity of 0.4, and 1.75:1 in the usual mode. |
 | #581 | In forced colors, a chart, a diagram, a formula with a part and an image keep their colors on a plate with the background color of the theme (F1, F2, and F7 for a formula). A dimmed element has an opacity of 0.6 (F6), and a code token in focus has a bar in the color `CanvasText`. The colors of code (F7) and a color or a gradient behind a slide (F8) go away, and the reference tells the user so. An image behind a slide stays, and the browser puts a box with the canvas color behind each text. A table dims with the same opacity. |
+| #582 | For `prefers-contrast: more`, each role of text of the theme has 7:1 or more, each dimmed role keeps 7:1, and the outlines of the menu and of the search field are 3 pixels wide. |
+
+The change for #582 is different from the proposal in one part. The proposal gave a text
+with the accent color the text color. A measurement of the 27 built-in themes showed that
+15 of them have more roles under 7:1, such as the colors of code, and `:solarized_light`
+has 5.0:1 for its text. Each role of text with less than 7:1 therefore becomes darker or
+lighter until it has 7:1, and it keeps its hue. The accent is one of these roles.
+
+Issue #582 had two more questions, with these answers:
+
+1. The dim state gets no mark that is not a color. A role near 7:1 does not dim, so
+   the state `dim` shows less for this user, and the documents tell the user so. The bar
+   of the `highlight` option still shows the lines in focus.
+2. The preference replaces the `dim_contrast` option of the deck, because 7 is the
+   highest value of the option.

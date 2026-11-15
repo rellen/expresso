@@ -27,6 +27,64 @@ defmodule Expresso.PaletteTest do
     end)
   end
 
+  describe "with_more_contrast/1" do
+    test "each role of text of each built-in theme has 7:1 or more, also when it is dimmed" do
+      for name <- Builtin.names() do
+        more = name |> Builtin.fetch!() |> Palette.with_more_contrast()
+
+        for {role, {_slot, on}} <- Palette.roles(), on != nil do
+          {_opacity, dimmed} = more.dimmed[role]
+
+          assert Color.contrast(more.roles[role], more.roles[on]) >= 7, "#{role} of #{name}"
+          assert Color.contrast(dimmed, more.roles[on]) >= 7, "dimmed #{role} of #{name}"
+        end
+      end
+    end
+
+    test "a role with 7:1 or more and each background keep their color" do
+      for name <- Builtin.names() do
+        palette = Builtin.fetch!(name)
+        more = Palette.with_more_contrast(palette)
+
+        for {role, {_slot, on}} <- Palette.roles() do
+          if on == nil or Color.contrast(palette.roles[role], palette.roles[on]) >= 7 do
+            assert more.roles[role] == palette.roles[role], "#{role} of #{name}"
+          else
+            refute more.roles[role] == palette.roles[role], "#{role} of #{name}"
+          end
+        end
+      end
+    end
+
+    test "the palette dims as with_dim_contrast/2 does with 7" do
+      more = :dracula |> Builtin.fetch!() |> Palette.with_more_contrast()
+
+      assert more.dim_ratio == 7.0
+      assert more == Palette.with_dim_contrast(more, 7)
+    end
+  end
+
+  describe "more_contrast_declarations/1" do
+    test "the declarations hold only the properties that change" do
+      palette = Builtin.fetch!(:default)
+      usual = palette |> Palette.declarations() |> String.split("; ")
+      more = palette |> Palette.more_contrast_declarations() |> String.split("; ")
+
+      assert Enum.all?(more, &(&1 not in usual))
+      assert Enum.any?(more, &String.starts_with?(&1, "--accent: #"))
+      assert Enum.any?(more, &String.starts_with?(&1, "--text-dim: #"))
+      refute Enum.any?(more, &String.starts_with?(&1, "--text: "))
+      refute Enum.any?(more, &String.starts_with?(&1, "--background: "))
+      refute Enum.any?(more, &String.starts_with?(&1, "--chart-1: "))
+    end
+
+    test "a palette that dims at 7 has only the dimmed properties" do
+      palette = :ayu_dark |> Builtin.fetch!() |> Palette.with_dim_contrast(7)
+
+      assert Palette.more_contrast_declarations(palette) == ""
+    end
+  end
+
   test "each built-in theme meets each minimum, within the limit of the change" do
     for name <- Builtin.names(), palette = Builtin.fetch!(name) do
       assert Palette.problems(palette) == [], "#{name}"

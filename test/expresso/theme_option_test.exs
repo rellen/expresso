@@ -258,6 +258,38 @@ defmodule Expresso.ThemeOptionTest do
       assert html =~ ~s(<html lang="en" data-variants="data-variants">)
     end
 
+    test "one variant gives a rule for more contrast, in front of the rule of paper" do
+      html = [Builder.slide("one")] |> Builder.deck(theme: :default) |> Expresso.Deck.render()
+      more = Expresso.Palette.more_contrast_declarations(Builtin.fetch!(:default))
+
+      assert more =~ "--accent: #"
+      assert html =~ "@media (prefers-contrast: more) { :root { #{more} } }\n@media print"
+    end
+
+    test "a deck with dim_contrast 7 and a theme with 7:1 for each role has no rule for more contrast" do
+      html =
+        [Builder.slide("one")]
+        |> Builder.deck(theme: :ayu_dark, dim_contrast: 7)
+        |> Expresso.Deck.render()
+
+      # The style sheet has a rule for the outlines, with a different text.
+      refute html =~ "@media (prefers-contrast: more) { :root"
+    end
+
+    test "two variants give a rule for more contrast for each scheme and for the key t" do
+      deck = Builder.deck([Builder.slide("one")], theme: [dark: :zenburn, light: :default])
+      html = Expresso.Deck.render(deck)
+      zenburn = Expresso.Palette.more_contrast_declarations(Builtin.fetch!(:zenburn))
+      default = Expresso.Palette.more_contrast_declarations(Builtin.fetch!(:default))
+      more = "@media (prefers-contrast: more)"
+
+      # The rule of the light variant must not apply to a dark screen.
+      assert html =~ "#{more} and (prefers-color-scheme: light) { :root { #{default} } }"
+      assert html =~ "#{more} and (prefers-color-scheme: dark) { :root { #{zenburn} } }"
+      assert html =~ ~s(#{more} { :root[data-scheme="light"] { #{default} } })
+      assert html =~ ~s(#{more} { :root[data-scheme="dark"] { #{zenburn} } }\n@media print)
+    end
+
     test "one variant writes no rule of a scheme and no data-variants" do
       html = [Builder.slide("one")] |> Builder.deck(theme: :dracula) |> Expresso.Deck.render()
 

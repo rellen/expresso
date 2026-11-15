@@ -74,8 +74,41 @@ defmodule Expresso.Renderer do
       end
 
     roles <>
+      more_contrast(deck) <>
       "\n@media print { #{@paper}, #{@paper}[data-scheme] { #{declarations(print)} } }" <>
       graphic_opacity(deck)
+  end
+
+  # The roles for a user who asks the system for more contrast. Each role of
+  # text then has 7:1 on its background, and each dimmed role keeps 7:1, also
+  # in a deck with a lower `dim_contrast` option. A rule holds only the
+  # properties that change. Each rule has the selector of the rule that it
+  # replaces and comes after it, so it wins. The rule of paper comes after
+  # these rules, so paper does not change.
+  #
+  # With two variants, the rule of the light variant names the light scheme
+  # of the screen. Without that condition, it applies to a dark screen too,
+  # and it replaces a property of the dark variant that needs no change.
+  defp more_contrast(deck) do
+    more = &Expresso.Palette.more_contrast_declarations/1
+
+    rules =
+      case variants(deck) do
+        [{nil, palette}] ->
+          [{"", ":root", more.(palette)}]
+
+        [light: light, dark: dark] ->
+          [
+            {" and (prefers-color-scheme: light)", ":root", more.(light)},
+            {" and (prefers-color-scheme: dark)", ":root", more.(dark)},
+            {"", ":root[data-scheme=\"light\"]", more.(light)},
+            {"", ":root[data-scheme=\"dark\"]", more.(dark)}
+          ]
+      end
+
+    for {condition, selector, declarations} <- rules, declarations != "", into: "" do
+      "\n@media (prefers-contrast: more)#{condition} { #{selector} { #{declarations} } }"
+    end
   end
 
   # The `dim_graphic_opacity` option of the deck, as a rule for each variant

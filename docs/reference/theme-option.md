@@ -170,6 +170,26 @@ contrast of each slide.
 An `alert` state draws an outline, and a link has a line under its text. Thus the color
 is not the only sign of these parts, as criterion 1.4.1 asks.
 
+## More contrast
+
+A user can ask the system for more contrast. The media query `prefers-contrast: more` is
+then true, and the document gives each role of text the enhanced minimum of WCAG 2.2,
+criterion 1.4.6:
+
+| Part | With the preference |
+| --- | --- |
+| A role of text with less than 7:1 on its background | It becomes darker on a light background, or lighter on a dark background, until it has 7:1. It keeps its hue. |
+| A role of text with 7:1 or more | No change. |
+| A dimmed role | It keeps 7:1, as with `dim_contrast 7`. See [the dim_contrast option](dim-contrast-option.md#more-contrast). |
+| A background, and the colors of the series of a chart | No change. |
+| Paper | No change. |
+
+The rule applies to a built-in theme and to a map, and to each variant of a theme with two
+variants. A deck needs no option for it.
+
+With the default theme, 9 roles change. The accent goes from 5.9:1 to 7.1:1, and the text
+stays at 21:1. With `:dracula`, no role changes, because each role has 7:1 or more.
+
 ## The warnings
 
 The compiler gives a warning for each role of a map that does not meet a minimum. The deck

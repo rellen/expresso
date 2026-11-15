@@ -228,6 +228,22 @@ Look for these three things:
 
 See [Forced colors](../reference/accessibility.md#forced-colors) for each rule.
 
+## Look at the deck with more contrast
+
+A user can also ask the system for more contrast. The deck then gives each text 7:1 or
+more on its background, and a dimmed text keeps 7:1. A deck needs no option for this
+preference.
+
+1. Open the developer tools of Chrome, and run `Show Rendering` in the command menu.
+2. Set `Emulate CSS media feature prefers-contrast` to `prefers-contrast: more`.
+3. Go through each step of the deck.
+
+Look for a step that tells its meaning only with the state `dim`. A color near 7:1
+does not dim, so the dimmed element can look the same as the current element. Add a state
+such as `highlight` to the current element.
+
+See [More contrast](../reference/accessibility.md#more-contrast) for each change.
+
 ## Make sure of the result
 
 1. Open the deck in a browser with a screen reader, such as VoiceOver on macOS or NVDA on

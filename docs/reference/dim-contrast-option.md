@@ -90,6 +90,27 @@ The colors of paper use the default theme, so at 4.5 a printed page does not dim
 The compiler gives no warning for paper. The `dim_graphic_opacity` option applies to paper
 too.
 
+## More contrast
+
+A user can ask the system for more contrast, and the media query `prefers-contrast: more`
+is then true. For such a user, each dimmed role keeps 7:1, as with `dim_contrast 7`. 7 is
+the highest value of the option, so the value of the deck has no effect for this user.
+
+Each role of text also gets 7:1 or more. See
+[More contrast](theme-option.md#more-contrast) of the theme option. A role that has
+7:1 or a small quantity more does not dim, so the state `dim` shows less for this user:
+
+| Theme | Roles of text that do not dim with the preference |
+| --- | --- |
+| The default theme | 10 of 18 |
+| `:dracula` | 5 of 18 |
+| `:github_dark`, `:kanagawa`, `:rose_pine` | 0 of 18 |
+| `:solarized_light`, `:everforest`, `:tokyo_night_light` | 18 of 18 |
+
+The bar of the `highlight` option still shows the lines in focus. A graphic dims only in a
+deck with [the dim_graphic_opacity option](dim-graphic-opacity-option.md), unless the
+theme dims at 7.
+
 ## When to give it
 
 The default of 3:1 keeps a clear difference between the text in focus and the dimmed text.

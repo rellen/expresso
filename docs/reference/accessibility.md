@@ -108,6 +108,20 @@ of [the dim_contrast option](dim-contrast-option.md). Give `dim_contrast 4.5` fo
 with small dimmed text, or for a deck that axe-core must pass. See
 [the theme option](theme-option.md#the-minimums).
 
+### More contrast
+
+A user can ask the system for more contrast, and the media query `prefers-contrast: more`
+is then true. The document changes these parts for such a user:
+
+| Part | With the preference |
+| --- | --- |
+| Each role of text of the theme | 7:1 or more on its background. See [More contrast](theme-option.md#more-contrast). |
+| Each dimmed role | 7:1 or more. See [the dim_contrast option](dim-contrast-option.md#more-contrast). |
+| The outline of the cursor of the menu | 3 pixels, and not 2. |
+| The outline of the current slide of the menu | 3 pixels, and not 2. |
+| The search field of the list of keys | An outline of 3 pixels while it has the focus. |
+| The outline of the selected page of the overview | 4 pixels, as in the usual mode. |
+
 ## Forced colors
 
 A user can ask the system for forced colors, such as the high contrast mode of Windows.
