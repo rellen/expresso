@@ -175,9 +175,10 @@ defmodule Expresso.Overlay.RenderTest do
                ~s(section[data-step="2"] [data-el="s1-e1"], section[data-step="3"] [data-el="s1-e1"] { --alert: 1; })
 
       assert style =~
-               ~s(section[data-step="3"] [data-el="s1-e2"] { --x: 400px; --dim: 0.3; --dimmed: 0.3; })
+               ~s|section[data-step="3"] [data-el="s1-e2"] { --x: calc(400 * var(--px)); --dim: 0.3; --dimmed: 0.3; }|
 
-      assert style =~ ~s(section[data-step="1"] [data-el="s1-e3"] { --alert: 1; --x: 1px; })
+      assert style =~
+               ~s|section[data-step="1"] [data-el="s1-e3"] { --alert: 1; --x: calc(1 * var(--px)); }|
 
       [first, second, third] = Regex.scan(~r/\[data-el="(s1-e\d)"\] \{/, style)
       assert [first, second, third] |> Enum.map(&List.last/1) == ["s1-e1", "s1-e2", "s1-e3"]
@@ -271,7 +272,9 @@ defmodule Expresso.Overlay.RenderTest do
       assert generated =~ ~s(section[data-step="3"] [data-on~="3"])
       refute generated =~ ~s(section[data-step="4"])
       assert generated =~ ~s(section[data-step="2"] [data-el="s1-e1"] { --alert: 1; })
-      assert generated =~ ~s(section[data-step="3"] [data-el="s1-e3"] { --x: 400px; --y: 100px; })
+
+      assert generated =~
+               ~s|section[data-step="3"] [data-el="s1-e3"] { --x: calc(400 * var(--px)); --y: calc(100 * var(--px)); }|
     end
   end
 

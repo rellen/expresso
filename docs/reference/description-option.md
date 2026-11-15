@@ -41,13 +41,14 @@ Each document has these tags, with no option:
 | Tag | Value | Use |
 | --- | --- | --- |
 | `meta charset` | `utf-8` | The encoding of the document. |
+| `meta name="viewport"` | `width=device-width, initial-scale=1` | A phone gives the document the width of its screen. See [The size of a slide](slide-size.md). |
 | `title` | [The name of the deck](deck-options.md), or the first heading | The name of the tab, and the title of a search result. |
 | `meta name="generator"` | `Expresso` and its version, such as `Expresso 0.1.0` | The tool that made the document. |
 | `meta name="color-scheme"` | `light`, `dark`, or `light dark` for a theme with two variants | The scroll bars and the colors of the system agree with [the theme](theme-option.md). |
 | `meta name="theme-color"` | The background color of the theme | A browser on a phone can give its bar this color. A theme with two variants has one tag for each scheme of the screen. |
 
-The document has no viewport tag. It has no Open Graph tag and no address of a network,
-unless the deck has [the url option](link-preview-options.md). `docs/document-tags.md` in
+The document has no Open Graph tag and no address of a network, unless the deck has
+[the url option](link-preview-options.md). `docs/document-tags.md` in
 the repository gives the reason for each tag.
 
 For the steps, see

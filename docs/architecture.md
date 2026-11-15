@@ -508,6 +508,8 @@ the doctype comes from `Expresso.Renderer.render/1`:
 html               lang "en", and data-variants for a theme with two variants
   head
     meta             charset "utf-8"
+    meta             name "viewport", so a phone gives the document the width of
+                     its screen. See docs/small-windows.md
     title            the name of the deck
     meta             name "description" and name "author", from the options of
                      the deck, then "generator", "color-scheme" and

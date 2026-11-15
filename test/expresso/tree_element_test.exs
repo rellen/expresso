@@ -279,7 +279,7 @@ defmodule Expresso.TreeElementTest do
              ]
 
       assert figure(plant(width: "900px")) |> LazyHTML.attribute("style") == [
-               "--tree-width: 900px"
+               "--tree-width: calc(900 * var(--px))"
              ]
 
       assert figure(plant()) |> LazyHTML.attribute("style") == []

@@ -123,8 +123,22 @@ defmodule Expresso.Element.ImageTest do
       end
     end
 
+    # A length in pixels follows the scale of the slide in a small window.
+    test "writes a width in pixels as a number of the pixel of the slide" do
+      assert custom_property("900px") == "calc(900 * var(--px))"
+      assert custom_property("12rem") == "12rem"
+    end
+
+    property "writes a width in pixels as the same number of the pixel of the slide" do
+      check all number <- CSS.number(),
+                head <- CSS.space(),
+                tail <- CSS.space() do
+        assert custom_property(head <> number <> "px" <> tail) == "calc(#{number} * var(--px))"
+      end
+    end
+
     property "writes a width of another form without a change" do
-      check all width <- CSS.other_width(),
+      check all width <- filter(CSS.other_width(), &(not String.ends_with?(&1, "px"))),
                 head <- CSS.space(),
                 tail <- CSS.space() do
         assert custom_property(head <> width <> tail) == head <> width <> tail
@@ -134,7 +148,11 @@ defmodule Expresso.Element.ImageTest do
     # The DSL takes each string, and a width that is not CSS must also stay the
     # same. A string with no percent sign is not one number in percent.
     property "writes a value that is not CSS without a change" do
-      check all width <- filter(string(:printable), &(not String.contains?(&1, "%"))) do
+      check all width <-
+                  filter(
+                    string(:printable),
+                    &(not String.contains?(&1, "%") and not (&1 =~ "px"))
+                  ) do
         assert custom_property(width) == width
       end
     end

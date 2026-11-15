@@ -67,7 +67,7 @@ defmodule Expresso.QrCodeElementTest do
     assert LazyHTML.attribute(figure, "style") == ["--qr-size: 30vw"]
 
     [figure] = render(Builder.qr_code(@address, size: "300px"))
-    assert LazyHTML.attribute(figure, "style") == ["--qr-size: 300px"]
+    assert LazyHTML.attribute(figure, "style") == ["--qr-size: calc(300 * var(--px))"]
   end
 
   test "a higher level makes a code with more modules" do

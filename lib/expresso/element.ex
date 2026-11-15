@@ -192,6 +192,50 @@ defmodule Expresso.Element do
     end
   end
 
+  # One number and the unit `px`, in each form of a CSS number.
+  @pixels ~r/\A\s*([+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?)px\s*\z/
+
+  @doc """
+  Write a length in pixels as a length that follows the scale of the slide
+
+  A value that is one number and `px` becomes that number of `--px`, and each
+  other value comes back as it is. The style sheet sets `--px` to one pixel
+  in a window of 1280 by 720 pixels or larger. In a smaller window, the text
+  of a slide becomes smaller, and `--px` becomes smaller with it. A length of
+  the deck in pixels thus keeps its size against the text of the slide.
+  `docs/small-windows.md` gives the design.
+
+      iex> Expresso.Element.slide_pixels("300px")
+      "calc(300 * var(--px))"
+      iex> Expresso.Element.slide_pixels("-.5px")
+      "calc(-.5 * var(--px))"
+      iex> Expresso.Element.slide_pixels("4rem")
+      "4rem"
+      iex> Expresso.Element.slide_pixels("calc(50% + 10px)")
+      "calc(50% + 10px)"
+  """
+  @spec slide_pixels(String.t()) :: String.t()
+  def slide_pixels(value) do
+    case Regex.run(@pixels, value, capture: :all_but_first) do
+      [number] -> "calc(#{number} * var(--px))"
+      nil -> value
+    end
+  end
+
+  @doc """
+  Write a width of the deck as a width of the slide
+
+  A percentage becomes a viewport unit, as `viewport_unit/1` tells, and a
+  length in pixels follows the scale of the slide, as `slide_pixels/1` tells.
+
+      iex> Expresso.Element.slide_length("60%")
+      "60vw"
+      iex> Expresso.Element.slide_length("900px")
+      "calc(900 * var(--px))"
+  """
+  @spec slide_length(String.t()) :: String.t()
+  def slide_length(width), do: width |> viewport_unit() |> slide_pixels()
+
   @doc """
   Return the style attribute of the box of an embed or of a video
 
@@ -206,7 +250,7 @@ defmodule Expresso.Element do
   @spec box_style(String.t() | nil, String.t() | nil) :: [{String.t(), String.t()}]
   def box_style(width, aspect) do
     case [
-           width && "--embed-width: #{viewport_unit(width)}",
+           width && "--embed-width: #{slide_length(width)}",
            aspect && "--embed-aspect: #{aspect}"
          ]
          |> Enum.reject(&is_nil/1) do

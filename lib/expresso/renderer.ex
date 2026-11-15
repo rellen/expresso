@@ -969,6 +969,12 @@ defmodule Expresso.Renderer do
           # the locale of the person. Elixir writes UTF-8 only.
           meta charset: "utf-8"
 
+          # A phone then gives the document the width of its screen, and not
+          # a width of 980 pixels at a smaller scale. The font size of the
+          # `html` element follows the window, so a slide fits that width.
+          # `docs/small-windows.md` gives the design.
+          meta name: "viewport", content: "width=device-width, initial-scale=1"
+
           # A deck has no name when the DSL gives no `name` option, or when
           # `Expresso.Deck.new/3` takes `nil`. The title then comes from the
           # first heading of the deck.

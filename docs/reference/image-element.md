@@ -70,7 +70,7 @@ the error.
 | `width` | The image |
 | --- | --- |
 | None | The image takes its natural size. The theme makes it smaller when the slide is too small. |
-| A length, such as `"900px"` | The image takes that width. |
+| A length, such as `"900px"` | The image takes that width. In a window that is smaller than 1280 by 720 pixels, the width becomes smaller with the slide. See [The size of a slide](slide-size.md). |
 | A percentage, such as `"60%"` | The image takes that part of the width of the slide. The document writes `60vw`. |
 | A CSS function, such as `"calc(50% + 10px)"` | The value goes into the document as it is. |
 

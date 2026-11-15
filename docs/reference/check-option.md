@@ -85,9 +85,12 @@ A browser level checks the page at each size of `--size`, in sequence, and at 19
 without the option. The `Checks:` line gives each size, such as
 `the layout at 1920 × 1080 and 1024 × 768`.
 
-A slide grows and shrinks with the page, so two sizes with the same proportions, such as
-1920 × 1080 and 1280 × 720, give the same layout. Give a size with other proportions, such
-as 1024 × 768 for a projector of 4:3, to find the problems of that room.
+A page of 1280 × 720 or larger gives the text of a slide the same size, so a larger page
+gives a slide more room. A smaller page shows the slide at a smaller scale, so two small
+sizes with the same proportions, such as 960 × 540 and 640 × 360, give the same layout.
+Give a size with other proportions, such as 1024 × 768 for a projector of 4:3, or
+390 × 844 for a phone, to find the problems of that screen. See
+[The size of a slide](slide-size.md).
 
 A problem of each size gives one line. A problem of some sizes names them before the first
 colon, such as `Slide 1 “wide”, step 1 (1024 × 768): the image “A wide image” goes 524 px past

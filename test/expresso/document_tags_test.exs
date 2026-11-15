@@ -31,23 +31,24 @@ defmodule Expresso.DocumentTagsTest do
       assert tags(document, "theme-color") == [{"#ffffff", nil}]
 
       names = document |> LazyHTML.query("meta[name]") |> LazyHTML.attribute("name")
-      assert names == ["generator", "color-scheme", "theme-color"]
+      assert names == ["viewport", "generator", "color-scheme", "theme-color"]
     end
 
     test "the encoding stays the first element of the head, and the title is in front of the tags" do
       {_document, html} = head(name: "deck")
 
       assert html =~
-               ~s(<head><meta charset="utf-8"/><title>deck</title><meta name="generator")
+               ~s(<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>) <>
+                 ~s(<title>deck</title><meta name="generator")
     end
 
-    # `width=device-width` gives a slide the width of a phone, and the text
-    # of a slide has a fixed size, so the browser cuts the text. Without the
-    # tag, a phone shows the whole slide at a smaller scale.
-    test "has no viewport tag" do
+    # A phone gives the document the width of its screen. The font size of
+    # the `html` element follows the window, so a slide fits that width. The
+    # tag does not stop the zoom of the user.
+    test "has the viewport tag, with no limit of the zoom" do
       {document, _html} = head(name: "deck")
 
-      assert tags(document, "viewport") == []
+      assert tags(document, "viewport") == [{"width=device-width, initial-scale=1", nil}]
     end
 
     test "names no address of a network" do
@@ -69,7 +70,7 @@ defmodule Expresso.DocumentTagsTest do
       assert tags(document, "author") == [{"Ada Lovelace", nil}]
 
       names = document |> LazyHTML.query("meta[name]") |> LazyHTML.attribute("name")
-      assert Enum.take(names, 3) == ["description", "author", "generator"]
+      assert Enum.take(names, 4) == ["viewport", "description", "author", "generator"]
     end
 
     test "a text of more than one line goes on one line" do

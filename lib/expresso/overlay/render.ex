@@ -226,7 +226,7 @@ defmodule Expresso.Overlay.Render do
 
   defp properties(ons) do
     ons
-    |> Enum.map(fn {_el, %On{state: state}} -> state end)
+    |> Enum.map(fn {_el, %On{state: state}, _scale} -> state end)
     |> Enum.reject(&is_nil/1)
     |> Enum.uniq()
     |> Enum.map(fn state ->
@@ -244,13 +244,13 @@ defmodule Expresso.Overlay.Render do
     end
   end
 
-  defp rule({el, %On{steps: steps} = on}) do
+  defp rule({el, %On{steps: steps} = on, scale}) do
     selectors =
       Enum.map_join(steps, ", ", fn step ->
         "section[data-step=\"#{step}\"] [data-el=\"#{el}\"]"
       end)
 
-    "#{selectors} { #{declarations(on)} }"
+    "#{selectors} { #{declarations(on, scale)} }"
   end
 
   # The state `dim`, or a `dim` key of `set`, also sets `--dimmed` to the same
@@ -258,7 +258,7 @@ defmodule Expresso.Overlay.Render do
   # element inside a dimmed element is dimmed too, and the colors of its text
   # move to their dimmed colors. `--dim` does not inherit, so an element inside
   # with its own `on` entity would reset it.
-  defp declarations(%On{state: state, set: set}) do
+  defp declarations(%On{state: state, set: set}, scale) do
     state = if state, do: [{state, 1}], else: []
     properties = state ++ (set || [])
 
@@ -269,13 +269,21 @@ defmodule Expresso.Overlay.Render do
       end
 
     Enum.map_join(properties ++ dimmed, " ", fn {key, value} ->
-      "--#{key}: #{css_value(value)};"
+      "--#{key}: #{css_value(value, scale)};"
     end)
   end
 
   # A value comes from the deck. The block is inside a `style` element, so the
   # function escapes `<`, and a value cannot close the element.
-  defp css_value(value), do: value |> to_string() |> String.replace("<", "\\3c ")
+  #
+  # With `scale`, a length in pixels follows the scale of the slide, as
+  # `Expresso.Element.slide_pixels/1` tells. A part and a copy have no
+  # `scale`: a pixel of a part of a diagram is a unit of its SVG file, and
+  # the browser already draws the file at the scale of the slide.
+  defp css_value(value, true),
+    do: value |> to_string() |> Expresso.Element.slide_pixels() |> css_value(false)
+
+  defp css_value(value, false), do: value |> to_string() |> String.replace("<", "\\3c ")
 
   # The on entities of a slide, each with the identity of its element
 
@@ -283,8 +291,11 @@ defmodule Expresso.Overlay.Render do
     for element <- Tree.descendants(elements),
         %On{steps: steps} = on <- on(element),
         steps not in [nil, []],
-        do: {Map.get(element, :el), on}
+        do: {Map.get(element, :el), on, not part?(element)}
   end
+
+  defp part?(element),
+    do: is_struct(element, Expresso.Element.Part) or is_struct(element, Expresso.Element.Copy)
 
   defp on(element), do: Map.get(element, :on) || []
 end

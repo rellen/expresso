@@ -712,7 +712,7 @@ defmodule Expresso.Element.Hierarchy do
 
     style =
       if tree.width,
-        do: [{"style", "--tree-width: #{Expresso.Element.viewport_unit(tree.width)}"}],
+        do: [{"style", "--tree-width: #{Expresso.Element.slide_length(tree.width)}"}],
         else: []
 
     %{

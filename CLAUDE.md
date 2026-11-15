@@ -83,8 +83,11 @@ Read these documents before you change the code:
 - `docs/document-tags.md` — the design for the `meta` and `link` elements of the
   document: the description, the author, the generator, the color scheme, the theme
   color, the address of the deck, the tags of a link preview, the icon and `robots`. The
-  code contains these tags. The document records a decision for each of 13 tags. Issue
-  #590 holds the viewport tag.
+  code contains these tags. The document records a decision for each of 13 tags.
+- `docs/small-windows.md` — the design for a slide in a window that is smaller than 1280
+  by 720 pixels, such as the screen of a phone, and for the viewport tag. The code
+  contains this design. The document records ten decisions, and each is settled. Its
+  section "The result" tells what changed during the work.
 - `docs/graph-diagrams.md` — the design for a `diagram` from the source of a graph, in the
   language of Graphviz or of D2. The code contains this design. The document records ten
   decisions, and each is settled. Its last section, "The result", tells what changed during

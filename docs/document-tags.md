@@ -2,8 +2,7 @@
 
 This document gives the design for the `meta` elements in the `head` of the document of a
 deck. Issue #566 asked for it. The document records a decision for each of 13 tags, and
-the answers to five questions. The code contains each tag of the decisions, and not the
-viewport tag. Its section "The result" tells what the code has, "The tags with the address
+the answers to five questions. The code contains each tag of the decisions. Its section "The result" tells what the code has, "The tags with the address
 of the deck" tells the later change, and "The work that follows" names the issues.
 
 ## The problem
@@ -36,7 +35,7 @@ deck on a web host, this had three effects:
 | `meta name="generator"` | Add it to each document: `Expresso` and its version. | It needs no value from the user, and it shows no text of the user. |
 | `meta name="color-scheme"` | Add it to each document, from the theme: `light`, `dark` or `light dark`. | The scroll bars and the colors of the system then agree with the slides. |
 | `meta name="theme-color"` | Add it to each document: the background color of the theme. | A browser on a phone can give its bar the color of the slide. |
-| `meta name="viewport"` | Leave it out, until a slide fits a small window. | With `width=device-width`, the browser cuts the text of a slide on a phone. See "The viewport". |
+| `meta name="viewport"` | Add it to each document, after the change that makes a slide fit a small window. | With `width=device-width` and the fixed size of the text, the browser cut the text of a slide on a phone. See "The viewport". |
 | `og:title`, `og:description`, `og:type`, `og:locale` | Add them with the `url` option of the deck. | A program makes a card only for a page on a host, and `og:url` is a part of the card. |
 | `og:image`, `og:image:alt`, its width and its height | Add them with the `card` option of the deck. | The picture must be a file at an absolute address. A data URI does not work. |
 | `og:url` and `link rel="canonical"` | Add them with the `url` option of the deck. | The render does not know the host. |
@@ -54,7 +53,7 @@ The facts about a card and about Google Search come from these pages, on 2026-11
 ## The answers to the questions
 
 1. **Which tags does each document get with no option?** `generator`, `color-scheme` and
-   `theme-color`. The viewport is not one of them.
+   `theme-color`. The viewport was not one of them at that time.
 2. **One option for the address of the deck, or one option for each tag?** One option for
    the address. `og:url`, `link rel="canonical"` and the address of the picture come from
    it.
@@ -96,9 +95,10 @@ and it does not change the insight. Lighthouse reads the value `is_mobile_optimi
 the browser for the insight. The tag with `width=device-width` passes the insight, but the
 slide then moves after it shows, and the performance score is lower.
 
-The tag thus needs a change of the layout first: the text of a slide must become smaller
+The tag thus needed a change of the layout first: the text of a slide must become smaller
 in a small window. That change also changes what `--check` measures, so it is a design of
-its own.
+its own. The change for issue #590 made it, and the document has the tag now.
+`docs/small-windows.md` gives that design.
 
 ## The rule of "no address of a network"
 
@@ -185,11 +185,10 @@ These decisions come from the work:
 - The key `t` does not change `theme-color`. The tag follows the scheme of the screen.
 - Reports say that Safari 26 does not use `theme-color` for the bar of the browser. It
   uses the background color of the page, which is the background color of the theme.
-- A phone shows a slide at a small scale, as before.
 
 ## The work that follows
 
 | Issue | Tags |
 | --- | --- |
 | #589 | The address of the deck, the Open Graph tags, the picture of the card, `twitter:card`, the icon and `robots`. The code contains this work. |
-| #590 | A slide that fits a small window, and then the viewport tag. |
+| #590 | A slide that fits a small window, and then the viewport tag. The code contains this work, and `docs/small-windows.md` gives its design. |

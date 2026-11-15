@@ -40,7 +40,11 @@ defmodule Expresso.Element.Column do
   end
 
   defp width(nil), do: []
-  defp width(width), do: [{"style", "--column-width: #{width}; --column-grow: 0"}]
+
+  defp width(width) do
+    width = Expresso.Element.slide_pixels(width)
+    [{"style", "--column-width: #{width}; --column-grow: 0"}]
+  end
 
   @doc """
   Make the HTML of a column

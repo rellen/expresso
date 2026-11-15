@@ -84,7 +84,7 @@ defmodule Expresso.Element.Image do
   # A custom property inherits, so the property goes on the root tag and the
   # `img` element reads it. An `on` entity can then also set the property.
   defp width(nil), do: []
-  defp width(width), do: [{"style", "--image-width: #{Expresso.Element.viewport_unit(width)}"}]
+  defp width(width), do: [{"style", "--image-width: #{Expresso.Element.slide_length(width)}"}]
 
   @doc """
   Make the HTML of an image

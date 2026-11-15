@@ -94,6 +94,7 @@ defmodule Expresso.MixProject do
         "docs/reference/external-option.md",
         "docs/reference/description-option.md",
         "docs/reference/link-preview-options.md",
+        "docs/reference/slide-size.md",
         "docs/reference/morph-option.md",
         "docs/reference/overlay-options.md",
         "docs/reference/step-labels.md",

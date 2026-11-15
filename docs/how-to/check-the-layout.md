@@ -111,6 +111,25 @@ Do one of these:
 - Move the element out of a `columns` element, so it gets the full width of the slide.
 - For a diagram, give its text a larger font size in its SVG file.
 
+## Check a deck for a phone
+
+A window that is smaller than 1280 × 720 shows a slide at a smaller scale, so a slide that
+fits a projector usually fits a phone. Three things do not follow the scale: a length in
+pixels in the `css` option, the text of an SVG file, and an image with a small natural
+size.
+
+1. Run the check with the size of a phone in each direction:
+
+   ```sh
+   mix expresso deck.exs --check=layout --size 390x844 --size 844x390
+   ```
+
+2. Read each line with `(390 × 844)` or `(844 × 390)`.
+3. For a rule of the `css` option that gives a length in pixels, write the length in
+   `rem`. 48 pixels are 1rem.
+
+See [The size of a slide](../reference/slide-size.md).
+
 ## Check a deck with no window
 
 `mix expresso deck.exs --check=layout` runs the check in a headless browser at

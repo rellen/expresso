@@ -1052,7 +1052,7 @@ defmodule Expresso.Element.Chart do
   def width(%__MODULE__{width: nil}), do: []
 
   def width(%__MODULE__{width: width}),
-    do: [{"style", "--chart-width: #{Expresso.Element.viewport_unit(width)}"}]
+    do: [{"style", "--chart-width: #{Expresso.Element.slide_length(width)}"}]
 
   @doc """
   Return the `data-keys` attribute of a mark of a category

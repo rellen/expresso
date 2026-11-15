@@ -199,7 +199,7 @@ defmodule Expresso.Element.Diagram do
   defp width(nil), do: []
 
   defp width(width) do
-    [{"style", "--diagram-width: #{Expresso.Element.viewport_unit(width)}"}]
+    [{"style", "--diagram-width: #{Expresso.Element.slide_length(width)}"}]
   end
 
   defp svg(%__MODULE__{elements: parts} = diagram, hidden?) do
