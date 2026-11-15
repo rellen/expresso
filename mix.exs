@@ -65,6 +65,7 @@ defmodule Expresso.MixProject do
         "docs/how-to/show-a-video.md",
         "docs/how-to/play-a-sound.md",
         "docs/how-to/share-the-slides-with-a-qr-code.md",
+        "docs/how-to/put-a-deck-on-a-web-host.md",
         "docs/how-to/cite-your-sources.md",
         "docs/how-to/draw-attention-with-a-callout.md",
         "docs/how-to/show-the-plan-of-a-talk.md",

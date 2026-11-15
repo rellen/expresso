@@ -118,8 +118,8 @@ step. A click on another part of the slide still does.
 
 ## Keep a long video next to the document
 
-The document holds each video file, so a long recording makes a large document, and the
-first slide waits for the whole file. Write `external true` to keep the file next to the
+The document holds each video file, so a long recording makes a large document, and each
+viewer gets the whole file with it. Write `external true` to keep the file next to the
 document:
 
 ```elixir
@@ -155,3 +155,4 @@ view and the handout view show it with no file.
 
 An `audio` element takes the same option. For each rule, see
 [A file next to the document](../reference/video-element.md#a-file-next-to-the-document).
+For the settings of the web host, see [Put a deck on a web host](put-a-deck-on-a-web-host.md).

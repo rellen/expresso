@@ -133,4 +133,5 @@ next to the document. This render has no output file, so it has no directory for
 Give an output file, or remove the external option.
 ```
 
-For the steps, see [Show a video](../how-to/show-a-video.md).
+For the steps, see [Show a video](../how-to/show-a-video.md). For the settings of a web
+host, see [Put a deck on a web host](../how-to/put-a-deck-on-a-web-host.md).

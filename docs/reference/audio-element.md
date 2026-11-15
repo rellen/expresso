@@ -67,4 +67,6 @@ the file into a directory next to the output file, such as `talk_files/` for `ta
 and the element `expresso-audios` holds the relative address of the copy, such as
 `talk_files/bell-3e700d6d.wav`. The browser then asks for the file only when the sound
 plays first. The rules are the rules of a video. See
-[A file next to the document](video-element.md#a-file-next-to-the-document).
+[A file next to the document](video-element.md#a-file-next-to-the-document). For the
+settings of a web host, see
+[Put a deck on a web host](../how-to/put-a-deck-on-a-web-host.md).
