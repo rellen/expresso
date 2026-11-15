@@ -26,7 +26,9 @@ defmodule Expresso.Renderer do
     @external_resource source
   end
 
-  @style File.read!("./assets/style.css")
+  # The document holds the style sheet with no comment and with no white space
+  # that CSS does not need. The comments are 40% of the file.
+  @style "./assets/style.css" |> File.read!() |> Expresso.Css.minify()
   @presenter File.read!("./priv/static/presenter.js")
 
   defp fonts do

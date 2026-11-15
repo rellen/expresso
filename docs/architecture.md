@@ -642,6 +642,21 @@ the same for `assets/fonts.css` and the font files. Therefore a change to
 one of these files starts a new compile of `Expresso.Renderer`. Elixir compares the content
 of an external resource, and not its time, so a `touch` does not start a compile.
 
+The document holds `assets/style.css` with no comment and with no white space that CSS
+does not need. `Expresso.Css.minify/1` makes that text at compile time, and it needs no
+Node. The file has 106.5 KB, and 40% of it is comments. The text of the document has
+52.7 KB. With gzip, the file has 25.3 KB and the text has 10.1 KB. The function keeps each
+string and each `url()` as it is, and it keeps each space that can have a meaning, such as
+the space of `a :hover` and of `calc(1px + 2px)`. A browser test reads the rules of the
+file and the rules of the text, and it makes sure that they are the same.
+
+Three style sheets stay as they are:
+
+- The font style sheet, because its first comment holds the copyright notice of the font
+  and the name of its license.
+- The roles of the theme and the generated rules, which the renderer makes for each deck.
+- The style sheet of the `css` option, which is the text of the user.
+
 The `css` option of a deck can name a font or a picture with `url()`. The document is one
 file, so `Expresso.Css.render/2` puts each local file of a `url()` into the style sheet as a
 data URI at render time, as `Expresso.Font` does for the font of the theme. A relative

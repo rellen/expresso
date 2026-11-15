@@ -211,6 +211,100 @@ defmodule Expresso.Css do
   def escape(css), do: String.replace(css, "</", "<\\/")
 
   @doc """
+  Remove each comment of a style sheet, and the white space that CSS does not
+  need
+
+  The renderer gives `assets/style.css` to this function at compile time, so
+  the document of a deck holds a smaller style sheet. The comments stay in
+  the file for the developer. The function changes no rule:
+
+  - It keeps each string and each `url()` as it is, also one that holds `/*`.
+  - It writes one space for each comment and for each sequence of white
+    space.
+  - It then removes the space on each side of `{`, `}`, `;` and `,`, the
+    space after `:`, and the `;` in front of `}`.
+
+  A space in a selector or in a value stays, because it can have a meaning:
+  `a :hover` is not `a:hover`, and `calc(1px + 2px)` needs its spaces.
+
+      iex> Expresso.Css.minify("a :hover { color: red; /* a note */ margin: 0   auto; }")
+      "a :hover{color:red;margin:0 auto}"
+
+      iex> Expresso.Css.minify(~s(a::after { content: "/* no comment */  x" ; }))
+      ~s(a::after{content:"/* no comment */  x"})
+  """
+  @spec minify(String.t()) :: String.t()
+  def minify(css) do
+    css
+    |> pieces([], [])
+    |> Enum.map_join(fn
+      {:code, text} -> compact(text)
+      {:kept, text} -> text
+    end)
+    |> String.trim()
+  end
+
+  # The pieces of a style sheet in sequence: `{:kept, text}` for a string and
+  # for the address of a `url()`, and `{:code, text}` for each other part,
+  # with one space in the place of each comment. `code` holds the characters
+  # of the current code piece, the last one first.
+  defp pieces("", done, code), do: Enum.reverse(flush(done, code))
+
+  defp pieces("/*" <> rest, done, code) do
+    case String.split(rest, "*/", parts: 2) do
+      [_comment, rest] -> pieces(rest, done, [" " | code])
+      [_comment] -> pieces("", done, code)
+    end
+  end
+
+  defp pieces(<<quote, rest::binary>>, done, code) when quote in [?", ?'] do
+    {string, rest} = string(rest, quote, [quote])
+    pieces(rest, [{:kept, string} | flush(done, code)], [])
+  end
+
+  defp pieces("url(" <> rest, done, code) do
+    case String.trim_leading(rest) do
+      <<quote, _rest::binary>> when quote in [?", ?'] ->
+        pieces(rest, done, ["url(" | code])
+
+      _address ->
+        [address, rest] = String.split(rest, ")", parts: 2)
+        pieces(rest, [{:kept, String.trim(address) <> ")"} | flush(done, ["url(" | code])], [])
+    end
+  end
+
+  defp pieces(<<char::utf8, rest::binary>>, done, code) do
+    pieces(rest, done, [<<char::utf8>> | code])
+  end
+
+  defp flush(done, []), do: done
+  defp flush(done, code), do: [{:code, code |> Enum.reverse() |> IO.iodata_to_binary()} | done]
+
+  # The text of a string to its closing quote, and the text after it. A
+  # backslash keeps the character after it, so `"\""` is one string.
+  defp string("", _quote, text), do: {text |> Enum.reverse() |> IO.iodata_to_binary(), ""}
+
+  defp string(<<?\\, char::utf8, rest::binary>>, quote, text) do
+    string(rest, quote, [<<?\\, char::utf8>> | text])
+  end
+
+  defp string(<<quote, rest::binary>>, quote, text) do
+    {[quote | text] |> Enum.reverse() |> IO.iodata_to_binary(), rest}
+  end
+
+  defp string(<<char::utf8, rest::binary>>, quote, text) do
+    string(rest, quote, [<<char::utf8>> | text])
+  end
+
+  defp compact(code) do
+    code
+    |> String.replace(~r/\s+/, " ")
+    |> String.replace(~r/ ?([{};,]) ?/, "\\1")
+    |> String.replace(": ", ":")
+    |> String.replace(";}", "}")
+  end
+
+  @doc """
   Give the names of a style sheet
 
   - `used` holds each name after two hyphens. CSS reads a custom property

@@ -32,7 +32,9 @@ defmodule Expresso.DimGraphicOpacityTest do
     style = style([])
 
     assert opacities(style) == []
-    assert style =~ "var(--dim-graphic-opacity, var(--dim-opacity))"
+    # The document holds the style sheet with no white space that CSS does not
+    # need, so the fallback has no space after its comma.
+    assert style =~ "var(--dim-graphic-opacity,var(--dim-opacity))"
   end
 
   # Issue #358: at 4.5, a light built-in theme has `--dim-opacity` 1.0, so a

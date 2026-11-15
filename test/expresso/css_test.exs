@@ -46,6 +46,74 @@ defmodule Expresso.CssTest do
     end
   end
 
+  describe "minify/1" do
+    test "removes each comment and writes a space in its place" do
+      assert Css.minify("a/* one */b { color: red /* two */ ; }") == "a b{color:red}"
+
+      assert Css.minify("/* first */\n\n/* second */\na { margin: 0 /* x */ auto; }") ==
+               "a{margin:0 auto}"
+    end
+
+    test "removes a comment that has no end" do
+      assert Css.minify("a { color: red; } /* no end") == "a{color:red}"
+    end
+
+    test "keeps a string as it is, also with a comment sign, a brace or an escaped quote" do
+      assert Css.minify(~S(a::after { content: "/* x */  { ; }" ; })) ==
+               ~S(a::after{content:"/* x */  { ; }"})
+
+      assert Css.minify(~S(a::after { content: "a \" /* b */" ; })) ==
+               ~S(a::after{content:"a \" /* b */"})
+
+      assert Css.minify("a { font-family: 'A  B' , serif; }") == "a{font-family:'A  B',serif}"
+    end
+
+    test "keeps the address of a url() as it is" do
+      assert Css.minify("a { background: url( a/*b*/c.png ) no-repeat ; }") ==
+               "a{background:url(a/*b*/c.png) no-repeat}"
+
+      assert Css.minify(~S|a { src: url("a  b.woff2") format("woff2") ; }|) ==
+               ~S|a{src:url("a  b.woff2") format("woff2")}|
+    end
+
+    test "keeps a space that has a meaning" do
+      assert Css.minify("a :hover > b + c ~ d { margin : 0   auto ; }") ==
+               "a :hover > b + c ~ d{margin :0 auto}"
+
+      assert Css.minify("a { width: calc( 100%  -  2rem ) ; }") == "a{width:calc( 100% - 2rem )}"
+      assert Css.minify("a { color: red !important ; }") == "a{color:red !important}"
+
+      assert Css.minify("a { grid-template-areas: 'x y'\n    'z z'; }") ==
+               "a{grid-template-areas:'x y' 'z z'}"
+    end
+
+    test "keeps the rules of an at-rule" do
+      assert Css.minify("@media screen and (min-width: 600px) {\n  a , b { color: red; }\n}\n") ==
+               "@media screen and (min-width:600px){a,b{color:red}}"
+
+      assert Css.minify(
+               ~S|@property --dim { syntax: "<number>"; inherits: true; initial-value: 0; }|
+             ) ==
+               ~S|@property --dim{syntax:"<number>";inherits:true;initial-value:0}|
+    end
+
+    test "gives the same text for a text that it made" do
+      source = File.read!("assets/style.css")
+      once = Css.minify(source)
+
+      assert Css.minify(once) == once
+    end
+
+    test "makes the style sheet of the theme smaller, with no comment and no line break" do
+      source = File.read!("assets/style.css")
+      result = Css.minify(source)
+
+      assert byte_size(result) < byte_size(source) * 0.6
+      refute result =~ "/*"
+      refute result =~ "\n"
+    end
+  end
+
   describe "resolve/1" do
     test "gives a style sheet as it is, and an empty one for nil" do
       assert Css.resolve("h1 { color: red; }") == {:ok, "h1 { color: red; }"}
