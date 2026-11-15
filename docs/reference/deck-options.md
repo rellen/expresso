@@ -32,6 +32,10 @@ end
 | `background color: :code_background` | The background of each slide that has no `background` option: an image, a color or a gradient. See [the background option](background-option.md). |
 | `description "A talk about supervision trees."` | A summary of the deck for a search engine. See [the description and author options](description-option.md). |
 | `author "Ada Lovelace"` | The name of the author of the deck, for a search engine. |
+| `url "https://example.com/talk/"` | The address of the deck on its host. A link to the deck then gets a preview. See [the url, card, favicon and robots options](link-preview-options.md). |
+| `card "card.png"` | The picture of the preview of a link. It needs the `url` option. |
+| `favicon "icon.svg"` | The icon of the tab of the browser. |
+| `robots "noindex"` | The directives for a search engine. |
 | `external true` | Keep the file of each image, video and audio element next to the document, in a directory such as `talk_files/`. The default is `false`. See [the external option](external-option.md). |
 | `css "deck.css"` | A style sheet, or the path of one. It applies after the theme. |
 | `effect`, `speed`, `easing` | The animation of each overlay. See [Animate elements in a slide](../how-to/animate-elements.md). |

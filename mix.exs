@@ -93,6 +93,7 @@ defmodule Expresso.MixProject do
         "docs/reference/dim-graphic-opacity-option.md",
         "docs/reference/external-option.md",
         "docs/reference/description-option.md",
+        "docs/reference/link-preview-options.md",
         "docs/reference/morph-option.md",
         "docs/reference/overlay-options.md",
         "docs/reference/step-labels.md",

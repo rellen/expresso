@@ -1790,6 +1790,26 @@ defmodule Expresso.Extension do
         doc:
           "The name of the author of the deck. The document then has a meta element with the name author. See docs/reference/description-option.md."
       ],
+      url: [
+        type: {:custom, Expresso.LinkPreview, :url, []},
+        doc:
+          "The address of the deck on its host, such as \"https://example.com/talk/\". The document then has link rel=canonical and the Open Graph tags, so a link to the deck gets a preview. See docs/reference/link-preview-options.md."
+      ],
+      card: [
+        type: {:custom, Expresso.LinkPreview, :card, []},
+        doc:
+          "The picture of the preview of a link to the deck: the path of a .png, .jpg or .jpeg file, or a list such as [image: \"card.png\", alt: \"The title slide\"]. The render keeps a copy of the file next to the document. It needs the url option. See docs/reference/link-preview-options.md."
+      ],
+      favicon: [
+        type: {:custom, Expresso.LinkPreview, :favicon, []},
+        doc:
+          "The icon of the tab of the browser: the path of a .svg, .png or .ico file. The document holds the file as a data URI. See docs/reference/link-preview-options.md."
+      ],
+      robots: [
+        type: {:custom, Expresso.LinkPreview, :robots, []},
+        doc:
+          "The directives for a search engine, such as \"noindex\". The document then has a meta element with the name robots. See docs/reference/link-preview-options.md."
+      ],
       external: [
         type: :boolean,
         doc:
@@ -1934,6 +1954,7 @@ defmodule Expresso.Extension do
       Expresso.Overlay.PropertyVerifier,
       Expresso.Overlay.SizeVerifier,
       Expresso.ThemeVerifier,
-      Expresso.CodeVerifier
+      Expresso.CodeVerifier,
+      Expresso.LinkPreviewVerifier
     ]
 end

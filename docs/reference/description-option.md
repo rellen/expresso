@@ -46,8 +46,9 @@ Each document has these tags, with no option:
 | `meta name="color-scheme"` | `light`, `dark`, or `light dark` for a theme with two variants | The scroll bars and the colors of the system agree with [the theme](theme-option.md). |
 | `meta name="theme-color"` | The background color of the theme | A browser on a phone can give its bar this color. A theme with two variants has one tag for each scheme of the screen. |
 
-The document has no viewport tag, no Open Graph tag and no address of a network.
-`docs/document-tags.md` in the repository gives the reason for each tag.
+The document has no viewport tag. It has no Open Graph tag and no address of a network,
+unless the deck has [the url option](link-preview-options.md). `docs/document-tags.md` in
+the repository gives the reason for each tag.
 
 For the steps, see
 [Give the deck a description](../how-to/put-a-deck-on-a-web-host.md#give-the-deck-a-description).

@@ -296,7 +296,8 @@ defmodule Expresso.Renderer do
   # empty.
   # The `meta` elements of the head, as a name, a content and a media query
   # or `nil`. `docs/document-tags.md` gives the decision for each tag. No tag
-  # holds an address, so the document names no address of a network.
+  # here holds an address. `Expresso.LinkPreview` writes the tags with the
+  # address of the deck, which only the `url` option gives.
   #
   #   * `description` and `author` come from the options of the deck. A deck
   #     without an option has no such tag, so the document shows no text
@@ -716,6 +717,36 @@ defmodule Expresso.Renderer do
     end
   end
 
+  # The `meta` and `link` elements of the head, after the title. The first
+  # group needs no option. The second group has the address of the deck, the
+  # tags of a link preview, the icon and the directives for a search engine,
+  # from the options of the deck.
+  defp head_elements(assigns) do
+    temple do
+      for {name, content, media} <- head_tags(@deck) do
+        meta name: name, content: content, media: media
+      end
+
+      for {tag, attributes} <- Expresso.LinkPreview.tags(@deck, document_title(@deck)) do
+        c(&preview_tag/1, tag: tag, attributes: attributes)
+      end
+    end
+  end
+
+  # One element of the head from `Expresso.LinkPreview.tags/2`: a `meta` or a
+  # `link` element with its attributes.
+  defp preview_tag(%{tag: :meta} = assigns) do
+    temple do
+      meta rest!: @attributes
+    end
+  end
+
+  defp preview_tag(%{tag: :link} = assigns) do
+    temple do
+      link rest!: @attributes
+    end
+  end
+
   # The list of keys: a `dialog` with a search field, and a section for each
   # mode. The key `?` or `/` opens it, and the script opens the section of the
   # mode under it. Each row holds its words in lower case, and the filter of
@@ -943,9 +974,7 @@ defmodule Expresso.Renderer do
           # first heading of the deck.
           title(do: document_title(@deck))
 
-          for {name, content, media} <- head_tags(@deck) do
-            meta name: name, content: content, media: media
-          end
+          c(&head_elements/1, deck: @deck)
 
           style do
             Phoenix.HTML.raw(fonts())

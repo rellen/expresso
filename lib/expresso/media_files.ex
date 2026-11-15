@@ -9,6 +9,9 @@ defmodule Expresso.MediaFiles do
   file only when its slide plays, and it can keep the file in its cache.
   `docs/external-media.md` gives the design.
 
+  The picture of the `card` option of the deck is such a file too, because
+  the tag `og:image` holds an address. `Expresso.LinkPreview` gives the rules.
+
   The name of a copy holds the first eight digits of the SHA-256 of its
   content, such as `run-3f2a1c9e.webm`. A changed file thus gets a new name,
   and two elements with the same file get the same copy.
@@ -84,10 +87,13 @@ defmodule Expresso.MediaFiles do
   percent sign for each character that an address does not take, such as a
   space in the name of the directory.
 
-  The function raises when the render has no directory for the copies.
+  The function raises when the render has no directory for the copies. The
+  `option` names the option that asks for the copy in the error: `:external`
+  for an element with `external true`, or `:card` for the `card` option of
+  the deck.
   """
-  @spec put(Path.t(), binary(), String.t()) :: String.t()
-  def put(src, bytes, noun) do
+  @spec put(Path.t(), binary(), String.t(), :external | :card) :: String.t()
+  def put(src, bytes, noun, option \\ :external) do
     case Process.get(@key) do
       {directory, files} when is_binary(directory) ->
         name = name(src, bytes)
@@ -95,7 +101,7 @@ defmodule Expresso.MediaFiles do
         URI.encode(directory, &URI.char_unreserved?/1) <> "/" <> name
 
       _no_directory ->
-        raise ArgumentError, no_directory(src, noun)
+        raise ArgumentError, no_directory(src, noun, option)
     end
   end
 
@@ -126,11 +132,19 @@ defmodule Expresso.MediaFiles do
         "next to the document. This render has no output file, so it has no directory for " <>
         "the copy. Give an output file, or remove the external option."
   """
-  @spec no_directory(Path.t(), String.t()) :: String.t()
-  def no_directory(src, noun) do
+  @spec no_directory(Path.t(), String.t(), :external | :card) :: String.t()
+  def no_directory(src, noun, option \\ :external)
+
+  def no_directory(src, noun, :external) do
     "the #{noun} \"#{src}\" has external true, so the render must write a copy of the file " <>
       "next to the document. This render has no output file, so it has no directory for " <>
       "the copy. Give an output file, or remove the external option."
+  end
+
+  def no_directory(src, noun, :card) do
+    "the #{noun} \"#{src}\" needs an address, so the render must write a copy of the file " <>
+      "next to the document. This render has no output file, so it has no directory for " <>
+      "the copy. Give an output file, or remove the card option."
   end
 
   @doc """

@@ -7,7 +7,8 @@ defmodule Expresso.PathTransformer do
   joins each relative path of the deck to that directory: the `src` of an
   image, a diagram, a code element, a local embed, a video and a sound, the
   `fallback` of an embed, the `poster` of a video, the `image` of a node of a
-  tree, the image of the `background` option of a slide and of the deck, and
+  tree, the image of the `background` option of a slide and of the deck, the
+  picture of the `card` option, the icon of the `favicon` option, and
   the `css` option when it is a path. An absolute path and the address of an embed stay as they
   are. The option itself becomes an absolute
   path, so the renderer can resolve a `url()` of an inline style sheet.
@@ -71,11 +72,31 @@ defmodule Expresso.PathTransformer do
             Expresso.Background.put_root(background, root)
           )
     end)
+    |> put_file(:card, root)
+    |> put_file(:favicon, root)
     |> then(fn state ->
       if css == nil or Expresso.Css.inline?(css),
         do: state,
         else: Transformer.set_option(state, [:deck], :css, path(css, root))
     end)
+  end
+
+  # The picture of the card and the icon of the tab are files of the deck.
+  # `Expresso.LinkPreview.put_root/2` keeps a deck with no such option as it
+  # is.
+  defp put_file(dsl_state, option, root) do
+    case Transformer.get_option(dsl_state, [:deck], option) do
+      nil ->
+        dsl_state
+
+      value ->
+        Transformer.set_option(
+          dsl_state,
+          [:deck],
+          option,
+          Expresso.LinkPreview.put_root(value, root)
+        )
+    end
   end
 
   defp slide(%{elements: elements} = slide, root) do

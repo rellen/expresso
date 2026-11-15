@@ -73,7 +73,8 @@ defmodule Expresso do
     # is present only for an option that the deck gives.
     given =
       [:template, :slide_template, :root, :dim_contrast, :dim_graphic_opacity, :window] ++
-        [:handout_hidden, :background, :advance, :loop, :external, :description, :author]
+        [:handout_hidden, :background, :advance, :loop, :external, :description, :author] ++
+        [:url, :card, :favicon, :robots]
 
     metadata =
       Enum.reduce(given, metadata, fn key, metadata ->

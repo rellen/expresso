@@ -30,6 +30,11 @@ defmodule Expresso.Deck do
   for each. A deck without a key has no such element.
   `docs/document-tags.md` gives the rules.
 
+  The metadata can also hold `:url`, `:card`, `:favicon` and `:robots`: the
+  address of the deck on its host, the picture of the preview of a link, the
+  icon of the tab, and the directives for a search engine.
+  `Expresso.LinkPreview` gives the rules.
+
   The metadata can also hold `:handout_hidden`. The value `true` shows each
   hidden slide in the handout view and on paper, in its place. A deck without
   the key leaves the hidden slides out. `docs/hidden-slides.md` gives the

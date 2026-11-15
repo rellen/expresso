@@ -26,7 +26,7 @@ the document, see [the external option](../reference/external-option.md).
    | File | When it is there |
    | --- | --- |
    | `site/index.html` | Always. It is the document of the deck. |
-   | `site/index_files/` | When an `image`, a `video` or an `audio` element has `external true`. |
+   | `site/index_files/` | When an `image`, a `video` or an `audio` element has `external true`, or when the deck has the `card` option. |
 
 4. Put each file of `site/` on the host. Keep the directory `index_files/` next to
    `index.html`.
@@ -99,6 +99,57 @@ end
 A deck with no `description` option has no description, and Lighthouse then gives 90 for
 SEO, and not 100. See
 [the description and author options](../reference/description-option.md).
+
+## Give a link to the deck a preview
+
+A chat program or a social network shows a card for a link: a title, a text and a picture.
+It reads them from the tags of the document, and the deck gives them with the `url` option
+and the `card` option.
+
+1. Make a picture of the first slide. The command needs Chrome or Chromium:
+
+   ```sh
+   mix expresso talk.exs --png pictures
+   cp pictures/slide-1.png card.png
+   ```
+
+2. Give the deck its address on the host, and the picture:
+
+   ```elixir
+   defmodule Talk do
+     use Expresso
+
+     name "Supervision trees in practice"
+     description "How a supervision tree starts a process again after a failure."
+     url "https://example.com/talk/"
+     card image: "card.png", alt: "The title slide of the talk"
+
+     slide do
+       heading "Supervision trees in practice"
+     end
+   end
+   ```
+
+3. Render the deck again. The render writes a copy of the picture into `site/index_files/`:
+
+   ```sh
+   mix expresso talk.exs site/index.html
+   ```
+
+4. Make sure that the document has the address of the picture:
+
+   ```sh
+   grep -o '<meta property="og:image"[^>]*>' site/index.html
+   ```
+
+5. Put each file of `site/` on the host, then paste the address of the deck into a chat
+   program. A program keeps a card for some time, so a change of the picture can show
+   late.
+
+End the address of a directory with `/`, because the address of the picture is relative to
+it. To give the tab of the browser an icon, add `favicon "icon.svg"`. To keep the deck out
+of a search engine, add `robots "noindex"`. See
+[the url, card, favicon and robots options](../reference/link-preview-options.md).
 
 ## Make sure that the host compresses the document
 

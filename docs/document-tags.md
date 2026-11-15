@@ -2,9 +2,9 @@
 
 This document gives the design for the `meta` elements in the `head` of the document of a
 deck. Issue #566 asked for it. The document records a decision for each of 13 tags, and
-the answers to five questions. The code contains the tags that need no address. Its
-section "The result" tells what the code has, and "The work that follows" names the
-issues for the other tags.
+the answers to five questions. The code contains each tag of the decisions, and not the
+viewport tag. Its section "The result" tells what the code has, "The tags with the address
+of the deck" tells the later change, and "The work that follows" names the issues.
 
 ## The problem
 
@@ -37,12 +37,12 @@ deck on a web host, this had three effects:
 | `meta name="color-scheme"` | Add it to each document, from the theme: `light`, `dark` or `light dark`. | The scroll bars and the colors of the system then agree with the slides. |
 | `meta name="theme-color"` | Add it to each document: the background color of the theme. | A browser on a phone can give its bar the color of the slide. |
 | `meta name="viewport"` | Leave it out, until a slide fits a small window. | With `width=device-width`, the browser cuts the text of a slide on a phone. See "The viewport". |
-| `og:title`, `og:description`, `og:type`, `og:locale` | Add them later, with the address of the deck. | A program makes a card only for a page on a host, and `og:url` is a part of the card. |
-| `og:image`, `og:image:alt`, its width and its height | Add them later, with an option for the picture. | The picture must be a file at an absolute address. A data URI does not work. |
-| `og:url` and `link rel="canonical"` | Add them later, with an option for the address of the deck. | The render does not know the host. |
-| `twitter:card` and its tags | Add `twitter:card` later, with the picture. | X reads the Open Graph tags for the title, the text and the picture. Only the kind of the card needs a tag. |
-| `link rel="icon"` | Add it later, with an option. | An icon as a data URI needs no address, but it needs a decision about the default icon. |
-| `meta name="robots"` | Add it later, with an option. | It needs no address. No user asked for it. |
+| `og:title`, `og:description`, `og:type`, `og:locale` | Add them with the `url` option of the deck. | A program makes a card only for a page on a host, and `og:url` is a part of the card. |
+| `og:image`, `og:image:alt`, its width and its height | Add them with the `card` option of the deck. | The picture must be a file at an absolute address. A data URI does not work. |
+| `og:url` and `link rel="canonical"` | Add them with the `url` option of the deck. | The render does not know the host. |
+| `twitter:card` and its tags | Add `twitter:card` with the `url` option. | X reads the Open Graph tags for the title, the text and the picture. Only the kind of the card needs a tag. |
+| `link rel="icon"` | Add it with the `favicon` option of the deck. | An icon as a data URI needs no address. A deck with no option has no icon. |
+| `meta name="robots"` | Add it with the `robots` option of the deck. | It needs no address. |
 | JSON-LD, such as `PresentationDigitalDocument` | Leave it out. | The list of the structured data that Google Search uses has no type for a presentation. |
 
 The facts about a card and about Google Search come from these pages, on 2026-11-15:
@@ -57,13 +57,12 @@ The facts about a card and about Google Search come from these pages, on 2026-11
    `theme-color`. The viewport is not one of them.
 2. **One option for the address of the deck, or one option for each tag?** One option for
    the address. `og:url`, `link rel="canonical"` and the address of the picture come from
-   it. This is a part of the work that follows.
+   it.
 3. **Does the render make a description from the first slide?** No. The description comes
    from the `description` option only. The first slide is often a title, which the
    `title` element already holds.
 4. **Who makes the picture of the card?** The user, with `--png`, and an option gives its
-   path. A render with no browser cannot make the picture. This is a part of the work
-   that follows.
+   path. A render with no browser cannot make the picture.
 5. **Does the viewport tag change the layout of a slide on a phone?** Yes. See "The
    viewport".
 
@@ -103,13 +102,14 @@ its own.
 
 ## The rule of "no address of a network"
 
-No tag of this change holds an address, so the rule stays as it is. The work that follows
-changes it in this way:
+The rule has one exception, which the change for issue #589 made:
 
 - Expresso itself writes no address into the document. This part stays.
-- A value that the user gives can be an address: the address of the deck. The document
-  then holds that address in `og:url`, in `link rel="canonical"` and in `og:image`.
-- `Expresso.FontTest` then examines a deck with no such option.
+- A value that the user gives can be an address: the `url` option of the deck. The
+  document then holds that address in `og:url` and in `link rel="canonical"`, and the
+  address of the picture in `og:image`.
+- `Expresso.FontTest` examines a deck with no such option. `Expresso.LinkPreviewTest`
+  makes sure that a deck with the option holds only these two addresses.
 
 ## The result
 
@@ -140,6 +140,46 @@ Lighthouse 13.6 gave these scores for a deck of one slide, on a local server wit
 
 The insight `viewport` has the score 0.5 in the two decks.
 
+## The tags with the address of the deck
+
+The change for issue #589 added the tags that the first change left for later. Four
+options of the deck give the values, and `Expresso.LinkPreview` writes the tags:
+
+| Option | Tags |
+| --- | --- |
+| `url` | `link rel="canonical"`, `og:url`, `og:type`, `og:title`, `og:description`, `og:locale` and `twitter:card`. |
+| `card` | `og:image`, its type, its width, its height and its `alt` text. |
+| `favicon` | `link rel="icon"`, as a data URI. |
+| `robots` | `meta name="robots"`. |
+
+The issue had four questions, with these answers:
+
+1. **The user makes the picture of the card**, with `--png`, and the `card` option gives
+   its path. A render with no browser cannot make the picture.
+2. **The render takes a picture of each size.** It reads the width and the height from the
+   header of a PNG or a JPEG file, and it gives no warning. The reference page tells the
+   usual size of 1200 by 630 pixels.
+3. **A deck with no `favicon` option has no icon.** An icon of Expresso in each deck is a
+   text that the user did not write.
+4. **Each tag group has its own option**, and not one group of options. The address is one
+   option, `url`, and each other address comes from it.
+
+These decisions come from the work:
+
+- **The picture is a copy next to the document.** `Expresso.MediaFiles` keeps the copy, as
+  for an element with `external true`, so each tool that writes a document writes the
+  picture too. A render with no output file raises an error that names the `card` option.
+- **A card with no `url` option is an error at compile time.** `og:image` holds an
+  absolute address, and only the `url` option gives its start.
+- **The address of the picture is relative to the address of the deck**, as a browser
+  resolves it. An address of a directory must thus end with `/`.
+- **`og:locale` needs a region.** Open Graph writes a locale as `pt_BR`. A language with
+  no region gives no tag, and a program then uses its default.
+- **The name of the icon option is `favicon`**, because the deck has the `icons` option for
+  the `icon` element.
+- **The Open Graph tags need the `url` option.** A deck with no host needs no card, so a
+  deck with only a `description` has no Open Graph tag.
+
 ## The limits
 
 - The key `t` does not change `theme-color`. The tag follows the scheme of the screen.
@@ -151,5 +191,5 @@ The insight `viewport` has the score 0.5 in the two decks.
 
 | Issue | Tags |
 | --- | --- |
-| #589 | The address of the deck, the Open Graph tags, the picture of the card, `twitter:card`, the icon and `robots`. |
+| #589 | The address of the deck, the Open Graph tags, the picture of the card, `twitter:card`, the icon and `robots`. The code contains this work. |
 | #590 | A slide that fits a small window, and then the viewport tag. |

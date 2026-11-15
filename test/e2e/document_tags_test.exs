@@ -80,4 +80,32 @@ defmodule Expresso.E2E.DocumentTagsTest do
     assert js(page, "document.querySelector('meta[name=author]').content") == "Ada Lovelace"
     assert js(page, "document.characterSet") == "UTF-8"
   end
+
+  test "the browser reads the address of the deck and the icon of the tab", %{
+    page: page,
+    tmp_dir: tmp_dir
+  } do
+    deck =
+      Builder.deck([Builder.slide("one", heading: "One")],
+        name: "tags",
+        url: "https://example.com/talk/",
+        card: "test/fixtures/dot.png",
+        favicon: "test/fixtures/badge.svg"
+      )
+
+    page = open(page, render(deck, tmp_dir))
+
+    assert js(page, "document.querySelector('link[rel=canonical]').href") ==
+             "https://example.com/talk/"
+
+    assert js(page, "document.querySelector('link[rel=icon]').href") =~
+             ~r/\Adata:image\/svg\+xml;base64,/
+
+    # The render wrote the copy of the picture next to the document.
+    name = Expresso.MediaFiles.name("dot.png", File.read!("test/fixtures/dot.png"))
+    assert File.ls!(Path.join(tmp_dir, "deck_files")) == [name]
+
+    assert js(page, "document.querySelector('meta[property=\"og:image\"]').content") ==
+             "https://example.com/talk/deck_files/" <> name
+  end
 end
