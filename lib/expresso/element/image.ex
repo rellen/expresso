@@ -7,6 +7,11 @@ defmodule Expresso.Element.Image do
   deck through `Expresso.PathTransformer`. `Expresso.Image` reads the file at
   render time and makes a data URI, so the document of the deck stays one file.
 
+  With `external true`, the render keeps a copy of the file next to the
+  document, and the `img` element holds the relative address of the copy.
+  `Expresso.MediaFiles` gives the rules, and the `external` option of the
+  deck gives the default.
+
   The `alt` option gives the text of the image for a screen reader. An image
   with no `alt` option is decorative, and the render function then writes an
   empty `alt` attribute.
@@ -47,6 +52,7 @@ defmodule Expresso.Element.Image do
               :goto,
               :window,
               :window_title,
+              :external,
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 
@@ -55,8 +61,9 @@ defmodule Expresso.Element.Image do
 
   The key `overlay` holds the attributes of the overlay contract, from
   `Expresso.Overlay.Render.attributes/1`, and the `style` attribute of the
-  `width` option. The key `src` holds the data URI of the file, and
-  `Expresso.Image.data_uri!/1` raises for a file that it cannot read. The key
+  `width` option. The key `src` holds the data URI of the file, or the
+  address of a copy of the file for an image with `external true`.
+  `Expresso.Image.source!/2` raises for a file that it cannot read. The key
   `goto` holds the link of the `goto` option, or `nil`.
   """
   @spec get_assigns(t()) :: map()
@@ -65,7 +72,7 @@ defmodule Expresso.Element.Image do
     %__MODULE__{src: src, alt: alt, width: width, goto: goto} = image
 
     %{
-      src: Expresso.Image.data_uri!(src),
+      src: Expresso.Image.source!(src, image.external == true),
       alt: alt || "",
       goto: goto,
       window: image.window,

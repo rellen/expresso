@@ -20,6 +20,11 @@ defmodule Expresso.Deck do
   the image, the color or the gradient behind the content of each slide that
   has no `background` of its own. A deck without the key has no background.
 
+  The metadata can also hold `:external`. The value `true` keeps the file of
+  each `image`, `video` and `audio` element next to the document, unless the
+  element has `external false`. A deck without the key keeps each file in the
+  document. `Expresso.MediaFiles` gives the rules.
+
   The metadata can also hold `:handout_hidden`. The value `true` shows each
   hidden slide in the handout view and on paper, in its place. A deck without
   the key leaves the hidden slides out. `docs/hidden-slides.md` gives the

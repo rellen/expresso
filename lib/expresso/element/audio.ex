@@ -30,9 +30,9 @@ defmodule Expresso.Element.Audio do
               :src,
               :title,
               :index,
+              :external,
               loop: false,
               controls: false,
-              external: false,
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 

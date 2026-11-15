@@ -1598,8 +1598,8 @@ for the user. It follows the design of the embed, with these differences:
 
 ### A file next to the document
 
-A `video` or an `audio` element with `external true` does not put its file into the
-document. `docs/external-media.md` gives the design. The parts are:
+An `image`, a `video` or an `audio` element with `external true` does not put its file
+into the document. `docs/external-media.md` gives the design. The parts are:
 
 - `Expresso.Media.sources/4` reads the file through `Expresso.DeckFile`, as for a data
   URI, and it gives the bytes to `Expresso.MediaFiles.put/3`. That function returns the
@@ -1619,6 +1619,14 @@ document. `docs/external-media.md` gives the design. The parts are:
   option: the standard output, and `Expresso.Deck.render/1` with no `collect/2`.
 - The presenter script needs no change. `media.ts` puts each value of the JSON element
   into `src` when the element plays first, so the browser asks for the file only then.
+- An `image` element takes the same option. `Expresso.Image.source!/2` gives the bytes to
+  `Expresso.MediaFiles.put/3`, and the `src` attribute of each `img` element holds the
+  address. `Expresso.Assets` does not change such an attribute, because it is not a data
+  URI. The `img` element has no `loading="lazy"`, because the layout check then measures
+  a slide before the browser has the image.
+- The `external` option of the deck is the default of each `image`, `video` and `audio`
+  element. `Expresso.Media.external/1` gives each element with no option that value
+  before the renderer gives the elements their numbers.
 
 ### The audio
 

@@ -2,8 +2,7 @@
 
 This guide shows how to put a deck on a web host, and how to make sure that the host sends
 it fast. GitHub Pages is the example of a host. For the option that keeps a file next to
-the document, see
-[A file next to the document](../reference/video-element.md#a-file-next-to-the-document).
+the document, see [the external option](../reference/external-option.md).
 
 ## Render the deck into a directory
 
@@ -27,7 +26,7 @@ the document, see
    | File | When it is there |
    | --- | --- |
    | `site/index.html` | Always. It is the document of the deck. |
-   | `site/index_files/` | When a `video` or an `audio` element has `external true`. |
+   | `site/index_files/` | When an `image`, a `video` or an `audio` element has `external true`. |
 
 4. Put each file of `site/` on the host. Keep the directory `index_files/` next to
    `index.html`.
@@ -45,6 +44,29 @@ host. [Keep a long video next to the document](show-a-video.md#keep-a-long-video
 gives the steps, with this deck as its example:
 
 ![A slide with a heading and a video](https://raw.githubusercontent.com/rellen/expresso/media/video-external.png)
+
+An image file is also a part of the document. For a deck with many photographs, give the
+`external` option to the deck. Each image, video and sound then stays out of the document:
+
+```elixir
+defmodule Talk do
+  use Expresso
+
+  external true
+
+  slide "the team" do
+    image "team.jpg", alt: "The team in front of the office"
+  end
+end
+```
+
+A deck with 40 photographs of 500 KB has a document of approximately 27 MB. With the
+option, the document holds only the address of each photograph. The browser gets each
+photograph one time, and the host can keep it in its cache, so a change of the text of the
+deck does not send the photographs again.
+
+To keep one small file in the document, give `external false` to its element. See
+[the external option](../reference/external-option.md).
 
 ## Make sure that the host compresses the document
 

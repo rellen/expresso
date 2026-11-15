@@ -845,6 +845,7 @@ defmodule Expresso.Renderer do
           |> Expresso.Element.Math.place()
           |> Expresso.Element.Embed.number()
           |> Expresso.Element.Window.apply()
+          |> Expresso.Media.external()
           |> Expresso.Element.Video.number()
           |> Expresso.Element.Audio.number()
           |> Expresso.Overlay.Render.identify()

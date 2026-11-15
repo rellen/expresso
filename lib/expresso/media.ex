@@ -11,7 +11,8 @@ defmodule Expresso.Media do
 
   An element with `external true` keeps its file next to the document, and
   the JSON element then holds the address of that copy. `Expresso.MediaFiles`
-  gives the rules.
+  gives the rules. The `external` option of the deck gives the default of
+  each `image`, `video` and `audio` element, and `external/1` applies it.
 
   An element module with the field `src` and the field `index` uses these
   functions with its own struct and its own media types, such as
@@ -19,6 +20,42 @@ defmodule Expresso.Media do
   """
 
   alias Expresso.Element.Tree
+
+  # The elements that take the `external` option.
+  @external [Expresso.Element.Image, Expresso.Element.Video, Expresso.Element.Audio]
+
+  @doc """
+  Give each image, video and audio element with no `external` option the
+  option of the deck
+
+  The `external` option of the deck is the default of each such element, and
+  a deck with no option gives `false`. An element with its own option keeps
+  its value. `Expresso.Renderer` calls this function before it gives the
+  elements their numbers, because `key/1` reads the option.
+
+      iex> image = %Expresso.Element.Image{src: "photo.jpg"}
+      iex> kept = %Expresso.Element.Image{src: "plan.png", external: false}
+      iex> slide = %Expresso.Slide{name: "one", elements: [image, kept]}
+      iex> deck = Expresso.Deck.new("deck", %{external: true}, [slide])
+      iex> [%{elements: elements}] = Expresso.Media.external(deck).slides
+      iex> Enum.map(elements, & &1.external)
+      [true, false]
+  """
+  @spec external(Expresso.Deck.t()) :: Expresso.Deck.t()
+  def external(%Expresso.Deck{metadata: metadata} = deck) do
+    default = (metadata || %{})[:external] == true
+
+    {deck, nil} =
+      Tree.map_reduce_deck(deck, nil, fn
+        %module{external: nil} = element, nil when module in @external ->
+          {%{element | external: default}, nil}
+
+        element, nil ->
+          {element, nil}
+      end)
+
+    deck
+  end
 
   @doc """
   Give each element of a module in a deck its number

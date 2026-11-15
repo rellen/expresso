@@ -2,8 +2,8 @@ defmodule Expresso.MediaFiles do
   @moduledoc """
   The files of a deck that the render keeps next to the document
 
-  A `video` or an `audio` element with `external true` does not go into the
-  document as a data URI. The render makes a copy of its file for a directory
+  An `image`, a `video` or an `audio` element with `external true` does not go
+  into the document as a data URI. The render makes a copy of its file for a directory
   next to the document, such as `talk_files/` for `talk.html`, and the
   document holds the relative address of the copy. The browser then gets the
   file only when its slide plays, and it can keep the file in its cache.

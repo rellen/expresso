@@ -38,9 +38,9 @@ defmodule Expresso.Element.Video do
               :width,
               :aspect,
               :index,
+              :external,
               loop: true,
               controls: false,
-              external: false,
               __spark_metadata__: nil
             ] ++ Expresso.Overlay.fields()
 

@@ -6,6 +6,9 @@ defmodule Expresso.Image do
   module reads an image at render time and makes a data URI from the bytes.
   The `img` element of `Expresso.Element.Image` then holds the image.
 
+  An `image` element with `external true` is the exception: `source!/2` then
+  returns the address of a copy of the file next to the document.
+
   `media_type/1` gives the media type of a path, and `data_uri/1` gives the
   full URI. The extension of the path gives the media type.
   """
@@ -74,6 +77,26 @@ defmodule Expresso.Image do
   def data_uri!(path) do
     case data_uri(path) do
       {:ok, uri} -> uri
+      {:error, message} -> raise ArgumentError, message
+    end
+  end
+
+  @doc """
+  Make the source of an `img` element for an image path, or raise
+
+  The source is the data URI of the file. With `external` as `true`, it is
+  the address of a copy of the file next to the document, such as
+  `talk_files/photo-3f2a1c9e.jpg`, and `Expresso.MediaFiles.put/3` keeps the
+  copy. That function raises when the render has no directory for the copy.
+  """
+  @spec source!(Path.t(), boolean()) :: String.t()
+  def source!(path, false), do: data_uri!(path)
+
+  def source!(path, true) do
+    with {:ok, _media_type} <- media_type(path),
+         {:ok, bytes} <- read(path) do
+      Expresso.MediaFiles.put(path, bytes, "image")
+    else
       {:error, message} -> raise ArgumentError, message
     end
   end

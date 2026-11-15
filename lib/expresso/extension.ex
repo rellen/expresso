@@ -137,6 +137,11 @@ defmodule Expresso.Extension do
           width: [
             type: :string,
             doc: "The width of the image, such as 900px or 60%. See docs/architecture.md."
+          ],
+          external: [
+            type: :boolean,
+            doc:
+              "Keep the file next to the document, in a directory such as talk_files for talk.html, in place of a data URI in the document. The output must be a file. The default is the external option of the deck, or false. See docs/reference/image-element.md."
           ]
         ]
   }
@@ -238,9 +243,8 @@ defmodule Expresso.Extension do
           ],
           external: [
             type: :boolean,
-            default: false,
             doc:
-              "Keep the file next to the document, in a directory such as talk_files for talk.html, in place of a data URI in the document. The browser then gets the file only when its slide plays. The output must be a file. See docs/reference/video-element.md."
+              "Keep the file next to the document, in a directory such as talk_files for talk.html, in place of a data URI in the document. The browser then gets the file only when its slide plays. The output must be a file. The default is the external option of the deck, or false. See docs/reference/video-element.md."
           ]
         ]
   }
@@ -278,9 +282,8 @@ defmodule Expresso.Extension do
           ],
           external: [
             type: :boolean,
-            default: false,
             doc:
-              "Keep the file next to the document, in a directory such as talk_files for talk.html, in place of a data URI in the document. The browser then gets the file only when its slide plays. The output must be a file. See docs/reference/audio-element.md."
+              "Keep the file next to the document, in a directory such as talk_files for talk.html, in place of a data URI in the document. The browser then gets the file only when its slide plays. The output must be a file. The default is the external option of the deck, or false. See docs/reference/audio-element.md."
           ]
         ]
   }
@@ -1776,6 +1779,11 @@ defmodule Expresso.Extension do
         default: "en",
         doc:
           "The language of the text of the deck, as a language tag, such as \"de\" or \"pt-BR\". A screen reader selects its voice from it. The default is \"en\". See docs/reference/lang-option.md."
+      ],
+      external: [
+        type: :boolean,
+        doc:
+          "Keep the file of each image, video and audio element next to the document, in a directory such as talk_files for talk.html. An element with its own external option keeps its value. The output must be a file. The default is false. See docs/reference/external-option.md."
       ],
       dim_contrast: [
         type: {:custom, Expresso.Deck, :dim_contrast, []},

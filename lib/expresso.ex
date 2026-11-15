@@ -73,7 +73,7 @@ defmodule Expresso do
     # is present only for an option that the deck gives.
     given =
       [:template, :slide_template, :root, :dim_contrast, :dim_graphic_opacity, :window] ++
-        [:handout_hidden, :background, :advance, :loop]
+        [:handout_hidden, :background, :advance, :loop, :external]
 
     metadata =
       Enum.reduce(given, metadata, fn key, metadata ->
@@ -146,7 +146,7 @@ defmodule Expresso do
   and returns an error tuple. The standard output then holds no text. A failed
   write of the output file is an error too.
 
-  A `video` or an `audio` element with `external true` keeps its file in a
+  An `image`, a `video` or an `audio` element with `external true` keeps its file in a
   directory next to the output file, such as `talk_files/` for `talk.html`.
   The function writes each such file after the document.
   `Expresso.MediaFiles` gives the rules.
@@ -160,7 +160,7 @@ defmodule Expresso do
   def main(nil, _output_path), do: error(Expresso.CommandLine.usage("mix expresso"))
 
   def main(input_path, output_path) do
-    # A `video` or an `audio` element with `external true` keeps its file next
+    # An `image`, a `video` or an `audio` element with `external true` keeps its file next
     # to the output file. The standard output has no directory for it, and
     # the render then raises an error that names the option.
     file = if output_path not in [nil, "-"], do: output_path

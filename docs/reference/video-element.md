@@ -28,7 +28,7 @@ end
 | `aspect` | A ratio, such as `"4/3"` | The ratio of the width to the height. The default is `"16/9"`. |
 | `loop` | `true` or `false` | Play the video again from the start at its end. The default is `true`. |
 | `controls` | `true` or `false` | Show the controls of the browser, so the presenter can turn the sound on. The default is `false`. |
-| `external` | `true` or `false` | Keep the file next to the document, in place of a data URI in the document. The default is `false`. See "A file next to the document". |
+| `external` | `true` or `false` | Keep the file next to the document, in place of a data URI in the document. The default is [the external option](external-option.md) of the deck, or `false`. See "A file next to the document". |
 | `at`, `on`, `effect`, `speed`, `easing` | See [the overlay options](overlay-options.md) | The steps of the video, as for each other element. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |

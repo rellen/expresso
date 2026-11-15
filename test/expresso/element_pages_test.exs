@@ -33,6 +33,9 @@ defmodule Expresso.ElementPagesTest do
   defp files(root) do
     File.cp!("examples/logo.png", Path.join(root, "logo.png"))
     File.cp!("examples/logo.png", Path.join(root, "map.png"))
+    # The render does not decode an image, so the content of this file can be
+    # a PNG.
+    File.cp!("examples/logo.png", Path.join(root, "team.jpg"))
     File.cp!("examples/flow.svg", Path.join(root, "flow.svg"))
     File.cp!("examples/animations/chime.ogg", Path.join(root, "chime.ogg"))
     File.cp!("examples/animations/visitors.csv", Path.join(root, "visitors.csv"))
@@ -85,6 +88,15 @@ defmodule Expresso.ElementPagesTest do
     deck
   end
 
+  # A block can have an element with `external true`, which keeps its file
+  # next to the document. The render then needs a directory for the copy.
+  defp render(deck) do
+    {html, _files} =
+      Expresso.MediaFiles.collect("page_files", fn -> Expresso.Deck.render(deck) end)
+
+    html
+  end
+
   for page <- @pages do
     @tag :tmp_dir
     test "each code block of the page of the #{page} element compiles with no warning and renders",
@@ -96,7 +108,7 @@ defmodule Expresso.ElementPagesTest do
 
       for {block, index} <- Enum.with_index(blocks) do
         deck = compile(block, unquote(page), index, tmp_dir, path)
-        if tool(block) == nil, do: assert(Expresso.Deck.render(deck) =~ "<html")
+        if tool(block) == nil, do: assert(render(deck) =~ "<html")
       end
     end
   end

@@ -23,7 +23,7 @@ end
 | `title` | A string, required | The name of the sound for a screen reader. The handout view and paper show it with a note symbol. |
 | `loop` | `true` or `false` | Play the sound again from the start at its end. The default is `false`. |
 | `controls` | `true` or `false` | Show the controls of the browser on the slide. The default is `false`. |
-| `external` | `true` or `false` | Keep the file next to the document, in place of a data URI in the document. The default is `false`. See "The file". |
+| `external` | `true` or `false` | Keep the file next to the document, in place of a data URI in the document. The default is [the external option](external-option.md) of the deck, or `false`. See "The file". |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 

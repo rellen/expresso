@@ -23,20 +23,27 @@ defmodule Expresso.MediaFilesTest do
 
   defp audio(options \\ []), do: Builder.audio(@chime, [title: "A chime"] ++ options)
 
-  defp deck(elements),
-    do: Builder.deck([Builder.slide("one", elements: elements)], name: "deck")
+  defp image(options \\ []), do: Builder.image(@poster, [alt: "A dot"] ++ options)
+
+  defp deck(elements, options \\ []),
+    do: Builder.deck([Builder.slide("one", elements: elements)], [name: "deck"] ++ options)
 
   # The document of a deck and the copies of its render, with the directory
   # `talk_files`.
-  defp render(elements) do
+  defp render(elements, options \\ []) do
     {html, files} =
-      MediaFiles.collect("talk_files", fn -> Expresso.Deck.render(deck(elements)) end)
+      MediaFiles.collect("talk_files", fn -> Expresso.Deck.render(deck(elements, options)) end)
 
     {LazyHTML.from_document(html), html, files}
   end
 
   defp clip_name, do: MediaFiles.name(@clip, File.read!(@clip))
   defp chime_name, do: MediaFiles.name(@chime, File.read!(@chime))
+  defp dot_name, do: MediaFiles.name(@poster, File.read!(@poster))
+
+  # The `src` attribute of each image of the present view.
+  defp sources(document),
+    do: document |> LazyHTML.query(".screen .image img") |> LazyHTML.attribute("src")
 
   describe "collect/2 and put/3" do
     test "put/3 returns the address of the copy, and collect/2 returns the copy" do
@@ -254,6 +261,131 @@ defmodule Expresso.MediaFilesTest do
 
       refute html =~ "data:video/"
       refute html =~ "data:audio/"
+    end
+  end
+
+  describe "an image with external true" do
+    test "each img element holds the address of the copy, and the document holds no data URI" do
+      {document, html, files} = render([image(external: true)])
+      address = "talk_files/" <> dot_name()
+
+      assert sources(document) == [address]
+      # The present view, the handout view and the menu show the image.
+      sources = document |> LazyHTML.query(".image img") |> LazyHTML.attribute("src")
+      assert length(sources) >= 3
+      assert Enum.uniq(sources) == [address]
+      refute html =~ "data:image/png"
+      assert files == [{address, File.read!(@poster)}]
+    end
+
+    test "two elements with the same file share one copy" do
+      {document, _html, files} = render([image(external: true), image(external: true, alt: "B")])
+
+      assert sources(document) == List.duplicate("talk_files/" <> dot_name(), 2)
+      assert length(files) == 1
+    end
+
+    test "an element with the option and one with no option have a source each" do
+      {document, _html, files} = render([image(), image(external: true)])
+
+      assert ["data:image/png;base64," <> _data, address] = sources(document)
+      assert address == "talk_files/" <> dot_name()
+      assert length(files) == 1
+    end
+
+    test "the render raises with no directory, and the error names the file and the option" do
+      assert_raise ArgumentError, ~r/the image "#{@poster}" has external true/, fn ->
+        Expresso.Deck.render(deck([image(external: true)]))
+      end
+    end
+
+    test "a file that the render cannot read, or of a type that it does not know, stops the render" do
+      for {path, message} <- [
+            {"no/such.png", ~r|no/such.png|},
+            {"test/fixtures/dot.txt", ~r/is not an image of a type that Expresso knows/}
+          ] do
+        assert_raise ArgumentError, message, fn ->
+          render([Builder.image(path, alt: "None", external: true)])
+        end
+      end
+    end
+
+    test "the render reads the file through Expresso.DeckFile, so the watch mode sees it" do
+      {_result, paths} = Expresso.DeckFile.track(fn -> render([image(external: true)]) end)
+
+      assert @poster in paths
+    end
+  end
+
+  describe "the external option of the deck" do
+    test "each image, video and audio element with no option keeps its file next to the document" do
+      {document, html, files} = render([image(), video(), audio()], external: true)
+
+      assert sources(document) == ["talk_files/" <> dot_name()]
+      assert script_json(document, "videos") == ["talk_files/" <> clip_name()]
+      assert script_json(document, "audios") == ["talk_files/" <> chime_name()]
+      refute html =~ "data:video/"
+      refute html =~ "data:audio/"
+
+      assert Enum.map(files, &elem(&1, 0)) |> Enum.sort() ==
+               Enum.sort(
+                 for name <- [dot_name(), clip_name(), chime_name()], do: "talk_files/" <> name
+               )
+    end
+
+    test "the poster of a video stays a data URI" do
+      {document, _html, _files} = render([video()], external: true)
+
+      assert ["data:image/png;base64," <> _data | _rest] =
+               document |> LazyHTML.query("img.embed-fallback") |> LazyHTML.attribute("src")
+    end
+
+    test "an element with external false keeps its file in the document" do
+      {document, _html, files} =
+        render([image(external: false), video(external: false), audio()], external: true)
+
+      assert ["data:image/png;base64," <> _data] = sources(document)
+      assert ["data:video/webm;base64," <> _data] = script_json(document, "videos")
+      assert Enum.map(files, &elem(&1, 0)) == ["talk_files/" <> chime_name()]
+    end
+
+    test "a deck with external false, or with no option, keeps each file in the document" do
+      for options <- [[], [external: false]] do
+        assert {_document, _html, []} = render([image(), video(), audio()], options)
+      end
+    end
+
+    test "the render raises with no directory, and the error names the first file" do
+      assert_raise ArgumentError, ~r/has external true/, fn ->
+        Expresso.Deck.render(deck([image()], external: true))
+      end
+    end
+
+    test "the DSL takes the option of the deck and the option of an image" do
+      defmodule ExternalDefaultDeck do
+        use Expresso
+
+        name "external"
+        external true
+
+        slide "one" do
+          image "test/fixtures/dot.png", alt: "A dot"
+
+          image "test/fixtures/halves.png" do
+            alt "Two halves"
+            external false
+          end
+        end
+      end
+
+      {html, files} =
+        MediaFiles.collect("d_files", fn ->
+          Expresso.Deck.render(Expresso.parse(ExternalDefaultDeck))
+        end)
+
+      assert Enum.map(files, &elem(&1, 0)) == ["d_files/" <> dot_name()]
+      assert html =~ ~s(src="d_files/#{dot_name()}")
+      assert html =~ "data:image/png"
     end
   end
 

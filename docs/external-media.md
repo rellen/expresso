@@ -3,7 +3,9 @@
 This document gives the design for a `video` and an `audio` element that keep their file
 next to the document, in place of a data URI in the document. The code contains this
 design. Issue #317 asked for it. The document records ten decisions, and each is settled.
-Its last section, "The result", tells what changed during the work.
+Its section "The result" tells what changed during the work. A later change gave the
+`image` element the same option, and it gave the deck an option for the default. See
+"A later change: an image, and an option of the deck".
 
 ## The problem
 
@@ -100,9 +102,48 @@ starts before the browser received them. A deck with a video in the document the
 a key at the time of its first slide. `external true` still has the second cost and the
 third cost as its reasons, and the document with such an element is still much smaller.
 
+### A later change: an image, and an option of the deck
+
+Issue #564 asked for the same option on the `image` element. The maintainer made these
+decisions on 2026-11-15:
+
+1. **The `image` element takes `external true`.** `Expresso.Image.source!/2` gives the
+   bytes to `Expresso.MediaFiles.put/3`, and each `img` element holds the address of the
+   copy. Each view of a slide has the same address, so the browser gets the file one time.
+2. **The deck takes the `external` option.** It is the default of each `image`, `video`
+   and `audio` element. This replaces decision 1 for a deck with many files. An element
+   has no default of its own, so `external false` on an element keeps its file in the
+   document. `Expresso.Media.external/1` gives each element the value before the render.
+3. **An image has no `loading="lazy"`.** The maintainer asked for a test in a browser
+   first, and for no attribute if the export or `--check` did not work with it. The table
+   gives the results.
+4. **The other images stay data URIs:** the background of a slide, the image of a node of
+   a tree, the fallback image of an embed, an image inside an SVG, and the poster of a
+   video. Each one needs a change of its own.
+
+The test of `loading="lazy"` used a deck of four slides with one image each, and a server
+that sent an image after 400 ms:
+
+| Measurement | With no attribute | With `loading="lazy"` |
+| --- | --- | --- |
+| The images that the browser asked for at the load | 4 of 4 | 1 of 4 |
+| The image of slide 2 at the time when slide 2 showed | Complete | Not complete. It showed 400 ms later. |
+| `--pdf` and `--png`, with four images of 10 MB | Each page had its image. | Each page had its image. |
+| `--check=browser`, with an image that is 787 px too tall | It found the problem. | It found no problem. |
+
+The layout check measures a slide before the browser has the image, so an image with no
+size gives a wrong result. The attribute also showed an image late during the talk. A
+later change can add the attribute, with two more parts: the presenter script must ask
+for the images of the next slide, and the check must wait for each image.
+
+With no attribute, the browser asks for each image when it loads the document. The first
+slide does not wait for them, and the host can keep each one in its cache.
+
 ## The limits
 
 - The render does not remove an old copy. After a change of the file, the directory holds
   the old copy and the new copy.
 - A document with such an element is not one file. Send the directory with it.
 - The speaker view and the handout view do not play a video, so they get no file.
+- The browser asks for each image with `external true` when it loads the document, also
+  for an image of a slide that the viewer does not go to.
