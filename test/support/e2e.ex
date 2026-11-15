@@ -261,12 +261,32 @@ defmodule Expresso.E2E do
     {:ok, value} =
       Frame.evaluate(page.main_frame.guid,
         timeout: @timeout,
-        expression: expression,
+        expression: clear_of_surrogates(expression),
         is_function: false,
         arg: nil
       )
 
     value
+  end
+
+  # `playwright_ex` 0.16.0 writes the length of a message to the driver as one
+  # UTF-32 code point. A length from 55296 to 57343 is a surrogate and not a
+  # code point, so the transport stops for a message of that size. The message
+  # holds the expression as JSON and no more than 800 bytes of other fields.
+  # The function adds spaces to an expression that can give such a length, so
+  # the message is longer than 57343 bytes.
+  @surrogates 55_296..57_343
+  @other_fields 800
+
+  defp clear_of_surrogates(expression) do
+    size = expression |> JSON.encode!() |> byte_size()
+    first.._//_ = @surrogates
+
+    if size in (first - @other_fields)..@surrogates.last//1 do
+      expression <> String.duplicate(" ", @surrogates.last + 1 - size)
+    else
+      expression
+    end
   end
 
   @doc """

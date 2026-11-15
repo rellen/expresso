@@ -205,6 +205,29 @@ dim_graphic_opacity 0.5
 
 See [the dim_graphic_opacity option](../reference/dim-graphic-opacity-option.md).
 
+## Look at the deck in forced colors
+
+A user can ask the system for forced colors, such as the high contrast mode of Windows.
+The browser then gives each text a color of the system. A deck needs no option for this
+mode, but look at it one time, because the mode removes each color that has a meaning.
+
+1. Open the deck in Chrome, and open the developer tools.
+2. Open the command menu with `Ctrl+Shift+P`, or with `Cmd+Shift+P` on macOS, and run
+   `Show Rendering`.
+3. Set `Emulate CSS media feature forced-colors` to `forced-colors: active`.
+4. Go through each step of the deck.
+
+Look for these three things:
+
+- A text that tells its meaning only with a color. The colors of code and the color of a
+  `set` go away. Add a word, or a state such as `highlight` or `alert`.
+- A chart, a diagram, a formula with a part or an image. Each one keeps its colors on a
+  plate with the background color of the theme, so it must be readable on that color.
+- A color or a gradient as the background of a slide. It goes away, so the slide must make
+  sense with no background. An image stays, and each text gets a box behind it.
+
+See [Forced colors](../reference/accessibility.md#forced-colors) for each rule.
+
 ## Make sure of the result
 
 1. Open the deck in a browser with a screen reader, such as VoiceOver on macOS or NVDA on

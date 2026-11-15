@@ -113,6 +113,29 @@ with small dimmed text, or for a deck that axe-core must pass. See
 A user can ask the system for forced colors, such as the high contrast mode of Windows.
 The browser then replaces the colors of the page with the colors of the system.
 
+### The content of a slide
+
+Each text of a slide takes a color of the system. A graphic keeps its colors on a plate:
+
+| Content | In forced colors |
+| --- | --- |
+| A text, a callout, a table, a tree, a stat | The colors of the system. |
+| A chart | The colors of the theme, on a plate with the background color of the theme. |
+| A diagram | Its colors, on the same plate. |
+| A formula with a part | Its colors, on the same plate. A step can give a part a color. |
+| A formula with no part | The colors of the system. |
+| An image | Its colors. The plate shows behind a transparent area. |
+| A dimmed element | An opacity of 0.6, because each text has one color. |
+| A code token in focus | A bar under the token, in the color `CanvasText`. |
+| The colors of code | They go away. Each token has the color of the text. |
+| A color or a gradient as the background of a slide | It goes away. The slide has the canvas of the system. |
+| An image as the background of a slide | It stays. The browser puts a box with the canvas color behind each text. |
+
+The plate is the area of the graphic and 0.25rem on each side. A dimmed line of code has
+7.4:1 on a black canvas and 5.7:1 on a white canvas.
+
+### The parts of the presenter
+
 The parts of the presenter take a color of the system, so each one shows:
 
 | Part | Color in forced colors |

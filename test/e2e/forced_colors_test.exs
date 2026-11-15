@@ -25,6 +25,72 @@ defmodule Expresso.E2E.ForcedColorsTest do
     end
   end
 
+  # A deck with the content that needs a rule in forced colors: a chart, a
+  # diagram, code with a line in focus, an image and a formula with a part.
+  defmodule ContentDeck do
+    use Expresso
+
+    name "content deck"
+
+    slide "chart" do
+      chart :bar do
+        title "Orders and returns each year"
+        categories ["2022", "2023"]
+        series "Orders", [120, 180]
+        series "Returns", [14, 22]
+      end
+    end
+
+    slide "diagram" do
+      diagram "test/fixtures/flow.svg" do
+        alt "A request goes from the browser to the server"
+      end
+    end
+
+    slide "code" do
+      code "elixir" do
+        text """
+        # A comment.
+        def one do
+          1
+        end
+        """
+
+        highlight [2..2]
+      end
+    end
+
+    slide "image" do
+      image "test/fixtures/dot.png", alt: "A dot"
+    end
+
+    slide "formula" do
+      math ~S(<math display="block"><mrow><mi data-part="bind">f</mi><mo>+</mo><mi>g</mi></mrow></math>) do
+        part "bind" do
+          on 1, set: [color: "rgb(255, 0, 0)"]
+        end
+      end
+    end
+  end
+
+  # The same chart in a dark theme. With a white canvas, its light text did
+  # not show.
+  defmodule DarkDeck do
+    use Expresso
+
+    name "dark deck"
+    theme :dracula
+
+    slide "chart" do
+      chart :bar do
+        title "Orders and returns each year"
+        categories ["2022", "2023"]
+        series "Orders", [120, 180]
+        series "Returns", [14, 22]
+      end
+    end
+  end
+
   @schemes [:light, :dark]
 
   # The contrast of a color of an element with the canvas, as WCAG calculates
@@ -136,6 +202,111 @@ defmodule Expresso.E2E.ForcedColorsTest do
     end
   end
 
+  # The lowest contrast of the texts of the chart with the plate of the chart.
+  @chart_texts """
+  (() => {
+    const parse = (color) => {
+      const rgb = /rgba?\\(([\\d.]+),\\s*([\\d.]+),\\s*([\\d.]+)/.exec(color);
+      if (rgb) return [+rgb[1], +rgb[2], +rgb[3]];
+      const srgb = /color\\(srgb ([\\d.e-]+) ([\\d.e-]+) ([\\d.e-]+)/.exec(color);
+      return [srgb[1] * 255, srgb[2] * 255, srgb[3] * 255];
+    };
+    const part = (value) => {
+      const v = value / 255;
+      return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    };
+    const light = ([r, g, b]) => 0.2126 * part(r) + 0.7152 * part(g) + 0.0722 * part(b);
+    const svg = document.querySelector("#slide-1 .chart svg");
+    const plate = parse(getComputedStyle(svg).backgroundColor);
+    const ratios = [...svg.querySelectorAll("text")]
+      .filter((text) => text.textContent.trim() !== "")
+      .map((text) => {
+        const [high, low] = [light(parse(getComputedStyle(text).fill)), light(plate)].sort((a, b) => b - a);
+        return (high + 0.05) / (low + 0.05);
+      });
+    return [ratios.length, Math.min(...ratios)];
+  })()
+  """
+
+  defp style(page, selector, property) do
+    js(
+      page,
+      "getComputedStyle(document.querySelector(#{JSON.encode!(selector)}))[#{JSON.encode!(property)}]"
+    )
+  end
+
+  for scheme <- @schemes do
+    for {deck, ground} <- [{ContentDeck, "rgb(255, 255, 255)"}, {DarkDeck, "rgb(40, 42, 54)"}] do
+      # The browser does not change the `fill` of an SVG text, so the chart
+      # keeps its colors on a plate with the background color of the theme.
+      test "each text of a chart of #{inspect(deck)} has 4.5:1 or more on its plate with the #{scheme} color scheme",
+           %{browser: browser, tmp_dir: tmp_dir} do
+        page =
+          browser
+          |> new_page(forced_colors: "active", color_scheme: unquote(scheme))
+          |> open(render(unquote(deck), tmp_dir))
+
+        assert style(page, "#slide-1 .chart svg", "forcedColorAdjust") == "none"
+        assert rgb(style(page, "#slide-1 .chart svg", "backgroundColor")) == unquote(ground)
+
+        [count, lowest] = js(page, @chart_texts)
+        assert count >= 6
+        assert lowest >= 4.5
+      end
+    end
+
+    test "a diagram, an image and a formula with a part have a plate with the #{scheme} color scheme",
+         %{browser: browser, tmp_dir: tmp_dir} do
+      page =
+        browser
+        |> new_page(forced_colors: "active", color_scheme: unquote(scheme))
+        |> open(render(ContentDeck, tmp_dir))
+
+      for selector <- ["#slide-2 .diagram > svg", "#slide-4 .image img", "#slide-5 .math math"] do
+        assert style(page, selector, "forcedColorAdjust") == "none", selector
+        assert rgb(style(page, selector, "backgroundColor")) == "rgb(255, 255, 255)", selector
+      end
+
+      # The part of the formula keeps the color of its step.
+      page |> keys(["j", "j", "j", "j"]) |> wait_for_position("5.1")
+
+      wait_for(
+        page,
+        "getComputedStyle(document.querySelector('#slide-5 .math-part')).color === 'color(srgb 1 0 0)'"
+      )
+    end
+
+    # Each text has one color of the system, so the dim state uses the opacity.
+    test "a dimmed line of code is different from the line in focus with the #{scheme} color scheme",
+         %{browser: browser, tmp_dir: tmp_dir} do
+      page =
+        browser
+        |> new_page(forced_colors: "active", color_scheme: unquote(scheme))
+        |> open(render(ContentDeck, tmp_dir))
+
+      page |> keys(["j", "j"]) |> wait_for_position("3.1")
+
+      filters =
+        js(page, """
+        [...document.querySelectorAll("#slide-3 .code .line")]
+          .map((line) => getComputedStyle(line).filter)
+        """)
+
+      assert length(filters) == 4
+      assert Enum.at(filters, 1) =~ "opacity(1)"
+      for index <- [0, 2, 3], do: assert(Enum.at(filters, index) =~ "opacity(0.6)")
+
+      # The two lines have the same color, so only the opacity tells them apart.
+      colors =
+        js(
+          page,
+          ~s|[...document.querySelectorAll("#slide-3 .code .line")].map((line) => getComputedStyle(line).color)|
+        )
+
+      assert Enum.uniq(colors) |> length() == 1
+    end
+  end
+
   # In the usual mode, a deck can change these colors, and the rules for forced
   # colors do not apply.
   test "the usual mode keeps the colors of the theme", %{page: page, tmp_dir: tmp_dir} do
@@ -145,5 +316,23 @@ defmodule Expresso.E2E.ForcedColorsTest do
 
     assert rgb(js(page, "getComputedStyle(document.querySelector('#progress')).backgroundColor")) ==
              "rgb(52, 101, 164)"
+  end
+
+  test "the usual mode gives a chart no plate, and it dims a line of code with a color",
+       %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(ContentDeck, tmp_dir))
+
+    assert style(page, "#slide-1 .chart svg", "backgroundColor") == "rgba(0, 0, 0, 0)"
+    assert style(page, "#slide-1 .chart svg", "forcedColorAdjust") == "auto"
+
+    page |> keys(["j", "j"]) |> wait_for_position("3.1")
+
+    filters =
+      js(
+        page,
+        ~s|[...document.querySelectorAll("#slide-3 .code .line")].map((line) => getComputedStyle(line).filter)|
+      )
+
+    for filter <- filters, do: assert(filter =~ "opacity(1)")
   end
 end

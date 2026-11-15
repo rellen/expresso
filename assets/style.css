@@ -3825,3 +3825,46 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     stroke: Highlight;
   }
 }
+/*
+ * The content of a slide in forced colors. The text takes the colors of the
+ * system, which is what the browser does with no rule. Three kinds of
+ * content need a rule.
+ *
+ * A graphic keeps its colors on a plate. The browser does not change the
+ * `fill` and the `stroke` of an SVG element, so a chart or a diagram kept
+ * the text color of the theme on the canvas of the system, and a dark text
+ * did not show on a black canvas. `forced-color-adjust: none` makes the
+ * graphic show as its author made it, and the background color of the theme
+ * goes behind it, as a photograph has its own ground. The outline has the
+ * same color, so the plate is larger than the box and no label touches its
+ * edge. A formula gets the plate only when it has a part with a name,
+ * because a step can give such a part a color. An image gets the plate for
+ * its transparent areas.
+ *
+ * The dim state uses the opacity. Each text has one color of the system, so
+ * the dimmed color of a role does not show. 0.6 keeps a contrast of 5.7:1 on
+ * a white canvas and of 7.4:1 on a black canvas. `--dim` does not inherit,
+ * so an element inside a dimmed element does not get the opacity two times.
+ * An element inside a plate keeps the dimmed color of the theme.
+ *
+ * A token of code in focus has a bar under it, which is a `box-shadow`, and
+ * the browser removes each `box-shadow`. A border of an inline element takes
+ * no space in its line, so the bar is a border here.
+ */
+@media (forced-colors: active) {
+  .chart svg,
+  .diagram > svg,
+  .math:has(.math-part) math,
+  .image img {
+    forced-color-adjust: none;
+    background-color: var(--background);
+    outline: 0.25rem solid var(--background);
+  }
+  [data-el]:not(:is(.chart, .diagram, .math:has(.math-part)) *) {
+    filter: blur(calc((1 - var(--shown)) * var(--enter-blur)))
+      opacity(calc(var(--opacity) * (1 - var(--dim, 0) * 0.4)));
+  }
+  .code .code-token {
+    border-bottom: calc(var(--highlight, 0) * 0.12em) solid CanvasText;
+  }
+}
