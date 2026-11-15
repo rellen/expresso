@@ -220,6 +220,7 @@ defmodule Expresso.Deck do
       |> Floki.parse_document!()
       |> Floki.raw_html()
       |> Expresso.Assets.dedupe()
+      |> Expresso.Font.trim()
 
     "<!DOCTYPE html>\n" <> body
   end

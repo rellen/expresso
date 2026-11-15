@@ -619,11 +619,22 @@ A browser starts to load a font only when a layout needs it, also when the font 
 URI. The first layout of the document can thus have the fallback font. The text then moves
 when the font replaces it, and a heading can change its number of lines.
 `Expresso.Font.loader/0` returns a script for the `head`, after the style sheet of the
-font. The script calls `document.fonts.load()` for each of the eight faces, so the browser
-starts each load before it reads the body. On 2026-11-15, a deck from `main` moved its
+font. The script calls `document.fonts.load()` for each face of the document, so the
+browser starts each load before it reads the body. On 2026-11-15, a deck from `main` moved its
 first slide in 13 of 24 loads in Chromium 159, and the same deck with the script moved it
 in none. The script does not make the order sure: a browser can still make a layout
 before the font is ready.
+
+Most decks need only the four Latin files. `Expresso.Font.trim/1` removes from the
+document each face that no character of the document needs, and
+`Expresso.Deck.render/1` calls it as its last step. A face whose `unicode-range` holds the
+space always stays. A Latin Extended face stays only when the document holds a character
+of its range, such as `ő`, as the character or as an escape. The function looks at the
+whole document, with each script and each JSON element, so a text that the presenter
+writes later also counts. It removes the `@font-face` rule and the entry in the script of
+`loader/0`. A deck with no such character is approximately 51 kilobytes smaller. The
+italic faces and the bold faces always stay: a face that is missing makes the browser
+draw a false italic or a false bold.
 
 The math fonts are different, because a deck with no formula needs none.
 `Expresso.Element.Math.Font` reads the style sheet of Temml for the font of the

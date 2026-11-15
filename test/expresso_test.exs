@@ -393,7 +393,7 @@ defmodule ExpressoTest do
       [loader] =
         document |> LazyHTML.query("head script:not([type])") |> Enum.map(&LazyHTML.text/1)
 
-      assert loader == Expresso.Font.loader()
+      assert loader =~ "document.fonts.load(font, text)"
 
       assert script =~ "keydown"
       refute script =~ "import "
