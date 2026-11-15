@@ -52,7 +52,8 @@ and `controls true` lets the presenter turn the sound on.
 ## The document
 
 The renderer writes each file one time, as a data URI, into the element
-`expresso-videos`. For a video with `external true`, it writes the address of a copy of
+`expresso-videos`. The element comes after the presenter script, so the deck answers a
+key before the browser received the file. For a video with `external true`, it writes the address of a copy of
 the file. Two video elements with the same file share it. Each copy of the slide
 holds only a `video` element with `data-video`, the number of the file, and the poster
 under it. The presenter gives the `video` element of the present view its source the first

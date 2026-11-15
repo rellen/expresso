@@ -402,6 +402,58 @@ defmodule ExpressoTest do
     end
   end
 
+  describe "the order of the script elements" do
+    defmodule MediaDeck do
+      use Expresso
+
+      slide "one" do
+        video "test/fixtures/clip.webm" do
+          title "A clip"
+          poster "test/fixtures/dot.png"
+        end
+
+        audio "test/fixtures/chime.wav" do
+          title "A chime"
+        end
+
+        embed "test/fixtures/page.html" do
+          title "A page"
+        end
+      end
+    end
+
+    # The index of each `script` element of the body, by its id. The presenter
+    # bundle has no id.
+    defp script_order(document) do
+      document
+      |> LazyHTML.query("body script")
+      |> Enum.with_index()
+      |> Map.new(fn {script, index} ->
+        {script |> LazyHTML.attribute("id") |> List.first() || :presenter, index}
+      end)
+    end
+
+    # A browser runs the presenter when it reads it. A video file is large, so
+    # an element with such a file in front of the presenter makes it start
+    # late.
+    test "each element that can hold a file comes after the presenter" do
+      order = MediaDeck |> document() |> script_order()
+
+      for id <- ["expresso-embeds", "expresso-videos", "expresso-audios"] do
+        assert order[:presenter] < Map.fetch!(order, id), id
+      end
+    end
+
+    # The presenter reads these elements when it starts.
+    test "the steps and the program come before the presenter" do
+      order = MediaDeck |> document() |> script_order()
+
+      for id <- ["expresso-deck", "expresso-program"] do
+        assert Map.fetch!(order, id) < order[:presenter], id
+      end
+    end
+  end
+
   describe "render/1 for a deck from the builder" do
     test "writes the heading of the slide" do
       document =

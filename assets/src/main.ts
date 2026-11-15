@@ -523,6 +523,14 @@ if (isSpeaker && partner !== null && !partner.closed) {
 // first step needs its own call.
 videos();
 
+// The lists of the videos and of the sounds come after this script in the
+// document, because they hold each file. The presenter thus starts before
+// the browser received a large file, and the call above finds no list. The
+// video of the current step plays when the browser read the whole document.
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", videos, { once: true });
+}
+
 // The pages load after the document, so the slides show at once. A page that
 // loads slowly then does not hold the load of the document.
 if (document.readyState === "complete") {

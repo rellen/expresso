@@ -570,15 +570,24 @@ html               lang "en", and data-variants for a theme with two variants
                      type "application/json", from Expresso.Steps
       script         the program of the presenter as JSON, id "expresso-program",
                      type "application/json", from Expresso.Presenter.Program
-      script         the sources of the embeds as JSON, id "expresso-embeds",
-                     when the deck has an embed
       script         the commands of the links as JSON, id "expresso-links",
                      from Expresso.Goto, when the deck has a link
+      script         priv/static/presenter.js, the presenter bundle
+      script         the sources of the embeds as JSON, id "expresso-embeds",
+                     when the deck has an embed
       script         the sources of the videos and the sounds as JSON, ids
                      "expresso-videos" and "expresso-audios", when the deck has
                      such an element
-      script         priv/static/presenter.js, the presenter bundle
 ```
+
+The last three elements come after the presenter bundle, because they can be large: a
+video file of 20 MB is 27 MB as a data URI. A browser runs a script when it reads it, so
+the presenter starts before the browser received these elements. `media.ts` and
+`embed.ts` read an element only when a slide needs it. While the browser reads the
+document, they look again for an element that is not there, and `main.ts` plays the video
+of the current step at `DOMContentLoaded`. On 2026-11-15, a deck with a video of 20 MB
+answered a key after 2.7 s on a network of 1.6 Mbit/s. With the elements in front of the
+bundle, it answered after 97.5 s.
 
 The renderer writes each `script` element of JSON with one component, and
 `Expresso.Json.for_script/1` makes each JSON text. That function writes each `<` as the

@@ -89,6 +89,17 @@ The code follows the plan, with these changes:
 and `docs/how-to/show-a-video.md` has the section "Keep a long video next to the
 document".
 
+### A later change to the first cost
+
+The first cost of "The problem" was not correct. A measurement for issue #568 showed that
+the first slide did not wait for each file: it showed after approximately 2 s. The
+presenter waited, so the deck did not answer a key before the browser received each file.
+
+The JSON elements with the files now come after the presenter script, and the presenter
+starts before the browser received them. A deck with a video in the document then answers
+a key at the time of its first slide. `external true` still has the second cost and the
+third cost as its reasons, and the document with such an element is still much smaller.
+
 ## The limits
 
 - The render does not remove an old copy. After a change of the file, the directory holds

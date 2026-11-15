@@ -87,6 +87,13 @@ export function player(list: string, key: string): Player {
   function read(): readonly string[] | null {
     if (sources === undefined) {
       const element = document.getElementById(list);
+      // The list comes after this script in the document, because it holds
+      // each file. The browser thus runs the script before it received the
+      // list. While the browser reads the document, a list that is not
+      // there can still come, so the next call looks again.
+      if (element === null && document.readyState === "loading") {
+        return null;
+      }
       // The renderer writes the list and this script into the same document,
       // so the script trusts the list, as it trusts the program.
       sources =

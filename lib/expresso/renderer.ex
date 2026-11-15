@@ -988,6 +988,22 @@ defmodule Expresso.Renderer do
           # script runs it.
           c(&json_script/1, id: "expresso-program", json: Program.json(@program))
 
+          # The commands of the links of the `goto` option. A link holds only
+          # its number in `data-link`, so the HTML of a deck cannot give a
+          # link new commands. A deck with no link has no such element.
+          c(&json_script/1, id: "expresso-links", json: Expresso.Goto.json(@deck))
+
+          script do
+            Phoenix.HTML.raw(presenter())
+          end
+
+          # The three elements below come after the script, because they can
+          # be large: a video file of 20 MB is 27 MB as a data URI. A browser
+          # runs the script when it reads it, so the presenter starts before
+          # the browser received these elements. The script reads each one
+          # only when it needs it, and it looks again when the browser read
+          # the whole document.
+          #
           # The sources of the embeds. The presenter gives a frame its source
           # when its slide shows, so each page loads one time. The videos and
           # the sounds hold each file one time, and the presenter gives an
@@ -998,17 +1014,8 @@ defmodule Expresso.Renderer do
             json: Expresso.Element.Embed.json(@deck)
           )
 
-          # The commands of the links of the `goto` option. A link holds only
-          # its number in `data-link`, so the HTML of a deck cannot give a
-          # link new commands. A deck with no link has no such element.
-          c(&json_script/1, id: "expresso-links", json: Expresso.Goto.json(@deck))
-
           c(&json_script/1, id: "expresso-videos", json: Expresso.Element.Video.json(@deck))
           c(&json_script/1, id: "expresso-audios", json: Expresso.Element.Audio.json(@deck))
-
-          script do
-            Phoenix.HTML.raw(presenter())
-          end
         end
       end
     end

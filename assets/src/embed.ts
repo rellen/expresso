@@ -26,6 +26,12 @@ let sources: WrittenEmbeds | null | undefined;
 function read(): WrittenEmbeds | null {
   if (sources === undefined) {
     const element = document.getElementById("expresso-embeds");
+    // The list comes after this script in the document, because it can hold
+    // the text of a page. While the browser reads the document, a list that
+    // is not there can still come, so the next call looks again.
+    if (element === null && document.readyState === "loading") {
+      return null;
+    }
     // The renderer writes the list and this script into the same document, so
     // the script trusts the list, as it trusts the program.
     sources =
