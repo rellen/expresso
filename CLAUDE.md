@@ -14,7 +14,7 @@ Read these documents before you change the code:
 - `usage-rules.md` — the rules of Expresso for an AI agent that writes a deck in the
   project of a user: the shape of a deck, the elements, the steps and the commands. The
   package `usage_rules` copies it into that project. Change it with each change to the
-  DSL. `Expresso.UsageRulesTest` compiles and renders each example of it.
+  DSL. No test compiles its examples, so render each example that you change.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide. The
   code contains each part of the design. The document ends with six decisions, and
   each is settled.
