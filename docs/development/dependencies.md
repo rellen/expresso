@@ -82,15 +82,16 @@ from each other dependency in three ways:
   library for the computer from a release of `leandrocp/mdex_native`, and it keeps it in
   its cache. `checksum-Elixir.MDExNative.Native.exs` of the package holds the checksum of
   each library. A computer with no way to GitHub cannot compile the dependency.
-- **The dependency has `runtime: false`.** It is not an application of Expresso, so a
-  release does not hold it. `Expresso.Notes` calls MDEx only when the module is available.
-  `elixirc_options: [no_warn_undefined: [MDEx]]` in `mix.exs` stops the warning of the
-  compiler for that call, and `plt_add_apps` gives the package to Dialyzer.
-- **The binary has no MDEx.** The library does not load in the ERTS of a Burrito binary.
-  [The binary and its tests](release.md) gives the cause.
+- **The binary gets a different library.** The library for the computer does not load in
+  the ERTS of a Burrito binary. The step `Expresso.Release.MDExLibrary` of the release
+  gets the library for each target, also from GitHub, and it makes sure of the same
+  checksum.
+- **A new version can stop the build of the binary.** For Linux, the step changes two
+  entries of the library. When the library of a new version of `mdex_native` has
+  different entries, the step stops with a message. Then correct the step.
+  [The binary and its tests](release.md) gives the details.
 
-`docs/speaker-notes.md` gives the design, and its decision 2 has a question for the
-maintainer about this dependency.
+`docs/speaker-notes.md` gives the design.
 
 ## The icons
 

@@ -29,15 +29,14 @@ PowerPoint take formatting in the notes, and reveal.js and Slidev take Markdown.
 1. **Markdown, from MDEx.** The maintainer made this decision. MDEx reads CommonMark and
    the extensions of GitHub, and it needs no parser of this project. The notes use the
    extensions for an address as a link and for text with a line through it.
-2. **MDEx is not in a release, and the binary shows plain text.** MDEx is a NIF in Rust.
-   RustlerPrecompiled gets its library from a release of MDEx on GitHub, for the computer
-   that compiles. The ERTS of a Burrito binary for Linux uses musl, and the library for
-   glibc and the library for musl both need `libgcc_s.so.1`. On a computer with glibc,
-   the loader of musl then stops with `_dl_find_object: symbol not found`. A binary for
-   macOS from a computer with Linux gets the library of Linux. The dependency therefore
-   has `runtime: false`, so a release does not hold it, and `Expresso.Notes` calls MDEx
-   only when it is available. Without MDEx, a note shows its text as you wrote it. The
-   question for the maintainer is below.
+2. **MDEx is in a release, and the binary gets the library for its target.** MDEx is a
+   NIF in Rust. RustlerPrecompiled gets its library from a release of MDEx on GitHub, for
+   the computer that compiles. That library does not load in a Burrito binary: the ERTS of
+   a binary for Linux uses musl, and a binary for macOS from a computer with Linux gets the
+   library of Linux. The step `Expresso.Release.MDExLibrary` of the release therefore puts
+   the library for the target into each binary. `Expresso.Notes` calls MDEx only when it
+   is available, and without MDEx a note shows its text as you wrote it. The alternatives
+   are below.
 3. **A line break stays, and HTML shows as text.** The notes were plain text with each
    line break. With the option `hardbreaks` of MDEx, a note that was correct before keeps
    its lines. With the option `escape`, a note with `<Enter>` keeps that text. A note
@@ -67,31 +66,42 @@ PowerPoint take formatting in the notes, and reveal.js and Slidev take Markdown.
     notes as paragraphs and lists, with no live region. The presenter reads the notes when
     the presenter wants them, and a live region would read each note at each step.
 
-### The question of decision 2
+### The alternatives of decision 2
 
-The binary and `mix expresso` write different HTML for a deck with notes. The test "writes
-the same HTML as Expresso.main/2" of `test/release/` therefore gives `Expresso.main/2` the
-setting `notes_markdown: false`. These are the alternatives:
+The first code had MDEx with `runtime: false`, so a release did not hold it. The binary
+and `mix expresso` then wrote different HTML for a deck with notes. These were the
+alternatives:
 
 | Alternative | Effect |
 | --- | --- |
-| MDEx with `runtime: false`, as the code is | Markdown with `mix expresso`. Plain text in the binary. |
-| A parser in Elixir, such as Earmark | The same HTML in each place. One more dependency in the binary. The change is in `Expresso.Notes.html/1` and in `mix.exs`. |
-| MDEx in the binary, with a library of `libgcc` for musl | Markdown in each place. The release must get the library of MDEx and of `libgcc` for each of its four targets. |
+| MDEx with `runtime: false` | Markdown with `mix expresso`. Plain text in the binary. |
+| A parser in Elixir | The same HTML in each place. Earmark is retired on Hex. EarmarkParser returns a tree and no HTML, so Expresso must make the HTML. |
+| MDEx in the binary | Markdown in each place. The release must get the library of MDEx for each of its four targets, and an unwinder for musl. |
+
+The maintainer asked for a test of the third alternative. The test succeeded, and the
+code has that alternative. `docs/development/release.md` tells how the library loads.
 
 ## The result
 
 The code follows the plan, with these changes:
 
-1. **The dependency has `runtime: false`.** The first build of the binary had MDEx, and
-   each start wrote a warning that the library did not load. Decision 2 gives the cause.
-2. **`elixirc_options: [no_warn_undefined: [MDEx]]`.** MDEx is not an application of
-   Expresso, so the compiler gave a warning for the call. `Expresso.Notes` makes sure that
-   the module is available.
-3. **A check note.** `--check` tells when the notes show as plain text, so a user of the
-   binary knows the cause.
+1. **The dependency had `runtime: false` at first.** The first build of the binary had
+   MDEx, and each start wrote a warning that the library did not load. The dependency
+   then got `runtime: false`, and the binary showed plain text. Item 5 gives the change
+   after that.
+2. **`elixirc_options: [no_warn_undefined: [MDEx]]`.** With `runtime: false`, MDEx was not
+   an application of Expresso, so the compiler gave a warning for the call. Item 5 removed
+   the setting.
+3. **A check note.** `--check` tells when the notes show as plain text, so a user of a
+   release where the library does not load knows the cause.
 4. **The speaker view takes a copy of the elements.** It took the text of the notes
    before. It now takes a copy of each note of the page, so the markup stays.
+
+5. **The binary holds MDEx.** `Expresso.Release.MDExLibrary` is a step of Burrito. It puts
+   the library of MDEx for the target into each binary. For Linux, it also changes two
+   entries of the library, and it builds an unwinder with Zig. The dependency has no
+   `runtime: false` now, and the binary and `mix expresso` write the same HTML. The binary
+   for macOS has no test, because no job of the workflow makes it.
 
 `docs/reference/note-element.md` gives the options, and
 `docs/how-to/write-notes-for-the-speaker.md` gives the steps.

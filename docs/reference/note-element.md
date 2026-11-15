@@ -84,18 +84,27 @@ print. The speaker view shows them. See [The deck options](deck-options.md).
 ## The Markdown library
 
 [MDEx](https://hexdocs.pm/mdex) makes the HTML of the notes. It is a dependency of
-Expresso, and `mix expresso` in your project uses it with no step from you.
+Expresso. `mix expresso` in your project and the binary of Expresso use it with no step
+from you.
 
-The binary of Expresso does not hold MDEx, because the library of MDEx does not load in
-the binary. The binary shows the text of each note as you wrote it, with its line breaks.
-`--check` then gives this note:
+A release of your own that holds Expresso holds MDEx too. A Burrito binary of your own
+needs the library of MDEx for its target, and not the library for your computer. Add the
+step of Expresso to the release in your `mix.exs`:
+
+```elixir
+burrito: [
+  targets: [linux_x86: [os: :linux, cpu: :x86_64]],
+  extra_steps: [patch: [post: [Expresso.Release.MDExLibrary]]]
+]
+```
+
+Without the step, the library does not load in a binary for Linux. Each start of that
+binary writes a warning, and the binary shows the text of each note as you wrote it, with
+its line breaks. `--check` then gives this note:
 
 ```
 The notes of the speaker show as plain text, because MDEx is not available.
 ```
-
-A release of your own that holds Expresso is the same. Add `{:mdex, "~> 0.14"}` to the
-dependencies of that release to get the Markdown.
 
 ## Accessibility
 

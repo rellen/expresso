@@ -2291,8 +2291,8 @@ step to the slide.
 
 The text of a note is Markdown. `Expresso.Notes.html/1` makes its HTML with MDEx, with a
 line break for each line break of the text, and with the HTML of the text as text. MDEx is
-a dependency with `runtime: false`, because its library does not load in the binary of
-Burrito. Without MDEx, the function returns the text in one paragraph.
+a NIF, and `Expresso.Release.MDExLibrary` puts its library for each target into the binary
+of Burrito. Without MDEx, the function returns the text in one paragraph.
 
 The handout view shows the notes in an `aside` element under each page of the slide, and
 the present view does not show them. `Expresso.Notes.of_page/3` gives the notes of the page
@@ -3258,7 +3258,8 @@ The commands are:
   compile. `docs/development/gifs.md` gives the details.
 - `mix release expresso_cli_app` makes a binary with Burrito. The targets are macOS and
   Linux, for x86_64 and for aarch64. Burrito needs Zig 0.16.0 and `xz` on the path.
-  `shell.nix` pins the Zig version, and `mix.exs` must agree with it.
+  `shell.nix` pins the Zig version, and `mix.exs` must agree with it. The step
+  `Expresso.Release.MDExLibrary` puts the library of MDEx for the target into the binary.
 - `mix test --only release` runs the binary, and `EXPRESSO_BINARY` gives its path.
   `docs/development/release.md` gives the commands.
 

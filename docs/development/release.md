@@ -22,31 +22,71 @@ the version of the release. A later binary of the same version runs that install
 and not its own. Therefore change the version in `mix.exs` for each binary that you give
 to other users. `<binary> maintenance uninstall` removes the installed release.
 
-## The binary has no MDEx
+## The library of MDEx in the binary
 
-MDEx makes the HTML of the notes of the speaker, and it is a NIF. The binary does not hold
-it, so the binary shows each note as plain text, and `--check` gives a note about it.
+MDEx makes the HTML of the notes of the speaker, and it is a NIF in Rust. RustlerPrecompiled
+gets its library for the computer that compiles. That library is not correct for a binary:
 
-The library of MDEx does not load in the binary for Linux. Burrito puts an ERTS for musl
-in that binary. The library for glibc and the library for musl both need `libgcc_s.so.1`.
-On a computer with glibc, the loader of musl gets the `libgcc_s.so.1` of glibc, and it
-stops:
+- Burrito puts an ERTS for musl in a binary for Linux, and most computers have glibc.
+- A binary for macOS from a computer with Linux gets the library of Linux.
+
+`Expresso.Release.MDExLibrary` is a step of Burrito, and the release in `mix.exs` names it
+in `extra_steps`. For each target, the step does these operations:
+
+1. It gets the library for the target from the release of `mdex_native` on GitHub. The
+   file cache of Burrito keeps the file for the next build.
+2. It makes sure that the SHA-256 of the file is the one in
+   `checksum-Elixir.MDExNative.Native.exs` of the Hex package.
+3. It writes the library with the name of the library that the release holds, because
+   `MDExNative.Native` loads the library by that name.
+4. For Linux, it changes two entries of the library, and it builds an unwinder with
+   `zig cc`.
+
+### The unwinder for Linux
+
+The library for musl needs `libgcc_s.so.1`, which unwinds the stack when Rust code panics.
+The launcher of Burrito puts the library directories of the host first in
+`LD_LIBRARY_PATH`, and musl looks there before it looks at the run path of a library. On
+a computer with glibc, musl then gets the `libgcc_s.so.1` of glibc, and it stops:
 
 ```
 Error relocating /lib/x86_64-linux-gnu/libgcc_s.so.1: _dl_find_object: symbol not found
 ```
 
-RustlerPrecompiled also gets the library for the computer that compiles, so a binary for
-macOS from a computer with Linux gets the library of Linux.
+The step therefore changes two entries of the dynamic section of the library:
 
-Therefore the dependency has `runtime: false` in `mix.exs`, and a release does not hold
-it. A release directory from before that change can hold the old libraries. Remove
-`_build/prod/rel` to make a release with no MDEx.
+| Before | After |
+| --- | --- |
+| `NEEDED` `libgcc_s.so.1` | `NEEDED` `expresso.so.1` |
+| `NEEDED` `libc.so` | `RUNPATH` `$ORIGIN` |
 
-The test "writes the same HTML as Expresso.main/2" gives `Expresso.main/2` the setting
-`notes_markdown: false`, because its deck has notes. The test "shows the notes of the
-speaker as plain text" makes sure that the binary writes no warning about the library.
-`docs/speaker-notes.md` gives the alternatives.
+Each new text has the length of the text that it replaces. The step thus moves no byte,
+and it needs no tool such as `patchelf`. No host has a library with the name
+`expresso.so.1`, so musl finds it only in the directory of the library of MDEx. musl is
+always present in the process, so the library does not need the entry for `libc.so`.
+
+`expresso.so.1` is the libunwind of LLVM. Zig holds its source in `lib/libunwind`, and the
+step compiles that source for the target. The license of libunwind is Apache 2.0 with the
+LLVM exception. A test outside the repository made a Rust library with the same two
+entries. Its panic went through 21 functions, each destructor ran, and Rust caught it.
+
+A new version of `mdex_native` can have a library with different entries. The step then
+stops the build with a message, and it does not make a binary that fails later.
+
+### The tests of the library
+
+| Target | Test |
+| --- | --- |
+| `linux_x86` | The release tests, in a session and in the workflow. |
+| `linux_arm` | The release tests in the workflow, on a runner with aarch64. |
+| `macos_x86`, `macos_arm` | No test, because no job makes these binaries. The library of macOS needs only libraries that macOS holds. Run `mix check` on a Mac to test the binary of that Mac. |
+
+The test "shows the Markdown of the notes of the speaker" makes sure that the binary
+writes no warning about the library, and that the notes have their Markdown. The test
+"writes the same HTML as Expresso.main/2" compares a deck with notes.
+
+A binary runs an installed release of the same version, as "Make a binary" tells. Run
+`<binary> maintenance uninstall` before you look at the notes of a new binary by hand.
 
 ## The dependency test
 

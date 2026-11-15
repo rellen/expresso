@@ -108,16 +108,11 @@ defmodule Expresso.BinaryTest do
   end
 
   # The deck has a code block, so the group ids of Makeup are a part of the
-  # comparison. The deck also has notes of the speaker. The binary does not
-  # hold MDEx, so its notes have no Markdown, and the setting `notes_markdown`
-  # gives the same notes to `Expresso.main/2`. `docs/speaker-notes.md` gives
-  # the reason.
+  # comparison. The deck also has notes of the speaker, so the Markdown of
+  # MDEx in the binary is a part of the comparison too.
   test "writes the same HTML as Expresso.main/2", %{tmp_dir: dir} = context do
     expected = Path.join(dir, "expected.html")
     actual = Path.join(dir, "actual.html")
-
-    Application.put_env(:expresso, :notes_markdown, false)
-    on_exit(fn -> Application.delete_env(:expresso, :notes_markdown) end)
 
     assert Expresso.main("examples/dsl_deck.exs", expected) == :ok
     assert {_output, 0} = run(context, ["examples/dsl_deck.exs", actual])
@@ -245,11 +240,10 @@ defmodule Expresso.BinaryTest do
     assert "<!DOCTYPE html>" <> _ = File.read!(html)
   end
 
-  # The precompiled library of MDEx does not load in the ERTS of the binary,
-  # so the release does not hold MDEx. A start of the binary then writes no
-  # warning about the library.
-  test "shows the notes of the speaker as plain text, and tells it in --check",
-       %{tmp_dir: dir} = context do
+  # `Expresso.Release.MDExLibrary` puts the library of MDEx for the target
+  # into the binary. A library that does not load makes each start of the
+  # binary write a warning, and the notes then show as plain text.
+  test "shows the Markdown of the notes of the speaker", %{tmp_dir: dir} = context do
     script =
       write_script(dir, "notes.exs", """
       defmodule Release.Notes do
@@ -276,13 +270,12 @@ defmodule Expresso.BinaryTest do
     refute output =~ "NIF"
 
     assert {report, 0} = standard_output(context, [script, "--check"])
-
-    assert report =~
-             "The notes of the speaker show as plain text, because MDEx is not available."
+    refute report =~ "plain text"
 
     document = File.read!(html)
-    assert document =~ ~s(<p class="note-plain">Say **hello**.</p>)
-    assert document =~ ~s(<p class="note-plain">Then `wait`.</p>)
+    assert document =~ "<p>Say <strong>hello</strong>.</p>"
+    assert document =~ "<p>Then <code>wait</code>.</p>"
+    refute document =~ ~s(class="note-plain")
   end
 
   test "writes the copy of a video with external true next to the output file",

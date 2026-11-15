@@ -8,8 +8,8 @@ defmodule Expresso.NotesPlainTest do
   alias Expresso.Builder
   alias Expresso.Check.Document
 
-  # A release, such as the binary of Burrito, does not hold MDEx. The setting
-  # `notes_markdown: false` gives the notes of such a release.
+  # A release where the library of MDEx does not load has no Markdown. The
+  # setting `notes_markdown: false` gives the notes of such a release.
   setup do
     Application.put_env(:expresso, :notes_markdown, false)
     on_exit(fn -> Application.delete_env(:expresso, :notes_markdown) end)

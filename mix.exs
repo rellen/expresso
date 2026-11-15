@@ -11,11 +11,7 @@ defmodule Expresso.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps(),
       releases: releases(),
-      # MDEx has `runtime: false`, so it is not an application of Expresso.
-      # The compiler then gives a warning for a call to it, and Dialyzer does
-      # not know it. `Expresso.Notes` makes sure that MDEx is available.
-      elixirc_options: [no_warn_undefined: [MDEx]],
-      dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix, :mdex]],
+      dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix]],
       docs: docs()
     ]
   end
@@ -181,7 +177,10 @@ defmodule Expresso.MixProject do
             macos_arm: [os: :darwin, cpu: :aarch64],
             linux_x86: [os: :linux, cpu: :x86_64],
             linux_arm: [os: :linux, cpu: :aarch64]
-          ]
+          ],
+          # The binary gets the library of MDEx for its target, and not the
+          # library for the computer that makes the release.
+          extra_steps: [patch: [post: [Expresso.Release.MDExLibrary]]]
         ]
       ]
     ]
@@ -203,12 +202,11 @@ defmodule Expresso.MixProject do
       {:temple, "~> 0.14"},
 
       # the Markdown of the notes of the speaker. MDEx is a NIF in Rust, and
-      # RustlerPrecompiled gets its library from a release of MDEx on GitHub.
-      # The library does not load in the ERTS of a Burrito binary, so the
-      # dependency has `runtime: false`, and a release does not hold it.
-      # `Expresso.Notes` calls MDEx only when it is available. See
+      # RustlerPrecompiled gets its library from a release of MDEx on GitHub,
+      # for the computer that compiles. `Expresso.Release.MDExLibrary` puts the
+      # library for each target into the Burrito binary. See
       # docs/speaker-notes.md.
-      {:mdex, "~> 0.14", runtime: false},
+      {:mdex, "~> 0.14"},
 
       # releasing
       {:burrito, "~> 1.6"},

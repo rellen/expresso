@@ -43,9 +43,8 @@ Read these documents before you change the code:
   during the work.
 - `docs/speaker-notes.md` — the design for the notes of the speaker: Markdown in a note,
   and a note for some steps of a slide. The code contains this design. The document records
-  ten decisions. Nine are settled, and decision 2 has a question for the maintainer: the
-  binary shows the notes as plain text, because it does not hold MDEx. Its last section,
-  "The result", tells what changed during the work.
+  ten decisions, and each is settled. Its last section, "The result", tells what changed
+  during the work.
 - `docs/export.md` — the design for the export from the command line: a PDF of a deck, and
   a PNG file of each slide, from a headless Chrome or Chromium. The code contains this
   design. The document records ten decisions, and each is settled. Its last section, "The

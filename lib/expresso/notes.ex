@@ -20,15 +20,17 @@ defmodule Expresso.Notes do
 
   HTML in a note shows as text, so a note can hold `<Enter>`.
 
-  MDEx is a NIF, and it is a dependency with `runtime: false`. A release, such
-  as the binary of Burrito, does not hold it, because the precompiled library
-  of MDEx does not load in the ERTS of that binary. `markdown?/0` tells if
-  MDEx is available. Without MDEx, `html/1` returns the text of the note as
-  it is, in one paragraph with the class `note-plain`.
+  MDEx is a NIF, and RustlerPrecompiled gets its library for the computer
+  that compiles. The binary of Burrito gets the library for its target from
+  `Expresso.Release.MDExLibrary`. `markdown?/0` tells if MDEx is available.
+  It is not available when its library does not load, such as in a release
+  for a different system that did not get the library for that system.
+  Without MDEx, `html/1` returns the text of the note as it is, in one
+  paragraph with the class `note-plain`.
 
   The application environment `config :expresso, notes_markdown: false` also
-  gives the notes with no Markdown. A test of the binary uses it to make the
-  document that the binary writes. `docs/speaker-notes.md` gives the design.
+  gives the notes with no Markdown. A test uses it to make the notes of a
+  release with no MDEx. `docs/speaker-notes.md` gives the design.
   """
 
   alias Expresso.Element.Note

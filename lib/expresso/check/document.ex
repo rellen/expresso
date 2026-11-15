@@ -54,9 +54,9 @@ defmodule Expresso.Check.Document do
   Return a note for a deck whose notes of the speaker show with no Markdown
 
   The notes of a slide are Markdown, and MDEx makes their HTML.
-  `Expresso.Notes.markdown?/0` tells if MDEx is available. The binary of
-  Expresso does not hold MDEx, so the notes there show as plain text. A deck
-  with no notes gets no note.
+  `Expresso.Notes.markdown?/0` tells if MDEx is available. In a release
+  where the library of MDEx does not load, the notes show as plain text. A
+  deck with no notes gets no note.
   """
   @spec notes(Expresso.Deck.t()) :: result()
   def notes(deck) do
