@@ -1,7 +1,8 @@
 # Render a deck in your project
 
 This guide shows how to keep a deck in your own project, give its paths from the project,
-and render it with `mix expresso` or with the binary. For each value of the option, see
+render it with `mix expresso` or with the binary, and give an AI agent the rules of the
+DSL. For each value of the option, see
 [The root option](../reference/root-option.md).
 
 ## Give each path from your project
@@ -65,6 +66,49 @@ The deck then renders from any directory.
    ```
 
 Your project does not start Expresso, and a release of your project does not hold it.
+
+## Give an AI agent the rules of Expresso
+
+An AI agent that writes a deck in your project does not know the DSL of Expresso. The
+package holds the file `usage-rules.md`, which gives an agent the shape of a deck, the
+elements, the steps and the commands. The package
+[usage_rules](https://hexdocs.pm/usage_rules) copies that file into the file that your
+agent reads, such as `AGENTS.md` or `CLAUDE.md`.
+
+1. Add `usage_rules` to the dependencies of your project:
+
+   ```elixir
+   defp deps do
+     [
+       {:expresso, github: "rellen/expresso", only: :dev, runtime: false},
+       {:usage_rules, "~> 1.3", only: :dev}
+     ]
+   end
+   ```
+
+2. Give the file and the package in the `project` function of `mix.exs`:
+
+   ```elixir
+   def project do
+     [
+       app: :my_app,
+       deps: deps(),
+       usage_rules: [file: "AGENTS.md", usage_rules: [:expresso]]
+     ]
+   end
+   ```
+
+3. Fetch the dependencies, and write the file:
+
+   ```sh
+   mix deps.get
+   mix usage_rules.sync
+   ```
+
+`AGENTS.md` then holds the rules between two comments. Run `mix usage_rules.sync` again
+after an update of Expresso. To keep `AGENTS.md` short, give
+`usage_rules: [{:expresso, link: :markdown}]`, and the file holds a link to
+`deps/expresso/usage-rules.md`.
 
 ## Render the deck with the binary
 

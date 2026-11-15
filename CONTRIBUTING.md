@@ -9,9 +9,12 @@ This document tells you how to make a change to Expresso and send it as a pull r
 2. Read [`CLAUDE.md`](CLAUDE.md). It gives the conventions for a branch, a commit message
    and the prose of a document or a comment.
 3. Make a branch. Do not commit to `main`.
-4. Run `mix check` before each commit. [The checks](docs/development/checks.md) tells what
+4. For a change to the DSL, change [`usage-rules.md`](usage-rules.md) too. That file gives
+   an AI agent the rules of Expresso in the project of a user, and a test compiles each
+   example of it.
+5. Run `mix check` before each commit. [The checks](docs/development/checks.md) tells what
    each check needs.
-5. Push the branch, and open a pull request. In the pull request, tell the maintainer which
+6. Push the branch, and open a pull request. In the pull request, tell the maintainer which
    checks you ran.
 
 The maintainer merges the pull request. A change that needs more than one pull request goes

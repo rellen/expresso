@@ -11,6 +11,10 @@ Read these documents before you change the code:
 - `docs/architecture.md` — the two input paths, the render pipeline, the templates, the
   elements, the DSL, the presenter and the build. Its section "Open work" gives the next
   items in the order of their value. It has no item at this time.
+- `usage-rules.md` — the rules of Expresso for an AI agent that writes a deck in the
+  project of a user: the shape of a deck, the elements, the steps and the commands. The
+  package `usage_rules` copies it into that project. Change it with each change to the
+  DSL. `Expresso.UsageRulesTest` compiles and renders each example of it.
 - `docs/overlays.md` — the design for overlays, which are the steps inside one slide. The
   code contains each part of the design. The document ends with six decisions, and
   each is settled.
