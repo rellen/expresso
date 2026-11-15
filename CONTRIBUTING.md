@@ -10,8 +10,7 @@ This document tells you how to make a change to Expresso and send it as a pull r
    and the prose of a document or a comment.
 3. Make a branch. Do not commit to `main`.
 4. For a change to the DSL, change [`usage-rules.md`](usage-rules.md) too. That file gives
-   an AI agent the rules of Expresso in the project of a user, and a test compiles each
-   example of it.
+   an AI agent the rules of Expresso in the project of a user.
 5. Run `mix check` before each commit. [The checks](docs/development/checks.md) tells what
    each check needs.
 6. Push the branch, and open a pull request. In the pull request, tell the maintainer which
