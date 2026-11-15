@@ -42,7 +42,9 @@ when its slide shows.
 
 Give `external true` to each large video and to each large sound of a deck for a web
 host. [Keep a long video next to the document](show-a-video.md#keep-a-long-video-next-to-the-document)
-gives the steps.
+gives the steps, with this deck as its example:
+
+![A slide with a heading and a video](https://raw.githubusercontent.com/rellen/expresso/media/video-external.png)
 
 ## Make sure that the host compresses the document
 
