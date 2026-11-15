@@ -9,6 +9,7 @@ mix format --check-formatted
 mix credo
 mix sobelow --exit --skip
 mix hex.audit                  # the advisories and the retirements of the dependencies
+mix usage_rules.sync --check   # the links to the rules of the dependencies, see dependencies.md
 mix test
 mix test --only e2e            # the browser tests, see browser-tests.md
 mix test --only dependency     # Expresso as a dependency, see release.md

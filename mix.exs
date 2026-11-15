@@ -16,7 +16,22 @@ defmodule Expresso.MixProject do
       # not know it. `Expresso.Notes` makes sure that MDEx is available.
       elixirc_options: [no_warn_undefined: [MDEx]],
       dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix, :mdex]],
-      docs: docs()
+      docs: docs(),
+      usage_rules: usage_rules()
+    ]
+  end
+
+  # The settings of `mix usage_rules.sync`. Some dependencies hold a file
+  # `usage-rules.md` with rules for an AI agent, such as Spark, which makes
+  # the DSL. The task writes a link to each file between two comments at the
+  # end of `CLAUDE.md`, and the agent reads the file when it uses the
+  # dependency. A link keeps `CLAUDE.md` short: the files have more than 1400
+  # lines. The pattern takes each dependency with such a file, also one that
+  # a later change adds. `docs/development/dependencies.md` gives the details.
+  defp usage_rules do
+    [
+      file: "CLAUDE.md",
+      usage_rules: [{~r/.*/, link: :markdown}]
     ]
   end
 
@@ -248,6 +263,11 @@ defmodule Expresso.MixProject do
 
       # checks
       {:ex_check, "~> 0.16", only: :dev},
+
+      # the rules of the dependencies for an AI agent. `mix usage_rules.sync`
+      # writes a link to the file `usage-rules.md` of each dependency into
+      # `CLAUDE.md`. `usage_rules/0` gives the settings.
+      {:usage_rules, "~> 1.3", only: :dev, runtime: false},
 
       # the formatter of the DSL. `Spark.Formatter` and `mix spark.formatter`
       # need it.

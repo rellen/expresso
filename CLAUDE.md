@@ -146,6 +146,7 @@ mix format
 mix credo
 mix sobelow --exit --skip
 mix hex.audit
+mix usage_rules.sync --check
 mix dialyzer
 mix test
 npm run check
@@ -166,6 +167,10 @@ dev and in test.
 
 `mix check` runs each command above. It runs the formatter with `--check-formatted`. It makes the binary for the target of the computer, and it runs
 the release tests with that binary. `.check.exs` gives the tools.
+
+`mix usage_rules.sync --check` fails when the links at the end of this file are not
+current. `mix usage_rules.sync --yes` writes them again, such as after a change to the
+dependencies. `docs/development/dependencies.md` gives the details.
 
 `mix test --only e2e` runs the browser tests of `test/e2e/`. They need Node, the Playwright
 driver of `package.json` and Chromium. `mix test` excludes them. In a remote session, the
@@ -369,3 +374,50 @@ works on the code of Expresso. Put the fact that the reader needs first.
 - Put a file name, a command, an option and an identifier in backticks.
 - Use a heading for each topic that a reader can look for.
 - Use bold text only for a term at the point where you define it.
+
+## The rules of the dependencies
+
+The lines after this paragraph come from `mix usage_rules.sync`. Each one is a link to the
+rules of a dependency for an AI agent. Read the rules of Spark before you change the DSL in
+`lib/expresso/extension.ex`. Do not change these lines by hand.
+
+<!-- usage-rules-start -->
+<!-- ex_check-start -->
+## ex_check usage
+_ex_check_
+
+[ex_check usage rules](deps/ex_check/usage-rules.md)
+<!-- ex_check-end -->
+<!-- mdex-start -->
+## mdex usage
+_Fast and extensible Markdown for Elixir_
+
+[mdex usage rules](deps/mdex/usage-rules.md)
+<!-- mdex-end -->
+<!-- sobelow-start -->
+## sobelow usage
+_Security-focused static analysis for Elixir & the Phoenix framework_
+
+[sobelow usage rules](deps/sobelow/usage-rules.md)
+<!-- sobelow-end -->
+<!-- spark-start -->
+## spark usage
+_Generic tooling for building DSLs_
+
+[spark usage rules](deps/spark/usage-rules.md)
+<!-- spark-end -->
+<!-- usage_rules-start -->
+## usage_rules usage
+_A config-driven dev tool for Elixir projects to manage AGENTS.md files and agent skills from dependencies_
+
+[usage_rules usage rules](deps/usage_rules/usage-rules.md)
+<!-- usage_rules-end -->
+<!-- usage_rules:elixir-start -->
+## usage_rules:elixir usage
+[usage_rules:elixir usage rules](deps/usage_rules/usage-rules/elixir.md)
+<!-- usage_rules:elixir-end -->
+<!-- usage_rules:otp-start -->
+## usage_rules:otp usage
+[usage_rules:otp usage rules](deps/usage_rules/usage-rules/otp.md)
+<!-- usage_rules:otp-end -->
+<!-- usage-rules-end -->

@@ -106,8 +106,10 @@ jobs:
   # step before it fails, so one run reports each defect, as `mix check` does.
   # `mix deps.unlock --check-unused` is the check of `unused_deps` in
   # `mix check`, and `mix docs` is its check of `ex_doc`. `mix hex.audit` fails
-  # for a dependency with a security advisory or a retirement on Hex. The cache
-  # of the job holds the PLT of Dialyzer, in `_build`.
+  # for a dependency with a security advisory or a retirement on Hex.
+  # `mix usage_rules.sync --check` fails when the links to the rules of the
+  # dependencies in `CLAUDE.md` are not current. The cache of the job holds the
+  # PLT of Dialyzer, in `_build`.
   lint:
     name: lint
     runs-on: ubuntu-24.04
@@ -128,6 +130,8 @@ jobs:
         run: mix sobelow --exit --skip
       - if: ${{ !cancelled() }}
         run: mix hex.audit
+      - if: ${{ !cancelled() }}
+        run: mix usage_rules.sync --check
       - if: ${{ !cancelled() }}
         run: mix deps.unlock --check-unused
       - if: ${{ !cancelled() }}

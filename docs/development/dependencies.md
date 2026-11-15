@@ -92,6 +92,36 @@ from each other dependency in three ways:
 `docs/speaker-notes.md` gives the design, and its decision 2 has a question for the
 maintainer about this dependency.
 
+## The rules of the dependencies for an AI agent
+
+Some dependencies hold a file `usage-rules.md` with rules for an AI agent, such as Spark,
+which makes the DSL. The dev dependency
+[usage_rules](https://hexdocs.pm/usage_rules) writes a link to each file at the end of
+`CLAUDE.md`, between the comments `usage-rules-start` and `usage-rules-end`. An agent then
+reads the rules of a dependency before it uses the dependency.
+
+- `usage_rules/0` in `mix.exs` gives the settings. The pattern `~r/.*/` takes each
+  dependency with such a file, and `link: :markdown` writes a link and not the text. The
+  files have more than 1400 lines.
+- The package also gives its own rules, and rules for Elixir and for OTP.
+- `mix usage_rules.sync --check` is a tool of `mix check` and a step of the job `lint`. It
+  fails when the lines in `CLAUDE.md` are not current.
+- Do not change the lines between the two comments by hand.
+
+After a change to the dependencies, write the lines again:
+
+```sh
+mix deps.get
+mix usage_rules.sync --yes
+```
+
+The package brings Igniter and six more packages to the lockfile. Each one is in the
+environment `dev` only, so a release and a project that uses Expresso do not hold them.
+
+Expresso gives its own rules to a project that uses it, in the file `usage-rules.md` of the
+repository. See "Give an AI agent the rules of Expresso" in
+`docs/how-to/render-a-deck-in-your-project.md`.
+
 ## The icons
 
 `priv/icons/lucide.json` holds the Lucide icons, from the file `icon-nodes.json` of the npm

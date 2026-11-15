@@ -24,6 +24,11 @@ burrito_target =
     # The security advisories and the retirements of the dependencies on Hex.
     {:hex_audit, "mix hex.audit"},
 
+    # The links to the rules of the dependencies at the end of `CLAUDE.md`.
+    # The tool fails when `mix usage_rules.sync` would change the file, such
+    # as after a new dependency with a file `usage-rules.md`.
+    {:usage_rules, "mix usage_rules.sync --check"},
+
     # The presenter script in TypeScript: the type check, the lint, the format
     # and the tests of `assets/test`. They need Node and `npm install`, as the
     # browser tests do. `docs/development/presenter-script.md` gives the
