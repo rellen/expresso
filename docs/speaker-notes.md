@@ -76,8 +76,11 @@ setting `notes_markdown: false`. These are the alternatives:
 | Alternative | Effect |
 | --- | --- |
 | MDEx with `runtime: false`, as the code is | Markdown with `mix expresso`. Plain text in the binary. |
-| A parser in Elixir, such as Earmark | The same HTML in each place. One more dependency in the binary. The change is in `Expresso.Notes.html/1` and in `mix.exs`. |
 | MDEx in the binary, with a library of `libgcc` for musl | Markdown in each place. The release must get the library of MDEx and of `libgcc` for each of its four targets. |
+
+Earmark is not an alternative. Each of its releases is retired on Hex, and the notice
+tells a user to move to a different library, such as MDEx. `mix hex.audit` fails for a
+retired dependency.
 
 ## The result
 
