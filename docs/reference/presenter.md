@@ -415,7 +415,9 @@ menu is a list of options that a screen reader reads. See
 
 ## The custom properties of a theme
 
-A theme can set these custom properties:
+A theme can set these custom properties. In forced colors, the progress bar, the laser
+pointer and the drawing take a color of the system, and not the color of a property. See
+[Forced colors](accessibility.md#forced-colors).
 
 | Property | Effect |
 | --- | --- |

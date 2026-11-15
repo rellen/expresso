@@ -77,7 +77,7 @@ defmodule Expresso.E2E do
 
   The options are the options of a context of Playwright, such as
   `viewport: %{width: 640, height: 360}`, `forced_colors: "active"`,
-  `color_scheme: "dark"` or `contrast: "more"`. The context closes at the end
+  `color_scheme: :dark` or `contrast: "more"`. The context closes at the end
   of the test.
   """
   @spec new_page(map(), keyword()) :: map()

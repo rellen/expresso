@@ -201,3 +201,4 @@ The code changed in one pull request for each issue:
 | Issue | Change |
 | --- | --- |
 | #580 | A step row of the menu and the search field of the list of keys have a minimum height of 24 pixels, in pixels and not in a unit of the font size. A browser test measures them in three window sizes. |
+| #579 | In forced colors, the progress bar and a line of the pen have the color `CanvasText`, and the dot of the laser pointer and a line of the highlighter have the color `Highlight`. The dot has a ring of `CanvasText`. The progress bar and the pen then have 21:1 on the canvas, and the dot has 8.7:1 or more. A line of the highlighter has 2.1:1 with its opacity of 0.4, and 1.75:1 in the usual mode. |

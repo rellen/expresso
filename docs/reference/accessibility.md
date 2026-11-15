@@ -108,6 +108,24 @@ of [the dim_contrast option](dim-contrast-option.md). Give `dim_contrast 4.5` fo
 with small dimmed text, or for a deck that axe-core must pass. See
 [the theme option](theme-option.md#the-minimums).
 
+## Forced colors
+
+A user can ask the system for forced colors, such as the high contrast mode of Windows.
+The browser then replaces the colors of the page with the colors of the system.
+
+The parts of the presenter take a color of the system, so each one shows:
+
+| Part | Color in forced colors |
+| --- | --- |
+| The progress bar | `CanvasText`, the color of the text. |
+| The dot of the laser pointer | `Highlight`, with a ring of `CanvasText`. |
+| A line of the pen | `CanvasText`. |
+| A line of the highlighter | `Highlight`, with the opacity of the highlighter. |
+
+A deck cannot change these colors in forced colors. The properties `--progress-color`,
+`--laser-color`, `--draw-pen-color` and `--draw-highlighter-color` apply only in the usual
+mode.
+
 ## The motion
 
 A reader who asks for reduced motion gets no effect, no transition and no morph.

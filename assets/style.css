@@ -3787,3 +3787,41 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     display: none;
   }
 }
+/*
+ * Forced colors, such as the high contrast mode of Windows. The browser
+ * replaces the color and the background color of each HTML element with a
+ * color of the system, and it removes each `box-shadow`. A part that is only
+ * a box with a background color then has the color of the canvas, and it
+ * does not show. The browser does not change the `stroke` of an SVG element,
+ * so a line of the drawing keeps a color of the theme, which can be weak on
+ * the canvas.
+ *
+ * These parts of the presenter get a color of the system. The deck cannot
+ * change these colors with `--progress-color`, `--laser-color` or the colors
+ * of the drawing, because the user selected the colors of the system.
+ * `forced-color-adjust: none` makes the browser keep the color of a rule.
+ * `docs/accessibility-preferences.md` gives the measurements.
+ */
+@media screen and (forced-colors: active) {
+  body[data-view="present"][data-progress="true"]:not([data-blank="true"]):not(
+      [data-overview="true"]
+    )
+    #progress {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+  /* The ring has the text color, so the dot also shows on a part that has
+   * the color `Highlight`. */
+  #laser {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    outline: 2px solid CanvasText;
+    box-shadow: none;
+  }
+  .drawing-pen {
+    stroke: CanvasText;
+  }
+  .drawing-highlighter {
+    stroke: Highlight;
+  }
+}
