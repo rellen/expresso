@@ -380,13 +380,20 @@ defmodule ExpressoTest do
   end
 
   describe "the presenter script" do
-    test "the document holds the bundle as one classic script" do
+    test "the body of the document holds the bundle as one classic script" do
       document = document(DslDeck)
 
-      # The other two `script` elements hold the list of the steps and the program
-      # of the presenter as JSON, and a browser does not run them.
+      # The other `script` elements of the body hold data for the presenter as
+      # JSON, such as the list of the steps, and a browser does not run them.
+      # The `head` holds one more classic script, which starts the load of the
+      # font. `Expresso.FontTest` has its tests.
       [script] =
-        document |> LazyHTML.query("script:not([type])") |> Enum.map(&LazyHTML.text/1)
+        document |> LazyHTML.query("body script:not([type])") |> Enum.map(&LazyHTML.text/1)
+
+      [loader] =
+        document |> LazyHTML.query("head script:not([type])") |> Enum.map(&LazyHTML.text/1)
+
+      assert loader == Expresso.Font.loader()
 
       assert script =~ "keydown"
       refute script =~ "import "

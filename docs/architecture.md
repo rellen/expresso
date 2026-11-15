@@ -606,6 +606,16 @@ SIL Open Font License, Version 1.1. `assets/fonts/OFL.txt` holds that license, a
 license permits this use. The eight files take approximately 110 kilobytes, and the data
 URIs take approximately 147 kilobytes of the document.
 
+A browser starts to load a font only when a layout needs it, also when the font is a data
+URI. The first layout of the document can thus have the fallback font. The text then moves
+when the font replaces it, and a heading can change its number of lines.
+`Expresso.Font.loader/0` returns a script for the `head`, after the style sheet of the
+font. The script calls `document.fonts.load()` for each of the eight faces, so the browser
+starts each load before it reads the body. On 2026-11-15, a deck from `main` moved its
+first slide in 13 of 24 loads in Chromium 159, and the same deck with the script moved it
+in none. The script does not make the order sure: a browser can still make a layout
+before the font is ready.
+
 The math fonts are different, because a deck with no formula needs none.
 `Expresso.Element.Math.Font` reads the style sheet of Temml for the font of the
 `math_font` option from `priv/temml/css/`, and it replaces each `url()` of a font file with

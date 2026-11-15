@@ -840,6 +840,14 @@ defmodule Expresso.Renderer do
             Phoenix.HTML.raw(fonts())
           end
 
+          # A browser starts to load a font only when a layout needs it. The
+          # first layout can then have the fallback font, and the text moves
+          # when the font comes. This script starts the load of each face
+          # before the browser reads the body.
+          script do
+            Phoenix.HTML.raw(Expresso.Font.loader())
+          end
+
           style do
             Phoenix.HTML.raw(theme(@deck) <> "\n" <> style())
           end
