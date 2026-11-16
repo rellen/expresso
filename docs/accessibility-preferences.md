@@ -165,6 +165,9 @@ The investigation also found two facts that are not new criteria of WCAG 2.2:
 - A test of each element. The 24 decks have no `embed`, no `audio`, no table and no
   speaker notes in forced colors.
 
+The last section of this document gives the results of issue #603 for the last two items,
+and for Firefox.
+
 ## The plan for the tests
 
 The browser tests can keep the state known:
@@ -225,3 +228,81 @@ not correct. A measurement for issue #566 gave 48 pixels for the `html` element,
 pixels for a step row, in windows from 320 to 1920 pixels wide. The section about
 criterion 2.5.8 has the correct text now. The change for issue #590 made the text of a
 slide smaller in a small window, and the parts of the presenter kept their size.
+
+## The parts that the first investigation did not measure
+
+Issue #603 asked for a measurement of the parts that the first investigation left out. This
+section gives the state on 2026-11-16, before and after the change for the issue.
+
+### The method of the second measurement
+
+The browser was Chromium 159 (headless shell), with a window of 1280 by 720 pixels, in four
+modes: the usual mode, forced colors with the light scheme, forced colors with the dark
+scheme, and `prefers-contrast: more`. A deck had a slide for each part. A script read the
+computed styles at each step and made a picture of each part in each mode. The pictures of
+the cursor of the typewriter effect come from a run with motion, during the typing.
+
+The default theme is light. Two parts also used the theme `:dracula`, because a dark theme
+on a white canvas can give a different defect.
+
+### The results
+
+| Part | Forced colors, light scheme | Forced colors, dark scheme | `prefers-contrast: more` |
+| --- | --- | --- | --- |
+| The state `highlight` from an `on` entity | No mark. | No mark. | No mark. |
+| A code token in focus | A border of 3 pixels in `CanvasText`, from #581. | The same. | A bar in the accent color, with 7.1:1 on the white slide. |
+| A line of code in focus | No bar. The dimmed lines have an opacity of 0.6, so the focus shows only while the other lines dim. | The same. | A bar in the accent color, with 7.1:1 on the white slide. |
+| A box of a tree in focus, from the `highlight` option | Each box looks the same as the box in focus. | The same. | A dimmed box has a text with 7:1, and the box in focus has 21:1. The dimming shows less, as #582 records. |
+| The cursor of the typewriter effect | No cursor. The text still types. | The same. | A cursor in the color of the text, with 21:1. |
+| An `embed` of a local HTML file | The page in the frame takes the colors of the system too, and its text has 21:1. The edge of the frame does not show. | The same. | No change. The page keeps the colors of its author. |
+| An `audio` element with controls | With a dark theme, the icons of the buttons are white on the white canvas. | With a light theme, the icons of the play button, the volume button and the menu button are black on the black canvas. The pause icon shows. | No change. |
+| A `video` element with controls | The browser draws the controls on a white panel under the picture. | The same white panel. The time and the track of the controls do not show. | No change. |
+| A table | Each text has 21:1. The lines between the rows have the color `CanvasText`. | The same. | The caption has 7:1, and each other text has 21:1. |
+| The notes of the speaker view | Each text has 21:1. A link has `LinkText` with 14:1, and an underline. | Each text has 21:1. A link has 19.6:1. | Each text has 21:1. |
+| Firefox | Not measured. | Not measured. | Not measured. |
+
+These results need an explanation:
+
+- **The state `highlight`.** Only a line and a token of a code element read
+  `--highlight`, and the compiler registers each state with no inheritance. An `on`
+  entity can give the state to each element, but the style sheet draws no mark for it,
+  also in the usual mode. Forced colors therefore remove nothing. The reference of the
+  overlay options gives only `alert` and `dim` for an `on` entity.
+- **A line of code in focus.** The key `d` turns off the dimming until the next step. A
+  code element where each line is in focus has no dimmed line. In these two cases, the line
+  in focus had no mark.
+- **A box of a tree.** The `highlight` option of a tree dims a box with the property
+  `--dimmed`, and not with the state `dim`. The rule of #581 for a dimmed element reads
+  `--dim`, so it did not apply. A box with the state `dim`, from `dim true`, had the
+  opacity.
+- **An audio element.** The browser draws the controls in the color scheme of the
+  document, which is the scheme of the theme. The canvas has the scheme of the system.
+- **A video element.** A page with no style sheet gives the same white panel in Chromium,
+  so the defect is in the browser. Neither `color-scheme` nor `forced-color-adjust` on the
+  `video` element changes it. A video without controls has no panel.
+- **Firefox.** This session has only Chromium, and the task did not allow an install. It is
+  still not known if the Playwright option `forcedColors` has an effect in Firefox.
+
+### The change
+
+| Part | Change |
+| --- | --- |
+| A line of code in focus | In forced colors, a pseudo-element in the color `CanvasText` is the bar. It has the place and the width of the shadow, so the text does not move. The bar has 21:1. |
+| A box of a tree in focus | In forced colors, a box that the `highlight` option dims has an opacity of 0.6, as a dimmed element has. A box inside a dimmed element does not get the opacity two times. |
+| The cursor of the typewriter effect | In forced colors, the cursor is a border in the color of the text. A negative margin of the same width keeps the place of each character. The cursor has 21:1. `--type-cursor-color` does not apply in this mode. |
+| An audio element | In forced colors, the element has `color-scheme: light dark`, so the browser draws its controls in the scheme of the system. |
+
+A browser test for each change is in `test/e2e/forced_colors_test.exs`, and it fails
+without the change.
+
+### The parts that stay open
+
+- **The controls of a video in forced colors.** The defect is in Chromium. A follow-up can
+  report it to Chromium, or a deck can show its video without controls.
+- **The edge of an embed in forced colors.** The text of the page is readable, but the
+  reader cannot see the area of the frame. A plate, as for an image, or an outline needs a
+  decision, because the page in the frame takes the colors of the system.
+- **The state `highlight` from an `on` entity.** The compiler accepts it, and it has no
+  effect in each mode. A follow-up can give it a mark, or give a warning for it.
+- **Firefox.** A session with Firefox can run the script of the first investigation and the
+  measurements of this section.

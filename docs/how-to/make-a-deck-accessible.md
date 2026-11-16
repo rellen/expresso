@@ -220,7 +220,8 @@ mode, but look at it one time, because the mode removes each color that has a me
 Look for these three things:
 
 - A text that tells its meaning only with a color. The colors of code and the color of a
-  `set` go away. Add a word, or a state such as `highlight` or `alert`.
+  `set` go away. Add a word, or the state `alert`. An `on` entity with the state
+  `highlight` draws no mark. Only the `highlight` option of a code element draws a bar.
 - A chart, a diagram, a formula with a part or an image. Each one keeps its colors on a
   plate with the background color of the theme, so it must be readable on that color.
 - A color or a gradient as the background of a slide. It goes away, so the slide must make

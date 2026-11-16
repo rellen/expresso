@@ -3876,9 +3876,38 @@ body[data-view="handout"][data-print-notes="false"] .notes {
  * so an element inside a dimmed element does not get the opacity two times.
  * An element inside a plate keeps the dimmed color of the theme.
  *
+ * The `highlight` option of a tree dims a box with `--dimmed`, and not with
+ * the state `dim`, so the rule of the elements does not dim it. Its box gets
+ * the same opacity here. `--tree-outer-dim` keeps the dimming of an element
+ * around the tree, which already has the opacity, so the box does not get it
+ * two times. A box with the state `dim`, from `dim true`, has `data-el` and
+ * gets the opacity from the rule of the elements.
+ *
  * A token of code in focus has a bar under it, which is a `box-shadow`, and
  * the browser removes each `box-shadow`. A border of an inline element takes
  * no space in its line, so the bar is a border here.
+ *
+ * A line of code in focus has a bar at its left, which is a `box-shadow` too.
+ * The opacity of the dimmed lines shows the focus, but the key `d` turns off
+ * the dimming, and the line in focus then had no mark. A pseudo-element in
+ * the color `CanvasText` is the bar here. It has the place and the width of
+ * the shadow, so the text does not move. The compiler registers `--highlight`
+ * with no inheritance, so the line copies it into `--line-bar` for the
+ * pseudo-element.
+ *
+ * The cursor of the effect `type` is a `box-shadow` too, so it went away. A
+ * border at the right of the character is the cursor here, and a negative
+ * margin of the same width keeps the next character in its place. The
+ * browser rounds the width of a border down to a whole pixel, so
+ * `--type-cursor` does the same and the margin agrees with the border. The
+ * border has the color of the text, which is a color of the system.
+ *
+ * The browser draws the controls of an audio element in the color scheme of
+ * the document, which is the scheme of the theme. With a light theme and a
+ * black canvas, the icons of the controls were black on black, and a dark
+ * theme gave white on white. `light dark` makes the browser draw the
+ * controls in the scheme of the system, which agrees with the canvas. The
+ * controls of a video do not change with this rule.
  */
 @media (forced-colors: active) {
   .chart svg,
@@ -3893,8 +3922,46 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     filter: blur(calc((1 - var(--shown)) * var(--enter-blur)))
       opacity(calc(var(--opacity) * (1 - var(--dim, 0) * 0.4)));
   }
+  .tree {
+    --tree-outer-dim: var(--dimmed);
+  }
+  .tree-node:not([data-el]) > .tree-box {
+    opacity: calc(1 - max(0, var(--dimmed) - var(--tree-outer-dim, 0)) * 0.4);
+  }
   .code .code-token {
     border-bottom: calc(var(--highlight, 0) * 0.12em) solid CanvasText;
+  }
+  .code .line {
+    position: relative;
+    --line-bar: var(--highlight, 0);
+  }
+  .code .line::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: -0.4rem;
+    width: 0.15rem;
+    forced-color-adjust: none;
+    background-color: CanvasText;
+    opacity: var(--line-bar);
+  }
+  .type-char {
+    --type-cursor: round(
+      down,
+      var(--type-cursor-width, 0.08em) *
+        clamp(
+          0,
+          (var(--i) + 1 - var(--type) * var(--type-n, 0)) * 1000 + 1,
+          1
+        ) *
+        clamp(0, (1 - var(--type)) * 1000000, 1),
+      1px
+    );
+    border-inline-end: var(--type-cursor) solid currentColor;
+    margin-inline-end: calc(-1 * var(--type-cursor));
+  }
+  audio {
+    color-scheme: light dark;
   }
 }
 /*

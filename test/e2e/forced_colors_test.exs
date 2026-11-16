@@ -91,6 +91,78 @@ defmodule Expresso.E2E.ForcedColorsTest do
     end
   end
 
+  # The parts that issue #603 measured: a tree with the `highlight` option, a
+  # tree with `dim true`, a text with the effect `type` and an audio element
+  # with controls.
+  defmodule MarkDeck do
+    use Expresso
+
+    name "mark deck"
+
+    slide "tree" do
+      tree do
+        title "The plant"
+        highlight ["Ben"]
+
+        node "Ana" do
+          node "Ben"
+          node "Eve"
+        end
+      end
+    end
+
+    slide "dim tree" do
+      tree do
+        title "The plant in turn"
+        reveal :levels
+        dim true
+
+        node "Ana" do
+          node "Ben"
+          node "Eve"
+        end
+      end
+    end
+
+    slide "type" do
+      text_box do
+        at from: 2
+        effect :type
+        speed 60_000
+        text_area(text: "Give the function a name, then call it.")
+      end
+    end
+
+    slide "audio" do
+      audio "test/fixtures/chime.wav" do
+        title "A chime with controls"
+        controls true
+      end
+    end
+  end
+
+  # An audio element with controls in a dark theme. With a white canvas, the
+  # icons of its controls were white.
+  defmodule DarkAudioDeck do
+    use Expresso
+
+    name "dark audio deck"
+    theme :dracula
+
+    slide "start" do
+      text_box do
+        text_area(text: "Start")
+      end
+    end
+
+    slide "audio" do
+      audio "test/fixtures/chime.wav" do
+        title "A chime with controls"
+        controls true
+      end
+    end
+  end
+
   @schemes [:light, :dark]
 
   # The contrast of a color of an element with the canvas, as WCAG calculates
@@ -304,6 +376,187 @@ defmodule Expresso.E2E.ForcedColorsTest do
         )
 
       assert Enum.uniq(colors) |> length() == 1
+    end
+  end
+
+  # The number of pixels of a PNG picture, in base64, that have a contrast of 3
+  # or more with the canvas.
+  @ink """
+  (async (png) => {
+    const parse = (color) => /rgba?\\((\\d+),\\s*(\\d+),\\s*(\\d+)/.exec(color).slice(1).map(Number);
+    const part = (value) => {
+      const v = value / 255;
+      return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+    };
+    const light = ([r, g, b]) => 0.2126 * part(r) + 0.7152 * part(g) + 0.0722 * part(b);
+    const canvas = light(parse(getComputedStyle(document.documentElement).backgroundColor));
+    const image = new Image();
+    image.src = "data:image/png;base64," + png;
+    await image.decode();
+    const board = document.createElement("canvas");
+    board.width = image.width;
+    board.height = image.height;
+    const context = board.getContext("2d");
+    context.drawImage(image, 0, 0);
+    const data = context.getImageData(0, 0, image.width, image.height).data;
+    let count = 0;
+    for (let at = 0; at < data.length; at += 4) {
+      const [high, low] = [light([data[at], data[at + 1], data[at + 2]]), canvas].sort((a, b) => b - a);
+      if ((high + 0.05) / (low + 0.05) >= 3) count += 1;
+    }
+    return count;
+  })
+  """
+
+  # The pixels of the area of the volume button and of the menu button of the
+  # audio element of a slide, with no part of the border of the controls.
+  # The browser drew these two buttons in the color of the canvas.
+  defp right_buttons_ink(page, slide) do
+    [x, y, width, height] =
+      js(page, """
+      (() => {
+        const box = document.querySelector("#slide-#{slide} audio").getBoundingClientRect();
+        return [box.x, box.y, box.width, box.height];
+      })()
+      """)
+
+    clip = %{x: x + width * 0.8, y: y + height * 0.3, width: width * 0.17, height: height * 0.4}
+    {:ok, png} = Page.screenshot(page.guid, timeout: 10_000, clip: clip)
+    js(page, "#{@ink}(#{JSON.encode!(png)})")
+  end
+
+  defp text_color(:light), do: "rgb(0, 0, 0)"
+  defp text_color(:dark), do: "rgb(255, 255, 255)"
+
+  for scheme <- @schemes do
+    # The bar of a line of code in focus is a `box-shadow`, and the browser
+    # removes each `box-shadow`. The key `d` turns off the dimming, so the
+    # bar is then the only mark of the line in focus.
+    test "a line of code in focus has a bar with the #{scheme} color scheme",
+         %{browser: browser, tmp_dir: tmp_dir} do
+      page =
+        browser
+        |> new_page(forced_colors: "active", color_scheme: unquote(scheme))
+        |> open(render(ContentDeck, tmp_dir))
+
+      page |> keys(["j", "j", "d"]) |> wait_for_position("3.1")
+
+      wait_for(page, """
+      [...document.querySelectorAll("#slide-3 .code .line")]
+        .every((line) => getComputedStyle(line).filter.includes("opacity(1)"))
+      """)
+
+      bars =
+        js(page, """
+        [...document.querySelectorAll("#slide-3 .code .line")].map((line) => {
+          const bar = getComputedStyle(line, "::before");
+          return [bar.content, bar.opacity, bar.backgroundColor, parseFloat(bar.width)];
+        })
+        """)
+
+      assert length(bars) == 4
+
+      for {[content, opacity, color, width], index} <- Enum.with_index(bars) do
+        assert content == ~s("")
+        assert opacity == if(index == 1, do: "1", else: "0")
+        assert color == text_color(unquote(scheme))
+        assert width >= 3
+      end
+    end
+
+    # The `highlight` option of a tree dims a box with `--dimmed`, and the
+    # rule of the dim state reads `--dim`.
+    test "a box of a tree that is not in focus has an opacity with the #{scheme} color scheme",
+         %{browser: browser, tmp_dir: tmp_dir} do
+      page =
+        browser
+        |> new_page(forced_colors: "active", color_scheme: unquote(scheme))
+        |> open(render(MarkDeck, tmp_dir))
+
+      boxes = fn ->
+        js(page, """
+        [...document.querySelectorAll("section.slide")]
+          .find((slide) => slide.style.display === "flex")
+          .querySelectorAll(".tree-node")
+          .values()
+          .map((node) => [
+            node.textContent.trim(),
+            getComputedStyle(node.querySelector(".tree-box")).opacity,
+            getComputedStyle(node).filter
+          ])
+          .toArray()
+        """)
+      end
+
+      assert [["Ana", "0.6", _], ["Ben", "1", _], ["Eve", "0.6", _]] = boxes.()
+
+      # A box with the state `dim` gets the opacity from the rule of the
+      # elements, and not two times.
+      page |> keys(["j", "j"]) |> wait_for_position("2.2")
+      assert [["Ana", "1", filter], ["Ben", "1", _], ["Eve", "1", _]] = boxes.()
+      assert filter =~ "opacity(0.6)"
+    end
+
+    # The cursor of the typewriter effect is a `box-shadow`. Its border keeps
+    # the place of each character, because a margin takes back its width.
+    test "the cursor of the typewriter effect shows with the #{scheme} color scheme",
+         %{browser: browser, tmp_dir: tmp_dir} do
+      page =
+        browser
+        |> new_page(
+          forced_colors: "active",
+          color_scheme: unquote(scheme),
+          reduced_motion: "no-preference"
+        )
+        |> open(render(MarkDeck, tmp_dir))
+
+      page |> keys(["j", "j", "j"]) |> wait_for_position("3.1")
+      page |> press("j") |> wait_for_position("3.2")
+
+      wait_for(page, """
+      [...document.querySelectorAll("#slide-3 .type-char")]
+        .filter((char) => getComputedStyle(char).opacity === "1").length >= 2
+      """)
+
+      [shown, cursors] =
+        js(page, """
+        (() => {
+          const chars = [...document.querySelectorAll("#slide-3 .type-char")];
+          const last = chars.findLastIndex((char) => getComputedStyle(char).opacity === "1");
+          const cursors = chars.slice(0, last + 1)
+            .map((char, index) => [index, getComputedStyle(char)])
+            .filter(([_index, style]) => style.borderRightWidth !== "0px")
+            .map(([index, style]) =>
+              [index, style.borderRightWidth, style.borderRightStyle, style.borderRightColor, style.marginRight]);
+          return [last + 1, cursors];
+        })()
+        """)
+
+      assert [[index, width, "solid", color, margin]] = cursors
+      assert index == shown - 1
+      assert color == text_color(unquote(scheme))
+      assert margin == "-" <> width
+      refute width == "0px"
+    end
+  end
+
+  # The browser draws the controls of an audio element in the color scheme of
+  # the document. With the scheme of the theme, its icons had the color of the
+  # canvas.
+  for {deck, scheme} <- [{MarkDeck, :dark}, {DarkAudioDeck, :light}] do
+    test "the buttons of an audio element of #{inspect(deck)} shows with the #{scheme} color scheme",
+         %{browser: browser, tmp_dir: tmp_dir} do
+      page =
+        browser
+        |> new_page(forced_colors: "active", color_scheme: unquote(scheme))
+        |> open(render(unquote(deck), tmp_dir))
+
+      {slide, keys} = if unquote(deck) == MarkDeck, do: {4, 5}, else: {2, 1}
+      page |> keys(List.duplicate("j", keys)) |> wait_for_position("#{slide}.1")
+
+      wait_for(page, "document.querySelector('#slide-#{slide} audio').readyState >= 1")
+
+      assert right_buttons_ink(page, slide) >= 20
     end
   end
 

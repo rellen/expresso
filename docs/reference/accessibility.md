@@ -140,7 +140,13 @@ Each text of a slide takes a color of the system. A graphic keeps its colors on 
 | A formula with no part | The colors of the system. |
 | An image | Its colors. The plate shows behind a transparent area. |
 | A dimmed element | An opacity of 0.6, because each text has one color. |
+| A box of a tree that the `highlight` option dims | An opacity of 0.6, as a dimmed element. |
 | A code token in focus | A bar under the token, in the color `CanvasText`. |
+| A line of code in focus | A bar at the left of the line, in the color `CanvasText`. It also shows after the key `d`. |
+| The cursor of the effect `:type` | A border at the right of the newest character, in the color of the text. `--type-cursor-color` does not apply, and `--type-cursor-width` does. |
+| An `embed` | The page in the frame takes the colors of the system too. The edge of the frame does not show. |
+| An `audio` element with controls | The controls of the browser, in the color scheme of the system. |
+| A `video` element with controls | The controls of the browser. Chromium draws them on a white panel under the picture, and with a black canvas their time does not show. |
 | The colors of code | They go away. Each token has the color of the text. |
 | A color or a gradient as the background of a slide | It goes away. The slide has the canvas of the system. |
 | An image as the background of a slide | It stays. The browser puts a box with the canvas color behind each text. |
@@ -158,6 +164,7 @@ The parts of the presenter take a color of the system, so each one shows:
 | The dot of the laser pointer | `Highlight`, with a ring of `CanvasText`. |
 | A line of the pen | `CanvasText`. |
 | A line of the highlighter | `Highlight`, with the opacity of the highlighter. |
+| The notes of the speaker view | The colors of the system, as a text of a slide. A link has the color `LinkText`. |
 
 A deck cannot change these colors in forced colors. The properties `--progress-color`,
 `--laser-color`, `--draw-pen-color` and `--draw-highlighter-color` apply only in the usual
