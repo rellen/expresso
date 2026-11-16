@@ -240,8 +240,9 @@ preference.
 3. Go through each step of the deck.
 
 Look for a step that tells its meaning only with the state `dim`. A color near 7:1
-does not dim, so the dimmed element can look the same as the current element. Add a state
-such as `highlight` to the current element.
+does not dim, so the dimmed element can look the same as the current element. Add the
+state `alert` to the current element. In a code element, give the `highlight` option, which
+draws a bar at each line in focus.
 
 See [More contrast](../reference/accessibility.md#more-contrast) for each change.
 
