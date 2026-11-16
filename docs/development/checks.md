@@ -47,6 +47,25 @@ of `mix check` runs each tool. In the retry mode, a run after a failure runs onl
 failed tools. A failed tool with a dependency that does not run is then skipped, and a
 skipped tool does not fail the run.
 
+## A commit with only Markdown files
+
+A commit that changes only Markdown files does not need each check. Run these commands
+for it:
+
+```sh
+mix docs                       # the links and the names of the documents
+mix test                       # some tests compile the code blocks of the documents
+mix usage_rules.sync --check   # the links at the end of CLAUDE.md
+```
+
+`Expresso.ExamplesTest`, `Expresso.GuideCodeTest` and `Expresso.ElementPagesTest` read the
+guides and the reference pages, so a change to a document can make a unit test fail. Add
+`mix test --only graphviz --only d2 --only mermaid --only temml` when the commit changes
+`docs/reference/diagram-element.md` or `docs/reference/math-element.md`, because those
+tests render the code blocks of the two pages.
+
+The workflow still runs each job for such a commit.
+
 ## Flaky tests
 
 A flaky test passes in one run and fails in a different run of the same code. To find one,

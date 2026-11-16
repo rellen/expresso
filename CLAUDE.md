@@ -52,9 +52,9 @@ Read these documents before you change the code:
   "The result", tells what changed during the work.
 - `docs/accessibility-preferences.md` — an investigation of a deck in forced colors, with
   the preference for more contrast, and against three new criteria of WCAG 2.2. It records
-  the state on 2026-11-15 and a proposal for each defect. No code changed. It has two
-  questions for the maintainer: the colors of a slide in forced colors, and the effect of
-  `prefers-contrast: more`.
+  the state on 2026-11-15 and a proposal for each defect. The maintainer answered its two
+  questions, and the code contains each proposal. Its last section, "The result", tells
+  what changed. Issues #603 and #604 hold the parts that nobody measured.
 - `docs/export.md` — the design for the export from the command line: a PDF of a deck, and
   a PNG file of each slide, from a headless Chrome or Chromium. The code contains this
   design. The document records ten decisions, and each is settled. Its last section, "The
@@ -159,6 +159,21 @@ mix test --only dependency
 BURRITO_TARGET=linux_x86 MIX_ENV=prod mix release expresso_cli_app --overwrite
 EXPRESSO_BINARY=burrito_out/expresso_cli_app_linux_x86 mix test --only release
 ```
+
+A commit that changes only Markdown files is an exception. Run these commands for it, and
+not the others:
+
+```sh
+mix docs
+mix test
+mix usage_rules.sync --check
+```
+
+`mix test` is necessary, because some tests read the documents: they compile each code
+block of a guide and of a reference page. Add
+`mix test --only graphviz --only d2 --only mermaid --only temml` when the commit changes
+`docs/reference/diagram-element.md` or `docs/reference/math-element.md`. Tell the
+maintainer in the pull request that you ran these commands only.
 
 Each command above passes at this time, and `mix check` passes as a whole. Keep them so. The
 four `npm` commands need Node and `npm install`, and the hook runs `npm install`. `mix compile`

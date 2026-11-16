@@ -3348,8 +3348,8 @@ The commands are:
 
 ## Open work
 
-No item is open at this time. Issue #397 to issue #407 propose other features. Each one
-needs a decision before the work starts.
+No item is open at this time. The open issues of the repository propose the next changes.
+Each one has its questions, and it needs a decision before the work starts.
 
 The last item, the β-reductions of `docs/beta-reductions.md`, added the `reduce` entity of a
 `math` element, with a parser of λ-terms, the rules of scope, four steps and the theme roles
