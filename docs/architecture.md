@@ -943,6 +943,12 @@ at most the height that is left, with `max-height: 100%`. An embed and a video g
 a size container. A page of the handout view on a screen has only a minimum height, so
 there each element keeps the height of its content.
 
+On paper, a page has the height of the sheet. The browser divides the pages into sheets,
+and Chrome then does not use the stretched height of `.slide-body` for its content. The
+print block therefore gives `.slide-body` the height `100%`, so an element takes at most
+the height that is left, as on a screen. Without it, a large image goes onto the next
+sheet.
+
 A slide of the present view takes the full width of the window, and its `.slide-body`
 takes the full width of the slide. A page of the handout view does the same in the width of
 the page. A `columns` element thus divides the width of the window, and not the width of

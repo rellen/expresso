@@ -2937,6 +2937,17 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   .handout-page {
     height: 100vh;
   }
+  /*
+   * The body of a slide stretches to the height of its row, and that height
+   * lets an image become smaller to fit the slide. Paper divides the pages
+   * into sheets, and then Chrome does not use the height of a stretched item
+   * for the content of that item. Without this rule, a large image does not
+   * become smaller, and it goes onto the next sheet. The height of 100% gives
+   * the body the height of its row again. `docs/export.md` tells more.
+   */
+  .handout-page .slide-body {
+    height: 100%;
+  }
   body:not([data-every="true"]) .handout-page[data-omit],
   .handout-page[data-omit="hidden"] {
     display: none;

@@ -89,6 +89,12 @@ The code follows the plan, with these changes:
    the test gives it the path of the browser. The job runs on x86_64 and on aarch64, so
    the key of the cache of the browser holds the architecture of the runner.
 
+A later fix, for issue #602, makes a large image fit its page in the handout form. On
+paper, Chrome divides the pages into sheets, and it then does not give the body of a slide
+the height of its row. An image then did not become smaller, and it went onto the next
+sheet. The print block of the style sheet now gives `.slide-body` the height `100%`. A test
+of `test/e2e/export_test.exs` finds the box of each image in the PDF.
+
 `docs/reference/export-options.md` gives the options, and `docs/how-to/export-a-deck.md`
 gives the steps.
 

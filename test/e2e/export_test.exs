@@ -196,6 +196,195 @@ defmodule Expresso.E2E.ExportTest do
     _error -> :error
   end
 
+  # The deck of issue #602. The image is larger than a page, so it must become
+  # smaller to fit its slide. The handout view gives a page to each step: three
+  # pages of the slide "blue" and one page of the slide "gold".
+  @large_images """
+  defmodule LargeImageDeck do
+    use Expresso
+    root __DIR__
+
+    slide "blue" do
+      heading "Blue"
+
+      list do
+        reveal true
+        item "One"
+        item "Two"
+      end
+
+      image "large.png", alt: "Blue", at: 3
+    end
+
+    slide "gold" do
+      heading "Gold"
+      image "large.png", alt: "Gold"
+      image "large.png", alt: "Gold again"
+    end
+  end
+
+  LargeImageDeck
+  """
+
+  describe "--pdf-pages handout with a large image" do
+    test "each page holds the whole image of its step", %{tmp_dir: dir} = context do
+      input = Path.join(dir, "large.exs")
+      File.write!(input, @large_images)
+      File.write!(Path.join(dir, "large.png"), solid_png(3000, 1700))
+      options = %{Export.defaults() | pdf: context.pdf, pdf_pages: :handout}
+
+      assert {:ok, [line]} = Export.export(input, nil, options)
+
+      # Step 3 of "blue" shows one image, and "gold" shows two. The image of
+      # a step that does not show it does not print. Without the fix, the
+      # image of "blue" goes onto the page of "gold", and the second image of
+      # "gold" goes onto a fifth page.
+      boxes = image_boxes(context.pdf)
+      assert Enum.map(boxes, &length/1) == [0, 0, 1, 2]
+      assert line == "Wrote #{context.pdf}: 4 pages."
+
+      # A4 landscape is 841.92 × 594.96 points, and the margin is 1 cm, which
+      # is 28.35 points. Each image is in the area inside the margin. The
+      # browser puts an image on the pixels of 300 dpi, so the limit is 1 point
+      # larger.
+      margin = 28.35 - 1
+
+      for {x0, y0, x1, y1} <- List.flatten(boxes) do
+        assert x0 >= margin and y0 >= margin
+        assert x1 <= 841.92 - margin and y1 <= 594.96 - margin
+      end
+    end
+  end
+
+  # A PNG file of one color, with a width and a height in pixels.
+  defp solid_png(width, height) do
+    row = [0, :binary.copy(<<240, 160, 0>>, width)]
+    data = :zlib.compress(List.duplicate(row, height))
+    header = <<width::32, height::32, 8, 2, 0, 0, 0>>
+
+    IO.iodata_to_binary([
+      <<137, "PNG", 13, 10, 26, 10>>,
+      chunk("IHDR", header),
+      chunk("IDAT", data),
+      chunk("IEND", "")
+    ])
+  end
+
+  defp chunk(type, data),
+    do: [<<byte_size(data)::32>>, type, data, <<:erlang.crc32([type, data])::32>>]
+
+  # The box of each image that each page of a PDF draws, as `{x0, y0, x1, y1}`
+  # in points, in the order of the pages. The browser writes each page with
+  # one content stream. The stream draws an image with the operator `Do`, in
+  # the unit square of the current transformation matrix. The operators `q`,
+  # `Q` and `cm` keep and change that matrix.
+  defp image_boxes(pdf) do
+    objects = pdf |> File.read!() |> objects()
+    images = for {number, {dict, _stream}} <- objects, dict =~ "/Subtype /Image", do: number
+
+    [kids] = Regex.run(~r{/Kids \[([^\]]*)\]}, root_pages(objects), capture: :all_but_first)
+
+    for page <- references(kids) do
+      {dict, _stream} = objects[page]
+      [contents] = Regex.run(~r{/Contents (\d+) 0 R}, dict, capture: :all_but_first)
+      {_dict, stream} = objects[String.to_integer(contents)]
+
+      names =
+        ~r{/(\w+) (\d+) 0 R}
+        |> Regex.scan(dict, capture: :all_but_first)
+        |> Map.new(fn [name, number] -> {name, String.to_integer(number)} end)
+
+      stream
+      |> :zlib.uncompress()
+      |> draws()
+      |> Enum.filter(fn {name, _box} -> names[name] in images end)
+      |> Enum.map(fn {_name, box} -> box end)
+    end
+  end
+
+  defp root_pages(objects) do
+    Enum.find_value(objects, fn {_number, {dict, _stream}} ->
+      if dict =~ ~r{/Type /Pages\b}, do: dict
+    end)
+  end
+
+  defp references(text) do
+    ~r{(\d+) 0 R}
+    |> Regex.scan(text, capture: :all_but_first)
+    |> List.flatten()
+    |> Enum.map(&String.to_integer/1)
+  end
+
+  # Each object of a PDF, as its number and a tuple of its dictionary and its
+  # stream. An object with no stream has `nil`.
+  defp objects(data) do
+    ~r{(\d+) 0 obj\b(.*?)endobj}s
+    |> Regex.scan(data, capture: :all_but_first)
+    |> Map.new(fn [number, body] ->
+      case Regex.run(~r{\A(.*?)stream\r?\n(.*)\r?\nendstream\s*\z}s, body,
+             capture: :all_but_first
+           ) do
+        [dict, stream] -> {String.to_integer(number), {dict, stream}}
+        nil -> {String.to_integer(number), {body, nil}}
+      end
+    end)
+  end
+
+  # The name and the box of each `Do` operator of a content stream. The
+  # state has the current matrix, the stack of `q`, the operands and the boxes.
+  defp draws(content) do
+    {_matrix, _stack, _operands, draws} =
+      content
+      |> String.split()
+      |> Enum.reduce({{1, 0, 0, 1, 0, 0}, [], [], []}, &operator/2)
+
+    Enum.reverse(draws)
+  end
+
+  defp operator("q", {matrix, stack, _operands, draws}), do: {matrix, [matrix | stack], [], draws}
+
+  defp operator("Q", {_matrix, [matrix | stack], _operands, draws}),
+    do: {matrix, stack, [], draws}
+
+  defp operator("cm", {matrix, stack, operands, draws}) do
+    [f, e, d, c, b, a] = Enum.take(operands, 6)
+    {multiply({a, b, c, d, e, f}, matrix), stack, [], draws}
+  end
+
+  defp operator("Do", {matrix, stack, ["/" <> name | _operands], draws}),
+    do: {matrix, stack, [], [{name, unit_box(matrix)} | draws]}
+
+  defp operator(token, {matrix, stack, operands, draws}) do
+    case operand(token) do
+      nil -> {matrix, stack, [], draws}
+      value -> {matrix, stack, [value | operands], draws}
+    end
+  end
+
+  # A number or a name is an operand. Each other token is an operator.
+  defp operand("/" <> _name = token), do: token
+
+  defp operand(token) do
+    case Float.parse(String.replace(token, ~r{\A(-?)\.}, "\\g{1}0.")) do
+      {value, ""} -> value
+      _other -> nil
+    end
+  end
+
+  # The product of two matrices of PDF. A point gets the first matrix first.
+  defp multiply({a1, b1, c1, d1, e1, f1}, {a2, b2, c2, d2, e2, f2}) do
+    {a1 * a2 + b1 * c2, a1 * b2 + b1 * d2, c1 * a2 + d1 * c2, c1 * b2 + d1 * d2,
+     e1 * a2 + f1 * c2 + e2, e1 * b2 + f1 * d2 + f2}
+  end
+
+  defp unit_box({a, b, c, d, e, f}) do
+    points =
+      for {x, y} <- [{0, 0}, {1, 0}, {0, 1}, {1, 1}], do: {a * x + c * y + e, b * x + d * y + f}
+
+    {xs, ys} = Enum.unzip(points)
+    {Enum.min(xs), Enum.min(ys), Enum.max(xs), Enum.max(ys)}
+  end
+
   describe "--png" do
     test "writes one file for the last step of each slide that the talk shows", context do
       options = %{Export.defaults() | png: context.png}
