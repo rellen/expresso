@@ -9,6 +9,7 @@ defmodule Mix.Tasks.Expresso do
       $ mix expresso <input> [output] --check[=layout | =a11y | =browser] [--size <size>]...
       $ mix expresso <input> [output] --pdf <file> [--pdf-pages <pages>] [--pdf-steps all]
       $ mix expresso <input> [output] --png <directory> [--png-steps all] [--size <size>]
+      $ mix expresso <input> [output] --card <file> [--card-slide <number>]
 
   `<input>` is the Elixir script of the deck, or `-` for the standard input.
   The script returns an `Expresso.Deck` struct, or a module that uses the DSL
@@ -62,8 +63,9 @@ defmodule Mix.Tasks.Expresso do
 
   With `--pdf <file>`, the task renders the deck, and a headless Chrome or
   Chromium writes a PDF of it. With `--png <directory>`, the browser writes a
-  PNG file of each slide into that directory. The two options can go
-  together. With `[output]`, the task also writes the document to that file.
+  PNG file of each slide into that directory. With `--card <file>`, the
+  browser writes the picture of a link preview. The options can go together.
+  With `[output]`, the task also writes the document to that file.
   The task writes a line for each export to the standard output.
 
     * `--pdf deck.pdf` - one page for each slide, as the present view shows
@@ -77,6 +79,10 @@ defmodule Mix.Tasks.Expresso do
       `slides/slide-3.png`, at the size of `--size`, or 1920 × 1080.
     * `--png-steps all` - one file for each step, such as
       `slides/slide-3-step-2.png`.
+    * `--card card.png` - one PNG file of 1200 × 630 pixels for the preview
+      of a link, from the last step of slide 1. `--card-slide 3` gives
+      slide 3. The `card` option of the deck can name the same file, and
+      that file can be missing before the export.
 
   The export needs the browser of `--check=layout`. Give its path in
   `EXPRESSO_CHROMIUM` when the task does not find it.
@@ -90,8 +96,8 @@ defmodule Mix.Tasks.Expresso do
     * `--check`, `--check=layout`, `--check=a11y`, `--check=browser` - check
       the deck, and write a report
     * `--size <width>x<height>` - a size of the page for a browser level of
-      `--check`, such as `1024x768`, or the size of the export. The default
-      is 1920 × 1080.
+      `--check`, such as `1024x768`, or the size of `--pdf` and `--png`. The
+      default is 1920 × 1080.
     * `--pdf <file>` - write a PDF of the deck
     * `--pdf-pages slides`, `--pdf-pages handout` - the form of the pages of
       the PDF. The default is `slides`.
@@ -100,6 +106,9 @@ defmodule Mix.Tasks.Expresso do
       The default is `a4`.
     * `--png <directory>` - write a PNG file of each slide
     * `--png-steps all` - a PNG file for each step
+    * `--card <file>` - write the picture of a link preview: a PNG file of
+      1200 × 630 pixels
+    * `--card-slide <number>` - the slide of the card. The default is 1.
     * `-h`, `--help` - show this help
     * `--version` - show the version of Expresso
     * `--install-check-tools` - install the tools of the browser levels of

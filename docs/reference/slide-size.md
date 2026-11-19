@@ -17,6 +17,7 @@ font-size: min(48px, 100vw * 48 / 1280, 100vh * 48 / 720);
 | 1920 by 1080 pixels | 48 px | 40 by 22.5 |
 | 1280 by 720 pixels | 48 px | 26.67 by 15 |
 | 1024 by 768 pixels | 38.4 px | 26.67 by 20 |
+| 1200 by 630 pixels, the card of `--card` | 42 px | 28.57 by 15 |
 | 844 by 390 pixels, a phone in the landscape direction | 26 px | 32.46 by 15 |
 | 390 by 844 pixels, a phone in the portrait direction | 14.6 px | 26.67 by 57.7 |
 

@@ -257,8 +257,8 @@ defmodule Expresso.E2E.ExportTest do
   end
 
   # A PNG file of one color, with a width and a height in pixels.
-  defp solid_png(width, height) do
-    row = [0, :binary.copy(<<240, 160, 0>>, width)]
+  defp solid_png(width, height, {red, green, blue} \\ {240, 160, 0}) do
+    row = [0, :binary.copy(<<red, green, blue>>, width)]
     data = :zlib.compress(List.duplicate(row, height))
     header = <<width::32, height::32, 8, 2, 0, 0, 0>>
 
@@ -439,6 +439,108 @@ defmodule Expresso.E2E.ExportTest do
       assert message =~ "Couldn't make directory"
     end
   end
+
+  # Slide 1 has a blue background, and slide 2 has a gold background. The
+  # `card` option names the file of `--card`, and that file does not exist
+  # before the export.
+  @card_deck """
+  defmodule CardDeck do
+    use Expresso
+    root __DIR__
+
+    name "card deck"
+    url "https://example.com/talk/"
+    card image: "card.png", alt: "The title slide"
+
+    slide "blue" do
+      background "blue.png"
+      heading "Blue"
+    end
+
+    slide "gold" do
+      background "gold.png"
+      heading "Gold"
+    end
+  end
+
+  CardDeck
+  """
+
+  describe "--card" do
+    setup %{tmp_dir: dir} do
+      input = Path.join(dir, "card.exs")
+      File.write!(input, @card_deck)
+      File.write!(Path.join(dir, "blue.png"), solid_png(64, 36, {0, 90, 200}))
+      File.write!(Path.join(dir, "gold.png"), solid_png(64, 36, {240, 160, 0}))
+      %{input: input, card: Path.join(dir, "card.png")}
+    end
+
+    test "writes slide 1 at 1200 × 630, and the document then holds the card",
+         %{tmp_dir: dir} = context do
+      output = Path.join(dir, "index.html")
+      options = %{Export.defaults() | card: context.card}
+
+      assert Export.export(context.input, output, options) ==
+               {:ok, ["Wrote #{context.card}: slide 1 at 1200 × 630."]}
+
+      assert png_size(context.card) == {1200, 630}
+      assert near?(corner_color(context.card), {0, 90, 200})
+
+      # The render after the card reads the new file.
+      html = File.read!(output)
+      assert html =~ ~s(<meta property="og:image:width" content="1200"/>)
+      assert html =~ ~s(<meta property="og:image:height" content="630"/>)
+      assert [_copy] = File.ls!(Path.join(dir, "index_files"))
+    end
+
+    test "writes the slide of --card-slide, with the other exports", context do
+      options = %{Export.defaults() | card: context.card, card_slide: 2, png: context.png}
+
+      assert Export.export(context.input, nil, options) ==
+               {:ok,
+                [
+                  "Wrote #{context.card}: slide 2 at 1200 × 630.",
+                  "Wrote 2 PNG files to #{context.png}."
+                ]}
+
+      assert png_size(context.card) == {1200, 630}
+      assert near?(corner_color(context.card), {240, 160, 0})
+      assert png_size(Path.join(context.png, "slide-2.png")) == {1920, 1080}
+    end
+
+    test "a render with no card file gives the error that names --card", context do
+      assert_raise ArgumentError, Expresso.LinkPreview.missing_card(context.card), fn ->
+        Expresso.main(context.input, Path.join(Path.dirname(context.card), "index.html"))
+      end
+    end
+
+    test "mix expresso writes the card", context do
+      output =
+        capture_io(fn ->
+          assert Expresso.CommandLine.run(
+                   [context.input, "--card", context.card, "--card-slide", "2"],
+                   "mix expresso",
+                   "help"
+                 ) == 0
+        end)
+
+      assert output == "Wrote #{context.card}: slide 2 at 1200 × 630.\n"
+      assert png_size(context.card) == {1200, 630}
+    end
+  end
+
+  # The color of the pixel at (8, 8) of a PNG file, which the background of
+  # the slide fills.
+  defp corner_color(path) do
+    {:ok, {width, height, rows}} = Expresso.Gif.Png.inflate(File.read!(path))
+    rgb = Expresso.Gif.Nif.unfilter(rows, width, height)
+    <<red, green, blue>> = binary_part(rgb, (8 * width + 8) * 3, 3)
+    {red, green, blue}
+  end
+
+  # The browser can change a color by a small amount when it draws an image.
+  defp near?({r1, g1, b1}, {r2, g2, b2}),
+    do: abs(r1 - r2) <= 4 and abs(g1 - g2) <= 4 and abs(b1 - b2) <= 4
 
   describe "run/3" do
     test "writes a line for each export, and returns 0", context do

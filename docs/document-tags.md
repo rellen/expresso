@@ -192,3 +192,4 @@ These decisions come from the work:
 | --- | --- |
 | #589 | The address of the deck, the Open Graph tags, the picture of the card, `twitter:card`, the icon and `robots`. The code contains this work. |
 | #590 | A slide that fits a small window, and then the viewport tag. The code contains this work, and `docs/small-windows.md` gives its design. |
+| #601 | The export option `--card`, which makes the picture of the card from a slide at 1200 by 630 pixels. A render with no card file stops with an error that names the option. The code contains this work, and `docs/export.md` gives its decisions. |

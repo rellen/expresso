@@ -116,5 +116,36 @@ defmodule Expresso.ExportTest do
       assert message =~ "that file does not exist"
       refute File.exists?(options.pdf)
     end
+
+    test "gives an error for a card slide that the deck does not have", %{tmp_dir: dir} do
+      # The browser does not run before this error, so any file can be the browser.
+      input = Path.join(dir, "deck.exs")
+      File.write!(input, ~s|import Expresso.Builder\ndeck([slide("one", heading: "One")])\n|)
+      options = %{Export.defaults() | card: Path.join(dir, "card.png"), card_slide: 2}
+
+      assert Export.export(input, nil, options, %{"EXPRESSO_CHROMIUM" => input}) ==
+               {:error, "--card-slide 2 names no slide. The deck has 1 slide."}
+
+      refute File.exists?(options.card)
+    end
+  end
+
+  describe "card_slide/2" do
+    test "counts the slides from 1, as the address does, with each hidden slide" do
+      slides = [
+        Builder.slide("one", elements: []),
+        Builder.slide("backup", elements: [], hidden: true),
+        Builder.slide("three", elements: [])
+      ]
+
+      deck = Builder.deck(slides)
+
+      assert {:ok, %{name: "one"}} = Export.card_slide(deck, 1)
+      assert {:ok, %{name: "backup"}} = Export.card_slide(deck, 2)
+      assert {:ok, %{name: "three"}} = Export.card_slide(deck, 3)
+
+      assert Export.card_slide(deck, 4) ==
+               {:error, "--card-slide 4 names no slide. The deck has 3 slides."}
+    end
   end
 end

@@ -13,12 +13,16 @@ defmodule Expresso.ExportBrowserTest do
       env = %{"HOME" => "/nonexistent", "PLAYWRIGHT_BROWSERS_PATH" => "/nonexistent"}
 
       found =
-        Expresso.Check.Browser.find(env, "--pdf and --png need", "docs/how-to/export-a-deck.md")
+        Expresso.Check.Browser.find(
+          env,
+          "--pdf, --png and --card need",
+          "docs/how-to/export-a-deck.md"
+        )
 
       case found do
         {:error, message} ->
           assert message ==
-                   "--pdf and --png need Chrome or Chromium. Install one of them, or give its " <>
+                   "--pdf, --png and --card need Chrome or Chromium. Install one of them, or give its " <>
                      "path in EXPRESSO_CHROMIUM. docs/how-to/export-a-deck.md tells how."
 
         # A computer with Chrome in a usual place of macOS finds it.

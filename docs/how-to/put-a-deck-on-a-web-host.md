@@ -106,14 +106,7 @@ A chat program or a social network shows a card for a link: a title, a text and 
 It reads them from the tags of the document, and the deck gives them with the `url` option
 and the `card` option.
 
-1. Make a picture of the first slide. The command needs Chrome or Chromium:
-
-   ```sh
-   mix expresso talk.exs --png pictures
-   cp pictures/slide-1.png card.png
-   ```
-
-2. Give the deck its address on the host, and the picture:
+1. Give the deck its address on the host, and the path of the picture:
 
    ```elixir
    defmodule Talk do
@@ -130,21 +123,29 @@ and the `card` option.
    end
    ```
 
-3. Render the deck again. The render writes a copy of the picture into `site/index_files/`:
+2. Make the picture, and render the deck. The command needs Chrome or Chromium:
 
    ```sh
-   mix expresso talk.exs site/index.html
+   mix expresso talk.exs site/index.html --card card.png
    ```
 
-4. Make sure that the document has the address of the picture:
+   `--card` writes a picture of the first slide, at 1200 by 630 pixels, to `card.png`.
+   The render then writes a copy of the picture into `site/index_files/`. To show a
+   different slide, add `--card-slide`, such as `--card-slide 2`.
+
+3. Make sure that the document has the address of the picture:
 
    ```sh
    grep -o '<meta property="og:image"[^>]*>' site/index.html
    ```
 
-5. Put each file of `site/` on the host, then paste the address of the deck into a chat
+4. Put each file of `site/` on the host, then paste the address of the deck into a chat
    program. A program keeps a card for some time, so a change of the picture can show
    late.
+
+After a change to the slide of the card, run the command of step 2 again. A render with
+no `--card` uses the picture that is there. When `card.png` does not exist, the render stops
+with an error that tells you to make it with `--card`.
 
 End the address of a directory with `/`, because the address of the picture is relative to
 it. To give the tab of the browser an icon, add `favicon "icon.svg"`. To keep the deck out

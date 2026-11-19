@@ -197,10 +197,41 @@ defmodule Expresso.LinkPreviewTest do
                    end
     end
 
-    test "a file that the render cannot read stops the render with its path" do
-      assert_raise ArgumentError, ~r|cannot read the card image "no/such.png"|, fn ->
+    test "a missing file stops the render, and the message tells how to make it" do
+      assert_raise ArgumentError, LinkPreview.missing_card("no/such.png"), fn ->
         head(url: @url, card: "no/such.png")
       end
+
+      assert LinkPreview.missing_card("no/such.png") =~
+               ~s(the card image "no/such.png" does not exist. ) <>
+                 "Make it from a slide of the deck with the export option --card no/such.png."
+    end
+
+    test "a file that the render cannot read for a different reason gives the reason",
+         %{tmp_dir: dir} do
+      path = Path.join(dir, "card.png")
+      File.mkdir!(path)
+
+      message = Expresso.DeckFile.read_error(path, "card image", :eisdir)
+      assert_raise ArgumentError, message, fn -> head(url: @url, card: path) end
+    end
+
+    test "Expresso.main/2 stops for a missing card, and writes no document", %{tmp_dir: dir} do
+      input = Path.join(dir, "deck.exs")
+      output = Path.join(dir, "index.html")
+      card = Path.join(dir, "card.png")
+
+      File.write!(input, """
+      import Expresso.Builder
+
+      deck([slide("one", heading: "One")], name: "deck", url: #{inspect(@url)}, card: #{inspect(card)})
+      """)
+
+      assert_raise ArgumentError, LinkPreview.missing_card(card), fn ->
+        Expresso.main(input, output)
+      end
+
+      refute File.exists?(output)
     end
 
     test "the option refuses a file of a different type, and a list with a different key" do

@@ -95,6 +95,29 @@ the height of its row. An image then did not become smaller, and it went onto th
 sheet. The print block of the style sheet now gives `.slide-body` the height `100%`. A test
 of `test/e2e/export_test.exs` finds the box of each image in the PDF.
 
+A later change, for issue #601, adds `--card`. The option writes the picture of the
+preview of a link: one PNG file of 1200 × 630 pixels. These are the decisions of the
+maintainer:
+
+1. **The card shows slide 1, and `--card-slide` gives a different slide.** The number is
+   the number in the address of the deck, as in the name of a PNG file, so a hidden slide
+   counts. `--card-slide` without `--card` is an error.
+2. **The browser opens the slide in a window of 1200 × 630 pixels.** The export does not
+   cut a picture of 1280 × 720 pixels. The window is smaller than 1280 × 720, so the rules
+   of `docs/small-windows.md` apply: the slide fills the window, and the text has the size
+   for that window, which is 42 pixels.
+3. **A render with no card file stops with an error that names `--card`.** A render with
+   no browser cannot make the picture, so `Expresso.LinkPreview.missing_card/1` tells the
+   user to make it with the export.
+4. **The name of the option is `--card`**, as the name of the deck option is `card`.
+
+The export makes the card before it renders the document. The render for the card has
+no `card` option, so the `card` option of the deck can name the file of `--card`, and that
+file can be missing. The export then renders the deck again, and the document holds the
+new picture. The card shows the last step of its slide with no progress bar, as a PNG file
+of `--png` does. `--size` does not change the card, so `--size` with only `--card` is an
+error.
+
 `docs/reference/export-options.md` gives the options, and `docs/how-to/export-a-deck.md`
 gives the steps.
 

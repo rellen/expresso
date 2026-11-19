@@ -57,13 +57,16 @@ mix expresso talk.exs --check        # check the deck, and write a report
 mix expresso talk.exs --check=layout # also measure each slide in Chrome or Chromium
 mix expresso talk.exs --pdf talk.pdf # a PDF with one page for each slide
 mix expresso talk.exs --png slides   # a PNG file of each slide
+mix expresso talk.exs talk.html --card card.png # the picture of a link preview, then the HTML
 ```
 
 - Run `mix expresso <deck> --check` after each change to a deck. Exit status 1 shows a problem.
 - Read each line of the report, and correct each line under `Problems:`.
 - Make the directory of the output file before the render. The render does not make it.
 - Do not edit the HTML document. Change the deck, and render it again.
-- `--check=layout`, `--check=a11y`, `--check=browser`, `--pdf` and `--png` need Chrome or Chromium.
+- `--check=layout`, `--check=a11y`, `--check=browser`, `--pdf`, `--png` and `--card` need Chrome or Chromium.
+- `--card` writes a PNG file of 1200 by 630 pixels from slide 1. `--card-slide 2` gives slide 2.
+- When the `card` option of the deck names a file that does not exist, the render stops. Give that path to `--card`.
 
 ## The steps of a slide
 

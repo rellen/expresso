@@ -98,7 +98,7 @@ defmodule Expresso.BurritoEntryPoint do
           --size <size>  A size of the page for a browser level of --check,
                          such as 1024x768. Give it more than one time for
                          more sizes. The default is 1920x1080. It is also
-                         the size of the export.
+                         the size of --pdf and --png.
           --pdf <file>   Write a PDF of the deck in a headless Chrome or
                          Chromium: one page for each slide, with the theme of
                          the deck. EXPRESSO_CHROMIUM gives the path of the
@@ -116,6 +116,11 @@ defmodule Expresso.BurritoEntryPoint do
                          the directory, such as slide-3.png.
           --png-steps all
                          Write a PNG file for each step.
+          --card <file>  Write the picture of a link preview: a PNG file of
+                         1200x630 from the last step of slide 1. The card
+                         option of the deck can name the same file.
+          --card-slide <number>
+                         The slide of the card. The default is 1.
       -h, --help         Show this help.
           --version      Show the version of Expresso.
           --install-check-tools

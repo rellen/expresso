@@ -340,7 +340,7 @@ defmodule Expresso.CommandLineTest do
     test "gives an error with --watch, with --check and with --port" do
       for option <- ["--watch", "--check", "--check=layout"] do
         assert CommandLine.parse(["deck.exs", "--pdf", "deck.pdf", option]) ==
-                 {:error, "--pdf and --png do not go with --watch or --check"}
+                 {:error, "--pdf, --png and --card do not go with --watch or --check"}
       end
 
       assert CommandLine.parse(["deck.exs", "--png", "slides", "--port", "4200"]) ==
@@ -359,9 +359,10 @@ defmodule Expresso.CommandLineTest do
              ]) ==
                {:error, "--pdf and --png take one --size"}
 
-      assert CommandLine.parse(["--pdf", "deck.pdf"]) == {:error, "--pdf and --png need an input"}
+      assert CommandLine.parse(["--pdf", "deck.pdf"]) ==
+               {:error, "--pdf, --png and --card need an input"}
 
-      assert {:error, "--pdf and --png write a line to the standard output" <> _} =
+      assert {:error, "--pdf, --png and --card write a line to the standard output" <> _} =
                CommandLine.parse(["deck.exs", "-", "--pdf", "deck.pdf"])
     end
 
@@ -371,6 +372,87 @@ defmodule Expresso.CommandLineTest do
 
       assert CommandLine.parse(["deck.exs", "deck.html", "more.html", "--pdf", "deck.pdf"]) ==
                {:error, "Unexpected argument: more.html"}
+    end
+
+    test "gives the path of the card, and the number of its slide in two forms" do
+      assert CommandLine.parse(["deck.exs", "--card", "card.png"]) ==
+               {:export, "deck.exs", nil, %{Export.defaults() | card: "card.png"}}
+
+      assert CommandLine.parse([
+               "deck.exs",
+               "site/index.html",
+               "--card=site/Card.PNG",
+               "--card-slide=4"
+             ]) ==
+               {:export, "deck.exs", "site/index.html",
+                %{Export.defaults() | card: "site/Card.PNG", card_slide: 4}}
+
+      assert CommandLine.parse([
+               "deck.exs",
+               "--png",
+               "slides",
+               "--card",
+               "card.png",
+               "--card-slide",
+               "2",
+               "--size",
+               "1280x720"
+             ]) ==
+               {:export, "deck.exs", nil,
+                %{
+                  Export.defaults()
+                  | png: "slides",
+                    card: "card.png",
+                    card_slide: 2,
+                    size: {1280, 720}
+                }}
+    end
+
+    test "gives an error for --card-slide without --card" do
+      assert CommandLine.parse(["deck.exs", "--card-slide", "2"]) ==
+               {:error, "--card-slide needs --card"}
+
+      assert CommandLine.parse(["deck.exs", "--png", "slides", "--card-slide=2"]) ==
+               {:error, "--card-slide needs --card"}
+    end
+
+    test "gives an error for a card that is not a PNG file, and for a bad number" do
+      for value <- ["-", "--png", ""] do
+        assert CommandLine.parse(["deck.exs", "--card=#{value}"]) ==
+                 {:error, "--card needs a file, such as card.png"}
+      end
+
+      for value <- ["card.jpg", "card", "card.png.svg"] do
+        assert CommandLine.parse(["deck.exs", "--card", value]) ==
+                 {:error, "--card writes a PNG file, so give a path that ends with .png"}
+      end
+
+      for value <- ["0", "-1", "two", "2.5", ""] do
+        assert CommandLine.parse(["deck.exs", "--card", "card.png", "--card-slide=#{value}"]) ==
+                 {:error,
+                  "Invalid value of --card-slide: #{value}. Give the number of a slide, such as 2."}
+      end
+
+      for name <- ~w(--card --card-slide) do
+        assert CommandLine.parse(["deck.exs", name]) == {:error, "#{name} needs a value"}
+      end
+    end
+
+    test "gives an error for --size with only --card, because the card has one size" do
+      assert CommandLine.parse(["deck.exs", "--card", "card.png", "--size", "1280x720"]) ==
+               {:error,
+                "--size needs --check=layout, --check=a11y, --check=browser, --pdf or --png. " <>
+                  "The card of --card always has 1200 × 630 pixels."}
+    end
+
+    test "gives an error for --card with --watch, with --check and without an input" do
+      for option <- ["--watch", "--check=layout"] do
+        assert CommandLine.parse(["deck.exs", "--card", "card.png", option]) ==
+                 {:error, "--pdf, --png and --card do not go with --watch or --check"}
+      end
+
+      assert CommandLine.parse(["--card", "card.png"]) ==
+               {:error, "--pdf, --png and --card need an input"}
     end
 
     test "gives :help and :version before the export" do

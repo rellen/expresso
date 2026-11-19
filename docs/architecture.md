@@ -179,7 +179,7 @@ help text, so the two commands take the same arguments. `run/3` reads the argume
 | `<input> [output]` | Calls `Expresso.main/2`. | 0, or 1 for an error |
 | `<input> [output] --watch` | Calls `Expresso.Watch.run/3`. See "The watch mode". | 1, after an error |
 | `<input> [output] --check[=<level>]` | Calls `Expresso.Check.run/3`. See "The check mode". | 0, or 1 for a problem or an error |
-| `<input> [output] --pdf <file>` or `--png <directory>` | Calls `Expresso.Export.run/3`. See "The export". | 0, or 1 for an error |
+| `<input> [output] --pdf <file>`, `--png <directory>` or `--card <file>` | Calls `Expresso.Export.run/3`. See "The export". | 0, or 1 for an error |
 
 Each argument that starts with `-` is an option, except `-` alone. `-` is a path, and
 `Expresso.main/2` reads it as the standard input or the standard output. A path that
@@ -322,8 +322,9 @@ These are the reasons for its design:
 
 ## The export
 
-`mix expresso deck.exs --pdf deck.pdf` writes a PDF of the deck, and `--png slides` writes
-a PNG file of each slide. `Expresso.Export.run/3` renders the deck, and a headless Chrome
+`mix expresso deck.exs --pdf deck.pdf` writes a PDF of the deck, `--png slides` writes
+a PNG file of each slide, and `--card card.png` writes the picture of a link preview.
+`Expresso.Export.run/3` renders the deck, and a headless Chrome
 or Chromium writes the files. The export uses three functions of
 `Expresso.Check.Browser`: `find/3` finds the browser, `command/4` runs it with a time
 limit, and `window/4` finds the size of the window that gives a page of a size.
@@ -338,6 +339,9 @@ limit, and `window/4` finds the size of the window that gives a page of a size.
   of each file. For each one, the browser opens the present view at the address of the
   step, such as `#3.2`, and takes a picture with `--screenshot`. Each run has its own
   profile, so the runs go at the same time.
+- **The card.** The browser takes one such picture in a window of 1200 × 630 pixels,
+  before the render of the document. The render for the card has no `card` option, so
+  the `card` option of the deck can name the file that the export writes.
 
 The browser writes each file into a private directory, and the export then writes it to
 its path. `docs/export.md` gives the design.

@@ -33,7 +33,7 @@ end
 | `description "A talk about supervision trees."` | A summary of the deck for a search engine. See [the description and author options](description-option.md). |
 | `author "Ada Lovelace"` | The name of the author of the deck, for a search engine. |
 | `url "https://example.com/talk/"` | The address of the deck on its host. A link to the deck then gets a preview. See [the url, card, favicon and robots options](link-preview-options.md). |
-| `card "card.png"` | The picture of the preview of a link. It needs the `url` option. |
+| `card "card.png"` | The picture of the preview of a link. It needs the `url` option. The export option `--card card.png` makes the file. |
 | `favicon "icon.svg"` | The icon of the tab of the browser. |
 | `robots "noindex"` | The directives for a search engine. |
 | `external true` | Keep the file of each image, video and audio element next to the document, in a directory such as `talk_files/`. The default is `false`. See [the external option](external-option.md). |

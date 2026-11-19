@@ -1,6 +1,6 @@
 defmodule Expresso.Export do
   @moduledoc """
-  Runs `mix expresso <input> --pdf <file>` and `--png <directory>`: a PDF of a deck, and a PNG of each slide
+  Runs `mix expresso <input> --pdf <file>`, `--png <directory>` and `--card <file>`: a PDF of a deck, a PNG of each slide, and the picture of a link preview
 
   The export renders the deck, and a headless Chrome or Chromium writes the
   files. `Expresso.Check.Browser.find/3` finds the browser, so the export
@@ -13,6 +13,8 @@ defmodule Expresso.Export do
   | `--pdf-steps all` | A page for each step, in either form. |
   | `--png slides` | One PNG file for the last step of each slide, such as `slides/slide-03.png`, at the size of `--size`, or 1920 × 1080. |
   | `--png-steps all` | One PNG file for each step, such as `slides/slide-03-step-2.png`. |
+  | `--card card.png` | One PNG file of 1200 × 630 for the preview of a link: the last step of slide 1 in a window of that size. |
+  | `--card-slide 3` | The card shows slide 3 in place of slide 1. |
 
   A hidden slide has no page and no file, as it has no page on paper. The
   deck option `handout_hidden true` gives it its pages and its files.
@@ -21,7 +23,10 @@ defmodule Expresso.Export do
   writes the form and the size of the page into that copy, and the style
   sheet of the theme reads them in its rules for paper. For each PNG file, the
   browser opens the present view at the step and takes a picture of the
-  window. `docs/export.md` gives the design.
+  window. The card is such a picture in a window of 1200 × 630, and the
+  export makes it before it renders the document. The `card` option of the
+  deck can thus name the file that `--card` writes. `docs/export.md` gives the
+  design.
 
   Each address has `?paused`, so the clock of a deck with the `advance`
   option does not go to a different step before the picture.
@@ -33,9 +38,10 @@ defmodule Expresso.Export do
   @typedoc """
   The options of an export
 
-  `pdf` is the path of the PDF, and `png` is the directory of the PNG files.
-  Each is `nil` when the command line does not give it. `size` is `nil` for
-  the default size.
+  `pdf` is the path of the PDF, `png` is the directory of the PNG files, and
+  `card` is the path of the picture of a link preview. Each is `nil` when the
+  command line does not give it. `card_slide` is the number of the slide of
+  the card in the address of the deck. `size` is `nil` for the default size.
   """
   @type options :: %{
           pdf: Path.t() | nil,
@@ -44,12 +50,18 @@ defmodule Expresso.Export do
           pdf_paper: :a4 | :letter,
           png: Path.t() | nil,
           png_steps: :last | :all,
+          card: Path.t() | nil,
+          card_slide: pos_integer(),
           size: Expresso.Check.size() | nil
         }
 
   # The size of a page of the slides and of a PNG file without `--size`. It
   # is the size of the page of `--check`.
   @default_size {1920, 1080}
+
+  # The size of the picture of a link preview. A chat program and a social
+  # network usually show a card of this size.
+  @card_size {1200, 630}
 
   # The time in the page that the browser gives the document before it
   # prints or takes a picture. The browser advances this time only when the
@@ -59,7 +71,7 @@ defmodule Expresso.Export do
   # The time in milliseconds that one run of the browser can take.
   @timeout 120_000
 
-  @need "--pdf and --png need"
+  @need "--pdf, --png and --card need"
   @guide "docs/how-to/export-a-deck.md"
 
   @doc """
@@ -73,6 +85,8 @@ defmodule Expresso.Export do
         pdf_paper: :a4,
         png: nil,
         png_steps: :last,
+        card: nil,
+        card_slide: 1,
         size: nil
       }
   """
@@ -85,6 +99,8 @@ defmodule Expresso.Export do
       pdf_paper: :a4,
       png: nil,
       png_steps: :last,
+      card: nil,
+      card_slide: 1,
       size: nil
     }
   end
@@ -118,6 +134,11 @@ defmodule Expresso.Export do
   so a missing browser gives its error at once. `env` holds the variables of
   the environment, and `EXPRESSO_CHROMIUM` in it gives the path of the
   browser.
+
+  The function makes the card first, from a render with no `card` option.
+  The card can thus be the file of the `card` option, and that file can be
+  missing. The function then renders the deck again for the other files. With
+  no output file, no PDF and no PNG files, it does not render the deck again.
   """
   @spec export(Path.t(), Path.t() | nil, options(), %{String.t() => String.t()}) ::
           {:ok, [String.t()]} | {:error, String.t()}
@@ -128,11 +149,81 @@ defmodule Expresso.Export do
 
     with {:ok, browser} <- Browser.find(env, @need, @guide),
          {:ok, deck} <- Expresso.load_file(input),
-         {html, copies} =
-           Expresso.MediaFiles.collect(directory, fn -> Expresso.Deck.render(deck) end),
-         :ok <- write(output, html, "output file"),
+         {:ok, card} <- card(deck, directory, browser, options),
+         {:ok, lines} <- document(deck, directory, browser, output, options) do
+      {:ok, card ++ lines}
+    end
+  end
+
+  # With no output file and no other export, the document has no use.
+  defp document(_deck, _directory, _browser, nil, %{pdf: nil, png: nil}), do: {:ok, []}
+
+  defp document(deck, directory, browser, output, options) do
+    {html, copies} = Expresso.MediaFiles.collect(directory, fn -> Expresso.Deck.render(deck) end)
+
+    with :ok <- write(output, html, "output file"),
          :ok <- Expresso.MediaFiles.write(copies, output) do
       files({html, copies}, deck, browser, options)
+    end
+  end
+
+  # The picture of a link preview. The render for the card has no `card`
+  # option, so the file of that option can be missing: the card makes it.
+  defp card(_deck, _directory, _browser, %{card: nil}), do: {:ok, []}
+
+  # sobelow_skip ["Traversal"]
+  defp card(deck, directory, browser, %{card: path, card_slide: number}) do
+    with {:ok, slide} <- card_slide(deck, number) do
+      plain = %{deck | metadata: Map.delete(deck.metadata, :card)}
+
+      {html, copies} =
+        Expresso.MediaFiles.collect(directory, fn -> Expresso.Deck.render(plain) end)
+
+      private_dir = Expresso.PrivateDir.open!("card")
+
+      try do
+        page = Path.join(private_dir.path, "deck.html")
+        File.write!(page, screen_document(html))
+        shot = {number, Render.max_step(slide), "card.png"}
+
+        with :ok <- Expresso.MediaFiles.write(copies, page),
+             {:ok, window} <- Browser.window(browser, private_dir.path, @card_size),
+             {:ok, {file, _name}} <- picture(shot, page, browser, window, @card_size),
+             :ok <- write(path, File.read!(file), "card file") do
+          {width, height} = @card_size
+          {:ok, ["Wrote #{path}: slide #{number} at #{width} × #{height}."]}
+        end
+      after
+        Expresso.PrivateDir.close(private_dir)
+      end
+    end
+  end
+
+  @doc """
+  Return the slide of the card, from its number in the address of the deck
+
+  The first slide has the number 1. A hidden slide can be the slide of the
+  card, because the address goes to it.
+
+      iex> alias Expresso.Builder
+      iex> deck = Builder.deck([Builder.slide("one", elements: []), Builder.slide("two", elements: [])])
+      iex> {:ok, slide} = Expresso.Export.card_slide(deck, 2)
+      iex> slide.name
+      "two"
+      iex> Expresso.Export.card_slide(deck, 3)
+      {:error, "--card-slide 3 names no slide. The deck has 2 slides."}
+  """
+  @spec card_slide(Expresso.Deck.t(), pos_integer()) ::
+          {:ok, Expresso.Slide.t()} | {:error, String.t()}
+  def card_slide(deck, number) do
+    case Enum.at(deck.slides, number - 1) do
+      nil ->
+        {:error,
+         "--card-slide #{number} names no slide. The deck has " <>
+           "#{count(length(deck.slides), "slide")}."}
+
+      slide ->
+        {:ok, slide}
     end
   end
 

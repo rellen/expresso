@@ -1798,7 +1798,7 @@ defmodule Expresso.Extension do
       card: [
         type: {:custom, Expresso.LinkPreview, :card, []},
         doc:
-          "The picture of the preview of a link to the deck: the path of a .png, .jpg or .jpeg file, or a list such as [image: \"card.png\", alt: \"The title slide\"]. The render keeps a copy of the file next to the document. It needs the url option. See docs/reference/link-preview-options.md."
+          "The picture of the preview of a link to the deck: the path of a .png, .jpg or .jpeg file, or a list such as [image: \"card.png\", alt: \"The title slide\"]. The render keeps a copy of the file next to the document. It needs the url option. The export option --card makes a PNG file of a slide. See docs/reference/link-preview-options.md."
       ],
       favicon: [
         type: {:custom, Expresso.LinkPreview, :favicon, []},

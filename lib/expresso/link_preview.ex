@@ -156,6 +156,39 @@ defmodule Expresso.LinkPreview do
         "Give the address of the deck, such as url \"https://example.com/talk/\", or remove the card option."
 
   @doc """
+  Return the message for a card file that does not exist
+
+  The export option `--card` makes a PNG file of a slide. For a PNG file, the
+  message gives the option with the path of the card. A JPEG file needs a
+  different path in the `card` option, because the export writes PNG only.
+
+      iex> Expresso.LinkPreview.missing_card("talk/card.png")
+      ~s(the card image "talk/card.png" does not exist. Make it from a slide of the deck ) <>
+        "with the export option --card talk/card.png. The export needs Chrome or Chromium. " <>
+        "A path is relative to the working directory of the command, or to the root option " <>
+        "of the deck."
+
+      iex> Expresso.LinkPreview.missing_card("card.jpg")
+      ~s(the card image "card.jpg" does not exist. Make a PNG file from a slide of the deck ) <>
+        "with the export option --card card.png, and give that path in the card option. The " <>
+        "export needs Chrome or Chromium. A path is relative to the working directory of the " <>
+        "command, or to the root option of the deck."
+  """
+  @spec missing_card(Path.t()) :: String.t()
+  def missing_card(path) do
+    make =
+      if extension(path) == ".png",
+        do: "Make it from a slide of the deck with the export option --card #{path}.",
+        else:
+          "Make a PNG file from a slide of the deck with the export option " <>
+            "--card #{Path.rootname(path)}.png, and give that path in the card option."
+
+    "the card image \"#{path}\" does not exist. #{make} The export needs Chrome or " <>
+      "Chromium. A path is relative to the working directory of the command, or to the root " <>
+      "option of the deck."
+  end
+
+  @doc """
   Join the relative path of a card or of an icon to the root of the deck
 
   `Expresso.PathTransformer` calls this function for the two options. `nil`
@@ -172,8 +205,9 @@ defmodule Expresso.LinkPreview do
   `title` is the title of the document. A deck with none of the four options
   gets an empty list. The function reads the file of the card and of the icon
   through `Expresso.DeckFile`, and it raises for a file that it cannot read.
-  It also raises for a card with no `url` option, and for a card in a render
-  with no directory for the copy.
+  For a card file that does not exist, the message of `missing_card/1` tells
+  the user to make it with `--card`. The function also raises for a card with
+  no `url` option, and for a card in a render with no directory for the copy.
   """
   @spec tags(Deck.t(), String.t()) :: [tag()]
   def tags(%Deck{metadata: metadata}, title) do
@@ -242,7 +276,18 @@ defmodule Expresso.LinkPreview do
   defp picture(nil, _url), do: []
 
   defp picture(%{image: path, alt: alt}, url) do
-    bytes = Expresso.DeckFile.read!(path, "card image")
+    bytes =
+      case Expresso.DeckFile.read(path) do
+        {:ok, bytes} ->
+          bytes
+
+        {:error, :enoent} ->
+          raise ArgumentError, missing_card(path)
+
+        {:error, reason} ->
+          raise ArgumentError, Expresso.DeckFile.read_error(path, "card image", reason)
+      end
+
     address = Expresso.MediaFiles.put(path, bytes, "card image", :card)
 
     size =

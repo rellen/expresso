@@ -329,7 +329,7 @@ defmodule Expresso.BinaryTest do
   # for each run, so it does not find the browsers of Playwright there.
   # Therefore the test gives the path of the browser: `EXPRESSO_CHROMIUM`, or
   # the headless shell of Playwright that the test finds.
-  test "writes a PDF and the PNG files of a deck with --pdf and --png",
+  test "writes a PDF, the PNG files and the card of a deck with --pdf, --png and --card",
        %{tmp_dir: dir} = context do
     browser =
       System.get_env("EXPRESSO_CHROMIUM") || Expresso.Check.Browser.playwright() ||
@@ -340,15 +340,26 @@ defmodule Expresso.BinaryTest do
     context = %{context | env: [{"EXPRESSO_CHROMIUM", browser} | context.env]}
     pdf = Path.join(dir, "deck.pdf")
     png = Path.join(dir, "slides")
+    card = Path.join(dir, "card.png")
 
     {output, error, status} =
-      outputs(context, dir, ["examples/dsl_deck.exs", "--pdf", pdf, "--png", png])
+      outputs(context, dir, [
+        "examples/dsl_deck.exs",
+        "--pdf",
+        pdf,
+        "--png",
+        png,
+        "--card",
+        card,
+        "--card-slide",
+        "2"
+      ])
 
     assert status == 0, "The binary gave the exit status #{status}, with this error:\n#{error}"
 
     assert [_all, pages, files] =
              Regex.run(
-               ~r/\AWrote .+deck\.pdf: (\d+) pages\.\nWrote (\d+) PNG files to .+slides\.\n\z/,
+               ~r/\AWrote .+card\.png: slide 2 at 1200 × 630\.\nWrote .+deck\.pdf: (\d+) pages\.\nWrote (\d+) PNG files to .+slides\.\n\z/u,
                output
              )
 
@@ -360,6 +371,7 @@ defmodule Expresso.BinaryTest do
     assert "%PDF-" <> _rest = bytes = File.read!(pdf)
     assert Expresso.Export.pages(bytes) == slides
     assert length(File.ls!(png)) == slides
+    assert Expresso.LinkPreview.dimensions(File.read!(card)) == {1200, 630}
   end
 
   test "gives the exit status 1 for an export with no browser", %{tmp_dir: dir} = context do

@@ -106,6 +106,20 @@ One command can write the HTML, the PDF and the pictures:
 mix expresso deck.exs deck.html --pdf deck.pdf --png slides
 ```
 
+## Write the picture of a link preview
+
+Give the option `--card` with the path of a PNG file:
+
+```sh
+mix expresso deck.exs --card card.png
+```
+
+The command writes `card.png`: the last step of slide 1 in a window of 1200 × 630 pixels,
+which is the usual size of the card of a link. To show a different slide, add
+`--card-slide`, such as `--card-slide 2`. The `card` option of a deck gives the picture to
+the document. See
+[Give a link to the deck a preview](put-a-deck-on-a-web-host.md#give-a-link-to-the-deck-a-preview).
+
 ## Export a deck in a workflow
 
 This job of GitHub Actions writes the PDF of a deck in a Mix project, and it keeps the
