@@ -73,6 +73,9 @@ tap on the left third goes to the previous step. On a touch screen, swipe left f
 step, and swipe right for the previous step. A click on a link of the `goto` option goes to
 its slide and step. A click on another link goes to the link.
 
+On a touch screen, the present view also shows the button of the menu in its top right
+corner. See [The button of the menu](#the-button-of-the-menu).
+
 ## The overview
 
 The overview shows each slide at its last step, in a grid that fits the window. A hidden
@@ -121,6 +124,21 @@ the menu. The menu knows these keys:
 <!-- /keys -->
 
 ![The menu opens, the cursor moves two steps, and Enter goes to that step](https://raw.githubusercontent.com/rellen/expresso/media/present-menu.gif)
+
+### The button of the menu
+
+A phone or a tablet has no key `m`, so the present view shows a button with three lines in
+its top right corner. A tap on the button does what `m` does: it opens the menu, and a
+second tap closes it. Tap a step or a slide in the menu to go to it.
+
+- The button shows only when the main pointer of the screen is coarse, such as a finger.
+  The media query is `(pointer: coarse)`. A computer with a mouse does not show it, also on
+  a projector.
+- The button is not on a black screen, in the overview, in the speaker view, in the handout
+  view, on paper or in a PNG file of the export.
+- The button is over the slide and over the menu. Do not put an important part of a slide
+  in its top right corner, for a talk from a phone or a tablet.
+- Its size is 43.2 by 43.2 CSS pixels in each window.
 
 ## The speaker view
 

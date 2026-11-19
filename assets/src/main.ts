@@ -675,7 +675,27 @@ document.addEventListener("keydown", (event: KeyboardEvent) => {
   if (inside(EDITABLE) || inside("#help") || inside("#times")) {
     return;
   }
+  // `Enter` and the space bar on the button of the menu press the button.
+  if (inside(MENU_BUTTON) && (event.key === "Enter" || event.key === " ")) {
+    return;
+  }
   handle({ kind: "key", key: event.key }, event);
+});
+
+// The button of the menu, for a touch screen with no keyboard. The style
+// sheet shows it only when the main pointer is coarse. A click on it is the
+// key `m`, so the program decides what it does, and the button opens the
+// same menu as the key. The click does not go on to the handler of the
+// document, so it does not zoom or change the step. A press on it does not
+// start a line of the drawing.
+const MENU_BUTTON = "#menu-button";
+const menuButton = document.getElementById("menu-button");
+menuButton?.addEventListener("click", (event: MouseEvent) => {
+  event.stopPropagation();
+  handle({ kind: "key", key: "m" }, event);
+});
+menuButton?.addEventListener("pointerdown", (event: PointerEvent) => {
+  event.stopPropagation();
 });
 
 const EDITABLE = "input, textarea, select, [contenteditable]";

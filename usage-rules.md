@@ -199,6 +199,10 @@ end
 - Use `rem` or pixels for a length, such as `"4rem"` or `"300px"`. 48 pixels are 1rem.
 - A percentage of a `width` option is a part of the width of the slide.
 - In the `css` option, use `rem` and not pixels. A slide becomes smaller in a small window.
+- A length in pixels of a `part` of a `math` element becomes smaller with the slide. A
+  length of a `part` of a `diagram` is in the units of its SVG file.
+- On a touch screen, the button of the menu is in the top right corner of the window. Do
+  not put important content in that corner of a deck for a phone or a tablet.
 
 ## Accessibility
 

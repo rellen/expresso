@@ -2,8 +2,9 @@
 
 This document gives the design for a slide in a window that is smaller than 1280 by 720
 pixels, such as the screen of a phone, and for the viewport tag of the document. Issue
-#590 asked for it. The code contains this design. The document records ten decisions, and
-each is settled. Its last section, "The result", tells what changed during the work.
+#590 asked for it, and issue #600 continued it for a phone. The code contains this design.
+The document records fourteen decisions, and each is settled. The sections "The result"
+and "The result for a phone" tell what changed during the work.
 
 ## The problem
 
@@ -63,7 +64,8 @@ Each decision is settled.
    smaller with the text in a small window.
 8. **A part and a copy keep their pixels.** A pixel of a part of a diagram is a unit of
    its SVG file, and the browser already draws the file at the scale of the slide.
-   `move_to` writes such a distance.
+   `move_to` writes such a distance. Decision 13 changed this decision for a part of a
+   formula.
 9. **The viewport tag is `width=device-width, initial-scale=1`.** It has no
    `maximum-scale` and no `user-scalable`, so the user can still zoom the page, as
    criterion 1.4.4 of WCAG asks.
@@ -110,16 +112,90 @@ These are the measurements after the change:
 Each of the 434 browser tests from before the change passed with no change to a test.
 They use a window of 1280 by 720 pixels or larger, where a slide does not change.
 
+## A phone
+
+Issue #600 gave three limits of the first work, and two questions. The maintainer answered
+the questions. These decisions are settled.
+
+11. **A phone in the portrait direction keeps the tall slide.** The slide does not turn,
+    and the document does not ask for the landscape direction. Decision 4 stays: the slide
+    fills the window, so a tall window shows a tall slide. This is the intended layout.
+12. **The present view has a button for the menu on a touch screen.** A phone has no key
+    `m`, and before this change a finger could not open the menu. The button is in the
+    top right corner, and a tap on it is the key `m`. It shows only with the media query
+    `(pointer: coarse)`. `(any-pointer: coarse)` is also true for a laptop with a touch
+    screen and a mouse, and the audience then sees the button on the projector. The
+    button is a part of the presenter, so its size is in `--ui`: 43.2 CSS pixels. Criterion
+    2.5.8 of WCAG 2.2 asks for 24.
+13. **A length in pixels of a part of a formula follows the scale.** A part of a formula
+    is in the MathML of the slide, and its pixels are CSS pixels, as for each other
+    element. A part of a diagram keeps the units of its SVG file, as decision 8 tells.
+    `Expresso.Overlay.Render` walks each element with its parent, and a part of a `math`
+    element gets the `scale` flag of its rule.
+14. **The height of the window is `100svh`.** The answer is in the next section.
+
+### The unit of the height of the window
+
+A browser of a phone shows bars, such as the address bar, and it hides them when the user
+scrolls. CSS has three units for the height of the window:
+
+| Unit | Height | Effect on a slide |
+| --- | --- | --- |
+| `vh` | The large viewport: the height with no bars. Safari on iOS uses it. | A bar covers the bottom of the slide, the footer and the progress bar while the bars show. |
+| `dvh` | The dynamic viewport: the height at this time. | The slide fits, but the font size of the `html` element changes each time that the bars go or come back. The whole slide then changes its layout, and the drawing and the laser pointer must measure the slide again. |
+| `svh` | The small viewport: the height while the bars show. | The whole slide is in view in each state of the bars. When the bars go, a strip of the background shows under the slide. |
+
+The decision is `svh`, because it keeps the whole slide in view in each state of the bars,
+and the slide does not change its layout during the talk. A deck does not scroll, so the
+bars usually stay, and the strip seldom shows. In full screen, the browser has no bars, and
+the three units are the same.
+
+Each rule of a screen with `100vh` uses `svh`, with the rule in `vh` first for a browser that
+does not know `svh`. The rules of paper keep `vh`, because paper has no bars. A browser of
+the floor of this project knows `svh`: Chrome 108, Safari 15.4 and Firefox 101 added it.
+
+## The result for a phone
+
+The code follows decisions 11 to 14, with these changes:
+
+1. **Each screen rule with the height of the window uses `svh`.** These are the font size
+   of the `html` element, `.screen`, the minimum height of the `body` and of a page of the
+   handout view, the speaker view, the overview, the copy of a slide in the menu, the
+   drawing layer and the width of an embed that reads the height of the window.
+2. **The button of the menu is `button#menu-button`.** It has the name "Menu of the slides
+   and their steps", `aria-controls="menu"` and `aria-expanded`. It is over the menu, so
+   a second tap closes the menu. It does not show on a black screen, in the overview, in
+   the speaker view, in the handout view or on paper. The export of `--png` hides it. In
+   forced colors it has the colors `ButtonText` and `ButtonFace`, and a border.
+3. **A click on the button does not reach the click handler of the document.** Thus it does
+   not zoom, change the step or start a line of the drawing. `Enter` and the space bar on
+   the button press the button, and they do not go to the program.
+
+The browser tests measure these results in the emulation of Chromium:
+
+| Measurement | Result |
+| --- | --- |
+| A part of a formula with `set: [x: "40px"]` at 1280 by 720 and at 640 by 360 | It moves by 40 and by 20 pixels. |
+| A part of a diagram with the same value | It moves by 40 units of its SVG file in each window. |
+| The box of the slide at 390 by 844 | 390 by 844 pixels, at the top left corner. |
+| The bottom of the slide and of the progress bar at 390 by 844 | 844 pixels or less. |
+| The button of the menu at 390 by 844 with touch | 43.2 by 43.2 pixels, in the top right corner. |
+| The button of the menu with a mouse | It does not show. |
+
+Nobody examined the document on a phone during this work. The test of
+`examples/dsl_deck.exs` and `examples/demo.exs` on a phone with Safari and on a phone with
+Chrome, in each direction, is left for the maintainer. The emulation of Chromium has no bars
+of a browser, so the tests cannot measure the effect of `svh`.
+
 ## The limits
 
 - A length in pixels in the `css` option of a deck does not follow the scale. Use `rem`
   for a size that must become smaller with the slide.
-- A length in pixels of a part of a formula does not follow the scale, because a part of
-  a formula and a part of a diagram are the same entity.
 - A value with more than one number, such as `calc(50% + 10px)`, keeps its pixels.
-- The height of the window is `100vh`. A browser of a phone can cover the bottom of the
-  slide with its bar, until the user moves the page.
+- A `vh` length that is not `100vh`, such as the default height of a chart, `72vh`, keeps
+  `vh`. A chart and a tree also have `max-height: 100%`, so they stay in the slide.
 - The text of a diagram from an SVG file can be small on a phone, because the file gives
   its size. `--check=layout` reports it.
 - The handout view becomes smaller with the slide in a small window.
+- The button of the menu can cover a part of a slide in the top right corner.
 - Nobody examined the document on a phone. The tests use the emulation of Chromium.

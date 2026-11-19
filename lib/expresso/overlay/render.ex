@@ -11,7 +11,7 @@ defmodule Expresso.Overlay.Render do
   """
 
   alias Expresso.Deck
-  alias Expresso.Element.{Chart, Hierarchy, On, Pause, Tree}
+  alias Expresso.Element.{Chart, Copy, Hierarchy, Math, On, Part, Pause, Tree}
   alias Expresso.Slide
 
   @doc """
@@ -277,25 +277,38 @@ defmodule Expresso.Overlay.Render do
   # function escapes `<`, and a value cannot close the element.
   #
   # With `scale`, a length in pixels follows the scale of the slide, as
-  # `Expresso.Element.slide_pixels/1` tells. A part and a copy have no
-  # `scale`: a pixel of a part of a diagram is a unit of its SVG file, and
-  # the browser already draws the file at the scale of the slide.
+  # `Expresso.Element.slide_pixels/1` tells. A part and a copy of a diagram
+  # have no `scale`: a pixel of such a part is a unit of its SVG file, and
+  # the browser already draws the file at the scale of the slide. A part of
+  # a formula is in the MathML of the slide, so its pixels are CSS pixels,
+  # and they follow the scale as each other length of the deck does.
   defp css_value(value, true),
     do: value |> to_string() |> Expresso.Element.slide_pixels() |> css_value(false)
 
   defp css_value(value, false), do: value |> to_string() |> String.replace("<", "\\3c ")
 
-  # The on entities of a slide, each with the identity of its element
+  # The on entities of a slide, each with the identity of its element and
+  # the `scale` flag of its rule. The flag needs the parent of the element,
+  # because a part of a formula and a part of a diagram are the same entity.
 
   defp ons(%Slide{elements: elements}) do
-    for element <- Tree.descendants(elements),
+    for {element, parent} <- with_parents(elements, nil),
         %On{steps: steps} = on <- on(element),
         steps not in [nil, []],
-        do: {Map.get(element, :el), on, not part?(element)}
+        do: {Map.get(element, :el), on, scale?(element, parent)}
   end
 
-  defp part?(element),
-    do: is_struct(element, Expresso.Element.Part) or is_struct(element, Expresso.Element.Copy)
+  # Each element of a list and each element under it, in document order, each
+  # with its parent. An element of the slide has the parent `nil`.
+  defp with_parents(elements, parent) do
+    Enum.flat_map(elements || [], fn element ->
+      [{element, parent} | with_parents(Tree.children(element), element)]
+    end)
+  end
+
+  defp scale?(element, parent), do: not part?(element) or is_struct(parent, Math)
+
+  defp part?(element), do: is_struct(element, Part) or is_struct(element, Copy)
 
   defp on(element), do: Map.get(element, :on) || []
 end

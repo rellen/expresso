@@ -15,8 +15,16 @@ html {
    * keeps 26.67rem by 15rem or more, and the browser cuts no text. A phone
    * thus shows the slide of a window of 1280 by 720 pixels at a smaller
    * scale. `docs/small-windows.md` gives the design.
+   *
+   * The height of the window is `100svh`, the small viewport height. It is
+   * the height while the bars of the browser of a phone show, so the bars
+   * do not cover the bottom of the slide. It does not change when the bars
+   * go, so the slide does not change its scale during a swipe. Each rule of
+   * a screen with the height of the window uses the same unit, and the rule
+   * with `vh` before it is for a browser that does not know `svh`.
    */
   font-size: min(48px, 100vw * 48 / 1280, 100vh * 48 / 720);
+  font-size: min(48px, 100vw * 48 / 1280, 100svh * 48 / 720);
   /*
    * The unit of the parts of the presenter: the menu, the list of keys, the
    * speaker view, the table of the times and the report of the layout check.
@@ -1597,6 +1605,10 @@ body[data-view="handout"] .chart-frames {
     var(--embed-width, 80vw),
     calc((100vh - 6rem) * var(--embed-aspect, 16/9))
   );
+  width: min(
+    var(--embed-width, 80vw),
+    calc((100svh - 6rem) * var(--embed-aspect, 16/9))
+  );
 }
 @media screen {
   body[data-view="handout"] .embed {
@@ -1606,6 +1618,10 @@ body[data-view="handout"] .chart-frames {
     width: min(
       var(--embed-width, 80vw),
       calc((100vh - 6rem) * var(--embed-aspect, 16/9))
+    );
+    width: min(
+      var(--embed-width, 80vw),
+      calc((100svh - 6rem) * var(--embed-aspect, 16/9))
     );
   }
 }
@@ -2783,6 +2799,7 @@ section[data-step] .part-copy[data-on][data-el] {
 }
 .screen {
   height: 100vh;
+  height: 100svh;
   width: 100%;
   display: flex;
   flex-direction: row;
@@ -2799,6 +2816,7 @@ section[data-step] .part-copy[data-on][data-el] {
   justify-content: stretch;
   width: 100%;
   min-height: 100vh;
+  min-height: 100svh;
 }
 /*
  * Each page that the handout view shows starts a new sheet of paper, except
@@ -3045,10 +3063,12 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     display: grid;
     box-sizing: border-box;
     height: 100vh;
+    height: 100svh;
     padding: 1vh 1vw;
     gap: 1vh 1vw;
     grid-template-columns: 60vw 1fr;
     grid-template-rows: 60vh auto auto auto 1fr;
+    grid-template-rows: 60svh auto auto auto 1fr;
     grid-template-areas:
       "current next"
       "current position"
@@ -3066,6 +3086,7 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     width: 100vw;
     min-height: 0;
     height: 100vh;
+    height: 100svh;
     overflow: hidden;
     outline: 2px solid currentColor;
   }
@@ -3163,6 +3184,7 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     display: grid;
     box-sizing: border-box;
     height: 100vh;
+    height: 100svh;
     padding: 1vh 1vw;
     gap: 1vh 1vw;
     grid-template-columns: repeat(var(--overview-columns, 1), max-content);
@@ -3177,6 +3199,7 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     grid-area: auto;
     width: 100vw;
     height: 100vh;
+    height: 100svh;
     min-height: 0;
     overflow: hidden;
     zoom: var(--overview-zoom, 1);
@@ -3264,6 +3287,7 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     justify-content: stretch;
     width: 100vw;
     height: 100vh;
+    height: 100svh;
     overflow: hidden;
     zoom: var(--menu-zoom, 0.1);
     background-color: var(--background);
@@ -3661,6 +3685,7 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100svh;
   z-index: 7;
   overflow: visible;
   pointer-events: none;
@@ -3794,6 +3819,68 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     background-color: var(--progress-color, var(--accent));
     transition: width 0.2s;
     z-index: 5;
+  }
+}
+/*
+ * The button of the menu. A phone or a tablet has no key `m`, so the present
+ * view shows a button in the top right corner when the main pointer of the
+ * screen is coarse, such as a finger. A tap on it does what `m` does: it
+ * opens the menu, and a second tap closes it. The button is over the menu,
+ * so it stays in reach while the menu shows. It is a part of the presenter
+ * and not of the slide, so its size is in `--ui`: 43.2 pixels, which is more
+ * than the 24 pixels of criterion 2.5.8 of WCAG 2.2.
+ *
+ * The button is not on a black screen, in the overview, in the speaker view,
+ * in the handout view or on paper. A mouse is a fine pointer, so a computer
+ * with a projector does not show it. The export of `--png` hides it too.
+ */
+#menu-button {
+  display: none;
+}
+@media screen and (pointer: coarse) {
+  body[data-view="present"]:not([data-blank="true"]):not([data-overview="true"])
+    #menu-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: calc(0.25 * var(--ui));
+    right: calc(0.25 * var(--ui));
+    z-index: 10;
+    box-sizing: border-box;
+    width: calc(0.9 * var(--ui));
+    height: calc(0.9 * var(--ui));
+    margin: 0;
+    padding: 0;
+    color: var(--text);
+    background-color: var(--background);
+    border: 1px solid color-mix(in srgb, var(--text) 40%, transparent);
+    border-radius: calc(0.15 * var(--ui));
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  #menu-button svg {
+    width: 60%;
+    height: 60%;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  #menu-button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+/*
+ * In forced colors, the button has the colors of a button of the system, and
+ * its border shows its box.
+ */
+@media screen and (forced-colors: active) {
+  #menu-button {
+    color: ButtonText;
+    background-color: ButtonFace;
+    border-color: ButtonText;
   }
 }
 /*
@@ -3991,7 +4078,8 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   .menu-slide:has(+ .menu-steps [data-current]) .menu-thumb {
     outline-width: calc(3px / var(--menu-zoom, 0.1));
   }
-  .menu-step[data-cursor] {
+  .menu-step[data-cursor],
+  #menu-button:focus-visible {
     outline-width: 3px;
   }
   .help-search input:focus-visible {

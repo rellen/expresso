@@ -251,18 +251,18 @@ defmodule Expresso.Export do
   @doc """
   Make the copy of a document that the browser opens for a PNG file
 
-  The copy does not show the progress bar, because a picture of a slide is
-  not a talk.
+  The copy does not show the progress bar or the button of the menu, because
+  a picture of a slide is not a talk.
 
       iex> Expresso.Export.screen_document("<html><head></head></html>")
-      "<html><head><style>#progress { display: none !important; }</style></head></html>"
+      "<html><head><style>#progress, #menu-button { display: none !important; }</style></head></html>"
   """
   @spec screen_document(String.t()) :: String.t()
   def screen_document(html) do
     String.replace(
       html,
       "</head>",
-      "<style>#progress { display: none !important; }</style></head>",
+      "<style>#progress, #menu-button { display: none !important; }</style></head>",
       global: false
     )
   end

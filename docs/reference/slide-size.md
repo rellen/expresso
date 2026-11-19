@@ -9,8 +9,10 @@ window, so a slide always has 26.67rem by 15rem or more.
 The `html` element has this rule on a screen:
 
 ```css
-font-size: min(48px, 100vw * 48 / 1280, 100vh * 48 / 720);
+font-size: min(48px, 100vw * 48 / 1280, 100svh * 48 / 720);
 ```
+
+A browser that does not know `svh` uses `100vh` in its place.
 
 | Window | Font size of the `html` element | Size of a slide in rem |
 | --- | --- | --- |
@@ -25,7 +27,21 @@ font-size: min(48px, 100vw * 48 / 1280, 100vh * 48 / 720);
 - A smaller window shows the slide of a window of 1280 pixels wide, or of 720 pixels high,
   at a smaller scale. Each line of a text keeps its words.
 - A slide fills the window in each proportion. A phone in the portrait direction shows a
-  tall slide.
+  tall slide. This is the intended layout: the slide does not turn, and it does not show
+  16:9 with an empty area above and below it.
+
+## The height of the window
+
+The height of the window is `100svh`, the small viewport height. A browser of a phone shows
+bars, such as the address bar, and it can hide them. `100svh` is the height while the bars
+show, so the bars do not cover the bottom of the slide, the footer or the progress bar.
+
+- The slide does not change its size when the bars go. A strip of the background can then
+  show under the slide.
+- Each rule of the style sheet with the height of the window uses `svh` on a screen. Paper
+  has no bars, so the rules of paper keep `vh`.
+- `vh` and `vw` in the `css` option of a deck keep their meaning. Use `svh` for a height
+  that must not go under the bars.
 
 ## The lengths of a deck
 
@@ -37,14 +53,17 @@ font-size: min(48px, 100vw * 48 / 1280, 100vh * 48 / 720);
 | `vw` and `vh` | They are parts of the window. |
 | A value with more than one number, such as `"calc(50% + 10px)"` | The pixels keep their size. |
 | A length in pixels in [the css option](css-option.md) | It keeps its size. Use `rem`. |
-| A length in pixels of a part of a diagram or of a formula | It keeps its size. A pixel of a part of a diagram is a unit of its SVG file. |
+| A length in pixels of a part of a formula, such as `set: [x: "40px"]` | It becomes smaller with the text. In a window of 640 by 360 pixels, the part moves by 20 pixels. |
+| A length in pixels of a part of a diagram | It keeps its size. A pixel of a part of a diagram is a unit of its SVG file, and the diagram becomes smaller with the slide. |
 
 In a window of 1280 by 720 pixels or larger, a length in pixels is that number of pixels.
 
 ## The parts of the presenter
 
-The menu, the list of keys, the speaker view, the table of the times and the report of
-the layout check are not a slide. Their text keeps its size in each window.
+The menu, the button of the menu, the list of keys, the speaker view, the table of the
+times and the report of the layout check are not a slide. Their text keeps its size in each
+window. On a touch screen, the button of the menu is in the top right corner of the present
+view. See [The button of the menu](presenter.md#the-button-of-the-menu).
 
 ## The viewport tag
 

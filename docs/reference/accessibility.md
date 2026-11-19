@@ -73,6 +73,11 @@ number of the step and its label. The option of a slide with one step and no lab
 the name of the slide. The picture of each slide in the menu is `inert`, so a screen reader
 and the `Tab` key skip it.
 
+On a touch screen, the button of the menu opens the menu. It is a `button` with the name
+"Menu of the slides and their steps", and `aria-expanded` tells if the menu is open. Its
+box is 43.2 by 43.2 CSS pixels, so it is larger than the 24 by 24 CSS pixels of
+criterion 2.5.8 of WCAG 2.2. See [The presenter](presenter.md#the-button-of-the-menu).
+
 ## The progress bar
 
 `div#progress` has the role `progressbar` with the name "Progress". `aria-valuenow` is the
@@ -118,6 +123,7 @@ is then true. The document changes these parts for such a user:
 | Each role of text of the theme | 7:1 or more on its background. See [More contrast](theme-option.md#more-contrast). |
 | Each dimmed role | 7:1 or more. See [the dim_contrast option](dim-contrast-option.md#more-contrast). |
 | The outline of the cursor of the menu | 3 pixels, and not 2. |
+| The outline of the button of the menu while it has the focus | 3 pixels, and not 2. |
 | The outline of the current slide of the menu | 3 pixels, and not 2. |
 | The search field of the list of keys | An outline of 3 pixels while it has the focus. |
 | The outline of the selected page of the overview | 4 pixels, as in the usual mode. |
@@ -165,6 +171,7 @@ The parts of the presenter take a color of the system, so each one shows:
 | A line of the pen | `CanvasText`. |
 | A line of the highlighter | `Highlight`, with the opacity of the highlighter. |
 | The notes of the speaker view | The colors of the system, as a text of a slide. A link has the color `LinkText`. |
+| The button of the menu | `ButtonText` on `ButtonFace`, with a border of `ButtonText`. |
 
 A deck cannot change these colors in forced colors. The properties `--progress-color`,
 `--laser-color`, `--draw-pen-color` and `--draw-highlighter-color` apply only in the usual

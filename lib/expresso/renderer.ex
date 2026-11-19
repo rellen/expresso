@@ -154,6 +154,20 @@ defmodule Expresso.Renderer do
   defp page_commands(slide),
     do: slide.metadata.slide_number |> Program.element() |> Program.json_commands()
 
+  # The button of the menu, for a touch screen with no keyboard. The style
+  # sheet shows it only in the present view of a screen whose main pointer is
+  # coarse, such as a finger. A click on it does what the key `m` does, so it
+  # opens the menu and closes it. The script writes `aria-expanded`. The icon
+  # is three lines, and the label gives the name for a screen reader.
+  defp menu_button(_assigns) do
+    Phoenix.HTML.raw(
+      ~s(<button type="button" id="menu-button" aria-label="Menu of the slides and their steps" ) <>
+        ~s(aria-controls="menu" aria-expanded="false">) <>
+        ~s(<svg aria-hidden="true" viewBox="0 0 24 24" width="24" height="24">) <>
+        ~s(<path d="M4 6h16M4 12h16M4 18h16"/></svg></button>)
+    )
+  end
+
   # The menu of the slides and their steps. `m` shows it. A row of a slide
   # holds a small copy of the last step of the slide, and the overlay rules
   # show that step because the copy is a `section` with `data-step`. A row of
@@ -1013,7 +1027,11 @@ defmodule Expresso.Renderer do
           end
         end
 
-        body style: "min-height: 100vh; width: 100%; margin: 0px; #{overview_sizes(@deck)}",
+        # `svh` is the height of the window while the bars of the browser of
+        # a phone show. `vh` comes first for a browser that does not know it.
+        body style:
+               "min-height: 100vh; min-height: 100svh; width: 100%; margin: 0px; " <>
+                 overview_sizes(@deck),
              data_view: "present",
              data_progress: progress(@deck),
              data_print_notes: print_notes(@deck) do
@@ -1102,6 +1120,8 @@ defmodule Expresso.Renderer do
                 aria_valuemax: 100,
                 aria_valuenow: 0 do
             end
+
+            c(&menu_button/1, [])
 
             # The dot of the laser pointer. The key `l` turns the pointer on,
             # and the script then moves the dot with the mouse. The dot is

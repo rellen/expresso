@@ -4,7 +4,7 @@ defmodule Expresso.Overlay.RenderTest do
   import Expresso.Test.HTML
 
   alias Expresso.Deck
-  alias Expresso.Element.{On, Pause, TextArea, TextBox}
+  alias Expresso.Element.{Diagram, Math, On, Part, Pause, TextArea, TextBox}
   alias Expresso.Overlay.Render
   alias Expresso.Slide
 
@@ -182,6 +182,23 @@ defmodule Expresso.Overlay.RenderTest do
 
       [first, second, third] = Regex.scan(~r/\[data-el="(s1-e\d)"\] \{/, style)
       assert [first, second, third] |> Enum.map(&List.last/1) == ["s1-e1", "s1-e2", "s1-e3"]
+    end
+
+    # A pixel of a part of a diagram is a unit of its SVG file, and the
+    # browser draws the file at the scale of the slide. A part of a formula
+    # is in the MathML of the slide, so its pixels follow the scale.
+    test "a length in pixels of a part follows the scale in a formula, and not in a diagram" do
+      part = fn el -> %Part{id: "a", el: el, on: [%On{steps: [2], set: [x: "40px"]}]} end
+
+      elements = [
+        %Math{el: nil, elements: [part.("s1-e2")]},
+        %Diagram{el: nil, elements: [part.("s1-e4")]}
+      ]
+
+      style = Render.style(deck([elements]))
+
+      assert style =~ ~s|section[data-step="2"] [data-el="s1-e2"] { --x: calc(40 * var(--px)); }|
+      assert style =~ ~s|section[data-step="2"] [data-el="s1-e4"] { --x: 40px; }|
     end
 
     test "escapes < in a value, so a value cannot close the style element" do

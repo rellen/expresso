@@ -48,6 +48,8 @@ Use one of these methods:
   slide 12.
 - Press `o` for the overview. Select a slide with the arrow keys, then press `Enter`.
 - Press `m` for the menu. Move the cursor to a step, then press `Enter`.
+- On a phone or a tablet, tap the button in the top right corner for the menu. Then tap a
+  step.
 
 A slide with `hidden true`, such as a backup slide, has no number, and the keys of the next
 step skip it. The overview and the menu go to it. See

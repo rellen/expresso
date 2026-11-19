@@ -251,8 +251,12 @@ function progress(fraction: number): void {
 // The menu is a `listbox`. The projections mark the row of the cursor with
 // `data-cursor` and the row of the current step with `data-current`, and this
 // function gives the same rows their ARIA state. The list takes the focus
-// while the menu is open, so a screen reader reads the row of the cursor.
+// while the menu is open, so a screen reader reads the row of the cursor. The
+// button of the menu tells a screen reader if the menu is open.
 function menu(open: boolean): void {
+  document
+    .getElementById?.("menu-button")
+    ?.setAttribute("aria-expanded", String(open));
   const list = document.querySelector?.<HTMLElement>("#menu [role=listbox]");
   if (list === null || list === undefined) {
     return;

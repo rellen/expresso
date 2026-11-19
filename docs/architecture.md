@@ -931,10 +931,15 @@ gives each element with an `on` entity its `data-el` value. `docs/overlays.md` g
 CSS contract of the overlays: the attributes, the base rules in `assets/style.css` and
 the generated style block.
 
-The class `.screen` gives the container `height: 100vh`, and each `section` gets
+The class `.screen` gives the container `height: 100svh`, and each `section` gets
 `height: 100%`. The viewport unit is necessary because the `body` gets `min-height`, and
 a percentage height cannot resolve against a minimum height. With `height: 100%` on the
 container, each slide takes the height of its content only.
+
+`svh` is the small viewport height: the height of the window while the bars of the browser
+of a phone show. Each rule of a screen with the height of the window uses it, and a rule
+with `vh` comes first for a browser that does not know it. The rules of paper keep `vh`.
+`docs/small-windows.md` gives the reason.
 
 The body of a slide takes the height that the header and the footer leave. The boxes from
 the slide to an element have `min-height: 0`, because a flex item is otherwise as high as
@@ -1427,6 +1432,11 @@ gives the design.
 A part of a formula can take `move_to`, the name of a different part. The render cannot
 measure a formula, so `Expresso.Element.Math.place/1` writes the move with two custom
 properties, and `assets/src/move.ts` measures the distance in the browser and sets them.
+
+A length in pixels of a part of a formula, such as `set: [x: "40px"]`, follows the scale of
+the slide, as `Expresso.Element.slide_pixels/1` tells. A length of a part of a diagram is in
+the units of its SVG file, so it keeps its pixels. `Expresso.Overlay.Render` walks each
+element with its parent, and the parent tells which rule applies.
 
 ### The diagram
 
@@ -2832,6 +2842,15 @@ cases:
 - it is on a link, a button or a form field. A link of the `goto` option is not such a
   link, and the next section gives its rules.
 
+A touch screen has no key `m`, so the present view has the button of the menu,
+`button#menu-button`, in its top right corner. The style sheet shows it only with
+`(pointer: coarse)`, and not on a black screen, in the overview, in the other views or on
+paper. A click on the button goes to `handle` in `main.ts` as the key `m`, so the program
+decides what it does, and the button opens and closes the same menu as the key. The click
+does not go on to the click handler of the document, so it does not zoom or change the
+step. `menu` in `dom.ts` writes `aria-expanded` on the button. The export of `--png` hides
+the button, as it hides the progress bar.
+
 ### The links
 
 The `goto` option of a text area, an image or an item makes the element a link to a slide
@@ -3126,6 +3145,8 @@ the state matches the mode `menu`:
 - A click on a row runs the commands of the row, which go to the step and close the menu.
   The row of a slide goes to step 1 of the slide.
 - `m` and `Escape` close the menu, and the step does not change.
+- On a touch screen, a click on the button of the menu is the key `m`. See "The mouse and
+  the touch screen".
 
 The step of the audience changes only at `Enter` or at a click. `menu` and `cursor` are
 not in the option `sync`, so the menu shows only in the window that opens it, as the
