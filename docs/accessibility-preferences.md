@@ -296,6 +296,7 @@ These results need an explanation:
 | A box of a tree in focus | In forced colors, a box that the `highlight` option dims has an opacity of 0.6, as a dimmed element has. A box inside a dimmed element does not get the opacity two times. |
 | The cursor of the typewriter effect | In forced colors, the cursor is a border in the color of the text. A negative margin of the same width keeps the place of each character. The cursor has 21:1. `--type-cursor-color` does not apply in this mode. |
 | An audio element | In forced colors, the element has `color-scheme: light dark`, so the browser draws its controls in the scheme of the system. |
+| An `embed` | Issue #608 added this change later. In forced colors, the box of the frame has an outline of 1 pixel in the color `CanvasText`, so its edge has 21:1 on the canvas. The maintainer selected the outline, and not a plate, because the page in the frame takes the colors of the system. |
 
 A browser test for each change is in `test/e2e/forced_colors_test.exs`, and it fails
 without the change.
@@ -307,7 +308,8 @@ without the change.
   it with the documents. See "The result".
 - **The edge of an embed in forced colors.** The text of the page is readable, but the
   reader cannot see the area of the frame. A plate, as for an image, or an outline needs a
-  decision, because the page in the frame takes the colors of the system.
+  decision, because the page in the frame takes the colors of the system. Issue #608 later
+  gave the frame an outline. See "The change".
 - **The state `highlight` from an `on` entity.** The compiler accepts it, and it has no
   effect in each mode. A follow-up can give it a mark, or give a warning for it.
 - **Firefox.** A session with Firefox can run the script of the first investigation and the

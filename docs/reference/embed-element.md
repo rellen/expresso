@@ -72,6 +72,20 @@ A data URI holds a file inside the page, such as an image in
 | `false` | Goes to the presenter, as a click on the slide does. | Goes to the presenter. The key Tab does not go into the page. |
 | `true` | Goes to the page. | Goes to the page after a click on it. Click the slide outside the page to give the keys to the presenter again. |
 
+## Forced colors
+
+In forced colors, such as the high contrast mode of Windows, the page in the frame takes
+the colors of the system, as the slide does. Thus the canvas of the page and the canvas of
+the slide have the same color. The frame then has an outline of 1 pixel in the color
+`CanvasText`, so the reader can see where the page starts and ends.
+
+- The outline takes no space, so the page keeps its size and its place.
+- The outline is on the box of the frame, so it also shows around the fallback in the
+  handout view and on paper.
+- In the usual mode, the frame has no outline.
+
+See [Forced colors](accessibility.md#forced-colors) for the other parts of a slide.
+
 ## The sandbox
 
 The frame has a `sandbox` attribute and `referrerpolicy="no-referrer"`:

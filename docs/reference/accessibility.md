@@ -144,7 +144,7 @@ Each text of a slide takes a color of the system. A graphic keeps its colors on 
 | A code token in focus | A bar under the token, in the color `CanvasText`. |
 | A line of code in focus | A bar at the left of the line, in the color `CanvasText`. It also shows after the key `d`. |
 | The cursor of the effect `:type` | A border at the right of the newest character, in the color of the text. `--type-cursor-color` does not apply, and `--type-cursor-width` does. |
-| An `embed` | The page in the frame takes the colors of the system too. The edge of the frame does not show. |
+| An `embed` | The page in the frame takes the colors of the system too. An outline of 1 pixel in the color `CanvasText` shows the edge of the frame. |
 | An `audio` element with controls | The controls of the browser, in the color scheme of the system. |
 | A `video` element with controls | The controls of the browser. Chromium draws them on a white panel under the picture, and with a black canvas their time does not show. See "A video in forced colors". |
 | The colors of code | They go away. Each token has the color of the text. |

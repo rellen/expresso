@@ -3919,6 +3919,13 @@ body[data-view="handout"][data-print-notes="false"] .notes {
  * theme gave white on white. `light dark` makes the browser draw the
  * controls in the scheme of the system, which agrees with the canvas. The
  * controls of a video do not change with this rule.
+ *
+ * The page in the frame of an embed takes the colors of the system too, so
+ * its canvas is the canvas of the slide, and the edge of the frame did not
+ * show. An outline of 1px in the color `CanvasText` marks the box of the
+ * frame. An outline takes no space, so the layout does not change. The box
+ * also holds the fallback, so the outline shows in the handout view and on
+ * paper too.
  */
 @media (forced-colors: active) {
   .chart svg,
@@ -3973,6 +3980,9 @@ body[data-view="handout"][data-print-notes="false"] .notes {
   }
   audio {
     color-scheme: light dark;
+  }
+  .embed-box {
+    outline: 1px solid CanvasText;
   }
 }
 /*

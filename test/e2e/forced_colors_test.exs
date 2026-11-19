@@ -163,6 +163,20 @@ defmodule Expresso.E2E.ForcedColorsTest do
     end
   end
 
+  # An embed of a local page. The page in the frame takes the colors of the
+  # system, so the edge of the frame did not show.
+  defmodule EmbedDeck do
+    use Expresso
+
+    name "embed deck"
+
+    slide "embed" do
+      embed "test/fixtures/page.html" do
+        title "A page that counts"
+      end
+    end
+  end
+
   @schemes [:light, :dark]
 
   # The contrast of a color of an element with the canvas, as WCAG calculates
@@ -540,6 +554,40 @@ defmodule Expresso.E2E.ForcedColorsTest do
     end
   end
 
+  # The computed outline of the box of the frame of an embed.
+  defp embed_outline(page) do
+    js(page, """
+    (() => {
+      const style = getComputedStyle(document.querySelector("#slide-1 .embed-box"));
+      return [style.outlineWidth, style.outlineStyle, style.outlineColor];
+    })()
+    """)
+  end
+
+  for scheme <- @schemes do
+    test "the frame of an embed has an outline with the #{scheme} color scheme",
+         %{browser: browser, tmp_dir: tmp_dir} do
+      page =
+        browser
+        |> new_page(forced_colors: "active", color_scheme: unquote(scheme))
+        |> open(render(EmbedDeck, tmp_dir))
+
+      assert [width, "solid", color] = embed_outline(page)
+      assert width == "1px"
+      assert rgb(color) == text_color(unquote(scheme))
+
+      # The outline takes no space, so the box keeps the size of the frame.
+      assert js(page, """
+             (() => {
+               const box = document.querySelector("#slide-1 .embed-box").getBoundingClientRect();
+               const frame = document.querySelector("#slide-1 .embed-frame").getBoundingClientRect();
+               return [box.x, box.y, box.width, box.height].join() ===
+                 [frame.x, frame.y, frame.width, frame.height].join();
+             })()
+             """)
+    end
+  end
+
   # The browser draws the controls of an audio element in the color scheme of
   # the document. With the scheme of the theme, its icons had the color of the
   # canvas.
@@ -569,6 +617,14 @@ defmodule Expresso.E2E.ForcedColorsTest do
 
     assert rgb(js(page, "getComputedStyle(document.querySelector('#progress')).backgroundColor")) ==
              "rgb(52, 101, 164)"
+  end
+
+  test "the usual mode gives the frame of an embed no outline", %{page: page, tmp_dir: tmp_dir} do
+    page = open(page, render(EmbedDeck, tmp_dir))
+
+    # Chromium gives the initial width, `medium`, to an outline with the style
+    # `none`, and that outline does not show.
+    assert [_width, "none", _color] = embed_outline(page)
   end
 
   test "the usual mode gives a chart no plate, and it dims a line of code with a color",
