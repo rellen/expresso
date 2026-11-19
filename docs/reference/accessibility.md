@@ -143,6 +143,7 @@ Each text of a slide takes a color of the system. A graphic keeps its colors on 
 | A box of a tree that the `highlight` option dims | An opacity of 0.6, as a dimmed element. |
 | A code token in focus | A bar under the token, in the color `CanvasText`. |
 | A line of code in focus | A bar at the left of the line, in the color `CanvasText`. It also shows after the key `d`. |
+| An element with the state `highlight` | A bar at the left of the element, in the color `CanvasText`. See [the overlay options](overlay-options.md#the-bar-of-the-state-highlight). |
 | The cursor of the effect `:type` | A border at the right of the newest character, in the color of the text. `--type-cursor-color` does not apply, and `--type-cursor-width` does. |
 | An `embed` | The page in the frame takes the colors of the system too. The edge of the frame does not show. |
 | An `audio` element with controls | The controls of the browser, in the color scheme of the system. |

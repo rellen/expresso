@@ -234,6 +234,12 @@ that stay open" gives. The maintainer selected the documents, and not a change o
 code. See "The controls in forced colors" in `docs/reference/video-element.md`, and "A
 video in forced colors" in `docs/reference/accessibility.md`.
 
+Issue #607 gave the state `highlight` from an `on` entity a mark. The theme draws a bar in
+the accent color at the left of the element, as for a line of code in focus. In forced
+colors, the bar has the color `CanvasText`, so it has 21:1 on the canvas. A part of a
+diagram, a part of a formula and a series of a chart get no bar, because a pseudo-element
+does not show in an SVG or in MathML. `docs/dim-state.md` gives the design.
+
 ## The parts that the first investigation did not measure
 
 Issue #603 asked for a measurement of the parts that the first investigation left out. This
@@ -309,6 +315,6 @@ without the change.
   reader cannot see the area of the frame. A plate, as for an image, or an outline needs a
   decision, because the page in the frame takes the colors of the system.
 - **The state `highlight` from an `on` entity.** The compiler accepts it, and it has no
-  effect in each mode. A follow-up can give it a mark, or give a warning for it.
+  effect in each mode. Issue #607 later gave it a bar. See "The result".
 - **Firefox.** A session with Firefox can run the script of the first investigation and the
   measurements of this section.

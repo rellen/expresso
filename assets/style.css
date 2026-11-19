@@ -2125,6 +2125,55 @@ body[data-view="handout"] .chart-frames {
   box-shadow: inset 0 calc(var(--highlight, 0) * -0.12em) 0 var(--accent);
 }
 /*
+ * The state `highlight` from an `on` entity draws a bar in the accent color
+ * at the left of the element, with the place and the width of the bar of a
+ * line of code. The bar is a pseudo-element with an absolute position, so it
+ * takes no space and the content does not move. The filter and the transform
+ * of an element with an identity make the element the containing block of
+ * the bar. The bar is a background color and not a `box-shadow`, so forced
+ * colors can keep it, and it asks for its exact color on paper.
+ *
+ * The compiler registers `--highlight` with no inheritance, so the element
+ * copies it into `--highlight-bar` for the pseudo-element. A line and a token
+ * of code have their own bars. A part of a text is in a line of text. A part
+ * of a diagram, a part of a formula and a series of a chart are in an SVG or
+ * in MathML, where a pseudo-element does not show. These get no bar.
+ *
+ * The marker of an item and the number of a footnote are at the left of the
+ * element, so the bar of an item is at the left of the list, and the bar of
+ * a footnote is at the left of its number. A box of a tree is in a
+ * `foreignObject`, which cuts each pixel outside its area. Its bar is inside
+ * the left border of the box, in the padding, so it does not cover the text.
+ */
+[data-el]:not(.line, .code-token, [data-text-part], svg *, math *) {
+  --highlight-bar: var(--highlight, 0);
+}
+.tree-node {
+  --highlight-bar: var(--highlight, 0);
+}
+:is(
+  [data-el]:not(.line, .code-token, [data-text-part], svg *, math *),
+  .tree-node > .tree-box
+)::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: -0.4rem;
+  width: 0.15rem;
+  background-color: var(--accent);
+  opacity: var(--highlight-bar);
+  pointer-events: none;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.item[data-el]::before,
+.footnote[data-el]::before {
+  inset-inline-start: -1.9rem;
+}
+.tree-node > .tree-box::before {
+  inset-inline-start: 0.15rem;
+}
+/*
  * The key `d` turns off the dimming of code and of the series of a chart until
  * the next change of the step, so the presenter can show a dimmed line or
  * series when the audience asks about it. The presenter writes
@@ -3955,6 +4004,13 @@ body[data-view="handout"][data-print-notes="false"] .notes {
     forced-color-adjust: none;
     background-color: CanvasText;
     opacity: var(--line-bar);
+  }
+  :is(
+    [data-el]:not(.line, .code-token, [data-text-part], svg *, math *),
+    .tree-node > .tree-box
+  )::before {
+    forced-color-adjust: none;
+    background-color: CanvasText;
   }
   .type-char {
     --type-cursor: round(

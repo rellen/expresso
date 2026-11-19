@@ -149,3 +149,23 @@ The code follows the plan, with five changes:
 
 A rule of a deck that gives a color to text does not dim by itself. "Make a color of your
 own dim" in `docs/how-to/style-one-slide.md` gives the steps for such a rule.
+
+### A later change: a bar for the state `highlight`
+
+Issue #607 gave the state `highlight` a mark on each element. Before the change, only a
+line and a token of a code element read `--highlight`, so the state had no effect on a
+different element. The maintainer selected a mark, and not a warning of the compiler.
+
+- The theme draws a bar in the accent color at the left of the element. It has the place
+  and the width of the bar of a line of code in focus.
+- The bar is a `::before` pseudo-element with an absolute position, so the content of the
+  element does not move. The filter and the transform of an element with an identity make
+  the element the containing block of the bar.
+- The compiler registers `--highlight` with no inheritance. The element copies the value
+  into `--highlight-bar`, which the pseudo-element reads.
+- The bar is a background color, and not a `box-shadow`. In forced colors, it has the
+  color `CanvasText`. On paper, it asks for its exact color.
+- A box of a tree is in a `foreignObject`, which cuts each pixel outside its area, so the
+  bar is inside the box. The bar of an item and of a footnote is at the left of the marker.
+- A pseudo-element does not show in an SVG or in MathML. Thus a part of a diagram, a part
+  of a formula and a series of a chart get no bar, and the reference tells the user so.

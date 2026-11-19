@@ -117,6 +117,7 @@ step specification.
 | --- | --- |
 | `state: :alert` | The theme draws an outline around the element. A line or an arrow of the `shape` element gets a stroke that is 4px wider, and no outline. |
 | `state: :dim` | Each color of text in the element changes to the dimmed color of its role. An image, an SVG file, an embed and a video show at the dim opacity of the theme. |
+| `state: :highlight` | The theme draws a bar in the accent color at the left of the element. See "The bar of the state `highlight`" below. |
 | `set: [x: "-300px", y: "0px"]` | The element moves by that distance. A length in pixels becomes smaller with the slide in a small window. See [The size of a slide](slide-size.md). |
 | `set: [scale: 1.5]` | The element changes its size by that factor. |
 | `set: [rotate: "-8deg"]` | The element turns by that angle. |
@@ -129,6 +130,35 @@ An `on` entity can be in each element, in an item of a list, in a row of a table
 a part of a diagram or of a formula. In a diagram, `x` and `y` are in the units of the SVG file. A part
 inside a `text` element of the file, such as a `tspan`, can fade, dim and change its
 color, and it cannot move or get an outline.
+
+### The bar of the state `highlight`
+
+The state `highlight` marks the element in focus with a bar at its left. The bar has the
+place, the width and the color of the bar of a line of code in focus.
+
+- The bar takes no space, so the content of the element does not move.
+- The bar has the height of the element. The bar of an item or of a footnote is at the
+  left of its marker. The bar of a box of a tree is inside the box, at its left edge.
+- In forced colors, the bar has the color of the text. See
+  [Forced colors](accessibility.md#forced-colors).
+- The handout view and paper show the bar at the step of the state.
+- A part of a diagram, a part of a formula and a series of a chart get no bar, because
+  they are in an SVG or in MathML. Give such a part the state `alert`, or a color with
+  `set`.
+- A line of code and a token of code get the bar of the `highlight` option of the code
+  element. See [The code element](code-element.md).
+
+```elixir
+slide "the steps" do
+  list do
+    item "Build the release"
+
+    item "Copy it to the server" do
+      on 2, state: :highlight
+    end
+  end
+end
+```
 
 ## A part of a text
 

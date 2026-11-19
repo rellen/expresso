@@ -103,6 +103,7 @@ end
 | `dim true` | Each earlier child dims when a later child shows. Use it with `reveal true`. |
 | `at 2`, `at 2..4`, `at from: 2`, `at [2, 5..7]` | The steps that show the element. |
 | `on 3, state: :alert` | An outline around the element at step 3. |
+| `on 3, state: :highlight` | A bar in the accent color at the left of the element at step 3. A part of a diagram or of a formula gets no bar. |
 | `on 3, state: :dim` | The dimmed colors at step 3. |
 | `on 3, set: [x: "4rem", y: "0", scale: 1.5, rotate: "-8deg", opacity: 0.3, color: "#c92a2a"]` | A move, a size, a turn, an opacity or a color at step 3. |
 | `effect :fly_up` | How the element shows, such as `:fade`, `:grow`, `:fly_up`, `:wipe`, `:blur` or `:type`. |
