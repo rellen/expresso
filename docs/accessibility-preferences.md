@@ -229,6 +229,11 @@ pixels for a step row, in windows from 320 to 1920 pixels wide. The section abou
 criterion 2.5.8 has the correct text now. The change for issue #590 made the text of a
 slide smaller in a small window, and the parts of the presenter kept their size.
 
+Issue #609 settled the controls of a video in forced colors, which the section "The parts
+that stay open" gives. The maintainer selected the documents, and not a change of the
+code. See "The controls in forced colors" in `docs/reference/video-element.md`, and "A
+video in forced colors" in `docs/reference/accessibility.md`.
+
 ## The parts that the first investigation did not measure
 
 Issue #603 asked for a measurement of the parts that the first investigation left out. This
@@ -298,7 +303,8 @@ without the change.
 ### The parts that stay open
 
 - **The controls of a video in forced colors.** The defect is in Chromium. A follow-up can
-  report it to Chromium, or a deck can show its video without controls.
+  report it to Chromium, or a deck can show its video without controls. Issue #609 settled
+  it with the documents. See "The result".
 - **The edge of an embed in forced colors.** The text of the page is readable, but the
   reader cannot see the area of the frame. A plate, as for an image, or an outline needs a
   decision, because the page in the frame takes the colors of the system.

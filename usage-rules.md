@@ -204,6 +204,8 @@ end
 
 - Give each `image` an `alt` option, unless the image is decorative.
 - Give each `diagram` an `alt` option, and each `video`, `audio` and `embed` a `title`.
+- Do not give a `video` the option `controls true` when the audience can use forced colors.
+  Chromium does not show the controls of a video in forced colors.
 - Do not tell a meaning with a color only. Add a word, or a state such as `:alert`.
 - Give the deck the `dim_contrast` option when it has small dimmed text. See
   `docs/reference/dim-contrast-option.md`.

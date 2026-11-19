@@ -146,13 +146,27 @@ Each text of a slide takes a color of the system. A graphic keeps its colors on 
 | The cursor of the effect `:type` | A border at the right of the newest character, in the color of the text. `--type-cursor-color` does not apply, and `--type-cursor-width` does. |
 | An `embed` | The page in the frame takes the colors of the system too. The edge of the frame does not show. |
 | An `audio` element with controls | The controls of the browser, in the color scheme of the system. |
-| A `video` element with controls | The controls of the browser. Chromium draws them on a white panel under the picture, and with a black canvas their time does not show. |
+| A `video` element with controls | The controls of the browser. Chromium draws them on a white panel under the picture, and with a black canvas their time does not show. See "A video in forced colors". |
 | The colors of code | They go away. Each token has the color of the text. |
 | A color or a gradient as the background of a slide | It goes away. The slide has the canvas of the system. |
 | An image as the background of a slide | It stays. The browser puts a box with the canvas color behind each text. |
 
 The plate is the area of the graphic and 0.25rem on each side. A dimmed line of code has
 7.4:1 on a black canvas and 5.7:1 on a white canvas.
+
+### A video in forced colors
+
+Chromium does not show the controls of a video in forced colors. This is a defect of the
+browser, and not of Expresso, and the style sheet of the deck cannot change it. A video
+without controls has no panel, so it avoids the problem:
+
+- Remove `controls true` from the video, or give `controls false`. The default is `false`.
+- Play the video with a move to its slide or its step, such as with `j`.
+- Pause the video with `b` or `w`. The next key or click shows the slide again, and the
+  video goes on from the same time.
+
+A video without controls has no sound. See
+[The controls in forced colors](video-element.md#the-controls-in-forced-colors).
 
 ### The parts of the presenter
 

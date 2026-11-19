@@ -27,7 +27,7 @@ end
 | `width` | A width, such as `900px` or `60%` | The largest width of the video. The default is `80%`. The video is narrower when the slide does not have the height for this width, as an embed is. |
 | `aspect` | A ratio, such as `"4/3"` | The ratio of the width to the height. The default is `"16/9"`. |
 | `loop` | `true` or `false` | Play the video again from the start at its end. The default is `true`. |
-| `controls` | `true` or `false` | Show the controls of the browser, so the presenter can turn the sound on. The default is `false`. |
+| `controls` | `true` or `false` | Show the controls of the browser, so the presenter can turn the sound on. The default is `false`. See "The controls in forced colors". |
 | `external` | `true` or `false` | Keep the file next to the document, in place of a data URI in the document. The default is [the external option](external-option.md) of the deck, or `false`. See "A file next to the document". |
 | `at`, `on`, `effect`, `speed`, `easing` | See [the overlay options](overlay-options.md) | The steps of the video, as for each other element. |
 | `class` | CSS class names | See [the class option](class-option.md). |
@@ -48,6 +48,33 @@ The box of a video is the box of an embed. A deck can set `--embed-width` and
 
 A browser starts a video with sound only after a click. Therefore the video has no sound,
 and `controls true` lets the presenter turn the sound on.
+
+## The controls in forced colors
+
+Chromium does not show the controls of a video in forced colors, such as the high contrast
+mode of Windows. It draws the controls on a white panel under the picture. With a dark color
+scheme, the time and the track of the controls are white or cyan on that panel, so they do
+not show. This is a defect of the browser, and not of Expresso. A page with no style sheet
+gives the same panel, and the style sheet of the deck cannot change it.
+
+A video without controls has no panel. For an audience that can use forced colors, do
+these steps:
+
+1. Remove `controls true` from the video, or give `controls false`. The default is `false`.
+2. Play and pause the video with the keys of the deck.
+
+These keys of the present view and of the speaker view control a video without controls:
+
+| Key | Result |
+| --- | --- |
+| `j`, `→`, `↓`, `Page Down`, `Space` to the slide or to the step of the video | The video plays from the start. |
+| `b` or `w` | The video pauses behind the black screen or the white screen. The next key or click shows the slide again, and the video goes on from the same time. |
+| `o` or `m` | The video pauses behind the overview or the menu. When the overview or the menu closes with no move, the video goes on from the same time. |
+| A key that goes to another slide | The video pauses. A move back starts it again from the start. |
+
+A video without controls has no sound, because a browser starts a video with sound only
+after a click. A click on the video goes to the next step. The captions show, and the
+presenter cannot turn them off.
 
 ## The document
 
