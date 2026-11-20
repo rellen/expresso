@@ -65,6 +65,10 @@ option, the document holds only the address of each photograph. The browser gets
 photograph one time, and the host can keep it in its cache, so a change of the text of the
 deck does not send the photographs again.
 
+The browser also asks for fewer files at the load. It gets the photographs of the first
+slide at the load, and the other photographs in the background after the load. See
+[When the browser gets the file](../reference/image-element.md#when-the-browser-gets-the-file).
+
 To keep one small file in the document, give `external false` to its element. See
 [the external option](../reference/external-option.md).
 

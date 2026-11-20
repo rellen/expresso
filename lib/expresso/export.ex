@@ -30,6 +30,12 @@ defmodule Expresso.Export do
 
   Each address has `?paused`, so the clock of a deck with the `advance`
   option does not go to a different step before the picture.
+
+  An image with `external true` has `loading="lazy"` in the document, and the
+  browser then asks for its file only near the window. Each copy for the
+  browser has no such attribute, so the load of the copy waits for the file of
+  each image, also on a slide that does not show. The browser prints or takes
+  the picture after that load. `eager/1` gives the rule.
   """
 
   alias Expresso.Check.Browser
@@ -272,7 +278,8 @@ defmodule Expresso.Export do
   The presenter script does not change these attributes, and the style sheet
   reads them in its rules for paper. The function also adds the rule of the
   page: the size of `--size` with no margin for the slides, and the paper of
-  `--pdf-paper` for the handout view.
+  `--pdf-paper` for the handout view. Each image loads with the document, as
+  `eager/1` tells.
 
       iex> options = %{Expresso.Export.defaults() | size: {1280, 720}, pdf_steps: :all}
       iex> Expresso.Export.print_document(~s(<!DOCTYPE html>\\n<html lang="en"><head></head></html>), options)
@@ -294,6 +301,7 @@ defmodule Expresso.Export do
       |> Enum.join()
 
     html
+    |> eager()
     |> String.replace("<html", "<html" <> attributes, global: false)
     |> String.replace("</head>", "<style>#{page_rule(options)}</style></head>", global: false)
   end
@@ -343,20 +351,39 @@ defmodule Expresso.Export do
   Make the copy of a document that the browser opens for a PNG file
 
   The copy does not show the progress bar or the button of the menu, because
-  a picture of a slide is not a talk.
+  a picture of a slide is not a talk. Each image loads with the document, as
+  `eager/1` tells.
 
       iex> Expresso.Export.screen_document("<html><head></head></html>")
       "<html><head><style>#progress, #menu-button { display: none !important; }</style></head></html>"
   """
   @spec screen_document(String.t()) :: String.t()
   def screen_document(html) do
-    String.replace(
-      html,
+    html
+    |> eager()
+    |> String.replace(
       "</head>",
       "<style>#progress, #menu-button { display: none !important; }</style></head>",
       global: false
     )
   end
+
+  @doc """
+  Remove `loading="lazy"` from each image of a document
+
+  `Expresso.Element.Image` writes the attribute as the first attribute of
+  the `img` element of an image with `external true`. The load of the
+  document does not wait for a lazy image of a slide that does not show, so
+  the browser can print before it has the file. Without the attribute, the load of the
+  document waits for the file of each image, also on a hidden slide or on a
+  later slide. The browser prints or takes a picture after the load, so each
+  page and each picture has its image.
+
+      iex> Expresso.Export.eager(~s(<p>A</p><img loading="lazy" src="a_files/b.png" alt="B">))
+      ~s(<p>A</p><img src="a_files/b.png" alt="B">)
+  """
+  @spec eager(String.t()) :: String.t()
+  def eager(html), do: String.replace(html, ~s(<img loading="lazy" ), "<img ")
 
   @doc """
   Return the slide, the step and the name of each PNG file of a deck

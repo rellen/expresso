@@ -95,6 +95,11 @@ the height of its row. An image then did not become smaller, and it went onto th
 sheet. The print block of the style sheet now gives `.slide-body` the height `100%`. A test
 of `test/e2e/export_test.exs` finds the box of each image in the PDF.
 
+A later change, for issue #599, gives an image with `external true` the attribute
+`loading="lazy"`. `Expresso.Export.eager/1` removes it from each copy of the document that
+the browser opens. The load of the copy then waits for the file of each image, also on a
+hidden slide or a later slide. `docs/external-media.md` gives the design.
+
 A later change, for issue #601, adds `--card`. The option writes the picture of the
 preview of a link: one PNG file of 1200 × 630 pixels. These are the decisions of the
 maintainer:

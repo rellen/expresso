@@ -10,7 +10,11 @@ defmodule Expresso.Element.Image do
   With `external true`, the render keeps a copy of the file next to the
   document, and the `img` element holds the relative address of the copy.
   `Expresso.MediaFiles` gives the rules, and the `external` option of the
-  deck gives the default.
+  deck gives the default. Such an `img` element also gets `loading="lazy"`,
+  so the browser does not ask for each file when it loads the document. The
+  presenter script asks for the files later: `assets/src/images.ts` gives the
+  rules. The attribute comes first in the tag, because
+  `Expresso.Export.eager/1` finds it there.
 
   The `alt` option gives the text of the image for a screen reader. An image
   with no `alt` option is decorative, and the render function then writes an
@@ -64,15 +68,20 @@ defmodule Expresso.Element.Image do
   `width` option. The key `src` holds the data URI of the file, or the
   address of a copy of the file for an image with `external true`.
   `Expresso.Image.source!/2` raises for a file that it cannot read. The key
-  `goto` holds the link of the `goto` option, or `nil`.
+  `loading` holds `"lazy"` for an image with `external true`, and `nil` for a
+  data URI, which writes no attribute. The key `goto` holds the link of the
+  `goto` option, or `nil`.
   """
   @spec get_assigns(t()) :: map()
   @impl Expresso.Element
   def get_assigns(image) do
     %__MODULE__{src: src, alt: alt, width: width, goto: goto} = image
 
+    external = image.external == true
+
     %{
-      src: Expresso.Image.source!(src, image.external == true),
+      src: Expresso.Image.source!(src, external),
+      loading: if(external, do: "lazy"),
       alt: alt || "",
       goto: goto,
       window: image.window,
@@ -107,10 +116,10 @@ defmodule Expresso.Element.Image do
     temple do
       if @goto do
         a class: "goto", href: Expresso.Goto.href(@goto), data_link: @goto.index do
-          img src: @src, alt: @alt
+          img loading: assigns[:loading], src: @src, alt: @alt
         end
       else
-        img src: @src, alt: @alt
+        img loading: assigns[:loading], src: @src, alt: @alt
       end
     end
   end

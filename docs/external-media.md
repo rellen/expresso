@@ -139,11 +139,56 @@ for the images of the next slide, and the check must wait for each image.
 With no attribute, the browser asks for each image when it loads the document. The first
 slide does not wait for them, and the host can keep each one in its cache.
 
+### A later change: an image loads near its slide
+
+Issue #599 asked for `loading="lazy"` with the two parts that the test above named. The
+maintainer made these decisions:
+
+1. **An image with `external true` has `loading="lazy"`.** An image in a data URI has no
+   attribute, because the document already holds its file. `Expresso.Element.Image`
+   writes the attribute first in the `img` element.
+2. **The presenter asks for each other file when the browser is idle.** After the load of
+   the document, `main.ts` calls `requestIdleCallback`, or `setTimeout` in a browser
+   without it. `images.ts` then sets `loading` to `eager` on each lazy image, and the
+   browser asks for each file in the background. The issue proposed one slide or two
+   slides in front. A jump to a far slide before the browser is idle can show its image
+   late, and the maintainer accepts that delay.
+3. **The handout view and a print ask for each file at once.** The presenter calls the
+   same function when the handout view opens and at the event `beforeprint`.
+4. **The layout check waits for each image.** Before it measures, the page sets each lazy
+   image to `eager`, and it waits until each image is complete.
+5. **The export waits for each image.** `Expresso.Export.eager/1` removes the attribute
+   from each copy of the document that the browser opens. The load of the copy then
+   waits for each file, also of a hidden slide or a later slide, and Chrome prints or
+   takes the picture after the load.
+
+The work changed one part of the plan. The maintainer asked for a wait for `decode()`
+after the load of each image. In `mix expresso --check`, the headless browser runs the
+page in virtual time, and a decode does not stop that time. The time of the check thus
+ended before each decode, and the page wrote no result. A complete image has its size,
+so the layout check needs no decode, and the browser decodes an image when it paints or
+prints it. `images.ts` therefore waits only until each image is complete.
+
+The browser tests of `test/e2e/lazy_images_test.exs` hold the idle callbacks of the page.
+They show these results:
+
+| Measurement | Result |
+| --- | --- |
+| The images that the browser has at the load | The image of slide 1 only. |
+| The images after the idle callback | Each image, also of a hidden slide. |
+| The handout view and the event `beforeprint`, with no idle callback | Each image. |
+| `?check`, with no idle callback | The check finds the image of slide 4 that is too large. |
+| `--check=layout` | The check finds the image of slide 4 that is too large. |
+| `--pdf`, the slides and the handout view | Each page has its image, also the page of a hidden slide. |
+
+`docs/reference/image-element.md` gives the rule in "When the browser gets the file".
+
 ## The limits
 
 - The render does not remove an old copy. After a change of the file, the directory holds
   the old copy and the new copy.
 - A document with such an element is not one file. Send the directory with it.
 - The speaker view and the handout view do not play a video, so they get no file.
-- The browser asks for each image with `external true` when it loads the document, also
-  for an image of a slide that the viewer does not go to.
+- When the browser is idle after the load, it asks for each image with `external true`,
+  also for an image of a slide that the viewer does not go to. A jump to a far slide
+  before then can show its image late.

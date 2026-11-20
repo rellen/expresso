@@ -57,6 +57,12 @@
 // rules. A sound of the audio element plays with the same rules, and
 // `audio.ts` gives the rest.
 //
+// An image with `external true` has `loading="lazy"`, so the browser asks
+// for its file when the image comes near the window. When the browser is idle
+// after the load, the presenter asks for each other file in the background.
+// The handout view, a print and the layout check ask for each file at once,
+// and the check waits for each image. `images.ts` gives the rules.
+//
 // A number of a chart with the `count` option counts from one frame to the
 // next after each change of the step. `chart.ts` gives the rules.
 //
@@ -87,12 +93,12 @@
 // the clock of the steps does not run. `rehearse.ts` gives the rules.
 //
 // `?check` in the address of the present view runs the layout check after the
-// load of the document and of its fonts. The check shows each step, finds the
-// elements that go past an edge of the window and the lines of code that
-// break, and writes a report into the document. `layout.ts` gives the rules.
-// `?check=a11y` then runs axe-core at each step and in each view, when the
-// document holds it. `check.ts` gives the rules, and the result of the two
-// checks for `mix expresso --check`.
+// load of the document, of its fonts and of each image. The check shows each
+// step, finds the elements that go past an edge of the window and the lines of
+// code that break, and writes a report into the document. `layout.ts` gives
+// the rules. `?check=a11y` then runs axe-core at each step and in each view,
+// when the document holds it. `check.ts` gives the rules, and the result of
+// the two checks for `mix expresso --check`.
 
 import {
   follow,
@@ -108,6 +114,7 @@ import type { Builtin } from "./program.ts";
 import { load as loadEmbeds } from "./embed.ts";
 import { play as playVideos } from "./video.ts";
 import { play as playAudios } from "./audio.ts";
+import { idle, load as loadImages } from "./images.ts";
 import { count } from "./chart.ts";
 import { forget, place } from "./move.ts";
 import { modeOf, pairs } from "./morph.ts";
@@ -396,6 +403,7 @@ function show(changed: State, local = true): void {
     embeds();
   }
   videos();
+  images();
   if (isSpeaker && loaded && moved && started === null) {
     started = Date.now();
     times = begin(state.index, started);
@@ -422,6 +430,15 @@ function videos(): void {
   const covered = state.blank || state.menu || state.overview;
   playVideos(slide, entry?.step ?? 1, covered);
   playAudios(slide, entry?.step ?? 1, covered);
+}
+
+// The handout view shows each page, so it asks for the file of each image
+// with `external true`. A page of the handout view then shows its image when
+// the presenter goes to it, and a print of the view has each image.
+function images(): void {
+  if (state.view === "handout") {
+    void loadImages();
+  }
 }
 
 // Open the speaker view, or show the window of the speaker view again. The
@@ -520,8 +537,9 @@ if (isSpeaker && partner !== null && !partner.closed) {
 }
 
 // `show` does nothing when the fragment gives no new step, so the video of the
-// first step needs its own call.
+// first step needs its own call, and so do the images of a handout view.
 videos();
+images();
 
 // The lists of the videos and of the sounds come after this script in the
 // document, because they hold each file. The presenter thus starts before
@@ -540,12 +558,30 @@ if (document.readyState === "complete") {
 }
 window.addEventListener("online", embeds);
 
+// The first slide shows before the load of the document. When the browser is
+// idle after the load, the presenter asks for the file of each image with
+// `external true`, so a slide later in the talk shows its image at once. A
+// print also asks for each file. The print does not wait for a file that it
+// asks for, but the background load usually has each file before then.
+const background = (): void => idle(() => void loadImages());
+if (document.readyState === "complete") {
+  background();
+} else {
+  window.addEventListener("load", background, { once: true });
+}
+window.addEventListener("beforeprint", () => void loadImages());
+
 // The layout check measures each step, and then it shows the current step
 // again. The images of a document load after the script, so the check waits
-// for the load of the document. An error of the check shows the current step
-// again and goes to the console, as each problem of the check does.
+// for the load of the document. An image with `external true` loads only near
+// the window, so the check also asks for each such file, and it waits until
+// each image is complete. A lazy image has no size before then, and the check
+// does not find an image that is too large. An error of the check shows the
+// current step again and goes to the console, as each problem of the check
+// does.
 function check(): void {
   document.fonts.ready
+    .then(loadImages)
     .then(async () => {
       const show = (index: number): void => {
         apply({ ...state, index }, deck, program);

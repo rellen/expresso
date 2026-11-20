@@ -55,8 +55,7 @@ end
   as a data URI, and 60 bytes as an address.
 - A web host can keep the copy in its cache. A change of the text of the deck then does
   not send the image again.
-- The browser asks for each image when it loads the document, also for an image of a
-  later slide. An image thus shows at its step with no wait.
+- The `img` element has `loading="lazy"`. See "When the browser gets the file".
 - Two elements with the same file share one copy.
 - The output must be a file. With `-`, the standard output, the renderer raises an
   `ArgumentError` that names the image and the option.
@@ -64,6 +63,22 @@ end
 
 [The external option](external-option.md) gives the option of the deck, the directory and
 the error.
+
+### When the browser gets the file
+
+An image with `external true` has `loading="lazy"`, so the browser does not ask for each
+file when it loads the document. An image in a data URI has no such attribute.
+
+| Time | The files that the browser asks for |
+| --- | --- |
+| The load of the document | The file of each image near the window, such as the images of the first slide. |
+| The browser is idle after the load | The file of each other image, in the background. A browser with no `requestIdleCallback` asks for them 1 s after the load. |
+| The handout view opens, or a print starts | The file of each image that the browser does not have yet. |
+| `--check=layout`, `--check=a11y` and `--check=browser` | The file of each image. The check waits until each image is complete, and then it measures the slides. |
+| `--pdf` and `--png` | The file of each image. The copy of the document that the browser opens has no `loading="lazy"`, so its load waits for each image. |
+
+A jump to a far slide before the browser is idle, such as from the menu, can show an image
+late, as a video can.
 
 ## The width
 

@@ -1649,8 +1649,13 @@ into the document. `docs/external-media.md` gives the design. The parts are:
 - An `image` element takes the same option. `Expresso.Image.source!/2` gives the bytes to
   `Expresso.MediaFiles.put/3`, and the `src` attribute of each `img` element holds the
   address. `Expresso.Assets` does not change such an attribute, because it is not a data
-  URI. The `img` element has no `loading="lazy"`, because the layout check then measures
-  a slide before the browser has the image.
+  URI.
+- The `img` element of such an image has `loading="lazy"`, so the browser asks for its
+  file only near the window. `images.ts` asks for each other file when the browser is
+  idle after the load, and at once for the handout view and a print. The layout check
+  waits until each image is complete before it measures. `Expresso.Export.eager/1`
+  removes the attribute from the copies that the export opens, so their load waits for
+  each image.
 - The `external` option of the deck is the default of each `image`, `video` and `audio`
   element. `Expresso.Media.external/1` gives each element with no option that value
   before the renderer gives the elements their numbers.
@@ -2570,6 +2575,8 @@ The TypeScript part is under `assets/src/`. It has these modules:
   custom properties of the part.
 - `media.ts`, `video.ts`, `audio.ts` and `embed.ts` give the sources of the media and of
   the frames to their elements.
+- `images.ts` asks for the file of each image with `external true`: in the background,
+  for the handout view, for a print and for the layout check.
 
 The first slide is slide 1, and the first step is step 1. `docs/overlays.md` gives the
 rules of a step.

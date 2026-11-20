@@ -102,9 +102,14 @@ defmodule Expresso.E2E.ExternalMediaTest do
       assert Enum.sort(File.ls!(Path.join(tmp_dir, "deck_files"))) ==
                Enum.sort([dot_name(), halves_name()])
 
-      # The browser has the image of slide 2 before the slide shows, so the
-      # image shows at its step with no wait.
-      assert js(audience, "document.querySelector('#slide-2 .image img').complete")
+      # The presenter asks for the image of slide 2 in the background, when
+      # the browser is idle after the load. The browser thus has the image
+      # before the slide shows, and the image shows at its step with no wait.
+      wait_for(audience, """
+      document.querySelector('#slide-2 .image img').complete &&
+        document.querySelector('#slide-2 .image img').naturalWidth > 0
+      """)
+
       audience |> press("j") |> press("j") |> wait_for_position("2.2")
       assert js(audience, @images) == [["deck_files/" <> halves_name(), true]]
     end

@@ -256,6 +256,60 @@ defmodule Expresso.E2E.ExportTest do
     end
   end
 
+  # Each image keeps its file next to the document, so it has
+  # `loading="lazy"`. Slide 3 is hidden, and the deck gives it its pages.
+  @external_images """
+  defmodule ExternalImageDeck do
+    use Expresso
+    root __DIR__
+    external true
+    handout_hidden true
+
+    slide "one" do
+      heading "One"
+      image "photo.png", alt: "One"
+    end
+
+    slide "two" do
+      heading "Two"
+      image "photo.png", alt: "Two"
+    end
+
+    slide "backup" do
+      hidden true
+      heading "Backup"
+      image "photo.png", alt: "Backup"
+    end
+
+    slide "four" do
+      heading "Four"
+      image "photo.png", alt: "Four"
+    end
+  end
+
+  ExternalImageDeck
+  """
+
+  describe "a deck with images next to the document" do
+    setup %{tmp_dir: dir} do
+      input = Path.join(dir, "external.exs")
+      File.write!(input, @external_images)
+      File.write!(Path.join(dir, "photo.png"), solid_png(400, 300))
+      %{input: input, output: Path.join(dir, "external.html")}
+    end
+
+    test "each page of the slides and of the handout view holds its image, also on a hidden slide or a later slide",
+         %{input: input, output: output} = context do
+      for pages <- [:slides, :handout] do
+        options = %{Export.defaults() | pdf: context.pdf, pdf_pages: pages}
+
+        assert {:ok, [_line]} = Export.export(input, output, options)
+        assert File.read!(output) =~ ~s(<img loading="lazy")
+        assert context.pdf |> image_boxes() |> Enum.map(&length/1) == [1, 1, 1, 1]
+      end
+    end
+  end
+
   # A PNG file of one color, with a width and a height in pixels.
   defp solid_png(width, height, {red, green, blue} \\ {240, 160, 0}) do
     row = [0, :binary.copy(<<red, green, blue>>, width)]

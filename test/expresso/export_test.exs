@@ -46,6 +46,31 @@ defmodule Expresso.ExportTest do
       assert letter =~ "@page { size: letter landscape; margin: 1cm; }"
     end
 
+    test "removes loading=lazy from each image, so each image loads with the document" do
+      html =
+        Builder.deck(
+          [
+            Builder.slide("one",
+              elements: [Builder.image("test/fixtures/dot.png", alt: "A dot", external: true)]
+            )
+          ],
+          name: "deck"
+        )
+        |> then(&Expresso.MediaFiles.collect("talk_files", fn -> Expresso.Deck.render(&1) end))
+        |> elem(0)
+
+      assert html =~ ~s(<img loading="lazy")
+
+      for document <- [
+            Export.print_document(html, Export.defaults()),
+            Export.print_document(html, %{Export.defaults() | pdf_pages: :handout}),
+            Export.screen_document(html)
+          ] do
+        refute document =~ ~s(loading="lazy")
+        assert document =~ ~s(<img src="talk_files/)
+      end
+    end
+
     test "changes only the first html tag and the first end of the head" do
       html = "<html><head></head><body><pre>&lt;html&gt; </head></pre></body></html>"
       printed = Export.print_document(html, Export.defaults())

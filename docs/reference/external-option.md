@@ -37,7 +37,7 @@ end
 
 | Element | With `external true` |
 | --- | --- |
-| [The image element](image-element.md) | The `img` element holds the address of the copy. The browser asks for each image when it loads the document. |
+| [The image element](image-element.md) | The `img` element holds the address of the copy, and it has `loading="lazy"`. The browser asks for the images of the first slide at the load, and for each other image when it is idle. See [When the browser gets the file](image-element.md#when-the-browser-gets-the-file). |
 | [The video element](video-element.md) | The browser asks for the file when the video plays first. The poster and the captions stay in the document. |
 | [The audio element](audio-element.md) | The browser asks for the file when the sound plays first. |
 

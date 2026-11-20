@@ -278,6 +278,35 @@ defmodule Expresso.MediaFilesTest do
       assert files == [{address, File.read!(@poster)}]
     end
 
+    test "each img element of the image has loading=lazy, and an image in a data URI has none" do
+      {document, html, _files} = render([image(external: true), image(alt: "B")])
+
+      # The present view, the handout view and the menu show each image.
+      lazy =
+        document |> LazyHTML.query(~s(.image img[loading="lazy"])) |> LazyHTML.attribute("src")
+
+      assert length(lazy) >= 3
+      assert Enum.uniq(lazy) == ["talk_files/" <> dot_name()]
+
+      inline =
+        document |> LazyHTML.query(".image img:not([loading])") |> LazyHTML.attribute("src")
+
+      assert length(inline) >= 3
+      assert Enum.all?(inline, &String.starts_with?(&1, "data:image/png;base64,"))
+
+      # `Expresso.Export.eager/1` finds the attribute at the start of the tag.
+      assert html =~ ~s(<img loading="lazy" src="talk_files/#{dot_name()}")
+    end
+
+    test "an image with the goto option has loading=lazy in its link" do
+      {document, _html, _files} = render([image(external: true, goto: [slide: 1])])
+
+      assert document
+             |> LazyHTML.query(~s(.screen .image a.goto img[loading="lazy"]))
+             |> Enum.count() ==
+               1
+    end
+
     test "two elements with the same file share one copy" do
       {document, _html, files} = render([image(external: true), image(external: true, alt: "B")])
 
@@ -338,6 +367,21 @@ defmodule Expresso.MediaFilesTest do
 
       assert ["data:image/png;base64," <> _data | _rest] =
                document |> LazyHTML.query("img.embed-fallback") |> LazyHTML.attribute("src")
+    end
+
+    test "each image with no option has loading=lazy, and an image with external false has none" do
+      {document, _html, _files} =
+        render([image(), image(external: false, alt: "B")], external: true)
+
+      assert document
+             |> LazyHTML.query(~s(.screen .image img[loading="lazy"]))
+             |> LazyHTML.attribute("alt") ==
+               ["A dot"]
+
+      assert document
+             |> LazyHTML.query(".screen .image img:not([loading])")
+             |> LazyHTML.attribute("alt") ==
+               ["B"]
     end
 
     test "an element with external false keeps its file in the document" do

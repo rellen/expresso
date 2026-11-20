@@ -477,8 +477,12 @@ export function fakePage(maxSteps: number[], options: Options = {}): FakePage {
       all().filter((each) => each.className === name),
     // Only a selector of one class, with one attribute or none, such as
     // `.handout-page[data-thumbnail]`, or of one attribute, such as
-    // `[data-asset-src]`.
+    // `[data-asset-src]`. The fake page has no image, so the selector of the
+    // images with a file next to the document finds no element.
     querySelectorAll: (selector: string) => {
+      if (selector === "img[loading]") {
+        return [];
+      }
       const only = /^\[(data-[\w-]+)\]$/.exec(selector);
       if (only) {
         return all().filter((each) => each.getAttribute(only[1]!) !== null);
