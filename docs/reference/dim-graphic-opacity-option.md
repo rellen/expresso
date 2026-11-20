@@ -51,8 +51,8 @@ you can still read that text.
 
 ## The errors and the warnings
 
-The compiler gives an error for a value that is not a number, for `0`, for a negative
-number and for a number that is more than 1:
+The compiler gives an error for a value that is not a number. It gives the same error for `0`,
+for a negative number and for a number that is more than 1:
 
 ```text
 the dim_graphic_opacity option must be a number that is more than 0 and not more than 1, such as 0.5, and not 0

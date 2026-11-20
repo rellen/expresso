@@ -31,7 +31,7 @@ end
 - A deck with no option has no such tag. The render makes no description from the slides.
 - A text of more than one line goes on one line, with one space in place of each line
   break.
-- An empty text gives no tag.
+- An option with an empty text writes no tag.
 - A search engine shows approximately 155 characters of a description.
 
 ## The tags of each document

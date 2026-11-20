@@ -21,11 +21,11 @@ end
 | --- | --- | --- |
 | The first argument | The path of an `.avif`, `.gif`, `.jpeg`, `.jpg`, `.png`, `.svg` or `.webp` file | The image. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. |
 | `alt` | A string | The text of the image for a screen reader. Without it, the image is decorative, and the `alt` attribute is empty. |
-| `width` | A CSS width, such as `"900px"` or `"60%"` | The width of the image. A percentage is a part of the width of the slide. The default is the natural width of the image. |
-| `external` | `true` or `false` | Keep the file next to the document, in place of a data URI in the document. The default is the `external` option of the deck, or `false`. See "A file next to the document". |
-| `goto` | A slide and a step, such as `[slide: 5]` or `[slide: "summary"]` | Makes the element a link to that slide and step. See [the goto option](goto-option.md). |
+| `width` | A CSS width, such as `"900px"` or `"60%"` | The width of the image. A percentage is a part of the slide width. The default is the natural width of the image. |
+| `external` | `true` or `false` | With `true`, the file stays next to the document, in place of a data URI in the document. The default is the `external` option of the deck, or `false`. See "A file next to the document". |
+| `goto` | A slide and a step, such as `[slide: 5]` or `[slide: "summary"]` | The option makes the element a link to that slide and step. See [the goto option](goto-option.md). |
 | `window` | `:macos`, `:terminal`, `:plain` or `:none` | A frame that looks like a window. The default is the `window` option of the deck. See [the window option](window-option.md). |
-| `window_title` | A string | The text of the bar of the window. |
+| `window_title` | A string | The text of the window bar. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
@@ -39,7 +39,7 @@ in the list.
 
 With `external true`, the document does not hold the image file. The render writes a copy
 of the file into a directory next to the output file, such as `talk_files/` for
-`talk.html`, and each `img` element holds the relative address of the copy, such as
+`talk.html`. Each `img` element holds the relative address of the copy, such as
 `talk_files/team-3f2a1c9e.jpg`.
 
 ```elixir
@@ -53,7 +53,7 @@ end
 
 - The document is smaller. A photograph of 500 KB adds approximately 670 KB to a document
   as a data URI, and 60 bytes as an address.
-- A web host can keep the copy in its cache. A change of the text of the deck then does
+- A web host can keep the copy in its cache. A change to the text of the deck then does
   not send the image again.
 - The `img` element has `loading="lazy"`. See "When the browser gets the file".
 - Two elements with the same file share one copy.
@@ -86,7 +86,7 @@ late, as a video can.
 | --- | --- |
 | None | The image takes its natural size. The theme makes it smaller when the slide is too small. |
 | A length, such as `"900px"` | The image takes that width. In a window that is smaller than 1280 by 720 pixels, the width becomes smaller with the slide. See [The size of a slide](slide-size.md). |
-| A percentage, such as `"60%"` | The image takes that part of the width of the slide. The document writes `60vw`. |
+| A percentage, such as `"60%"` | The image takes that part of the slide width. The document writes `60vw`. |
 | A CSS function, such as `"calc(50% + 10px)"` | The value goes into the document as it is. |
 
 The width goes into the custom property `--image-width`, in the `style` attribute of the
@@ -102,7 +102,7 @@ end
 ```
 
 Use the `on` entity only on an image with no `width` option. The `style` attribute of the
-`width` option takes priority over the rule of the `on` entity, and the width then does
+`width` option has priority over the rule of the `on` entity, and the width then does
 not change. Write a percentage of the slide as `vw` in `set`, because the `on` entity does
 not change `%` to `vw`.
 

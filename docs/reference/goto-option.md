@@ -67,7 +67,7 @@ The deck must have the slide and the step:
 | --- | --- |
 | The present view | The presenter goes to the slide and the step of the link. The browser history gets no entry, and the address shows the new step. |
 | A black screen or the list of keys | The click closes the black screen or the list, and it does nothing more. |
-| The overview | The click goes to step 1 of the slide of the page, as a click on each other part of the page does. |
+| The overview | The click goes to step 1 of the slide that the page shows, as a click on each other part of the page does. |
 | The speaker view | The click goes to the next step or to the previous step, as a click on each other part of the page does. |
 | The handout view | The browser follows the link. The address then shows the slide and the step of the link. |
 
@@ -80,7 +80,7 @@ The link is an HTML link with the address of its step, such as `#5.2`. `Tab` mov
 link, and `Enter` goes to its step. A screen reader reads the link as a link, with the
 text or the `alt` text of the element as its name.
 
-The list of keys of the present view shows the row "Click or tap a link".
+The list of keys in the present view shows the row "Click or tap a link".
 
 ## Rules
 

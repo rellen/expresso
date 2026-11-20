@@ -10,7 +10,7 @@ give. For the steps, see [Make a deck accessible](../how-to/make-a-deck-accessib
 | `main.views` | `main` | The present view, the handout view, the progress bar and the live region. |
 | `nav#menu` | `navigation`, with the name "Slides and steps" | The menu. |
 | `dialog#help` | `dialog`, with the title of the list | The list of keys. |
-| `aside.notes` | `complementary`, with the name "Notes: " and the name of the page | The notes of a page of the handout view. The speaker view holds the notes of the current step as paragraphs and lists, with no live region. |
+| `aside.notes` | `complementary`, with the name "Notes: " and the name of the page | The notes for a page of the handout view. The speaker view holds the notes of the current step as paragraphs and lists, with no live region. |
 
 The `main` element takes no box, so the views keep their layout.
 
@@ -64,7 +64,7 @@ The region is empty at load.
 
 | Element | Role | State |
 | --- | --- | --- |
-| The list of the menu | `listbox`, with the name "Slides and steps" | `aria-activedescendant` is the id of the option of the cursor. The list takes the focus while the menu is open. |
+| The list of the menu | `listbox`, with the name "Slides and steps" | `aria-activedescendant` is the id of the cursor's option. The list takes the focus while the menu is open. |
 | The steps of a slide | `group`, with the name of the slide | — |
 | A step | `option`, with the id `menu-step-<index>` | `aria-selected="true"` on the option of the cursor, and `aria-current="step"` on the option of the current step. |
 
@@ -76,7 +76,7 @@ and the `Tab` key skip it.
 On a touch screen, the button of the menu opens the menu. It is a `button` with the name
 "Menu of the slides and their steps", and `aria-expanded` tells if the menu is open. Its
 box is 43.2 by 43.2 CSS pixels, so it is larger than the 24 by 24 CSS pixels of
-criterion 2.5.8 of WCAG 2.2. See [The presenter](presenter.md#the-button-of-the-menu).
+criterion 2.5.8 in WCAG 2.2. See [The presenter](presenter.md#the-button-of-the-menu).
 
 ## The progress bar
 
@@ -88,7 +88,7 @@ part of the deck before the current step, from 0 to 100, as the width of the bar
 | Element | What a screen reader gets |
 | --- | --- |
 | `image` | The `alt` option as the `alt` attribute. Without it, the image is decorative. |
-| `diagram` | With the `alt` option, an `img` with that text as its name. Without it, the text of the SVG. A graph from Graphviz or D2 without `alt` gives a nested list of its nodes and edges, such as "web, to api", in the place of the text of the SVG. |
+| `diagram` | With the `alt` option, an `img` with that text as its name. Without it, the text of the SVG. A graph from Graphviz or D2 without `alt` gives a nested list of its nodes and edges, such as "web, to api". The list replaces the text of the SVG. |
 | `chart` | An `img` with the `title` option as its name, and a table of the values. |
 | `stat` | The whole value as one text, such as "$4.2M", and the `label` option. |
 | `icon` | Nothing for the drawing. The `label` option as text. |
@@ -98,7 +98,7 @@ part of the deck before the current step, from 0 to 100, as the width of the bar
 | `math` | MathML, which a screen reader reads. A formula from the `tex` option is MathML too. A part of a later step, such as a line of a derivation with `reveal true`, is hidden until its step, as an element is. |
 | `table` | The `caption` option as the name of the table. Each header cell is a `th` with a `scope`: `col` in the `header` row, and `row` for the first cell of a row with `row_header`. |
 | An element of a later step | Nothing. The style sheet hides it with `visibility: hidden` until its step. |
-| A part of a text of a later step | Nothing, as for an element. A part with a state shows at each step, and a screen reader reads it at each step. |
+| A part of a text at a later step | Nothing, as for an element. A part with a state shows at each step, and a screen reader reads it at each step. |
 | A text with `effect :type` | The whole text at once, at the step of the element. The characters that the eye sees have `aria-hidden`, so a screen reader does not read one letter at a time. |
 
 ## The language
@@ -120,13 +120,13 @@ is then true. The document changes these parts for such a user:
 
 | Part | With the preference |
 | --- | --- |
-| Each role of text of the theme | 7:1 or more on its background. See [More contrast](theme-option.md#more-contrast). |
+| Each role of text in the theme | 7:1 or more on its background. See [More contrast](theme-option.md#more-contrast). |
 | Each dimmed role | 7:1 or more. See [the dim_contrast option](dim-contrast-option.md#more-contrast). |
-| The outline of the cursor of the menu | 3 pixels, and not 2. |
-| The outline of the button of the menu while it has the focus | 3 pixels, and not 2. |
-| The outline of the current slide of the menu | 3 pixels, and not 2. |
-| The search field of the list of keys | An outline of 3 pixels while it has the focus. |
-| The outline of the selected page of the overview | 4 pixels, as in the usual mode. |
+| The outline around the cursor of the menu | 3 pixels, and not 2. |
+| The outline around the button of the menu while it has the focus | 3 pixels, and not 2. |
+| The outline around the current slide of the menu | 3 pixels, and not 2. |
+| The search field in the list of keys | An outline of 3 pixels while it has the focus. |
+| The outline around the selected page of the overview | 4 pixels, as in the usual mode. |
 
 ## Forced colors
 
@@ -200,4 +200,4 @@ A reader who asks for reduced motion gets no effect, no transition and no morph.
 
 The keys of the presenter are single characters, such as `j` and `p`, and `?` opens the
 list of keys. A key does nothing while the focus is in a field of text, such as the search
-of the list of keys. See [The presenter](presenter.md).
+in the list of keys. See [The presenter](presenter.md).

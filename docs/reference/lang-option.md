@@ -1,7 +1,7 @@
 # The lang option
 
-The `lang` option gives the language of the text of a deck. A screen reader selects its
-voice and its pronunciation from it, and a browser selects its hyphenation and its quotes.
+The `lang` option gives the language of the text in a deck. A screen reader selects its voice
+and its pronunciation from it, and a browser selects its hyphenation and its quotation marks.
 
 ```elixir
 defmodule MyTalk.Deck do

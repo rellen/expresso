@@ -32,8 +32,8 @@ The element also takes the overlay options, such as `at` and `effect`. See
 
 The compiler gives an error for a path with a different extension and for an address. The
 render gives an error for a file that it cannot read. It also gives an error for a sound
-with `external true` when the output is the standard output, because the document then
-has no directory for the copy of the file.
+with `external true` when the output is the standard output. The document then has no
+directory for the copy of the file.
 
 ## When the sound plays
 
@@ -63,10 +63,12 @@ is the smallest, and an MP3 file plays in each browser. The watch mode renders t
 again after a change to the file.
 
 With `external true`, the document does not hold the file. The render writes a copy of
-the file into a directory next to the output file, such as `talk_files/` for `talk.html`,
-and the element `expresso-audios` holds the relative address of the copy, such as
+the file into a directory next to the output file, such as `talk_files/` for `talk.html`.
+The element `expresso-audios` holds the relative address of the copy, such as
 `talk_files/bell-3e700d6d.wav`. The browser then asks for the file only when the sound
-plays first. The rules are the rules of a video. See
+plays first.
+
+The rules are the rules of a video. See
 [A file next to the document](video-element.md#a-file-next-to-the-document). For the
 settings of a web host, see
 [Put a deck on a web host](../how-to/put-a-deck-on-a-web-host.md).

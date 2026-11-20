@@ -78,19 +78,18 @@ presenter cannot turn them off.
 
 ## The document
 
-The renderer writes each file one time, as a data URI, into the element
-`expresso-videos`. The element comes after the presenter script, so the deck answers a
-key before the browser received the file. For a video with `external true`, it writes the address of a copy of
-the file. Two video elements with the same file share it. Each copy of the slide
-holds only a `video` element with `data-video`, the number of the file, and the poster
-under it. The presenter gives the `video` element of the present view its source the first
-time that it plays.
+The renderer writes each file one time, as a data URI, into the element `expresso-videos`. The
+element comes after the presenter script, so the deck answers a key before the browser received
+the file. For a video with `external true`, it writes the address of the file's copy. Two video
+elements with the same file share it. Each copy of the slide holds only a `video` element with
+`data-video`, the number of the file, and the poster under it. The presenter gives the `video`
+element of the present view its source the first time that it plays.
 
 ## A file next to the document
 
-With `external true`, the document does not hold the video file. The render writes a
-copy of the file into a directory next to the output file, and the element
-`expresso-videos` holds the relative address of the copy:
+With `external true`, the document does not hold the video file. The render writes a copy of the
+file into a directory next to the output file. The element `expresso-videos` holds the relative
+address of the copy:
 
 | Output file | Directory of the copies | Address in the document |
 | --- | --- | --- |
@@ -99,7 +98,7 @@ copy of the file into a directory next to the output file, and the element
 
 These rules apply:
 
-- The name of a copy holds the name of the file and eight digits of the SHA-256 of its
+- The name of a copy holds the name of the file and eight digits from the SHA-256 of its
   content. A changed file gets a new name, so a web host can keep a copy in its cache for
   a long time.
 - Two elements with the same file and `external true` share one copy.
@@ -107,9 +106,8 @@ These rules apply:
   not wait for it. The browser can go to a time of the video before the whole file
   arrives.
 - The poster and the captions stay in the document, as data URIs.
-- The output must be a file. With `-`, the standard output, the document has no directory
-  for the copy, and the renderer raises an `ArgumentError` that names the video and the
-  option.
+- The output must be a file. With `-`, the standard output, the document has no directory for
+  the copy. The renderer then raises an `ArgumentError` that names the video and the option.
 - Send the directory with the document. A document with no copy shows the poster.
 - The render does not remove an old copy from the directory.
 
@@ -124,11 +122,11 @@ Each tool writes the copies next to its document:
 
 ## The captions
 
-The `captions` option gives a WebVTT file. The renderer writes it into the `video`
-element as a `track` with `kind="captions"`, the label "Captions" and the attribute
-`default`, so the browser shows the captions from the start. The track holds the file as a
-data URI, because the document is one file. With `controls true`, the controls of the
-browser can turn the captions off.
+The `captions` option gives a WebVTT file. The renderer writes it into the `video` element as a
+`track` with `kind="captions"`, the label "Captions" and the attribute `default`. Therefore the
+browser shows the captions from the start. The track holds the file as a data URI, because the
+document is one file. With `controls true`, the controls of the browser can turn the captions
+off.
 
 ```text
 WEBVTT

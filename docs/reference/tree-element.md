@@ -77,16 +77,16 @@ tree(title: "The folders", elements: [
 | `sum` | `true` or `false` | Give a node with no `value` the sum of the values under it. The default is `true`. |
 | `value_format` | `:number`, `:bytes` or `:percent` | The text of a value, such as `1,250`, `412 GB` or `12.5%`. The default is `:number`. |
 | `sort` | `:value` or `:none` | The order of the nodes under each node. `:value` puts the largest value first. The default is `:none`, the order of the data. |
-| `bar` | `true` or `false` | A bar along the bottom of each box, with the part of the value of the root. The default is `false`. |
+| `bar` | `true` or `false` | A bar along the bottom of each box, with the part of the root's value. The default is `false`. |
 | `limit` | A positive integer | The most nodes under each node. One more node, such as "3 more", holds the total of the rest. |
 | `depth` | A positive integer | The most levels, with `1` for the root only. A node at the last level shows the total of the values under it. |
-| `box` | One size, or a list of sizes | The size of the boxes of each level, from the root down, such as `[[width: 280, height: 120], [width: 220, height: 96]]`. The last size applies to each deeper level. One size, such as `[width: 200, height: 80]`, applies to each level. The default is `[width: 220, height: 96]`. |
-| `width` | A CSS length | The width of the tree, such as `"900px"` or `"70%"`. The default is 80% of the width of the slide. |
+| `box` | One size, or a list of sizes | The size of the boxes at each level, from the root down, such as `[[width: 280, height: 120], [width: 220, height: 96]]`. The last size applies to each deeper level. One size, such as `[width: 200, height: 80]`, applies to each level. The default is `[width: 220, height: 96]`. |
+| `width` | A CSS length | The width of the tree, such as `"900px"` or `"70%"`. The default is 80% of the slide's width. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 
 The sizes of `box` are in the units of the drawing. The drawing scales to the width of the
 element, and it keeps its proportions. Thus a larger box gives more space to its text, and
-a smaller font. The height of the tree is at most 72% of the height of the slide.
+a smaller font. The height of the tree is at most 72% of the slide's height.
 
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).
@@ -97,8 +97,8 @@ A slide, a text box, a column and a callout can hold a tree.
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | A string, required | The identity of the node. It is also the text of the first line of the box. |
-| `label` | A string | The text of the first line of the box in place of the name. |
+| The first argument | A string, required | The identity of the node. It is also the first line of the box. |
+| `label` | A string | The first line of the box in place of the name. |
 | `detail` | A string | The second line of the box, such as a role or a size. |
 | `image` | A path | An image that the box shows in a circle at its left, such as `"ana.jpg"`. A relative path starts from the `root` option of the deck. |
 | `icon` | A name | An icon that the box shows at its left, in place of an image, such as `"factory"`. The names are the names of [the icon element](icon-element.md). |
@@ -115,7 +115,7 @@ The name is the identity of the node, so two nodes of one tree cannot have the s
 Give a different name and a label to the second node, such as
 `node "home/docs", label: "docs"`.
 
-The `node` entity is also the entity of a node of a chart of flows. See
+The `node` entity is also the entity for a node in a chart of flows. See
 [the chart element](chart-element.md). A chart takes the options `column` and `order`, and a
 tree does not. A tree takes `detail`, `image`, `icon`, `fields`, `color`, `value`,
 `layout`, `parent`, the overlay options, the `on` entity and nested nodes, and a chart does
@@ -131,10 +131,10 @@ and the file has a row for each node. The file has one of two forms:
 | Parent | `id`, `parent`, and the other columns. An empty `parent` makes the root. | `ben,ana,Ben,Production` |
 | Path | `path`, and the other columns. The `separator` option divides a path. | `/home/photos,412000000000` |
 
-The other columns have the names of the options of a node: `label`, `detail`, `image`,
-`icon`, `value`, `color`, `layout` and `class`. An empty cell gives no option. The tree
-does not read a different column, unless its `fields` option names the column. Each column
-of `fields` becomes a field of each box, with its heading as the name of the field.
+The other columns have the names of a node's options: `label`, `detail`, `image`, `icon`,
+`value`, `color`, `layout` and `class`. An empty cell gives no option. The tree does not
+read a different column, unless its `fields` option names the column. Each column of
+`fields` becomes a field of each box, with its heading as the name of the field.
 
 ```text
 id,parent,label,detail,value,team
@@ -181,8 +181,8 @@ change to the file.
 
 ### The parent option
 
-The `parent` option of a node puts the node under the node that it names, so you can type a
-flat list in place of nesting:
+The `parent` option of a node puts the node under the node that it names. Thus you can type
+a flat list in place of nesting:
 
 ```elixir
 slide "the flat list" do
@@ -202,9 +202,9 @@ order, after the nodes that the parent holds in its block.
 ## The steps
 
 Each box takes the overlay options of a node, so `at` and the `on` entity work as for each
-element. A box is not inside the box of its parent in the HTML, so the compiler gives each
-box the steps of its node, or of the nearest node above it with steps. Thus `at` on a node
-shows the node and the nodes under it at that step, unless they have their own `at`. The
+element. A box is not inside the box of its parent in the HTML. Therefore the compiler gives
+each box the steps of its node, or of the nearest node above it with steps. Thus `at` on a
+node shows the node and the nodes under it at that step, unless they have their own `at`. The
 line to a node shows with the node.
 
 The `reveal` option of the tree gives the steps for the usual orders:
@@ -240,8 +240,8 @@ end
 ```
 
 `dim true` dims each box from the first step of a later box, as the `dim` option of a list
-does. A dimmed box moves its text to the dimmed colors of the theme, and its border, its
-tint, its icon, its bar and its line fade.
+does. A dimmed box moves its text to the dimmed colors of the theme. Its border, its tint, its
+icon, its bar and its line fade.
 
 ### The reflow option
 
@@ -277,7 +277,7 @@ end
 The effect `:grow` draws each line from its parent to its box when the box shows, and the
 box grows into its place.
 
-The node of the rest of a `limit` shows with the last node that the limit keeps.
+The node that holds the rest of a `limit` shows with the last node that the limit keeps.
 
 ## The highlight option
 
@@ -307,8 +307,8 @@ end
 A group is one of these:
 
 - the name of a node, such as `"Ben"`;
-- `branch("Eve")`, for the node and each node under it, also the node of the rest of a
-  `limit`. `use Expresso` imports `branch/1`, and `{:branch, "Eve"}` is the same value;
+- `branch("Eve")`, for the node and each node under it, also the node that holds the rest
+  of a `limit`. `use Expresso` imports `branch/1`, and `{:branch, "Eve"}` is the same value;
 - a list of those, such as `["Cy", "Gus"]`.
 
 The line to a box in focus keeps its color, so the path from the root to the group stays
@@ -321,9 +321,9 @@ nodes itself, so a tree with it takes no `dim` option.
 
 ## The frames
 
-A tree with `frame` entities shows the same hierarchy at two or more points in time, such as
-an org chart before and after a reorg, or a disk on two dates. Each frame holds a whole tree.
-The first frame shows first, and each later frame takes one step.
+A tree with `frame` entities shows the same hierarchy at two or more points in time. Examples
+are an org chart before and after a reorganization, and a disk on two dates. Each frame holds
+a whole tree. The first frame shows first, and each later frame takes one step.
 
 ```elixir
 slide "the reorg" do
@@ -366,9 +366,9 @@ The name of a node is its identity across the frames. At the step of a frame:
   old content to the new content;
 - the lines of the frame and the label of the frame show under the tree.
 
-Each frame has the layout of its own tree, at the center of the size of the largest frame.
-With `color {:field, name}`, one legend holds the values of each frame, so a value has one
-color in each frame.
+Each frame has the layout of its own tree, at the center of the largest frame's size. With
+`color {:field, name}`, one legend holds the values of each frame, so a value has one color
+in each frame.
 
 `Expresso.Builder` takes the frames in the `timeline` key, and each frame takes its nodes in
 the `elements` key:
@@ -380,7 +380,7 @@ tree(title: "The plant", timeline: [
 ])
 ```
 
-A CSV file gives the frames with the `frames` option, which names the column of the frame
+A CSV file gives the frames with the `frames` option, which names the column with the frame
 of each row. Each value of the column is a frame, in the order of the file, and the rows of
 each frame make one tree:
 
@@ -393,18 +393,19 @@ year,id,parent,detail
 2025,eve,ana,Quality
 ```
 
-The frames give the steps of the tree, so a tree with frames takes no `reveal`,
-`highlight`, `reflow` or `dim` option, and a node of a frame takes no `at` option and no
+The frames give the steps of the tree. Thus a tree with frames takes no `reveal`,
+`highlight`, `reflow` or `dim` option. A node of a frame also takes no `at` option and no
 `on` entity. The tree itself can take `at` and the `on` entity.
 
-Paper and the handout view show each frame as a small tree in a grid, with its label under
-it, in place of the tree that moves.
+Paper and the handout view do not show the tree that moves. They show each frame as a small
+tree in a grid, with its label under it.
 
 ## The box
 
 A box shows its parts in this order:
 
-1. The image or the icon, in a circle at the left. A box without them centers its text.
+1. The image or the icon, in a circle at the left. A box without them has its text at the
+   center.
 2. The label, in bold.
 3. The detail, in the muted color.
 4. A line for each field, with the name in the muted color.
@@ -442,8 +443,8 @@ A node can have a value, such as the size of a folder or the number of people in
 tree applies the options of the values in this order:
 
 1. `depth` cuts the tree. A node at the last level gets the total of the values under it.
-2. `sum` gives each node with no value the sum of the values of the nodes under it. A value
-   of a node comes first, so a folder can show its own size.
+2. `sum` gives each node with no value the sum of the values under it. A value of a node
+   comes first, so a folder can show its own size.
 3. `sort :value` puts the nodes under each node in the order of their values, from the
    largest. A node with no value goes last.
 4. `limit` keeps that number of nodes under each node. One more node holds the rest, with
@@ -480,8 +481,8 @@ The formats of a value are these:
 | `:bytes` | `412_000_000_000` | `412 GB`, in units of 1000. A value under 10 units has one decimal, such as `4.2 MB`. |
 | `:percent` | `25` of a root of `200` | `12.5%`, with at most one decimal |
 
-The bar of a box has the part of the value of the root, so the bar of the root is full. A
-box without a color has a bar in the accent color.
+The bar of a box has the part of the root's value, so the bar of the root is full. A box
+without a color has a bar in the accent color.
 
 ## The colors
 
@@ -521,7 +522,7 @@ field of each node in the list, so it gets the same information as the colors.
 
 ## The layout
 
-The compiler calculates the place of each box. Each node places the nodes under it with one
+The compiler calculates the place of each box. Each node puts the nodes under it with one
 of three layouts:
 
 | Layout | The nodes under a node | The line to each node |
@@ -539,7 +540,7 @@ The layout of the nodes under a node comes from the first of these:
 4. The `layout` option of the tree. The default is `:top_down`.
 
 A wide last level is the usual problem of an org chart. `stack_from 3` stacks the nodes of
-level 3 under each node of level 2, so the tree gets taller and not wider. A disk has deep
+level 3 under each node of level 2, so the tree becomes taller and not wider. A disk has deep
 folders, and `layout :left_right` puts each level in a column.
 
 ```elixir
@@ -571,9 +572,9 @@ end
 ```
 
 In a tree with one layout, the boxes of one level have their tops in one row for
-`:top_down`, and their left edges in one column for `:left_right`. The layout does not move
-a subtree into the space next to a smaller subtree. Thus the place of each box depends only
-on its branch, and the same tree gives the same picture each time.
+`:top_down`. For `:left_right`, they have their left edges in one column. The layout does
+not move a subtree into the space next to a smaller subtree. Thus the place of each box
+depends only on its branch, and the same tree gives the same picture each time.
 
 ## The look
 
@@ -586,9 +587,9 @@ properties in the `css` option:
 | --- | --- | --- |
 | `--tree-width` | The width of the tree | `80vw` |
 | `--tree-height` | The most height of the tree | `72vh` |
-| `--tree-border` | The color of the border of a box without a color | the muted color |
+| `--tree-border` | The border color of a box without a color | the muted color |
 | `--tree-line` | The color of the lines | the muted color |
-| `--tree-box` | The color of the background of a box | the background color |
+| `--tree-box` | The background color of a box | the background color |
 | `--tree-text` | The color of the label | the text color |
 | `--tree-bar` | The color of the bar | the color of the box, or the accent color |
 
@@ -601,14 +602,14 @@ The renderer writes a `figure` with the class `tree`. It holds:
   with the class `tree-box`. The `div` holds:
   - an `img` with the class `tree-image`, or a `span` with the class `tree-icon` that holds
     the SVG of the icon. The `div` then also has the class `tree-media`;
-  - a `div` with the class `tree-text`. It holds a `p` with the class `tree-label`, a `p`
-    with the class `tree-detail` when the node has a detail, and a `p` with the class
-    `tree-field` for each field. The name of a field is in a `span` with the class
+  - a `div` with the class `tree-text`. It holds a `p` with the class `tree-label`, and a
+    `p` with the class `tree-detail` when the node has a detail. It also holds a `p` with
+    the class `tree-field` for each field. The name of a field is in a `span` with the class
     `tree-field-name`. A `p` with the class `tree-value` holds the text of the value;
   - with `bar true`, a `span` with the class `tree-bar` that holds a `span` with the class
-    `tree-bar-fill`. Its `width` is the part of the value of the root.
+    `tree-bar-fill`. Its `width` is the part of the root's value.
 
-  The node of the rest of a `limit` has the class `tree-more`.
+  The node that holds the rest of a `limit` has the class `tree-more`.
 
   A box with a color also has the class `tree-colored` and the custom property
   `--tree-color` in its `style`, such as `var(--chart-2)` or `var(--danger)`;
@@ -636,8 +637,8 @@ A tree with frames has these differences:
 - a `foreignObject` under the tree holds a `div` with the class `tree-frame-labels`, with a
   `p` with the class `tree-frame-label` for each frame;
 - a `div` with the class `tree-frames` holds a `figure` with the class `tree-copy` for each
-  frame: an `svg` of the frame with no steps, and a `figcaption` with its label. Only paper
-  and the handout view show it;
+  frame. The `figure` holds an `svg` of the frame with no steps, and a `figcaption` with its
+  label. Only paper and the handout view show this `div`;
 - each frame has its own `ul` with the class `tree-list`. Its `aria-label` holds the title
   and the label of the frame, such as `The plant, After`.
 
@@ -669,10 +670,12 @@ The compiler gives an error for these:
 - a `morph` option on a node. Give the option to the tree;
 - a node that shows at a step at which the node above it does not show;
 - a `reveal` value that is not `:levels`, `:branches` or `:nodes`;
-- a `highlight` option that is not a list of groups, a group that names no node of the
-  tree, `highlight` with `reveal` or with `dim`, and `whole_first` without `highlight`;
-- a tree with frames and node entities of its own, a frame that holds a series or a flow,
-  and a frame whose tree has an error, with the label of the frame;
+- a `highlight` option that is not a list of groups, and a group that names no node of the
+  tree;
+- `highlight` with `reveal` or with `dim`, and `whole_first` without `highlight`;
+- a tree with frames and node entities of its own, and a frame that holds a series or a
+  flow;
+- a frame whose tree has an error, with the label of the frame;
 - a tree with frames and the option `reveal`, `highlight`, `reflow` or `dim`, and a node of
   a frame with `at` or an `on` entity;
 - the `frames` option without `src`, and a `frames` column that the file does not have;

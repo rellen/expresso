@@ -75,7 +75,7 @@ can hold `<Enter>`.
 | --- | --- |
 | The present view | None. |
 | The speaker view | The notes for each step, then the notes of the current step, in the order of the deck. |
-| A page of the handout view, and paper | The notes for each step, then the notes of the step of the page. |
+| A page of the handout view, and paper | The notes for each step, then the notes of the step that the page shows. |
 | A page with [the handout option](presenter.md#the-handout-view) | Also the notes of each earlier step that has no page, under the label of the step, such as `Step 2`. |
 
 The deck option `print_notes false` leaves the notes out of the handout view and of the
@@ -100,5 +100,5 @@ dependencies of that release to get the Markdown.
 ## Accessibility
 
 The notes of a page are an `aside` element with the name `Notes:` and the name of the
-page. The speaker view holds the notes of the current step as text and lists, so a screen
+page. The speaker view holds the notes of the current step as text and lists. Thus a screen
 reader reads them as it reads each other text. See [Accessibility](accessibility.md).

@@ -2,8 +2,8 @@
 
 The `advance` option gives each step a time. The present view goes to the next step when
 that time ends. The `loop` option of the deck makes the first slide the slide after the
-last one. Use them for a talk with a fixed time for each slide, and for a deck that runs on
-a screen with no presenter.
+last one. Use them for a talk with a fixed time for each slide. Use them also for a deck that
+runs on a screen with no presenter.
 
 ```elixir
 defmodule MyDeck do
@@ -49,7 +49,7 @@ makes such lines from a rehearsal. See
 
 | Value | Effect |
 | --- | --- |
-| `loop true` | The step after the last step of the talk is step 1 of the first slide of the talk. The clock and the keys of the next step go to it. |
+| `loop true` | The step after the last step of the talk is step 1 of the talk's first slide. The clock and the keys of the next step go to it. |
 | No option, or `loop false` | The last step of the talk has no step after it. This is the default. |
 
 The key of the previous step does not go from the first slide to the last slide. A

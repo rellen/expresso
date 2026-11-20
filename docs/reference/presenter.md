@@ -55,8 +55,8 @@ The present view knows these keys:
 
 <!-- /keys -->
 
-To go to a slide, type its number, then press `Enter`. For example, `1` `2` `Enter` goes
-to slide 12. The number shows in the top right corner until `Enter`.
+To go to a slide, type its number. Then press `Enter`. For example, `1` `2` `Enter` goes to
+slide 12. The number shows in the top right corner until `Enter`.
 
 A slide with `hidden true` is not a part of the talk. The keys above skip it, and the
 numbers count only the slides of the talk. The overview, the menu and a link go to it. See
@@ -70,8 +70,8 @@ A presentation remote sends `Page Down` and `Page Up`, so it works with the deck
 
 A click or a tap on the right two thirds of the window goes to the next step. A click or a
 tap on the left third goes to the previous step. On a touch screen, swipe left for the next
-step, and swipe right for the previous step. A click on a link of the `goto` option goes to
-its slide and step. A click on another link goes to the link.
+step. Swipe right for the previous step. A click on a link of the `goto` option goes to its
+slide and step. A click on another link goes to the link.
 
 On a touch screen, the present view also shows the button of the menu in its top right
 corner. See [The button of the menu](#the-button-of-the-menu).
@@ -106,6 +106,7 @@ window shows the overview. The overview knows these keys:
 The menu lists each slide with a small picture of its last step, and the steps of each
 slide under it. A step shows its number and its label. See [Step labels](step-labels.md).
 A hidden slide shows a dash in the place of its number.
+
 `m` opens the menu with the cursor at the current step, and the step of the audience
 changes only at `Enter` or at a click. In the speaker view, only the speaker window shows
 the menu. The menu knows these keys:
@@ -134,21 +135,23 @@ second tap closes it. Tap a step or a slide in the menu to go to it.
 - The button shows only when the main pointer of the screen is coarse, such as a finger.
   The media query is `(pointer: coarse)`. A computer with a mouse does not show it, also on
   a projector.
-- The button is not on a black screen, in the overview, in the speaker view, in the handout
-  view, on paper or in a PNG file of the export.
+- The button is not on a black screen, in the overview, in the speaker view or in the handout
+  view. It is also not on paper or in a PNG file of the export.
 - The button is over the slide and over the menu. Do not put an important part of a slide
-  in its top right corner, for a talk from a phone or a tablet.
+  in its top right corner. This rule is for a talk from a phone or a tablet.
 - Its size is 43.2 by 43.2 CSS pixels in each window.
 
 ## The speaker view
 
 The speaker view shows the current step, the next step, the notes of the current step,
 the position and a timer. The notes are the `notes` option of the slide and each `note` of
-the step, with their Markdown. See [The note element](note-element.md). The position ends with the label of the step, when the slide gives
-one. The keys operate in either window, and the two windows show the same step. `b` in the
-speaker view gives a black screen to the audience, and `w` gives a white screen. A white
-screen follows each rule of a black screen: it pauses a video and a sound, and the next key
-or click closes it. The speaker view knows these keys:
+the step, with their Markdown. See [The note element](note-element.md). The position ends
+with the label of the step, when the slide gives one.
+
+The keys operate in either window, and the two windows show the same step. `b` in the speaker
+view gives a black screen to the audience, and `w` gives a white screen. A white screen
+follows each rule of a black screen: it pauses a video and a sound, and the next key or click
+closes it. The speaker view knows these keys:
 
 <!-- keys speaker -->
 
@@ -255,8 +258,8 @@ parameters:
 | `?rehearse` | `deck.html?rehearse` | A rehearsal: the clock of the steps does not run. See [The time of each slide](#the-time-of-each-slide). |
 | `?check` | `deck.html?check` | The layout check. See [the layout check](layout-check.md). |
 
-A step that the slide does not have shows the nearest step of that slide, so an old link
-still opens the right slide after the slide loses a step.
+A step that the slide does not have shows the nearest step of that slide. Thus an old link
+still opens the correct slide after the slide loses a step.
 
 ## The clock of the steps
 
@@ -281,7 +284,7 @@ These rules apply:
 ## The time of each slide
 
 The speaker view records the time that each step used, while its timer runs. The key `e`
-in the speaker view shows a table with the time of each slide, and the lines of
+in the speaker view shows a table with the time of each slide. It also shows the lines of
 [the advance option](advance-option.md) for those times. For the design, see
 [The rehearsal](../rehearsal.md).
 
@@ -289,8 +292,8 @@ in the speaker view shows a table with the time of each slide, and the lines of
 
 | Key or address | Effect |
 | --- | --- |
-| `e` | The table of the time of each slide, in the speaker view. `Esc` or a click outside the table closes it. |
-| `r` | Set the timer to 0:00, and start a new record. |
+| `e` | The table with the time of each slide, in the speaker view. `Esc` or a click outside the table closes it. |
+| `r` | Set the timer to 0:00. Start a new record. |
 | `?rehearse` | A rehearsal: the clock of the steps does not run, in the two windows. |
 
 These rules apply:
@@ -298,7 +301,7 @@ These rules apply:
 - The record starts with the timer, at the first change of the step. The step that shows
   before that change has no time.
 - A step that shows a second time adds to its time.
-- The table shows the sum of the steps of each slide, and `No time` for a slide that did
+- The table shows the sum of the steps in each slide, and `No time` for a slide that did
   not show while the timer ran. A hidden slide has the word `hidden` after its name.
 - The lines give each slide its `advance` option, under a comment with the name of the
   slide. One click on the lines selects each of them.
@@ -355,8 +358,8 @@ These rules apply:
 
 ## The zoom
 
-A click with the Alt key on a slide of the present view or of the speaker view zooms: the
-part of the slide under the mouse fills the window, in the two windows. For the design,
+A click with the Alt key on a slide of the present view or of the speaker view zooms. The
+part of the slide under the mouse then fills the window, in the two windows. For the design,
 see [The zoom](../zoom.md).
 
 ![A click with the Alt key on a table makes the table fill the window, and the key Esc shows the full slide again](https://raw.githubusercontent.com/rellen/expresso/media/present-zoom.gif)
@@ -384,7 +387,7 @@ These rules apply:
 - A change of the step shows the full slide, and it turns the key `z` off.
 - The key `z` turns the laser pointer and the drawing off, and the keys `l` and `x` turn
   the key `z` off. A click with the Alt key zooms also while the laser pointer or the
-  drawing is on, and the dot and the lines stay on their part of the slide.
+  drawing is on. The dot and the lines then stay on their part of the slide.
 - The present view changes with the speed and the easing of the theme. The speaker view
   changes at once, and so does the present view of a reader who asks for reduced motion.
 - In full screen, the browser uses `Esc` to leave full screen. Click with the Alt key
@@ -394,8 +397,8 @@ These rules apply:
 ## The progress bar
 
 A thin bar at the bottom of the present view shows the part of the talk that is done. Each
-step of each slide of the talk counts one time, and a hidden slide does not count. Write `progress false` in the deck to hide the bar at
-the start. The key `g` can still show it.
+step in each slide of the talk counts one time, and a hidden slide does not count. Write
+`progress false` in the deck to hide the bar at the start. The key `g` can still show it.
 
 ![The bar at the bottom grows with each step](https://raw.githubusercontent.com/rellen/expresso/media/present-progress.gif)
 
@@ -445,10 +448,10 @@ pointer and the drawing take a color of the system, and not the color of a prope
 | `--progress-color`, `--progress-height` | The color and the height of the progress bar. |
 | `--slide-number-color`, `--slide-number-size` | The color and the size of the slide number. |
 | `--slide-number-right`, `--slide-number-bottom` | The position of the slide number. |
-| `--goto-color` | The color of a link of the `goto` option. |
+| `--goto-color` | The color of a link that the `goto` option makes. |
 | `--digits-color`, `--digits-background` | The colors of the slide number that the presenter types. |
-| `--hidden-slide-opacity` | The opacity of the content of a hidden slide in the overview and in the menu. The default is 0.45. |
-| `--clock-stopped-color` | The color of the time left of a step in the speaker view while the key `a` has the clock stopped. The default is the role `warning`. |
-| `--laser-color`, `--laser-size` | The color and the size of the dot of the laser pointer. The defaults are the role `danger` and `0.4rem`. |
-| `--draw-pen-color`, `--draw-pen-width` | The color and the width of a line of the pen. The defaults are the role `danger` and `0.12rem`. |
-| `--draw-highlighter-color`, `--draw-highlighter-width`, `--draw-highlighter-opacity` | The color, the width and the opacity of a line of the highlighter. The defaults are the role `warning`, `0.7rem` and 0.4. |
+| `--hidden-slide-opacity` | The opacity that the content of a hidden slide has in the overview and in the menu. The default is 0.45. |
+| `--clock-stopped-color` | The color in which the speaker view shows the time left of a step while the key `a` has the clock stopped. The default is the role `warning`. |
+| `--laser-color`, `--laser-size` | The color and the size of the dot that the laser pointer shows. The defaults are the role `danger` and `0.4rem`. |
+| `--draw-pen-color`, `--draw-pen-width` | The color and the width of a line that the pen draws. The defaults are the role `danger` and `0.12rem`. |
+| `--draw-highlighter-color`, `--draw-highlighter-width`, `--draw-highlighter-opacity` | The color, the width and the opacity of a line that the highlighter draws. The defaults are the role `warning`, `0.7rem` and 0.4. |

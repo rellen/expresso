@@ -23,36 +23,40 @@ end
 | The first argument | An address that starts with `https://` or `http://`, or the path of a local `.html` or `.htm` file | The page. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. |
 | `title` | A string, required | The name of the page for a screen reader. The fallback image gets it as its `alt` text. |
 | `fallback` | The path of an image | The image that shows on paper, in the handout view, in the overview and while the page loads. |
-| `width` | A CSS width, such as `"900px"` or `"80%"` | The largest width of the page. A percentage is a part of the width of the slide. The default is `80%`. The page is narrower when the slide does not have the height for this width, so the page fits in the height that is left. |
+| `width` | A CSS width, such as `"900px"` or `"80%"` | The largest width of the page. A percentage is a part of the slide's width. The default is `80%`. The page is narrower when the slide does not have the height for this width, so the page fits in the height that is left. |
 | `aspect` | Two numbers with a slash, such as `"16/9"` | The ratio of the width to the height. The default is `16/9`. |
 | `interactive` | `true` or `false` | Let the page take clicks and keys. The default is `false`. |
 | `window` | `:macos`, `:terminal`, `:plain` or `:none` | A frame that looks like a window. The default is the `window` option of the deck. See [the window option](window-option.md). |
-| `window_title` | A string | The text of the bar of the window. Give the address of the page, such as `"localhost:4000"`, for the look of a browser. |
+| `window_title` | A string | The text in the bar of the window. Give the address of the page, such as `"localhost:4000"`, for the look of a browser. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
 The element also takes the overlay options, such as `at` and `effect`. See
 [the overlay options](overlay-options.md).
 
-The compiler gives an error for a first argument that is not an address or the path of an
-HTML file, for an `aspect` that is not a ratio, and for an element with no `title`. The
-render gives an error for a local file that it cannot read, and for a local file that is
+The compiler gives an error for these:
+
+- a first argument that is not an address or the path of an HTML file;
+- an `aspect` that is not a ratio;
+- an element with no `title`.
+
+The render gives an error for a local file that it cannot read, and for a local file that is
 not UTF-8. The message names the file.
 
 ## When the page loads
 
 | View | The page |
 | --- | --- |
-| The present view | The page loads when its slide shows for the first time, after the load of the deck. It then stays loaded, and it keeps its state when the slide shows again. |
+| The present view | The page loads when its slide shows for the first time, after the deck loads. It then stays loaded, and it keeps its state when the slide shows again. |
 | The speaker view | No page loads. The pages show the fallback. |
 | The handout view, the overview and paper | No page loads. Each page shows the fallback. |
 
 Without a `fallback`, each of these places shows a box with the title, and with the address
 for a page of the network. The fallback also shows under the frame while the page loads.
 
-A browser with no network loads no address, and the fallback stays. When the network comes
-back, the page loads. A page that the network does not deliver shows the error page of the
-browser, because a deck cannot read a page of a different origin.
+A browser with no network loads no address, and the fallback stays. When the network is
+available again, the page loads. A page that the network does not deliver shows the browser's
+error page, because a deck cannot read a page of a different origin.
 
 ## A local file
 
@@ -75,8 +79,8 @@ A data URI holds a file inside the page, such as an image in
 ## Forced colors
 
 In forced colors, such as the high contrast mode of Windows, the page in the frame takes
-the colors of the system, as the slide does. Thus the canvas of the page and the canvas of
-the slide have the same color. The frame then has an outline of 1 pixel in the color
+the system's colors, as the slide does. Thus the canvas of the page and the canvas of the
+slide have the same color. The frame then has an outline of 1 pixel in the color
 `CanvasText`, so the reader can see where the page starts and ends.
 
 - The outline takes no space, so the page keeps its size and its place.

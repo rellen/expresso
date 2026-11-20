@@ -51,7 +51,7 @@ Use [the columns element](columns-element.md) to put groups side by side.
 
 The document writes a `div` with the class `text-box`. The theme puts the children in a
 column, one under the other, in the center of the box. The text box takes the free space of
-its parent. A `spacer` in the text box takes the free space of the box, and it pushes the
+its parent. A `spacer` in the text box takes the free space of the box. It pushes the
 children after it to the end of the box.
 
 An `at` option or an `on` entity on the text box applies to each child together. A child

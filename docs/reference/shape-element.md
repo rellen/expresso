@@ -1,7 +1,7 @@
 # The shape element
 
 The `shape` element draws a rectangle, an ellipse, a line or an arrow over a slide. Use it
-to point at a part of a slide, such as a line of code or a row of a table.
+to point at a part of a slide, such as a line of code or a table row.
 
 ```elixir
 slide "the result" do
@@ -39,8 +39,8 @@ The element also takes the overlay options, such as `at`, `effect` and the `on` 
 rectangle and an ellipse. A line and an arrow get a stroke that is 4px wider, and the head
 of an arrow grows with the stroke.
 
-Write the options in the block when the shape also has a block, because the DSL does not
-take options and a block in the same call:
+The DSL does not take options and a block in the same call. Therefore write the options in the
+block when the shape also has a block:
 
 ```elixir
 slide "a note" do
@@ -57,7 +57,7 @@ end
 
 ## The place
 
-A percentage is a part of the slide: `x` and the first length of a point are parts of the
+A percentage is a part of the slide. `x` and the first length of a point are parts of the
 width, and `y` and the second length are parts of the height. The point `["0%", "0%"]` is
 the top left corner of the slide, and `["100%", "100%"]` is the bottom right corner. The
 place does not depend on the other elements of the slide.
@@ -73,7 +73,7 @@ the content under it. The layer takes no click, so a click on a shape goes to th
 
 | Custom property | Default | Effect |
 | --- | --- | --- |
-| `--shape-color` | `--accent` of the theme | The color of the line, of the head of an arrow, of the text and of the fill. |
+| `--shape-color` | `--accent` of the theme | The color of the line, of an arrow's head, of the text and of the fill. |
 | `--shape-width` | `0.15rem` | The width of the line. |
 
 `on 3, set: [color: "var(--danger)"]` changes the color of a shape at a step, and the state

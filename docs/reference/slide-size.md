@@ -1,8 +1,8 @@
 # The size of a slide
 
-A slide fills the window of the browser, and its text has a size of 48 pixels for 1rem.
-In a window that is smaller than 1280 by 720 pixels, the text becomes smaller with the
-window, so a slide always has 26.67rem by 15rem or more.
+A slide fills the window of the browser, and its text has a size of 48 pixels for 1rem. In a
+window that is smaller than 1280 by 720 pixels, the text becomes smaller with the window. Thus
+a slide always has 26.67rem by 15rem or more.
 
 ## The font size
 
@@ -25,8 +25,8 @@ A browser that does not know `svh` uses `100vh` in its place.
 
 - A window of 1280 by 720 pixels or larger gives a slide more room, and the text keeps its
   size.
-- A smaller window shows the slide of a window of 1280 pixels wide, or of 720 pixels high,
-  at a smaller scale. Each line of a text keeps its words.
+- A smaller window shows the slide of a window that is 1280 pixels wide, or 720 pixels high, at
+  a smaller scale. Each line of a text keeps its words.
 - A slide fills the window in each proportion. A phone in the portrait direction shows a
   tall slide. This is the intended layout: the slide does not turn, and it does not show
   16:9 with an empty area above and below it.
@@ -50,21 +50,29 @@ show, so the bars do not cover the bottom of the slide, the footer or the progre
 | --- | --- |
 | `rem` and `em`, such as `"4rem"` | It becomes smaller with the text. |
 | One number of pixels, such as `width "300px"` or `set: [x: "-200px"]` | It becomes smaller with the text. The document holds `calc(300 * var(--px))`. |
-| A percentage of a `width` option, such as `"60%"` | It is a part of the width of the window. |
+| A percentage of a `width` option, such as `"60%"` | It is a part of the window's width. |
 | `vw` and `vh` | They are parts of the window. |
 | A value with more than one number, such as `"calc(50% + 10px)"` | The pixels keep their size. |
 | A length in pixels in [the css option](css-option.md) | It keeps its size. Use `rem`. |
-| A length in pixels of a part of a formula, such as `set: [x: "40px"]` | It becomes smaller with the text. In a window of 640 by 360 pixels, the part moves by 20 pixels. |
-| A length in pixels of a part of a diagram | It keeps its size. A pixel of a part of a diagram is a unit of its SVG file, and the diagram becomes smaller with the slide. |
+| A length in pixels for a part of a formula, such as `set: [x: "40px"]` | It becomes smaller with the text. In a window of 640 by 360 pixels, the part moves by 20 pixels. |
+| A length in pixels for a part of a diagram | It keeps its size. A pixel for a part of a diagram is a unit of its SVG file, and the diagram becomes smaller with the slide. |
 
 In a window of 1280 by 720 pixels or larger, a length in pixels is that number of pixels.
 
 ## The parts of the presenter
 
-The menu, the button of the menu, the list of keys, the speaker view, the table of the
-times and the report of the layout check are not a slide. Their text keeps its size in each
-window. On a touch screen, the button of the menu is in the top right corner of the present
-view. See [The button of the menu](presenter.md#the-button-of-the-menu).
+These parts of the presenter are not a slide:
+
+- the menu,
+- the button of the menu,
+- the list of keys,
+- the speaker view,
+- the table of the times,
+- the report of the layout check.
+
+Their text keeps its size in each window. On a touch screen, the button of the menu is in the
+top right corner of the present view. See
+[The button of the menu](presenter.md#the-button-of-the-menu).
 
 ## The viewport tag
 

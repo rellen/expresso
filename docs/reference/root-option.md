@@ -1,7 +1,7 @@
 # The root option
 
-The `root` option of a deck gives the directory of each relative path of the deck. Without
-it, a relative path starts from the working directory of the command.
+The `root` option of a deck gives the directory where each relative path of the deck starts.
+Without it, a relative path starts from the working directory of the command.
 
 ```elixir
 defmodule MyTalk.Deck do
@@ -46,7 +46,7 @@ directory.
 | A video | The first argument and the `poster` and `captions` options of `video`. |
 | A sound | The first argument of `audio`. |
 | A chart file | The `src` option of `chart`. |
-| An icon | Each path of the `icons` option of the deck. |
+| An icon | Each path in the `icons` option of the deck. |
 | A style sheet | The `css` option of the deck, when it is a path. |
 | A file of `url()` | A `url()` of a style sheet in the `css` option itself. A `url()` of a CSS file starts from the directory of that file. See [the css option](css-option.md#files-in-the-style-sheet). |
 
@@ -59,11 +59,11 @@ These paths stay as they are:
 
 ## The errors
 
-The compiler gives an error for a code file, a chart file, an icon file or a style sheet
-that it cannot read, with the full path from the root. The renderer raises an
-`ArgumentError` for an image, a diagram, a page, a video, a poster, captions, a sound or a
-file of `url()` that it cannot read, with the full path. The message of an element names the
-file and the reason, and it tells where a relative path starts:
+The compiler reads a code file, a chart file, an icon file and a style sheet. It gives an
+error for a file that it cannot read, with the full path from the root. The renderer reads an
+image, a diagram, a page, a video, a poster, captions, a sound and a file of `url()`. It
+raises an `ArgumentError` for a file that it cannot read, with the full path. The message of
+an element names the file and the reason, and it tells where a relative path starts:
 
 ```text
 cannot read the diagram "/home/me/talk/no/such.svg": no such file or directory. A path is

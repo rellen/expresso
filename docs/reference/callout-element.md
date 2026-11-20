@@ -19,7 +19,7 @@ end
 | Option | Value | Effect |
 | --- | --- | --- |
 | The first argument | `:note`, `:tip`, `:important`, `:warning`, `:caution`, `:definition` or `:example`, required | The kind of the callout. The kind gives the color, the icon and the default title. |
-| `title` | A string, or `false` | The text of the header in place of the name of the kind. The value `false` removes the header. The text is not HTML. |
+| `title` | A string, or `false` | The text of the header in place of the kind's name. The value `false` removes the header. The text is not HTML. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
@@ -38,17 +38,17 @@ keeps the color of the text.
 | `:tip` | Tip | `--success` | A better way to do a task. |
 | `:important` | Important | `--emphasis` | A fact that the audience must not miss. |
 | `:warning` | Warning | `--warning` | A risk to the result. |
-| `:caution` | Caution | `--danger` | A risk of damage or of a loss of data. |
+| `:caution` | Caution | `--danger` | A risk of damage or of a data loss. |
 | `:definition` | Definition | `--muted` | The meaning of a term. Give the term as the `title`. |
-| `:example` | Example | `--success` | An example of the point of the slide. |
+| `:example` | Example | `--success` | An example of the point that the slide makes. |
 
 ![The seven kinds of the callout, each with its icon and its color](https://raw.githubusercontent.com/rellen/expresso/media/callout-kinds.png)
 
 ## The content
 
-A callout holds the elements that a text box holds: `text_area`, `image`, `list`, `table`,
-`quotation`, `spacer`, `code`, `math`, `diagram`, `embed`, `video`, `audio`, `qr_code`,
-`chart`, `stat` and `icon`. A callout cannot hold a callout or a `columns` element.
+A callout holds the elements that a text box holds. They are `text_area`, `image`, `list`,
+`table`, `quotation`, `spacer`, `code`, `math`, `diagram`, `embed`, `video`, `audio`,
+`qr_code`, `chart`, `stat` and `icon`. A callout cannot hold a callout or a `columns` element.
 
 ```elixir
 slide "the release" do
@@ -63,24 +63,24 @@ slide "the release" do
 end
 ```
 
-An `embed` or a `video` in a callout cannot take its size from the height that is left in
-the slide, because a callout takes the height of its content. Its width is the `width`
-option, or less when the window is not high enough for that width. Give a small `width`,
-such as `"40%"`, so that the callout fits in the slide.
+A callout takes the height of its content. Thus an `embed` or a `video` in a callout cannot
+take its size from the height that is left in the slide. Its width is the `width` option, or
+less when the window is not high enough for that width. Give a small `width`, such as
+`"40%"`, so that the callout fits in the slide.
 
 A slide, a text box and a column can hold a callout. A callout without elements shows only
 its header.
 
-Each element of a callout takes its own overlay options, so a callout can build inside. An
-element without `at` shows at each step at which the callout shows.
+Each element of a callout takes its own overlay options, so the elements can show at
+different steps. An element without `at` shows at each step at which the callout shows.
 
 ## The HTML
 
 The renderer writes a `div` with the classes `callout` and `callout-<kind>`, and the role
 `note`. The header is a `p` with the class `callout-title`, so it does not change the
-outline of the headings of the slide. The icon is an inline `svg` with the class
-`callout-icon` and `aria-hidden="true"`, so a screen reader reads the title only. The
-elements are in a `div` with the class `callout-body`.
+outline of the slide's headings. The icon is an inline `svg` with the class `callout-icon`
+and `aria-hidden="true"`, so a screen reader reads the title only. The elements are in a
+`div` with the class `callout-body`.
 
 A deck can change the color of a kind with the `css` option. Each kind reads
 `--callout-color` and `--callout-dim`:

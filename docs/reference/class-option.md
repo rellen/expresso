@@ -35,7 +35,7 @@ end
 
 | Place | The element that gets the classes |
 | --- | --- |
-| A slide | The `section` of the slide in the present view, and the `section` of each page of the slide in the handout view. |
+| A slide | The `section` of the slide in the present view, and the `section` of each page that the slide has in the handout view. |
 | `text_box`, `text_area`, `image`, `list`, `item`, `table`, `row`, `quotation`, `spacer`, `code`, `math`, `diagram`, `embed`, `video`, `audio`, `qr_code`, `chart`, `series`, `node`, `tree`, `stat`, `icon`, `columns`, `column`, `callout`, `toc`, `footnote` and `shape` | The root element of the element, such as the `div` of a code element or the `tr` of a row. |
 
 A `part` of a diagram, a `frame` of a chart, an `on` entity and `pause` do not take the
@@ -58,7 +58,7 @@ A code element with `class "tiny"` thus has the classes `code tiny`. The rules o
 still apply, and a rule of the deck can select `.code.tiny`.
 
 Use names that the theme does not use, such as `dense` or `note`. A name of the theme,
-such as `code` or `slide`, gives the element the rules of that part of the theme.
+such as `code` or `slide`, gives the element the rules that the theme has for that part.
 
 ## A rule for a slide
 

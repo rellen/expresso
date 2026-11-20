@@ -1,6 +1,6 @@
 # The toc element
 
-The `toc` element is a table of contents: a numbered list of the sections of the deck, with
+The `toc` element is a table of contents: a numbered list of the deck's sections. The list has
 a link to the first slide of each section.
 
 ```elixir
@@ -32,8 +32,8 @@ A section runs from its slide to the next slide with a `section` option. A slide
 the option belongs to the section of the slide before it. The slides before the first
 section belong to no section.
 
-A template reads the title of the section of a slide from the metadata of the slide: a
-slide template from `@metadata[:section]`, and a deck template from
+A template reads the title of a slide's section from the metadata of the slide. A slide
+template reads it from `@metadata[:section]`, and a deck template reads it from
 `@slide.metadata[:section]`. A slide before the first section has no key `:section`. See
 [the template option](template-option.md).
 
@@ -51,12 +51,12 @@ The element also takes the overlay options, such as `at`, `effect` and the `on` 
 [the overlay options](overlay-options.md).
 
 A slide, a text box and a column can hold a toc. A deck can have a toc on more than one
-slide, such as an agenda at the start and a recap at the start of each section.
+slide. Examples are an agenda at the start and a recap at the start of each section.
 
 ## The current section
 
-The section of the slide of the toc is the current section. Its entry has the accent color
-and bold text. The `progress` option tells how each other entry looks:
+The section of the slide that holds the toc is the current section. Its entry has the accent
+color and bold text. The `progress` option tells how each other entry looks:
 
 | Value | Each earlier entry | Each later entry |
 | --- | --- | --- |
@@ -77,8 +77,8 @@ first entry shows at the first step of the toc, and each later entry takes the n
 Each entry stays after its step. With `dim`, an entry dims at the step of the next entry.
 
 The `dim` option and the `progress` option are independent. On a recap slide, `progress`
-marks the current section. On an agenda that builds, `dim` keeps the eye on the newest
-entry.
+marks the current section. On an agenda that shows its entries one after the other, `dim`
+keeps the attention of the audience on the newest entry.
 
 ## The HTML
 
@@ -89,7 +89,7 @@ entry. Each `li` has the class `toc-entry` and one of `toc-earlier`, `toc-curren
 `aria-current="location"`, so a screen reader names it.
 
 Each title is a link of the [goto option](goto-option.md) with the class `toc-link`. A
-click on it in the present view goes to step 1 of the first slide of its section. The title
+click on it in the present view goes to the first slide of its section, at step 1. The title
 is text, and not HTML.
 
 ## The errors

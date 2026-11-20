@@ -1,7 +1,7 @@
 # The footnote element
 
 The `footnote` element gives a source or a note at the bottom of a slide. The handout view
-and paper also get a page of the sources of each slide.
+and paper also get a page with the sources of each slide.
 
 ```elixir
 slide "the claim" do

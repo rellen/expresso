@@ -1,9 +1,13 @@
 # The url, card, favicon and robots options
 
-Four options of a deck give the tags for a deck on a web host: the address of the deck,
-the picture of the preview of a link, the icon of the tab, and the directives for a search
-engine. Each option is optional, and a deck with none of them names no address of a
-network.
+Four options of a deck give the tags for a deck on a web host:
+
+- The address of the deck.
+- The picture of a link preview.
+- The icon of the tab.
+- The directives for a search engine.
+
+Each option is optional, and a deck with none of them names no address of a network.
 
 ```elixir
 defmodule MyDeck do
@@ -29,8 +33,8 @@ end
 | Option | Value | Effect |
 | --- | --- | --- |
 | `url` | An address that starts with `https://` or `http://` | The address of the deck on its host. The document gets `link rel="canonical"`, the Open Graph tags and `twitter:card`. |
-| `card` | The path of a `.png`, `.jpg` or `.jpeg` file, or `[image: path, alt: text]` | The picture of the preview of a link. It needs the `url` option. |
-| `favicon` | The path of a `.svg`, `.png` or `.ico` file | The icon of the tab of the browser. The document holds the file as a data URI. |
+| `card` | The path of a `.png`, `.jpg` or `.jpeg` file, or `[image: path, alt: text]` | The picture of a link preview. It needs the `url` option. |
+| `favicon` | The path of a `.svg`, `.png` or `.ico` file | The icon of the browser tab. The document holds the file as a data URI. |
 | `robots` | A text, such as `"noindex"` | The directives for a search engine, in `meta name="robots"`. |
 
 A path is relative to [the root option](root-option.md) of the deck, or to the working
@@ -47,7 +51,7 @@ A chat program or a social network makes a card for a link from these tags:
 | `og:type` | `website` |
 | `og:title` | The name of the deck, or its first heading. |
 | `og:description` | [The description option](description-option.md) of the deck. A deck with no description has no tag. |
-| `og:locale` | [The lang option](lang-option.md) with a region, such as `pt_BR` for `"pt-BR"`. A language with no region, such as `"de"`, gives no tag. |
+| `og:locale` | [The lang option](lang-option.md) with a region, such as `pt_BR` for `"pt-BR"`. A language with no region, such as `"de"`, has no tag. |
 | `twitter:card` | `summary_large_image` for a deck with the `card` option, and `summary` for a deck with none. |
 
 X reads the Open Graph tags for the title, the text and the picture of its card.
@@ -58,7 +62,7 @@ With the `card` option, the document has these tags:
 
 | Tag | Value |
 | --- | --- |
-| `og:image` | The absolute address of a copy of the file, such as `https://example.com/talk/talk_files/card-3f2a1c9e.png`. |
+| `og:image` | The absolute address of the file's copy, such as `https://example.com/talk/talk_files/card-3f2a1c9e.png`. |
 | `og:image:type` | `image/png` or `image/jpeg`. |
 | `og:image:width` and `og:image:height` | The size of the picture in pixels, from the header of the file. |
 | `og:image:alt` | The `alt` text. A card with no `alt` has no tag. |
@@ -68,8 +72,8 @@ With the `card` option, the document has these tags:
   document, as it does for an element with [the external option](external-option.md).
   Send that directory to the host with the document.
 - The address of the picture is relative to the address of the deck, as in a browser. End
-  the address of a directory with `/`. `https://example.com/talk/` gives
-  `https://example.com/talk/talk_files/...`, and `https://example.com/talk` gives
+  the address of a directory with `/`. With `https://example.com/talk/`, the picture is at
+  `https://example.com/talk/talk_files/...`. With `https://example.com/talk`, it is at
   `https://example.com/talk_files/...`.
 - A card usually shows a picture of 1200 by 630 pixels. The render takes a picture of each
   size, and the program cuts a picture with a different form.
@@ -118,4 +122,4 @@ For a `.jpg` or a `.jpeg` file, the message gives a path that ends with `.png`, 
 `--card` writes a PNG file. Give that path in the `card` option too.
 
 The renderer also raises an `ArgumentError` for a picture or an icon that it cannot read
-for a different reason, such as a directory in place of a file.
+for a different reason. An example is a directory in place of a file.

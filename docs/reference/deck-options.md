@@ -31,18 +31,18 @@ end
 | `handout_hidden true` | Show each hidden slide in the handout view and on paper, in its place. The default leaves the hidden slides out. See [the hidden option](hidden-option.md). |
 | `background color: :code_background` | The background of each slide that has no `background` option: an image, a color or a gradient. See [the background option](background-option.md). |
 | `description "A talk about supervision trees."` | A summary of the deck for a search engine. See [the description and author options](description-option.md). |
-| `author "Ada Lovelace"` | The name of the author of the deck, for a search engine. |
+| `author "Ada Lovelace"` | The name of the deck's author, for a search engine. |
 | `url "https://example.com/talk/"` | The address of the deck on its host. A link to the deck then gets a preview. See [the url, card, favicon and robots options](link-preview-options.md). |
-| `card "card.png"` | The picture of the preview of a link. It needs the `url` option. The export option `--card card.png` makes the file. |
-| `favicon "icon.svg"` | The icon of the tab of the browser. |
+| `card "card.png"` | The picture of a link preview. It needs the `url` option. The export option `--card card.png` makes the file. |
+| `favicon "icon.svg"` | The icon of the browser tab. |
 | `robots "noindex"` | The directives for a search engine. |
 | `external true` | Keep the file of each image, video and audio element next to the document, in a directory such as `talk_files/`. The default is `false`. See [the external option](external-option.md). |
 | `css "deck.css"` | A style sheet, or the path of one. It applies after the theme. |
 | `effect`, `speed`, `easing` | The animation of each overlay. See [Animate elements in a slide](../how-to/animate-elements.md). |
-| `root __DIR__` | The directory of each relative path of the deck. See [the root option](root-option.md). |
+| `root __DIR__` | The directory where each relative path of the deck starts. See [the root option](root-option.md). |
 | `template MyDeckTemplate` | A module that makes the header and the footer. See [the template option](template-option.md). |
 | `slide_template MySlideTemplate` | A module that makes the body of each slide. |
-| `lang "de"` | The language of the text of the deck, for a screen reader. The default is `"en"`. See [the lang option](lang-option.md). |
+| `lang "de"` | The language of the text in the deck, for a screen reader. The default is `"en"`. See [the lang option](lang-option.md). |
 | `dim_contrast 4.5` | The minimum contrast of dimmed text, from 3 to 7. The default is 3. See [the dim_contrast option](dim-contrast-option.md). |
 | `dim_graphic_opacity 0.5` | The opacity of a dimmed image, SVG file, embed and video. Without the option, a graphic dims with the opacity of the theme. See [the dim_graphic_opacity option](dim-graphic-opacity-option.md). |
 | `math_font :stix` | The font of each `math` element: `:latin_modern`, the default, `:stix`, `:libertinus`, `:noto` or `:system`. A document holds the chosen font only when the deck has a `math` element. See [the math element](math-element.md#the-math-font). |
@@ -53,7 +53,7 @@ end
 
 ## The options of a slide
 
-slide replaces the option of the deck for that slide. The `template` option of a slide
-replaces `slide_template`, and its `meta` option gives values of your own to the
+An option on a slide replaces the option of the deck for that slide. The `template` option of a
+slide replaces `slide_template`, and its `meta` option gives values of your own to the
 templates.
 

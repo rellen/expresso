@@ -44,8 +44,8 @@ these keys:
 ## The image
 
 The path of the image is relative to the working directory of the command, or to
-[the root option](root-option.md) of the deck. The file has one of the types of
-[the image element](image-element.md).
+[the root option](root-option.md) of the deck. The file has one of the types that
+[the image element](image-element.md) takes.
 
 The document holds the image as a data URI, so the deck stays one file. Each copy of the
 slide shows the image: the present view, each page of the handout view, the overview and
@@ -89,7 +89,7 @@ contrast. [The check](check-option.md) with `--check=a11y` measures it in the br
   element. axe-core measures such a text.
 
 The check measures the background at a width of not more than 480 pixels. One point of
-the measure is then the mean of a small area of the slide, so one bright point of a
+the measure is then the mean of a small area on the slide. Therefore one bright point of a
 picture does not fail a text.
 
 ## The views and paper
@@ -101,8 +101,9 @@ picture does not fail a text.
 | Paper | The background, with the colors of paper for the text and for the dim layer. See [the theme option](theme-option.md). |
 
 Paper uses the default theme, which has dark text. A dark image with no dim layer then
-gives dark text on a dark image. Give `dim` a value that keeps the text readable in the
-two themes, or leave the slide out of the handout with [the handout option](presenter.md#the-handout-view).
+has dark text on it. Give `dim` a value that keeps the text readable in the two themes. As
+an alternative, leave the slide out of the handout with
+[the handout option](presenter.md#the-handout-view).
 
 ## The transitions
 

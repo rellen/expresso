@@ -21,7 +21,7 @@ end
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | A name, required | The name of a Lucide icon, such as `"rocket"`, or a name of the `icons` option of the deck. |
+| The first argument | A name, required | The name of a Lucide icon, such as `"rocket"`, or a name from the `icons` option of the deck. |
 | `label` | A string | The text under the icon. A screen reader reads it. |
 | `size` | A CSS length, such as `"5rem"` | The width and the height of the icon. The default is `"3em"`. |
 | `color` | `:text`, `:muted`, `:accent`, `:success`, `:emphasis`, `:warning` or `:danger` | The role of the theme that gives the color of the icon and of its label. The default is `:text`. |
@@ -34,8 +34,8 @@ hold an icon.
 
 ## The names
 
-The Lucide set has 1,877 icons. Find a name at [lucide.dev/icons](https://lucide.dev/icons),
-and write it as the page writes it, such as `"git-commit-horizontal"`. Expresso holds
+The Lucide set has 1,877 icons. Find a name at [lucide.dev/icons](https://lucide.dev/icons).
+Write it as the page writes it, such as `"git-commit-horizontal"`. Expresso holds
 `lucide-static` 1.55.0, so an icon that a later version adds is not available.
 
 A name that no icon has is an error. The message gives three names that are near, such as
@@ -44,7 +44,7 @@ A name that no icon has is an error. The message gives three names that are near
 ## An icon in a text
 
 `:icon:name:` in the text of a `text_area` or an `item` becomes the icon, with the size of
-the text and the color of the text. A name of the `icons` option of the deck works too.
+the text and the color of the text. A name from the `icons` option of the deck works too.
 
 ```elixir
 slide "checks" do
@@ -65,12 +65,12 @@ icons logo: "assets/logo.svg", espresso: "icons/espresso.svg"
 
 - A path is relative to [the root option](root-option.md) of the deck, or to the working
   directory of the command.
-- A name of the deck wins over a Lucide name.
+- A name of the deck has priority over a Lucide name.
 - The renderer keeps the `svg` element of the file. It removes the XML declaration, the
   doctype, the comments, and the `width`, the `height` and the `class` of the `svg`
   element.
 - Each color of a `fill` or a `stroke`, in an attribute or in a `style`, becomes
-  `currentColor`, so the icon takes the color of the `color` option or of the text. The
+  `currentColor`. Thus the icon takes the color of the `color` option or of the text. The
   values `none` and `currentColor` stay.
 - Each copy of the icon in the document gets its own `id` values, and each `url(#id)` and
   `href="#id"` of the copy changes with them. A `clipPath`, a `mask` or a `filter` thus

@@ -40,8 +40,8 @@ keeps its place in the deck, and it is not a part of the talk.
 
 | Way | Steps |
 | --- | --- |
-| The overview | Press `o`, select the slide, and press `Enter`. A click on the slide does the same. |
-| The menu | Press `m`, move the cursor to the slide or to one of its steps, and press `Enter`. |
+| The overview | Press `o`. Select the slide. Then press `Enter`. A click on the slide does the same. |
+| The menu | Press `m`. Move the cursor to the slide or to one of its steps. Then press `Enter`. |
 | A link | Give an element [the goto option](goto-option.md) with the name of the slide, such as `goto: [slide: "the numbers"]`. |
 | The address | Open the address of the slide, such as `deck.html#5.1`. The address uses the place of the slide in the deck. |
 
@@ -83,15 +83,14 @@ defmodule MyDeck do
 end
 ```
 
-A hidden slide then follows its `handout` option, as each other slide does. The page of
-the sources then gives its footnotes under the heading `Hidden slide:` and the name of the
-slide.
+A hidden slide then obeys its `handout` option, as each other slide does. The page of the
+sources then shows its footnotes under the heading `Hidden slide:` and the name of the slide.
 
 ## The custom property
 
 | Property | Effect |
 | --- | --- |
-| `--hidden-slide-opacity` | The opacity of the content of a hidden slide in the overview and in the menu. The default is 0.45. |
+| `--hidden-slide-opacity` | The opacity that the content of a hidden slide has in the overview and in the menu. The default is 0.45. |
 
 ## The limits
 

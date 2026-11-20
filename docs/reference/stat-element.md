@@ -44,8 +44,8 @@ With `count true`, the number counts from `from` to the value:
 - A stat with `at` counts at the first step at which it shows.
 - A stat without `at` in a container with `at`, such as a column, counts at the first step
   at which the container shows.
-- The count lasts three times the time of the animations of the element, which the `speed`
-  option of the deck, the slide or the stat gives.
+- The count lasts three times the time that each animation of the element takes. The `speed`
+  option of the deck, the slide or the stat gives this time.
 - The number keeps its decimals and its commas during the count.
 - At the end of the count, the number shows each digit of the value, as a stat without
   `count` shows it.
@@ -56,9 +56,9 @@ With `count true`, the number counts from `from` to the value:
 ## The look
 
 The number has the accent color and a bold weight, and the label has the muted color. Each
-dims with the state `dim`. The number is 3em high, and at most a quarter of the width of
-its box, so three stats fit in a row. A deck can set `--stat-size` in the `css` option to
-change the size, such as `.stat { --stat-size: 4em; }`.
+dims with the state `dim`. The number is 3em high, and at most a quarter of its box width,
+so three stats fit in a row. A deck can set `--stat-size` in the `css` option to change the
+size, such as `.stat { --stat-size: 4em; }`.
 
 ## The HTML
 

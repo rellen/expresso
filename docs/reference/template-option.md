@@ -1,6 +1,6 @@
 # The template option
 
-The `template` option selects a template, which makes the HTML of a part of each slide. A
+The `template` option selects a template, which makes the HTML for a part of each slide. A
 deck template makes the header and the footer. A slide template makes the body of the
 slide. For the steps, see [Make templates of your own](../how-to/make-templates.md).
 
@@ -89,10 +89,10 @@ end
 ```
 
 `@metadata` holds the options of the slide, such as `:heading` and `:notes`. The value of
-`:notes` is the Markdown text of the `notes` option. `@metadata` also holds
-`:section`, the title of the section of the slide, from the `section` option of this slide
-or of an earlier slide. See [the toc element](toc-element.md). The default slide template
-writes the heading, then the elements.
+`:notes` is the Markdown text of the `notes` option. `@metadata` also holds `:section`, the
+title of the slide's section, from the `section` option of this slide or of an earlier slide.
+See [the toc element](toc-element.md). The default slide template writes the heading, then
+the elements.
 
 ## Values of your own
 

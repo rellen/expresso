@@ -13,7 +13,7 @@ states.
 | `css "deck.css"` | The file at this path, relative to [the root option](root-option.md) of the deck, or to the working directory of the command without it. |
 
 A rule of the style sheet applies to each slide. To style one slide or one element, give it
-a class name with [the class option](class-option.md), and write a rule for that class.
+a class name with [the class option](class-option.md). Then write a rule for that class.
 
 A file that the compiler cannot read gives an error at compile time. A file that is not
 UTF-8 also gives an error. A deck from
@@ -72,8 +72,8 @@ its place when the element shows, and back when it hides.
 | `--exit-animation` | the name of `@keyframes` | `none` |
 
 The theme plays `--enter-animation` when the element shows, and `--exit-animation` when
-it hides, with the time and the easing of the element. A transition wins over an animation
-for the same property. Keyframes that change `transform` therefore play in full, but
+it hides, with the time and the easing of the element. A transition has priority over an
+animation for the same property. Keyframes that change `transform` therefore play in full, but
 keyframes that change `opacity` have no effect during the fade.
 
 ## New transitions
@@ -104,11 +104,11 @@ A rule of the deck can set or read these custom properties of the theme:
 - The overlays: `--x`, `--y`, `--scale`, `--rotate`, `--opacity`, `--color`, `--alert`,
   `--dim`, `--dimmed`, `--dim-opacity`, `--dim-graphic-opacity`, `--shown` and
   `--text-part-alert-color`.
-- The effect `:type`: `--type-char`, the time of one character, which is `40ms` in the
-  theme, `--type-cursor-width`, which is `0.08em`, and `--type-cursor-color`, which is the
-  color of the text. The width `0` gives no cursor. See
-  [The effect `:type`](overlay-options.md#the-effect-type).
-- The font of the text, and of the text of a formula: `--font-text`.
+- The effect `:type`: `--type-char`, `--type-cursor-width` and `--type-cursor-color`.
+  `--type-char` is the time of one character, which is `40ms` in the theme.
+  `--type-cursor-width` is `0.08em`, and `--type-cursor-color` is the color of the text. The
+  width `0` gives no cursor. See [The effect `:type`](overlay-options.md#the-effect-type).
+- The font of the text, and of the text in a formula: `--font-text`.
 - The parts of the page: `--slide-padding`, `--progress-color`, `--progress-height`,
   `--slide-number-color`, `--slide-number-size`, `--slide-number-right`,
   `--slide-number-bottom`, `--overview-color`, `--menu-color`, `--menu-zoom`,
@@ -119,7 +119,7 @@ A rule of the deck can set or read these custom properties of the theme:
 - The charts: `--chart-1` to `--chart-8`, `--chart-width`, `--chart-height` and
   `--chart-dim-opacity`. See [the chart element](chart-element.md).
 - The colors: each role of [the theme option](theme-option.md), such as `--text`,
-  `--accent` and `--code-keyword`, and the dimmed color of each role of text, such as
+  `--accent` and `--code-keyword`. Each role of text also has a dimmed color, such as
   `--text-dim`. A role that a rule of the deck replaces gets no check of its contrast.
 
 `--dimmed` is 1 in a dimmed element and in each element inside it, and 0 in other

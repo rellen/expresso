@@ -1,7 +1,7 @@
 # The export options
 
-The options `--pdf`, `--png` and `--card` of `mix expresso` and of the binary write a PDF
-of a deck, a PNG file of each slide, and the picture of the preview of a link. A headless
+The options `--pdf`, `--png` and `--card` write a PDF of a deck, a PNG file of each slide, and
+the picture of a link preview. `mix expresso` and the binary take these options. A headless
 Chrome or Chromium writes the files.
 
 ```sh
@@ -29,11 +29,11 @@ the design, see [The export](../export.md).
 | `--pdf-pages` | `slides` or `handout` | The form of the pages. The default is `slides`. |
 | `--pdf-steps` | `all` | A page for each step. |
 | `--pdf-paper` | `a4` or `letter` | The paper of the form `handout`. The default is `a4`. |
-| `--size` | A width and a height, such as `1280x720` | The size of a page of the form `slides`. The default is `1920x1080`. |
+| `--size` | A width and a height, such as `1280x720` | The size of a page in the form `slides`. The default is `1920x1080`. |
 
 | | `--pdf-pages slides` | `--pdf-pages handout` |
 | --- | --- | --- |
-| The pages | The last step of each slide. | The steps of [the handout option](presenter.md#the-handout-view) of each slide. |
+| The pages | The last step of each slide. | The steps that [the handout option](presenter.md#the-handout-view) of each slide gives. |
 | With `--pdf-steps all` | Each step of each slide. | Each step of each slide, as the key `a` gives. |
 | The size of a page | The size of `--size` in pixels, with no margin. The text has the size that it has in a window of that size. | The paper of `--pdf-paper`, landscape, with a margin of 1 cm. |
 | The colors | The theme of the deck. | The theme of paper, which is the default theme. See [The theme option](theme-option.md). |
@@ -56,7 +56,7 @@ the design, see [The export](../export.md).
 
 The number of a slide is its number in the address of the deck, such as `#3.2`. Each
 number has the digits of the largest number, so a deck with 12 slides gives
-`slide-03.png`, and the names sort in the order of the deck. A picture shows the present
+`slide-03.png`. The names thus sort in the order of the deck. A picture shows the present
 view with no progress bar. A file with the same name in the directory gets the new
 picture, and each other file of the directory stays.
 
@@ -64,7 +64,7 @@ picture, and each other file of the directory stays.
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| `--card` | The path of a `.png` file, such as `card.png` | Write the picture of the preview of a link to that file: one PNG file of 1200 × 630 pixels. |
+| `--card` | The path of a `.png` file, such as `card.png` | Write the picture of a link preview to that file: one PNG file of 1200 × 630 pixels. |
 | `--card-slide` | The number of a slide, such as `2` | The slide of the card. The default is `1`. It needs `--card`. |
 
 - The browser opens the slide in a window of 1200 × 630 pixels. The slide fills the
@@ -120,7 +120,12 @@ and the exit status is 1.
 
 ## The browser
 
-The export looks for the browser as `--check=layout` does: `EXPRESSO_CHROMIUM`, then the
-browsers of Playwright, then Chrome and Chromium on the `PATH`, then the usual places on
-macOS. See [The check option](check-option.md). The headless shell of Playwright starts
-fast, and it gives each size.
+The export looks for the browser as `--check=layout` does, in this sequence:
+
+1. `EXPRESSO_CHROMIUM`.
+2. The browsers of Playwright.
+3. Chrome and Chromium on the `PATH`.
+4. The usual places on macOS.
+
+See [The check option](check-option.md). The headless shell of Playwright starts
+quickly, and it gives each size.

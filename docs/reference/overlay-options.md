@@ -13,7 +13,7 @@ first step is step 1. For the design, see [Overlays](../overlays.md).
 | `2..4` | Step 2 to step 4. |
 | `[2, 5..7]` | Step 2, and step 5 to step 7. |
 | `[from: 2]` | Step 2 and each step after it. |
-| `:next` | The current value of the counter of the slide. |
+| `:next` | The current value of the slide's counter. |
 | `[from: :next]` | The current value of the counter, and each step after it. |
 | `[2, from: 5]` | Step 2, and step 5 and each step after it. |
 
@@ -98,8 +98,8 @@ These rules apply:
   shows again is complete at once.
 - An element inside with its own steps is not part of the text. It shows at its own
   steps, with its own effect.
-- A picture, a formula, an icon and the number of a line of code show at once. An element
-  with no text fades.
+- A picture, a formula, an icon and the line numbers of a `code` element show at once. An
+  element with no text fades.
 - A screen reader reads the whole text at once. A reader who asks for reduced motion sees
   the whole text at once. A page of the handout view and paper show the whole text.
 - The custom property `--type-char` gives the time of one character, and
@@ -123,29 +123,28 @@ step specification.
 | `set: [rotate: "-8deg"]` | The element turns by that angle. |
 | `set: [opacity: 0.3]` | The element shows at that opacity, from 0 to 1. |
 | `set: [color: "#c92a2a"]` | The text of the element changes to that color. |
-| `copy_to: ["hole1", "hole2"]` | From the first step of the entity, a copy of a part goes to each element of the SVG file, or to each part of the formula. See "Copy a part to other places" below. |
-| `move_to: "station"` | A part of a diagram moves to the center of the element with the id `"station"` in the same SVG file. A part of a formula moves to the center of the part `"station"` of the same formula. See "Move a part to another part" below. |
+| `copy_to: ["hole1", "hole2"]` | A copy of a part goes to each element of the SVG file, or to each part of the formula. Each copy shows from the first step of the entity. See "Copy a part to other places" below. |
+| `move_to: "station"` | A part of a diagram moves to the center of the element with the id `"station"` in the same SVG file. A part of a formula moves to the center of the part `"station"` in the same formula. See "Move a part to another part" below. |
 
-An `on` entity can be in each element, in an item of a list, in a row of a table and in
-a part of a diagram or of a formula. In a diagram, `x` and `y` are in the units of the SVG file. A part
-inside a `text` element of the file, such as a `tspan`, can fade, dim and change its
-color, and it cannot move or get an outline.
+An `on` entity can be in each element, in an item of a list and in a row of a table. It can
+also be in a part of a diagram or of a formula. In a diagram, `x` and `y` are in the units of
+the SVG file. A part inside a `text` element of the file, such as a `tspan`, can fade, dim and
+change its color. It cannot move or get an outline.
 
 ### The bar of the state `highlight`
 
 The state `highlight` marks the element in focus with a bar at its left. The bar has the
-place, the width and the color of the bar of a line of code in focus.
+place, the width and the color of the bar that a line of code in focus gets.
 
 - The bar takes no space, so the content of the element does not move.
 - The bar has the height of the element. The bar of an item or of a footnote is at the
-  left of its marker. The bar of a box of a tree is inside the box, at its left edge.
+  left of its marker. The bar of a box in a tree is inside the box, at its left edge.
 - In forced colors, the bar has the color of the text. See
   [Forced colors](accessibility.md#forced-colors).
 - The handout view and paper show the bar at the step of the state.
-- A part of a diagram, a part of a formula and a series of a chart get no bar, because
-  they are in an SVG or in MathML. Give such a part the state `alert`, or a color with
-  `set`.
-- A line of code and a token of code get the bar of the `highlight` option of the code
+- A part of a diagram, a part of a formula and a series of a chart are in an SVG or in
+  MathML. Thus they get no bar. Give such a part the state `alert`, or a color with `set`.
+- A line of code and a token of code get the bar from the `highlight` option of the code
   element. See [The code element](code-element.md).
 
 ```elixir
@@ -183,7 +182,7 @@ The value of `at` is a step specification in text:
 | `2` | Step 2 only. | `2` |
 | `2-4` | Step 2 to step 4. | `2..4` |
 | `2-` | Step 2 and each step after it. | `[from: 2]` |
-| `+` | The current value of the counter of the slide. | `:next` |
+| `+` | The current value of the slide's counter. | `:next` |
 | `+-` | The current value of the counter, and each step after it. | `[from: :next]` |
 | `2,5-` | Step 2, and step 5 and each step after it. | `[2, from: 5]` |
 
@@ -205,8 +204,11 @@ These rules apply:
 The theme reads the custom property `--text-part-alert-color` for the color of the state
 `alert`. The default is `--accent`.
 
-The compiler gives an error for a value of `at` that is not one of the forms, for a state
-that is not `alert` or `dim`, and for a tag with `state` and no `at`.
+The compiler gives an error for:
+
+- a value of `at` that is not one of the forms,
+- a state that is not `alert` or `dim`,
+- a tag with `state` and no `at`.
 
 ### Move a part to another part
 
@@ -222,7 +224,7 @@ the file changes the distance at the next render.
 - The render gives an error for an id that the file does not have, and for an element with
   no shape, such as a `title`.
 - A part of a `math` element moves to a different part of its formula. The presenter script
-  measures that move in the browser, because the place of a part comes from the fonts. See
+  measures that movement in the browser, because the place of a part comes from the fonts. See
   [the math element](math-element.md#move-a-part-to-another-part).
 
 The render measures the box of each element from its attributes, with the `transform` of
@@ -256,7 +258,7 @@ not show.
 
 | Option | Effect |
 | --- | --- |
-| The argument | The id of the element of the SVG file where the copy goes. |
+| The argument | The id of the element in the SVG file where the copy goes. |
 | `at` | The steps that show the copy. The option is necessary. |
 | `as` | The name of the copy. The default is the part, `@` and the target, such as `"arg@hole1"`. |
 | `effect` | How the copy shows and hides. The default is the effect of the part. |
@@ -264,10 +266,10 @@ not show.
 
 - The render copies the element of the part after that element. Each element of the copy
   gets a new `id`, so the file keeps one element with each `id`. The root gets the name of
-  the copy, and each other element gets the name of the copy, `-` and its old `id`, such as
+  the copy. Each other element gets the name of the copy, `-` and its old `id`, such as
   `"body@line2-bound"`. A `part` entity can name such an element.
 - A copy does not change its target. To hide a bound variable when the argument lands on it,
-  give the variable its own `part` with `at` or `on`.
+  give the variable a `part` with `at` or `on`.
 - A screen reader does not read a copy, because it repeats a part.
 - The compiler gives an error for a copy to its own part, and for two parts or copies with
   the same name. The render gives an error for a target that the file does not have.
@@ -301,7 +303,7 @@ its entity. A `copy` entity takes `at: :next`.
 
 `docs/part-copies.md` gives the design.
 
-The theme owns the custom properties that `set` writes. The compiler gives a warning for a
+The theme reads the custom properties that `set` writes. The compiler gives a warning for a
 key that the theme does not use. The theme of this project uses `x`, `y`, `scale`,
 `rotate`, `opacity` and `color`.
 
@@ -353,13 +355,13 @@ each role, such as `--text-dim`, and a deck can replace one in its `css` option.
 
 ## `dim`
 
-`dim true` on a `list`, a `table`, a `code` element, a `chart` or a `toc` gives each child the state `dim` from
-the first step of a later child. The newest child then shows in full, and the earlier
-children show in their dimmed colors. The option reads the steps of the children, so it
-works with `reveal` and with an `at` option on each child. A child without steps, such as
-the header of a table, does not dim.
+A `list`, a `table`, a `code` element, a `chart` and a `toc` take `dim true`. The option gives
+each child the state `dim` from the first step of a later child. The newest child then shows
+in full, and the earlier children show in their dimmed colors. The option reads the steps of
+the children, so it works with `reveal` and with an `at` option on each child. A child without
+steps, such as the header of a table, does not dim.
 
-A color that a rule of the deck gives to text does not dim. For the steps to make it dim,
+A color that a rule of the deck gives to text does not dim. For the procedure to make it dim,
 see [Make a color of your own dim](../how-to/style-one-slide.md#make-a-color-of-your-own-dim).
 
 ![The earlier items of a list dim](https://raw.githubusercontent.com/rellen/expresso/media/overlay-dim.gif)
@@ -383,8 +385,8 @@ view shows it. See [Step labels](step-labels.md).
 
 ## `speed`
 
-The time of each animation of an element: its effect, the changes of its `on` entities
-and the state `dim`.
+The time that each animation of an element takes: its effect, the changes of its `on`
+entities and the state `dim`.
 
 | Value | Time |
 | --- | --- |

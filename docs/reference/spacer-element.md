@@ -21,8 +21,8 @@ slide "top and bottom" do
 end
 ```
 
-Write `spacer()` with the parentheses. Elixir reads a bare `spacer` as a variable.
-`Expresso.Builder` has `spacer()` too.
+Write `spacer()` with the parentheses. Elixir reads `spacer` without the parentheses as a
+variable. `Expresso.Builder` has `spacer()` too.
 
 ## The options
 

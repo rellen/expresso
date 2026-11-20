@@ -39,8 +39,8 @@ deck with its recording.
 | `:plain` | The title at the left, and no dots. | Almost square |
 | `:none` | No frame. | |
 
-The dots take the colors of the roles `danger`, `warning` and `success` of the theme, as the
-red, yellow and green dots of macOS.
+The dots take the colors that the theme has for the roles `danger`, `warning` and `success`,
+as the red, yellow and green dots of macOS.
 
 ## The options
 

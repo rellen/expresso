@@ -44,7 +44,7 @@ end
 These files stay in the document, also in a deck with `external true`:
 
 - the image of [the background option](background-option.md),
-- the image of a node of a `tree` element,
+- the image of a node in a `tree` element,
 - the fallback image of an `embed` element,
 - a file of [the css option](css-option.md),
 - a font and an icon.
@@ -58,7 +58,7 @@ The render writes a copy of each file into a directory next to the output file:
 | `talk.html` | `talk_files/` | `talk_files/team-3f2a1c9e.jpg` |
 | `out/my talk.html` | `out/my talk_files/` | `my%20talk_files/team-3f2a1c9e.jpg` |
 
-- The name of a copy holds the name of the file and eight digits of the SHA-256 of its
+- The name of a copy holds the name of the file and eight digits from the SHA-256 of its
   content. A changed file gets a new name, so a web host can keep a copy in its cache for
   a long time.
 - Two elements with the same file share one copy.

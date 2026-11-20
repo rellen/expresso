@@ -28,20 +28,20 @@ end
 | The first argument | The path of an `.svg` file, or of a `.dot`, a `.gv`, a `.d2` or a `.mmd` file | The diagram, or the source of a graph. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. See [A graph from Graphviz](#a-graph-from-graphviz), [A graph from D2](#a-graph-from-d2) and [A diagram from Mermaid](#a-diagram-from-mermaid). |
 | `source` | A string | The source of a graph in the deck, in place of a file. It needs `lang`. A diagram takes the first argument or `source`, and not both. |
 | `lang` | `:mermaid` | The language of `source`. A file gives its language with its extension, so a file takes no `lang`. |
-| `width` | A CSS width, such as `"900px"` or `"60%"` | The width of the diagram. A percentage is a part of the width of the slide. The default is the width that the file gives. |
-| `alt` | A string | The text of the diagram for a screen reader. The diagram then has the role `img`, and a screen reader reads this text in the place of the text of the SVG. Without it, a screen reader reads the text of the SVG, or the list of a graph. See [A graph and a screen reader](#a-graph-and-a-screen-reader). |
+| `width` | A CSS width, such as `"900px"` or `"60%"` | The width of the diagram. A percentage is relative to the width of the slide. The default is the width that the file gives. |
+| `alt` | A string | The text of the diagram for a screen reader. The diagram then has the role `img`, and a screen reader reads this text, and not the text of the SVG. Without it, a screen reader reads the text of the SVG, or the list of a graph. See [A graph and a screen reader](#a-graph-and-a-screen-reader). |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 | `layout` | For Graphviz, `:dot`, `:neato`, `:fdp`, `:sfdp`, `:circo` or `:twopi`. For D2, `:elk` or `:dagre`. | The layout engine of the tool. The default is `:dot` for Graphviz and `:elk` for D2. Pele has one layout, so a Mermaid diagram takes no `layout`. |
 | `edges` | `:follow` or `:own` | When an edge of a graph without its own part shows. The default is `:follow`. See [The edges of a graph](#the-edges-of-a-graph). |
 | `colors` | `:theme` or `:tool` | The colors of a graph. The default is `:theme`. See [The colors and the font of a graph](#the-colors-and-the-font-of-a-graph). |
-| `font` | The path of a directory with TTF files | The font of the text of a graph. The default is the font of the built-in theme. A path is relative to the root option of the deck. |
+| `font` | The path of a directory with TTF files | The font of the text in a graph. The default is the font of the built-in theme. A path is relative to the root option of the deck. |
 
 ## The options of a part
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | A string | The `id` of an element of the SVG file, or the name of an element of a graph. |
+| The first argument | A string | The `id` of an element in the SVG file, or the name of an element in a graph. |
 
 A diagram and a part each take the overlay options, such as `at`, `effect` and the `on`
 entity. The `on` entity of a part also takes `move_to`. See
@@ -87,9 +87,9 @@ The render finds the program `dot` on the `PATH`. The variable `EXPRESSO_DOT` gi
 different path. A deck without a graph does not need Graphviz.
 
 The watch mode renders the deck again after a change to the source. It keeps the SVG of each
-graph, so it runs the tool again only after a change to the source, the `layout` option, the
-font or the program of the tool. D2 can import a different file of D2 into a source. The
-watch mode does not see a change to that file, so save the source again after such a change.
+graph. It thus runs the tool again only after a change to the source, the `layout` option, the
+font or the program of the tool. D2 can import a different file of D2 into a source. The watch
+mode does not find a change to that file, so save the source again after such a change.
 
 The graph gets the colors and the font of the theme. See
 [The colors and the font of a graph](#the-colors-and-the-font-of-a-graph).
@@ -167,9 +167,8 @@ is a container, such as `Presenter` for `subgraph Presenter` and `intake` for
 `flow intake["Intake"]`. A collapsed flow is one node, and an edge to one of its members
 goes to the flow, such as `receive->processing`.
 
-A sequence diagram names its parts in the same way. A message is an edge from one actor to
-the other, so a message without its own part shows from the step where both of its actors
-show:
+A sequence diagram names its parts in the same way. A message is an edge from one actor to the
+other. Thus a message without its own part shows from the step where both of its actors show:
 
 | Element of a sequence diagram | Name | Example |
 | --- | --- | --- |
@@ -185,7 +184,7 @@ end with a marker, such as the triangle of `<|--`:
 | --- | --- | --- |
 | A class | Its id | `Turtle` |
 | A namespace | Its id. Each class in it has the namespace as its parent. | `Reef` |
-| A relation | The two classes, in the order of the source, and the arrow: `->` for a marker at the second class, `<-` for a marker at the first class, `<->` for a marker at each end, and `--` for no marker | `Animal<-Turtle` for `Animal <\|-- Turtle` |
+| A relation | The two classes, in the order of the source, and the arrow. The arrow is `->` for a marker at the second class, and `<-` for a marker at the first class. It is `<->` for a marker at each end, and `--` for no marker. | `Animal<-Turtle` for `Animal <\|-- Turtle` |
 | A second relation between the same classes in the same direction | The name of the first relation, then `:2` | `Animal<-Turtle:2` |
 | A note | `note` and its number from 0, in the order of the source | `note0` |
 | The line from a note to its class | The note, `--` and the class | `note0--Turtle` |
@@ -229,7 +228,7 @@ An architecture diagram names an edge by its two ends. A group is a container:
 | --- | --- | --- |
 | A service or a junction | Its id | `api` |
 | A group | Its id. Each service, junction or group in it has it as its parent. | `cloud` |
-| An edge | The two ends and the arrow: `->` for a head at the second end, `<-` for a head at the first end, `<->` for a head at each end, and `--` for no head | `web->api` for `web:R --> L:api` |
+| An edge | The two ends and the arrow. The arrow is `->` for a head at the second end, and `<-` for a head at the first end. It is `<->` for a head at each end, and `--` for no head. | `web->api` for `web:R --> L:api` |
 | A second edge between the same ends with the same arrow | The name of the first edge, then `:2` | `web->api:2` |
 
 A block diagram names an edge by its two ends. A composite block is a container:
@@ -238,7 +237,7 @@ A block diagram names an edge by its two ends. A composite block is a container:
 | --- | --- | --- |
 | A block | Its id | `server` |
 | A composite block | Its id. Each block in it has it as its parent. | `store` for `block:store` |
-| An edge | The two ends and the arrow: `->` for a head at the end, `<-` for a head at the start, `<->` for a head at each end, and `--` for no head | `server->db` |
+| An edge | The two ends and the arrow. The arrow is `->` for a head at the end, and `<-` for a head at the start. It is `<->` for a head at each end, and `--` for no head. | `server->db` |
 | A second edge between the same ends with the same arrow | The name of the first edge, then `:2` | `server->db:2` |
 
 A mindmap names each line by the node and its child. A line has no direction, so its arrow
@@ -300,7 +299,7 @@ A user journey has no edges. A section is a container:
 | --- | --- | --- |
 | A section | Its name | `Before` |
 | A task | Its text. It has its section as its parent. | `Write the deck` |
-| An item of the legend of the actors | The name of the actor | `Presenter` |
+| An item in the legend of the actors | The name of the actor | `Presenter` |
 
 The line of the scores and the faces on it show at each step.
 
@@ -410,7 +409,7 @@ A Cynefin diagram names a transition by its two domains. A domain is a container
 | An item | Its label. It has its domain as its parent. | `User research` |
 | A transition | The two domains and `->` | `complex->complicated` |
 
-Each of the five domains is a part, also a domain with no items.
+Each of the five domains is a part, and a domain with no items is a part too.
 
 A railroad diagram has no edges. A rule is a container:
 
@@ -437,9 +436,9 @@ A kanban board has no edges. A column is a container:
 | A column | Its id | `todo` for `todo[To do]` |
 | A card | Its id, or its text for a card without an id. It has its column as its parent. | `charts` for `charts[Add the charts]` |
 
-Pele draws each of the 32 diagram types of Mermaid 12.1, and each type has a table on this
-page. A type that a later version of Pele adds keeps the `data-id` of Pele as the name of
-each part, with no marks, and each part can take steps.
+Pele draws the 32 diagram types of Mermaid 12.1, and each type has a table on this page. A type
+that a later version of Pele adds keeps the `data-id` of Pele as the name of each part, with no
+marks. Each part of that type can take steps.
 
 Pele is a library in JavaScript, and Expresso holds a copy of it. The render runs it with
 the program `node` on the `PATH`, and the variable `EXPRESSO_NODE` gives a different path.
@@ -454,8 +453,8 @@ graph with colors that have a meaning.
 | Tool | The colors of the theme |
 | --- | --- |
 | Graphviz | The lines and the text take the color `--text`, and the white background goes away. A color that the source gives, such as `color=red`, stays. |
-| D2 | Each class of the palette of D2 takes a custom property, such as `--graph-B4` for the fill of a shape. The table below gives the default of each property. The background goes away. |
-| Pele | Pele writes each color as a custom property, such as `--pele-fg`, and the theme sets each one: the text and the lines take `--text`, the shapes take a tint of `--accent` with a border of `--accent`, and the series of a chart take `--chart-1` to `--chart-8`. |
+| D2 | Each class of the D2 palette takes a custom property, such as `--graph-B4` for the fill of a shape. The table below gives the default of each property. The background goes away. |
+| Pele | Pele writes each color as a custom property, such as `--pele-fg`, and the theme sets each one. The text and the lines take `--text`. The shapes take a tint of `--accent` with a border of `--accent`. The series of a chart take `--chart-1` to `--chart-8`. |
 
 | Properties | D2 uses them for | Default |
 | --- | --- | --- |
@@ -472,9 +471,9 @@ The [css option](css-option.md) can change each property, such as
 `.diagram-d2 { --graph-B4: var(--chart-4); }`.
 
 The text of a graph gets the font of the slide. The render gives the font to the tool, so the
-tool sizes each box for the text in that font. The default is Atkinson Hyperlegible, the font
-of the built-in theme. A deck with a different font gives its TTF files with the `font`
-option:
+tool calculates the size of each box for the text in that font. The default is Atkinson
+Hyperlegible, the font of the built-in theme. A deck with a different font gives its TTF files
+with the `font` option:
 
 ```elixir
 slide "the system" do
@@ -488,8 +487,8 @@ The directory holds a TTF file for each style: regular, bold, italic and bold it
 render reads the family and the style from each file. A style without a file takes the
 regular file. In Graphviz, a `fontname` of the source still applies to its element. For
 Mermaid, the render reads the advance width of each character from the files, and Pele
-sizes each box from those widths. A monospace text in a Mermaid diagram takes a fixed width
-of 0.6 of the size for each character.
+calculates the size of each box from those widths. A monospace text in a Mermaid diagram takes
+a fixed width of 0.6 times the size for each character.
 
 ## A graph and a screen reader
 
@@ -506,10 +505,10 @@ For the graph of the examples above, a screen reader reads this list:
   - api, to db, to db (replica)
 - db
 
-An edge with a label gets the label in parentheses. An edge with no direction, such as
-`a -- b`, reads "with b". The label of a node is the text that it shows, or its name when it
-shows no text. With the `alt` option, the diagram is one image with that name, and it gets no
-list.
+An edge with a label gets the label in parentheses. For an edge with no direction, such as
+`a -- b`, a screen reader reads "with b". The label of a node is the text that it shows, or its
+name when it shows no text. With the `alt` option, the diagram is one image with that name, and
+it gets no list.
 
 ## The edges of a graph
 
@@ -551,15 +550,15 @@ The render gives an error for these:
 - a source that the tool cannot draw, such as a source with a syntax error. The message
   gives the message of the tool.
 
-The DSL and `Expresso.Builder` give an error for the options `layout`, `edges`, `colors`
-and `font` of an `.svg` file, and for a layout of a different tool. The render gives an error
-for a font directory without a TTF file, without a regular file, or with more than one
-family.
+The DSL and `Expresso.Builder` give an error for the options `layout`, `edges`, `colors` and
+`font` of an `.svg` file. They also give an error for a layout of a different tool. The render
+gives an error for a font directory without a TTF file, without a regular file, or with more
+than one family.
 
 ## The theme and the SVG file
 
 The document holds the SVG as elements, and not as a picture. The rules of the theme and
-of [the css option](css-option.md) thus reach the parts of the diagram.
+of [the css option](css-option.md) thus apply to the parts of the diagram.
 
 The render removes the XML declaration and the DOCTYPE at the start of the file, because
 an HTML document cannot hold them. A file from Graphviz, Inkscape or Illustrator thus

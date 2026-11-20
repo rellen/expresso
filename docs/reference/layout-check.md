@@ -1,7 +1,7 @@
 # The layout check
 
 The layout check finds the parts of a deck that do not fit the window. `?check` at the
-end of the address of the present view starts it, such as `deck.html?check`. The speaker
+end of the present view's address starts it, such as `deck.html?check`. The speaker
 view does not run it.
 
 For the steps of a check, see [Check that a deck fits the screen](../how-to/check-the-layout.md).
@@ -13,7 +13,7 @@ The check runs one time, after the load of the document and of its fonts. It sho
 step of each slide in sequence, with the time of each animation at zero, and it measures
 the slide at that step. Then the presenter shows the step of the address again.
 
-The check measures the window at that time. A change of the size of the window after the
+The check measures the window at that time. A change to the size of the window after the
 check does not change the report. Reload the page for a new check.
 
 ## The problems
@@ -22,7 +22,7 @@ check does not change the report. Reload the page for a new check.
 | --- | --- | --- |
 | Past an edge | The box of an element goes more than 1 pixel past the left, top, right or bottom edge of the window. | The edge, and the distance in pixels. For two or more edges, the edge with the largest distance. |
 | A line breaks | A line of a code element is more than 1.5 times the line height of the element. A code element with `wrap true` breaks its lines on purpose, and the check does not measure them. | The number of lines that break in the code element. |
-| Small text | The smallest text that shows in a chart or a diagram is smaller than 1/60 of the window height: 12 pixels at 1280 × 720, and 18 pixels at 1920 × 1080. | The size of that text in pixels, rounded down to a tenth, and the limit in pixels. |
+| Small text | The smallest text that shows in a chart or a diagram is smaller than 1/60 of the window height. This limit is 12 pixels at 1280 × 720, and 18 pixels at 1920 × 1080. | The size of that text in pixels, rounded down to a tenth, and the limit in pixels. |
 
 The check measures these elements, and the content of each:
 
@@ -34,26 +34,27 @@ The check measures these elements, and the content of each:
 - the content of an element: a `math` element, an `img` element, an `svg` element, a
   `pre` element, an `iframe` element and a `table` element.
 
-The `svg` element of a line or an arrow of [the shape element](shape-element.md) covers the
-whole slide, so the check measures its `line` element, and not the `svg` element. The check
-measures the `svg` element of [the chart element](chart-element.md). The table of a chart
-is for a screen reader, so the check does not measure it. The check also skips the text of
-[a stat](stat-element.md) for a screen reader, for the same reason.
+A line or an arrow of [the shape element](shape-element.md) has an `svg` element that covers
+the whole slide. The check therefore measures its `line` element, and not the `svg` element.
+The check measures the `svg` element of [the chart element](chart-element.md). The table of a
+chart is for a screen reader, so the check does not measure it. The check also does not
+measure the text of [a stat](stat-element.md) for a screen reader, for the same reason.
 
 The check measures what an element shows, and not its box. A tag of the content shows its
 box. Each other element shows its text and its content, so the check measures the smallest
-box that holds them. A text box is as wide as the slide, so its box goes past an edge when
+box that holds them. A text box is as wide as the slide. Its box thus goes past an edge when
 it moves, while its text can stay in the window.
 
-An element that does not show at the step, as an overlay specifies, is not measured. A part
-of a diagram is not measured, because a part can move past the box of its diagram.
+The check does not measure an element that does not show at the step, as an overlay
+specifies. It does not measure a part of a diagram, because a part can move past the box of
+its diagram.
 
 The check measures the size of text only in the `svg` element of a chart or a diagram. That
 `svg` element takes the height that is left in the slide, and its text becomes smaller with
 it. Thus a long heading can make the text too small to read, while the chart stays in the
 window. The size of a text is its font size times the scale of the `svg` element on the
-screen. A text that does not show at the step, such as a frame of a chart that comes later,
-is not measured.
+screen. The check does not measure a text that does not show at the step, such as a frame of
+a chart that comes later.
 
 An element counts only when no element inside it goes past the same edge. Thus the report
 names the innermost element: a formula in a column, and not the column.
@@ -83,7 +84,7 @@ for one or more problems.
 After the report, the page writes the result as JSON into a `script` element with the id
 `check-result`, and the `body` element gets `data-check="done"`. The JSON holds the size of
 the window and the text of each problem. With `?check=a11y`, and with axe-core in the
-document, the page first runs axe-core at each step and in each view, and the JSON also
+document, the page first runs axe-core at each step and in each view. The JSON then also
 holds each violation. [The check option](check-option.md) reads this element.
 
 The report does not show on paper.
@@ -92,7 +93,7 @@ The report does not show on paper.
 
 The check reads the place and the size of each element. It does not find:
 
-- a color with low contrast. The theme option checks the colors of a theme, and the
+- a color with low contrast. The theme option does a check of the colors in a theme. The
   compiler gives a warning for a color of a map under its minimum. See
   [The theme option](theme-option.md). `--check=a11y` runs axe-core, which finds the
   contrast of each text on the slide. See [The check option](check-option.md),

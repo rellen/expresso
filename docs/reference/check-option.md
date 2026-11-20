@@ -1,8 +1,8 @@
 # The check option
 
-The option `--check` of `mix expresso` and of the binary checks a deck, and writes a report
-to the standard output. The exit status is 1 for a problem, so a continuous integration job
-can run it.
+The option `--check` of `mix expresso` and of the binary does a check of a deck, and writes a
+report to the standard output. The exit status is 1 for a problem, so a continuous integration
+job can run it.
 
 ```sh
 mix expresso <input> [output] --check
@@ -39,9 +39,9 @@ For the steps and the installation of the tools, see
 | Check | Kind | Finds |
 | --- | --- | --- |
 | The render | Error | A deck file that does not compile, or does not return a deck |
-| The theme | Problem | Each role of a theme of 16 colors under its minimum of contrast. The text is the warning of the compiler. See [The theme option](theme-option.md). |
+| The theme | Problem | Each role of a theme with 16 colors under its minimum of contrast. The text is the warning of the compiler. See [The theme option](theme-option.md). |
 | The dimming | Note | Each variant of the theme that does not dim at the `dim_contrast` option. The text is the warning of the compiler. See [The dim_contrast option](dim-contrast-option.md#a-theme-that-does-not-dim). |
-| The size | Note | The size of the document, and the type and the size of its three largest files. A file is a data URI in an attribute, such as `src`, or in a `url()` of the style sheet, such as a font of the theme. |
+| The size | Note | The size of the document, and the type and the size of its three largest files. A file is a data URI in an attribute, such as `src`. A data URI in a `url()` of the style sheet, such as a font of the theme, is a file too. |
 | An image | Note | An image with no `alt` option. A screen reader skips it. |
 | A diagram | Note | A diagram with no `alt` option. A screen reader reads the text of its SVG. |
 | A hidden heading | Note | A slide with no visible heading. A screen reader reads [the hidden heading](accessibility.md). |
@@ -53,9 +53,13 @@ For the steps and the installation of the tools, see
 Chromium, with `?check` or `?check=a11y` in the address. The page of the copy has the size
 1920 × 1080.
 
-The layout check finds each element that goes past an edge of the window, each line of code
-that breaks, and each chart or diagram with text smaller than 1/60 of the window height, at
-each step. Its problems have the same text as the report of `?check`, such as
+The layout check finds these items at each step:
+
+- each element that goes past an edge of the window,
+- each line of code that breaks,
+- each chart or diagram with text smaller than 1/60 of the window height.
+
+Its problems have the same text as the report of `?check`, such as
 `Slide 6, step 3: the math “s = o + x” goes 120 px past the right edge`.
 
 The accessibility check runs axe-core on the slide of each step. Then it runs axe-core on
@@ -67,12 +71,12 @@ the whole document in these views:
 - the overview,
 - the handout view.
 
-A problem of axe-core gives the step or the view, the id of the rule, the description of
-the rule, and the name of each element that fails. The name of an element of a slide is its
-kind and the first 40 characters of its text, such as `the text area “Grey on grey”`, as
-the layout check gives it. Another element, such as an entry of the menu, gives the CSS
-selector of axe-core. The time of each animation is zero, so axe-core reads the final color
-of each element.
+A problem of axe-core gives the step or the view, the id of the rule and the description of
+the rule. It also gives the name of each element that fails. For an element of a slide, the
+name is its kind and the first 40 characters of its text, such as
+`the text area “Grey on grey”`. The layout check gives the same name. For a different element,
+such as an entry of the menu, the name is the CSS selector of axe-core. The time of each
+animation is zero, so axe-core reads the final color of each element.
 
 The check gives each rule on each element one time, at the first step or view that has it.
 The overview and the handout view hold a copy of each slide, and a copy has the name of its
@@ -81,15 +85,15 @@ same kind and the same text count as one element.
 
 ### Sizes of the page
 
-A browser level checks the page at each size of `--size`, in sequence, and at 1920 × 1080
-without the option. The `Checks:` line gives each size, such as
+A browser level runs the checks of the page at each size of `--size`, in sequence, and at
+1920 × 1080 without the option. The `Checks:` line gives each size, such as
 `the layout at 1920 × 1080 and 1024 × 768`.
 
 A page of 1280 × 720 or larger gives the text of a slide the same size, so a larger page
-gives a slide more room. A smaller page shows the slide at a smaller scale, so two small
-sizes with the same proportions, such as 960 × 540 and 640 × 360, give the same layout.
-Give a size with other proportions, such as 1024 × 768 for a projector of 4:3, or
-390 × 844 for a phone, to find the problems of that screen. See
+gives a slide more room. A smaller page shows the slide at a smaller scale. Therefore two small
+sizes with the same proportions, such as 960 × 540 and 640 × 360, give the same layout. Give a
+size with other proportions to find the problems of a screen with those proportions. Examples
+are 1024 × 768 for a projector of 4:3, and 390 × 844 for a phone. See
 [The size of a slide](slide-size.md).
 
 A problem of each size gives one line. A problem of some sizes names them before the first
@@ -100,8 +104,8 @@ gives two lines. `--check=browser` presses the keys one time, at the first size.
 ### Two variants of a theme
 
 For a deck with a light and a dark variant, each browser level runs the checks of the page
-two times: one time with `?scheme=light` and one time with `?scheme=dark`. The `Checks:`
-line of the report then ends with `in the light and the dark variants`.
+two times. It runs them one time with `?scheme=light` and one time with `?scheme=dark`. The
+`Checks:` line of the report then ends with `in the light and the dark variants`.
 
 A problem of the two variants gives one line. A problem of one variant gives the name of
 the variant before the first colon, such as
@@ -109,7 +113,7 @@ the variant before the first colon, such as
 the size and the variant, such as `(1024 × 768, dark)`. `--check=browser` presses the keys
 one time, in the variant of the document, because the keys do not change with the colors.
 
-The check with no tool already checks the colors of each variant, as
+The check with no tool already examines the colors of each variant, as
 [the theme option](theme-option.md) does.
 
 ### The keys of the presenter
@@ -117,12 +121,12 @@ The check with no tool already checks the colors of each variant, as
 `--check=browser` opens the document in the Chromium of Playwright, in a page of
 1920 × 1080 with reduced motion. First it runs the layout check and axe-core with
 `?check=a11y`, as `--check=a11y` does. Then it opens the document again, and it uses the
-keys of the list of keys:
+keys that the list of keys shows:
 
 | Action | A problem when |
 | --- | --- |
 | Open the deck. | The present view does not show step 1 of slide 1. |
-| Press `j` at each step, to the last step. | The view does not show the next entry of the list of the steps. The check stops at the first such step. |
+| Press `j` at each step, to the last step. | The view does not show the next entry in the list of the steps. The check stops at the first such step. |
 | Press `Home`, then `m`, then `Escape`. | The menu does not open, does not take the focus, does not close, or keeps the focus. |
 | Press `/`, then `Escape`. | The list of keys does not open, does not take the focus, does not close, or keeps the focus. |
 | Press `o`, then `Escape`. | The overview does not open or does not close. |
@@ -132,17 +136,21 @@ The keys come from the program of the presenter, so the check presses the keys t
 of keys shows. A key changes the view in a frame of the browser, so the check waits up to
 2 s for each change.
 
-Each error of the script of the page, each rejected promise with no handler, and each call of
-`console.error` during these actions is a problem too, such as
-`The script: TypeError: x is undefined`.
+During these actions, each of these items is a problem too:
+
+- each error in the script of the page,
+- each rejected promise with no handler,
+- each call of `console.error`.
+
+An example is `The script: TypeError: x is undefined`.
 
 ## The tools
 
 | Variable | Gives | Without it |
 | --- | --- | --- |
 | `EXPRESSO_CHROMIUM` | The path of Chrome or Chromium | The check looks in [the sequence of the search](#the-search-for-the-browser). |
-| `EXPRESSO_AXE` | The path of `axe.min.js` | The check looks for `node_modules/axe-core/axe.min.js` in the current directory, in the directory of the deck, then in each parent of them, and then in the directory of the tools. Thus the directory of the deck comes before a parent of the current directory. |
-| `EXPRESSO_PLAYWRIGHT` | The path of `cli.js` of the npm package `playwright` | The check looks for `node_modules/playwright/cli.js` in the same directories as axe-core. |
+| `EXPRESSO_AXE` | The path of `axe.min.js` | The check looks for `node_modules/axe-core/axe.min.js` in the current directory, and then in the directory of the deck. Then it looks in each parent of them, and then in the directory of the tools. Thus the directory of the deck comes before a parent of the current directory. |
+| `EXPRESSO_PLAYWRIGHT` | The path of `cli.js` in the npm package `playwright` | The check looks for `node_modules/playwright/cli.js` in the same directories as axe-core. |
 | `EXPRESSO_TOOLS` | The directory of the tools | `--install-check-tools` uses `expresso` in the cache directory of the user, such as `~/.cache/expresso` on Linux and `~/Library/Caches/expresso` on macOS. |
 
 ### Install the tools
@@ -152,13 +160,13 @@ installs the tools of the browser levels. It needs `node` and `npm` on the `PATH
 takes no other argument. It runs these commands, in sequence:
 
 1. `npm install --prefix <directory> playwright axe-core`, with the directory of
-   `EXPRESSO_TOOLS`. `Expresso.Check.Tools.packages/0` gives the version of each package.
+   `EXPRESSO_TOOLS`. `Expresso.Check.Tools.packages/0` returns the version of each package.
    The version comes from `package.json` of Expresso, so it is the version that the tests
    of Expresso use.
 2. `node <directory>/node_modules/playwright/cli.js install chromium`, which puts the
    Chromium and the headless shell into the cache of Playwright.
 
-The exit status is 1 when a command fails. The error of a missing tool of a level gives
+The exit status is 1 when a command fails. The error for a missing tool of a level gives
 this command.
 
 ### The search for the browser
@@ -168,7 +176,7 @@ this sequence:
 
 1. The headless shell of Playwright, and then its Chromium, in the directory of
    `PLAYWRIGHT_BROWSERS_PATH`, or in the cache of Playwright without it. The headless shell
-   starts fast, and it gives the page its size exactly. The check uses the largest revision
+   starts quickly, and it gives the page its size exactly. The check uses the largest revision
    of each browser, such as `chromium_headless_shell-1194` before
    `chromium_headless_shell-999`.
 2. `google-chrome`, `google-chrome-stable`, `chrome`, `chrome-headless-shell`,
@@ -241,14 +249,15 @@ Problems:
 the browser two times: one time to measure its window, and one time for the check.
 Playwright gives the page its size, so `--check=browser` starts its browser one time. A
 deck with two variants of a theme runs the checks of the page two times, so these levels
-take about two times as long. Each size of `--size` adds one more run of the checks of the
-page, for each variant. The check stops a
-browser that does not end in 30 s for the measure, or in 10 minutes for the check, and
-gives an error. Then give a different browser in `EXPRESSO_CHROMIUM`.
+take approximately two times as long. For each size of `--size`, these levels run the checks
+of the page one more time, for each variant.
 
-Most of the time of `--check=a11y` goes to axe-core, at about 0.2 s for each step. During
-the steps, the check takes the menu, the list of keys and the copies of the slides out of
-the document, because axe-core reads the whole document at each run. For the Line 4 deck
+The check stops a browser that does not end in 30 s for the measurement, or in 10 minutes for
+the check. The check also gives an error. Then give a different browser in `EXPRESSO_CHROMIUM`.
+
+`--check=a11y` uses most of its time for axe-core, at approximately 0.2 s for each step. At
+each run, axe-core reads the whole document. Therefore, during the steps, the check removes
+the menu, the list of keys and the copies of the slides from the document. For the Line 4 deck
 of `examples/line4`, with 28 slides and 76 steps, these were the times after the compile:
 
 | Level | Time |

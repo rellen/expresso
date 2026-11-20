@@ -28,10 +28,12 @@ end
 | `colors: map, adjust: true` | The map, with each color that does not meet its minimum adjusted. See [the adjustment of a map](#the-adjustment-of-a-map). |
 | `dark: theme, light: theme` | Two variants. Each value is a name or a map, and `adjust: true` applies to each map. See [two variants](#two-variants). |
 
-The compiler gives an error for a name that is not a built-in theme, and for a map with a
-missing slot, an unknown slot or a color that is not `#rrggbb`. It also gives an error for
-a keyword list with an unknown key, a key two times, or a form other than `colors` alone
-or `dark` with `light`.
+The compiler gives an error for each of these values:
+
+- A name that is not a built-in theme.
+- A map with a missing slot, an unknown slot or a color that is not `#rrggbb`.
+- A keyword list with an unknown key, or with a key two times.
+- A keyword list with a form other than `colors` alone or `dark` with `light`.
 
 Paper always gets the default theme. A printer gives a white sheet, and a dark theme on
 it wastes ink. A PDF of `--pdf` with one page for each slide is not for paper, and it
@@ -145,8 +147,8 @@ how to add one.
 | One Dark | 0.35 |
 | Nord | 0.37 |
 
-A map of the colors of a scheme that is not built in still works, and the compiler then
-gives a warning for each color under its minimum. See [the warnings](#the-warnings).
+A map with the colors of a scheme that is not built in still works. The compiler then gives
+a warning for each color under its minimum. See [the warnings](#the-warnings).
 
 ## The minimums
 
@@ -157,15 +159,15 @@ gives a warning for each color under its minimum. See [the warnings](#the-warnin
 | The progress bar, the selected page of the overview and a link | 4.5:1, from the accent | Lc 60, from the accent | 1.4.11 |
 
 Each color must meet both measures. The contrast ratio of WCAG 2.2 gives too high a value
-for a color on a dark background. The lightness contrast `Lc` of APCA, the method of the
+for a color on a dark background. The lightness contrast `Lc` of APCA, the method in the
 draft of WCAG 3, corrects this. Expresso uses the absolute value of `Lc`, and the
 constants of APCA-W3 0.0.98G-4g.
 
 Lc 60 is the APCA minimum for the text of content. Lc 30 is its minimum for any text that
-the reader must be able to read, such as a dimmed item that the presenter does not talk
-about now. WCAG lets large text have 3:1. A theme does not use the smaller minimums of large
-text for its colors of text, because a projector and the light of a room lower the
-contrast of each slide.
+the reader must be able to read. An example is a dimmed item that the presenter does not
+talk about now. WCAG lets large text have 3:1. A projector and the light of a room decrease
+the contrast of each slide. Thus a theme does not use the smaller minimums of large text for
+its colors of text.
 
 An `alert` state draws an outline, and a link has a line under its text. Thus the color
 is not the only sign of these parts, as criterion 1.4.1 asks.
@@ -202,11 +204,11 @@ the theme gives code_comment a contrast of 1.28:1, and WCAG asks for 4.5:1. The 
 ```
 
 - The color has the hue of the slot, with a different lightness. It meets the minimums on
-  each background of the roles of the slot, such as `base00` and `base01` for `base05`.
+  each background that the roles of the slot use, such as `base00` and `base01` for `base05`.
 - When no lightness passes, the warning says so. Then change the color by hand, or change
   the background.
-- The role `dimmed_text` stands for the role of text with the lowest contrast, at the dim
-  opacity of the theme. It passes when each role of text passes.
+- The role `dimmed_text` is the role of text with the lowest contrast, at the dim opacity
+  of the theme. It passes when each role of text passes.
 
 `Expresso.Palette.suggestions/1` returns the same colors, and `Expresso.Palette.problems/1`
 returns each role that fails. For the steps, see
@@ -217,7 +219,7 @@ A warning of a variant names it, such as `the dark theme gives code_comment a co
 
 ## The adjustment of a map
 
-`adjust: true` changes the lightness of each role of a map that does not meet its minimum,
+`adjust: true` changes the lightness of each role in a map that does not meet its minimum,
 as `Expresso.Palette.Builtin` does for a built-in theme. The hue of each color and each
 background stays the same. The map in the deck stays as you write it, and the document
 gets the adjusted colors.
@@ -237,8 +239,8 @@ variant:
 | --- | --- |
 | A screen with no preference, or with a light scheme | The light variant. |
 | A screen with a dark scheme, as `prefers-color-scheme: dark` gives | The dark variant. |
-| `?scheme=light` or `?scheme=dark` at the end of the address | That variant. It wins over the scheme of the screen. |
-| The key `t` in the present view or in the speaker view | The other variant, in the two windows. It wins over the scheme of the screen and over the address until the next load of the document. |
+| `?scheme=light` or `?scheme=dark` at the end of the address | That variant. It has priority over the scheme of the screen. |
+| The key `t` in the present view or in the speaker view | The other variant, in the two windows. It has priority over the scheme of the screen and over the address until the next load of the document. |
 | Paper | The default theme, as for one theme. |
 
 - The two windows of the presenter show the same variant. The key `s` gives the variant of
@@ -265,8 +267,8 @@ option of the deck comes after them, so a deck can replace a role.
 | `--danger` | `base08` | A talk that is over its time, and a callout of the kind `:caution` |
 | `--success` | `base0B` | A callout of the kind `:tip` or `:example` |
 | `--emphasis` | `base0E` | A callout of the kind `:important` |
-| `--binder` | `base0E` | The λ, its variable and the bound variables of a `reduce` of a math element |
-| `--argument` | `base0C` | The argument of a `reduce` of a math element |
+| `--binder` | `base0E` | The λ, its variable and the bound variables of a `reduce` in a math element |
+| `--argument` | `base0C` | The argument of a `reduce` in a math element |
 | `--code-background` | `base01` | A code block |
 | `--code-text` | `base05` | Operators, variables and punctuation |
 | `--code-comment` | `base03` | Comments and documentation |

@@ -39,7 +39,7 @@ The element also takes the overlay options, such as `at`, `effect` and the `on` 
 
 ## MathML
 
-The text goes into the document as it is. Each browser of the floor of this project
+The text goes into the document as it is. Each browser at the floor of this project
 supports MathML Core. Give the `math` tag the attribute `display="block"` for a formula on
 its own line.
 
@@ -51,8 +51,8 @@ use the `tex` option.
 ## A formula in LaTeX
 
 The `tex` option takes the formula in LaTeX. The render runs
-[Temml](https://temml.org) in Node, and Temml makes the MathML of each formula of the deck in
-one run. Temml supports most of the LaTeX of mathematics, such as `\frac`, `\sqrt`,
+[Temml](https://temml.org) in Node, and Temml makes the MathML for each formula of the deck in
+one run. Temml supports most of the LaTeX for mathematics, such as `\frac`, `\sqrt`,
 `\sum`, `\begin{aligned}` and `\text`. Each formula is in display mode, so it is on its own
 line.
 
@@ -61,7 +61,7 @@ line.
 | Node | The render needs Node on the `PATH`, as for a diagram from Mermaid. `EXPRESSO_NODE` gives a different path. A deck with no `tex` option needs no Node. The project holds its own copy of Temml, so you do not install a package of npm. |
 | An error | A formula that Temml cannot read stops the render with the formula and the message of Temml, such as `Unexpected end of input`. |
 | The commands that Temml refuses | Temml refuses each command that writes an attribute or reads a file, such as `\style` and `\includegraphics`. It allows `\class` and `\data`, and `\part` and `\id` name a part. |
-| The watch mode | The watch mode keeps the MathML of each formula from one render to the next, so a change of one slide runs Temml for the formulas that changed. |
+| The watch mode | The watch mode keeps the MathML of each formula from one render to the next. A change of one slide thus runs Temml for the formulas that changed. |
 
 Use the `~S` sigil for the LaTeX, so that Elixir does not change a `\`.
 
@@ -110,7 +110,7 @@ slide "the redex" do
 end
 ```
 
-At step 2 the binder `f` gets the accent color, at step 3 the argument `g` shows, and at
+At step 2 the binder `f` gets the accent color, and at step 3 the argument `g` shows. At
 step 4 an outline goes around the whole redex.
 
 A `math` element with a `do` block takes `tex` inside the block, as above. The form
@@ -124,7 +124,7 @@ A `math` element with a `do` block takes `tex` inside the block, as above. The f
 | `on ..., state: :alert` | An outline goes around the part. |
 | `on ..., set: [color: ...]` | The part gets that color. |
 | `on ..., set: [x: ..., y: ..., scale: ..., rotate: ..., opacity: ...]` | The part moves, changes its size, turns or fades. |
-| `on ..., move_to: "name"` | The part moves, so its center is at the center of the part `name` of the same formula. |
+| `on ..., move_to: "name"` | The part moves, so its center is at the center of the part `name` in the same formula. |
 
 - A part with the name of two sub-terms changes both.
 - The render stops for a `move_to` with a name that the formula does not have, and for a
@@ -164,8 +164,9 @@ end
 | `within` | The name of the part that holds the occurrences. The default is the whole formula. |
 | `bare` | With `true`, a symbol with an index is not an occurrence, so `each "x"` does not select the `x` of `x_1` or of `x^2`. The default is `false`. |
 
-- A part with `each` and with the name of a part of the formula, such as `part "body"` with
-  `each "x"`, puts its options on each occurrence inside that part, and not on the part.
+- A part with `each` can have the name of a part in the formula, such as `part "body"` with
+  `each "x"`. It then puts its options on each occurrence inside that part, and not on the
+  part.
 - An occurrence is one symbol with the same text, so `each "x"` does not select the `x` of
   `\exp`.
 - By default, the base of a symbol with an index, such as the `x` of `x_1`, is an
@@ -174,8 +175,8 @@ end
   occurrence, because the base of the index is the group.
 - The index of a symbol is an occurrence of its own text, so `each "1"` selects the `1` of
   `x_1`.
-- `each` knows no rules of scope. It also selects the variable of a binder, such as the `x`
-  of `\lambda x`.
+- `each` does not apply rules of scope. It also selects the variable of a binder, such as the
+  `x` of `\lambda x`.
 - The render gives an error for a `within` that the formula does not have, and for a symbol
   with no occurrence. The compiler gives an error for `within` or `bare` without `each`,
   and for `each` in a part of a diagram.
@@ -189,7 +190,7 @@ the size of the window changes and when a font loads.
 
 - A part with two or more elements, such as a line, moves as one. Its center is the center of
   the box that holds each of its elements.
-- The `set` of the same `on` entity can hold other keys, such as `color` and `scale`, and it
+- The `set` of the same `on` entity can hold other keys, such as `color` and `scale`. It
   cannot hold `x` or `y`, because `move_to` gives them.
 - Each place is the place of the part at rest, without the moves of the other steps.
 - A browser with no script shows the part at its own place at each step.
@@ -223,7 +224,7 @@ The `copy` entity and `copy_to` take the same options as in a diagram. See
 - A source in a script, such as an exponent, is smaller than a symbol of the formula. The
   copy gets the width of its source.
 - A copy does not change its target. To hide a bound variable when the argument lands on
-  it, give the variable its own `part` with `at` or `on`.
+  it, give that variable a `part` with `at` or `on`.
 - A screen reader does not read a copy, because it repeats a part.
 - A browser with no script does not show a copy.
 
@@ -280,13 +281,13 @@ slide "the proof" do
 end
 ```
 
-A cell of a row cannot be inside a group of a different cell, so a part of a row names each
+A cell of a row cannot be inside a group of a different cell. A part of a row thus names each
 cell, as `l2` does above.
 
 ### The line entity
 
 The `line` entity writes the aligned LaTeX for you. Its first argument is the relation in
-LaTeX, the `tex` option is the term, and the `why` option is the reason in a column at the
+LaTeX, and the `tex` option is the term. The `why` option is the reason in a column at the
 right.
 
 ```elixir
@@ -305,11 +306,11 @@ end
 | The first argument | LaTeX, such as `"="` or `~S"\to_\beta"` | The relation of the line. The first line usually has none. |
 | `tex` | LaTeX | The term of the line. |
 | `why` | Plain text | The reason of the line. A character such as `&`, `%` or `{` shows as it is. |
-| `name` | A name | The name of the part of the line. The default is `line1`, `line2` and so on. |
+| `name` | A name | The name of the line's part. The default is `line1`, `line2` and so on. |
 
 - Each line is a part with its name, so a `part` entity can give it steps, such as
   `part "line2" do on 3, state: :alert end`. Its options add to the line.
-- The MathML of each cell of a line has the attribute `data-line` with the name of the
+- The MathML of each cell in a line has the attribute `data-line` with the name of the
   line. A `\part` that is the whole term of a line thus keeps its own name.
 - `reveal true` on the `math` element shows each line at its own step. The first line shows at
   the first step of the element. A `part` of the deck without an `at` option does not take a
@@ -321,7 +322,7 @@ end
 
 `\from{name}{…}` in the LaTeX of a line marks a sub-term that comes from the part `name` of
 an earlier line. At the step of the line, a copy of that part moves from the earlier line
-to the sub-term, and the part stays in its line.
+to the sub-term. The part stays in its line.
 
 ```elixir
 slide "the reduction" do
@@ -341,9 +342,9 @@ end
 - Each `\from` makes one copy, so two links with one name make two copies.
 - The copy stays on the sub-term at each later step, and the presenter script hides the
   sub-term under it. A browser with no script shows the sub-term, so the line is complete.
-- A line with a link needs steps: give the math element `reveal true`, or give the part of
+- A line with a link needs steps. Give the math element `reveal true`, or give the part of
   the line an `at` option.
-- `steps: 2` on a `line` entity moves the copies of its links at its first step, and shows
+- `steps: 2` on a `line` entity moves the copies of its links at its first step. It shows
   the other symbols of the line, its relation and its reason at the next step. It needs
   `reveal true`.
 - A `\part` inside a `\from`, such as `\from{arg}{\part{hole}{g}}`, names the linked
@@ -351,20 +352,20 @@ end
   A part that holds only some symbols of the sub-term changes the same symbols of the copy.
 - A part around a linked sub-term, such as its line, gives the copy its `on` entities, so a
   copy dims with its line.
-- A link with the name of a set of `each` takes one occurrence of the set: the first link
-  with that name takes the first occurrence in the earlier line, the second link takes the
+- A link that names a set of `each` takes one occurrence of the set. The first link with
+  that name takes the first occurrence in the earlier line, the second link takes the
   second occurrence, and so on.
 - The compiler gives an error for `\from` in a math element without `line` entities and in
-  the first line. The render gives an error for a name that no earlier line has, and for
-  more links to a set than occurrences of the set in the earlier line.
+  the first line. The render gives an error for a name that no earlier line has. It also
+  gives an error for more links to a set than occurrences of the set in the earlier line.
 
 `docs/line-links.md` gives the design.
 
 ### Write the next line by a rewrite
 
 A `rewrite` entity makes the next line from the line before it by a substitution, so you do
-not write the new line. The render writes the new line with links, so each kept symbol of
-the old line moves down, and a copy of the argument moves into each place.
+not write the new line. The render writes the new line with links. Each kept symbol of the
+old line thus moves down, and a copy of the argument moves into each place.
 
 ```elixir
 slide "the reduction" do
@@ -384,33 +385,34 @@ end
 ```
 
 The rewrite makes the line `g\,(g\,x)`, with the reason `f := g`. It takes three steps of
-the counter of `reveal`, one for each phase:
+the `reveal` counter, one for each phase:
 
 | Step | Phase | What changes |
 | --- | --- | --- |
 | 1 | `:occurrences` | Each occurrence in the old line gets the color `--accent`, and the source of `by` gets the color `--success`. |
 | 2 | `:kept` | Each run of kept symbols, such as `(` and `x)`, moves down from the old line to its place. |
-| 3 | `:copies` | A copy of the source of `by` moves into the place of each occurrence, and the rest of the new line shows, with its relation and its reason. |
+| 3 | `:copies` | A copy of the `by` source moves into the place of each occurrence. The rest of the new line shows, with its relation and its reason. |
 
 | Option | Effect |
 | --- | --- |
 | The first argument | The relation of the new line, such as `~S"\to_\beta"`. The default is `=`. |
-| `replace` | The name of a part of the old line, or a symbol, such as `"f"`, `"2"` or `~S"\alpha"`. Each occurrence becomes the new content. A rewrite with `to` or `rule` can omit it. |
-| `within` | With a symbol, the name of the part of the old line that holds the occurrences. The default is the whole line. |
-| `by` | The name of a part of the old line or of an earlier line. A copy of it moves into the place of each occurrence. |
+| `replace` | The name of a part in the old line, or a symbol, such as `"f"`, `"2"` or `~S"\alpha"`. Each occurrence becomes the new content. A rewrite with `to` or `rule` can omit it. |
+| `within` | With a symbol, the name of the part in the old line that holds the occurrences. The default is the whole line. |
+| `by` | The name of a part in the old line or in an earlier line. A copy of it moves into the place of each occurrence. |
 | `by_tex` | New LaTeX for the place of each occurrence, in place of `by`. It fades in. |
 | `to` | A template in LaTeX for the part of `replace`, or for the whole line without `replace`. Each `\use{name}` in it is a copy of the part `name`, and the rest fades in. |
 | `rule` | A left side and a right side in LaTeX, such as `{~S"a\,(b + c)", ~S"a\,b + a\,c"}`. The first match of the left side in the old line, or in the part of `replace`, becomes the right side. |
 | `vars` | The variables of `rule`, such as `~w(a b c)`. |
-| `drop` | The names of the parts of the old line that the new line does not hold. |
+| `drop` | The names of the parts in the old line that the new line does not hold. |
 | `from` | The name of the line that the rewrite reads. The default is the line before it. |
 | `why` | The reason of the new line, as plain text. The default is the replaced symbol or part, `:=` and the new content, in LaTeX. |
-| `name` | The name of the part of the new line, as for a `line`. |
-| `steps` | A list of groups of the phases, such as `[[:occurrences, :kept], :copies]`. Each group is one step, and the new line shows at the last step. The groups hold each phase once, in the order of the table above. The default is `[:occurrences, :kept, :copies]`. |
+| `name` | The name of the new line's part, as for a `line`. |
+| `steps` | A list with groups of the phases, such as `[[:occurrences, :kept], :copies]`. Each group is one step, and the new line shows at the last step. The groups hold each phase once, in the order of the table above. The default is `[:occurrences, :kept, :copies]`. |
 
-- A rewrite gives each run of kept symbols of the old line a part, such as `keep-2-1`, and
-  the new line a link to it. A relation, such as `=`, and a binary operator, such as `+`,
-  get a part of their own inside `\mathrel` or `\mathbin`, so they keep their spaces. A symbol of `\text` or of `\operatorname` is not an occurrence.
+- A rewrite gives each run of kept symbols in the old line a part, such as `keep-2-1`. It
+  gives the new line a link to that part. A relation, such as `=`, and a binary operator,
+  such as `+`, get a part of their own inside `\mathrel` or `\mathbin`. They thus keep their
+  spaces. A symbol of `\text` or of `\operatorname` is not an occurrence.
 - A group or a command that holds an occurrence, such as `\frac`, fades in with the new
   line.
 - A rewrite adds no parentheses. Put them in the source of `by`, such as
@@ -419,16 +421,19 @@ the counter of `reveal`, one for each phase:
   rewrite.
 - A rewrite needs `reveal true`, because it takes a step for each group of its phases.
 - Each occurrence in the old line gets the class `hit-k`, where `k` is the number of the new
-  line, so a `part` entity with that name can change it.
-- The compiler gives an error for a rewrite with no line before it, for a name that the
-  lines do not have, for a rewrite with no occurrence, for a rewrite with more or less than
-  one of `by`, `by_tex`, `to` and `rule`, for `by` or `by_tex` without `replace`, and for a rewrite
-  without `reveal true`.
+  line. A `part` entity with that name can thus change it.
+- The compiler gives an error for each of these items:
+  - A rewrite with no line before it.
+  - A name that the lines do not have.
+  - A rewrite with no occurrence.
+  - A rewrite with more or less than one of `by`, `by_tex`, `to` and `rule`.
+  - `by` or `by_tex` without `replace`.
+  - A rewrite without `reveal true`.
 
 #### A template
 
 `to` gives the new content as a template. Each `\use{name}` in it becomes a copy of the part
-`name` of the nearest line before the rewrite, so one part can go to two places.
+`name` in the nearest line before the rewrite. One part can thus go to two places.
 
 ```elixir
 slide "distribute" do
@@ -466,25 +471,26 @@ end
 
 The rewrite makes the line `y = k\,x + k\,h`, and you give the old line no names.
 
-- A variable binds one operand: a symbol or a command with its scripts, a brace group, or
-  a group in parentheses from `(` to its `)`. A variable before a script, as in `a^2`,
-  binds the base only.
+- A variable binds one operand. An operand is a symbol or a command with its scripts, a
+  brace group, or a group in parentheses from `(` to its `)`. A variable before a script, as
+  in `a^2`, binds the base only.
 - The match skips spaces, such as `\,`, so `a\,b` matches `k (x + h)`.
 - A variable that occurs two times in the left side, as in `a + a`, must bind equal LaTeX.
 - A command or a brace group of the left side, such as `\frac{a}{b}`, matches its groups in
   full.
-- The first match from the left wins. With `replace`, the match must be inside that part.
+- The rewrite uses the first match from the left. With `replace`, the match must be inside
+  that part.
 - A match does not cross a `\part` or a `\from` of the old line, but it looks inside them.
-- The render gives an error for a rule that matches nothing, and for a variable of the
-  right side that the left side does not have.
+- The render gives an error for a rule that matches nothing. It also gives an error for a
+  variable of the right side that the left side does not have.
 
 `docs/line-rewrites.md` gives the design.
 
 ### Reduce a λ-term
 
 A `reduce` entity makes the next line by one β-reduction. The render reads the λ-term in the
-LaTeX of the old line, finds the redex, its bound variables and its argument, and writes a
-rewrite for them, so you give no names but the redex.
+LaTeX of the old line. It finds the redex, its bound variables and its argument, and it
+writes a rewrite for them. You thus give no names but the redex.
 
 ```elixir
 slide "a reduction" do
@@ -499,29 +505,29 @@ end
 ```
 
 The reduction makes the line `g\,(g\,x)`, with the relation `\to_\beta` and the reason
-`f := g`. It takes four steps of the counter of `reveal`, one for each phase:
+`f := g`. It takes four steps of the `reveal` counter, one for each phase:
 
 | Step | Phase | What changes |
 | --- | --- | --- |
 | 1 | `:redex` | The λ with its variable gets the color `--binder`, and the argument gets the color `--argument`. |
 | 2 | `:bound` | Each bound variable gets the color `--binder`. |
-| 3 | `:body` | Each run of the rest of the body moves down from the old line to its place. |
+| 3 | `:body` | Each run in the rest of the body moves down from the old line to its place. |
 | 4 | `:argument` | A copy of the argument moves into the place of each bound variable, and the new line shows. |
 
 | Option | Effect |
 | --- | --- |
-| The first argument | The redex: `:leftmost` for the leftmost outermost redex, the redex of normal order, or the name of a `\part` of the old line that holds the redex. |
+| The first argument | The redex. `:leftmost` selects the leftmost outermost redex, which is the redex of normal order. A name selects the `\part` of the old line that holds the redex. |
 | `relation` | The relation of the new line. The default is `~S"\to_\beta"`. |
 | `from` | The name of the line that the reduction reads. The default is the line before it. |
 | `why` | The reason, as plain text. The default is the variable, `:=` and the argument, in LaTeX. |
-| `name` | The name of the part of the new line. |
-| `steps` | A list of groups of the phases, such as `[[:redex, :bound], :body, :argument]`. Each group is one step, and the new line shows at the last step. The groups hold each phase once, in the order of the table above. The default is `[:redex, :bound, :body, :argument]`. |
+| `name` | The name of the new line's part. |
+| `steps` | A list with groups of the phases, such as `[[:redex, :bound], :body, :argument]`. Each group is one step, and the new line shows at the last step. The groups hold each phase once, in the order of the table above. The default is `[:redex, :bound, :body, :argument]`. |
 
 - A λ-term is a variable, `\lambda x.` with a body, an application, or a term in
   parentheses. A variable is a letter, a number or a command such as `\alpha`, with its
   scripts. A body goes as far right as it can, and an application groups from the left.
-- The parser reads through a `\part`, a `\from`, a `\class` and a brace group, so a
-  reduction can read a line that a rewrite or a reduction made.
+- The parser reads through a `\part`, a `\from`, a `\class` and a brace group. A reduction
+  can thus read a line that a rewrite or a reduction made.
 - The bound variables are the free occurrences of the variable in the body. An inner λ with
   the same variable keeps its own variable.
 - An argument of more than one variable, such as `a\,b`, gets parentheses in each place,
@@ -531,14 +537,14 @@ The reduction makes the line `g\,(g\,x)`, with the relation `\to_\beta` and the 
 - A body that is a λ keeps the parentheses of its λ when a term comes after the redex, so
   `(\lambda f.\,\lambda x.\,f\,x)\,g\,y` becomes `(\lambda x.\,g\,x)\,y`.
 - The render gives an error for a line that is not a λ-term, for a part with no redex, and
-  for a capture: a λ of the body around a bound variable that binds a free variable of the
-  argument. Give that λ a different variable.
+  for a capture. A capture is a λ of the body around a bound variable that binds a free
+  variable of the argument. Give that λ a different variable.
 - A reduction gives the old line the parts `lam-k`, `close-k`, `body-k`, `arg-k` and
   `bound-k`, where `k` is the number of the new line.
-- A link of the old line that occurs once, such as a kept run of a rewrite, can hold the end
-  of one term and the start of the next. A reduction then splits the link and its source in
-  two, such as `keep-2-1` and `keep-2-1-2`. A redex that crosses a `\part`, or a link that
-  occurs more than once, stops the render.
+- A link of the old line can occur once, such as a kept run of a rewrite. Such a link can
+  hold the end of one term and the start of the next. A reduction then splits the link and
+  its source in two, such as `keep-2-1` and `keep-2-1-2`. A redex that crosses a `\part`, or
+  a link that occurs more than once, stops the render.
 - A part of a reduction that is the whole body of a `\part`, such as `\part{g}{g}`, gets an
   empty group after it, `\part{g}{\part{arg-2}{g}{}}`. Temml then keeps the two names on
   two elements.
@@ -582,6 +588,6 @@ end
 ## Show the steps of a proof
 
 [Explain a formula step by step](../how-to/explain-a-formula-step-by-step.md) shows the parts
-and the lines with example decks. To move a copy of each symbol of a formula in a long proof,
-see [Show the steps of a proof](../how-to/show-the-steps-of-a-proof.md), which draws the
+and the lines with example decks. To move a copy of each symbol in a formula in a long proof,
+see [Show the steps of a proof](../how-to/show-the-steps-of-a-proof.md). That page draws the
 formula as a diagram.

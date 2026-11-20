@@ -33,16 +33,16 @@ The minimum of APCA for dimmed text stays at Lc 30 at each value.
 ## What it changes
 
 The option changes each dimmed color of [the theme](theme-option.md), such as
-`--text-dim` and `--code-comment-dim`, and the opacity `--dim-opacity` of a dimmed image,
-SVG file, embed and video. Each variant of a theme with two variants, and the colors of paper,
-follow the option.
+`--text-dim` and `--code-comment-dim`. It also changes the opacity `--dim-opacity` of a dimmed
+image, SVG file, embed and video. Each variant of a theme with two variants, and the colors of
+paper, follow the option.
 
 [The dim_graphic_opacity option](dim-graphic-opacity-option.md) gives a dimmed graphic an
 opacity of its own. A graphic then does not follow `--dim-opacity`.
 
 A higher ratio dims less. A role of text near 4.5:1, such as the numbers of the default
-theme, then does not dim at 4.5. The focus of the `highlight` option of a code
-element still shows, because the lines in focus get a bar in the color `--accent`.
+theme, then does not dim at 4.5. The `highlight` option of a code element still shows its
+focus, because the lines in focus get a bar in the color `--accent`.
 
 ## A theme that does not dim
 
