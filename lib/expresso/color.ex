@@ -185,10 +185,10 @@ defmodule Expresso.Color do
   The function returns the color and the change of its lightness in OKLab, from
   0 to 1. A color that already has the contrast comes back with the change 0.
   The foreground becomes lighter on a dark background and darker on a light
-  background, in steps of 0.001. The function changes only the lightness of
-  the color in OKLab, so the hue stays the same. The function reduces the
-  chroma only where a color with the new lightness is outside sRGB. It returns
-  `:error` when no lightness gives the contrast.
+  background, in steps of 0.001. The function changes the lightness of the
+  color in OKLab. It also reduces the chroma, but only where a color with the
+  new lightness is outside sRGB. The hue stays the same. It returns `:error`
+  when no lightness gives the contrast.
 
       iex> Expresso.Color.adjust("#ffffff", "#000000", 4.5)
       {:ok, "#ffffff", 0.0}

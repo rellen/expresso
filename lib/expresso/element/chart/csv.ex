@@ -12,10 +12,12 @@ defmodule Expresso.Element.Chart.Csv do
   The default of the `cell` option is `number/1`. For a waterfall chart, the
   function of the option also reads the mark of a total.
 
-  For a treemap or a sunburst, the `levels` option can name the columns that
-  hold the levels of a category, from the top level down. The category of a
-  row is then the list of its levels, and an empty cell at the end of the
-  list ends the category at a higher level.
+  The `levels` option can name the columns that hold the levels of a category,
+  from the first level to the last. The category of a row is then the list of
+  its levels, and an empty cell at the end of the list ends the category at a
+  higher level. A chart of parts, such as a treemap, and a chart of flows, such
+  as a sankey, take the option. For a chart of flows, each level is one node of
+  a path.
   """
 
   alias Expresso.Element.{Frame, Series}

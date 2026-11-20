@@ -3,12 +3,13 @@ defmodule Expresso.Element.Chart do
   Draws a chart as an element of a slide
 
   The element draws a bar chart, a line chart, a pie chart, a treemap, a
-  sunburst or a sankey. It also draws an alluvial chart, a parallel sets
-  chart, a chord chart, a scatter plot or a waterfall chart.
+  sunburst, a Voronoi treemap or a sankey. It also draws an alluvial chart, a
+  parallel sets chart, a chord chart, a scatter plot, a bubble chart or a
+  waterfall chart.
 
-  The `chart` entity takes the kind as its first argument: `:bar`, `:line`,
-  `:pie`, `:treemap`, `:sunburst`, `:sankey`, `:alluvial`, `:parallel_sets` or
-  `:chord`. A slash in a category of a treemap or a sunburst names a part of a
+  The `chart` entity takes the kind as its first argument, and
+  `Expresso.Element.Chart.Kinds` gives the list of kinds. A slash in a
+  category of a treemap, a sunburst or a Voronoi treemap names a part of a
   group, and `Expresso.Element.Chart.Hierarchy` draws them. The `categories`
   option gives the names of the categories, and each `series` entity gives a
   name and one value for each category. The `src` option gives a CSV file in

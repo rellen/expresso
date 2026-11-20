@@ -3,8 +3,8 @@ defmodule Expresso.Element.QrCode do
   Shows a QR code of a text, such as the address of the slides
 
   The `qr_code` entity takes the text as its first argument. `EQRCode` makes
-  the matrix of the code at render time. The render function writes the
-  matrix as one SVG `path`, with one square for each dark module. The SVG goes
+  the matrix of the code at render time. `path/2` writes the dark modules of
+  the matrix as one SVG `path`. The SVG goes
   into the document, so the code needs no file and no script, and it shows in
   a printed copy.
 
@@ -14,10 +14,11 @@ defmodule Expresso.Element.QrCode do
   code has a quiet zone of four modules around it, as in the standard.
 
   The `size` option gives the width and the height of the code, as the
-  `width` option of an image does. The render function writes it into the
-  custom property `--qr-size`. The `label` option gives a line of text under
-  the code. The `title` option gives the name of the code for a screen
-  reader, and the default is the text of the code.
+  `width` option of an image does. `get_assigns/1` writes it into the custom
+  property `--qr-size`, in the `style` attribute of the element. The `label`
+  option gives a line of text under the code. The `title` option gives the
+  name of the code for a screen reader, and the default is the text of the
+  code.
   """
 
   use Expresso.Element

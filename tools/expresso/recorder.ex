@@ -3,7 +3,7 @@ defmodule Expresso.Recorder do
   Records the frames of a deck in Chromium while it does the keys of an example
 
   `mix expresso.gifs` uses this module. `start/0` starts Playwright and one
-  browser, `record/2` returns the frames of one example, and `stop/1` closes
+  browser, `record/4` returns the frames of one example, and `stop/1` closes
   the browser. `Expresso.Gif` then encodes the frames as a GIF.
 
   A GIF must show each animation in the same way on each run. Therefore the

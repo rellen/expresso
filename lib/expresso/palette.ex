@@ -5,7 +5,7 @@ defmodule Expresso.Palette do
   A palette has the 16 colors of a base16 scheme, `base00` to `base0F`. The
   scheme gives each color a purpose. `base00` is the background, `base05` is
   the text, `base03` is the comments, and `base08` to `base0F` are the
-  accents. `new/4` makes a palette, and it assigns one of the colors to each
+  accents. `new/3` makes a palette, and it assigns one of the colors to each
   **role** of the theme. A role is a color that the style sheet reads as a
   custom property, such as `--text` or `--code-keyword`. `roles/0` lists them.
 

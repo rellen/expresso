@@ -6,10 +6,11 @@ defmodule Expresso.PathTransformer do
   When the deck has the `root` option, it joins each relative path of the deck
   to that directory:
 
-  - the `src` of an image, a diagram, a code element, a local embed, a video
-    and a sound
+  - the `src` of an image, a diagram, a code element, a chart, a tree, a
+    local embed, a video and a sound
+  - the `font` of a diagram
   - the `fallback` of an embed
-  - the `poster` of a video
+  - the `poster` and the `captions` of a video
   - the `image` of a node in a tree
   - the image in the `background` option of a slide and of the deck
   - the picture of the `card` option

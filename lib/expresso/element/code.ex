@@ -15,7 +15,7 @@ defmodule Expresso.Element.Code do
 
   The `lines` option takes a range of lines in the file, such as
   `3086..3095`, and the element then shows only those lines. It can also take
-  a start text and an end text, such as `[from: "def start(", to: "\n  end"]`.
+  a start text and an end text, such as `[from: "def start(", to: "\\n  end"]`.
   The excerpt then starts at the line of the start text and ends at the line
   of the end text. Therefore, a change above the excerpt does not move it.
   `to: :block` in place of an end text ends the excerpt at the end of the

@@ -62,7 +62,8 @@ defmodule Expresso.Overlay.Typewriter do
   The function obeys these rules:
 
   - White space takes no position, so it takes no time. It is in the `span`
-    of the character before it.
+    of the character before it. White space at the start of the text is in
+    the `span` of the character after it.
   - A character reference such as `&amp;` is one character.
   - An element inside with its own steps is not part of the text. It shows
     at its own steps, with its own effect.

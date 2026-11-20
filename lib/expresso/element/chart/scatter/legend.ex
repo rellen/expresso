@@ -4,10 +4,11 @@ defmodule Expresso.Element.Chart.Scatter.Legend do
 
   A scatter plot has up to four legends, from the top:
 
-  - The series, with the symbol and the color of each one.
-  - The colors: each category of the color, with its color. When the symbol
-    and the color of each point take the same category, the item also shows
-    the symbol, and the chart has no legend of the symbols.
+  - The colors. When a `series` entity has the `color` option, the legend
+    shows each such series, with its symbol and its color. Otherwise, it
+    shows each category of the color, with its color. When the symbol and
+    the color of each point take the same category, the item also shows the
+    symbol, and the chart has no legend of the symbols.
   - The scale of a color from a number, with its highest and its lowest
     value.
   - The symbols: each category of the symbol, with its symbol.

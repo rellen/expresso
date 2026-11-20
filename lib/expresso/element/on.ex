@@ -3,7 +3,7 @@ defmodule Expresso.Element.On do
   Holds a state of an element for a set of steps
 
   The `on` entity is inside an element. Its first argument is an overlay
-  specification, and its options are `state`, `set` and `move_to`.
+  specification, and its options are `state`, `set`, `move_to` and `copy_to`.
   `docs/overlays.md` gives the rules. The transformer expands the
   specification into the `steps` field, and the renderer writes the state and
   the properties as CSS rules.

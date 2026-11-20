@@ -11,8 +11,8 @@ defmodule Expresso.SignalHandler do
   The launcher of Burrito 1.6 sends SIGTERM when the reader of the standard
   output stops, as `| head` does. The launcher passes the standard output of
   the VM through a pipe, and it stops the read of that pipe first. Thus each
-  write to the standard output also waits forever, and the binary did not
-  stop. See `stdoutCopyThread` in `deps/burrito/src/erlang_launcher.zig`.
+  write to the standard output also waits forever. Without this handler, the
+  binary does not stop. See `stdoutCopyThread` in `deps/burrito/src/erlang_launcher.zig`.
 
   This handler halts the VM at once for a SIGTERM, and it does not write to the
   standard output. The default handler of OTP handles the other signals.

@@ -27,8 +27,8 @@ defmodule Expresso.Test.PresenterFixtures do
   commands]`, `["swipe", direction]`, `["hash", fragment]` and `["message",
   slide, step, fields]`. The fields of a message are an object with a value
   for each field of the option `sync`. The commands of a click are the
-  commands for the page in the overview or for the link under the click, or
-  `null`. A result is `[state, prevented, effects, transition]`.
+  commands for the page in the overview, for the link or for the row of the
+  menu under the click, or `null`. A result is `[state, prevented, effects, transition]`.
   """
 
   alias Expresso.Builder

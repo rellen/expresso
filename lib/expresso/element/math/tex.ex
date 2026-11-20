@@ -2,7 +2,7 @@ defmodule Expresso.Element.Math.Tex do
   @moduledoc """
   Makes the MathML of formulas in LaTeX with Temml
 
-  [Temml](https://temml.org) is a library in JavaScript, so `render!/2` runs
+  [Temml](https://temml.org) is a library in JavaScript, so `render!/1` runs
   Node with the script `priv/temml/render.mjs`, through
   `Expresso.Element.Diagram.Tool`. The project holds a copy of `temml.mjs`
   and its license in `priv/temml/`, so a render needs Node and no package of

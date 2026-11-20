@@ -20,7 +20,9 @@ defmodule Expresso.Element.Chart.Scatter.Labels do
   Return the place of the label of each point, by the number of the point
 
   Each point has `index`, `name`, `x`, `y` and `r`, in the units of the SVG.
-  `labeled` holds the numbers of the points with a label.
+  `points` holds only the points with a label, so a label can cover the mark
+  of a point without a label. `box` is the box of the plot, with `left`,
+  `right`, `top` and `bottom`.
 
   The function tries eight places in order: right, left, above, below, and
   the four corners. It takes the first free place. At a free place, the label

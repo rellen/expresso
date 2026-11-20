@@ -2,8 +2,9 @@ defmodule Expresso.Element.Item do
   @moduledoc """
   Defines an item of a list
 
-  The `item` entity takes its text as its first argument, and it can hold one
-  nested `list`. `Expresso.Element.List` gives the rules of a list.
+  The `item` entity takes its text as its first argument. Its block can hold
+  nested `list` entities, to each depth. `Expresso.Element.List` gives the
+  rules of a list.
   """
 
   use Expresso.Element

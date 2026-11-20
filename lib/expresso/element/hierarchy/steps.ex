@@ -10,7 +10,9 @@ defmodule Expresso.Element.Hierarchy.Steps do
 
   `Expresso.Overlay.Expand` calls `groups/2` before the counter walk and
   `dim/1` after the expansion, as it does for the `reveal` and the `dim`
-  options of a list. The renderer calls `effective/1` and `rules/2`.
+  options of a list. `Expresso.Element.Hierarchy` calls `effective/1` for
+  the steps of each box. For the moves of `reflow`, it calls `layouts/4` and
+  `offsets/2`.
   """
 
   alias Expresso.Element.Hierarchy

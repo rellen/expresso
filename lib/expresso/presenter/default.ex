@@ -4,9 +4,9 @@ defmodule Expresso.Presenter.Default do
 
   Each document holds the program that `Expresso.Presenter.Program` makes from
   this definition. The modes are in the order that the interpreter examines
-  them: the black screen, the list of keys, the overview, then the views. The
-  bindings of a mode are in the order of the rows in its list of keys. The
-  projections tell how the script writes a state to the document.
+  them: the black screen, the list of keys, the overview, the menu, then the
+  views. The bindings of a mode are in the order of the rows in its list of
+  keys. The projections tell how the script writes a state to the document.
   `Expresso.Presenter.Definition` tells what each part of a mode does, and
   `Expresso.Presenter.Projection` tells what each projection does.
   """
