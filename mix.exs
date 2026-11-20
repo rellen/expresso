@@ -12,7 +12,7 @@ defmodule Expresso.MixProject do
       deps: deps(),
       releases: releases(),
       # MDEx has `runtime: false`, so it is not an application of Expresso.
-      # The compiler then gives a warning for a call to it, and Dialyzer does
+      # The compiler then writes a warning for a call to it, and Dialyzer does
       # not know it. `Expresso.Notes` makes sure that MDEx is available.
       elixirc_options: [no_warn_undefined: [MDEx]],
       dialyzer: [plt_core_path: "_build/#{Mix.env()}", plt_add_apps: [:mix, :mdex]],
@@ -21,13 +21,16 @@ defmodule Expresso.MixProject do
     ]
   end
 
-  # The settings of `mix usage_rules.sync`. Some dependencies hold a file
-  # `usage-rules.md` with rules for an AI agent, such as Spark, which makes
-  # the DSL. The task writes a link to each file between two comments at the
-  # end of `CLAUDE.md`, and the agent reads the file when it uses the
-  # dependency. A link keeps `CLAUDE.md` short: the files have more than 1400
-  # lines. The pattern takes each dependency with such a file, also one that
-  # a later change adds. `docs/development/dependencies.md` gives the details.
+  # This function returns the settings of `mix usage_rules.sync`. Some
+  # dependencies hold a file `usage-rules.md` with rules for an AI agent. Spark,
+  # which makes the DSL, is an example. The task writes a link to each file
+  # between two comments at the end of `CLAUDE.md`. The agent reads the file
+  # when it uses the dependency.
+  #
+  # A link keeps `CLAUDE.md` short: the files have more than 1400 lines. The
+  # pattern takes each dependency that has such a file. It also takes a
+  # dependency that a later change adds. `docs/development/dependencies.md`
+  # gives the details.
   defp usage_rules do
     [
       file: "CLAUDE.md",
@@ -35,11 +38,16 @@ defmodule Expresso.MixProject do
     ]
   end
 
-  # The pages of `mix docs`. The groups follow Diataxis: a tutorial teaches the
-  # basics, a how-to guide gives the steps of one task, a reference page
-  # describes each option, and an explanation gives the design and its
-  # reasons. The site is for a user, so the documents for a contributor stay
-  # out of it. `CONTRIBUTING.md` lists them. The GIFs of the guides come
+  # This function returns the settings of `mix docs`. The groups of the pages
+  # come from Diataxis, a framework for documentation:
+  #
+  # - A tutorial teaches the basics.
+  # - A how-to guide gives the steps of one task.
+  # - A reference page describes each option.
+  # - An explanation gives the design and its reasons.
+  #
+  # The site is for a user, so it does not contain the documents for a
+  # contributor. `CONTRIBUTING.md` lists them. The GIFs of the guides come
   # from `mix expresso.gifs`, and the workflow publishes them to the branch
   # `media`. See `docs/development/gifs.md`.
   defp docs do
@@ -48,7 +56,7 @@ defmodule Expresso.MixProject do
       source_url: "https://github.com/rellen/expresso",
       homepage_url: "https://rellen.github.io/expresso/",
       # `docs/architecture.md` names this function of Mix, which has no
-      # documentation. ExDoc then writes the name with no link.
+      # documentation. This option tells ExDoc to write the name with no link.
       skip_code_autolink_to: ["Mix.Tasks.Help.run/1"],
       extras: [
         "README.md",
@@ -162,15 +170,15 @@ defmodule Expresso.MixProject do
     ]
   end
 
-  # `test/support` holds the generators of the property tests, and only the test
-  # environment compiles them. `tools/` holds the recorder of the GIFs and its
-  # encoder, a Zig NIF. The release does not need them, so only `dev` and `test`
+  # `test/support` holds the generators of the property tests, and only `test`
+  # compiles them. `tools/` holds the recorder of the GIFs and its encoder, a
+  # NIF in Zig. The release does not need the tools, so only `dev` and `test`
   # compile them.
   defp elixirc_paths(:test), do: ["lib", "tools", "test/support"]
   defp elixirc_paths(:dev), do: ["lib", "tools"]
   defp elixirc_paths(_env), do: ["lib"]
 
-  # Run "mix help compile.app" to learn about applications.
+  # Run `mix help compile.app` to read about applications.
   def application do
     [
       # `inets` gives `:httpd`, the web server of the watch mode.
@@ -207,14 +215,14 @@ defmodule Expresso.MixProject do
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
+  # Run `mix help deps` to read about dependencies.
   defp deps do
     [
-      # DSL
+      # the DSL
       {:spark, "~> 2.7"},
 
-      # results, lists, maps and keyword lists. Shoddy is not on Hex, so the lockfile
-      # gives the commit of its main branch.
+      # small functions for results, lists, maps and keyword lists. Shoddy is
+      # not on Hex, so the lockfile holds the commit of its main branch.
       {:shoddy, github: "rellen/shoddy", branch: "main"},
 
       # HTML
@@ -222,15 +230,15 @@ defmodule Expresso.MixProject do
       {:phoenix_html, "~> 4.3"},
       {:temple, "~> 0.14"},
 
-      # the Markdown of the notes of the speaker. MDEx is a NIF in Rust, and
+      # the Markdown in the notes of the speaker. MDEx is a NIF in Rust, and
       # RustlerPrecompiled gets its library from a release of MDEx on GitHub.
-      # The library does not load in the ERTS of a Burrito binary, so the
-      # dependency has `runtime: false`, and a release does not hold it.
+      # The library does not load in the ERTS of a Burrito binary. Therefore
+      # the dependency has `runtime: false`, and a release does not hold it.
       # `Expresso.Notes` calls MDEx only when it is available. See
-      # docs/speaker-notes.md.
+      # `docs/speaker-notes.md`.
       {:mdex, "~> 0.14", runtime: false},
 
-      # releasing
+      # the release
       {:burrito, "~> 1.6"},
 
       # the presenter bundle
@@ -256,9 +264,10 @@ defmodule Expresso.MixProject do
       {:makeup_rust, "~> 0.3"},
       {:makeup_diff, "~> 0.1"},
 
-      # docs. Zigler depends on zig_doc, which asks for ExDoc 0.39.1 exactly.
-      # zig_doc compiles with this version too, so the override keeps it, and
-      # zig_doc needs ExDoc in each environment that compiles Zigler.
+      # the documentation. Zigler depends on zig_doc, which asks for ExDoc
+      # 0.39.1 exactly. zig_doc compiles with ExDoc 0.40 too, so the override
+      # keeps that version. zig_doc needs ExDoc in each environment that
+      # compiles Zigler.
       {:ex_doc, "~> 0.40", only: [:dev, :test], runtime: false, override: true},
 
       # checks
@@ -266,7 +275,7 @@ defmodule Expresso.MixProject do
 
       # the rules of the dependencies for an AI agent. `mix usage_rules.sync`
       # writes a link to the file `usage-rules.md` of each dependency into
-      # `CLAUDE.md`. `usage_rules/0` gives the settings.
+      # `CLAUDE.md`. `usage_rules/0` returns the settings.
       {:usage_rules, "~> 1.3", only: :dev, runtime: false},
 
       # the formatter of the DSL. `Spark.Formatter` and `mix spark.formatter`
@@ -277,16 +286,16 @@ defmodule Expresso.MixProject do
       # therefore the dependency is present in `dev` too.
       {:stream_data, "~> 1.2", only: [:dev, :test], runtime: false},
 
-      # the queries of the HTML in the unit tests. Lexbor parses the HTML as a
+      # the queries on the HTML in the unit tests. Lexbor parses the HTML as a
       # browser does, and it takes each CSS selector of a browser. Floki stays
       # for `lib/` and for the tests that use it. See "The HTML in a unit test"
-      # in docs/development/unit-tests.md.
+      # in `docs/development/unit-tests.md`.
       {:lazy_html, "~> 0.1.13", only: :test},
 
       # the browser tests of `mix test --only e2e`, the recorder of the GIFs in
-      # `tools/` and `--check=browser`. The client drives the Playwright driver
-      # of `package.json`. It is optional, so a project that uses Expresso adds
-      # it only for `--check=browser`.
+      # `tools/` and `--check=browser`. The client controls the Playwright
+      # driver of `package.json`. It is optional, so a project that uses
+      # Expresso adds it only for `--check=browser`.
       {:playwright_ex, "~> 0.12", optional: true},
 
       # the GIF encoder of the recorder, a NIF in Zig. Zigler compiles it with
@@ -306,22 +315,27 @@ defmodule Mix.Tasks.Compile.Presenter do
   @moduledoc """
   Make the presenter bundle with esbuild
 
-  `mix.exs` puts this compiler in front of the Elixir compiler. esbuild reads
-  `assets/src/main.ts`, it follows each import, and it writes one minified
-  script to `priv/static/presenter.js`. `Expresso.Renderer` reads that file at
-  compile time.
+  `mix.exs` puts this compiler before the Elixir compiler. esbuild reads
+  `assets/src/main.ts` and each file that it imports. Then esbuild writes one
+  minified script to `priv/static/presenter.js`. `Expresso.Renderer` reads that
+  file at compile time.
 
-  The compiler gives esbuild its version and its profile itself. A project that
-  takes Expresso as a dependency does not load `config/config.exs` of Expresso,
-  and a dependency from Git has no bundle, because `.gitignore` excludes it.
+  The compiler sets the version and the profile of esbuild. It does not use
+  `config/config.exs` for them, for two reasons. A project that takes Expresso
+  as a dependency does not load the `config/config.exs` of Expresso. A
+  dependency from Git has no bundle, because `.gitignore` excludes the bundle.
 
   This module is in `mix.exs` and not in `lib/`. Mix runs the compilers before
   it compiles `lib/`, so a compiler in `lib/` is not present when Mix needs it.
-  Mix loads `mix.exs` first, so a module here is present.
+  Mix loads `mix.exs` first, so a module in this file is present.
 
-  The compiler runs esbuild when a source is newer than the bundle, when the
-  bundle is not present, or when the command has `--force`. `mix clean` removes
-  the bundle. See `docs/typescript.md`.
+  The compiler runs esbuild in each of these conditions:
+
+  - A source is newer than the bundle.
+  - The bundle is not present.
+  - The command has `--force`.
+
+  `mix clean` removes the bundle. See `docs/typescript.md`.
   """
 
   use Mix.Task.Compiler
@@ -347,8 +361,8 @@ defmodule Mix.Tasks.Compile.Presenter do
   end
 
   defp bundle do
-    # The first run downloads the esbuild binary, and the download needs these
-    # applications. `mix esbuild` starts them the same way.
+    # The first run gets the esbuild binary from the network, and it uses these
+    # applications for the request. `mix esbuild` starts them in the same way.
     Mix.ensure_application!(:inets)
     Mix.ensure_application!(:ssl)
     Application.put_env(:esbuild, :version, @version)
