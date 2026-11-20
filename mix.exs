@@ -21,16 +21,8 @@ defmodule Expresso.MixProject do
     ]
   end
 
-  # This function returns the settings of `mix usage_rules.sync`. Some
-  # dependencies hold a file `usage-rules.md` with rules for an AI agent. Spark,
-  # which makes the DSL, is an example. The task writes a link to each file
-  # between two comments at the end of `CLAUDE.md`. The agent reads the file
-  # when it uses the dependency.
-  #
-  # A link keeps `CLAUDE.md` short: the files have more than 1400 lines. The
-  # pattern takes each dependency that has such a file. It also takes a
-  # dependency that a later change adds. `docs/development/dependencies.md`
-  # gives the details.
+  # `mix usage_rules.sync` reads these settings. See
+  # `docs/development/dependencies.md`.
   defp usage_rules do
     [
       file: "CLAUDE.md",
@@ -249,27 +241,7 @@ defmodule Mix.Tasks.Compile.Presenter do
   @moduledoc """
   Make the presenter bundle with esbuild
 
-  `mix.exs` puts this compiler before the Elixir compiler. esbuild reads
-  `assets/src/main.ts` and each file that it imports. Then esbuild writes one
-  minified script to `priv/static/presenter.js`. `Expresso.Renderer` reads that
-  file at compile time.
-
-  The compiler sets the version and the profile of esbuild. It does not use
-  `config/config.exs` for them, for two reasons. A project that takes Expresso
-  as a dependency does not load the `config/config.exs` of Expresso. A
-  dependency from Git has no bundle, because `.gitignore` excludes the bundle.
-
-  This module is in `mix.exs` and not in `lib/`. Mix runs the compilers before
-  it compiles `lib/`, so a compiler in `lib/` is not present when Mix needs it.
-  Mix loads `mix.exs` first, so a module in this file is present.
-
-  The compiler runs esbuild in each of these conditions:
-
-  - A source is newer than the bundle.
-  - The bundle is not present.
-  - The command has `--force`.
-
-  `mix clean` removes the bundle. See `docs/typescript.md`.
+  See `docs/development/presenter-script.md`.
   """
 
   use Mix.Task.Compiler
@@ -295,8 +267,6 @@ defmodule Mix.Tasks.Compile.Presenter do
   end
 
   defp bundle do
-    # The first run gets the esbuild binary from the network, and it uses these
-    # applications for the request. `mix esbuild` starts them in the same way.
     Mix.ensure_application!(:inets)
     Mix.ensure_application!(:ssl)
     Application.put_env(:esbuild, :version, @version)

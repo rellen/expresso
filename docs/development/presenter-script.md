@@ -54,6 +54,19 @@ A project that takes Expresso from GitHub makes the bundle in the same way when 
 the dependency. The compiler gives esbuild its version and profile, because a dependency
 does not load `config/config.exs`.
 
+The compiler is the module `Mix.Tasks.Compile.Presenter`. It is in `mix.exs` and not in
+`lib/`, because Mix runs the compilers before it compiles `lib/`. It runs esbuild in each of
+these conditions:
+
+- A source is newer than the bundle.
+- The bundle is not present.
+- The command has `--force`.
+
+esbuild reads `assets/src/main.ts` and each file that it imports, and `Expresso.Renderer`
+reads the bundle at compile time. `mix clean` removes the bundle. The download of the
+esbuild binary needs the applications `inets` and `ssl`. The compiler starts them before it
+runs esbuild, as `mix esbuild` does.
+
 The commands are:
 
 ```sh

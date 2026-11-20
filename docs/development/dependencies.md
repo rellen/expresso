@@ -142,7 +142,8 @@ reads the rules of a dependency before it uses the dependency.
 
 - `usage_rules/0` in `mix.exs` gives the settings. The pattern `~r/.*/` takes each
   dependency with such a file, and `link: :markdown` writes a link and not the text. The
-  files have more than 1400 lines.
+  files have more than 1400 lines. The pattern also takes a dependency that a later change
+  adds.
 - The package also gives its own rules, and rules for Elixir and for OTP.
 - `mix usage_rules.sync --check` is a tool of `mix check` and a step of the job `lint`. It
   fails when the lines in `CLAUDE.md` are not current.
