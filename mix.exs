@@ -38,18 +38,11 @@ defmodule Expresso.MixProject do
     ]
   end
 
-  # This function returns the settings of `mix docs`. The groups of the pages
-  # come from Diataxis, a framework for documentation:
-  #
-  # - A tutorial teaches the basics.
-  # - A how-to guide gives the steps of one task.
-  # - A reference page describes each option.
-  # - An explanation gives the design and its reasons.
-  #
-  # The site is for a user, so it does not contain the documents for a
-  # contributor. `CONTRIBUTING.md` lists them. The GIFs of the guides come
-  # from `mix expresso.gifs`, and the workflow publishes them to the branch
-  # `media`. See `docs/development/gifs.md`.
+  # The groups of the pages come from Diataxis. See https://diataxis.fr. The
+  # site contains only user documentation. `CONTRIBUTING.md` lists contributor
+  # documents. The GIFs of the guides come from `mix expresso.gifs`, and the
+  # workflow publishes them to the branch `media`. See
+  # `docs/development/gifs.md`.
   defp docs do
     [
       main: "readme",
@@ -170,10 +163,6 @@ defmodule Expresso.MixProject do
     ]
   end
 
-  # `test/support` holds the generators of the property tests, and only `test`
-  # compiles them. `tools/` holds the recorder of the GIFs and its encoder, a
-  # NIF in Zig. The release does not need the tools, so only `dev` and `test`
-  # compile them.
   defp elixirc_paths(:test), do: ["lib", "tools", "test/support"]
   defp elixirc_paths(:dev), do: ["lib", "tools"]
   defp elixirc_paths(_env), do: ["lib"]
@@ -215,41 +204,18 @@ defmodule Expresso.MixProject do
     ]
   end
 
-  # Run `mix help deps` to read about dependencies.
+  # `docs/development/dependencies.md` gives the purpose of each dependency.
   defp deps do
     [
-      # the DSL
       {:spark, "~> 2.7"},
-
-      # small functions for results, lists, maps and keyword lists. Shoddy is
-      # not on Hex, so the lockfile holds the commit of its main branch.
       {:shoddy, github: "rellen/shoddy", branch: "main"},
-
-      # HTML
       {:floki, "~> 0.38"},
       {:phoenix_html, "~> 4.3"},
       {:temple, "~> 0.14"},
-
-      # the Markdown in the notes of the speaker. MDEx is a NIF in Rust, and
-      # RustlerPrecompiled gets its library from a release of MDEx on GitHub.
-      # The library does not load in the ERTS of a Burrito binary. Therefore
-      # the dependency has `runtime: false`, and a release does not hold it.
-      # `Expresso.Notes` calls MDEx only when it is available. See
-      # `docs/speaker-notes.md`.
       {:mdex, "~> 0.14", runtime: false},
-
-      # the release
       {:burrito, "~> 1.6"},
-
-      # the presenter bundle
       {:esbuild, "~> 0.10", runtime: false},
-
-      # the QR code element. The package makes the matrix of a code, and
-      # `Expresso.Element.QrCode` writes it as SVG.
       {:eqrcode, "~> 0.2"},
-
-      # the highlighting of a code element. Each lexer package registers its
-      # languages when its application starts.
       {:makeup, "~> 1.2"},
       {:makeup_elixir, "~> 1.0"},
       {:makeup_erlang, "~> 1.1"},
@@ -263,46 +229,14 @@ defmodule Expresso.MixProject do
       {:makeup_c, "~> 0.1"},
       {:makeup_rust, "~> 0.3"},
       {:makeup_diff, "~> 0.1"},
-
-      # the documentation. Zigler depends on zig_doc, which asks for ExDoc
-      # 0.39.1 exactly. zig_doc compiles with ExDoc 0.40 too, so the override
-      # keeps that version. zig_doc needs ExDoc in each environment that
-      # compiles Zigler.
       {:ex_doc, "~> 0.40", only: [:dev, :test], runtime: false, override: true},
-
-      # checks
       {:ex_check, "~> 0.16", only: :dev},
-
-      # the rules of the dependencies for an AI agent. `mix usage_rules.sync`
-      # writes a link to the file `usage-rules.md` of each dependency into
-      # `CLAUDE.md`. `usage_rules/0` returns the settings.
       {:usage_rules, "~> 1.3", only: :dev, runtime: false},
-
-      # the formatter of the DSL. `Spark.Formatter` and `mix spark.formatter`
-      # need it.
       {:sourceror, "~> 1.0", only: [:dev, :test], runtime: false},
-
-      # property tests. The formatter and the static analysis run in `dev`, and
-      # therefore the dependency is present in `dev` too.
       {:stream_data, "~> 1.2", only: [:dev, :test], runtime: false},
-
-      # the queries on the HTML in the unit tests. Lexbor parses the HTML as a
-      # browser does, and it takes each CSS selector of a browser. Floki stays
-      # for `lib/` and for the tests that use it. See "The HTML in a unit test"
-      # in `docs/development/unit-tests.md`.
       {:lazy_html, "~> 0.1.13", only: :test},
-
-      # the browser tests of `mix test --only e2e`, the recorder of the GIFs in
-      # `tools/` and `--check=browser`. The client controls the Playwright
-      # driver of `package.json`. It is optional, so a project that uses
-      # Expresso adds it only for `--check=browser`.
       {:playwright_ex, "~> 0.12", optional: true},
-
-      # the GIF encoder of the recorder, a NIF in Zig. Zigler compiles it with
-      # the Zig of the toolchain.
       {:zigler, "~> 0.16", only: [:dev, :test], runtime: false},
-
-      # static analysis
       {:credo, ">= 0.0.0", only: :dev, runtime: false},
       {:doctor, ">= 0.0.0", only: :dev, runtime: false},
       {:dialyxir, ">= 0.0.0", only: :dev, runtime: false},

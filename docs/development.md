@@ -12,7 +12,7 @@ deck in a browser. Each topic has a page in `docs/development/`:
 | [The graph tools](development/graph-tools.md) | Graphviz and D2 for the diagrams from the source of a graph, and their tests |
 | [The binary and its tests](development/release.md) | The binary, the dependency test and the release tests |
 | [The workflow](development/ci.md) | The checks of a pull request on GitHub, and Zig in the workflow |
-| [The dependencies](development/dependencies.md) | The audit of the dependencies, their updates and the icons |
+| [The dependencies](development/dependencies.md) | The purpose of each dependency, the audit of the dependencies, their updates and the icons |
 | [The presenter script](development/presenter-script.md) | The TypeScript of the presenter: its lint, its schema, its fixtures and the tables of keys |
 | [Add a built-in theme](development/themes.md) | The steps to add a base16 scheme as a theme |
 | [Record the GIFs and the stills](development/gifs.md) | `mix expresso.gifs`, and the branch `media` |
@@ -32,6 +32,14 @@ how-to guides, the reference pages and the two explanations below. The documents
 contributor, such as this index and `docs/development/`, stay in the repository, and
 GitHub shows them. A link from a page of the site to one of them uses its address on
 GitHub.
+
+The groups of the site come from [Diataxis](https://diataxis.fr), a framework for
+documentation:
+
+- A tutorial teaches the basics.
+- A how-to guide gives the steps of one task.
+- A reference page describes each option.
+- An explanation gives the design and its reasons.
 
 - `docs/architecture.md` — how the code makes an HTML document from a deck.
 - `docs/overlays.md` — the design for overlays, and its decisions.

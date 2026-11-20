@@ -1,6 +1,46 @@
 # The dependencies
 
-This page tells you how to act on an advisory, how to update a dependency and how to update the icons.
+This page tells you the purpose of each dependency, how to act on an advisory, how to
+update a dependency and how to update the icons.
+
+## The purpose of each dependency
+
+`deps/0` in `mix.exs` lists the dependencies with no comment. This table gives the purpose
+of each one:
+
+| Dependency | Purpose |
+| --- | --- |
+| `spark` | The DSL. |
+| `shoddy` | Small functions for results, lists, maps and keyword lists. It comes from GitHub and not from Hex. |
+| `floki`, `phoenix_html`, `temple` | The HTML of a document. |
+| `mdex` | The Markdown in the notes of the speaker. See [MDEx](#mdex). |
+| `burrito` | The binary. See [The binary and its tests](release.md). |
+| `esbuild` | The presenter bundle. See [The presenter script](presenter-script.md). |
+| `eqrcode` | The matrix of a QR code. `Expresso.Element.QrCode` writes it as SVG. |
+| `makeup` and each `makeup_*` package | The highlighting of a `code` element. Each lexer package registers its languages when its application starts. |
+| `ex_doc` | The site of `mix docs`. See [ExDoc](#exdoc). |
+| `ex_check` | `mix check`. See [The checks](checks.md). |
+| `usage_rules` | The links to the rules of the dependencies. See [The rules of the dependencies for an AI agent](#the-rules-of-the-dependencies-for-an-ai-agent). |
+| `sourceror` | The formatter of the DSL. `Spark.Formatter` and `mix spark.formatter` need it. |
+| `stream_data` | The property tests. See [Property tests](unit-tests.md#property-tests). |
+| `lazy_html` | The queries on the HTML in the unit tests. See [The HTML in a unit test](unit-tests.md#the-html-in-a-unit-test). |
+| `playwright_ex` | The browser tests, the recorder of the GIFs in `tools/`, and `--check=browser`. See [The browser tests](browser-tests.md). |
+| `zigler` | The GIF encoder of the recorder, a NIF in Zig. Zigler compiles it with the Zig of the toolchain. |
+| `credo`, `doctor`, `dialyxir`, `sobelow` | The static analysis. |
+
+`playwright_ex` is the Elixir client of the Playwright driver, which `package.json` pins.
+The dependency is optional, so a project that uses Expresso adds it only for
+`--check=browser`.
+
+Add a row to this table for each new dependency. Do not write the purpose as a comment in
+`mix.exs`.
+
+## ExDoc
+
+Zigler depends on zig_doc, which asks for ExDoc 0.39.1 exactly. zig_doc compiles with ExDoc
+0.40 too, so `override: true` in `mix.exs` keeps that version. zig_doc needs ExDoc in each
+environment that compiles Zigler. Therefore the dependency is present in `dev` and in
+`test`.
 
 ## The audit of the dependencies
 

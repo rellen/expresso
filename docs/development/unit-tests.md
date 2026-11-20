@@ -22,9 +22,9 @@ A property that fails gives the smallest value that it found, and the seed of th
 `config/config.exs` gives each property 500 runs. The generators make many forms, and the
 default of 100 runs does not reach enough of them.
 
-The dependency is present in `dev` and in `test`. `mix format` runs in `dev`, and it reads
-`deps/stream_data/.formatter.exs` through `import_deps`. Therefore the formatter writes no
-parentheses after `check all`.
+The dependency is present in `dev` and in `test`. The formatter and the static analysis
+run in `dev`. `mix format` reads `deps/stream_data/.formatter.exs` through `import_deps`.
+Therefore the formatter writes no parentheses after `check all`.
 
 ## The HTML in a unit test
 
@@ -39,7 +39,7 @@ file in `~/.cache/elixir_make`, so a later compile needs no network. The NIF nee
 LazyHTML parses the HTML with Lexbor, as a browser does. It also takes each CSS selector of
 a browser, such as `:has()` and `:is()`. Floki does not know these selectors, and it
 ignores them with no error. Thus a Floki query with `:has()` can find the wrong nodes, and
-the test can pass.
+the test can pass. Floki stays a dependency for `lib/` and for the tests that use it.
 
 Write a test with LazyHTML as follows:
 
