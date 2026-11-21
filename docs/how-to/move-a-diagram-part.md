@@ -64,7 +64,7 @@ an `id`. Then move the part to the shape:
 on 2, move_to: "above-booth"
 ```
 
-## The complete deck
+## Complete deck
 
 This SVG file has three stations and a widget. Each station is a `rect` with an `id`, and
 its label is a separate `text` element:

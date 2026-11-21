@@ -1,4 +1,4 @@
-# The background option
+# `background` option
 
 The `background` option gives a slide a background: an image, a color or a gradient behind
 its content. The option of the deck gives the background of each slide that has no option
@@ -21,7 +21,7 @@ end
 `slide("title", background: [image: "dusk.png", dim: 0.5])` and
 `deck(slides, background: [color: :code_background])`.
 
-## The values
+## Values
 
 | Value | Background |
 | --- | --- |
@@ -41,7 +41,7 @@ these keys:
 | `angle` | A gradient | The direction of the gradient in degrees. `180` goes from the top to the bottom, and `90` goes from the left to the right. | `180` |
 | `dim` | Each kind | The opacity of the dim layer, from 0 to 1. | `0` |
 
-## The image
+## Image
 
 The path of the image is relative to the working directory of the command, or to
 [the root option](root-option.md) of the deck. The file has one of the types that
@@ -55,7 +55,7 @@ A screen reader does not read the image, because the background is decoration. F
 image that carries information, use [the image element](image-element.md) with an `alt`
 option.
 
-## The colors
+## Colors
 
 A color of `color` and of `gradient` is one of these values:
 
@@ -66,7 +66,7 @@ A color of `color` and of `gradient` is one of these values:
 
 The colors of a gradient are at equal distances on its line.
 
-## The dim layer
+## Dim layer
 
 `dim` puts a layer in the background color of the theme over the image, the color or the
 gradient. With a dark theme, the layer makes the background darker. With a light theme, it
@@ -74,7 +74,7 @@ makes the background lighter. The text of the slide then has more contrast.
 
 `dim: 1` shows only the background color of the theme.
 
-## The contrast of the text
+## Contrast of the text
 
 The compiler does not read the image, so it gives no warning for a text with too little
 contrast. [The check](check-option.md) with `--check=a11y` measures it in the browser:
@@ -92,7 +92,7 @@ The check measures the background at a width of not more than 480 pixels. One po
 the measure is then the mean of a small area on the slide. Therefore one bright point of a
 picture does not fail a text.
 
-## The views and paper
+## Views and paper
 
 | Where | What shows |
 | --- | --- |
@@ -103,15 +103,15 @@ picture does not fail a text.
 Paper uses the default theme, which has dark text. A dark image with no dim layer then
 has dark text on it. Give `dim` a value that keeps the text readable in the two themes. As
 an alternative, leave the slide out of the handout with
-[the handout option](presenter.md#the-handout-view).
+[the handout option](presenter.md#handout-view).
 
-## The transitions
+## Transitions
 
 The background is a part of its slide. The transitions `:slide` and `:zoom` move it with
 the slide. With `:fade`, and with the morph, two slides with the same background show the
 background with no change during the transition.
 
-## The errors
+## Errors
 
 The compiler gives an error for a value that is not one of the forms above. The message
 names the key, such as:

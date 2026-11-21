@@ -3,7 +3,7 @@
 The how-to guides and the reference pages show a GIF or a still of each example deck of
 `examples/animations/`, and each how-to guide shows at least one. `docs/reference/presenter.md`
 and `docs/how-to/present-a-deck.md` show a GIF or a still of each example deck of
-`examples/presenter/`. "The gallery" of `docs/reference/theme-option.md`
+`examples/presenter/`. "Gallery" of `docs/reference/theme-option.md`
 shows a still of `examples/themes/showcase.exs` for each built-in theme.
 `mix expresso.gifs` records them:
 

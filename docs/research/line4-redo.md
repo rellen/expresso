@@ -16,7 +16,7 @@ these features:
 - `embed` of a local page, which puts the factory into the document,
 - `code` with `src`, `lines` from a text, and `highlight`.
 
-## The result
+## Result
 
 | Item | Result |
 | --- | --- |
@@ -26,7 +26,7 @@ these features:
 | `?check` at 1920 × 1080 | No problem |
 | axe-core 4.14.0 on each slide, the menu, the list of keys, the overview and the handout view | No violation with #207. Without it, one violation on each chart. |
 
-### The accessibility problems of the old deck
+### Accessibility problems of the old deck
 
 | Problem | Cause | Status |
 | --- | --- | --- |
@@ -208,7 +208,7 @@ from the talk, and rellen/iso-factories#12 gave the last group `to: :block`.
 | 7. The name of the categories of a chart | #211 | Nothing. The first heading of `throughput.csv`, `commit`, names the categories. |
 | 8. A title for the axis of the values of a chart | #211 | Nothing. The title of each chart gives the unit. A deck can give `value_label`. |
 
-### The check of the talk
+### Check of the talk
 
 `mix expresso deck.exs --check=browser` gave no problem for the talk:
 

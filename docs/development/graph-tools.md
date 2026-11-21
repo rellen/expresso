@@ -1,4 +1,4 @@
-# The graph tools
+# Graph tools
 
 This page tells you how to install the tools that draw a graph, and how to run their
 tests. A `diagram` with a `.dot` or a `.gv` file runs Graphviz, and a `diagram` with a
@@ -7,7 +7,7 @@ runs Pele in Node. `Expresso.Element.Math.Tex` runs Temml in Node, and it makes 
 of a formula in LaTeX. `docs/graph-diagrams.md`, `docs/mermaid-diagrams.md` and
 `docs/math-parts.md` give the design.
 
-## The tests
+## Tests
 
 The tests that run a tool have the tag of the tool. `mix test` excludes them, as it
 excludes the browser tests.
@@ -46,7 +46,7 @@ workflow runs them too.
 Two example decks of `examples/animations/` draw a graph. The browser test that renders each
 example deck, and `mix expresso.gifs`, therefore need both tools too.
 
-## The installation
+## Installation
 
 | Place | Graphviz | D2 |
 | --- | --- | --- |

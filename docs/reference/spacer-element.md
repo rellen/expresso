@@ -1,4 +1,4 @@
-# The spacer element
+# `spacer` element
 
 The `spacer` element has no content. It takes the free space of its container, and it pushes
 the elements after it to the end.
@@ -24,7 +24,7 @@ end
 Write `spacer()` with the parentheses. Elixir reads `spacer` without the parentheses as a
 variable. `Expresso.Builder` has `spacer()` too.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -34,7 +34,7 @@ variable. `Expresso.Builder` has `spacer()` too.
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).
 
-## The layout
+## Layout
 
 The theme gives the spacer `flex-grow: 1`. These are the results:
 

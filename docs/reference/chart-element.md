@@ -1,7 +1,7 @@
-# The chart element
+# `chart` element
 
 The `chart` element draws a chart from numbers in the deck or in a CSV file.
-[The kinds](#the-kinds) gives each kind of chart. The document holds the chart as SVG, so the
+[The kinds](#kinds) gives each kind of chart. The document holds the chart as SVG, so the
 chart needs no script, and it prints.
 
 ```elixir
@@ -19,21 +19,21 @@ end
 `Expresso.Builder` takes the same options, such as
 `chart(:bar, title: "Orders", categories: ["2025"], elements: [series("Orders", [310])])`.
 
-## The options of the chart
+## Options of the chart
 
 | Option | Value | Effect |
 | --- | --- | --- |
 | The first argument | `:bar`, `:line`, `:pie`, `:treemap`, `:sunburst`, `:voronoi`, `:sankey`, `:alluvial`, `:parallel_sets`, `:chord`, `:scatter`, `:bubble` or `:waterfall` | The kind of the chart. |
 | `title` | A string, required | The name of the chart for a screen reader, and the caption of its table. |
 | `categories` | A list of strings | The name of each category, such as each year. A category of a treemap or a sunburst can also be a list of its levels. A category in a chart of flows is a path of nodes. |
-| `category_label` | A string | The name of the categories, such as `"Year"`. See [the names of the axes](#the-names-of-the-axes). A chart with `src` takes the first heading of its file. |
-| `value_label` | A string | The name of the values, such as `"Widgets an hour"`. See [the names of the axes](#the-names-of-the-axes). |
+| `category_label` | A string | The name of the categories, such as `"Year"`. See [the names of the axes](#names-of-the-axes). A chart with `src` takes the first heading of its file. |
+| `value_label` | A string | The name of the values, such as `"Widgets an hour"`. See [the names of the axes](#names-of-the-axes). |
 | `src` | The path of a CSV file or a TSV file | The categories and the series, in place of `categories` and `series`, or the points of a scatter plot. A path is relative to [the root option](root-option.md) of the deck, or to the working directory of the command. |
 | `delimiter` | One character, such as `";"` | The character between two cells of the `src` file. The default is a tab for a file that ends in `.tsv`, and a comma for each other file. The option needs `src`. |
 | `values` | `true` or `false` | Show the value of each bar. The default is `true`. |
 | `reveal` | `true` or `false` | Show each series at its own step. A chart of flows has its own steps, which [reveal](#reveal) gives. The default is `false`. A pie takes no `reveal`. |
 | `dim` | `true` or `false` | Dim each series when a later series shows. The default is `false`. See [a dimmed series](#a-dimmed-series). |
-| `highlight` | A list of groups, such as `["Returns", ["Orders", "Repairs"], "2024"]` | Each series shows at each step. Each group of series or of categories is in focus at its own step, and the rest of the chart dims. A chart of flows takes the names of nodes in place of categories, and a scatter plot takes the names of points, categories and series. Each kind of chart takes it. See [the highlight option](#the-highlight-option). |
+| `highlight` | A list of groups, such as `["Returns", ["Orders", "Repairs"], "2024"]` | Each series shows at each step. Each group of series or of categories is in focus at its own step, and the rest of the chart dims. A chart of flows takes the names of nodes in place of categories, and a scatter plot takes the names of points, categories and series. Each kind of chart takes it. See [the highlight option](#highlight-option). |
 | `whole_first` | `true` or `false` | With `highlight`, the whole chart shows in full color for one step before the first group. The default is `false`. |
 | `separator` | A string | The text between two levels of a category in a treemap, a sunburst or a Voronoi treemap. The default is `"/"`. |
 | `shape` | `:rectangle`, `:circle`, `:hexagon` or a list of points | The container of a Voronoi treemap. The default is `:rectangle`. See [a Voronoi treemap](#a-voronoi-treemap). |
@@ -43,19 +43,19 @@ end
 | `sort` | `true` or `false` | Put the categories of a bar chart in order of their totals, from the largest, in each frame. A bar chart without frames, and each copy in the handout view and on paper, also uses this order. The default is `false`. |
 | `count` | `true` or `false` | Count each number from the value of one frame to the value of the next. The default is `false`, and the numbers fade. |
 | `thumbnail` | `:first`, `:last` or the number of a frame | The frame that the overview and the menu of the slides show. The default is `:first`. |
-| `label`, `x`, `y`, `symbol`, `color`, `size` | A string | The heading of a column in the `src` file of a scatter plot. See [the points of a CSV file](#the-points-of-a-csv-file). |
+| `label`, `x`, `y`, `symbol`, `color`, `size` | A string | The heading of a column in the `src` file of a scatter plot. See [the points of a CSV file](#points-of-a-csv-file). |
 | `x_label`, `y_label` | A string | The name of the x axis or of the y axis in a scatter plot. See [a scatter plot](#a-scatter-plot). |
 | `x_range`, `y_range` | Two numbers, such as `{0, 100}` | The low end and the high end of an axis in a scatter plot. The default comes from the points. |
 | `x_scale`, `y_scale` | `:linear` or `:log` | The scale of an axis in a scatter plot. The default is `:linear`. |
-| `direction` | `:vertical` or `:horizontal` | The direction of the columns in a waterfall chart. The default is `:vertical`. See [the direction](#the-direction). |
-| `spans` | `true` or `false` | Draw an arrow over the columns of a waterfall chart from each total to the next total. The arrow shows the sum of the changes between them. The default is `false`. See [the spans](#the-spans). |
-| `totals` | `:grow` or `:complete` | How a total of a waterfall chart with `reveal` shows. The default is `:grow`. See [the steps of a waterfall chart](#the-steps-of-a-waterfall-chart). |
+| `direction` | `:vertical` or `:horizontal` | The direction of the columns in a waterfall chart. The default is `:vertical`. See [the direction](#direction). |
+| `spans` | `true` or `false` | Draw an arrow over the columns of a waterfall chart from each total to the next total. The arrow shows the sum of the changes between them. The default is `false`. See [the spans](#spans). |
+| `totals` | `:grow` or `:complete` | How a total of a waterfall chart with `reveal` shows. The default is `:grow`. See [the steps of a waterfall chart](#steps-of-a-waterfall-chart). |
 | `value_range` | Two numbers, such as `{900, 1050}` | The low end and the high end of the value axis in a waterfall chart. The default holds zero and each column. See [a cut axis](#a-cut-axis). |
-| `symbol_label`, `color_label`, `size_label` | A string | The title of a legend in a scatter plot, and the header of its column in the table. See [the symbol, the color and the size](#the-symbol-the-color-and-the-size). |
-| `labels` | `:all`, `:none` or a list of point names | The points of a scatter plot with a label. The default is `:none`. See [the labels of the points](#the-labels-of-the-points). |
+| `symbol_label`, `color_label`, `size_label` | A string | The title of a legend in a scatter plot, and the header of its column in the table. See [the symbol, the color and the size](#symbol-color-and-size). |
+| `labels` | `:all`, `:none` or a list of point names | The points of a scatter plot with a label. The default is `:none`. See [the labels of the points](#labels-of-the-points). |
 | `color_scale` | `:sequential`, `:diverging` or two roles, such as `{:chart_1, :chart_4}` | The scale of a color from a number in a scatter plot. The default is `:sequential`. See [a color from a number](#a-color-from-a-number). |
 | `color_mid` | A number | The value at the neutral middle of `color_scale :diverging`. The default is `0`. |
-| `trend` | `:linear` | Draw the least-squares line of each group in a scatter plot. See [the trend lines](#the-trend-lines). |
+| `trend` | `:linear` | Draw the least-squares line of each group in a scatter plot. See [the trend lines](#trend-lines). |
 | `jitter` | A number from 0 to 0.2, such as `0.02` | Move each mark of a scatter plot by at most this part of the range of each axis. See [many marks in one place](#many-marks-in-one-place). |
 | `opacity` | A number from 0 to 1, such as `0.6` | The opacity of each mark in a scatter plot. An area with many marks then looks darker. |
 | `width` | A CSS width, such as `"900px"` or `"70%"` | The width of the chart. A percentage is a part of the width of the slide. The default is `80%`. |
@@ -65,13 +65,13 @@ end
 The chart also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).
 
-## The options of a series
+## Options of a series
 
 | Option | Value | Effect |
 | --- | --- | --- |
 | The first argument | A string | The name of the series. |
 | The second argument | A list of numbers | One value for each category, in the order of the categories. A series of a scatter plot holds `point` entities in place of values. A series of a waterfall chart also takes `:total` and `{:total, value}`. See [a waterfall chart](#a-waterfall-chart). |
-| `symbol` | `:circle`, `:square`, `:triangle`, `:diamond`, `:cross` or `:star` | The symbol of each point in a series of a scatter plot. See [the series of points](#the-series-of-points). |
+| `symbol` | `:circle`, `:square`, `:triangle`, `:diamond`, `:cross` or `:star` | The symbol of each point in a series of a scatter plot. See [the series of points](#series-of-points). |
 | `color` | A role, such as `:chart_3` or `:accent` | The color of each point in a series of a scatter plot. |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
@@ -79,7 +79,7 @@ The chart also takes the overlay options, such as `at`, `effect` and the `on` en
 A series also takes the overlay options, so a series can show at its own step without
 `reveal`.
 
-## The highlight option
+## `highlight` option
 
 The `highlight` option puts one group of series or of categories in focus at each step.
 Each series shows at each step:
@@ -138,7 +138,7 @@ the step of a group of categories.
 
 Each kind of chart takes the option. A chart with `src` takes the names of the series and
 of the categories from its file. The key `d` shows each series and each category in full
-color until the next step, as it does for code. See [the key d](code-element.md#the-key-d).
+color until the next step, as it does for code. See [the key d](code-element.md#key-d).
 
 ## A dimmed series
 
@@ -156,7 +156,7 @@ other categories:
 A deck can set `--chart-dim-opacity` in [the css option](css-option.md), such as `0.5`
 for a lighter dim. The handout view and paper show the dimming of each step.
 
-## The names of the axes
+## Names of the axes
 
 | Option | Bar chart and line chart | Each chart, in its table |
 | --- | --- | --- |
@@ -171,7 +171,7 @@ column of frames, it takes the first heading of the other columns. With `levels`
 the headings of the levels, joined by `/`. An empty heading gives no name. The
 `category_label` option has priority over the heading of the file.
 
-## The frames
+## Frames
 
 A `frame` entity holds the values of the series at one point in time. Its argument is the
 label of the frame, such as `"2024"`, and it holds one `series` entity for each series of the
@@ -226,7 +226,7 @@ On paper and in the handout view, a chart with frames shows each frame as a smal
 grid. Each small chart has the label of its frame under it. The present view, the speaker
 view and the overview show the chart that moves.
 
-## The effect `:grow`
+## Effect `:grow`
 
 A chart or a series with the effect `:grow` grows at the step at which it shows. A bar grows
 from the base line, a line opens from the left, and a pie and a sunburst open clockwise from
@@ -234,7 +234,7 @@ the top. A box of a treemap grows from its top left corner. The labels of a tree
 sunburst show after their boxes and arcs grow. The
 chart does not change its size. With `count true`, a number counts from zero.
 
-## The browsers
+## Browsers
 
 The marks of a chart with frames or with the effect `:grow` move with registered custom
 properties. Chrome 85, Safari 16.4 and Firefox 128 support them. An earlier browser shows the
@@ -244,7 +244,7 @@ A label of a value or of the axis has each digit of its number and no exponent, 
 `0.00025`. The axis of very small values, such as `0.0000001`, has round ticks, and each
 tick has a label in the same form.
 
-## The kinds
+## Kinds
 
 | Kind | The series | The labels |
 | --- | --- | --- |
@@ -254,7 +254,7 @@ tick has a label in the same form.
 | `:treemap` | Exactly one. Each category is a box, and a group holds its parts. | The name and the value of each part, and the name of each group in a strip at its top. |
 | `:sunburst` | Exactly one. Each level of the groups is a ring, and each category is an arc of the outer rings. | The name of each arc, and the part in percent of each group at the top level, in a legend at the right. |
 | `:voronoi` | Exactly one. Each category is a cell of a convex shape, and a group is the cell that holds its parts. | The name and the value of each part in its cell. The part in percent of each group at the top level, in a legend at the right. See [a Voronoi treemap](#a-voronoi-treemap). |
-| `:sankey` | Exactly one. Each category is a path of nodes, and its value goes along each link of the path. | The name and the value of each node. See [the labels](#the-labels). |
+| `:sankey` | Exactly one. Each category is a path of nodes, and its value goes along each link of the path. | The name and the value of each node. See [the labels](#labels). |
 | `:alluvial` | Exactly one. Each category is a path with one name for each column. | As a sankey, and a title over each column. See [an alluvial chart](#an-alluvial-chart). |
 | `:parallel_sets` | Exactly one. Each category is a path with one name for each column, and it is one ribbon through the columns. | As an alluvial chart. See [a parallel sets chart](#a-parallel-sets-chart). |
 | `:chord` | Exactly one. Each category is a path of nodes, as in a sankey, and each link is a chord between two arcs of a ring. | The name and the total of each node, outside its arc. See [a chord chart](#a-chord-chart). |
@@ -267,7 +267,7 @@ approximately five round ticks. The axis stays the same at each step, so it does
 when a series shows. A chart with two or more series has a legend above the plot, and each
 item of the legend shows and dims with its series.
 
-## The groups of a treemap and a sunburst
+## Groups of a treemap and a sunburst
 
 The rules of this section also apply to a Voronoi treemap. A slash in a category names a
 part of a group. The category `"Production/Press"` is the part
@@ -354,13 +354,13 @@ These rules apply to a Voronoi treemap:
   `:grow`. A cell can change its number of corners from one frame to the next, so a cell
   cannot move from one frame to the next. Use a treemap for a change over time.
 
-## The charts of flows
+## Charts of flows
 
 A **chart of flows** shows how an amount goes between the nodes of a graph. A sankey, an
 alluvial chart, a parallel sets chart and a chord chart are charts of flows. In this section, a **flow** is an item of the data, and a **link** is the mark
 that shows one or more flows.
 
-### The flows
+### Flows
 
 A `flow` entity gives one flow: the node where it starts, the node where it ends, and its
 value. A chart with flows holds no `categories`, no `series` and no `src`:
@@ -391,7 +391,7 @@ its path. The values of the same link add. In a sankey, a name is one node in th
 The table for a screen reader holds one row for each link. Its headers are "From", "To" and
 the `value_label`, or "Value".
 
-### The node entity
+### `node` entity
 
 A `node` entity changes how the chart shows one node:
 
@@ -399,7 +399,7 @@ A `node` entity changes how the chart shows one node:
 | --- | --- | --- |
 | The first argument | A string | The name of the node in the flows. |
 | `label` | A string | The text of the label and of the table. The default is the name. |
-| `column` | An integer, 1 or more | The column of the node, from the left. The default comes from [the layout](#the-layout-of-a-sankey). A column that puts the target of a flow in the column of its source, or before it, makes the flow a back link. |
+| `column` | An integer, 1 or more | The column of the node, from the left. The default comes from [the layout](#layout-of-a-sankey). A column that puts the target of a flow in the column of its source, or before it, makes the flow a back link. |
 | `order` | An integer | The place of the node in its column, from the top. A node without `order` has the number of its place in the data. Thus `order: 0` puts a node at the top. |
 | `class` | CSS class names | The classes on the `rect` of the node. See [the class option](class-option.md). |
 
@@ -407,7 +407,7 @@ A `node` entity changes how the chart shows one node:
 An example is
 `chart(:sankey, title: "Energy", flows: [flow("A", "B", 1), node("B", label: "Bee")])`.
 
-### The layout of a sankey
+### Layout of a sankey
 
 The layout obeys these rules:
 
@@ -492,7 +492,7 @@ is different. These rules apply:
   empty part at the end of the ring.
 - A node entity takes no `column`.
 
-### The labels
+### Labels
 
 A label shows the name of its node and, with `values true`, its value. Each label is at the
 right of its node. The layout keeps space at the right edge for the widest label of the last
@@ -501,7 +501,7 @@ column. This space is at most one third of the width.
 A label shows when its node is 16 units high or more. A label of a shorter node shows when
 its middle is one line or more from the middle of each other label in its column.
 
-### The frames of a chart of flows
+### Frames of a chart of flows
 
 A `frame` holds `flow` entities, or one series. The frames share these items:
 
@@ -576,7 +576,7 @@ two powers of ten or less also has a tick at 2 and at 5 times each power.
 The axis adds a margin at each end, so a mark is not on the edge of the plot. The margin is 5
 percent of the range of the values, and it does not go past zero.
 
-### The symbol, the color and the size
+### Symbol, color and size
 
 The symbol, the color and the size of a mark show three more values of a point:
 
@@ -649,7 +649,7 @@ of a mark changes with its number from one frame to the next. A chart takes a nu
 color of each point or of no point. A CSV file with a number in each cell of its color column
 gives a color from a number.
 
-### The series of points
+### Series of points
 
 A `series` entity can hold the points of a group. The series gives its points a symbol and a
 color, and a point can replace them:
@@ -688,7 +688,7 @@ point.
 
 A chart holds points or series of points, and not both.
 
-### The trend lines
+### Trend lines
 
 `trend :linear` draws the least-squares line for each group of points: each series, or each
 category of the color, in the color of the group. A chart without series and without
@@ -711,7 +711,7 @@ Three options help when marks cover each other:
   inside the plot, and a trend line fits the values without the move.
 - The larger marks come first in each group, so a large mark does not hide a small mark.
 
-### The labels of the points
+### Labels of the points
 
 The `labels` option gives a label to the points of a scatter plot. `:all` gives a label to
 each point, and a list of names, such as `labels ["api", "web"]`, gives one to those points.
@@ -723,7 +723,7 @@ and no other mark, and stays inside the plot. When no place is free, the label t
 place that covers the least of the other labels, then of the marks. An earlier point gets the
 better place. The width of a label is an estimate from its number of characters.
 
-### The steps of a scatter plot
+### Steps of a scatter plot
 
 The steps of a scatter plot show groups of points:
 
@@ -753,9 +753,9 @@ slide "focus" do
 end
 ```
 
-The rules of [the highlight option](#the-highlight-option) apply, such as `whole_first`.
+The rules of [the highlight option](#highlight-option) apply, such as `whole_first`.
 
-### The frames of a scatter plot
+### Frames of a scatter plot
 
 Each `frame` holds the points of one point in time. Each mark moves to its new place and
 size from one frame to the next, so a point keeps its mark and does not fade:
@@ -782,7 +782,7 @@ slide "income" do
 end
 ```
 
-Each frame after the first takes one step, as in [the frames](#the-frames). Each later frame
+Each frame after the first takes one step, as in [the frames](#frames). Each later frame
 holds the points of the first frame by name, in any order. A point keeps its symbol, its
 color and its series from the first frame, so a later frame can leave them out. The axes
 hold the values of each frame, and a label moves with its mark. A label keeps its place
@@ -792,7 +792,7 @@ column that holds the frame of each row.
 The table for a screen reader has the x, the y and the size of each frame. Paper and the
 handout view show each frame as a small chart.
 
-### The points of a CSV file
+### Points of a CSV file
 
 The `src` option gives a CSV file with one row for each point. The first row holds the
 headings, and the options `label`, `x`, `y`, `symbol`, `color` and `size` name the column of
@@ -829,11 +829,11 @@ end
 | `symbol` | A category of the symbol | No symbol |
 | `color` | A category of the color | No color |
 | `size` | The size, a number more than zero | No size |
-| `frames` | The label of the frame for each row. See [the frames of a scatter plot](#the-frames-of-a-scatter-plot). | No frames |
+| `frames` | The label of the frame for each row. See [the frames of a scatter plot](#frames-of-a-scatter-plot). | No frames |
 
 An empty cell of the symbol or of the color gives the point no category. A number can have a
 comma between each group of three digits, as for the other kinds. The `delimiter` option and
-the rules of [the CSV file](#the-csv-file) apply.
+the rules of [the CSV file](#csv-file) apply.
 
 The table for a screen reader has one row for each point, with its name, its x value and
 its y value. The headers of the columns are `x_label` and `y_label`, or `x` and `y`. A chart
@@ -865,7 +865,7 @@ end
 The sum agrees with the value when the two are equal at the most decimals of the numbers in
 the series. Thus `[0.1, 0.2, {:total, 0.3}]` agrees, and `[119.5, {:total, 120}]` does not.
 
-### The labels of a waterfall chart
+### Labels of a waterfall chart
 
 A total shows its value over its column. A change shows its value with its sign, such as
 `+40` or `-50`, in its column, and its running total over the column in `--muted`. The text
@@ -875,7 +875,7 @@ removes the labels.
 A dashed line joins the end of each column to the start of the next column, at the running
 total.
 
-### The spans
+### Spans
 
 With `spans true`, an arrow goes over the columns from each total to the next total. The sum
 of the changes between them, such as `+70`, goes over the middle of the arrow. The arrow goes
@@ -896,7 +896,7 @@ end
 With `reveal true`, a span shows with the last column before the total at its end, so it
 shows when that total is complete.
 
-### The direction
+### Direction
 
 `direction :vertical`, the default, draws columns from the bottom up, with the categories
 under them. `direction :horizontal` draws bars from left to right, with the categories down
@@ -918,7 +918,7 @@ it, and `category_label` goes beside the categories. The labels go at the end of
 and a connector goes down from one bar to the next bar. A span goes down at the right of the
 bars.
 
-### The steps of a waterfall chart
+### Steps of a waterfall chart
 
 With `reveal true`, the start and the totals show alone at the first step, and each change
 shows at its own step after it:
@@ -960,7 +960,7 @@ These options work with the steps:
 
 The overview, the menu of the slides, the handout view and paper show the last step.
 
-### The frames of a waterfall chart
+### Frames of a waterfall chart
 
 A waterfall chart takes `frame` entities, as a bar chart does. Each frame holds the series,
 and each later frame takes one step. At the step of a frame, each column moves to its place
@@ -985,12 +985,12 @@ end
 ```
 
 Each frame has its totals at the same categories as the first frame. With `reveal true`, the
-changes of the first frame show one step each, as [the steps](#the-steps-of-a-waterfall-chart)
+changes of the first frame show one step each, as [the steps](#steps-of-a-waterfall-chart)
 tell, and each later frame then takes one step. The `frames` option of a CSV file gives the
 frames, as for a bar chart. The `thumbnail` option names the frame that the overview shows,
 and paper and the handout view show each frame as a small chart.
 
-### The highlight of a waterfall chart
+### Highlight of a waterfall chart
 
 The `highlight` option takes the names of categories, and each group of names is in focus at
 its own step. A column, its labels, the connector at its left and its category are in focus
@@ -1031,7 +1031,7 @@ end
 
 The compiler refuses a column that goes past an end of `value_range`.
 
-### The colors of a waterfall chart
+### Colors of a waterfall chart
 
 | Column | Custom property | The default |
 | --- | --- | --- |
@@ -1047,7 +1047,7 @@ the text has the same contrast with the column.
 The table for a screen reader has one row for each column, with its category, its change and
 the running total after it.
 
-## The CSV file
+## CSV file
 
 The first row holds a heading for the categories, then the name of each series. Each other
 row holds a category, then one number for each series. A comma divides two cells:
@@ -1113,7 +1113,7 @@ year,month,Web,Shop
 
 The watch mode renders the deck again after a change to the file.
 
-## The errors
+## Errors
 
 The compiler gives an error for these:
 
@@ -1224,7 +1224,7 @@ The compiler also gives an error for these:
 The message names the file, and the line of a row. `Expresso.Builder.deck/2` raises a
 `Spark.Error.DslError` with the same message.
 
-## The colors
+## Colors
 
 The theme gives the colors of the series as `--chart-1` to `--chart-8`, in a fixed order:
 blue, orange, aqua, yellow, magenta, green, violet and red. A light theme and a dark theme
@@ -1238,7 +1238,7 @@ height, and `--chart-dim-opacity` in [the css option](css-option.md). The defaul
 is `72vh`. A chart also takes at most the height that the heading, the name of the deck and
 the other elements leave in the slide. Thus a chart fits in a small window.
 
-## The HTML
+## HTML
 
 The document writes a `figure` element with the classes `chart` and `chart-bar`,
 `chart-line`, `chart-pie`, `chart-treemap`, `chart-sunburst`, `chart-sankey`,

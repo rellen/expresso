@@ -1,4 +1,4 @@
-# The checks
+# Checks
 
 This page lists the checks of the project, and tells you what each check needs.
 

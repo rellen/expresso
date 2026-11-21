@@ -6,7 +6,7 @@ can Gleam and Lustre replace TypeScript for the script inside the presentation H
 The investigation built a working Gleam port of the presenter, and it measured the bundle.
 The numbers below come from that build, and not from an estimate.
 
-## The answer
+## Answer
 
 Gleam is possible, and the cost is 6 times the size of the bundle and one more tool in the
 build. Lustre is not correct for this program. Lustre makes the DOM, and the presenter does
@@ -14,7 +14,7 @@ not make the DOM. `Expresso.Renderer` makes the DOM.
 
 The recommendation is to keep TypeScript.
 
-## The measurement
+## Measurement
 
 Each bundle below is the output of esbuild with `--bundle --format=iife --minify
 --target=es2020`, which is the configuration of the repository today.
@@ -45,18 +45,18 @@ program itself is small, as the TypeScript is small.
 The bundle goes into the HTML file, and a person opens that file from the disk. Therefore
 the size after gzip does not apply. 1 kB becomes 6 kB, and this is the honest number.
 
-## The constraints of the repository
+## Constraints of the repository
 
 `docs/typescript.md` gives four decisions. Gleam agrees with two of them, and it breaks
 one.
 
-### The output is one HTML file
+### Output is one HTML file
 
 Gleam agrees. The Gleam compiler writes ES modules, and esbuild makes one IIFE from them,
 as it does for the TypeScript. The bundle has no `import`, no `export` and no `</script>`.
 The measurement above confirms each of these.
 
-### The target is ES2020
+### Target is ES2020
 
 Gleam agrees, with esbuild. The compatibility reference of Gleam asks for ECMAScript 2022
 or higher, and the document says that a bundler can make an older version. esbuild with
@@ -87,7 +87,7 @@ Two facts make the cost smaller than it appears:
 The cost stays, because the compiler is an operating system dependency and not a Hex
 dependency. A person outside the Nix shell must install it.
 
-### The `script` element stays classic
+### `script` element stays classic
 
 Gleam agrees. The IIFE format gives a classic script.
 
@@ -139,14 +139,14 @@ The investigation found three benefits:
   A Gleam test needs `gleam test`, and the run needs a build.
 - `prettier` no longer formats the script. `gleam format` does.
 
-## The size of the problem
+## Size of the problem
 
 `assets/src/` has 144 lines, and its tests have 287 lines. The overlay work makes the
 state machine three or four times larger, as `docs/typescript.md` says. A program of
 approximately 500 lines does not need the type system of Gleam, and the current tools give
 a type check and a test for each rule.
 
-## The conditions for a new decision
+## Conditions for a new decision
 
 Change the decision when one of these becomes true:
 
@@ -157,7 +157,7 @@ Change the decision when one of these becomes true:
 - The presenter must make the DOM, and not only write two attributes. Lustre then becomes
   a candidate, and the deck must move into Gleam first.
 
-## The sources
+## Sources
 
 - [The compatibility reference of Gleam](https://gleam.run/documentation/compatibility-reference/)
   gives ECMAScript 2022 as the floor of the JavaScript target, and it says that a bundler

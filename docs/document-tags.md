@@ -1,11 +1,11 @@
-# The tags of the document for a search engine and for a link
+# Tags of the document for a search engine and for a link
 
 This document gives the design for the `meta` elements in the `head` of the document of a
 deck. Issue #566 asked for it. The document records a decision for each of 13 tags, and
-the answers to five questions. The code contains each tag of the decisions. Its section "The result" tells what the code has, "The tags with the address
-of the deck" tells the later change, and "The work that follows" names the issues.
+the answers to five questions. The code contains each tag of the decisions. Its section "Result" tells what the code has, "The tags with the address
+of the deck" tells the later change, and "Work that follows" names the issues.
 
-## The problem
+## Problem
 
 The `head` of the document held a `meta charset`, the `title` and the style sheets. For a
 deck on a web host, this had three effects:
@@ -17,7 +17,7 @@ deck on a web host, this had three effects:
 3. The document had no `meta name="viewport"`. Lighthouse gave the insight `viewport` the
    score 0.5.
 
-## The constraints
+## Constraints
 
 - **The document names no address of a network.** `Expresso.FontTest` makes sure that the
   document holds no `http://` and no `https://`.
@@ -26,7 +26,7 @@ deck on a web host, this had three effects:
   stays optional.
 - **Each default is safe.** A tag does not show a text that the user did not write.
 
-## The decision for each tag
+## Decision for each tag
 
 | Tag | Decision | Reason |
 | --- | --- | --- |
@@ -35,7 +35,7 @@ deck on a web host, this had three effects:
 | `meta name="generator"` | Add it to each document: `Expresso` and its version. | It needs no value from the user, and it shows no text of the user. |
 | `meta name="color-scheme"` | Add it to each document, from the theme: `light`, `dark` or `light dark`. | The scroll bars and the colors of the system then agree with the slides. |
 | `meta name="theme-color"` | Add it to each document: the background color of the theme. | A browser on a phone can give its bar the color of the slide. |
-| `meta name="viewport"` | Add it to each document, after the change that makes a slide fit a small window. | With `width=device-width` and the fixed size of the text, the browser cut the text of a slide on a phone. See "The viewport". |
+| `meta name="viewport"` | Add it to each document, after the change that makes a slide fit a small window. | With `width=device-width` and the fixed size of the text, the browser cut the text of a slide on a phone. See "Viewport". |
 | `og:title`, `og:description`, `og:type`, `og:locale` | Add them with the `url` option of the deck. | A program makes a card only for a page on a host, and `og:url` is a part of the card. |
 | `og:image`, `og:image:alt`, its width and its height | Add them with the `card` option of the deck. | The picture must be a file at an absolute address. A data URI does not work. |
 | `og:url` and `link rel="canonical"` | Add them with the `url` option of the deck. | The render does not know the host. |
@@ -50,7 +50,7 @@ The facts about a card and about Google Search come from these pages, on 2026-11
   has 25 features, and no feature for a presentation or for a document.
 - [The Open Graph protocol](https://ogp.me/) gives `og:image` as an address of an image.
 
-## The answers to the questions
+## Answers to the questions
 
 1. **Which tags does each document get with no option?** `generator`, `color-scheme` and
    `theme-color`. The viewport was not one of them at that time.
@@ -65,7 +65,7 @@ The facts about a card and about Google Search come from these pages, on 2026-11
 5. **Does the viewport tag change the layout of a slide on a phone?** Yes. See "The
    viewport".
 
-## The viewport
+## Viewport
 
 The text of a slide has a fixed size: the `html` element has `font-size: 48px` on a screen
 of each size. A slide thus needs a window of a sufficient width, and `--check` measures
@@ -100,7 +100,7 @@ in a small window. That change also changes what `--check` measures, so it is a 
 its own. The change for issue #590 made it, and the document has the tag now.
 `docs/small-windows.md` gives that design.
 
-## The rule of "no address of a network"
+## Rule of "no address of a network"
 
 The rule has one exception, which the change for issue #589 made:
 
@@ -111,7 +111,7 @@ The rule has one exception, which the change for issue #589 made:
 - `Expresso.FontTest` examines a deck with no such option. `Expresso.LinkPreviewTest`
   makes sure that a deck with the option holds only these two addresses.
 
-## The result
+## Result
 
 The code has these parts:
 
@@ -140,7 +140,7 @@ Lighthouse 13.6 gave these scores for a deck of one slide, on a local server wit
 
 The insight `viewport` has the score 0.5 in the two decks.
 
-## The tags with the address of the deck
+## Tags with the address of the deck
 
 The change for issue #589 added the tags that the first change left for later. Four
 options of the deck give the values, and `Expresso.LinkPreview` writes the tags:
@@ -180,13 +180,13 @@ These decisions come from the work:
 - **The Open Graph tags need the `url` option.** A deck with no host needs no card, so a
   deck with only a `description` has no Open Graph tag.
 
-## The limits
+## Limits
 
 - The key `t` does not change `theme-color`. The tag follows the scheme of the screen.
 - Reports say that Safari 26 does not use `theme-color` for the bar of the browser. It
   uses the background color of the page, which is the background color of the theme.
 
-## The work that follows
+## Work that follows
 
 | Issue | Tags |
 | --- | --- |

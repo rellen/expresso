@@ -1,12 +1,12 @@
-# The rehearsal
+# Rehearsal
 
 This document gives the design for the rehearsal: the speaker view records the time that
 each slide of a talk used, and it gives the lines of the `advance` option for those times.
 The code contains this design. Issue #402 asked for it, as the second of its two parts.
 `docs/timed-advance.md` gives the first part. The document records ten decisions, and each
-is settled. Its last section, "The result", tells what changed during the work.
+is settled. Its last section, "Result", tells what changed during the work.
 
-## The problem
+## Problem
 
 The `advance` option gives each step a time, and the author must know those times. A
 talk with a fixed length needs a time for each slide that agrees with the words of the
@@ -14,7 +14,7 @@ speaker. PowerPoint and Keynote record the time of each slide while the speaker
 rehearses, and they then use those times. In Expresso, the author measured each slide
 with a watch.
 
-## The plan
+## Plan
 
 1. The speaker view records the time that each step used, while its timer runs.
 2. The key `e` of the speaker view opens a dialog with a table of the time of each slide,
@@ -23,7 +23,7 @@ with a watch.
    step its time with the keys.
 4. The `advance` option of a slide also takes a list, with a time for each step.
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -59,7 +59,7 @@ Each decision is settled.
     of them. A button that writes to the clipboard needs a permission that a document
     from a file does not always have.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 
@@ -77,10 +77,10 @@ The code follows the plan, with these changes:
 5. **The key `r` also starts a new record.** The text of the key in the list of keys
    tells this.
 
-`docs/reference/presenter.md` has the section "The time of each slide", and
+`docs/reference/presenter.md` has the section "Time of each slide", and
 `docs/how-to/rehearse-a-talk.md` gives the steps.
 
-## The limits
+## Limits
 
 - A reload of the speaker view starts a new record.
 - The record does not stop on a black screen or while the key `a` has the clock of the

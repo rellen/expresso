@@ -1,4 +1,4 @@
-# The toolchain
+# Toolchain
 
 This page tells you how to get the versions of the tools that the checks need.
 
@@ -46,7 +46,7 @@ To move the pin, do these steps:
 1. Find a release of `nixpkgs-unstable` that gives the versions of `.tool-versions`.
    https://nix-releases.s3.amazonaws.com/?delimiter=/&prefix=nixpkgs/ lists each release,
    and the name of a release ends with the first 12 characters of its commit.
-2. Make sure that Burrito has an ERTS for its OTP version. [The release tests](release.md#the-release-tests) gives
+2. Make sure that Burrito has an ERTS for its OTP version. [The release tests](release.md#release-tests) gives
    the reason.
 3. Put the commit in `flake.nix`, and run `nix flake lock`.
 
@@ -86,7 +86,7 @@ packages are older. The apt package of Erlang gives OTP 25, the apt package of E
 
 Burrito needs Zig and `xz`. The container gives `xz`, and the hook gives Zig. Without Zig,
 `mix release expresso_cli_app` gives the error "You MUST have `zig` and `xz` installed to
-use Burrito". The Zig build takes approximately 400 MB of disk. [The release tests](release.md#the-release-tests)
+use Burrito". The Zig build takes approximately 400 MB of disk. [The release tests](release.md#release-tests)
 gives the commands that make the binary and test it.
 
 To run the hook again by hand:

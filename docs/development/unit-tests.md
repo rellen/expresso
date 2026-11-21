@@ -1,4 +1,4 @@
-# The unit tests
+# Unit tests
 
 This page tells you how to write a property test and a test that reads the HTML of a deck. `mix test` runs both.
 
@@ -26,7 +26,7 @@ The dependency is present in `dev` and in `test`. The formatter and the static a
 run in `dev`. `mix format` reads `deps/stream_data/.formatter.exs` through `import_deps`.
 Therefore the formatter writes no parentheses after `check all`.
 
-## The HTML in a unit test
+## HTML in a unit test
 
 Each unit test that reads the HTML of a deck uses LazyHTML. `lazy_html` is a dependency
 for the `test` environment only. The tests of the table, the list, the image and the other

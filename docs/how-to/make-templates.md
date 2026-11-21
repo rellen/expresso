@@ -46,7 +46,7 @@ such as `heading`.
 The class `slide-body` gives your template the padding at the sides of the built-in
 template. A rule of the `css` option can then style the parts of your template.
 
-## The complete deck
+## Complete deck
 
 This deck shows the part of the talk in the header. Its slide template puts the heading at
 the left, with a bar in the accent color. The title slide keeps the built-in slide

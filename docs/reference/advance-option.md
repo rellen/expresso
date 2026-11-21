@@ -1,4 +1,4 @@
-# The advance option and the loop option
+# `advance` and `loop` options
 
 The `advance` option gives each step a time. The present view goes to the next step when
 that time ends. The `loop` option of the deck makes the first slide the slide after the
@@ -26,7 +26,7 @@ end
 `Expresso.Builder` takes the same options, such as `slide("title", advance: false)` and
 `deck(slides, advance: 20_000, loop: true)`.
 
-## The values of advance
+## Values of `advance`
 
 | Where | Value | Effect |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ the last time of the list, and a time after the last step has no effect. The spe
 makes such lines from a rehearsal. See
 [Rehearse a talk and record the time of each slide](../how-to/rehearse-a-talk.md).
 
-## The values of loop
+## Values of `loop`
 
 | Value | Effect |
 | --- | --- |
@@ -55,7 +55,7 @@ makes such lines from a rehearsal. See
 The key of the previous step does not go from the first slide to the last slide. A
 [hidden slide](hidden-option.md) is not a part of the talk, so the loop does not show it.
 
-## The clock
+## Clock
 
 The **clock of the steps** counts the time that the step that shows used. These rules
 apply:
@@ -73,7 +73,7 @@ apply:
 The keys of the next step and of the previous step move as in each deck, also while the
 clock is stopped.
 
-## The speaker view
+## Speaker view
 
 The speaker view shows the time left of the step under the timer:
 
@@ -86,7 +86,7 @@ The speaker view shows the time left of the step under the timer:
 Only the present view goes to the next step. A speaker view with no present view shows
 the time, and it does not move.
 
-## The address
+## Address
 
 `?paused` in the address stops the clock at the load, as the key `a` does:
 
@@ -97,9 +97,9 @@ deck.html?paused
 Press `a` to start the clock. The time of the step starts then.
 
 `?rehearse` in the address is a rehearsal. The present view then has no clock, and the key
-`a` does not start one. See [The time of each slide](presenter.md#the-time-of-each-slide).
+`a` does not start one. See [The time of each slide](presenter.md#time-of-each-slide).
 
-## The tools
+## Tools
 
 | Tool | With a time |
 | --- | --- |
@@ -108,13 +108,13 @@ Press `a` to start the clock. The time of the step starts then.
 | `mix expresso <input> --pdf` and `--png` | The export opens the document with `?paused`. A picture of a step shows that step. |
 | The handout view and paper | They show each step, as for each deck. |
 
-## The custom property
+## Custom property
 
 | Property | Effect |
 | --- | --- |
 | `--clock-stopped-color` | The color of the time left in the speaker view while the key `a` has the clock stopped. The default is the role `warning`. |
 
-## The limits
+## Limits
 
 - A deck with one step and `loop true` has no step to go to, so its step has no time.
 - The speaker view does not know when the present view shows its handout view. Its time

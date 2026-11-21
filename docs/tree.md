@@ -3,9 +3,9 @@
 This document gives a plan for the element `tree`, which shows a hierarchy as boxes and
 lines. An org chart is one use, and the use of a disk by folders is another. The code
 contains this plan. The document records nine decisions, and each is settled. The last
-section, "The result", tells what changed during the work.
+section, "Result", tells what changed during the work.
 
-## The problem
+## Problem
 
 A talk often shows a hierarchy:
 
@@ -30,7 +30,7 @@ A tree in a talk has these needs:
 - Data from a file, because a real tree comes from a system, not from a list that the author
   types.
 
-## The constraints
+## Constraints
 
 - The output stays one HTML file, and the presenter script does not calculate a layout. The
   compiler calculates each layout, as it does for the charts.
@@ -41,9 +41,9 @@ A tree in a talk has these needs:
   node above it.
 - The theme gives each color, and the deck can change each color with CSS.
 
-## The plan
+## Plan
 
-### The entity
+### Entity
 
 `tree` is a new element. It is not a kind of `chart`. A chart shows series of values, and
 its options, such as `series`, `count` and the axes, do not apply to a tree. The tree uses
@@ -97,7 +97,7 @@ end
 
 The `title` option is required, as for a chart. It names the tree for a screen reader.
 
-### The node
+### Node
 
 The tree uses the `node` entity of the charts of flows. The entity gets the options of a
 tree, and a verifier refuses an option that does not apply to the parent element:
@@ -129,7 +129,7 @@ in the `elements` key, as a list takes its items:
 The name `node` is also the name of `Kernel.node/1`. `use Expresso` imports `Kernel` without
 `node/1`, so the `node` of the DSL has no conflict in a module of a deck.
 
-### The values
+### Values
 
 A node can have a `value`. These options of the tree use the values:
 
@@ -144,7 +144,7 @@ A node can have a `value`. These options of the tree use the values:
 
 The value goes into the box after the fields, and into the tree for a screen reader.
 
-### The data
+### Data
 
 A CSV file gives a tree with one row for each node. The `src` option names the file. The
 file gives the tree in one of two forms:
@@ -163,7 +163,7 @@ A `node` in a DSL deck can also give `parent: "ben"` in place of nesting. Thus a
 type a flat list. The compiler refuses a tree with two roots, a loop, an unknown parent, and
 an identity that shows two times.
 
-### The box
+### Box
 
 The box holds the image or the icon, the label, the detail, the fields, the value and the
 bar, in this order. Each box of one level has the same size. The option `box` of the tree
@@ -194,7 +194,7 @@ The color of a box comes from one of these sources, in this order:
 The theme gives the custom properties `--tree-box`, `--tree-border`, `--tree-line`,
 `--tree-text` and `--tree-bar`, so a deck can change them with its CSS.
 
-### The layout
+### Layout
 
 The layout is recursive. The layout of a node places the subtrees of its nodes, and each
 subtree is a box. The `layout` option of a node sets how its nodes go. A node takes the
@@ -220,7 +220,7 @@ only, so the same tree gives the same picture each time.
 
 The drawing scales to fit the box of the element, as a chart does.
 
-### The steps
+### Steps
 
 Each box takes the overlay options, so `at` and `on` work as for each element. The tree also
 has these options for the common orders:
@@ -247,7 +247,7 @@ yet:
 The effect `:grow` draws each line from its parent to its box, from the root down, when the
 box shows.
 
-### The highlight
+### Highlight
 
 The option `highlight` puts a node or a branch in focus at each step, as for a chart:
 
@@ -260,7 +260,7 @@ in focus. A list puts each item of the list in focus at the same step. The rest 
 dims, as a dimmed series of a chart does. The line from a box in focus to its parent stays in
 full color.
 
-### The frames
+### Frames
 
 A `frame` holds a full tree at one point in time, such as before and after a
 reorganization, or the disk in two months:
@@ -294,7 +294,7 @@ fades in, and a box of the old frame only fades out. Each frame has its own copy
 lines, as with `reflow`, because a path cannot change its shape in each browser. A CSV file
 gives frames with the `frames` option, which names a column, as for a chart.
 
-### The views
+### Views
 
 | View | The tree |
 | --- | --- |
@@ -312,7 +312,7 @@ Production, team 42 people, 2 items". The lines are an SVG with `aria-hidden`.
 A box that does not show at the step has `visibility: hidden`, so a screen reader skips it,
 as for each element with `at`.
 
-### The rendering
+### Rendering
 
 The module of the element is `Expresso.Element.Hierarchy`, because `Expresso.Element.Tree`
 holds the functions that walk the elements of a slide. The drawing is one SVG with a `viewBox` of the layout. The lines are paths in the SVG. Each
@@ -325,7 +325,7 @@ correctly.
 A box has a transform from the channels of its place, as a mark of a chart has. The compiler
 writes the channels of each step that changes a place, from the layout of that step.
 
-## The alternatives
+## Alternatives
 
 - **A kind of chart, such as `chart :tree`.** The kind would get frames, highlight and CSV
   from the chart. The options of series and axes would not apply, and each one would need an
@@ -340,7 +340,7 @@ writes the channels of each step that changes a place, from the layout of that s
   folder. Two entities with the name `node` and different options cannot exist, because
   `Expresso.Builder` makes one function for each name.
 
-## The decisions
+## Decisions
 
 1. **The element is a general tree, not a chart of people.** An org chart and the use of a
    disk are two uses of one element.
@@ -375,7 +375,7 @@ writes the channels of each step that changes a place, from the layout of that s
    10. A guide in `docs/how-to/`, two example decks (an org chart and the use of a disk) and
        their GIFs.
 
-## The result
+## Result
 
 The ten pull requests of the stack contain the plan. These parts changed during the work:
 

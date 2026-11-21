@@ -15,7 +15,7 @@ defmodule Expresso.Watch.Files do
       change is found.
     * An old file gets no digest, so a digest that is removed is not a change.
 
-  The section "The watch mode" of `docs/architecture.md` tells why the watch
+  The section "Watch mode" of `docs/architecture.md` tells why the watch
   mode reads the file system, and not the events of the operating system.
   """
 

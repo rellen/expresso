@@ -16,7 +16,7 @@ steps:
    mix run -e 'for n <- Expresso.Palette.Builtin.names(), p = Expresso.Palette.Builtin.fetch!(n), do: IO.puts("#{n} #{p.variant} #{Float.round(p.change, 2)} #{elem(p.dimmed.text, 0)} #{elem(p.dimmed.code_comment, 0)}")'
    ```
 
-4. Add the still of the theme to "The gallery" of `docs/reference/theme-option.md`.
+4. Add the still of the theme to "Gallery" of `docs/reference/theme-option.md`.
    `mix expresso.gifs` records a still for each built-in theme, with the name
    `theme-` and the name of the theme with hyphens, such as `theme-tokyo-night-storm.png`.
    This command records it:

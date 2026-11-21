@@ -1,4 +1,4 @@
-# The morph option
+# `morph` option
 
 The `morph` option moves the elements that two neighbor slides share from their place on one
 slide to their place on the next slide. The rest of the two slides fades.
@@ -14,7 +14,7 @@ slide to their place on the next slide. The rest of the two slides fades.
 `Expresso.Builder` takes the same option, such as `deck(slides, morph: :named)`,
 `slide("second", morph: :off)` and `stat(42, morph: "total")`.
 
-## The modes
+## Modes
 
 | Mode | Partners |
 | --- | --- |

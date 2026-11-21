@@ -5,7 +5,7 @@ steps, such as one word of a sentence. The code contains this design. Issue #404
 it. The document records ten decisions, and each is settled. Its last section, "The
 result", tells what changed during the work.
 
-## The problem
+## Problem
 
 The overlays of `docs/overlays.md` give steps to an element, to an item of a list, to a
 line of code and to a part of a chart. A text area could not give a step to one word of a
@@ -13,7 +13,7 @@ sentence. A talk often needs this: the last word of a question shows at the next
 a key phrase changes its color when the presenter says it. Beamer has `\only<2>{...}` and
 `\alert<2>{...}` inside a text.
 
-## The plan
+## Plan
 
 1. A tag in the text of a text area or of an item takes the attribute `at`, with a step
    specification in text, and the attribute `state`.
@@ -25,7 +25,7 @@ a key phrase changes its color when the presenter says it. Beamer has `\only<2>{
 4. The render of the text element writes the attributes of the overlay contract into the
    tag of each part.
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -71,7 +71,7 @@ Each decision is settled.
     sentence as the audience sees it. The issue asked for the whole sentence at each step.
     That is not the rule of an element, and two rules for the same attribute are worse.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 

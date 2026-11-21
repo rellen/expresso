@@ -34,7 +34,7 @@ state:
 
 The label of each frame shows under the tree, so it tells the audience what occurs.
 
-## The example deck
+## Example deck
 
 The deck has one slide for the tree of the application and three slides for the strategies
 of a `Supervisor`. It has one slide each for a `DynamicSupervisor` and a
@@ -428,28 +428,28 @@ end
 Examples.TreeSupervision
 ```
 
-### The tree of the application
+### Tree of the application
 
 The first slide shows the root supervisor, then its four children, then their children.
 `color :branch` gives each child of the root a color:
 
 ![The root supervisor shows, then a registry, a DynamicSupervisor, a PartitionSupervisor and a pipeline under it, then the children of each one](https://raw.githubusercontent.com/rellen/expresso/media/tree-supervision.gif)
 
-### The strategy one_for_one
+### Strategy one_for_one
 
 When a child crashes, the supervisor starts only that child again. The other workers keep
 their PIDs:
 
 ![Worker 2 crashes and turns red, then it starts again in green with a new PID, and workers 1 and 3 do not change](https://raw.githubusercontent.com/rellen/expresso/media/tree-one-for-one.gif)
 
-### The strategy one_for_all
+### Strategy one_for_all
 
 When a child crashes, the supervisor stops each other child, and then it starts all of
 them again:
 
 ![Worker 2 crashes, the supervisor stops workers 1 and 3, then the three workers start again with new PIDs](https://raw.githubusercontent.com/rellen/expresso/media/tree-one-for-all.gif)
 
-### The strategy rest_for_one
+### Strategy rest_for_one
 
 When a child crashes, the supervisor stops the children that started after it, and then it
 starts them again. The children before it keep their PIDs:

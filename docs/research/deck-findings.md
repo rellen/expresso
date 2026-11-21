@@ -15,7 +15,7 @@ We wrote each finding at the time that we found it. Each finding has a kind:
 
 Each finding also tells what we did in the deck, and what change to Expresso can help.
 
-## The findings
+## Findings
 
 ### 1. A path is relative to the working directory, not to the deck
 

@@ -1,4 +1,4 @@
-# The icon element
+# `icon` element
 
 The `icon` element shows an icon from the Lucide set, or an SVG file of the deck. An icon
 can also go into the text of a text area or an item, with the size of the text.
@@ -17,7 +17,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `icon("rocket", label: "Release", size: "5rem")`.
 
-## The options of the element
+## Options of the element
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -32,7 +32,7 @@ The element also takes the overlay options, such as `at`, `effect` and the `on` 
 [the overlay options](overlay-options.md). A slide, a text box, a column and a callout can
 hold an icon.
 
-## The names
+## Names
 
 The Lucide set has 1,877 icons. Find a name at [lucide.dev/icons](https://lucide.dev/icons).
 Write it as the page writes it, such as `"git-commit-horizontal"`. Expresso holds
@@ -55,7 +55,7 @@ slide "checks" do
 end
 ```
 
-## The icons option of the deck
+## `icons` option of the deck
 
 The `icons` option gives names of your own, each with the path of an SVG file:
 
@@ -78,7 +78,7 @@ icons logo: "assets/logo.svg", espresso: "icons/espresso.svg"
 - Give the file a `viewBox`, so the icon keeps its shape at each size.
 - The watch mode renders the deck again after a change to the file.
 
-## The HTML
+## HTML
 
 The element is a `figure` with the classes `icon` and `icon-<color>`, and the style
 `--icon-size`. It holds an `svg` with the class `icon-svg` and `aria-hidden="true"`, and a
@@ -88,7 +88,7 @@ skips the icon.
 An icon in a text is an `svg` with the class `icon-inline` and `aria-hidden="true"`. Write
 the meaning of the icon in the text too, because a screen reader does not read the icon.
 
-## The errors
+## Errors
 
 The compiler gives an error for these:
 
@@ -97,7 +97,7 @@ The compiler gives an error for these:
   element;
 - a `color` that is not in the list.
 
-## The license
+## License
 
 The Lucide icons are under the ISC license, and the icons that come from Feather are under
 the MIT license. `priv/icons/LICENSE` holds the two licenses.

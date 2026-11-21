@@ -1,4 +1,4 @@
-# The columns element
+# `columns` element
 
 The `columns` element puts its `column` elements side by side. A column holds elements, as a
 text box does.
@@ -29,14 +29,14 @@ end
 `Expresso.Builder` takes the same options, such as
 `columns(elements: [column(width: "40%", elements: [...]), column(elements: [...])])`.
 
-## The options of the columns
+## Options of the columns
 
 | Option | Value | Effect |
 | --- | --- | --- |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
-## The options of a column
+## Options of a column
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -47,7 +47,7 @@ end
 The columns element and a column each take the overlay options, such as `at`, `effect`
 and the `on` entity. See [the overlay options](overlay-options.md).
 
-## The width of a column
+## Width of a column
 
 | Columns | The result |
 | --- | --- |
@@ -59,7 +59,7 @@ The document writes the custom properties `--column-width` and `--column-grow` o
 column with a `width` option, and the theme reads them. A column without the option gets
 the defaults of the theme: it grows, and its base width is 0%.
 
-## The children
+## Children
 
 A column can hold each element that [a text box](text-box-element.md) holds, except a
 `columns` element. A column cannot hold a text box. See

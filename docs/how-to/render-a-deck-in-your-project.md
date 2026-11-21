@@ -132,7 +132,7 @@ The binary can write only a part of the HTML to a pipe that does not block, when
 of the pipe is slow. The exit status is then 0. Give an output path, or write the standard
 output to a file with `> deck.html`, to get all the HTML.
 
-## The complete deck
+## Complete deck
 
 This deck is next to the file `examples/animations/counter.ex`, so its root is `__DIR__`.
 It shows the function `handle_call/3` of the file in two groups:

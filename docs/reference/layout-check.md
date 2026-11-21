@@ -1,4 +1,4 @@
-# The layout check
+# Layout check
 
 The layout check finds the parts of a deck that do not fit the window. `?check` at the
 end of the present view's address starts it, such as `deck.html?check`. The speaker
@@ -16,7 +16,7 @@ the slide at that step. Then the presenter shows the step of the address again.
 The check measures the window at that time. A change to the size of the window after the
 check does not change the report. Reload the page for a new check.
 
-## The problems
+## Problems
 
 | Problem | When | The report gives |
 | --- | --- | --- |
@@ -61,7 +61,7 @@ names the innermost element: a formula in a column, and not the column.
 
 The check gives each problem one time, at the first step that has it.
 
-## The report
+## Report
 
 The report is an `aside` element with the id `layout-check`, in the lower right corner of
 the window. It holds:

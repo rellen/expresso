@@ -55,7 +55,7 @@ pass in one variant and fail in the other. A problem of only one variant names t
 such as `Slide 1 “start”, step 1 (dark): color-contrast`. See
 [Check a deck before the talk](check-a-deck.md).
 
-## The complete deck
+## Complete deck
 
 This deck has a dark and a light built-in theme. The window of the recording has a light
 scheme, and the key `t` shows the dark variant:

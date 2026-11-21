@@ -1,4 +1,4 @@
-# The image element
+# `image` element
 
 The `image` element shows an image file. The document holds the file as a data URI, so the
 deck stays one file. With `external true`, the file stays next to the document.
@@ -15,7 +15,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `image("logo.png", alt: "The logo of the project", width: "40%")`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -80,7 +80,7 @@ file when it loads the document. An image in a data URI has no such attribute.
 A jump to a far slide before the browser is idle, such as from the menu, can show an image
 late, as a video can.
 
-## The width
+## Width
 
 | `width` | The image |
 | --- | --- |
@@ -112,6 +112,6 @@ An `.svg` file in an `image` is a picture: the theme cannot change its colors, a
 cannot show at steps. To show the parts of an SVG file at steps, use
 [the diagram element](diagram-element.md).
 
-## The watch mode
+## Watch mode
 
 The watch mode renders the deck again after a change to the image file.

@@ -1,4 +1,4 @@
-# The QR code element
+# `qr_code` element
 
 The `qr_code` element shows a QR code of a text, such as the address of the slides. A
 phone camera reads the code from the screen or from paper.
@@ -15,7 +15,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `qr_code("https://rellen.github.io/expresso/", label: "rellen.github.io/expresso")`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -43,7 +43,7 @@ limit. This table gives the limit of each level:
 
 A long text makes a code with small modules. Keep an address short.
 
-## The colors
+## Colors
 
 A scanner reads a dark code on a light ground best. The code thus keeps its own two colors
 in each theme, and not the colors of the slide:
@@ -56,7 +56,7 @@ in each theme, and not the colors of the slide:
 Set the two properties in [the css option](css-option.md) to change the colors. Keep a
 strong contrast between them. Some phones cannot read a light code on a dark ground.
 
-## The HTML
+## HTML
 
 The document writes a `figure` element with the class `qr-code`. It holds an `svg` element
 with `role="img"` and the `title` as its `aria-label`. The SVG holds a `rect` with the class

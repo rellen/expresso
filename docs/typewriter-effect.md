@@ -1,18 +1,18 @@
-# The typewriter effect
+# Typewriter effect
 
 This document gives the design for the effect `:type`, which shows the text of an element
 one character at a time, as if you type it. The code contains this design. Issue #405 asked
 for it. The document records ten decisions, and each is settled. Its last section, "The
 result", tells what changed during the work.
 
-## The problem
+## Problem
 
 A talk about code often types a command or a line of code. To type it during the talk is
 slow, and an error stops the talk. A video of the text is hard to change. Keynote has a
 typewriter build, and some themes of Slidev type code. Expresso showed a whole element or
 a whole line at a step.
 
-## The plan
+## Plan
 
 1. `effect :type` is a value of the `effect` option. The style sheet of the theme has a
    rule for `[data-effect="type"]`, so `Expresso.Overlay.EffectVerifier` knows the effect.
@@ -25,7 +25,7 @@ a whole line at a step.
 5. The presenter script writes `data-back` on a slide after a step back, and the style
    sheet then gives the change no time.
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -79,7 +79,7 @@ Each decision is settled.
     The text does not change during the effect, so a screen reader gets no update for
     each character.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 
@@ -97,10 +97,10 @@ The code follows the plan, with these changes:
 4. **The fake element of the tests has `toggleAttribute`.** `dom.ts` writes `data-back`
    with it, and the fake slide of `assets/test/` had no such function.
 
-`docs/reference/overlay-options.md` has the section "The effect `:type`", and
+`docs/reference/overlay-options.md` has the section "Effect `:type`", and
 `docs/how-to/animate-elements.md` has the section "Type a text or a line of code".
 
-## The limits
+## Limits
 
 - The text of step 1 of a slide shows with the slide. Put `pause()` in front of the
   element to make its text type at step 2.

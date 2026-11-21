@@ -1,4 +1,4 @@
-# The math element
+# `math` element
 
 The `math` element shows a formula in MathML. The browser draws the formula with no script
 and no font file. The `tex` option takes the formula in LaTeX, and the render makes the
@@ -25,7 +25,7 @@ end
 `Expresso.Builder` takes the same argument and option, such as `math(~S"<math>...</math>")` and
 `math(tex: ~S"E = mc^2")`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -65,7 +65,7 @@ line.
 
 Use the `~S` sigil for the LaTeX, so that Elixir does not change a `\`.
 
-## The parts of a formula
+## Parts of a formula
 
 A part is a sub-term of a formula with a name. Three commands of the LaTeX give a name:
 
@@ -87,7 +87,7 @@ end
   refuses a different name.
 - The MathML argument can give a part with the attribute `data-part` or `class`.
 
-## The steps of a part
+## Steps of a part
 
 A `part` entity of a `math` element gives a part its steps. It takes the overlay options, as
 a part of a diagram does: `at`, `effect` and the `on` entity with `state` and `set`.
@@ -260,7 +260,7 @@ end
 - The render gives an error for a copy of a copy to a set. Give each copy a copy of the
   source.
 
-## The lines of a derivation
+## Lines of a derivation
 
 A derivation has a line for each step, and the lines align on their relations, such as `=`
 or `→β`. A formula takes its lines in two forms.
@@ -284,7 +284,7 @@ end
 A cell of a row cannot be inside a group of a different cell. A part of a row thus names each
 cell, as `l2` does above.
 
-### The line entity
+### `line` entity
 
 The `line` entity writes the aligned LaTeX for you. Its first argument is the relation in
 LaTeX, and the `tex` option is the term. The `why` option is the reason in a column at the
@@ -551,7 +551,7 @@ The reduction makes the line `g\,(g\,x)`, with the relation `\to_\beta` and the 
 
 `docs/beta-reductions.md` gives the design.
 
-## The math font
+## Math font
 
 The deck option `math_font` gives the font of each `math` element. The document holds the
 font as a data URI, so a formula looks the same on each computer and needs no network.

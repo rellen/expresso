@@ -4,10 +4,10 @@ This document gives the design for a part that names each occurrence of a symbol
 formula or inside a part, such as each `f` in the body of a λ. One entry can then color,
 dim, move or copy each occurrence. The same option selects each token with a text in a
 `code` element. The code contains this design. The document records ten decisions, and
-each is settled. Its last section, "The result", tells what changed during the work. Issue
+each is settled. Its last section, "Result", tells what changed during the work. Issue
 #479 holds the same plan.
 
-## The problem
+## Problem
 
 A talk often shows one variable at each place where it occurs: the bound variables of a λ,
 each `x` of a polynomial, or each use of a name in a proof. A part of a formula names one
@@ -18,7 +18,7 @@ the names when the formula changes.
 and `bound`. The `code` element has the same problem: its `highlight` selects lines, or a
 range from one text to another, and not each token with a text.
 
-## The constraints
+## Constraints
 
 - An occurrence is a symbol of the MathML of a formula, or a token of the highlighter of a
   code element. A text inside a different symbol, such as the `x` of `exp`, is not an
@@ -65,7 +65,7 @@ code src: "lib/counter.ex", lang: :elixir do
 end
 ```
 
-## The decisions
+## Decisions
 
 | Number | Question | Decision |
 | --- | --- | --- |
@@ -80,7 +80,7 @@ end
 | 9 | The code element | A group of `highlight` takes `[each: "text"]`. The tokens with that text are in focus at the step of the group, and each other token dims. `reveal` refuses `each`, because a hidden token leaves a hole in its line. |
 | 10 | The stack and the examples | Seven pull requests. `examples/animations/y_combinator.exs` colors the bound variables with `each` and gives them no part. The how-to guide gets an example of each `x` of a polynomial, with a GIF. |
 
-## The design
+## Design
 
 - **The options.** The `part` entity takes `each`, `within` and `bare`. The check of a math
   element refuses `within` and `bare` without `each`, and the check of a diagram refuses
@@ -101,7 +101,7 @@ end
   text of the group. The style sheet dims each other token at the step of the group, and
   the tokens of the group get the bar of focus.
 
-## The stack
+## Stack
 
 Each pull request is based on the one before it.
 
@@ -113,7 +113,7 @@ Each pull request is based on the one before it.
 6. `examples/animations/y_combinator.exs` with `each`.
 7. The guide, an example of a polynomial and its GIF.
 
-## The progress
+## Progress
 
 | Pull request | State |
 | --- | --- |
@@ -125,7 +125,7 @@ Each pull request is based on the one before it.
 | 6. `examples/animations/y_combinator.exs` with `each` | Done. The part `fs` with `each "f"` and `within "body"` colors the two bound variables, so they have no names. A symbol in two parts keeps the overlay attributes of the last part only, so the set does not hold the binder, which has its own part `bind`. The new part `body` holds the two bodies of the definition. The steps and the GIF do not change. |
 | 7. The guide and the example of a polynomial | Done. `docs/how-to/explain-a-formula-step-by-step.md` shows `examples/animations/math_each.exs`, and `mix expresso.gifs` records `math-each.gif`. |
 
-## The result
+## Result
 
 The seven pull requests of the stack contain the design. These parts are different from the
 plan, or the plan did not tell them:

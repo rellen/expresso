@@ -122,7 +122,7 @@ Examples.TreeDisk
 ![A tree of the folders of a disk from left to right, with a bar in each box, and the home folder and then the var folder in focus](https://raw.githubusercontent.com/rellen/expresso/media/tree-disk.gif)
 
 A file in the parent form has the columns `id` and `parent` in place of `path`. Use this
-form for an export from a list of people. See [the data](../reference/tree-element.md#the-data).
+form for an export from a list of people. See [the data](../reference/tree-element.md#data).
 
 ## Show a change of a team with frames
 

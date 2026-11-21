@@ -40,7 +40,7 @@ DSL gives an author two forms of per-step state:
 - `on ~o"3", class: "alert"` must apply the rules of `.alert` from the theme on step 3
   only. This form is the problem.
 
-### The problem
+### Problem
 
 A CSS rule selects an element and sets properties. I know no construction that lets a
 generated rule say "on step 3, apply the declarations of `.alert` to this element". The
@@ -59,13 +59,13 @@ the theme. The old `@apply` rule is gone. I see three options:
    of the container and not to the container, and the browser support is newer than the
    floor below.
 
-### The browser floor
+### Browser floor
 
 The design commits to the browsers that support `@property`: Chrome 85, Safari 16.4 and
 Firefox 128, which is the July 2024 baseline. Name each construction that needs a newer
 engine, with the version and the date.
 
-### The questions
+### Questions
 
 Give a citation for each answer. Prefer the specifications, the release notes of the
 browsers, caniuse, the browser compatibility data of MDN, and the results of the web
@@ -108,7 +108,7 @@ platform tests.
    engine, say how much newer. Say whether a fallback is possible, with `@supports` or
    with JavaScript only where `if()` and style queries are absent.
 
-### The format of the output
+### Format of the output
 
 Give a structured report with these parts:
 

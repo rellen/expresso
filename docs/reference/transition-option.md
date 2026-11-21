@@ -1,4 +1,4 @@
-# The transition option
+# `transition` option
 
 The `transition` option gives the transition from one slide to the next in the present
 view.
@@ -13,7 +13,7 @@ view.
 `Expresso.Builder` takes the same option, such as `deck(slides, transition: :slide)` and
 `slide("second", transition: :zoom)`.
 
-## The kinds
+## Kinds
 
 ### `:fade`
 
@@ -79,7 +79,7 @@ For the steps and a complete deck, see
   with the higher number of the two.
 - With the deck option `loop true`, the move from the last slide to the first slide goes
   forward, and the first slide gives the kind. See
-  [the loop option](advance-option.md#the-values-of-loop).
+  [the loop option](advance-option.md#values-of-loop).
 - The browser must have the View Transitions API. A browser without it shows the next slide at
   once.
 - A reader who asks for reduced motion gets no transition.

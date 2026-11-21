@@ -1,4 +1,4 @@
-# The browser tests
+# Browser tests
 
 The tests of `test/e2e/` render a deck to an HTML file, open the file in Chromium, and
 operate the presenter as a user does. They press keys, click, tap, swipe, read computed

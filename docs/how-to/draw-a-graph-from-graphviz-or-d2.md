@@ -162,7 +162,7 @@ end
 To change one color of the theme for a graph of D2, change its custom property with the
 [css option](../reference/css-option.md). An example is
 `.diagram-d2 { --graph-B4: var(--chart-4); }`.
-[The colors and the font of a graph](../reference/diagram-element.md#the-colors-and-the-font-of-a-graph)
+[The colors and the font of a graph](../reference/diagram-element.md#colors-and-font-of-a-graph)
 lists the properties.
 
 ## Give the graph the font of your theme

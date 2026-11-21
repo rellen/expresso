@@ -4,9 +4,9 @@ This document gives a plan for a `diagram` that takes the source of a graph, in 
 language of Graphviz or of D2, and the record of its result. The render runs the tool, and
 the deck animates the nodes and the edges with the parts of the `diagram` element. The code
 contains this plan. The document records ten decisions, and each is settled. The last
-section, "The result", tells what changed during the work. Issue #386 holds the same plan.
+section, "Result", tells what changed during the work. Issue #386 holds the same plan.
 
-## The problem
+## Problem
 
 A talk often shows a graph: the services of a system, the states of a process, or the
 modules of a program. Graphviz and D2 calculate the layout of such a graph from a short
@@ -35,7 +35,7 @@ tool. The test found these problems:
 - **A screen reader gets the text in the order of the file.** D2 writes no `<title>`, and
   the order of the file is not the order of the graph.
 
-## The constraints
+## Constraints
 
 - The output stays one HTML file, and the presenter script does not calculate a layout.
   The render runs the tool, as the render calculates the layout of a chart.
@@ -51,7 +51,7 @@ tool. The test found these problems:
 - The watch mode renders the deck again after a change of the source.
 - The handout view and paper show each step that the present view can show.
 
-## The facts about the two tools
+## Facts about the two tools
 
 These facts come from Graphviz 2.43.0 and D2 0.7.1 in a session on Linux x86_64.
 
@@ -72,9 +72,9 @@ These facts come from Graphviz 2.43.0 and D2 0.7.1 in a session on Linux x86_64.
 
 The ELK layout of D2 runs inside the binary of D2, so D2 needs no Java and no Node.
 
-## The plan
+## Plan
 
-### The entity
+### Entity
 
 The `diagram` element takes a source file. The extension of the file selects the tool:
 
@@ -108,12 +108,12 @@ The diagram gets these options:
 | `layout` | For D2, `:elk` or `:dagre`. For Graphviz, `:dot`, `:neato`, `:fdp`, `:sfdp`, `:circo` or `:twopi`. | The layout engine. The default is `:elk` for D2 and `:dot` for Graphviz. |
 | `edges` | `:follow` or `:own` | `:follow` shows an edge from the step where both of its ends show. `:own` gives an edge only the steps of its own part. The default is `:follow`. |
 | `colors` | `:theme` or `:tool` | `:theme` gives the graph the colors of the theme. `:tool` keeps the colors of the tool. The default is `:theme`. |
-| `font` | The path of a directory with TTF files | The font of the text. The default is the font of the built-in theme. See "The fonts". |
+| `font` | The path of a directory with TTF files | The font of the text. The default is the font of the built-in theme. See "Fonts". |
 
 A verifier refuses `layout`, `edges`, `colors` and `font` for an SVG file, and a layout that
 is not a layout of the tool.
 
-### The run of the tool
+### Run of the tool
 
 A module for each tool runs the tool with `System.cmd/3`. The module sends the source to
 the standard input, and it reads the SVG from the standard output.
@@ -137,7 +137,7 @@ message of the tool and the path of the source.
 
 `Expresso.DeckFile` reads the source, so the watch mode sees each change of the source.
 
-### The cache
+### Cache
 
 D2 with ELK takes about 2 s for a small graph. The watch mode renders the whole deck after
 each change, so a deck with five graphs would wait 10 s after a change of the text of one
@@ -147,7 +147,7 @@ The watch mode therefore keeps the SVG of each source in a cache. The key is the
 tool, its version, its arguments, the font and the source. A render from the command line runs each
 tool one time and does not need the cache.
 
-### The names of the parts
+### Names of the parts
 
 The render gives each node, edge and container an `id`, so a part names it in the words of
 the source. The render keeps an `id` that the source gives.
@@ -167,7 +167,7 @@ A part with a name that the graph does not have stops the render, as a part of a
 does now. The message lists the names that the graph has, because the author cannot read
 the names in the SVG.
 
-### The edges that follow their nodes
+### Edges that follow their nodes
 
 The render knows the two ends of each edge from its name. With `edges :follow`, an edge
 without its own part gets the steps where both of its ends show. An end without a part
@@ -176,7 +176,7 @@ shows at each step.
 An edge with its own part keeps the steps of its part. Thus an author can show an edge
 later than its nodes, for example to show a new connection.
 
-### The colors
+### Colors
 
 With `colors :theme`, the render and the theme change the colors of the tool:
 
@@ -200,7 +200,7 @@ A rule in the style sheet of D2 has a lower specificity than a rule of the theme
 `Expresso.SvgCopy` puts each selector of the file in `:where()`. Thus the rules of the
 theme apply. The dark variant of a theme changes the graph with the slide.
 
-### The fonts
+### Fonts
 
 The text of a graph gets the font of the slide. Each tool measures the text with the font
 that it gets, and it calculates the size of each box from that measure. Therefore the render
@@ -228,7 +228,7 @@ A deck with a different font, from a theme or from the `css` option, gives the T
 that font with the `font` option. The render cannot read a font from the CSS of the deck.
 Without the option, the tool gets the font of the built-in theme.
 
-### The views
+### Views
 
 The diagram is one SVG for each view, as now. The handout view and paper show each step,
 because the steps are the steps of the parts.
@@ -240,7 +240,7 @@ The list holds each container with its nodes, and each node with the edges that 
 such as "web, to api". The style sheet hides the list from the eye. The `alt` option keeps
 its effect: the diagram becomes one image with that name, and the list goes away.
 
-### The tests
+### Tests
 
 The tests that run a tool need that tool, so they get the tags `:graphviz` and `:d2`.
 `mix test` excludes them, as it excludes `:e2e`. A test without a tool uses an SVG that the
@@ -252,7 +252,7 @@ a remote session refuses a download from a repository that the session does not 
 the hook builds D2 with `go install oss.terrastruct.com/d2@<version>`. The proxy lets Go
 get the modules.
 
-## The alternatives
+## Alternatives
 
 - **A new element, such as `graph`.** A new element would repeat the parts, the width, the
   morph and the copies of `diagram`. A graph is a diagram that the render draws, so the same
@@ -272,7 +272,7 @@ get the modules.
 - **Mermaid.** `mermaid-cli` needs a browser to calculate the layout, and a file from
   `mermaid-cli` already works as a `diagram`. Mermaid can come later with the same plan.
 
-## The decisions
+## Decisions
 
 1. **The `diagram` element takes the source, and the extension selects the tool.** A new
    element would repeat most of `diagram`.
@@ -282,7 +282,7 @@ get the modules.
 3. **The default layout of D2 is ELK.** ELK gives the better layout, and dagre is 7 times
    faster. The cache of the watch mode hides the time of ELK.
 4. **The render gives each element an `id` from the source.** The names of the table in
-   "The names of the parts" are the words of the source. A second edge between the same
+   "Names of the parts" are the words of the source. A second edge between the same
    ends gets `:2`.
 5. **An edge follows its nodes by default.** `edges :follow` is the default, and
    `edges :own` is for a deck that gives each edge its own steps.
@@ -310,7 +310,7 @@ get the modules.
     6. The list for a screen reader.
     7. A guide in `docs/how-to/`, an example deck for each tool, and their GIFs.
 
-## The result
+## Result
 
 The stack of pull requests #387, #388, #390, #391, #392, #393 and the pull request of the
 guide holds the code. These parts are different from the plan:

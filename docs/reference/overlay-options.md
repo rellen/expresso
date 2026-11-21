@@ -1,9 +1,9 @@
-# The overlay options
+# Overlay options
 
 These options animate the elements of a slide. An overlay divides a slide into steps. The
 first step is step 1. For the design, see [Overlays](../overlays.md).
 
-## The forms of a step specification
+## Forms of a step specification
 
 `at` and `on` take the same forms.
 
@@ -42,7 +42,7 @@ The way in which an element shows and hides at the steps of its `at` option.
 | `:fly_right` | The element fades in and moves right by 1rem to its place. |
 | `:wipe` | A clip opens the element from left to right. The element does not fade. |
 | `:blur` | The element fades in from a blur of 0.2rem to sharp. |
-| `:type` | The text of the element shows one character at a time. The element does not fade. See [The effect `:type`](#the-effect-type). |
+| `:type` | The text of the element shows one character at a time. The element does not fade. See [The effect `:type`](#effect-type). |
 
 An element, a slide and the deck take the option. An element uses the nearest value: its
 own value, then the value of the nearest parent, then the slide, then the deck. A list
@@ -60,7 +60,7 @@ The `css` option of the deck can give more effects. See [The css option](css-opt
 
 ![The items of a list fly up one after the other, and the last item flies out after a step back](https://raw.githubusercontent.com/rellen/expresso/media/overlay-effect-list.gif)
 
-### The effect `:type`
+### Effect `:type`
 
 `effect :type` shows the text of an element one character at a time, with a cursor after
 the newest character. For the design, see [The typewriter effect](../typewriter-effect.md).
@@ -117,7 +117,7 @@ step specification.
 | --- | --- |
 | `state: :alert` | The theme draws an outline around the element. A line or an arrow of the `shape` element gets a stroke that is 4px wider, and no outline. |
 | `state: :dim` | Each color of text in the element changes to the dimmed color of its role. An image, an SVG file, an embed and a video show at the dim opacity of the theme. |
-| `state: :highlight` | The theme draws a bar in the accent color at the left of the element. See "The bar of the state `highlight`" below. |
+| `state: :highlight` | The theme draws a bar in the accent color at the left of the element. See "Bar of the state `highlight`" below. |
 | `set: [x: "-300px", y: "0px"]` | The element moves by that distance. A length in pixels becomes smaller with the slide in a small window. See [The size of a slide](slide-size.md). |
 | `set: [scale: 1.5]` | The element changes its size by that factor. |
 | `set: [rotate: "-8deg"]` | The element turns by that angle. |
@@ -131,7 +131,7 @@ also be in a part of a diagram or of a formula. In a diagram, `x` and `y` are in
 the SVG file. A part inside a `text` element of the file, such as a `tspan`, can fade, dim and
 change its color. It cannot move or get an outline.
 
-### The bar of the state `highlight`
+### Bar of the state `highlight`
 
 The state `highlight` marks the element in focus with a bar at its left. The bar has the
 place, the width and the color of the bar that a line of code in focus gets.
@@ -396,7 +396,7 @@ entities and the state `dim`.
 | a number, such as `1200` | That number of milliseconds |
 
 An element with `effect :type` reads the option in a different way. See
-[The effect `:type`](#the-effect-type).
+[The effect `:type`](#effect-type).
 
 ![Four boxes that move with different speeds](https://raw.githubusercontent.com/rellen/expresso/media/overlay-speed.gif)
 
@@ -413,7 +413,7 @@ The change of the speed during each animation of an element.
 
 ![Four boxes that move with different easings](https://raw.githubusercontent.com/rellen/expresso/media/overlay-easing.gif)
 
-## The rules of `speed` and `easing`
+## Rules of `speed` and `easing`
 
 An element, a slide and the deck take both options. An element uses the nearest value, as
 for `effect`: its own value, then the value of the nearest parent, then the slide, then

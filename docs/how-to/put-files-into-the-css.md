@@ -51,7 +51,7 @@ check measures the contrast of the text on the picture. See
 Make sure that the font license lets you put the font into a document that you give to other
 people.
 
-## The complete deck
+## Complete deck
 
 This deck gives each heading a band with the picture `examples/logo.png`. The CSS file is
 `examples/animations/styles/band.css`, so its `url()` starts from `styles/`:

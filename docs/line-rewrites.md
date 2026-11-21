@@ -1,13 +1,13 @@
-# The next line by a rewrite
+# Next line by a rewrite
 
 This document gives the design for a `rewrite` entity of a derivation. The entity makes the
 next line from a line before it by a substitution or by a rule, so the author does not write
 the new line by hand. The render then writes the new line, its links and its copies. The
 code contains this design. The document records ten decisions, and each is settled. Its
-last section, "The result", tells what changed during the work. Issue #478 holds the same
+last section, "Result", tells what changed during the work. Issue #478 holds the same
 plan.
 
-## The problem
+## Problem
 
 With the links of `docs/line-links.md`, each new line of a derivation tells which of its
 parts come from the line before it. The author must still write the whole new line. For a
@@ -21,7 +21,7 @@ Many talks make a substitution:
 - Apply an equation as a rule, such as `a (b + c) = a b + a c`.
 - Replace a bound variable with an argument, in a β-reduction.
 
-## The constraints
+## Constraints
 
 - A `rewrite` makes a `line` of `docs/math-parts.md` with the links of `docs/line-links.md`
   and the copies of `docs/part-copies.md`. The render, the presenter and the style sheet
@@ -63,7 +63,7 @@ rewrite "=", rule: {~S"a\,(b + c)", ~S"a\,b + a\,c"}, vars: ~w(a b c)
 The render makes the line `y = k\,x + k\,h`. Each variable of the right side is a copy of
 the symbols that it matched, and each copy moves from the old line.
 
-## The decisions
+## Decisions
 
 | Number | Question | Decision |
 | --- | --- | --- |
@@ -78,7 +78,7 @@ the symbols that it matched, and each copy moves from the old line.
 | 9 | A pattern | `rule: {left, right}` and `vars` match the left side in the old line, or in the part of `replace`. A variable binds one atom: a symbol, a brace group or a group in parentheses. The match skips spaces such as `\,`. The first match from the left wins, and the render stops for no match. |
 | 10 | The steps | A rewrite takes three steps of the counter of `reveal`: the occurrences and the source of `by` get a color, then each kept symbol moves, then each copy moves. The default reason is `replace := by`. Seven pull requests. `examples/animations/y_combinator.exs` writes each line after the first with `rewrite`, and the how-to guide gets an example of a rule with a GIF. |
 
-## The design
+## Design
 
 - **The parser.** `Expresso.Element.Math.Latex` reads LaTeX into a tree of atoms: a symbol, a
   command with its brace groups, a brace group, a script, and a space. Each atom keeps its
@@ -98,7 +98,7 @@ the symbols that it matched, and each copy moves from the old line.
   the links of the kept symbols take the second step, and the links of the new content take
   the third step.
 
-## The stack
+## Stack
 
 Each pull request is based on the one before it.
 
@@ -111,7 +111,7 @@ Each pull request is based on the one before it.
 7. `examples/animations/y_combinator.exs` with `rewrite`, and the guide with an example of
    a rule and its GIF.
 
-## The progress
+## Progress
 
 | Pull request | State |
 | --- | --- |
@@ -123,7 +123,7 @@ Each pull request is based on the one before it.
 | 6. The pattern `rule` | Done. `Expresso.Element.Math.Rule.match/6` finds the first match of the left side, from the left and from the outside in, and binds each variable to one operand. It gives the first binding of each variable the part `var-k-x` and the match the part `rule-k` in the old line. The rewrite then replaces `rule-k` with the right side as a template, with `\\use{var-k-x}` for each variable. A match does not cross a `\\part` or a `\\from` of the old line. |
 | 7. The examples and the guide | Done. `examples/animations/y_combinator.exs` has one line and four rewrites: the unfold of `Y`, two β-reductions and a template. The guide to a proof shows it. `docs/how-to/explain-a-formula-step-by-step.md` shows `examples/animations/math_rule.exs`, and `mix expresso.gifs` records `math-rule.gif`. The copy of a link now takes the colors of the parts inside its sub-term on the same symbols, and the parts around the sub-term reach it through `data-el`. |
 
-## The result
+## Result
 
 The seven pull requests of the stack contain the design. These parts are different from the
 plan, or the plan did not tell them:

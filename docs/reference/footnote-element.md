@@ -1,4 +1,4 @@
-# The footnote element
+# `footnote` element
 
 The `footnote` element gives a source or a note at the bottom of a slide. The handout view
 and paper also get a page with the sources of each slide.
@@ -18,7 +18,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `footnote("The reviews of a conference in 2024.", at: [from: 2])`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -30,7 +30,7 @@ The element also takes the overlay options, such as `at`, `effect` and the `on` 
 [the overlay options](overlay-options.md). The `auto_reveal` option of a slide does not
 give a footnote a step of its own, so a footnote without `at` shows at each step.
 
-## The place and the number
+## Place and number
 
 Write a footnote at the level of the slide. The compiler refuses a footnote inside an
 element, such as a text box. See [The places of the elements](placement.md).
@@ -45,14 +45,14 @@ template thus gets the list, with no change to the template.
 | A mark in the text | Write the number in the text yourself, such as `<sup>1</sup>`. Do not write it in the footnote, because the list gives the number. |
 | A footnote at a step | The footnote keeps its number and its space at each step, so the list does not move. |
 
-## The page of the sources
+## Page of the sources
 
 The handout view and paper show a page with the title "Sources" after the last slide. The
 page holds the footnotes of each slide under the number and the name of the slide. A slide
 with no footnote does not show on the page, and a deck with no footnote has no page. The
 present view, the speaker view and the overview do not show the page.
 
-## The HTML and the colors
+## HTML and colors
 
 The document writes an `ol` element with the class `footnotes` after the slide template,
 and an `li` element with the class `footnote` for each footnote. The page of the sources is

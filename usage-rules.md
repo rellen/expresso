@@ -3,7 +3,7 @@
 Expresso makes one HTML document from a deck of slides. You write the deck in a DSL of
 Elixir, render it with `mix expresso`, and a browser presents the document.
 
-## The shape of a deck
+## Shape of a deck
 
 A deck is a module with `use Expresso`. This is a complete deck file, such as `talk.exs`:
 
@@ -68,7 +68,7 @@ mix expresso talk.exs talk.html --card card.png # the picture of a link preview,
 - `--card` writes a PNG file of 1200 by 630 pixels from slide 1. `--card-slide 2` gives slide 2.
 - When the `card` option of the deck names a file that does not exist, the render stops. Give that path to `--card`.
 
-## The steps of a slide
+## Steps of a slide
 
 An overlay divides a slide into steps. Step 1 is the first step, and the key `j` goes to
 the next step.
@@ -116,7 +116,7 @@ end
 - A child shows only at the steps of its parent.
 - Use `reveal true` for a list. Do not give each item its own `at`.
 
-## The elements
+## Elements
 
 | Element | Use | A short form |
 | --- | --- | --- |
@@ -146,7 +146,7 @@ end
 - Write LaTeX in a sigil with no escape, such as `~S"\frac{a}{b}"`.
 - A `math` element with `tex` and a graph of Mermaid need Node at the render.
 
-## The options of a deck
+## Options of a deck
 
 | Option | Effect |
 | --- | --- |

@@ -154,7 +154,7 @@ end
 To change one color of the theme for a diagram of Mermaid, change its custom property with
 the [css option](../reference/css-option.md). An example is
 `.diagram-pele { --pele-accent: var(--chart-3); }`.
-[The colors and the font of a graph](../reference/diagram-element.md#the-colors-and-the-font-of-a-graph)
+[The colors and the font of a graph](../reference/diagram-element.md#colors-and-font-of-a-graph)
 lists the properties.
 
 ## Give the diagram the font of your theme

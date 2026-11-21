@@ -1,4 +1,4 @@
-# The audio element
+# `audio` element
 
 The `audio` element plays a sound file in a slide. The document holds each file one time,
 and the sound plays in the present view at the steps of the element.
@@ -15,7 +15,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `audio("chime.ogg", title: "The chime", loop: true)`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ end
 | `title` | A string, required | The name of the sound for a screen reader. The handout view and paper show it with a note symbol. |
 | `loop` | `true` or `false` | Play the sound again from the start at its end. The default is `false`. |
 | `controls` | `true` or `false` | Show the controls of the browser on the slide. The default is `false`. |
-| `external` | `true` or `false` | Keep the file next to the document, in place of a data URI in the document. The default is [the external option](external-option.md) of the deck, or `false`. See "The file". |
+| `external` | `true` or `false` | Keep the file next to the document, in place of a data URI in the document. The default is [the external option](external-option.md) of the deck, or `false`. See "File". |
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
@@ -47,7 +47,7 @@ A browser plays a sound only after the first key or click of the presenter in th
 A sound of the first slide therefore starts at the first key that changes the step, the
 view or the screen. A sound on a later slide starts when its step shows.
 
-## The controls
+## Controls
 
 Without `controls`, the present view shows nothing in the place of the element. With
 `controls true`, the slide shows the controls of the browser. The sound still plays at its
@@ -55,7 +55,7 @@ step, and the presenter can pause it, play it again or change its volume. A paus
 the controls stays after a step and after a black screen, the menu or the overview. A
 click on the controls goes to the controls, and not to the presenter.
 
-## The file
+## File
 
 The document holds each file one time, as a data URI, so a long sound makes a large
 document. Two elements with the same path share the file. A short sound in the Ogg format

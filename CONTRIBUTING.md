@@ -19,7 +19,7 @@ This document tells you how to make a change to Expresso and send it as a pull r
 The maintainer merges the pull request. A change that needs more than one pull request goes
 as a stack, and "Git" in `CLAUDE.md` tells how to open one.
 
-## The documents for a contributor
+## Documents for a contributor
 
 [`docs/development.md`](docs/development.md) lists a page for each topic, such as the
 browser tests, the binary, the workflow and the presenter script. These documents give the

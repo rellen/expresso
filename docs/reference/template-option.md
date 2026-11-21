@@ -1,4 +1,4 @@
-# The template option
+# `template` option
 
 The `template` option selects a template, which makes the HTML for a part of each slide. A
 deck template makes the header and the footer. A slide template makes the body of the
@@ -16,7 +16,7 @@ slide. For the steps, see [Make templates of your own](../how-to/make-templates.
 `deck(slides, template: MyDeckTemplate, slide_template: MySlideTemplate)` and
 `slide("first", template: MySlideTemplate)`.
 
-## The values
+## Values
 
 | Value | Template |
 | --- | --- |
@@ -144,5 +144,5 @@ end
   `./priv/templates/slides/` before a render. A module in one of these files is available
   as a template.
 - The watch mode renders again after a change to a file in `./priv/templates/`.
-- For the design of the templates, see "The templates" in
+- For the design of the templates, see "Templates" in
   [the architecture](../architecture.md).

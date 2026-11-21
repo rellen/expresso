@@ -36,7 +36,7 @@ defmodule Expresso.Watch.Server do
   This module contains the server and the script, so the two always change
   together. The file `version` and the script are internal: a later release
   of Expresso can push the reload over a WebSocket, and the user sees no
-  difference. The section "The watch mode" of `docs/architecture.md` gives the
+  difference. The section "Watch mode" of `docs/architecture.md` gives the
   details.
   """
 

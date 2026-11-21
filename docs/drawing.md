@@ -1,18 +1,18 @@
-# The drawing
+# Drawing
 
 This document gives the design for the drawing of the presenter: lines that the presenter
 draws on a slide during the talk, with a pen or with a highlighter. The code contains this
 design. Issue #398 asked for it. The document records ten decisions, and each is settled.
-Its last section, "The result", tells what changed during the work.
+Its last section, "Result", tells what changed during the work.
 
-## The problem
+## Problem
 
 A question in a talk often needs a circle around a part of a slide, or a line that joins
 two parts. PowerPoint has ink, reveal.js has a plugin for a chalkboard, and Slidev has
 drawings. Expresso had the `shape` element for the marks that the author plans, and no
 way to draw during the talk.
 
-## The plan
+## Plan
 
 1. The presenter program gets the fields `draw` and `highlighter` of the state. The key
    `x` changes `draw`, the key `h` changes `highlighter`, and the key `c` calls the
@@ -22,7 +22,7 @@ way to draw during the talk.
    the lines of the slide that shows, and `dom.ts` writes a path for each line.
 4. Each change of the drawing goes to the other window in a message `drawing`.
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -61,7 +61,7 @@ Each decision is settled.
     reads no change. The overview, the menu, a black screen, the handout view and paper
     show no drawing.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 
@@ -80,10 +80,10 @@ The code follows the plan, with these changes:
    document names no address of a network, so the script reads the namespace of the
    element that the renderer wrote.
 
-`docs/reference/presenter.md` has the section "The drawing", and
+`docs/reference/presenter.md` has the section "Drawing", and
 `docs/how-to/present-a-deck.md` has the section "Draw on a slide".
 
-## The limits
+## Limits
 
 - A reload of the present view removes the drawing.
 - The drawing has no key to remove only the last line.

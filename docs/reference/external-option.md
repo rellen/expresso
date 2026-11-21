@@ -1,4 +1,4 @@
-# The external option
+# `external` option
 
 The `external` option keeps the file of an element next to the document, in place of a
 data URI in the document. The option of the deck gives the default of each `image`,
@@ -24,7 +24,7 @@ end
 `Expresso.Builder` takes the same options, such as `deck(slides, external: true)` and
 `image("team.jpg", alt: "The team", external: true)`.
 
-## The values
+## Values
 
 | Where | Value | Effect |
 | --- | --- | --- |
@@ -33,7 +33,7 @@ end
 | An element | `external true` | The file of this element stays next to the document. |
 | An element | `external false` | The file of this element goes into the document, also in a deck with `external true`. |
 
-## The elements
+## Elements
 
 | Element | With `external true` |
 | --- | --- |
@@ -49,7 +49,7 @@ These files stay in the document, also in a deck with `external true`:
 - a file of [the css option](css-option.md),
 - a font and an icon.
 
-## The directory
+## Directory
 
 The render writes a copy of each file into a directory next to the output file:
 
@@ -69,7 +69,7 @@ The render writes a copy of each file into a directory next to the output file:
 The watch mode, `--check`, `--pdf` and `--png` work with such a deck. See
 [A file next to the document](video-element.md#a-file-next-to-the-document).
 
-## The error
+## Error
 
 The output must be a file. With `-`, the standard output, the document has no directory
 for the copies, and the renderer raises an `ArgumentError` that names the first file:

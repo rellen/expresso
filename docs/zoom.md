@@ -1,18 +1,18 @@
-# The zoom
+# Zoom
 
 This document gives the design for the zoom of the presenter: a part of a slide that
 fills the window during the talk. The code contains this design. Issue #399 asked for it.
-The document records ten decisions, and each is settled. Its last section, "The result",
+The document records ten decisions, and each is settled. Its last section, "Result",
 tells what changed during the work.
 
-## The problem
+## Problem
 
 A slide with much detail is hard to read from the back of a room. A question can ask
 about a detail that the slide shows small, such as one line of a block of code or one row
 of a table. reveal.js zooms to an element at a click with the Alt key, and PowerPoint has
 a zoom in the slide show. Expresso had no zoom.
 
-## The plan
+## Plan
 
 1. A click with the Alt key on a slide finds the element under the mouse. `main.ts`
    makes an area from the box of its content, and `zoom.ts` makes the scale and the move
@@ -23,7 +23,7 @@ a zoom in the slide show. Expresso had no zoom.
 4. The presenter program gets the field `zoom` of the state. The key `z` changes it, and
    a click with no key then zooms. The key `Esc` calls the built-in function `zoom_out`.
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -62,7 +62,7 @@ Each decision is settled.
     each time, so it reads no change. The transform uses the speed and the easing of the
     theme, and a reader who asks for reduced motion gets no change in progress.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 
@@ -92,10 +92,10 @@ The code follows the plan, with these changes:
    clicks at a part of the window, and the recorder then takes the frames of the
    transition.
 
-`docs/reference/presenter.md` has the section "The zoom", and
+`docs/reference/presenter.md` has the section "Zoom", and
 `docs/how-to/present-a-deck.md` has the section "Zoom into a part of a slide".
 
-## The limits
+## Limits
 
 - In full screen, the browser uses `Esc` to leave full screen, and the script does not
   get the key. Click with the Alt key again, or press `z`.

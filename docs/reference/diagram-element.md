@@ -1,4 +1,4 @@
-# The diagram element
+# `diagram` element
 
 The `diagram` element shows an SVG file as a part of the document. Each `part` names an
 element of the file, and that element can show, hide, move or change at steps.
@@ -21,7 +21,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `diagram("flow.svg", width: "60%", elements: [part("arrow", at: [from: 2])])`.
 
-## The options of the diagram
+## Options of the diagram
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -33,11 +33,11 @@ end
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 | `layout` | For Graphviz, `:dot`, `:neato`, `:fdp`, `:sfdp`, `:circo` or `:twopi`. For D2, `:elk` or `:dagre`. | The layout engine of the tool. The default is `:dot` for Graphviz and `:elk` for D2. Pele has one layout, so a Mermaid diagram takes no `layout`. |
-| `edges` | `:follow` or `:own` | When an edge of a graph without its own part shows. The default is `:follow`. See [The edges of a graph](#the-edges-of-a-graph). |
-| `colors` | `:theme` or `:tool` | The colors of a graph. The default is `:theme`. See [The colors and the font of a graph](#the-colors-and-the-font-of-a-graph). |
+| `edges` | `:follow` or `:own` | When an edge of a graph without its own part shows. The default is `:follow`. See [The edges of a graph](#edges-of-a-graph). |
+| `colors` | `:theme` or `:tool` | The colors of a graph. The default is `:theme`. See [The colors and the font of a graph](#colors-and-font-of-a-graph). |
 | `font` | The path of a directory with TTF files | The font of the text in a graph. The default is the font of the built-in theme. A path is relative to the root option of the deck. |
 
-## The options of a part
+## Options of a part
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -92,7 +92,7 @@ font or the program of the tool. D2 can import a different file of D2 into a sou
 mode does not find a change to that file, so save the source again after such a change.
 
 The graph gets the colors and the font of the theme. See
-[The colors and the font of a graph](#the-colors-and-the-font-of-a-graph).
+[The colors and the font of a graph](#colors-and-font-of-a-graph).
 
 ## A graph from D2
 
@@ -444,7 +444,7 @@ Pele is a library in JavaScript, and Expresso holds a copy of it. The render run
 the program `node` on the `PATH`, and the variable `EXPRESSO_NODE` gives a different path.
 A deck without a Mermaid diagram needs no Node.
 
-## The colors and the font of a graph
+## Colors and font of a graph
 
 A graph gets the colors of the theme, so it changes with the theme and with the dark variant
 of a theme. With `colors :tool`, the graph keeps the colors of the tool. Use `:tool` for a
@@ -510,7 +510,7 @@ An edge with a label gets the label in parentheses. For an edge with no directio
 name when it shows no text. With the `alt` option, the diagram is one image with that name, and
 it gets no list.
 
-## The edges of a graph
+## Edges of a graph
 
 An edge of a graph joins two nodes. With `edges :follow`, the default, an edge without its
 own part shows from the step where both of its ends show:
@@ -538,7 +538,7 @@ An edge with its own part keeps the steps of that part, so an edge can show late
 ends. With `edges :own`, an edge without a part shows at each step, as an element of an SVG
 file does.
 
-## The errors
+## Errors
 
 The render gives an error for these:
 
@@ -555,7 +555,7 @@ The DSL and `Expresso.Builder` give an error for the options `layout`, `edges`, 
 gives an error for a font directory without a TTF file, without a regular file, or with more
 than one family.
 
-## The theme and the SVG file
+## Theme and SVG file
 
 The document holds the SVG as elements, and not as a picture. The rules of the theme and
 of [the css option](css-option.md) thus apply to the parts of the diagram.
@@ -584,7 +584,7 @@ the class `diagram-part`. The theme moves the `g` element, so the part keeps its
 A part inside a `text` element of the file, such as a `tspan`, can fade, dim and change
 its color. It cannot move or get an outline.
 
-## The watch mode
+## Watch mode
 
 The watch mode renders the deck again after a change to the SVG file, or to the source of a
 graph. It runs the tool of a graph again only after a change that changes the graph. See

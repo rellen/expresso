@@ -1,21 +1,21 @@
-# The timed advance
+# Timed advance
 
 This document gives the design for a deck that goes to the next step after a time: the
 `advance` option of a slide and of the deck, the `loop` option of the deck, and the clock
 of the steps in the presenter. The code contains this design. Issue #402 asked for it. The
-document records ten decisions, and each is settled. Its last section, "The result", tells
+document records ten decisions, and each is settled. Its last section, "Result", tells
 what changed during the work.
 
 The issue has two parts. This document is for the first part. The second part is the
 rehearsal, which records the time of each slide, and it has its own pull request.
 
-## The problem
+## Problem
 
 Some talks move by time. A lightning talk such as Ignite or PechaKucha gives each slide a
 fixed time, and a deck on a screen at a stand runs with no presenter. PowerPoint and
 Keynote have a time for each slide. Expresso moved only at a key or at a click.
 
-## The plan
+## Plan
 
 1. The DSL gets the option `advance` of a slide and of the deck, and the option `loop` of
    the deck.
@@ -26,7 +26,7 @@ Keynote have a time for each slide. Expresso moved only at a key or at a click.
 4. `advance.ts` holds the rules of the clock of the step that shows. The present view
    goes to the next step when the time ends, and the speaker view shows the time left.
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -66,7 +66,7 @@ Each decision is settled.
     level open the document with `?paused`, which stops the clock at the load. A picture
     of a step is then a picture of that step.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 
@@ -90,7 +90,7 @@ The code follows the plan, with these changes:
 `docs/reference/advance-option.md` gives the options, and
 `docs/how-to/run-a-deck-by-time.md` gives the steps.
 
-## The limits
+## Limits
 
 - The handout view of the present view stops the clock, and the speaker view does not
   know this. Its time left then continues to count.

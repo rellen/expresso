@@ -2,7 +2,7 @@
 
 A step label is a short name for one step of a slide, such as "The restart". The speaker
 view shows the label of the current step after the position, and the menu of `m` shows
-the label of each step. See [The menu](presenter.md#the-menu).
+the label of each step. See [The menu](presenter.md#menu).
 
 ```elixir
 slide "restart" do
@@ -25,7 +25,7 @@ slide "restart" do
 end
 ```
 
-## The two forms
+## Two forms
 
 | Form | Where | The step that it names |
 | --- | --- | --- |
@@ -43,7 +43,7 @@ step with a label gets it after a colon, such as "Slide 4 of 13, step 4 of 4: Th
 `Builder.slide("restart", labels: ["The tree"], elements: [...])` and
 `Builder.pause(label: "The restart")`.
 
-## The errors
+## Errors
 
 The compiler gives an error for:
 

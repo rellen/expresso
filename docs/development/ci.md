@@ -1,8 +1,8 @@
-# The workflow
+# Workflow
 
 This page describes the workflow that checks a pull request on GitHub, and how its jobs get Zig.
 
-## The checks of a pull request
+## Checks of a pull request
 
 `.github/workflows/check.yml` runs the checks for a pull request and for a push to `main`.
 The jobs run in parallel on Linux, so the slowest of them gives their time:
@@ -122,7 +122,7 @@ necessary. The first `mix dialyzer` builds a PLT of approximately 570 modules, a
 operation takes approximately two minutes. The PLT stays in `_build`, so each
 `mix dialyzer` after the first takes a few seconds. Dialyzer reports no error at this time.
 
-## The runner
+## Runner
 
 Each job runs on `ubuntu-24.04`, and not on `ubuntu-latest`. A remote session also runs
 Ubuntu 24.04, so `apt-get` gives the same Graphviz to both, and the Erlang build for Ubuntu
@@ -131,7 +131,7 @@ Ubuntu 24.04, so `apt-get` gives the same Graphviz to both, and the Erlang build
 tests of Graphviz failed. To change the version of Ubuntu, change it here, in each job, and
 in the documents that name Ubuntu 24.04.
 
-## The time limits
+## Time limits
 
 Each job of `.github/workflows/check.yml` has `timeout-minutes`, so a job that hangs fails in
 minutes. Without a limit, GitHub stops a job after six hours. On 2026-10-23, the job `gifs` of

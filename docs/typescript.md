@@ -3,7 +3,7 @@
 This document gave a plan for the presenter script in TypeScript. The code contains the
 plan, and "Progress" gives the date of each step. The document ends with five decisions.
 
-## The constraint
+## Constraint
 
 One constraint holds. The output of Expresso is one HTML file that stands alone. The file
 holds the presenter script, and a person can open the file with no other file. A minified
@@ -13,7 +13,7 @@ Nothing else holds. The structure of the script today, and the form of the `scri
 element today, are results of a small first version. They are not constraints. The plan
 below changes both.
 
-## The script before the conversion
+## Script before the conversion
 
 Until 2026-09-13, `assets/main.js` was the presenter. It held the number of the current
 slide, and it read the keys `j`, `k` and `p`. It showed a slide with the inline
@@ -35,9 +35,9 @@ A conversion of 35 lines costs little. A conversion after the overlay work costs
 the overlay code then goes into the script without types and without tests. Therefore do
 the conversion first.
 
-## The design
+## Design
 
-### The source
+### Source
 
 Put the source in `assets/src/`, as a set of modules:
 
@@ -58,7 +58,7 @@ property. The option `erasableSyntaxOnly` in `tsconfig.json` makes the compiler 
 other syntax. Node runs a `.ts` file with such syntax directly, and the tests below need
 this.
 
-### The bundle
+### Bundle
 
 esbuild makes one script from the modules. It reads `main.ts`, it follows each `import`,
 it strips the types, and it writes one file in the IIFE format with `--minify`. The
@@ -78,7 +78,7 @@ The bundle goes to `priv/static/presenter.js`. Git does not hold this file, so a
 `.gitignore`. A minified file gives a diff that no person can read, and a build that is a
 part of `mix compile` needs no copy in Git.
 
-### The compile step
+### Compile step
 
 Add a Mix compiler, `Mix.Tasks.Compile.Presenter`, in `mix.exs`, and put it in front of
 the Elixir compiler:
@@ -90,7 +90,7 @@ compilers: [:presenter] ++ Mix.compilers()
 The compiler runs esbuild when a file under `assets/src/` is newer than the bundle. The
 order makes sure that the bundle exists before the Elixir compiler reads it.
 
-### The renderer
+### Renderer
 
 `Expresso.Renderer` reads `priv/static/presenter.js` with `File.read!/1` at compile time,
 as it reads `assets/main.js` today. Each file under `assets/src/` becomes an
@@ -101,7 +101,7 @@ The `script` element does not change. The renderer writes the bundle with
 `Phoenix.HTML.raw/1`, as it does today. Do not put the text `</script>` into a string in
 the source. That text closes the element early. esbuild does not escape it.
 
-### The type check
+### Type check
 
 esbuild strips the types, and it does not check them. `tsc --noEmit` checks them. Add
 `assets/tsconfig.json`:
@@ -127,7 +127,7 @@ Node needs the extension in an import, such as `import { next } from "./state.ts
 esbuild accepts this form. `tsc` accepts it with `allowImportingTsExtensions`, which needs
 `noEmit`. The option `types` gives the test files the types of `node:test`.
 
-### The tests
+### Tests
 
 Node runs a `.ts` file directly, and it has a test runner. Put the tests in
 `assets/test/`, and run them with `node --test assets/test/`. No other tool is necessary.
@@ -140,7 +140,7 @@ The tests cover `state.ts`. The Playwright recipe in `docs/development/browser-t
 and `main.ts`. Add one line to that recipe: make sure that `document.compatMode` is
 `CSS1Compat`, so that the result comes from the standards mode.
 
-### The tools
+### Tools
 
 Add `package.json` at the root of the repository, with `typescript`, `@types/node` and
 `prettier` as development dependencies, and with these scripts:
@@ -164,14 +164,14 @@ Each environment gets Node from its own source, and the tools from `package.json
 `mix compile` needs Node in no environment. The type check and the tests need Node, and a
 person runs them before a commit.
 
-### The documents
+### Documents
 
 - `CLAUDE.md` — add `npm run check` and `npm test` to the commands in "Build and test".
 - `docs/development.md` — add a section for the script: the source, the bundle, the
   check, the tests and the `compatMode` line in the Playwright recipe.
-- `docs/architecture.md` — in "The presenter", name `assets/src/` as the source and
-  `priv/static/presenter.js` as the bundle. In "The render pipeline", add the compiler.
-- `docs/overlays.md` — in "The JavaScript code", name `state.ts` for the rules and
+- `docs/architecture.md` — in "Presenter", name `assets/src/` as the source and
+  `priv/static/presenter.js` as the bundle. In "Render pipeline", add the compiler.
+- `docs/overlays.md` — in "JavaScript code", name `state.ts` for the rules and
   `dom.ts` for the attributes.
 
 ## Progress
@@ -188,7 +188,7 @@ came from the work, and the plan above did not give them:
 On 2026-09-13, the bundle of the presenter was 662 bytes. Chromium reports `CSS1Compat`, and the
 keys `j`, `k` and `p` give the same result as the script before the conversion.
 
-## The steps
+## Steps
 
 Do the steps in this order. Each step leaves the repository in a state that compiles and
 passes the checks.
@@ -214,7 +214,7 @@ passes the checks.
 10. Run each command in "Build and test" of `CLAUDE.md`, `npm run check` and `npm test`.
     Commit.
 
-## The decisions
+## Decisions
 
 The maintainer accepted proposals 1 to 4 on 2026-09-13, and proposal 5 later. The decisions
 are settled.
@@ -328,9 +328,9 @@ writes `assets/src/schema.ts`, which holds the type and the decoder of each valu
 bundle holds only the decoder of the message. On 2026-10-01, this change made the bundle
 go from 8,979 to 9,846 bytes minified, and from 3,702 to 4,054 bytes gzipped.
 
-## The lint
+## Lint
 
 On 2026-10-10, `npm run lint` added oxlint with the type-aware rules of `tsgolint`, and
 `mix check` began to run the four `npm` commands. The first run found one promise that
-nothing handled: the layout check in `main.ts`. "The lint and the format of the script" in
+nothing handled: the layout check in `main.ts`. "Lint and format of the script" in
 `docs/development/presenter-script.md` gives the rules and the reasons.

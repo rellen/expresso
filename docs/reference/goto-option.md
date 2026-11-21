@@ -1,4 +1,4 @@
-# The goto option
+# `goto` option
 
 The `goto` option makes an element a link to a slide and a step of the deck. A click on
 the link in the present view goes to that step.
@@ -31,7 +31,7 @@ end
 `text_area(text: "The summary", goto: [slide: 3, step: 2])` or
 `text_area(text: "The end", goto: [slide: "end"])`.
 
-## The values
+## Values
 
 | Value | Target |
 | --- | --- |
@@ -74,7 +74,7 @@ The deck must have the slide and the step:
 A click with a modifier, such as `Ctrl`, and a click with a button other than the main
 button go to the browser.
 
-## The keyboard and a screen reader
+## Keyboard and a screen reader
 
 The link is an HTML link with the address of its step, such as `#5.2`. `Tab` moves to the
 link, and `Enter` goes to its step. A screen reader reads the link as a link, with the

@@ -1,4 +1,4 @@
-# The root option
+# `root` option
 
 The `root` option of a deck gives the directory where each relative path of the deck starts.
 Without it, a relative path starts from the working directory of the command.
@@ -20,7 +20,7 @@ end
 `Expresso.Builder` takes the same option, such as `deck(slides, root: "talk")`. For the
 steps, see [Render a deck in your project](../how-to/render-a-deck-in-your-project.md).
 
-## The values
+## Values
 
 | Value | Directory |
 | --- | --- |
@@ -34,7 +34,7 @@ binary evaluate the file with `Code.eval_file/1`. In a deck from the standard in
 `cat deck.exs | mix expresso - -`, `__DIR__` is `"."`, so `root __DIR__` gives the working
 directory.
 
-## The paths that it changes
+## Paths that it changes
 
 | Path | Option |
 | --- | --- |
@@ -57,7 +57,7 @@ These paths stay as they are:
 - a path that the deck joins itself, such as `Path.join(@dir, "logo.png")`, when the result
   is absolute.
 
-## The errors
+## Errors
 
 The compiler reads a code file, a chart file, an icon file and a style sheet. It gives an
 error for a file that it cannot read, with the full path from the root. The renderer reads an

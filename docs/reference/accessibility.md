@@ -1,9 +1,9 @@
-# The accessibility of a deck
+# Accessibility of a deck
 
 This page gives what the document of a deck tells a screen reader, and what the deck must
 give. For the steps, see [Make a deck accessible](../how-to/make-a-deck-accessible.md).
 
-## The landmarks
+## Landmarks
 
 | Element | Role | Holds |
 | --- | --- | --- |
@@ -14,7 +14,7 @@ give. For the steps, see [Make a deck accessible](../how-to/make-a-deck-accessib
 
 The `main` element takes no box, so the views keep their layout.
 
-## The slides
+## Slides
 
 Each slide of the present view and each page of the handout view is a `section` with these
 attributes:
@@ -28,7 +28,7 @@ attributes:
 The name is the `heading` of the slide. Without a heading, it is the name of the slide.
 Without both, the label has the position only.
 
-### The heading of a slide
+### Heading of a slide
 
 Each slide and each page holds an `h1`, so a screen reader that moves from heading to
 heading reaches each slide.
@@ -39,12 +39,12 @@ heading reaches each slide.
 | The slide template writes no `h1` | An `h1` with the class `slide-hidden-heading`, which the style sheet hides from the eye. Its text is the heading, the name, or the position of the slide, such as `Slide 4 of 9`. |
 | The slide gives `sr_heading false` | No hidden `h1`. |
 
-## The title
+## Title
 
 The `title` element holds the name of the deck. A deck with no name takes the heading of
 its first slide with a heading, and a deck with no heading takes `Slides`.
 
-## The live region
+## Live region
 
 `div#announce` has the role `status`, so a screen reader reads each change of its text and
 does not stop what it reads. The screen and paper do not show it.
@@ -60,7 +60,7 @@ does not stop what it reads. The screen and paper do not show it.
 
 The region is empty at load.
 
-## The menu
+## Menu
 
 | Element | Role | State |
 | --- | --- | --- |
@@ -76,14 +76,14 @@ and the `Tab` key skip it.
 On a touch screen, the button of the menu opens the menu. It is a `button` with the name
 "Menu of the slides and their steps", and `aria-expanded` tells if the menu is open. Its
 box is 43.2 by 43.2 CSS pixels, so it is larger than the 24 by 24 CSS pixels of
-criterion 2.5.8 in WCAG 2.2. See [The presenter](presenter.md#the-button-of-the-menu).
+criterion 2.5.8 in WCAG 2.2. See [The presenter](presenter.md#button-of-the-menu).
 
-## The progress bar
+## Progress bar
 
 `div#progress` has the role `progressbar` with the name "Progress". `aria-valuenow` is the
 part of the deck before the current step, from 0 to 100, as the width of the bar shows it.
 
-## The elements
+## Elements
 
 | Element | What a screen reader gets |
 | --- | --- |
@@ -101,17 +101,17 @@ part of the deck before the current step, from 0 to 100, as the width of the bar
 | A part of a text at a later step | Nothing, as for an element. A part with a state shows at each step, and a screen reader reads it at each step. |
 | A text with `effect :type` | The whole text at once, at the step of the element. The characters that the eye sees have `aria-hidden`, so a screen reader does not read one letter at a time. |
 
-## The language
+## Language
 
 The `html` element has the `lang` attribute from [the lang option](lang-option.md) of the
 deck, and the default is `en`. A screen reader selects its voice from it.
 
-## The contrast
+## Contrast
 
 Each text of a theme keeps 4.5:1 on its background. A dimmed text keeps 3:1, or the ratio
 of [the dim_contrast option](dim-contrast-option.md). Give `dim_contrast 4.5` for a deck
 with small dimmed text, or for a deck that axe-core must pass. See
-[the theme option](theme-option.md#the-minimums).
+[the theme option](theme-option.md#minimums).
 
 ### More contrast
 
@@ -133,7 +133,7 @@ is then true. The document changes these parts for such a user:
 A user can ask the system for forced colors, such as the high contrast mode of Windows.
 The browser then replaces the colors of the page with the colors of the system.
 
-### The content of a slide
+### Content of a slide
 
 Each text of a slide takes a color of the system. A graphic keeps its colors on a plate:
 
@@ -149,7 +149,7 @@ Each text of a slide takes a color of the system. A graphic keeps its colors on 
 | A box of a tree that the `highlight` option dims | An opacity of 0.6, as a dimmed element. |
 | A code token in focus | A bar under the token, in the color `CanvasText`. |
 | A line of code in focus | A bar at the left of the line, in the color `CanvasText`. It also shows after the key `d`. |
-| An element with the state `highlight` | A bar at the left of the element, in the color `CanvasText`. See [the overlay options](overlay-options.md#the-bar-of-the-state-highlight). |
+| An element with the state `highlight` | A bar at the left of the element, in the color `CanvasText`. See [the overlay options](overlay-options.md#bar-of-the-state-highlight). |
 | The cursor of the effect `:type` | A border at the right of the newest character, in the color of the text. `--type-cursor-color` does not apply, and `--type-cursor-width` does. |
 | An `embed` | The page in the frame takes the colors of the system too. An outline of 1 pixel in the color `CanvasText` shows the edge of the frame. |
 | An `audio` element with controls | The controls of the browser, in the color scheme of the system. |
@@ -173,9 +173,9 @@ without controls has no panel, so it avoids the problem:
   video goes on from the same time.
 
 A video without controls has no sound. See
-[The controls in forced colors](video-element.md#the-controls-in-forced-colors).
+[The controls in forced colors](video-element.md#controls-in-forced-colors).
 
-### The parts of the presenter
+### Parts of the presenter
 
 The parts of the presenter take a color of the system, so each one shows:
 
@@ -192,11 +192,11 @@ A deck cannot change these colors in forced colors. The properties `--progress-c
 `--laser-color`, `--draw-pen-color` and `--draw-highlighter-color` apply only in the usual
 mode.
 
-## The motion
+## Motion
 
 A reader who asks for reduced motion gets no effect, no transition and no morph.
 
-## The keys
+## Keys
 
 The keys of the presenter are single characters, such as `j` and `p`, and `?` opens the
 list of keys. A key does nothing while the focus is in a field of text, such as the search

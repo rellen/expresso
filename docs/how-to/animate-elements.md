@@ -604,7 +604,7 @@ Examples.Typewriter
 - After a step back, the text shows at once. A reader who asks for reduced motion also
   sees the whole text at once.
 
-See [The effect `:type`](../reference/overlay-options.md#the-effect-type) for each rule.
+See [The effect `:type`](../reference/overlay-options.md#effect-type) for each rule.
 
 ## Dim the earlier items of a list
 

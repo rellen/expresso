@@ -1,4 +1,4 @@
-# The export options
+# Export options
 
 The options `--pdf`, `--png` and `--card` write a PDF of a deck, a PNG file of each slide, and
 the picture of a link preview. `mix expresso` and the binary take these options. A headless
@@ -14,14 +14,14 @@ mix expresso <input> [output] --card <file> --card-slide 2
 For the steps, see [Export a deck as PDF or as pictures](../how-to/export-a-deck.md). For
 the design, see [The export](../export.md).
 
-## The arguments
+## Arguments
 
 | Argument | Effect |
 | --- | --- |
 | `<input>` | The deck file, or `-` for the standard input. The export needs it. |
 | `[output]` | The file for the HTML. Without it, the export writes no HTML. `-` is an error, because the export writes a line for each file to the standard output. |
 
-## The options of the PDF
+## Options of the PDF
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -33,7 +33,7 @@ the design, see [The export](../export.md).
 
 | | `--pdf-pages slides` | `--pdf-pages handout` |
 | --- | --- | --- |
-| The pages | The last step of each slide. | The steps that [the handout option](presenter.md#the-handout-view) of each slide gives. |
+| The pages | The last step of each slide. | The steps that [the handout option](presenter.md#handout-view) of each slide gives. |
 | With `--pdf-steps all` | Each step of each slide. | Each step of each slide, as the key `a` gives. |
 | The size of a page | The size of `--size` in pixels, with no margin. The text has the size that it has in a window of that size. | The paper of `--pdf-paper`, landscape, with a margin of 1 cm. |
 | The colors | The theme of the deck. | The theme of paper, which is the default theme. See [The theme option](theme-option.md). |
@@ -41,7 +41,7 @@ the design, see [The export](../export.md).
 | The page of the sources | None. | After the last page, when a slide has a footnote. |
 | A chart or a tree with frames | The frame of the step. | Each frame, as paper shows it. |
 
-## The options of the PNG files
+## Options of the PNG files
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -60,7 +60,7 @@ number has the digits of the largest number, so a deck with 12 slides gives
 view with no progress bar. A file with the same name in the directory gets the new
 picture, and each other file of the directory stays.
 
-## The options of the card
+## Options of the card
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -90,7 +90,7 @@ picture, and each other file of the directory stays.
 - The export writes each file only after the browser made it, so an error leaves no part
   of a file.
 
-## The output and the exit status
+## Output and exit status
 
 The export writes one line for each option to the standard output:
 
@@ -118,7 +118,7 @@ and the exit status is 1.
 | `--pdf, --png and --card do not go with --watch or --check` | Run the check or the watch mode in a different command. |
 | `--pdf and --png take one --size` | The command gives `--size` more than one time. |
 
-## The browser
+## Browser
 
 The export looks for the browser as `--check=layout` does, in this sequence:
 

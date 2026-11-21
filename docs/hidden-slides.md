@@ -2,10 +2,10 @@
 
 This document gives the design for a slide that the talk skips, such as a backup slide for
 the questions after the talk. The code contains this design. Issue #401 asked for it. The
-document records twelve decisions, and each is settled. Its last section, "The result",
+document records twelve decisions, and each is settled. Its last section, "Result",
 tells what changed during the work.
 
-## The problem
+## Problem
 
 A talk often has slides that the presenter shows only when a question needs them: a detail
 of a chart, a slide of numbers, or an answer to a common question. PowerPoint and Keynote
@@ -13,7 +13,7 @@ can hide a slide, so the slide show skips it. In Expresso, each slide showed in 
 Thus the author put such slides after the last slide of the talk, and the progress bar and
 the slide numbers counted them.
 
-## The terms
+## Terms
 
 - The **talk** is the slides that are not hidden, in the sequence of the deck.
 - A **hidden slide** is a slide with `hidden true`. It keeps its place in the deck, and it
@@ -22,7 +22,7 @@ the slide numbers counted them.
   a hidden slide has a place too.
 - The **number** of a slide is its number in the talk. A hidden slide has no number.
 
-## The plan
+## Plan
 
 1. The slide option `hidden true` and the deck option `handout_hidden true`.
 2. `Expresso.Deck.number_slides/1` writes the place of each slide as `:slide_number` and
@@ -35,7 +35,7 @@ the slide numbers counted them.
 5. The renderer writes the numbers, the marks of the overview and of the menu, and the
    attributes that leave a hidden slide out of the handout view and of paper.
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -86,7 +86,7 @@ Each decision is settled.
     step, and `j` and `k` go only through the steps of the slide that shows. A verifier
     that refuses such a deck adds a rule for a case that has no use.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 
