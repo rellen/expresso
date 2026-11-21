@@ -1,4 +1,4 @@
-# The description and author options
+# `description` and `author` options
 
 The `description` option and the `author` option of a deck give a search engine a summary
 of the deck and the name of its author. Each option writes one `meta` element into the
@@ -21,7 +21,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `deck(slides, description: "How a supervision tree starts a process again.")`.
 
-## The options
+## Options
 
 | Option | Value | Tag in the document |
 | --- | --- | --- |
@@ -34,7 +34,7 @@ end
 - An option with an empty text writes no tag.
 - A search engine shows approximately 155 characters of a description.
 
-## The tags of each document
+## Tags of each document
 
 Each document has these tags, with no option:
 

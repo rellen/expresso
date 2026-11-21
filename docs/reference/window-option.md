@@ -1,4 +1,4 @@
-# The window option
+# `window` option
 
 The `window` option puts a code element, an image or an embed into a frame that looks like
 a window of an operating system. The frame has a bar with a title, and it can have the three
@@ -30,7 +30,7 @@ end
 [Show code on a slide](../how-to/show-code.md#put-the-code-into-a-window) gives an example
 deck with its recording.
 
-## The styles
+## Styles
 
 | Style | The bar | The corners |
 | --- | --- | --- |
@@ -42,7 +42,7 @@ deck with its recording.
 The dots take the colors that the theme has for the roles `danger`, `warning` and `success`,
 as the red, yellow and green dots of macOS.
 
-## The options
+## Options
 
 | Option | Where | Value | Effect |
 | --- | --- | --- | --- |
@@ -56,7 +56,7 @@ A code element with `src` and without `window_title` shows the name of its file,
 The frame does not change the steps of the element. The lines of a code element still show,
 dim and come into focus as their options give.
 
-## The look
+## Look
 
 A deck can change these custom properties in the `css` option:
 
@@ -69,7 +69,7 @@ A deck can change these custom properties in the `css` option:
 | `--window-shadow` | The shadow of the frame | a soft black shadow |
 | `--window-bar` | The height of the bar | `1.1rem` |
 
-## The HTML
+## HTML
 
 The element holds a `div` with the classes `window` and `window-<style>`, such as
 `window window-macos`. The frame holds:

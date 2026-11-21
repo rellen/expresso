@@ -50,5 +50,5 @@ time, or rehearse it again.
 The speaker view records the times of each talk, with or without `?rehearse`. Press `e`
 after the talk to see the time that each slide used.
 
-For each rule, see [The time of each slide](../reference/presenter.md#the-time-of-each-slide)
+For each rule, see [The time of each slide](../reference/presenter.md#time-of-each-slide)
 and [the advance option](../reference/advance-option.md).

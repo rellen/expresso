@@ -1,11 +1,11 @@
-# The color preferences of a user, and the new criteria of WCAG 2.2
+# Color preferences of a user, and new criteria of WCAG 2.2
 
 This document records an investigation of a deck in forced colors, with the preference
 for more contrast, and against three criteria that WCAG 2.2 added. Issue #571 asked for
 it. The document gives the state on 2026-11-15, a proposal for each defect, and two
 questions for the maintainer. No code changed.
 
-## The method
+## Method
 
 The browser was Chromium 159 (headless shell), with a window of 1280 by 720 pixels.
 Playwright gave the browser the preference with the context option `forcedColors`, and
@@ -65,7 +65,7 @@ correction.
 | A tree, a stat, a footnote, an icon | Each text and each line shows. |
 | A QR code | It keeps its black modules on its white square. |
 
-### The defects
+### Defects
 
 | Number | Part | What happens | Measurement |
 | --- | --- | --- | --- |
@@ -88,7 +88,7 @@ The rule that removes the `box-shadow` of the laser pointer also applies to the
 underline of the `highlight` state and to the cursor of the typewriter effect. The
 investigation did not measure these two.
 
-### The alternatives for the content of a slide
+### Alternatives for the content of a slide
 
 | Alternative | Effect | Cost |
 | --- | --- | --- |
@@ -105,7 +105,7 @@ the pen are parts of the presenter. They can use a color of the system, such as
 
 **Question 1 for the maintainer:** alternative A, B or C?
 
-## The preference for more contrast
+## Preference for more contrast
 
 `assets/style.css` has no rule for `prefers-contrast: more`, so the preference changes
 nothing.
@@ -134,7 +134,7 @@ The proposal has three parts:
 **Question 2 for the maintainer:** is this proposal correct, or does the preference stay
 with no effect?
 
-## The new criteria of WCAG 2.2
+## New criteria of WCAG 2.2
 
 | Criterion | Result | Measurement |
 | --- | --- | --- |
@@ -168,7 +168,7 @@ The investigation also found two facts that are not new criteria of WCAG 2.2:
 The last section of this document gives the results of issue #603 for the last two items,
 and for Firefox.
 
-## The plan for the tests
+## Plan for the tests
 
 The browser tests can keep the state known:
 
@@ -179,7 +179,7 @@ The browser tests can keep the state known:
    dimmed element is different from the current element.
 3. A test for the two controls of criterion 2.5.8 at the window size of the tests.
 
-## The issues
+## Issues
 
 The investigation gives four issues. Two of them wait for an answer to a question:
 
@@ -190,7 +190,7 @@ The investigation gives four issues. Two of them wait for an answer to a questio
 | Make the content of a slide readable in forced colors | F1, F2, F6, F7, F8 | Question 1. |
 | Give more contrast for `prefers-contrast: more` | The table of the roles | Question 2. |
 
-## The result
+## Result
 
 The maintainer answered the two questions on 2026-11-15:
 
@@ -231,7 +231,7 @@ slide smaller in a small window, and the parts of the presenter kept their size.
 
 Issue #609 settled the controls of a video in forced colors, which the section "The parts
 that stay open" gives. The maintainer selected the documents, and not a change of the
-code. See "The controls in forced colors" in `docs/reference/video-element.md`, and "A
+code. See "Controls in forced colors" in `docs/reference/video-element.md`, and "A
 video in forced colors" in `docs/reference/accessibility.md`.
 
 Issue #607 gave the state `highlight` from an `on` entity a mark. The theme draws a bar in
@@ -240,12 +240,12 @@ colors, the bar has the color `CanvasText`, so it has 21:1 on the canvas. A part
 diagram, a part of a formula and a series of a chart get no bar, because a pseudo-element
 does not show in an SVG or in MathML. `docs/dim-state.md` gives the design.
 
-## The parts that the first investigation did not measure
+## Parts that the first investigation did not measure
 
 Issue #603 asked for a measurement of the parts that the first investigation left out. This
 section gives the state on 2026-11-16, before and after the change for the issue.
 
-### The method of the second measurement
+### Method of the second measurement
 
 The browser was Chromium 159 (headless shell), with a window of 1280 by 720 pixels, in four
 modes: the usual mode, forced colors with the light scheme, forced colors with the dark
@@ -256,7 +256,7 @@ the cursor of the typewriter effect come from a run with motion, during the typi
 The default theme is light. Two parts also used the theme `:dracula`, because a dark theme
 on a white canvas can give a different defect.
 
-### The results
+### Results
 
 | Part | Forced colors, light scheme | Forced colors, dark scheme | `prefers-contrast: more` |
 | --- | --- | --- | --- |
@@ -294,7 +294,7 @@ These results need an explanation:
 - **Firefox.** This session has only Chromium, and the task did not allow an install. It is
   still not known if the Playwright option `forcedColors` has an effect in Firefox.
 
-### The change
+### Change
 
 | Part | Change |
 | --- | --- |
@@ -307,16 +307,16 @@ These results need an explanation:
 A browser test for each change is in `test/e2e/forced_colors_test.exs`, and it fails
 without the change.
 
-### The parts that stay open
+### Parts that stay open
 
 - **The controls of a video in forced colors.** The defect is in Chromium. A follow-up can
   report it to Chromium, or a deck can show its video without controls. Issue #609 settled
-  it with the documents. See "The result".
+  it with the documents. See "Result".
 - **The edge of an embed in forced colors.** The text of the page is readable, but the
   reader cannot see the area of the frame. A plate, as for an image, or an outline needs a
   decision, because the page in the frame takes the colors of the system. Issue #608 later
-  gave the frame an outline. See "The change".
+  gave the frame an outline. See "Change".
 - **The state `highlight` from an `on` entity.** The compiler accepts it, and it has no
-  effect in each mode. Issue #607 later gave it a bar. See "The result".
+  effect in each mode. Issue #607 later gave it a bar. See "Result".
 - **Firefox.** A session with Firefox can run the script of the first investigation and the
   measurements of this section.

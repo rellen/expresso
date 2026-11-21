@@ -1,18 +1,18 @@
-# The export
+# Export
 
 This document gives the design for the export of a deck from the command line: a PDF, and
 a PNG file of each slide. The code contains this design. Issue #407 asked for it. The
-document records ten decisions, and each is settled. Its last section, "The result", tells
+document records ten decisions, and each is settled. Its last section, "Result", tells
 what changed during the work.
 
-## The problem
+## Problem
 
 A PDF of a deck came from the print dialog of the browser. The author opened the deck,
 pressed `p`, selected the steps with `a`, and printed. A build cannot do these steps, so a
 workflow could not publish the slides of a talk. Slidev and Marp export a PDF and pictures
 from the command line.
 
-## The plan
+## Plan
 
 1. `Expresso.CommandLine` reads `--pdf`, `--png` and their options, and it calls
    `Expresso.Export.run/3`.
@@ -24,7 +24,7 @@ from the command line.
 4. For each PNG file, the browser opens the present view at one step, and it takes a
    picture of the window.
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -69,7 +69,7 @@ Each decision is settled.
     no part of a file, and the export gives one line for each file to the standard
     output, so a build log shows the number of pages.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 
@@ -126,7 +126,7 @@ error.
 `docs/reference/export-options.md` gives the options, and `docs/how-to/export-a-deck.md`
 gives the steps.
 
-## The limits
+## Limits
 
 - A deck with a light and a dark variant of its theme gives the light variant.
 - The export takes one size. A second size needs a second command.

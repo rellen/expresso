@@ -408,7 +408,7 @@ defmodule Expresso.Extension do
   # the nodes under it. The node declares the key of its children without
   # their definitions: in the block of a node, the `node` macro of the tree
   # stays in scope, so a tree can nest to each depth, as a list does. See
-  # "The definitions of the elements" in docs/architecture.md. Each parent
+  # "Definitions of the elements" in docs/architecture.md. Each parent
   # refuses the options of the other parent: see `Expresso.Element.Node`.
   @node %Spark.Dsl.Entity{
     name: :node,
@@ -765,7 +765,7 @@ defmodule Expresso.Extension do
   # A list holds items, and an item holds nested lists. The item declares the
   # key of its children without their definitions: in the block of an item,
   # the `list` macro of the slide stays in scope, so a list can nest to each
-  # depth. See "The definitions of the elements" in docs/architecture.md.
+  # depth. See "Definitions of the elements" in docs/architecture.md.
   @item %Spark.Dsl.Entity{
     name: :item,
     target: Expresso.Element.Item,

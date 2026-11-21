@@ -1,4 +1,4 @@
-# The list element
+# `list` element
 
 The `list` element shows a list of `item` elements, with a bullet or a number for each item.
 An item can hold a nested list.
@@ -27,7 +27,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `list(reveal: true, elements: [item("One"), item("Two")])`.
 
-## The options of the list
+## Options of the list
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -37,7 +37,7 @@ end
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
-## The options of an item
+## Options of an item
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -57,7 +57,7 @@ at those steps. See [A part of a text](overlay-options.md#a-part-of-a-text).
 
 An item holds one `list` after its text, and an item of that list can hold a list too.
 
-## The HTML
+## HTML
 
 The document writes an `ol` element for an ordered list and a `ul` element for each other
 list, with the class `list`. Each item is an `li` element with the class `item`. The text

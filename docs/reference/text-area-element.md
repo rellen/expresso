@@ -1,4 +1,4 @@
-# The text area element
+# `text_area` element
 
 The `text_area` element shows text. The text can contain HTML, such as `<b>`, `<em>` or a
 link.
@@ -16,7 +16,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `text_area(text: "The answer is <b>42</b>.")`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -28,7 +28,7 @@ end
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).
 
-## The HTML
+## HTML
 
 The document writes a `div` with the class `text-area`, and a second `div` that holds the
 text. The text thus stays one block, and an inline element such as `<b>` does not break
@@ -51,7 +51,7 @@ runs commands. A link with the class `goto` runs only the commands that the comp
 for a link of the deck. It ignores an attribute `data-commands`. A command that the presenter
 does not know stops the click with an error.
 
-## The parts of the text
+## Parts of the text
 
 A tag in the text takes the attribute `at`, and the part of the text in the tag then shows
 at those steps:

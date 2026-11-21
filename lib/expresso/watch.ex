@@ -23,7 +23,7 @@ defmodule Expresso.Watch do
       render to the next, so a render does not run each tool of the deck
       again.
 
-  The section "The watch mode" of `docs/architecture.md` gives the design, and
+  The section "Watch mode" of `docs/architecture.md` gives the design, and
   the parts that a later version can replace.
   """
 

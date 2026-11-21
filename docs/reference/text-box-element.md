@@ -1,4 +1,4 @@
-# The text box element
+# `text_box` element
 
 The `text_box` element holds other elements in one group. The group shows, hides and moves
 as one element.
@@ -24,7 +24,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `text_box(at: [from: 2], elements: [text_area(text: "Three steps:")])`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -34,7 +34,7 @@ end
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).
 
-## The children
+## Children
 
 A text box can hold each of these elements:
 
@@ -47,7 +47,7 @@ A text box cannot hold a text box. See [The places of the elements](placement.md
 
 Use [the columns element](columns-element.md) to put groups side by side.
 
-## The layout
+## Layout
 
 The document writes a `div` with the class `text-box`. The theme puts the children in a
 column, one under the other, in the center of the box. The text box takes the free space of

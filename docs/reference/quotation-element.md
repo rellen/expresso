@@ -1,4 +1,4 @@
-# The quotation element
+# `quotation` element
 
 The `quotation` element shows a quotation and the name of its source.
 
@@ -13,7 +13,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `quotation("Less is more.", by: "Ludwig Mies van der Rohe")`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -25,11 +25,11 @@ end
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).
 
-## The HTML
+## HTML
 
 The document writes a `figure` element with the class `quotation`. The text goes into a
 `blockquote` element, and the source goes into a `figcaption` element.
 
-## The name
+## Name
 
 The entity is `quotation`, and not `quote`, because `quote` is a special form of Elixir.

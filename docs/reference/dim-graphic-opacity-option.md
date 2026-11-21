@@ -1,4 +1,4 @@
-# The dim_graphic_opacity option
+# `dim_graphic_opacity` option
 
 The `dim_graphic_opacity` option of a deck gives the opacity of a dimmed graphic: an image,
 an SVG file, an embed and a video. Without the option, a graphic dims with the opacity that
@@ -15,7 +15,7 @@ end
 
 `Expresso.Builder` takes the same option, such as `deck(slides, dim_graphic_opacity: 0.5)`.
 
-## The values
+## Values
 
 | Value | Effect |
 | --- | --- |
@@ -49,7 +49,7 @@ The `dim_contrast` option gives a minimum for text. The option does not measure 
 and a graphic can hold text, such as a label of a diagram. Thus select an opacity at which
 you can still read that text.
 
-## The errors and the warnings
+## Errors and warnings
 
 The compiler gives an error for a value that is not a number. It gives the same error for `0`,
 for a negative number and for a number that is more than 1:

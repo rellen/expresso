@@ -1,18 +1,18 @@
-# The notes of the speaker
+# Notes of the speaker
 
 This document gives the design for the notes of the speaker: Markdown in a note, and a
 note for some steps of a slide. The code contains this design. Issue #406 asked for it.
 The document records ten decisions. Nine are settled, and decision 2 has a question for
-the maintainer. Its last section, "The result", tells what changed during the work.
+the maintainer. Its last section, "Result", tells what changed during the work.
 
-## The problem
+## Problem
 
 The `notes` option of a slide was one string. The speaker view showed it as plain text,
 and it showed the same note at each step of the slide. A slide with five steps then had
 one long note, and the presenter had to find the part of the current step. Keynote and
 PowerPoint take formatting in the notes, and reveal.js and Slidev take Markdown.
 
-## The plan
+## Plan
 
 1. The text of a note is Markdown. `Expresso.Notes.html/1` makes its HTML with MDEx.
 2. The `note` entity of a slide gives a note for the steps of its `at` option.
@@ -24,7 +24,7 @@ PowerPoint take formatting in the notes, and reveal.js and Slidev take Markdown.
 5. The presenter script puts a copy of the notes of the page of the current step into
    the speaker view.
 
-## The decisions
+## Decisions
 
 1. **Markdown, from MDEx.** The maintainer made this decision. MDEx reads CommonMark and
    the extensions of GitHub, and it needs no parser of this project. The notes use the
@@ -67,7 +67,7 @@ PowerPoint take formatting in the notes, and reveal.js and Slidev take Markdown.
     notes as paragraphs and lists, with no live region. The presenter reads the notes when
     the presenter wants them, and a live region would read each note at each step.
 
-### The question of decision 2
+### Question of decision 2
 
 The binary and `mix expresso` write different HTML for a deck with notes. The test "writes
 the same HTML as Expresso.main/2" of `test/release/` therefore gives `Expresso.main/2` the
@@ -82,7 +82,7 @@ Earmark is not an alternative. Each of its releases is retired on Hex, and the n
 tells a user to move to a different library, such as MDEx. `mix hex.audit` fails for a
 retired dependency.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 

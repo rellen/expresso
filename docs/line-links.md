@@ -4,9 +4,9 @@ This document gives the design for a link from a sub-term of a line of a derivat
 sub-term of an earlier line that it comes from. At the step of the new line, each linked
 sub-term moves from its place in the earlier line to its place in the new line. The code
 contains this design. The document records ten decisions, and each is settled. Its last
-section, "The result", tells what changed during the work. Issue #474 holds the same plan.
+section, "Result", tells what changed during the work. Issue #474 holds the same plan.
 
-## The problem
+## Problem
 
 Each new line of a derivation comes from an earlier line. The body of a λ drops one line,
 and the argument goes into each hole. A `math` element with `line` entities shows each line
@@ -23,7 +23,7 @@ uses them. The author must then:
 
 A change of one line changes the places of each line after it.
 
-## The constraints
+## Constraints
 
 - The output stays one HTML file.
 - A link obeys the overlay contract of `docs/overlays.md`. It uses the copies of
@@ -49,7 +49,7 @@ end
 At step 2, the second line shows. The relation and the reason fade in, the body moves down
 from the first line, and a copy of `g` moves into each hole. The first line stays.
 
-## The decisions
+## Decisions
 
 | Number | Question | Decision |
 | --- | --- | --- |
@@ -64,7 +64,7 @@ from the first line, and a copy of `g` moves into each hole. The first line stay
 | 9 | The layout and the morph | The presenter script measures each place, as for `move_to`. The moves are inside one element, so they need no morph between slides. |
 | 10 | The stack and the examples | Six pull requests. `examples/animations/y_combinator.exs` becomes a `math` element with `line` entities and links, so its SVG file and its script go away. The how-to guide gets an example of one β-reduction with a GIF. |
 
-## The design
+## Design
 
 - **The macro.** `priv/temml/render.mjs` gives Temml the macro `\from`, which becomes
   `\data{from=name}{…}`. The MathML of the sub-term gets `data-from="name"`.
@@ -89,7 +89,7 @@ from the first line, and a copy of `g` moves into each hole. The first line stay
   `\part` entities inside it, on an inner element, so the overlay attributes of a `part`
   entity reach the copy.
 
-## The stack
+## Stack
 
 Each pull request is based on the one before it.
 
@@ -100,7 +100,7 @@ Each pull request is based on the one before it.
 5. `examples/animations/y_combinator.exs` as a math element with links.
 6. The guide, an example of one β-reduction and its GIF.
 
-## The progress
+## Progress
 
 | Pull request | State |
 | --- | --- |
@@ -111,7 +111,7 @@ Each pull request is based on the one before it.
 | 5. The example of the Y combinator | Done. `examples/animations/y_combinator.exs` is a `math` element with five lines and links, in 9 steps in the place of 13. Its SVG file and the script that wrote it go away. A math element has no caption, so the reason of each line tells the step. The body of each λ is in parts around its holes, so a copy of the argument lands in a place with no bound variable under it. A part that was the whole term of a line lost its name, because Temml puts the attributes of two nested `\data` on one element. Each cell of a line now has `data-line` in the place of `data-part`. |
 | 6. The guide and the example of one β-reduction | Done. `docs/how-to/explain-a-formula-step-by-step.md` shows `examples/animations/math_link.exs`, with `steps: 2`, and `mix expresso.gifs` records `math-link.gif`. |
 
-## The result
+## Result
 
 The six pull requests of the stack contain the design. These parts are different from the
 plan, or the plan did not tell them:

@@ -1,4 +1,4 @@
-# The tree element
+# `tree` element
 
 The `tree` element shows a hierarchy of nodes as boxes and lines, such as an org chart or
 the folders of a disk. The root is at the top, and the nodes under each node are in a row
@@ -59,19 +59,19 @@ tree(title: "The folders", elements: [
 ])
 ```
 
-## The options of the tree
+## Options of the tree
 
 | Option | Value | Effect |
 | --- | --- | --- |
 | `title` | A string, required | The name of the tree for a screen reader. |
-| `color` | `:branch` or `{:field, name}` | The colors of the boxes from the palette. See [the colors](#the-colors). The default is no color. |
-| `layout` | `:top_down`, `:left_right` or `:stacked` | How the nodes under each node go. See [the layout](#the-layout). The default is `:top_down`. |
-| `src`, `delimiter`, `separator`, `fields` | | The CSV file of the nodes. See [the data](#the-data). |
-| `frames` | A column of the `src` file | The column that names the frame of each row. See [the frames](#the-frames). |
-| `reveal` | `:levels`, `:branches` or `:nodes` | Show the nodes in steps. See [the steps](#the-steps). |
+| `color` | `:branch` or `{:field, name}` | The colors of the boxes from the palette. See [the colors](#colors). The default is no color. |
+| `layout` | `:top_down`, `:left_right` or `:stacked` | How the nodes under each node go. See [the layout](#layout). The default is `:top_down`. |
+| `src`, `delimiter`, `separator`, `fields` | | The CSV file of the nodes. See [the data](#data). |
+| `frames` | A column of the `src` file | The column that names the frame of each row. See [the frames](#frames). |
+| `reveal` | `:levels`, `:branches` or `:nodes` | Show the nodes in steps. See [the steps](#steps). |
 | `dim` | `true` or `false` | Dim the boxes of the earlier steps. The default is `false`. |
 | `reflow` | `true` or `false` | Calculate the layout at each step from the boxes that show. The default is `false`. |
-| `highlight` | A list of groups | One group of nodes in focus at each step. See [the highlight option](#the-highlight-option). |
+| `highlight` | A list of groups | One group of nodes in focus at each step. See [the highlight option](#highlight-option). |
 | `whole_first` | `true` or `false` | With `highlight`, show the whole tree in full color for one step first. The default is `false`. |
 | `stack_from` | A level of 2 or more | The first level that the tree stacks, with `1` for the root. |
 | `sum` | `true` or `false` | Give a node with no `value` the sum of the values under it. The default is `true`. |
@@ -93,7 +93,7 @@ The element also takes the overlay options, such as `at`, `effect` and the `on` 
 
 A slide, a text box, a column and a callout can hold a tree.
 
-## The options of a node
+## Options of a node
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -104,10 +104,10 @@ A slide, a text box, a column and a callout can hold a tree.
 | `icon` | A name | An icon that the box shows at its left, in place of an image, such as `"factory"`. The names are the names of [the icon element](icon-element.md). |
 | `fields` | A keyword list | Short facts, one line each under the detail, such as `[team: "42 people", floor: 3]`. A name can also be a string, such as `[{"Cost center", "4100"}]`. A text is a string or a number. |
 | `color` | A role of the theme | The color of the box and of each box under it: `:text`, `:muted`, `:accent`, `:success`, `:emphasis`, `:warning` or `:danger`. |
-| `at`, `effect`, `speed`, `easing` and the `on` entity | | The steps of the box. See [the steps](#the-steps) and [the overlay options](overlay-options.md). |
-| `parent` | A name | The node above this node, in place of nesting. See [the parent option](#the-parent-option). |
-| `value` | A number that is not negative | A size or a count, such as `412_000_000_000`. See [the values](#the-values). |
-| `layout` | `:top_down`, `:left_right` or `:stacked` | How the nodes under this node go, and the nodes under them. See [the layout](#the-layout). |
+| `at`, `effect`, `speed`, `easing` and the `on` entity | | The steps of the box. See [the steps](#steps) and [the overlay options](overlay-options.md). |
+| `parent` | A name | The node above this node, in place of nesting. See [the parent option](#parent-option). |
+| `value` | A number that is not negative | A size or a count, such as `412_000_000_000`. See [the values](#values). |
+| `layout` | `:top_down`, `:left_right` or `:stacked` | How the nodes under this node go, and the nodes under them. See [the layout](#layout). |
 | `class` | CSS class names | The classes of the box. |
 | Nested `node` entities | | The nodes under this node, from the left. |
 
@@ -121,7 +121,7 @@ tree does not. A tree takes `detail`, `image`, `icon`, `fields`, `color`, `value
 `layout`, `parent`, the overlay options, the `on` entity and nested nodes, and a chart does
 not.
 
-## The data
+## Data
 
 A tree can come from a CSV file in place of node entities. The `src` option names the file,
 and the file has a row for each node. The file has one of two forms:
@@ -179,7 +179,7 @@ The options of the file are these:
 A tree with `src` takes no node entities. The watch mode renders the deck again after a
 change to the file.
 
-### The parent option
+### `parent` option
 
 The `parent` option of a node puts the node under the node that it names. Thus you can type
 a flat list in place of nesting:
@@ -199,7 +199,7 @@ end
 Only a node at the top of the tree takes the option. The nodes under one parent keep their
 order, after the nodes that the parent holds in its block.
 
-## The steps
+## Steps
 
 Each box takes the overlay options of a node, so `at` and the `on` entity work as for each
 element. A box is not inside the box of its parent in the HTML. Therefore the compiler gives
@@ -243,7 +243,7 @@ end
 does. A dimmed box moves its text to the dimmed colors of the theme. Its border, its tint, its
 icon, its bar and its line fade.
 
-### The reflow option
+### `reflow` option
 
 With `reflow false`, the default, the layout keeps a place for each box from the first step.
 A box fades in at its place, and no box moves.
@@ -279,7 +279,7 @@ box grows into its place.
 
 The node that holds the rest of a `limit` shows with the last node that the limit keeps.
 
-## The highlight option
+## `highlight` option
 
 The `highlight` option puts one group of nodes in focus at each step, and the rest of the
 tree dims. Each box shows at each step.
@@ -319,7 +319,7 @@ comes into focus at the next step.
 A tree takes `highlight` or `reveal`, and not both. The `highlight` option dims the other
 nodes itself, so a tree with it takes no `dim` option.
 
-## The frames
+## Frames
 
 A tree with `frame` entities shows the same hierarchy at two or more points in time. Examples
 are an org chart before and after a reorganization, and a disk on two dates. Each frame holds
@@ -400,7 +400,7 @@ The frames give the steps of the tree. Thus a tree with frames takes no `reveal`
 Paper and the handout view do not show the tree that moves. They show each frame as a small
 tree in a grid, with its label under it.
 
-## The box
+## Box
 
 A box shows its parts in this order:
 
@@ -437,7 +437,7 @@ slide "the team" do
 end
 ```
 
-## The values
+## Values
 
 A node can have a value, such as the size of a folder or the number of people in a team. The
 tree applies the options of the values in this order:
@@ -484,7 +484,7 @@ The formats of a value are these:
 The bar of a box has the part of the root's value, so the bar of the root is full. A box
 without a color has a bar in the accent color.
 
-## The colors
+## Colors
 
 The color of a box comes from the first of these sources that gives one:
 
@@ -520,7 +520,7 @@ end
 The legend is in the drawing, so it scales with the tree. The screen reader reads the
 field of each node in the list, so it gets the same information as the colors.
 
-## The layout
+## Layout
 
 The compiler calculates the place of each box. Each node puts the nodes under it with one
 of three layouts:
@@ -576,7 +576,7 @@ In a tree with one layout, the boxes of one level have their tops in one row for
 not move a subtree into the space next to a smaller subtree. Thus the place of each box
 depends only on its branch, and the same tree gives the same picture each time.
 
-## The look
+## Look
 
 A box without a color has a border in the muted color, a background in the color of the
 background, and round corners. The label is bold, and the detail has the muted color. A text
@@ -593,7 +593,7 @@ properties in the `css` option:
 | `--tree-text` | The color of the label | the text color |
 | `--tree-bar` | The color of the bar | the color of the box, or the accent color |
 
-## The HTML
+## HTML
 
 The renderer writes a `figure` with the class `tree`. It holds:
 
@@ -642,7 +642,7 @@ A tree with frames has these differences:
 - each frame has its own `ul` with the class `tree-list`. Its `aria-label` holds the title
   and the label of the frame, such as `The plant, After`.
 
-## The errors
+## Errors
 
 The compiler gives an error for these:
 

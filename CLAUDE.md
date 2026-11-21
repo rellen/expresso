@@ -25,35 +25,35 @@ Read these documents before you change the code:
   of its result. The code contains this conversion.
 - `docs/tree.md` — the design for the element `tree`, which shows a hierarchy as boxes and
   lines, such as an org chart or the use of a disk. The code contains this design. The
-  document records nine decisions, and each is settled. Its last section, "The result",
+  document records nine decisions, and each is settled. Its last section, "Result",
   tells what changed during the work.
 - `docs/dim-state.md` — the design for a dim state with a color for each role. The code
   contains this design. The document records five decisions, and each is settled. Its
-  last section, "The result", tells what changed during the work.
+  last section, "Result", tells what changed during the work.
 - `docs/hidden-slides.md` — the design for a slide that the talk skips, such as a backup
   slide. The code contains this design. The document records twelve decisions, and each is
-  settled. Its last section, "The result", tells what changed during the work.
+  settled. Its last section, "Result", tells what changed during the work.
 - `docs/inline-steps.md` — the design for a part of a text that shows or changes at its
   own steps, such as one word of a sentence. The code contains this design. The document
-  records ten decisions, and each is settled. Its last section, "The result", tells what
+  records ten decisions, and each is settled. Its last section, "Result", tells what
   changed during the work.
 - `docs/slide-backgrounds.md` — the design for the background of a slide: an image, a color
   or a gradient behind its content. The code contains this design. The document records ten
-  decisions, and each is settled. Its last section, "The result", tells what changed during
+  decisions, and each is settled. Its last section, "Result", tells what changed during
   the work.
 - `docs/typewriter-effect.md` — the design for the effect `:type`, which shows the text of
   an element one character at a time. The code contains this design. The document records
-  ten decisions, and each is settled. Its last section, "The result", tells what changed
+  ten decisions, and each is settled. Its last section, "Result", tells what changed
   during the work.
 - `docs/speaker-notes.md` — the design for the notes of the speaker: Markdown in a note,
   and a note for some steps of a slide. The code contains this design. The document records
   ten decisions. Nine are settled, and decision 2 has a question for the maintainer: the
   binary shows the notes as plain text, because it does not hold MDEx. Its last section,
-  "The result", tells what changed during the work.
+  "Result", tells what changed during the work.
 - `docs/accessibility-preferences.md` — an investigation of a deck in forced colors, with
   the preference for more contrast, and against three new criteria of WCAG 2.2. It records
   the state on 2026-11-15 and a proposal for each defect. The maintainer answered its two
-  questions, and the code contains each proposal. Its last section, "The result", tells
+  questions, and the code contains each proposal. Its last section, "Result", tells
   what changed. Issues #603 and #604 hold the parts that nobody measured.
 - `docs/export.md` — the design for the export from the command line: a PDF of a deck, and
   a PNG file of each slide, from a headless Chrome or Chromium. The code contains this
@@ -61,20 +61,20 @@ Read these documents before you change the code:
   result", tells what changed during the work.
 - `docs/laser-pointer.md` — the design for the laser pointer of the presenter: a red dot
   that goes with the mouse, in the two windows. The code contains this design. The
-  document records ten decisions, and each is settled. Its last section, "The result",
+  document records ten decisions, and each is settled. Its last section, "Result",
   tells what changed during the work.
 - `docs/drawing.md` — the design for the drawing of the presenter: lines that the
   presenter draws on a slide during the talk, with a pen or with a highlighter. The code
   contains this design. The document records ten decisions, and each is settled. Its last
-  section, "The result", tells what changed during the work.
+  section, "Result", tells what changed during the work.
 - `docs/zoom.md` — the design for the zoom of the presenter: a part of a slide that fills
   the window during the talk. The code contains this design. The document records ten
-  decisions, and each is settled. Its last section, "The result", tells what changed
+  decisions, and each is settled. Its last section, "Result", tells what changed
   during the work.
 - `docs/timed-advance.md` — the design for a deck that goes to the next step after a time:
   the `advance` option, the `loop` option and the clock of the steps. The code contains
   this design. The document records ten decisions, and each is settled. Its last section,
-  "The result", tells what changed during the work.
+  "Result", tells what changed during the work.
 - `docs/rehearsal.md` — the design for the rehearsal: the speaker view records the time
   of each slide, and it gives the lines of the `advance` option. The code contains this
   design. The document records ten decisions, and each is settled. Its last section, "The
@@ -82,7 +82,7 @@ Read these documents before you change the code:
 - `docs/external-media.md` — the design for an `image`, a `video` and an `audio` element
   that keep their file next to the document, in place of a data URI, and for the
   `external` option of the deck. The code contains this design. The document records ten
-  decisions, and each is settled. Its section "The result" tells what changed during the
+  decisions, and each is settled. Its section "Result" tells what changed during the
   work, and what a later change added.
 - `docs/document-tags.md` — the design for the `meta` and `link` elements of the
   document: the description, the author, the generator, the color scheme, the theme
@@ -91,22 +91,22 @@ Read these documents before you change the code:
 - `docs/small-windows.md` — the design for a slide in a window that is smaller than 1280
   by 720 pixels, such as the screen of a phone, and for the viewport tag. The code
   contains this design. The document records fourteen decisions, and each is settled. Its
-  sections "The result" and "The result for a phone" tell what changed during the work.
+  sections "Result" and "Result for a phone" tell what changed during the work.
   Nobody tested a deck on a real phone.
 - `docs/graph-diagrams.md` — the design for a `diagram` from the source of a graph, in the
   language of Graphviz or of D2. The code contains this design. The document records ten
-  decisions, and each is settled. Its last section, "The result", tells what changed during
+  decisions, and each is settled. Its last section, "Result", tells what changed during
   the work.
 - `docs/mermaid-diagrams.md` — the design for a `diagram` from the source of Mermaid, drawn by
   Pele in Node. The code contains this design. The document records ten decisions, and each
-  is settled. Its last section, "The result", tells what changed during the work.
+  is settled. Its last section, "Result", tells what changed during the work.
 - `docs/scatter-plots.md` — the design for the chart kinds `:scatter` and `:bubble`, which
   show each item as one mark with a position, a symbol, a color and a size. The code contains
   this design. The document records ten decisions, and each is settled. Its last section,
-  "The result", tells what changed during the work.
+  "Result", tells what changed during the work.
 - `docs/waterfall-charts.md` — the design for the chart kind `:waterfall`, which shows how a
   start value changes through increases, decreases and totals. The code contains this design.
-  The document records ten decisions, and each is settled. Its last section, "The result",
+  The document records ten decisions, and each is settled. Its last section, "Result",
   tells what changed during the work.
 - `docs/math-parts.md` — the design for a `math` element that takes LaTeX and gives a name to
   each part of a formula, so a step can color, dim or move one part. The code contains this
@@ -114,11 +114,11 @@ Read these documents before you change the code:
   result", tells what changed during the work.
 - `docs/part-copies.md` — the design for a copy of a part of a diagram or of a formula, which
   moves to a different place while the part stays. The code contains this design. The
-  document records ten decisions, and each is settled. Its last section, "The result", tells
+  document records ten decisions, and each is settled. Its last section, "Result", tells
   what changed during the work.
 - `docs/line-links.md` — the design for a link from a sub-term of a line of a derivation to
   the sub-term of an earlier line that it comes from. The code contains this design. The
-  document records ten decisions, and each is settled. Its last section, "The result", tells
+  document records ten decisions, and each is settled. Its last section, "Result", tells
   what changed during the work.
 - `docs/each-occurrence.md` — the design for a part that names each occurrence of a symbol
   in a formula, and for each token with a text in a code element. The code contains this
@@ -130,7 +130,7 @@ Read these documents before you change the code:
   result", tells what changed during the work.
 - `docs/beta-reductions.md` — the design for a `reduce` entity, which makes the next line of
   a derivation by one β-reduction and shows it in four steps. The code contains this design.
-  The document records ten decisions, and each is settled. Its last section, "The result",
+  The document records ten decisions, and each is settled. Its last section, "Result",
   tells what changed during the work.
 
 ## Build and test
@@ -391,7 +391,7 @@ works on the code of Expresso. Put the fact that the reader needs first.
 - Use a heading for each topic that a reader can look for.
 - Use bold text only for a term at the point where you define it.
 
-## The rules of the dependencies
+## Rules of the dependencies
 
 The lines after this paragraph come from `mix usage_rules.sync`. Each one is a link to the
 rules of a dependency for an AI agent. Read the rules of Spark before you change the DSL in

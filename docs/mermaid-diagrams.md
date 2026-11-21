@@ -6,7 +6,7 @@ diagram in Node, and the deck animates its parts with the parts of the `diagram`
 as for a graph from Graphviz or D2. The document records ten decisions, and each is
 settled. Issue #409 holds the same plan.
 
-## The problem
+## Problem
 
 Many developers write their diagrams in Mermaid, because GitHub, GitLab, Obsidian and many
 documentation tools draw it. A deck can take a graph from Graphviz or D2, as
@@ -17,14 +17,14 @@ Mermaid.js itself is a poor fit for a render outside a browser. It needs a brows
 measure its text, its bundle is approximately 1.6 MB with gzip, and its SVG has generated
 ids.
 
-## The constraints
+## Constraints
 
 The constraints of `docs/graph-diagrams.md` apply: the output stays one HTML file, a diagram
 obeys the overlay contract, the same deck gives the same document, a deck without Mermaid
 needs no tool, a missing tool stops the render with a message, and the watch mode renders
 again after a change of the source.
 
-## The facts about Pele
+## Facts about Pele
 
 These facts come from Pele 1.8.0 in Node 24, in a session on Linux x86_64.
 
@@ -49,7 +49,7 @@ These facts come from Pele 1.8.0 in Node 24, in a session on Linux x86_64.
   file. The output is the same in each run.
 - A syntax error throws an error with the line of the error, such as `Parse error on line 3`.
 
-## The decisions
+## Decisions
 
 | Number | Question | Decision |
 | --- | --- | --- |
@@ -66,7 +66,7 @@ These facts come from Pele 1.8.0 in Node 24, in a session on Linux x86_64.
 
 Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 
-## The design
+## Design
 
 - `Expresso.Element.Diagram.Pele` runs `priv/pele/render.mjs` through
   `Expresso.Element.Diagram.Tool`. The script reads `source.mmd` and `options.json` from a
@@ -84,7 +84,7 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 - The tests that run Node have the tag `:mermaid`. The other tests read the output of the
   script in `test/fixtures/mermaid/`.
 
-## The stack
+## Stack
 
 1. The tool: the copy of Pele, the script, the `source` and `lang` options, the flowchart
    with its marks, the colors and the cache.
@@ -95,7 +95,7 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
    swimlane, eventmodeling, agentflow, cynefin, railroad, wardley.
 4. The guide, the example decks and their GIFs.
 
-## The progress
+## Progress
 
 | Pull request | State |
 | --- | --- |
@@ -134,7 +134,7 @@ Decision 9 changes the example of issue #409, which named an edge `L_web_api_0`.
 | 33. Wardley | Done. An anchor or a component is a node with the arrow of its evolution, and a link is an edge such as `Deck->Renderer`. Each type of Pele now has a plan. |
 | 34. The guide, the example decks and their GIFs | Done. `docs/how-to/draw-a-diagram-from-mermaid.md` shows a flowchart from a `.mmd` file and a sequence diagram from the `source` option, with their GIFs. |
 
-## The result
+## Result
 
 The stack of pull requests #410 to #445 and the pull request of the guide holds the code.
 These parts are different from the plan:

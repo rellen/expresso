@@ -7,7 +7,7 @@ rules of scope and a preset of steps. The code contains this design. The documen
 ten decisions, and each is settled. Issue #475 holds the same plan. The last section, "The
 result", tells what changed during the work.
 
-## The problem
+## Problem
 
 With the `rewrite` entity of `docs/line-rewrites.md`, an author can write a β-reduction:
 name the binder, the body and the argument with `\part`, and rewrite the bound variable with
@@ -17,7 +17,7 @@ of an inner λ with the same name.
 
 The λ-calculus has rules for each of these parts, so the render can find them.
 
-## The constraints
+## Constraints
 
 - A `reduce` makes a `rewrite` of `docs/line-rewrites.md`. The links, the copies, the moves
   and the presenter script need no new code.
@@ -45,7 +45,7 @@ The reduction takes four steps:
 3. The rest of the body moves down from the old line.
 4. A copy of the argument moves into the place of each bound variable, and the line shows.
 
-## The decisions
+## Decisions
 
 | Number | Question | Decision |
 | --- | --- | --- |
@@ -60,7 +60,7 @@ The reduction takes four steps:
 | 9 | The colors | Two new roles of the theme, `binder` and `argument`, each with a dimmed color, color the λ, its binder and the bound variables, and the argument. Each built-in theme meets the contrast minimums for them. |
 | 10 | The stack and the examples | Six pull requests. `examples/animations/y_combinator.exs` unfolds `Y` with a `rewrite`, makes each β-reduction with `reduce :leftmost`, and folds the last line with a `rewrite`. The definition of `Y` needs no names. The how-to guide gets an example of a reduction with a GIF. |
 
-## The design
+## Design
 
 - **The parser.** `Expresso.Element.Math.Lambda` reads the atoms of a line into terms. Each
   term keeps the path of its atoms in the tree of the line, so the render can put a part
@@ -78,7 +78,7 @@ The reduction takes four steps:
 - **The colors.** `Expresso.Palette` gets the roles `binder` and `argument`, from the slots
   `base0E` and `base0C`. The theme writes `--binder`, `--argument` and their dimmed colors.
 
-## The stack
+## Stack
 
 Each pull request is based on the one before it.
 
@@ -90,7 +90,7 @@ Each pull request is based on the one before it.
 6. `examples/animations/y_combinator.exs` with `reduce`, and the guide with an example of a
    reduction and its GIF.
 
-## The progress
+## Progress
 
 | Pull request | State |
 | --- | --- |
@@ -102,7 +102,7 @@ Each pull request is based on the one before it.
 | 6. The example and the guide | Done. `examples/animations/y_combinator.exs` unfolds `Y` with a `rewrite`, makes two reductions with `reduce :leftmost`, and folds the last line with a rule. `examples/animations/math_reduce.exs` and its GIF show a reduction in the how-to guide, and `docs/how-to/show-the-steps-of-a-proof.md` uses `reduce`. |
 | A browser test | Done after the stack. `test/e2e/math_reduce_test.exs` makes sure of the four steps of one reduction in Chromium: the colors of the λ and of the argument, then of the bound variables, then the moves of the body and of the copies. |
 
-## The result
+## Result
 
 The six pull requests of the stack contain the design. These parts are different from the
 plan, or the plan did not tell them:

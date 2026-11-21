@@ -538,4 +538,4 @@ goes past an edge. Then give the formula a class and a smaller size of text. The
 
 The deck option `math_font` gives the font of each formula: `:latin_modern`, the default,
 `:stix`, `:libertinus`, `:noto` or `:system`. The document holds the font, so a formula looks
-the same on each computer. See [the math font](../reference/math-element.md#the-math-font).
+the same on each computer. See [the math font](../reference/math-element.md#math-font).

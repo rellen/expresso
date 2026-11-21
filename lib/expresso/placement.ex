@@ -4,7 +4,7 @@ defmodule Expresso.Placement do
 
   The DSL accepts an element in more places than these rules give. This is
   because the macros of the outer entities stay in scope in each nested block.
-  See "The definitions of the elements" in `docs/architecture.md`.
+  See "Definitions of the elements" in `docs/architecture.md`.
   `Expresso.PlacementTransformer` calls `slide/1` for each slide, and it refuses
   an element in a wrong place. `docs/reference/placement.md` gives the rules.
 

@@ -1,10 +1,10 @@
-# The presenter
+# Presenter
 
 This page describes each view of the presenter, its keys, and the parts of the address.
 The HTML document holds the presenter, so a browser needs no other file to present the
 deck. For the steps of a talk, see [Present a deck](../how-to/present-a-deck.md).
 
-## The views
+## Views
 
 | View | Opens with | Shows |
 | --- | --- | --- |
@@ -17,7 +17,7 @@ deck. For the steps of a talk, see [Present a deck](../how-to/present-a-deck.md)
 `?` or `/` opens the search of the keys in each view. The keys of the current view come
 first, in groups. The keys of each other view are in a closed section below them.
 
-## The present view
+## Present view
 
 The present view knows these keys:
 
@@ -66,7 +66,7 @@ A presentation remote sends `Page Down` and `Page Up`, so it works with the deck
 
 ![Three steps forward, one step back, a black screen, and the last slide](https://raw.githubusercontent.com/rellen/expresso/media/present-keys.gif)
 
-### The mouse and the touch screen
+### Mouse and touch screen
 
 A click or a tap on the right two thirds of the window goes to the next step. A click or a
 tap on the left third goes to the previous step. On a touch screen, swipe left for the next
@@ -74,9 +74,9 @@ step. Swipe right for the previous step. A click on a link of the `goto` option 
 slide and step. A click on another link goes to the link.
 
 On a touch screen, the present view also shows the button of the menu in its top right
-corner. See [The button of the menu](#the-button-of-the-menu).
+corner. See [The button of the menu](#button-of-the-menu).
 
-## The overview
+## Overview
 
 The overview shows each slide at its last step, in a grid that fits the window. A hidden
 slide has a dashed outline and a lower opacity. In the speaker view, only the speaker
@@ -101,7 +101,7 @@ window shows the overview. The overview knows these keys:
 
 ![The overview opens, the selection moves two slides, and Enter goes to that slide](https://raw.githubusercontent.com/rellen/expresso/media/present-overview.gif)
 
-## The menu
+## Menu
 
 The menu lists each slide with a small picture of its last step, and the steps of each
 slide under it. A step shows its number and its label. See [Step labels](step-labels.md).
@@ -126,7 +126,7 @@ the menu. The menu knows these keys:
 
 ![The menu opens, the cursor moves two steps, and Enter goes to that step](https://raw.githubusercontent.com/rellen/expresso/media/present-menu.gif)
 
-### The button of the menu
+### Button of the menu
 
 A phone or a tablet has no key `m`, so the present view shows a button with three lines in
 its top right corner. A tap on the button does what `m` does: it opens the menu, and a
@@ -141,7 +141,7 @@ second tap closes it. Tap a step or a slide in the menu to go to it.
   in its top right corner. This rule is for a talk from a phone or a tablet.
 - Its size is 43.2 by 43.2 CSS pixels in each window.
 
-## The speaker view
+## Speaker view
 
 The speaker view shows the current step, the next step, the notes of the current step,
 the position and a timer. The notes are the `notes` option of the slide and each `note` of
@@ -188,7 +188,7 @@ closes it. The speaker view knows these keys:
 The timer starts at the first change of the step after the speaker view opens. A second `s`
 shows the open speaker view again, and its timer continues.
 
-### The time of the talk
+### Time of the talk
 
 The `duration` option of the deck gives the length of the talk in minutes. The speaker view
 then shows the time left under the timer. The time left turns amber when the presenter is
@@ -199,7 +199,7 @@ more time than the steps before the current step get.
 
 ![The timer runs, the time left turns amber behind the pace, and red after the end](https://raw.githubusercontent.com/rellen/expresso/media/present-pace.gif)
 
-## The handout view
+## Handout view
 
 The handout view shows one page for each step of each slide. A printer gets this view with
 no key. In this view, only these keys operate, so the other keys scroll the pages:
@@ -241,9 +241,9 @@ The command line writes the same PDF with no window:
 
 The handout view and paper leave out each hidden slide, and `a` does not show it. The deck
 option `handout_hidden true` puts each hidden slide in. See
-[the hidden option](hidden-option.md#the-handout-view-and-paper).
+[the hidden option](hidden-option.md#handout-view-and-paper).
 
-## The address
+## Address
 
 The address of the document holds the slide and the step, and it can hold these
 parameters:
@@ -255,13 +255,13 @@ parameters:
 | `?duration=` | `deck.html?duration=15` | The length of the talk in minutes. It replaces the `duration` option of the deck. |
 | `?all` | `deck.html?all` | The handout view with each step, as after `a`. |
 | `?paused` | `deck.html?paused` | The clock of the steps is stopped at the load, as after `a`. See [the advance option](advance-option.md). |
-| `?rehearse` | `deck.html?rehearse` | A rehearsal: the clock of the steps does not run. See [The time of each slide](#the-time-of-each-slide). |
+| `?rehearse` | `deck.html?rehearse` | A rehearsal: the clock of the steps does not run. See [The time of each slide](#time-of-each-slide). |
 | `?check` | `deck.html?check` | The layout check. See [the layout check](layout-check.md). |
 
 A step that the slide does not have shows the nearest step of that slide. Thus an old link
 still opens the correct slide after the slide loses a step.
 
-## The clock of the steps
+## Clock of the steps
 
 A deck with [the advance option](advance-option.md) gives each step a time, and the
 present view goes to the next step when that time ends. For the design, see
@@ -281,7 +281,7 @@ These rules apply:
   last slide to the first slide.
 - In a deck with no `advance` option, the key `a` has no effect that you can see.
 
-## The time of each slide
+## Time of each slide
 
 The speaker view records the time that each step used, while its timer runs. The key `e`
 in the speaker view shows a table with the time of each slide. It also shows the lines of
@@ -310,7 +310,7 @@ These rules apply:
 - While the table shows, a key goes to the browser, so the step does not change.
 - A reload of the speaker view starts a new record.
 
-## The laser pointer
+## Laser pointer
 
 The key `l` in the present view or in the speaker view turns the laser pointer on. A red
 dot then goes with the mouse, or with your finger on a touch screen, in the two windows.
@@ -330,7 +330,7 @@ These rules apply:
 - The overview, the menu, a black screen, the handout view and paper show no dot. A screen
   reader reads no change.
 
-## The drawing
+## Drawing
 
 The key `x` in the present view or in the speaker view turns the drawing on. A drag of
 the mouse, or of your finger on a touch screen, then draws a line on the slide, in the two
@@ -356,7 +356,7 @@ These rules apply:
 - The overview, the menu, a black screen, the handout view and paper show no drawing. A
   screen reader reads no change.
 
-## The zoom
+## Zoom
 
 A click with the Alt key on a slide of the present view or of the speaker view zooms. The
 part of the slide under the mouse then fills the window, in the two windows. For the design,
@@ -394,7 +394,7 @@ These rules apply:
   again, or press `z`.
 - The overview and the handout view show no zoom. A screen reader reads no change.
 
-## The progress bar
+## Progress bar
 
 A thin bar at the bottom of the present view shows the part of the talk that is done. Each
 step in each slide of the talk counts one time, and a hidden slide does not count. Write
@@ -402,7 +402,7 @@ step in each slide of the talk counts one time, and a hidden slide does not coun
 
 ![The bar at the bottom grows with each step](https://raw.githubusercontent.com/rellen/expresso/media/present-progress.gif)
 
-## The slide numbers
+## Slide numbers
 
 Write `slide_numbers true` in the deck to show the slide numbers. The right corner at the
 bottom then shows the number of the slide and the number of slides, such as `3 / 12`.
@@ -412,7 +412,7 @@ slide shows no number.
 
 ![Slide 3 of 6, with the number in the right corner at the bottom](https://raw.githubusercontent.com/rellen/expresso/media/present-slide-numbers.png)
 
-## The transitions and the morph
+## Transitions and morph
 
 A move to a different slide in the present view fades the old slide out and the new slide
 in. The `transition` option of the deck or of a slide sets a different kind, and a move
@@ -434,7 +434,7 @@ are in a `main` landmark, and each slide is a group with the role description "s
 menu is a list of options that a screen reader reads. See
 [The accessibility of a deck](accessibility.md).
 
-## The custom properties of a theme
+## Custom properties of a theme
 
 A theme can set these custom properties. In forced colors, the progress bar, the laser
 pointer and the drawing take a color of the system, and not the color of a property. See

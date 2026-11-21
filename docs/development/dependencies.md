@@ -1,9 +1,9 @@
-# The dependencies
+# Dependencies
 
 This page tells you the purpose of each dependency, how to act on an advisory, how to
 update a dependency and how to update the icons.
 
-## The purpose of each dependency
+## Purpose of each dependency
 
 `deps/0` in `mix.exs` lists the dependencies with no comment. This table gives the purpose
 of each one:
@@ -20,10 +20,10 @@ of each one:
 | `makeup` and each `makeup_*` package | The highlighting of a `code` element. Each lexer package registers its languages when its application starts. |
 | `ex_doc` | The site of `mix docs`. See [ExDoc](#exdoc). |
 | `ex_check` | `mix check`. See [The checks](checks.md). |
-| `usage_rules` | The links to the rules of the dependencies. See [The rules of the dependencies for an AI agent](#the-rules-of-the-dependencies-for-an-ai-agent). |
+| `usage_rules` | The links to the rules of the dependencies. See [The rules of the dependencies for an AI agent](#rules-of-the-dependencies-for-an-ai-agent). |
 | `sourceror` | The formatter of the DSL. `Spark.Formatter` and `mix spark.formatter` need it. |
 | `stream_data` | The property tests. See [Property tests](unit-tests.md#property-tests). |
-| `lazy_html` | The queries on the HTML in the unit tests. See [The HTML in a unit test](unit-tests.md#the-html-in-a-unit-test). |
+| `lazy_html` | The queries on the HTML in the unit tests. See [The HTML in a unit test](unit-tests.md#html-in-a-unit-test). |
 | `playwright_ex` | The browser tests, the recorder of the GIFs in `tools/`, and `--check=browser`. See [The browser tests](browser-tests.md). |
 | `zigler` | The GIF encoder of the recorder, a NIF in Zig. Zigler compiles it with the Zig of the toolchain. |
 | `credo`, `doctor`, `dialyxir`, `sobelow` | The static analysis. |
@@ -42,7 +42,7 @@ Zigler depends on zig_doc, which asks for ExDoc 0.39.1 exactly. zig_doc compiles
 environment that compiles Zigler. Therefore the dependency is present in `dev` and in
 `test`.
 
-## The audit of the dependencies
+## Audit of the dependencies
 
 `mix hex.audit` fails for a dependency with a security advisory or a retirement on Hex.
 Hex 2.5 added the advisories to this task, and they come from the same source as the
@@ -132,7 +132,7 @@ from each other dependency in three ways:
 `docs/speaker-notes.md` gives the design, and its decision 2 has a question for the
 maintainer about this dependency.
 
-## The rules of the dependencies for an AI agent
+## Rules of the dependencies for an AI agent
 
 Some dependencies hold a file `usage-rules.md` with rules for an AI agent, such as Spark,
 which makes the DSL. The dev dependency
@@ -163,7 +163,7 @@ Expresso gives its own rules to a project that uses it, in the file `usage-rules
 repository. See "Give an AI agent the rules of Expresso" in
 `docs/how-to/render-a-deck-in-your-project.md`.
 
-## The icons
+## Icons
 
 `priv/icons/lucide.json` holds the Lucide icons, from the file `icon-nodes.json` of the npm
 package `lucide-static`. `priv/icons/SOURCE` gives the version. Dependabot does not see the

@@ -2,15 +2,15 @@
 
 This document gives a plan for the state `dim`, and the record of its result. The code
 contains this plan. The plan depends on pull request #128, which adds the APCA minimums to
-each theme. The document ends with five decisions, and each is settled. "The result"
+each theme. The document ends with five decisions, and each is settled. "Result"
 gives the five places where the code is different from the plan.
 
-## The problem
+## Problem
 
 The state `dim` gives an element a filter with one opacity, the dim opacity of the theme.
 The filter applies that opacity to each color of the element. After #128, the dim opacity
 is the smallest multiple of 0.05 that keeps each role of text at 3:1 and at Lc 30 on its
-background. "The contrast of a theme" in `docs/architecture.md` gives the formulas.
+background. "Contrast of a theme" in `docs/architecture.md` gives the formulas.
 
 Each role is near its own minimum, because the palette adjusts a role only until it meets
 the minimum. Thus the role with the lowest contrast sets the opacity for all the roles. A
@@ -35,7 +35,7 @@ alone at the same minimums. A lower value dims more.
 The text of `:default` and `:dracula` could dim to 0.45, in place of 0.8 and 0.65. The gain
 is small for a theme with a text of low contrast, such as `:solarized_light`.
 
-## The constraints
+## Constraints
 
 - Each dimmed color stays at 3:1 and at Lc 30 on its background, the minimums of #128.
 - The output stays one HTML file. CSS cannot calculate a contrast, so `Expresso.Palette`
@@ -44,7 +44,7 @@ is small for a theme with a text of low contrast, such as `:solarized_light`.
 - The `css` option of a deck can replace a role, such as `--text`. A deck that does this
   must still dim.
 
-## The plan
+## Plan
 
 1. `Expresso.Palette` calculates a dimmed color for each role of text. The dimmed color is
    the blend of the role and its background at the smallest multiple of 0.05 that keeps
@@ -65,7 +65,7 @@ is small for a theme with a text of low contrast, such as `:solarized_light`.
 6. The tests make sure that each dimmed role meets its minimums, and that the next step of
    0.05 fails. An e2e test reads the computed color of a dimmed item and of a dimmed
    comment, and it compares them with the dimmed colors of the palette.
-7. The documents change: "The contrast of a theme" in `docs/architecture.md`, the table of
+7. The documents change: "Contrast of a theme" in `docs/architecture.md`, the table of
    `docs/reference/theme-option.md`, the state `dim` in
    `docs/reference/overlay-options.md` and the custom properties in
    `docs/reference/css-option.md`.
@@ -73,7 +73,7 @@ is small for a theme with a text of low contrast, such as `:solarized_light`.
    each dimmed text in a browser. The stills of the gallery change on the next push to
    `main`.
 
-## The alternatives
+## Alternatives
 
 | Alternative | Result | Why the plan does not use it |
 | --- | --- | --- |
@@ -81,7 +81,7 @@ is small for a theme with a text of low contrast, such as `:solarized_light`.
 | Lower minimums for a dimmed element | Each theme dims more. | A dimmed element must stay readable. #128 sets the minimums. |
 | A blur or a lighter weight of the font | The element looks less important. | A blur makes the text less readable. A different weight changes the width of the text and moves the layout. |
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -93,7 +93,7 @@ Each decision is settled.
    palette must then calculate in OKLab too, and the two calculations can disagree.
 3. **`--dim-opacity` stays.** The plan kept it for one release, and the style sheet did
    not read it. The result changes this decision: an image, an SVG file and an embed dim
-   with `--dim-opacity`, so the property stays, and it is not deprecated. "The result"
+   with `--dim-opacity`, so the property stays, and it is not deprecated. "Result"
    tells why.
 4. **A nested dimmed element does not dim two times.** The inherited property `--dimmed`
    carries the state to each element inside a dimmed element. A nested element with the
@@ -114,7 +114,7 @@ Each decision is settled.
    We selected design C. A deck without the option renders as before, and the user who
    gives the option accepts the opacity for the text in a graphic.
 
-## The result
+## Result
 
 The code follows the plan, with five changes:
 

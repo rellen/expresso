@@ -1,4 +1,4 @@
-# The url, card, favicon and robots options
+# `url`, `card`, `favicon` and `robots` options
 
 Four options of a deck give the tags for a deck on a web host:
 
@@ -28,7 +28,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `deck(slides, url: "https://example.com/talk/", card: "card.png")`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ end
 A path is relative to [the root option](root-option.md) of the deck, or to the working
 directory of the command.
 
-## The tags of the url option
+## Tags of the `url` option
 
 A chat program or a social network makes a card for a link from these tags:
 
@@ -56,7 +56,7 @@ A chat program or a social network makes a card for a link from these tags:
 
 X reads the Open Graph tags for the title, the text and the picture of its card.
 
-## The picture of the card
+## Picture of the card
 
 With the `card` option, the document has these tags:
 
@@ -79,20 +79,20 @@ With the `card` option, the document has these tags:
   size, and the program cuts a picture with a different form.
 - The render does not make the picture. The export option `--card card.png` makes it: a
   PNG file of 1200 by 630 pixels from slide 1, or from the slide of `--card-slide`. See
-  [The export options](export-options.md#the-options-of-the-card).
+  [The export options](export-options.md#options-of-the-card).
 - The `card` option can name the file of `--card`. The export makes the picture before it
   renders the document, so the file can be missing, and the document holds the new
   picture. See
   [Give a link to the deck a preview](../how-to/put-a-deck-on-a-web-host.md#give-a-link-to-the-deck-a-preview).
 
-## The icon and the directives
+## Icon and directives
 
 - With no `favicon` option, the document has no icon, and a browser asks the host for
   `/favicon.ico`.
 - `robots "noindex"` asks a search engine to leave the deck out of its results. A host can
   also send the header `X-Robots-Tag`.
 
-## The errors
+## Errors
 
 The compiler gives an error for a deck with the `card` option and no `url` option:
 

@@ -11,7 +11,7 @@ unfolds the definition of `Y`, a `reduce` entity makes each β-reduction, and a 
 `rewrite` folds the last line. You write no line after the first by hand. See
 [the math element](../reference/math-element.md#reduce-a-λ-term).
 
-## The steps of a reduction
+## Steps of a reduction
 
 A β-reduction replaces each bound variable in the body of a λ with the argument. A `reduce`
 shows it in four steps:
@@ -52,7 +52,7 @@ argument. Give that λ a different variable.
 A reduction and a rewrite give their parts colors themselves, so the deck needs no color of
 its own.
 
-## The example deck
+## Example deck
 
 ```elixir
 defmodule Examples.YCombinator do

@@ -1,4 +1,4 @@
-# The shape element
+# `shape` element
 
 The `shape` element draws a rectangle, an ellipse, a line or an arrow over a slide. Use it
 to point at a part of a slide, such as a line of code or a table row.
@@ -17,7 +17,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `shape(:arrow, from: ["80%", "20%"], to: ["70%", "45%"])`.
 
-## The options
+## Options
 
 | Option | Kinds | Value | Effect |
 | --- | --- | --- | --- |
@@ -55,7 +55,7 @@ slide "a note" do
 end
 ```
 
-## The place
+## Place
 
 A percentage is a part of the slide. `x` and the first length of a point are parts of the
 width, and `y` and the second length are parts of the height. The point `["0%", "0%"]` is
@@ -69,7 +69,7 @@ A shape shows nothing in the place where you write it. The renderer puts the sha
 slide into one layer over the whole slide, in the order of the deck. A shape thus covers
 the content under it. The layer takes no click, so a click on a shape goes to the slide.
 
-## The color and the line
+## Color and line
 
 | Custom property | Default | Effect |
 | --- | --- | --- |

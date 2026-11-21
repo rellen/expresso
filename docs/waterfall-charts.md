@@ -3,10 +3,10 @@
 This document gives the design for the chart kind `:waterfall`, and the record of its
 progress. A waterfall chart shows how a start value changes through a list of increases and
 decreases, with total columns between them. The code contains this design. The document
-records ten decisions, and each is settled. Its last section, "The result", tells what
+records ten decisions, and each is settled. Its last section, "Result", tells what
 changed during the work. Issue #411 holds the same plan.
 
-## The problem
+## Problem
 
 A talk often explains how one number becomes another number: the cash at the start of a year,
 the income and the costs, and the cash at the end. A waterfall chart shows this. Each change
@@ -17,7 +17,7 @@ A bar chart of Expresso cannot draw a floating column or a running total. The au
 calculate each base by hand and hide a series under it, and then the totals cannot grow with
 the changes.
 
-## The constraints
+## Constraints
 
 - The output stays one HTML file. The compiler calculates each place, and the presenter
   script calculates no layout.
@@ -54,7 +54,7 @@ With `reveal true`, the chart takes these steps:
 | 5 | Interest (+20) | 120 | grows to 150 |
 | 6 | Costs (-50) | 120 | shrinks to 100 |
 
-## The decisions
+## Decisions
 
 | Number | Question | Decision |
 | --- | --- | --- |
@@ -69,7 +69,7 @@ With `reveal true`, the chart takes these steps:
 | 9 | The agreement of a total | The compiler rounds the sum to the most decimals of the numbers of the series, so the sum of `0.1` and `0.2` agrees with `0.3`, and `119.5` does not agree with `120`. |
 | 10 | The code | A new family `:waterfall` in `Expresso.Element.Chart.Kinds`, and a new module `Expresso.Element.Chart.Waterfall`. `Expresso.Element.Chart` sends each function of a waterfall to that module, so the code of the other kinds does not change. |
 
-## The design
+## Design
 
 - **The data.** `Expresso.Element.Chart.Waterfall` checks the one series and calculates the
   base, the end and the running total of each column. A change starts at the running total
@@ -109,7 +109,7 @@ With `reveal true`, the chart takes these steps:
 - `docs/reference/chart-element.md` gives the options. A how-to guide gives the tasks, with
   example decks and their GIFs.
 
-## The stack
+## Stack
 
 1. This document.
 2. The kind `:waterfall`, `:total` and `{:total, value}`, the columns, the colors, the
@@ -123,7 +123,7 @@ With `reveal true`, the chart takes these steps:
 8. The frames.
 9. The guide, the example decks and their GIFs.
 
-## The progress
+## Progress
 
 | Pull request | State |
 | --- | --- |
@@ -137,7 +137,7 @@ With `reveal true`, the chart takes these steps:
 | 8. The frames | Done. The states hold the states of `reveal` in the first frame, then one state for each later frame, so one list of rules moves the totals at the steps of the changes and the columns at the steps of the frames. The channels `--k<n>` of the texts that fade count states, not frames. Each later frame has its totals at the categories of the totals of the first frame. |
 | 9. The guide, the example decks and their GIFs | Done. `docs/how-to/show-how-a-total-changes-in-a-waterfall-chart.md` shows three example decks: the cash of a year with reveal and spans, a budget with a cut axis, horizontal bars and highlight, and two years from a CSV file with frames. |
 
-## The result
+## Result
 
 The nine pull requests of the stack contain the plan. These parts are different from the
 plan, or the plan did not tell them:

@@ -1,4 +1,4 @@
-# The embed element
+# `embed` element
 
 The `embed` element shows a web page in a slide: a page from the network, or a local HTML
 file. The page runs in a frame, so a live demonstration can be part of the talk.
@@ -16,7 +16,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `embed("demo.html", title: "The demonstration", fallback: "demo.png")`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -90,7 +90,7 @@ slide have the same color. The frame then has an outline of 1 pixel in the color
 
 See [Forced colors](accessibility.md#forced-colors) for the other parts of a slide.
 
-## The sandbox
+## Sandbox
 
 The frame has a `sandbox` attribute and `referrerpolicy="no-referrer"`:
 

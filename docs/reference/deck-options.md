@@ -1,4 +1,4 @@
-# The deck options
+# Deck options
 
 This page lists each option that a deck takes. Write an option in the deck to apply it to
 each slide:
@@ -23,7 +23,7 @@ end
 | `morph :named` | Which elements move from one slide to the next: `:auto`, `:named` or `:off`. The default is `:auto`. See [the morph option](morph-option.md). |
 | `duration 20` | The length of the talk in minutes. The speaker view then shows the time left. |
 | `advance 20_000` | The time of each step in milliseconds. The present view then goes to the next step after that time. A slide can replace it. See [the advance option](advance-option.md). |
-| `loop true` | Go from the last step of the talk to the first slide. See [the loop option](advance-option.md#the-values-of-loop). |
+| `loop true` | Go from the last step of the talk to the first slide. See [the loop option](advance-option.md#values-of-loop). |
 | `progress false` | Hide the progress bar at the start. |
 | `slide_numbers true` | Show the number of each slide, such as `3 / 12`. |
 | `handout :last` | The pages of the handout view: `:last` or `:all`. |
@@ -45,13 +45,13 @@ end
 | `lang "de"` | The language of the text in the deck, for a screen reader. The default is `"en"`. See [the lang option](lang-option.md). |
 | `dim_contrast 4.5` | The minimum contrast of dimmed text, from 3 to 7. The default is 3. See [the dim_contrast option](dim-contrast-option.md). |
 | `dim_graphic_opacity 0.5` | The opacity of a dimmed image, SVG file, embed and video. Without the option, a graphic dims with the opacity of the theme. See [the dim_graphic_opacity option](dim-graphic-opacity-option.md). |
-| `math_font :stix` | The font of each `math` element: `:latin_modern`, the default, `:stix`, `:libertinus`, `:noto` or `:system`. A document holds the chosen font only when the deck has a `math` element. See [the math element](math-element.md#the-math-font). |
+| `math_font :stix` | The font of each `math` element: `:latin_modern`, the default, `:stix`, `:libertinus`, `:noto` or `:system`. A document holds the chosen font only when the deck has a `math` element. See [the math element](math-element.md#math-font). |
 | `window :macos` | A frame that looks like a window around each code element, image and embed: `:macos`, `:terminal`, `:plain` or `:none`. The default is `:none`. See [the window option](window-option.md). |
 | `icons logo: "assets/logo.svg"` | SVG files of your own for the `icon` element and for `:icon:name:` in a text. See [the icon element](icon-element.md). |
 | `theme :dracula` | The colors of the slides and of the code. Each built-in theme meets the contrast minimums of WCAG. `theme dark: :dracula, light: :default` gives two variants. See [the theme option](theme-option.md). |
 
 
-## The options of a slide
+## Options of a slide
 
 An option on a slide replaces the option of the deck for that slide. The `template` option of a
 slide replaces `slide_template`, and its `meta` option gives values of your own to the

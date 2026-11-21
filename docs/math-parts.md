@@ -3,10 +3,10 @@
 This document gives the design for a `math` element that takes LaTeX and gives a name to
 each part of the formula, and the record of its progress. A step can then color, dim or move
 one part of a formula. The code contains this design. The document records ten decisions,
-and each is settled. Its last section, "The result", tells what changed during the work.
+and each is settled. Its last section, "Result", tells what changed during the work.
 Issue #472 holds the same plan.
 
-## The problem
+## Problem
 
 A talk about mathematics or about a program often explains a formula one part at a time: the
 term that changes, the variable that a rule binds, or the line of a proof that follows from
@@ -24,7 +24,7 @@ The example deck `examples/animations/y_combinator.exs` therefore draws its term
 file, with one `text` for each symbol in a cell of one width. The spaces are wrong, and a
 script of 150 lines writes the file.
 
-## The constraints
+## Constraints
 
 - The output stays one HTML file. The render makes the MathML, and the presenter script
   calculates no layout.
@@ -80,7 +80,7 @@ math do
 end
 ```
 
-## The decisions
+## Decisions
 
 | Number | Question | Decision |
 | --- | --- | --- |
@@ -95,7 +95,7 @@ end
 | 9 | The tests | A new tag `:temml` marks each test that runs Node. `mix test` excludes it, and the command of the graph tools also runs it. A file of fixtures holds the MathML of the sources of the other tests, and a test with the tag `:temml` makes sure that the fixtures agree with Temml. |
 | 10 | The stack and the examples | Nine pull requests. The guide shows new example decks of mathematics. `examples/animations/y_combinator.exs` keeps its SVG file until issues #473 and #474 add the moves. |
 
-## The design
+## Design
 
 - **The copy of Temml.** `priv/temml/` holds `temml.min.js`, its license, its version in
   `package.json` and a script `render.mjs`. The `package.json` of the project names the same
@@ -128,7 +128,7 @@ end
 - `docs/reference/math-element.md` gives the options. A how-to guide gives the tasks, with
   example decks and their GIFs.
 
-## The stack
+## Stack
 
 1. This document.
 2. The copy of Temml in `priv/temml/`, the script and the run in Node.
@@ -140,7 +140,7 @@ end
 8. The handout, the screen reader and the layout check for the parts.
 9. The guide, the example decks and their GIFs.
 
-## The progress
+## Progress
 
 | Pull request | State |
 | --- | --- |
@@ -156,7 +156,7 @@ end
 | 10. `\id` | Done. The maintainer asked for `\id` as a third name of a part. The script gives Temml a macro `\id`, the same as `\part`, so the MathML gets `data-part` and no HTML `id`, and two formulas with the same name do not clash. |
 | 11. `move_to` | Done. The maintainer asked for `move_to` on a part of a formula. `Expresso.Element.Math.place/1` writes the move as `--x: var(--to-x-name)` and `--y: var(--to-y-name)`, and it gives the part the attribute `data-move-to`. `assets/src/move.ts` measures a hidden copy of the formula with no transform and no transition, and it sets the two custom properties. It measures again when the window changes its size and when a font loads. The issues #473 and #474 need this measure. |
 
-## The result
+## Result
 
 The eleven pull requests of the stack contain the plan and two additions. These parts are
 different from the plan, or the plan did not tell them:

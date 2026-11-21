@@ -1,4 +1,4 @@
-# The binary and its tests
+# Binary and its tests
 
 This page tells you how to make the binary, and how the dependency test and the release tests use Expresso outside this repository.
 
@@ -22,7 +22,7 @@ the version of the release. A later binary of the same version runs that install
 and not its own. Therefore change the version in `mix.exs` for each binary that you give
 to other users. `<binary> maintenance uninstall` removes the installed release.
 
-## The binary has no MDEx
+## Binary has no MDEx
 
 MDEx makes the HTML of the notes of the speaker, and it is a NIF. The binary does not hold
 it, so the binary shows each note as plain text, and `--check` gives a note about it.
@@ -48,7 +48,7 @@ The test "writes the same HTML as Expresso.main/2" gives `Expresso.main/2` the s
 speaker as plain text" makes sure that the binary writes no warning about the library.
 `docs/speaker-notes.md` gives the alternatives.
 
-## The dependency test
+## Dependency test
 
 The test of `test/dependency/` makes a Mix project in `_build/dependency_project`.
 The project takes Expresso as a dev dependency from the path of the repository, as
@@ -75,7 +75,7 @@ new project, remove the directory:
 rm -rf _build/dependency_project
 ```
 
-## The release tests
+## Release tests
 
 The tests of `test/release/` run the binary that Burrito makes, as a user does. They read
 the exit status, the standard output and the output file. They find the defects that the

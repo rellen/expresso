@@ -1,4 +1,4 @@
-# The class option
+# `class` option
 
 The `class` option gives CSS class names to a slide or to an element. A rule of
 [the css option](css-option.md) can then select that slide or that element only.
@@ -41,7 +41,7 @@ end
 A `part` of a diagram, a `frame` of a chart, an `on` entity and `pause` do not take the
 option.
 
-## The value
+## Value
 
 The value is one class name or more, with a space between two names, such as `"dense"`
 or `"dense wide"`. A name starts with a letter, an underscore, or a hyphen and a letter.
@@ -51,7 +51,7 @@ The compiler gives an error for a value that is not such a list of names.
 `Expresso.Builder` raises an `ArgumentError` with the same message after the name of
 the function and the option, such as `text_area: invalid value for :class option: ...`.
 
-## The classes of the theme
+## Classes of the theme
 
 The element keeps the class of the theme, and the classes of the option come after it.
 A code element with `class "tiny"` thus has the classes `code tiny`. The rules of the theme

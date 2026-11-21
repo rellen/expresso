@@ -1,4 +1,4 @@
-# The callout element
+# `callout` element
 
 The `callout` element is a box with a kind, a header and other elements, such as a note or
 a warning.
@@ -14,7 +14,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `callout(:tip, title: "Faster", elements: [text_area(text: "...")])`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -26,7 +26,7 @@ end
 The element also takes the overlay options, such as `at`, `effect` and the `on` entity. See
 [the overlay options](overlay-options.md).
 
-## The kinds
+## Kinds
 
 Each kind takes its color from a role of the theme. The header and the icon have that
 color, the border has that color, and the box has a light tint of it. The text of the body
@@ -44,7 +44,7 @@ keeps the color of the text.
 
 ![The seven kinds of the callout, each with its icon and its color](https://raw.githubusercontent.com/rellen/expresso/media/callout-kinds.png)
 
-## The content
+## Content
 
 A callout holds the elements that a text box holds. They are `text_area`, `image`, `list`,
 `table`, `quotation`, `spacer`, `code`, `math`, `diagram`, `embed`, `video`, `audio`,
@@ -74,7 +74,7 @@ its header.
 Each element of a callout takes its own overlay options, so the elements can show at
 different steps. An element without `at` shows at each step at which the callout shows.
 
-## The HTML
+## HTML
 
 The renderer writes a `div` with the classes `callout` and `callout-<kind>`, and the role
 `note`. The header is a `p` with the class `callout-title`, so it does not change the
@@ -92,7 +92,7 @@ A deck can change the color of a kind with the `css` option. Each kind reads
 }
 ```
 
-## The errors
+## Errors
 
 The compiler gives an error for these:
 

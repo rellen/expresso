@@ -1,4 +1,4 @@
-# The presenter script
+# Presenter script
 
 This page tells you how to build and test the presenter script in TypeScript, and how to
 run its type check and its lint.
@@ -32,7 +32,7 @@ run its type check and its lint.
 - `assets/src/assets.ts` — copies each large file back into the elements that
   `Expresso.Assets` gave a reference.
 - `assets/test/interpreter.test.ts` — the test that runs the fixtures of the Elixir
-  interpreter. "The fixtures of the interpreter" below tells how to write them again.
+  interpreter. "Fixtures of the interpreter" below tells how to write them again.
 - `assets/test/validate.ts` — examines a program of the presenter and a list of the
   steps with the decoders of `schema.ts`. `assets/test/program.test.ts` and
   `assets/test/deck.test.ts` run it on each program and each list of the fixture file.
@@ -110,7 +110,7 @@ file at a time. These options refuse code that is unused, unreachable or incompl
 `exactOptionalPropertyTypes` refuses `undefined` for an optional property. The options do
 not change the bundle.
 
-## The lint and the format of the script
+## Lint and format of the script
 
 Three tools check the presenter script, and each has one job:
 
@@ -152,7 +152,7 @@ These are the reasons for the choice of the tools:
   80 it changed the layout of 3 files. Prettier takes approximately one second for
   `assets/`. Look at oxfmt again after its version 1.0.
 
-## The schema of the presenter
+## Schema of the presenter
 
 `Expresso.Presenter.Schema` describes the JSON form of each value that Elixir writes for
 the script: the program, the list of the steps, the commands of an element, and the
@@ -193,7 +193,7 @@ the browser can send any value. Each call in `schema.ts` has the annotation `@__
 so esbuild removes each decoder that the script does not use. Prettier does not format the
 file, and `.prettierignore` names it.
 
-## The fixtures of the interpreter
+## Fixtures of the interpreter
 
 The TypeScript interpreter must return the result of the Elixir interpreter for each
 event. Node cannot run Elixir, so Git holds the results of the Elixir interpreter in
@@ -237,7 +237,7 @@ Sobelow gives a warning for `Phoenix.HTML.raw/1`. When the input is safe, put a
 Prettier formats the files in `assets/`. `package.json` pins the version, and
 `npm install` gives the command. Run `npm run format`, which is not one of the checks.
 
-## The fixture of the number formats
+## Fixture of the number formats
 
 `format` and `formatStat` in `assets/src/chart.ts` write the number of a count at each
 frame. They copy `Expresso.Element.Chart.Plot.label/1` and
@@ -258,7 +258,7 @@ steps:
 2. Run `npm test`, and change the function of the script until the test passes.
 3. Commit the file with the change.
 
-## The tables of keys
+## Tables of keys
 
 `docs/reference/presenter.md` holds a table of keys for each mode, and `Expresso.Test.KeyTables` makes each
 table from `Expresso.Presenter.Default`. Its test in

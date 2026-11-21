@@ -7,7 +7,7 @@ current code" says where each part is.
 An overlay is a step in a slide. Overlays give reveals, emphasis and movement inside one
 slide.
 
-## The model
+## Model
 
 A slide is a function of a step index. The renderer runs one time. It writes all the
 states of the slide into one HTML document. CSS then shows the state for the current
@@ -25,7 +25,7 @@ in this document is a result of this limit.
 An overlay specification tells the compiler which steps show an element. Put the
 specification in the `at` option of an element.
 
-### The specification
+### Specification
 
 A specification is an Elixir term. The `at` option accepts these forms:
 
@@ -58,7 +58,7 @@ transformer resolves the struct later. The struct holds one pair for each item, 
 step and the last step. In a pair, `:next` stands for the counter and `:max` stands for
 the maximum step number.
 
-### The slide counter
+### Slide counter
 
 Each slide has a counter. The counter starts at 1.
 
@@ -108,7 +108,7 @@ slide "pipeline" do
 end
 ```
 
-### The `auto_reveal` option
+### `auto_reveal` option
 
 `auto_reveal` is a boolean option of the `slide` entity, and its default value is `false`.
 With the value `true`, the transformer gives `at [from: :next]` to each element at the
@@ -165,7 +165,7 @@ These rules apply with the option:
   of the slide can make it larger. A `steps` option that is smaller gives an error from the
   transformer.
 
-### The `reveal` option
+### `reveal` option
 
 `reveal` is a boolean option of an element that holds children of one kind, such as a
 `list` of items or a `table` of rows. Its default value is `false`. With the value `true`,
@@ -211,7 +211,7 @@ These rules apply with the option:
   that the element does not show gives an error from
   `Expresso.Element.Code.build/1`, because such a group shows nothing.
 
-### The dim option
+### `dim` option
 
 A `list`, a `table`, a `code` element, a `chart` or a `toc` also takes `dim true`. Each child then gets the
 state `dim` from the first step of a later child. The earlier items stay on the slide, and
@@ -292,7 +292,7 @@ this design has a construction for it. The floor is July 2024, and the section "
 properties" defines it. The decision "How does the `on` entity apply a state?" gives the
 evidence.
 
-### The state option
+### `state` option
 
 The compiler registers each state as a number:
 
@@ -388,7 +388,7 @@ with a view transition name must leave the layout, and the theme must hide it wi
 
 ## Compilation
 
-### The transformer
+### Transformer
 
 The transformer runs one time for each slide. It does these operations:
 
@@ -429,7 +429,7 @@ and it is a pure function. `Expresso.Overlay.Transformer` calls it for each slid
 DSL state. When the expansion gives an error, the transformer makes a
 `Spark.Error.DslError` with the path of the slide.
 
-### The verifier
+### Verifier
 
 The verifier gives an error for these conditions:
 
@@ -465,7 +465,7 @@ error from that callback as a compile warning. The module then compiles. Therefo
 transformers. Spark raises an error from a transformer at compile time, and the compile
 stops. A test catches the error with `assert_raise/2`.
 
-### The warnings of the properties
+### Warnings of the properties
 
 The verifier of the steps gives an error only. `Expresso.Overlay.PropertyVerifier` is a
 second verifier, and it gives a warning for four conditions of a custom property:
@@ -489,7 +489,7 @@ replaces the registration of the theme, and it makes a value of a different type
 The theme then loses the property. A value that is a number, such as `--alert: 0`, stays
 valid, and it gets no warning.
 
-#### The rule for a property that the theme registers
+#### Rule for a property that the theme registers
 
 The theme registers some custom properties with an `@property` rule. Each rule gives a
 syntax and an initial value. The value of a state or of a `set` key must agree with that
@@ -547,7 +547,7 @@ reads is correct. A deck module inside a project that runs
 theme. A later version that gives a deck its own theme must also give the verifier the
 names of that theme.
 
-### The warning of the size of a slide
+### Warning of the size of a slide
 
 `Expresso.Overlay.SizeVerifier` gives a warning for a slide that takes more than 50 steps.
 `Expresso.Overlay.Size.slide/1` makes the message for one slide, and it is a pure
@@ -561,7 +561,7 @@ The warning applies to a slide with no `steps` option only. That option is a sta
 the author, so a slide with `steps 200` gives no warning. An author who wants many steps
 gives the slide that option.
 
-### The type
+### Type
 
 Use `{:custom, Expresso.Overlay, :new, []}` for the type of the `at` option. This
 type accepts each form of the table, and it puts the form into the struct. Spark reports
@@ -571,7 +571,7 @@ message lists the accepted forms.
 Put the `at` option into one shared schema. Merge that schema into the schema of each
 element entity.
 
-## The CSS contract
+## CSS contract
 
 The renderer writes these attributes:
 
@@ -588,7 +588,7 @@ The renderer writes these attributes:
 
 The list of the steps also gives the maximum step number of each slide, and the JavaScript
 code reads the list. The attribute stays for the style sheet of a theme and for the tests.
-The section "The list of the steps" of `docs/architecture.md` gives the list.
+The section "List of the steps" of `docs/architecture.md` gives the list.
 
 A rule for step 3 looks like this:
 
@@ -652,7 +652,7 @@ the rule of each element, such as `.text-area`, also had the delayed transition.
 then stayed hidden until the end of the fade in of its parent, and the element showed at
 once after the fade.
 
-### The identity of an element
+### Identity of an element
 
 The `data-on` attribute is not sufficient for the `on` entity. Two elements can show at
 the same step and can hold different values. A selector on `data-on` alone applies both
@@ -698,7 +698,7 @@ The browser holds an unregistered custom property as a text value. The browser c
 calculate intermediate values for a text value, and the transition is abrupt. Therefore
 the theme must register each custom property that it animates, with the `@property`
 at-rule and a `syntax` descriptor. A property that the theme reads with no transition,
-such as `--dur`, needs no registration. See "The warnings of the properties".
+such as `--dur`, needs no registration. See "Warnings of the properties".
 
 ```css
 @property --x {
@@ -804,7 +804,7 @@ sheet to the names of the theme in the same way, so a state that the style sheet
 gives no warning.
 
 A diagram part with an effect that moves or grows it goes into the wrapper that the
-section "The CSS contract" describes. The lines of a code element take the effect of the
+section "CSS contract" describes. The lines of a code element take the effect of the
 element.
 
 ### Duration and easing
@@ -892,7 +892,7 @@ theme must also set `visibility: hidden` after the transition.
 This section lists the work that this design made necessary. Each item is done, and the
 section "Progress" gives the date of each.
 
-### The extension
+### Extension
 
 `Expresso.Extension` lists `Expresso.Overlay.Transformer` and
 `Expresso.VerifierTransformer` in its `transformers` option. The second transformer runs
@@ -905,14 +905,14 @@ struct target, because Spark builds a struct for each entity.
 The `slide` entity takes an optional name as its first argument. Therefore the examples in
 this document, which write `slide "pipeline" do`, are correct.
 
-### The slide metadata
+### Slide metadata
 
 The transformer writes the maximum step number into `slide.metadata.max_step`. The `slide`
 entity has no `metadata` option, and the struct default is `nil`. The transformer accepts
 `nil`, and it writes a map. `Expresso.parse/1` then puts the heading and the slide number
 into that map.
 
-### The elements
+### Elements
 
 Each element struct has an `at` field, an `on` field, a `steps` field and an `el` field.
 The `at` field and the `on` field hold the specifications. The transformer writes the
@@ -929,9 +929,9 @@ the layout, because `.text-box` and `.text-area` are flex children.
 
 A block element inside the root tag is different, and a text area needs one. The theme
 makes `.text-area` a flex container. Therefore the render function puts the text in one
-block element. `docs/architecture.md` gives the rule in the section "The elements".
+block element. `docs/architecture.md` gives the rule in the section "Elements".
 
-### The renderer
+### Renderer
 
 `Expresso.Renderer` reads `assets/style.css` with `File.read!/1` at compile time. The step
 rules depend on the deck, and the module attribute cannot hold them. Therefore the
@@ -943,7 +943,7 @@ The renderer writes `data-step="1"` and `data-max-step` on each `section` elemen
 that the overlay transformer did not expand has no `max_step` in its metadata, and its
 maximum is 1. The DSL and `Expresso.Builder` expand each slide.
 
-### The JavaScript code
+### JavaScript code
 
 The presenter is in `assets/src/`. `state.ts` holds the index of the current step in the
 list of the steps, which gives each step of each slide in sequence. `dom.ts` shows and
@@ -962,10 +962,10 @@ The rules are:
 - `p` changes between the present view and the handout view. A projection writes the
   view into the `data-view` attribute of the `body`.
 
-The section "The presenter" of `docs/architecture.md` gives the other keys. These keys
+The section "Presenter" of `docs/architecture.md` gives the other keys. These keys
 use the same two moves, or they go to step 1 of a slide.
 
-### The imperative API
+### Imperative API
 
 `Expresso.Builder` makes a deck with functions in place of the DSL. `examples/demo.exs`
 uses it. `Expresso.Builder.Generator` makes one function for each entity of
@@ -975,19 +975,19 @@ the transformers and the verifiers of the extension. Therefore the two paths giv
 same overlays, with the same checks and the same messages. The decision "Does the
 imperative API keep parity with the DSL?" gives the reasons.
 
-## The test plan
+## Test plan
 
 The code has each test below. The tests of `Expresso.Overlay` and of its modules
 are in `test/expresso/overlay_*_test.exs`. The tests of the presenter are in
 `assets/test/interpreter.test.ts` and `assets/test/state.test.ts`.
 
-- Tests for `Expresso.Overlay`. Each row of the table in "The specification" is one test
+- Tests for `Expresso.Overlay`. Each row of the table in "Specification" is one test
   of `new/1`, and a different term gives an error. `resolve_next/2`, `max_step/1` and
   `steps/2` get a test for each rule of the counter and of an open range.
 - Transformer tests. A slide with a `pause` and a `:next` gives the correct step number for each
   element. An open range expands to the maximum step number of the slide. The transformer
   removes each `pause` entity.
-- Verifier tests. Each condition in the section "The verifier" gives an error.
+- Verifier tests. Each condition in the section "Verifier" gives an error.
 - Render tests. A test parses the HTML with LazyHTML, a dependency of the `test`
   environment, and asserts the value of `data-step`, `data-max-step`, `data-on` and
   `data-el`.
@@ -1029,7 +1029,7 @@ are in `test/expresso/overlay_*_test.exs`. The tests of the presenter are in
 - The `handout` option, done on 2026-09-24, for a slide and for the deck. The default
   keeps a page for each step.
 
-## The decisions
+## Decisions
 
 The maintainer decided each item below on 2026-09-13. The decisions are settled. A later
 change needs a new decision, and this document then records it.
@@ -1068,7 +1068,7 @@ version needs this, add an explicit `leave` option. Do not loosen this rule.
 
 The maintainer decided this on 2026-09-13. The `on` entity does not apply a class. It
 writes a custom property, `--<state>: 1`, and the theme owns the appearance. The section
-"The state option" gives the contract. For an overlay, the JavaScript code writes
+"`state` option" gives the contract. For an overlay, the JavaScript code writes
 `data-step` only.
 
 The evidence is in `docs/research/overlay-class-report.md`, which answers the prompt in

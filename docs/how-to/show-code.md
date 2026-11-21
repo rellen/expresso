@@ -22,7 +22,7 @@ Use the sigil `~S`, so `#{name}` stays text and Elixir does not run it.
 
 The compiler gives a warning for a language that no lexer registers, such as `"elixr"`,
 and the code then shows with no colors. The warning lists the languages that have a lexer.
-For the list, see [the languages](../reference/code-element.md#the-languages).
+For the list, see [the languages](../reference/code-element.md#languages).
 
 ## Show lines of a file
 
@@ -267,7 +267,7 @@ Examples.CodeUndim
 
 Give the name of the file's language, such as `"toml"`, `"yaml"` or `"nix"`. Expresso has
 lexers for many such languages, and for the languages of programs. For each name, see
-[the languages](../reference/code-element.md#the-languages).
+[the languages](../reference/code-element.md#languages).
 
 A document in Org, reStructuredText, LaTeX or Typst works in the same way. Its lexer colors
 the headings, the markup, the commands and the comments.

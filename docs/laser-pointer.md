@@ -1,18 +1,18 @@
-# The laser pointer
+# Laser pointer
 
 This document gives the design for the laser pointer of the presenter: a red dot that goes
 with the mouse during the talk. The code contains this design. Issue #397 asked for it.
-The document records ten decisions, and each is settled. Its last section, "The result",
+The document records ten decisions, and each is settled. Its last section, "Result",
 tells what changed during the work.
 
-## The problem
+## Problem
 
 The `shape` element marks a part of a slide, but the author must plan each mark before
 the talk. During a question, the presenter had no way to point at a line of code or at a
 bar of a chart. PowerPoint, Keynote and Google Slides each have a laser pointer. The
 cursor of the system is small, and it is hard to see on a projector.
 
-## The plan
+## Plan
 
 1. The presenter program gets the field `laser` of the state, and the key `l` changes
    it, in the present view and in the speaker view.
@@ -23,7 +23,7 @@ cursor of the system is small, and it is hard to see on a projector.
 4. While the pointer is on, the script puts the dot at the mouse, and it sends the place
    of the dot to the other window.
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -58,7 +58,7 @@ Each decision is settled.
 10. **The dot is decoration.** It has `aria-hidden`, and a screen reader reads no change.
     The overview, the menu, a black screen, the handout view and paper show no dot.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 
@@ -72,5 +72,5 @@ The code follows the plan, with these changes:
    the present view the size of the window, and the page of the current step a box of
    its own.
 
-`docs/reference/presenter.md` has the section "The laser pointer", and
+`docs/reference/presenter.md` has the section "Laser pointer", and
 `docs/how-to/present-a-deck.md` has the section "Point at a part of a slide".

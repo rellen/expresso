@@ -49,7 +49,7 @@ burrito_target =
 
     # The binary of Burrito and its tests. The release uses the build of prod.
     # The tests start after the browser tests, and only after a release that
-    # succeeded. `docs/development/release.md` gives the details in "The release tests".
+    # succeeded. `docs/development/release.md` gives the details in "Release tests".
     {:release, "mix release expresso_cli_app --overwrite",
      env: %{"MIX_ENV" => "prod", "BURRITO_TARGET" => burrito_target}},
     # The test of Expresso as a dev dependency of a project. It fetches the

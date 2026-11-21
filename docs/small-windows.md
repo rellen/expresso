@@ -3,10 +3,10 @@
 This document gives the design for a slide in a window that is smaller than 1280 by 720
 pixels, such as the screen of a phone, and for the viewport tag of the document. Issue
 #590 asked for it, and issue #600 continued it for a phone. The code contains this design.
-The document records fourteen decisions, and each is settled. The sections "The result"
-and "The result for a phone" tell what changed during the work.
+The document records fourteen decisions, and each is settled. The sections "Result"
+and "Result for a phone" tell what changed during the work.
 
-## The problem
+## Problem
 
 The text of a slide had a fixed size: the `html` element had `font-size: 48px` in each
 window. A slide thus needed a window of a sufficient width.
@@ -20,7 +20,7 @@ window. A slide thus needed a window of a sufficient width.
 - A small window on a computer cut a slide in the same way. `--check=layout` at 390 by 844
   and at 844 by 390 pixels gave 20 problems for `examples/dsl_deck.exs`.
 
-## The plan
+## Plan
 
 1. The font size of the `html` element becomes smaller with a small window. Each size of a
    slide is in `rem`, so the slide becomes smaller as a whole.
@@ -28,7 +28,7 @@ window. A slide thus needed a window of a sufficient width.
 3. A length that a deck gives in pixels becomes smaller with the slide.
 4. The document gets the viewport tag.
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -73,7 +73,7 @@ Each decision is settled.
     pixels for the export of one page for each slide. They come after the rule of the
     screen.
 
-## The answers to the questions of the issue
+## Answers to the questions of the issue
 
 1. **Does a slide keep its line breaks in each window?** Yes, for a window with less width
    than 1280 pixels. See decision 5.
@@ -81,7 +81,7 @@ Each decision is settled.
 3. **Does the presenter script need a change for a tap and for a swipe?** No. A browser
    test taps a phone of 390 by 844 pixels, and the deck goes to the next step.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 
@@ -134,7 +134,7 @@ the questions. These decisions are settled.
     element gets the `scale` flag of its rule.
 14. **The height of the window is `100svh`.** The answer is in the next section.
 
-### The unit of the height of the window
+### Unit of the height of the window
 
 A browser of a phone shows bars, such as the address bar, and it hides them when the user
 scrolls. CSS has three units for the height of the window:
@@ -154,7 +154,7 @@ Each rule of a screen with `100vh` uses `svh`, with the rule in `vh` first for a
 does not know `svh`. The rules of paper keep `vh`, because paper has no bars. A browser of
 the floor of this project knows `svh`: Chrome 108, Safari 15.4 and Firefox 101 added it.
 
-## The result for a phone
+## Result for a phone
 
 The code follows decisions 11 to 14, with these changes:
 
@@ -187,7 +187,7 @@ Nobody examined the document on a phone during this work. The test of
 Chrome, in each direction, is left for the maintainer. The emulation of Chromium has no bars
 of a browser, so the tests cannot measure the effect of `svh`.
 
-## The limits
+## Limits
 
 - A length in pixels in the `css` option of a deck does not follow the scale. Use `rem`
   for a size that must become smaller with the slide.

@@ -1,4 +1,4 @@
-# The note element
+# `note` element
 
 The `note` element gives a note of the speaker for some steps of a slide. The `notes`
 option of a slide gives a note for each step. The speaker view and the handout view show
@@ -30,7 +30,7 @@ end
 `Expresso.Builder` takes the same options, such as `note("Ask the room.", at: 2)`, in the
 `elements` list of the slide. For the design, see [The notes of the speaker](../speaker-notes.md).
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -47,13 +47,13 @@ These rules apply:
 - A note does not add a step to its slide. A step that the slide does not have is an
   error.
 
-## The notes option of a slide
+## `notes` option of a slide
 
 `notes "Welcome the audience."` in a slide gives a note for each step of the slide. Its
 text is Markdown, as the text of a `note`. A `note` with no `at` option has the same
 effect, and you can write it near the element that it tells about.
 
-## The Markdown of a note
+## Markdown of a note
 
 | You write | The note shows |
 | --- | --- |
@@ -76,12 +76,12 @@ can hold `<Enter>`.
 | The present view | None. |
 | The speaker view | The notes for each step, then the notes of the current step, in the order of the deck. |
 | A page of the handout view, and paper | The notes for each step, then the notes of the step that the page shows. |
-| A page with [the handout option](presenter.md#the-handout-view) | Also the notes of each earlier step that has no page, under the label of the step, such as `Step 2`. |
+| A page with [the handout option](presenter.md#handout-view) | Also the notes of each earlier step that has no page, under the label of the step, such as `Step 2`. |
 
 The deck option `print_notes false` leaves the notes out of the handout view and of the
 print. The speaker view shows them. See [The deck options](deck-options.md).
 
-## The Markdown library
+## Markdown library
 
 [MDEx](https://hexdocs.pm/mdex) makes the HTML of the notes. It is a dependency of
 Expresso, and `mix expresso` in your project uses it with no step from you.

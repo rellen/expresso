@@ -9,7 +9,7 @@ option, see [The theme option](../reference/theme-option.md).
 A theme of your own is a map with a `#rrggbb` color for each slot of base16, from `:base00`
 to `:base0F`. `base00` is the background, and `base01` is the background of the code.
 `base05` is the text, `base03` is the comments, and `base08` to `base0F` are the accents.
-The roles in [the theme option](../reference/theme-option.md#the-roles) tell the purpose of
+The roles in [the theme option](../reference/theme-option.md#roles) tell the purpose of
 each slot.
 
 1. Start from a base16 scheme, or write 16 colors of your own:
@@ -74,7 +74,7 @@ theme colors: %{base00: "#13233a", ...}, adjust: true
 Your map stays as you write it, so the slides and your map can show different colors.
 Copy the colors of the warnings into the map, as above, to keep the two the same.
 
-## The complete deck
+## Complete deck
 
 This deck has the map above with each color of the warnings. The compiler gives no
 warning, and the dimmed item keeps its contrast:

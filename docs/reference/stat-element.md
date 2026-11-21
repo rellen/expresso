@@ -1,4 +1,4 @@
-# The stat element
+# `stat` element
 
 The `stat` element is a big number with a label, such as "1,250 orders". It can count up to
 its value when it shows.
@@ -15,7 +15,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `stat(4.2, prefix: "$", suffix: "M", label: "revenue")`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -36,7 +36,7 @@ The element also takes the overlay options, such as `at`, `effect` and the `on` 
 A slide, a text box, a column and a callout can hold a stat. Put stats in the columns of a
 `columns` element to show them in a row.
 
-## The count
+## Count
 
 With `count true`, the number counts from `from` to the value:
 
@@ -53,14 +53,14 @@ With `count true`, the number counts from `from` to the value:
 
 ![Two stats count when the slide shows, and a third stat counts at step 2](https://raw.githubusercontent.com/rellen/expresso/media/stat.gif)
 
-## The look
+## Look
 
 The number has the accent color and a bold weight, and the label has the muted color. Each
 dims with the state `dim`. The number is 3em high, and at most a quarter of its box width,
 so three stats fit in a row. A deck can set `--stat-size` in the `css` option to change the
 size, such as `.stat { --stat-size: 4em; }`.
 
-## The HTML
+## HTML
 
 The renderer writes a `figure` with the class `stat`. It holds a `p` with the class
 `stat-value` and a `figcaption` with the class `stat-label`. The `p` holds:
@@ -73,7 +73,7 @@ The renderer writes a `figure` with the class `stat`. It holds a `p` with the cl
 
 With `count`, the number also has the class `stat-count`.
 
-## The errors
+## Errors
 
 The compiler gives an error for these:
 

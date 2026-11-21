@@ -1,9 +1,9 @@
-# The places of the elements
+# Places of the elements
 
 This page gives the elements that each element can hold. The compiler gives an error for an
 element in a place that this page does not give.
 
-## The rules
+## Rules
 
 | Element | Holds |
 | --- | --- |
@@ -36,7 +36,7 @@ These rules give some facts:
 - A `node` entity goes in a chart or in a tree. A frame holds no `node`.
 - A tree nests to each depth: a node of a tree holds nodes.
 
-## The error
+## Error
 
 The error gives the slide, the element, its parent and the elements that the parent holds:
 

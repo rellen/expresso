@@ -1,4 +1,4 @@
-# The theme option
+# `theme` option
 
 The `theme` option of a deck gives the colors of the slides, of the code and of the
 presenter. Each built-in theme meets the contrast minimums of WCAG 2.2 and of APCA below.
@@ -18,14 +18,14 @@ end
 
 `Expresso.Builder` takes the same option, such as `deck(slides, theme: :dracula)`.
 
-## The values
+## Values
 
 | Value | Colors |
 | --- | --- |
 | `:default` | Black text on white, with the code colors of Tango. A deck without the option gets this theme. |
 | The name of a built-in theme, such as `:dracula` | That theme. The next section lists the built-in themes. |
 | A map with a `#rrggbb` color for each slot from `:base00` to `:base0F` | A base16 scheme of your own. The compiler gives a warning for each color that does not meet its minimum, and the deck compiles. |
-| `colors: map, adjust: true` | The map, with each color that does not meet its minimum adjusted. See [the adjustment of a map](#the-adjustment-of-a-map). |
+| `colors: map, adjust: true` | The map, with each color that does not meet its minimum adjusted. See [the adjustment of a map](#adjustment-of-a-map). |
 | `dark: theme, light: theme` | Two variants. Each value is a name or a map, and `adjust: true` applies to each map. See [two variants](#two-variants). |
 
 The compiler gives an error for each of these values:
@@ -39,7 +39,7 @@ Paper always gets the default theme. A printer gives a white sheet, and a dark t
 it wastes ink. A PDF of `--pdf` with one page for each slide is not for paper, and it
 keeps the theme of the deck. See [The export options](export-options.md).
 
-## The built-in themes
+## Built-in themes
 
 Each built-in theme comes from a base16 scheme of the
 [Tinted Theming project](https://github.com/tinted-theming/schemes). `assets/themes/`
@@ -92,7 +92,7 @@ A dark theme needs the largest change, because most dark schemes give their comm
 contrast. The contrast ratio of WCAG is too high for a color on a dark background, and the
 APCA minimum then makes the color lighter.
 
-### The gallery
+### Gallery
 
 Each picture shows the deck `examples/themes/showcase.exs` at its second step, with code,
 a dimmed item, the progress bar and the slide number. `mix expresso.gifs` records one
@@ -129,7 +129,7 @@ tells how.
 | `:tomorrow_night` | ![Tomorrow Night, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-tomorrow-night.png) |
 | `:zenburn` | ![Zenburn, with code and a dimmed item](https://raw.githubusercontent.com/rellen/expresso/media/theme-zenburn.png) |
 
-### The schemes that are not built in
+### Schemes that are not built in
 
 A scheme is built in only when no color moves more than 0.4. A larger change gives a
 color that the reader does not know as a color of the scheme. These schemes meet the
@@ -148,9 +148,9 @@ how to add one.
 | Nord | 0.37 |
 
 A map with the colors of a scheme that is not built in still works. The compiler then gives
-a warning for each color under its minimum. See [the warnings](#the-warnings).
+a warning for each color under its minimum. See [the warnings](#warnings).
 
-## The minimums
+## Minimums
 
 | Part | WCAG 2.2 | APCA | WCAG criterion |
 | --- | --- | --- | --- |
@@ -192,7 +192,7 @@ variants. A deck needs no option for it.
 With the default theme, 9 roles change. The accent goes from 5.9:1 to 7.1:1, and the text
 stays at 21:1. With `:dracula`, no role changes, because each role has 7:1 or more.
 
-## The warnings
+## Warnings
 
 The compiler gives a warning for each role of a map that does not meet a minimum. The deck
 still compiles, and the colors of the map stay as you give them. Each warning gives the
@@ -217,7 +217,7 @@ returns each role that fails. For the steps, see
 A warning of a variant names it, such as `the dark theme gives code_comment a contrast of
 ...`. A built-in variant gets no warning, because it meets each minimum.
 
-## The adjustment of a map
+## Adjustment of a map
 
 `adjust: true` changes the lightness of each role in a map that does not meet its minimum,
 as `Expresso.Palette.Builtin` does for a built-in theme. The hue of each color and each
@@ -252,7 +252,7 @@ variant:
 For the steps, see
 [Give a deck a light and a dark variant](../how-to/give-a-deck-two-variants.md).
 
-## The roles
+## Roles
 
 The renderer writes a custom property for each role of the theme on `:root`. The `css`
 option of the deck comes after them, so a deck can replace a role.

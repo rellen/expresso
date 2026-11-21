@@ -2,7 +2,7 @@
 
 This guide shows how to draw a sankey chart. A sankey shows how an amount goes from sources
 to targets through other nodes. For each option and each rule of the layout, see
-[the charts of flows](../reference/chart-element.md#the-charts-of-flows).
+[the charts of flows](../reference/chart-element.md#charts-of-flows).
 
 ## Draw a sankey from flows
 
@@ -95,7 +95,7 @@ Examples.ChartSankeyFunnel
 ![A funnel from 10,000 visits to 2,400 trials, 600 payments and 450 renewals, with a gray node next to each stage for the people who leave](https://raw.githubusercontent.com/rellen/expresso/media/chart-sankey-funnel.png)
 
 For the values of each option, see
-[the node entity](../reference/chart-element.md#the-node-entity).
+[the node entity](../reference/chart-element.md#node-entity).
 
 ## Show a change over time
 

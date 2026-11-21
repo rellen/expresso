@@ -1,4 +1,4 @@
-# The code element
+# `code` element
 
 The `code` element shows source code with the colors of its language. The source is the
 `text` option, or the file of the `src` option.
@@ -18,16 +18,16 @@ end
 `Expresso.Builder` takes the same options, such as
 `code("elixir", src: "lib/my_app/server.ex", lines: 40..58, line_numbers: true)`.
 
-## The options
+## Options
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| The first argument | The name of a language, such as `"elixir"` or `"js"` | The colors of the language. See [the languages](#the-languages). Without it, the code has no colors. |
+| The first argument | The name of a language, such as `"elixir"` or `"js"` | The colors of the language. See [the languages](#languages). Without it, the code has no colors. |
 | `text` | A string | The source code. |
 | `src` | The path of a file, relative to [the root option](root-option.md) of the deck, or to the working directory of the command | The source code is the text of the file. |
 | `lines` | A range, such as `10..24`, or texts, such as `[from: "def start(", to: :block]` | The element shows only these lines of the `src` file. See [lines from a text](#lines-from-a-text). The default is each line. |
 | `line_numbers` | `true` or `false` | Show the number of each line. The default is `false`. |
-| `reveal` | Line numbers, ranges and texts, such as `[10..12, 13..20]` or `[[from: "def start(", to: "end"]]` | Each group of lines shows at its own step. See [the groups](#the-groups) and [the overlay options](overlay-options.md). |
+| `reveal` | Line numbers, ranges and texts, such as `[10..12, 13..20]` or `[[from: "def start(", to: "end"]]` | Each group of lines shows at its own step. See [the groups](#groups) and [the overlay options](overlay-options.md). |
 | `dim` | `true` or `false` | Each group dims when a later group shows. |
 | `highlight` | Groups in the form of `reveal` | Each line shows at each step. Each group is in focus at its own step, and the other lines dim. |
 | `trailing_comments` | `true` or `false` | `false` removes a comment at the end of a line that has code before it. See [long lines](#long-lines). The default is `true`. |
@@ -42,7 +42,7 @@ end
 The element takes `text` or `src`, and not both. It takes `reveal` or `highlight`, and not
 both.
 
-## The languages
+## Languages
 
 A lexer gives the colors of a language. These names have a lexer:
 
@@ -94,7 +94,7 @@ from the text of the file:
 | Key | Value | Effect |
 | --- | --- | --- |
 | `from` | The text of the first line, or a part of it | The excerpt starts at the line that holds the text. The default is line 1. |
-| `to` | The text of the last line, or a part of it, or `:block` | The excerpt ends at the line that holds the last character of the text. The text is the first one after the start of the `from` text. With `:block`, the excerpt ends at [the end of the block](#the-end-of-a-block) that the `from` line opens. The default is the last line. |
+| `to` | The text of the last line, or a part of it, or `:block` | The excerpt ends at the line that holds the last character of the text. The text is the first one after the start of the `from` text. With `:block`, the excerpt ends at [the end of the block](#end-of-a-block) that the `from` line opens. The default is the last line. |
 
 A text can hold a line break, such as `"\n  end"`, which is the first line of the file
 that starts with `  end`. The lines keep their numbers in the file, so the first line of
@@ -102,7 +102,7 @@ the excerpt can be line 40. A `reveal` or a `highlight` uses those numbers.
 
 For the steps, see [Show code on a slide](../how-to/show-code.md).
 
-### The end of a block
+### End of a block
 
 `to: :block` ends the lines at the end of the block that the `from` line opens, such as a
 function, an `if` or a `do` block. The indent finds the block, so the option stays correct
@@ -125,7 +125,7 @@ code "js" do
 end
 ```
 
-## The errors
+## Errors
 
 The compiler gives an error for:
 
@@ -150,14 +150,14 @@ The render gives an error for a token group with no token.
 `Expresso.Builder.deck/2` raises a `Spark.Error.DslError` for an error of the file, such as a
 file that it cannot read.
 
-## The warnings
+## Warnings
 
 The compiler gives a warning for a language that no lexer registers, such as `"elixr"`.
 The warning names the slide and gives the list of the languages. The deck still compiles,
 and the element shows its lines with no colors. `Expresso.Builder.deck/2` writes the same
 warning to the standard error.
 
-## The groups
+## Groups
 
 A group of `reveal` or `highlight` takes one of these forms:
 
@@ -166,19 +166,19 @@ A group of `reveal` or `highlight` takes one of these forms:
 | A number | `12` | The line with that number. |
 | A range | `12..15` | The lines with those numbers. |
 | Texts | `[from: "next = ", to: "{:reply"]` | From the line that holds the `from` text to the line that holds the last character of the `to` text. |
-| A block | `[from: "if (extra) {", to: :block]` | From the line that holds the `from` text to [the end of its block](#the-end-of-a-block). |
+| A block | `[from: "if (extra) {", to: :block]` | From the line that holds the `from` text to [the end of its block](#end-of-a-block). |
 | A start text only | `[from: "def handle_call("]` | The line that holds the text. |
 | Each token with a text | `[each: "count"]` | No line. Each token with the text is in focus. Only `highlight` takes this form. See [each token with a text](#each-token-with-a-text). |
 
 A number is the number of the line in the file, as
-[the numbers of the lines](#the-numbers-of-the-lines) tell. With `relative true`, a number
+[the numbers of the lines](#numbers-of-the-lines) tell. With `relative true`, a number
 counts from the first line of the excerpt, so `1` is that line. Expresso finds texts inside the
 text of the element, with the rules of [lines from a text](#lines-from-a-text). The `from` text
 must be in the text of the element one time, and the `to` text must come after it. The forms can
 mix in one option.
 
 With `effect :type`, the lines of a `reveal` group type one after the other, one
-character at a time. See [The effect `:type`](overlay-options.md#the-effect-type).
+character at a time. See [The effect `:type`](overlay-options.md#effect-type).
 
 ## Long lines
 
@@ -192,7 +192,7 @@ A line that is too long for the element breaks at the edge. Two options help:
 The two options change only the slide. `lines`, the groups of `reveal` and `highlight`,
 and the texts of `from` and `to` still read the text of the file.
 
-## The numbers of the lines
+## Numbers of the lines
 
 Each line has a number. The first line of the `text` option is line 1. With `src`, the
 number of a line is its number in the file, so the first line of `lines 40..58` is line 40.
@@ -204,14 +204,14 @@ With `line_numbers true`, each line starts with its number. The numbers are in o
 with the color that the theme gives to comments. A screen reader does not read the numbers,
 and a copy of the text from the slide does not take them.
 
-## The place on the slide
+## Place on the slide
 
 A code element that is alone in its parent takes the free height, and its code stays in the
 center. Code elements that share a parent, such as two excerpts in one column, take only
 the height of their lines. Their code starts at the left edge of the parent, so the lines
 of each excerpt align.
 
-## The highlight option
+## `highlight` option
 
 The `highlight` option takes groups of lines, in the same form as `reveal`. Each line
 shows at each step. Each group is in focus at one step, in the order of the option:
@@ -254,7 +254,7 @@ end
 - `reveal` does not take a token group, because a hidden token leaves an empty space in its
   line.
 
-### The key d
+### Key `d`
 
 The key `d` turns off the dimming in the present view, for each code element and for each
 series of a chart. The dimming stays off until the next change of the step. The key works

@@ -3,11 +3,11 @@
 This document tells you how Expresso makes an HTML document from a deck. It gives the
 structure of the code at this time. It also names the parts that are not complete.
 
-## The two input paths
+## Two input paths
 
 Expresso has two ways to make an `Expresso.Deck` struct. Both paths reach HTML.
 
-### The imperative path
+### Imperative path
 
 A script makes a deck with the functions of `Expresso.Builder`, and the script returns the
 deck.
@@ -26,7 +26,7 @@ deck(
 )
 ```
 
-`Expresso.main/2` reads a file of this kind. The section "The render pipeline" gives the
+`Expresso.main/2` reads a file of this kind. The section "Render pipeline" gives the
 steps.
 
 The functions come from the DSL. `Expresso.Builder.Generator` reads the definition of
@@ -42,7 +42,7 @@ Spark has no public function for this work, so the generator depends on two part
 Spark that are not public: `Spark.Dsl.Entity.build/5` and the form of the DSL state.
 After an update of Spark, the parity tests find a change of either part.
 
-### The DSL path
+### DSL path
 
 A module declares a deck with the Spark DSL. The script returns the module.
 
@@ -103,7 +103,7 @@ heading from the metadata. Therefore `Expresso.from_dsl_state/1` calls `Expresso
 slide, and that function puts the heading into the metadata. The default slide template
 writes the heading container only when the metadata contains a heading.
 
-## The render pipeline
+## Render pipeline
 
 `Expresso.main/2` does these steps:
 
@@ -123,7 +123,7 @@ also an error.
 
 The function also has a clause for `nil`, which writes the usage text of the mix task to
 the standard error and returns an error tuple. The two commands never call the function
-with `nil`: "The two commands" below tells what they do for a command with no argument.
+with `nil`: "Two commands" below tells what they do for a command with no argument.
 
 `Expresso.to_deck/1` accepts three values:
 
@@ -152,13 +152,13 @@ an error tuple, and `Expresso.main/2` writes the message.
 
 The wildcard of step 1 is relative to the working directory of the command. This
 repository has no `priv/templates/` directory, so step 1 compiles no file here. A deck
-that needs a custom template gives a module instead. See "The templates".
+that needs a custom template gives a module instead. See "Templates".
 
 Step 5 is necessary because Floki drops a doctype node. Therefore the renderer cannot
 write the doctype, and the deck function adds it after step 4. Without the doctype a
 browser uses the quirks mode, and the layout is not correct.
 
-### The two commands
+### Two commands
 
 Two entry points run a command line:
 
@@ -177,9 +177,9 @@ help text, so the two commands take the same arguments. `run/3` reads the argume
 | An output path that names the input file, also through a link, in each mode | Writes `The output file is the input file`, and the usage text, to the standard error. The deck does not change. | 1 |
 | No input path | Writes the usage text to the standard error. | 1 |
 | `<input> [output]` | Calls `Expresso.main/2`. | 0, or 1 for an error |
-| `<input> [output] --watch` | Calls `Expresso.Watch.run/3`. See "The watch mode". | 1, after an error |
-| `<input> [output] --check[=<level>]` | Calls `Expresso.Check.run/3`. See "The check mode". | 0, or 1 for a problem or an error |
-| `<input> [output] --pdf <file>`, `--png <directory>` or `--card <file>` | Calls `Expresso.Export.run/3`. See "The export". | 0, or 1 for an error |
+| `<input> [output] --watch` | Calls `Expresso.Watch.run/3`. See "Watch mode". | 1, after an error |
+| `<input> [output] --check[=<level>]` | Calls `Expresso.Check.run/3`. See "Check mode". | 0, or 1 for a problem or an error |
+| `<input> [output] --pdf <file>`, `--png <directory>` or `--card <file>` | Calls `Expresso.Export.run/3`. See "Export". | 0, or 1 for an error |
 
 Each argument that starts with `-` is an option, except `-` alone. `-` is a path, and
 `Expresso.main/2` reads it as the standard input or the standard output. A path that
@@ -246,7 +246,7 @@ The VM stops in less than one second after the launcher. This watch works with e
 of Burrito, so Expresso does not wait for a change in the launcher. Two tests of
 `test/release/` send SIGTERM to the launcher, in the watch mode and in `--check`.
 
-## The check mode
+## Check mode
 
 `mix expresso deck.exs --check` checks a deck, and writes a report to the standard output.
 `docs/reference/check-option.md` gives the levels and the report. `Expresso.Check` runs a
@@ -320,7 +320,7 @@ These are the reasons for its design:
   clock of the browser does not wait for the decode of an image. `docs/slide-backgrounds.md`
   gives the design.
 
-## The export
+## Export
 
 `mix expresso deck.exs --pdf deck.pdf` writes a PDF of the deck, `--png slides` writes
 a PNG file of each slide, and `--card card.png` writes the picture of a link preview.
@@ -346,7 +346,7 @@ limit, and `window/4` finds the size of the window that gives a page of a size.
 The browser writes each file into a private directory, and the export then writes it to
 its path. `docs/export.md` gives the design.
 
-## The watch mode
+## Watch mode
 
 `mix expresso deck.exs --watch` serves the document at `http://127.0.0.1:4100/`. After
 each change to a file of the deck, it renders the deck again, and the page reloads on the
@@ -359,7 +359,7 @@ same step. `--port` gives a different port, and the binary takes the same option
    records each file that the render reads. `render_file/1` returns an error tuple for each
    failure and does not raise, so a deck with an error does not stop the watch mode. The
    render also runs inside `Expresso.Element.Diagram.Cache.run/2`, which keeps the SVG of
-   each graph from the render before. See "The diagram".
+   each graph from the render before. See "Diagram".
 3. After a good render, `Expresso.Watch.Server.publish/2` serves the new document, and the
    page reloads. With an output path, the watch mode also writes that file.
 4. After a failed render, the watch mode writes the error to the standard error. The page
@@ -375,7 +375,7 @@ The watch mode watches these files:
   sound, a chart file, a code file, an icon file and a style sheet. Each module that reads
   one of these files calls `Expresso.DeckFile.read/1`, which records the path only inside
   `Expresso.DeckFile.track/1`. Thus no module needs code for the watch mode.
-- The custom templates in `./priv/templates/`. See "The templates".
+- The custom templates in `./priv/templates/`. See "Templates".
 
 Each element that reads a file gives the same message for a file that it cannot read.
 `Expresso.DeckFile.read!/2` raises it at render time, for an image, a diagram, a page, a
@@ -402,7 +402,7 @@ The transformer is the first place that knows the option. An entity of the DSL i
 before the options of the deck are known, so an entity cannot join a path to the root.
 The image, the diagram, the embed and the style sheet read their files at render time, so
 the joined path is enough for them. The code element reads its file at compile time, as
-"The code" tells, so the transformer also reads that file.
+"Code" tells, so the transformer also reads that file.
 
 The watch mode does not see a file that the deck script reads by itself, for example with
 `File.read!/1` or `Code.require_file/1`. A failed render can stop before it reads each file
@@ -412,7 +412,7 @@ Each render evaluates the deck file again, so a deck module gets a new definitio
 time. During the render only, the watch mode sets the compiler option
 `ignore_module_conflict`, so the compiler does not warn about the new definition.
 
-### The contract and the parts that can change
+### Contract and parts that can change
 
 The user sees these parts of the watch mode, and a later version must keep them:
 
@@ -439,7 +439,7 @@ dependency. They also work in the same way on each operating system and in the b
 A deck has a small number of files, so a snapshot two times each second costs little.
 The cost is a delay of 500 milliseconds or less before each render and each reload.
 
-### The server
+### Server
 
 The server is `:httpd` from the `inets` application of OTP. `mix.exs` puts `:inets` in
 `extra_applications`, so the release of the binary holds it. The server listens on
@@ -478,14 +478,14 @@ file next to the document".
 The address holds the slide and the step, so a reload shows the same step. The speaker
 view opens the same address, so it gets the script and reloads too. `window.opener` stays
 after a reload, and the present view finds the speaker view again from its next message.
-See "The messages between the windows".
+See "Messages between the windows".
 
 `/` with a query, such as `/?speaker=` or `/?scheme=dark`, also gets `index.html`.
 `mod_alias` of OTP looks for the directory index with the query still in the path, so it
 does not add `index.html`, and `mod_get` then refuses the directory with the status 403. A
 `re_write` rule of `mod_alias` therefore changes `/?` to `index.html?`.
 
-### The private directory
+### Private directory
 
 The watch mode and the browser levels of `--check` write a copy of the deck into a
 directory from `Expresso.PrivateDir`. Many computers have one `/tmp` for all the users, so
@@ -502,7 +502,7 @@ input. When the VM halts or the owner process stops, the operating system closes
 pipe. The `sh` process then removes the directory. `Expresso.PrivateDir.close/1` removes
 the directory at once, and `Expresso.Watch.Server.stop/1` calls it.
 
-## The document
+## Document
 
 `Expresso.Deck.render/1` writes one HTML document with this structure. Each part below
 the doctype comes from `Expresso.Renderer.render/1`:
@@ -609,7 +609,7 @@ The two views hold the same slides. Therefore a selector on the full document fi
 element two times. A test that counts an element, or that reads its text, must select
 inside `.screen` or inside `.handout`.
 
-### The font
+### Font
 
 The document of a deck is one file, and a font cannot be a second file.
 `assets/fonts.css` holds one `@font-face` rule for each face of the theme, and each rule
@@ -655,7 +655,7 @@ a document with a `math` element. The font of Latin Modern Math, the default, ad
 approximately 540 kilobytes to such a document. `priv/fonts/math/SOURCE` names the origin
 and the license of each file.
 
-### The style sheets and the bundle
+### Style sheets and bundle
 
 The renderer holds `assets/style.css` and the presenter bundle in module attributes.
 It reads them with `File.read!/1` at compile time. The style sheet, and each source of the
@@ -690,9 +690,9 @@ directory. Thus a CSS file that works in a browser next to its files also works 
 gives the names of the custom properties, the effects and the transitions of the theme to
 three verifiers: `Expresso.Overlay.PropertyVerifier`, `Expresso.Overlay.EffectVerifier`
 and `Expresso.TransitionVerifier`. `docs/overlays.md` gives the rules of the first two, and
-"The transitions" gives the rules of the third.
+"Transitions" gives the rules of the third.
 
-### The colors
+### Colors
 
 `assets/style.css` declares no color. Each color is a custom property of a role, such as
 `--text`, `--accent` or `--code-keyword`. The renderer writes the roles of the theme of
@@ -708,7 +708,7 @@ warning for a scheme of a deck that fails, and `Expresso.Color` calculates the c
 and the lightness. `docs/reference/theme-option.md` gives the roles, the minimums and the
 built-in themes.
 
-### The contrast of a theme
+### Contrast of a theme
 
 This section gives the formulas of `Expresso.Color` and `Expresso.Palette`, and it tells
 why the minimums have their values. Each constant of a formula is a module attribute with
@@ -754,7 +754,7 @@ This table shows why a theme needs both measures:
 The second and the fourth row have the same contrast ratio. On white, APCA gives Lc 72. On
 the dark background, it gives Lc 37, which is less than its minimum for large text.
 
-#### The adjustment of a color
+#### Adjustment of a color
 
 `Color.adjust/4` changes the lightness of a color until the color meets a contrast ratio
 and an `Lc`:
@@ -853,7 +853,7 @@ The change is a second set of values and not a rule of the style sheet, because 
 renderer calculates the dimmed colors for each deck. `assets/style.css` holds only the
 rule that makes the outlines of the menu and of the search field 3 pixels wide.
 
-#### The dimmed colors
+#### Dimmed colors
 
 An opacity `o` changes each channel of a color to `o × color + (1 - o) × background`, and
 the contrast of the color becomes less:
@@ -921,9 +921,9 @@ rule, so it renders as before. Decision 5 of `docs/dim-state.md` gives the reaso
 A series of a chart dims in a different way. Its marks fade to `--chart-dim-opacity`, 0.3
 by default, and its texts take the dimmed color of the text. A colored bar at
 `--dim-opacity` looked almost the same as a bar in full color, and the texts keep the
-minimums of a dimmed text. "The chart" tells how the series gets the state.
+minimums of a dimmed text. "Chart" tells how the series gets the state.
 
-### The style of a slide
+### Style of a slide
 
 The renderer writes an inline `style` attribute on each `section` of the present view.
 The first slide gets `display: flex`, and each other slide gets `display: none`. A
@@ -965,7 +965,7 @@ its content. The custom property `--slide-padding` gives the space between the e
 content, `0 1rem` by default. The default slide template writes the heading with no inline
 style, so a rule `h1` of the `css` option can align it.
 
-## The templates
+## Templates
 
 A template makes the HTML for a part of the document. There are two kinds.
 
@@ -1021,7 +1021,7 @@ end
 
 `Expresso.Builder` takes the same option, such as `slide("first", template: MySlideTemplate)`.
 
-## The elements
+## Elements
 
 An element is the content of a slide. These are the elements at this time:
 
@@ -1048,7 +1048,7 @@ An element is the content of a slide. These are the elements at this time:
 - `Expresso.Element.Stat`
 - `Expresso.Element.Icon`
 
-### The parts of an element module
+### Parts of an element module
 
 An element module has `use Expresso.Element`, and these parts:
 
@@ -1096,7 +1096,7 @@ so each rule of the theme still selects the element. The option is not part of t
 attributes, because the root tag already has a `class` attribute, and HTML takes only the
 first of two.
 
-### The kinds of element in the script
+### Kinds of element in the script
 
 `Expresso.Element.kinds/0` holds one table of the kinds of element. Each row gives the
 module, the class of the root tag, the name of the kind, and the content that the auto
@@ -1116,7 +1116,7 @@ These are the reasons for this design:
 - **A list item, a row and a spacer have no row.** The first two are parts of an element,
   and a spacer shows nothing.
 
-### The walks over the tree of elements
+### Walks over the tree of elements
 
 A container, such as a text box, a column or a list, holds its children under the key
 `:elements`. `Expresso.Element.Tree` gives the walks over this tree, and each one reads the
@@ -1148,7 +1148,7 @@ The tree is not a protocol. Each container keeps its children under the same key
 `Map.get/2` reads each one in the same way. A protocol would need about 30 `defimpl`
 blocks, or a `@fallback_to_any` that calls the same `Map.get/2`.
 
-### The text box and the text area
+### Text box and text area
 
 A `text_box` contains other elements. A `text_area` contains text. The renderer writes the
 text with `Phoenix.HTML.raw/1`, so the text can contain HTML.
@@ -1159,7 +1159,7 @@ text with an inline element, such as `<b>`, breaks into more than one line. The 
 function of a text area puts the text in one block element, which is one flex item. A
 custom element that writes text from the deck must do the same.
 
-### The image
+### Image
 
 An `image` shows an image file. The document of a deck is one file, so the image cannot be
 a second file. `Expresso.Image` reads the file at render time, and it makes a data URI from
@@ -1209,17 +1209,17 @@ The theme does not register `--image-width` with the `@property` at-rule. A regi
 property always has a value, so the fall back to `auto` would not work, and each image
 would take the width zero.
 
-### The list
+### List
 
 A `list` holds `item` elements, and an item holds text and nested lists. A list can nest
 to each depth, because the `list` macro of the slide stays in scope in the block of an
-item. See "The definitions of the elements" below. `Expresso.ElementPagesTest` makes sure
+item. See "Definitions of the elements" below. `Expresso.ElementPagesTest` makes sure
 of a fourth level. The
 `ordered` option gives an `ol` element, and the default is a `ul` element. The `reveal`
 option shows the items one after the other, and `docs/overlays.md` gives its rules. The
 text of an item goes into one block element, as in a text area, and it can contain HTML.
 
-### The table
+### Table
 
 A `table` holds `row` elements, and a row takes a list of strings as its cells. Each cell
 can contain HTML. The `header` option makes the first row the header, and the renderer
@@ -1234,14 +1234,14 @@ empty `th` element has no name. The `caption` option writes a `caption` element 
 first child of the table. `Expresso.Element.Table.check/1` refuses `caption_hidden`
 without `caption`.
 
-### The quotation
+### Quotation
 
 A `quotation` takes its text as its first argument, and the `by` option gives the name of
 the source. The renderer writes a `figure` element with a `blockquote` element, and the
 source goes into a `figcaption` element. The entity is not named `quote`, because
 `Kernel.SpecialForms.quote/2` has that name, and a call of the DSL would be ambiguous.
 
-### The spacer
+### Spacer
 
 A `spacer` has no content. The theme gives it `flex-grow: 1`, so it takes the free space
 of its container and pushes the elements after it to the end. Two spacers around an
@@ -1249,7 +1249,7 @@ element put the element in the middle. Write `spacer()` with parentheses, as for
 The `auto_reveal` option of the slide skips a spacer, as it skips a footnote. A spacer
 with a step of its own gives a step at which the presenter sees no change.
 
-### The code
+### Code
 
 A `code` element shows source code. The entity takes the name of the language as its
 optional first argument. The `text` option holds the source, or the `src` option names a
@@ -1306,7 +1306,7 @@ each of these languages:
 - diff
 
 Hex has no Makeup lexer for many other languages. The modules of `Expresso.Lexers` are
-lexers of this project, and "The languages" in `docs/reference/code-element.md` lists them.
+lexers of this project, and "Languages" in `docs/reference/code-element.md` lists them.
 Each one is pure Elixir with NimbleParsec, so the binary of Burrito needs no native
 library. A package with a native library, such as `makeup_syntect`, was the other choice.
 It also registers approximately 200 names, and some of those names would replace the
@@ -1390,7 +1390,7 @@ that share a parent do not grow, and their code starts at the left edge of the p
 rule `.code:has(~ .code), .code ~ .code` of `assets/style.css` finds them.
 
 
-### The window
+### Window
 
 The `window` option puts a code element, an image or an embed into a frame that looks like
 a window of an operating system. `Expresso.Element.Window` gives the rules:
@@ -1404,7 +1404,7 @@ a window of an operating system. `Expresso.Element.Window` gives the rules:
   attributes and its place, so the steps, the morph and the layout check do not change.
 - **The colors of the theme.** The dots take the roles `danger`, `warning` and `success`,
   so each theme gives them a color with its own contrast.
-### The columns
+### Columns
 
 A `columns` element puts its `column` elements side by side, and a column holds the same
 elements as a text box. The theme makes the element a flex row. A column without a
@@ -1416,7 +1416,7 @@ A column takes the `at` option and the `on` entity. The extension does not give 
 or `text_box` as a child of a column, but the DSL accepts both in a column, and they
 render in the column. `Expresso.ElementPagesTest` makes sure of it.
 
-### The math
+### Math
 
 A `math` element takes MathML as its first argument, from the `<math>` tag to the
 `</math>` tag. A browser renders MathML Core without a script and without a font file,
@@ -1442,12 +1442,12 @@ the slide, as `Expresso.Element.slide_pixels/1` tells. A length of a part of a d
 the units of its SVG file, so it keeps its pixels. `Expresso.Overlay.Render` walks each
 element with its parent, and the parent tells which rule applies.
 
-### The diagram
+### Diagram
 
 A `diagram` shows an SVG file. The `src` option gives the path, as for an image. The
 render function puts the SVG into the document as an element, and not as a data URI.
 Therefore the rules of the theme reach the parts of the diagram. The `alt` option gives the
-diagram the role `img` and a name. See "The accessibility".
+diagram the role `img` and a name. See "Accessibility".
 
 A `part` entity names an element of the file by its `id`, and its `at` option and `on`
 entities give the steps. The parts are the children of the diagram, so the transformer
@@ -1556,7 +1556,7 @@ code:
 - **The source is a file of the deck.** The render reads the source with
   `Expresso.DeckFile`, so the watch mode renders again after a change to the source.
 
-### The embed
+### Embed
 
 An `embed` shows a web page in a frame. `docs/reference/embed-element.md` gives the options
 for the user. These are the reasons for its design:
@@ -1591,7 +1591,7 @@ for the user. These are the reasons for its design:
   callout is a flex column with an automatic height, so an embed or a video in a callout
   is not a size container either. It uses the same width in each view and on paper.
 
-### The video
+### Video
 
 A `video` plays a WebM or an MP4 file. `docs/reference/video-element.md` gives the options
 for the user. It follows the design of the embed, with these differences:
@@ -1618,7 +1618,7 @@ for the user. It follows the design of the embed, with these differences:
 - **It has no sound.** A browser plays a video automatically only when it is muted. With
   `controls`, the video takes the clicks, and the presenter can turn the sound on.
 - **The captions are a `track`.** The `captions` option gives a WebVTT file, and the
-  renderer writes it as a data URI into a `track` of each copy. See "The accessibility".
+  renderer writes it as a data URI into a `track` of each copy. See "Accessibility".
 - **It uses the box of an embed.** The element has the classes of an embed, so the size,
   the poster under the video, and the rules that hide the frame in the handout view and in
   the menu apply to it.
@@ -1660,7 +1660,7 @@ into the document. `docs/external-media.md` gives the design. The parts are:
   element. `Expresso.Media.external/1` gives each element with no option that value
   before the renderer gives the elements their numbers.
 
-### The audio
+### Audio
 
 An `audio` element plays a sound file. `docs/reference/audio-element.md` gives the options
 for the user. It shares the design of the video: `Expresso.Media` numbers the files and
@@ -1678,7 +1678,7 @@ are the differences:
 - **It does not loop by default.** A signal or a clip of speech plays one time. A video
   loops by default, because a video of a demonstration usually repeats.
 
-### The QR code
+### QR code
 
 A `qr_code` shows a QR code of a text. `Expresso.Element.QrCode` calls `EQRCode.encode/2`
 at render time, and it writes the matrix of the code as SVG. These are the reasons for this
@@ -1700,7 +1700,7 @@ design:
 The `size` option goes into the custom property `--qr-size`, with the rule of the width of
 an image: `Expresso.Element.viewport_unit/1` writes a percentage as `vw`.
 
-### The footnote
+### Footnote
 
 A `footnote` gives a source at the bottom of a slide. It shows nothing in its place:
 `Expresso.Template.render_elements/1` skips it, as it skips a `pause`. The renderer
@@ -1720,7 +1720,7 @@ for this design:
   after the last page. It is not a `handout-page`, so the script does not count it as a
   step, and the style sheet hides it in the speaker view and in the overview.
 
-### The shape
+### Shape
 
 A `shape` draws a rectangle, an ellipse, a line or an arrow over a slide. It shows nothing
 in its place, as a footnote does. The renderer collects the shapes of a slide with
@@ -1751,7 +1751,7 @@ in its place, as a footnote does. The renderer collects the shapes of a slide wi
 - **The layer takes no click.** `pointer-events: none` sends a click on a shape to the
   slide, so a click still shows the next step.
 
-### The chart
+### Chart
 
 A `chart` draws a bar chart, a line chart or a pie chart as SVG in the document.
 `Expresso.Element.Chart` writes the SVG, and `Expresso.Element.Chart.Plot` holds the
@@ -1765,7 +1765,7 @@ to the items of a list. These are the reasons for this design:
 - **A box of 800 by 450 units.** The SVG scales the box to the width of the element. The
   width is `--chart-width`, and `--chart-height` limits the height. The height that is
   left in the slide also limits it, so the chart fits under the heading and the name of
-  the deck. "The style of a slide" tells how. A line, the edge of a mark and a line of the
+  the deck. "Style of a slide" tells how. A line, the edge of a mark and a line of the
   grid keep their width in pixels with `vector-effect: non-scaling-stroke`.
 - **Colors of their own.** The colors of a theme are colors of text. A measure of five
   colors of each built-in theme, with a simulation of each deficit of color vision in
@@ -1815,7 +1815,7 @@ to the items of a list. These are the reasons for this design:
   The state `dim` sets `--dim: 1`, and a series reads it into `--chart-dim`, so
   `dim true` and `highlight` dim in the same way.
 
-### The kinds of a chart
+### Kinds of a chart
 
 `Expresso.Element.Chart.Kinds` holds one table of the kinds of a chart. Each kind has a
 family, and the family decides which code draws it:
@@ -1850,7 +1850,7 @@ line differ in their marks, in their box and in the place of a category.
 `single/1` checks the frames of a chart of flows with the whole timeline. The check of each
 later frame therefore does not call it again for such a chart.
 
-### The treemap and the sunburst
+### Treemap and sunburst
 
 A treemap and a sunburst show the parts of a whole in groups.
 `Expresso.Element.Chart.Hierarchy` builds the tree, places the parts and draws them. These
@@ -1878,7 +1878,7 @@ are the reasons for this design:
 - **A label shows only when it fits.** The renderer estimates the width of the text of each
   label in each frame, and a channel hides a label that does not fit.
 
-### The Voronoi treemap
+### Voronoi treemap
 
 A Voronoi treemap fills a convex container with the parts of a whole in groups.
 `Expresso.Element.Chart.Voronoi` makes the layout, and `Expresso.Element.Chart.Hierarchy`
@@ -1912,7 +1912,7 @@ design:
   14px and 12px, then the name alone in each size. In the samples of the guide, these forms
   labeled each cell that the first form left with no label.
 
-### The charts of flows
+### Charts of flows
 
 A chart of flows shows how an amount goes between the nodes of a graph. A sankey is a chart
 of flows. `Expresso.Element.Chart.Sankey` makes the links, places the nodes and draws them.
@@ -1994,7 +1994,7 @@ has one drawing with no layer around it. `Layers` also holds these functions:
 private functions in each module, and Credo, Dialyzer and the coverage would point at the
 macro.
 
-### The scatter plot
+### Scatter plot
 
 A scatter plot holds `point` entities, or `series` that hold points, in place of
 categories and series of values. `Expresso.Element.Chart` sends each of its functions for
@@ -2015,7 +2015,7 @@ file, the assigns, the layout, the marks, the rules of the frames and the table.
   `Scatter.Trend` give the legends, the places of the labels, the points of a CSV file
   and the trend lines.
 
-### The waterfall chart
+### Waterfall chart
 
 A waterfall chart has one series. Its first value is the start, each other number is a
 change, and `:total` or `{:total, value}` marks a total column. `Expresso.Element.Chart`
@@ -2047,7 +2047,7 @@ the layout, the marks and the table to `Expresso.Element.Chart.Waterfall`.
   for each later frame. A text that changes, such as the signed change, has one copy for
   each state, and the label of the frame has the label of the frame of each state.
 
-### The table of a chart
+### Table of a chart
 
 Each chart writes a table of its values for a screen reader, because the SVG has
 `role="img"` and only the title. `Expresso.Element.Chart.Table.render/1` writes the table
@@ -2065,7 +2065,7 @@ The first cell of each row is the header of the row. The first header of the col
 `nil`: the corner then names nothing, so it is a `td` cell. A header with no text has no
 name for a screen reader. `Table.caption/2` puts the name of the values after the title.
 
-### The motion of a chart
+### Motion of a chart
 
 A chart with frames moves its marks from the values of one frame to the values of the next,
 and a chart with the effect `:grow` grows its marks when it shows.
@@ -2115,7 +2115,7 @@ browser runs no script for a mark. These are the reasons for this design:
   present view. A small chart has no morph key, because the morph between two slides pairs
   a key only when it occurs one time.
 
-### The tree
+### Tree
 
 A `tree` shows a hierarchy of nodes as boxes and lines, such as an org chart or the folders
 of a disk. `docs/tree.md` gives the design and the plan of its pull requests. These are the
@@ -2192,7 +2192,7 @@ reasons for this design:
   the title as its `aria-label` holds the same tree, and the style sheet hides it from the
   eye, as it hides the live region.
 
-### The callout
+### Callout
 
 A `callout` is a box with a kind, a header and the elements of a text box.
 `Expresso.Element.Callout` writes a `div` with the role `note`, a header, and the elements
@@ -2220,7 +2220,7 @@ in a body. These are the reasons for this design:
   `Expresso.PlacementTransformer` refuses a callout or `columns` in a callout. See "The
   definitions of the elements".
 
-### The table of contents
+### Table of contents
 
 A `toc` lists the sections of the deck. A slide with the `section` option starts a section.
 `Expresso.SectionTransformer` puts one `Expresso.Element.TocEntry` for each section into
@@ -2246,7 +2246,7 @@ this design:
 - **The metadata holds the section of each slide.** A template reads `:section` and writes
   it in a header. The `meta` option of a slide can still give a value of its own.
 
-### The stat
+### Stat
 
 A `stat` is a big number with a label. `Expresso.Element.Stat` writes a `figure`, and the
 style sheet and `assets/src/chart.ts` make the count. These are the reasons for this
@@ -2273,7 +2273,7 @@ design:
 - **A size from the box.** The number is at most a quarter of the width of its box, with a
   container query, so three stats fit in the columns of a slide without a change of size.
 
-### The icons
+### Icons
 
 An `icon` element shows an icon, and `:icon:name:` puts an icon into a text.
 `Expresso.Icon` holds the Lucide icons, and `Expresso.IconTransformer` puts the SVG into
@@ -2301,12 +2301,12 @@ the elements at compile time. These are the reasons for this design:
   signature of a text area or of an item does not read the text of a `<style>`, so an
   inline icon with a `<style>` does not change it.
 
-## The DSL
+## DSL
 
 `Expresso.Extension` gives the Spark extension. It contains one section, `deck`, which is a
 top level section. The section holds `slide` entities.
 
-### The entities
+### Entities
 
 - A `slide` holds the definition of each element entity, and the `pause` entity.
 - A `text_box`, a `column`, a `callout` and an `item` declare the key `elements` with no
@@ -2321,7 +2321,7 @@ top level section. The section holds `slide` entities.
 The `slide` entity takes an optional name as its first argument. The DSL accepts `slide do`
 and `slide "name" do`.
 
-### The definitions of the elements
+### Definitions of the elements
 
 `Expresso.Extension` defines each element one time, as a child of the `slide` entity. A
 container, such as `text_box`, `column`, `callout` and `item`, declares the key `elements`
@@ -2362,7 +2362,7 @@ The check reads the structs that Spark makes. An entity keeps only the children 
 that it declares, so an element in the block of a leaf, such as a `text_area` in a `code`
 block, is lost before the check, with no error.
 
-### The options of the overlays
+### Options of the overlays
 
 `docs/overlays.md` gives the meaning of each of these options:
 
@@ -2390,7 +2390,7 @@ A slide also has a `heading` option, a `notes` option and a `handout` option, an
 `section` option starts a section, and `Expresso.SectionTransformer` puts the section of
 each slide into its metadata.
 
-### The notes
+### Notes
 
 The `notes` option holds the notes of the speaker for each step of a slide, and a `note`
 entity holds a note for the steps of its `at` option. `Expresso.Element.Note` is the struct
@@ -2415,7 +2415,7 @@ deck: `false` for `print_notes: false`, and `true` otherwise. The style sheet th
 each `aside` in the handout view and on paper. The renderer still writes each `aside`,
 because the speaker view takes a copy of the notes of the page of the current step.
 
-### The slide numbers
+### Slide numbers
 
 The `slide_numbers` option of the deck shows the number of each slide and the number of
 slides, such as `3 / 12`. The renderer writes a `span` with the class `slide-number` into
@@ -2430,20 +2430,20 @@ number in the talk, or `nil`. `docs/hidden-slides.md` gives the design.
 
 In the present view, the style sheet puts the number in the corner of the window.
 
-### The transformer and the verifiers
+### Transformer and verifiers
 
 The extension imports nothing, and it lists seven transformers and four verifiers:
 
 - `Expresso.PlacementTransformer` refuses an element in a wrong place. It runs first, and it
-  changes nothing. See "The definitions of the elements".
+  changes nothing. See "Definitions of the elements".
 - `Expresso.PathTransformer` joins each relative path of the deck to the `root` option, and
-  it builds each code element and each chart with `src`. See "The watch mode".
+  it builds each code element and each chart with `src`. See "Watch mode".
 - `Expresso.CssTransformer` reads and scans the `css` option of the deck one time, and it
   persists the names under `:css_names`. It runs after the path transformer, which gives
   the path of the file.
 - `Expresso.IconTransformer` reads the files of the `icons` option of the deck, and it puts
   the SVG of each icon into its element and into the text of each text area and item. See
-  "The icons".
+  "Icons".
 - `Expresso.SectionTransformer` puts the section of each slide into its metadata, and the
   entries into each `toc`. It runs before the overlay transformer. See "The table of
   contents".
@@ -2455,18 +2455,18 @@ The extension imports nothing, and it lists seven transformers and four verifier
   the theme nor the CSS of the deck uses.
 - `Expresso.Overlay.SizeVerifier` gives a warning for a slide of very many steps.
 - `Expresso.ThemeVerifier` gives a warning for each role of a theme from a map that does
-  not meet its minimum, with a color that passes. See "The contrast of a theme".
+  not meet its minimum, with a color that passes. See "Contrast of a theme".
 - `Expresso.CodeVerifier` gives a warning for a language that no lexer registers. See
-  "The code".
+  "Code".
 
 `Expresso.VerifierTransformer` calls `verify/1` of each of these four checks:
 
-- `Expresso.GotoVerifier` refuses a `goto` option that names no slide. See "The links".
+- `Expresso.GotoVerifier` refuses a `goto` option that names no slide. See "Links".
 - `Expresso.Overlay.Verifier` reports a specification that breaks a rule.
 - `Expresso.Overlay.EffectVerifier` gives an error for a `css` file that the CSS transformer
   cannot read, and for an effect without a rule in the theme or in that style sheet.
 - `Expresso.TransitionVerifier` gives an error for a transition without a rule in the theme
-  or in the CSS of the deck. See "The transitions".
+  or in the CSS of the deck. See "Transitions".
 
 The four checks run in a transformer and not as verifiers, for the reason that "The
 definitions of the elements" gives. Spark reports the error of a verifier as a warning. The
@@ -2506,7 +2506,7 @@ holds the step labels in `labels`, a map from a step number to its name. The `la
 option of the slide and the `label` option of each `pause` give them.
 `docs/overlays.md` gives the rules.
 
-## The presenter
+## Presenter
 
 The presenter has an Elixir part and a TypeScript part. The Elixir part tells what each
 key, click and swipe does. The TypeScript part runs these rules in the browser.
@@ -2565,11 +2565,11 @@ The TypeScript part is under `assets/src/`. It has these modules:
 - `layout.ts` makes the layout check of `?check`. It shows each step with `dom.ts`, it
   measures the elements of the slide, and it writes a report into the document.
 - `check.ts` runs axe-core for `?check=a11y`, and it writes the result of the two checks
-  for the check mode. See "The check mode".
+  for the check mode. See "Check mode".
 - `background.ts` measures the contrast of each text on the background of its slide, for
   `?check=a11y`.
 - `search.ts` filters the list of keys, and `scheme.ts` changes the variant of a theme.
-- `morph.ts` finds the elements that two slides share. See "The morph".
+- `morph.ts` finds the elements that two slides share. See "Morph".
 - `chart.ts` writes the numbers that count, of a chart and of a stat.
 - `move.ts` measures each `move_to` of a part of a formula, and it sets the distance as
   custom properties of the part.
@@ -2581,7 +2581,7 @@ The TypeScript part is under `assets/src/`. It has these modules:
 The first slide is slide 1, and the first step is step 1. `docs/overlays.md` gives the
 rules of a step.
 
-### The list of the steps
+### List of the steps
 
 `Expresso.Steps` makes a list of each step of the deck, and the renderer writes it as JSON
 into the element `script#expresso-deck`. The element comes before the presenter bundle, so
@@ -2610,7 +2610,7 @@ program of the next section. `validateDeck` in `assets/test/validate.ts` decodes
 list of the fixture file.
 `docs/research/elixir-presenter-report.md` gives the reason for the list.
 
-### The program
+### Program
 
 The renderer writes the program of the deck as JSON into the element
 `script#expresso-program`, after the list of the steps. The program holds the first state
@@ -2680,7 +2680,7 @@ The schema also gives the constants of the script. `ELEMENT_KINDS` holds the kin
 element from `Expresso.Element.kinds/0`, and the layout check reads it. See "The kinds of
 element in the script".
 
-### The projections
+### Projections
 
 A **projection** is a rule that writes one part of the state to the document.
 `Expresso.Presenter.Default` declares each projection, and the program holds them. After
@@ -2702,7 +2702,7 @@ The renderer writes each part that does not change during the talk. Examples are
 The script still writes the parts that need the document: the slide of the current step,
 the list of keys of the mode, and the texts of the speaker view.
 
-### The options sync and reset
+### Options `sync` and `reset`
 
 Two options of `Expresso.Presenter.Default` tell what happens to a field outside the
 commands:
@@ -2717,7 +2717,7 @@ these rules is therefore a change to `Expresso.Presenter.Default` only, and neit
 interpreter changes. Neither option can name `index`: the message always holds the slide
 and the step, and a change of `index` starts the reset.
 
-### The tests and the bundle
+### Tests and bundle
 
 The unit tests of `assets/test/` test these modules with no browser. The browser tests of
 `test/e2e/` open a rendered deck in Chromium and operate the presenter with its keys, with
@@ -2729,7 +2729,7 @@ and `docs/development/browser-tests.md` gives the browser tests.
 not hold the bundle. The module is in `mix.exs`, because Mix runs the compilers before it
 compiles `lib/`. `docs/typescript.md` gives the design.
 
-### The keys
+### Keys
 
 `Expresso.Presenter.Default` holds the keys of each mode. The list of keys that `?` or `/`
 shows comes from it, and so do the tables of keys in
@@ -2763,7 +2763,7 @@ The tables do not give these rules:
   The rules of a step select the slide by its id, so this rule needs `!important`. The
   option `reset [:undim]` sets `undim` to `false` at each change of the step, so the next
   step dims the code again. The presenter does not have to press `d` again after an
-  answer. See "The options sync and reset".
+  answer. See "Options `sync` and `reset`".
 - `l` toggles the field `laser`, which is the laser pointer, and it sets `draw` to
   `false`. The field is in the options `sync` and `reset`, so the two windows have the
   same value, and a change of the step turns the pointer off. While the field is true, `main.ts` puts the element `laser` at
@@ -2802,7 +2802,7 @@ The tables do not give these rules:
   the address does. The speaker view writes the time left into the element
   `speaker-advance`. `docs/timed-advance.md` gives the design.
 
-### The list of keys
+### List of keys
 
 The list of keys is a `<dialog>` with a search field. The renderer writes it, and the
 script operates it with little code:
@@ -2834,7 +2834,7 @@ text at the first `Esc`, and the dialog then stays open.
 `f` calls the full screen functions of the browser, and `Escape` of the browser also takes
 the document out of full screen.
 
-### The mouse and the touch screen
+### Mouse and touch screen
 
 A click or a tap on the right two thirds of the window shows the next step, and on the
 left third the previous step. A swipe of one finger to the left shows the next step, and
@@ -2862,7 +2862,7 @@ does not go on to the click handler of the document, so it does not zoom or chan
 step. `menu` in `dom.ts` writes `aria-expanded` on the button. The export of `--png` hides
 the button, as it hides the progress bar.
 
-### The links
+### Links
 
 The `goto` option of a text area, an image or an item makes the element a link to a slide
 and a step. `docs/reference/goto-option.md` gives the option for the user.
@@ -2900,7 +2900,7 @@ Therefore the browser does not follow the link, and the history gets no entry. A
 only go to a slide and a step, so the handout view and the print show each state that a
 link can give.
 
-### The list of keys
+### List of keys
 
 `Expresso.Presenter.Help` makes the rows of the list of keys from the bindings of the
 definition. The interpreter runs the same bindings, so the list shows each key that
@@ -2913,7 +2913,7 @@ Each `details` element has the name of its mode in `data-mode`. `helpMode` in
 of that mode, gives it `data-current`, and opens the dialog with `showModal`. A printer does
 not get the list.
 
-### The progress bar
+### Progress bar
 
 The progress bar is the element `progress` at the bottom of the present view. The
 renderer writes it into each document. It also writes `data-progress` on the `body` from
@@ -2928,7 +2928,7 @@ into `--fraction` on the `body`, and the style sheet sets the width of the bar f
 The style sheet shows the bar in the present view only, and not on a black screen, in the
 overview or on paper. Its color is `--accent`, and a deck can set `--progress-color` and `--progress-height`.
 
-### The transitions
+### Transitions
 
 The `transition` option of the deck gives the transition from one slide to the next in the
 present view: `:fade`, `:slide`, `:zoom`, `:none` or a transition of the CSS of the deck.
@@ -2976,7 +2976,7 @@ rules, and the presenter does not know the names:
 
 A deck struct from data does not go through the verifier, so a kind without a rule fades.
 
-### The morph
+### Morph
 
 The morph moves each element that two neighbor slides share from its old box to its new
 box, inside the view transition of the slide change. The browser does the move, when the
@@ -2991,7 +2991,7 @@ The renderer writes three values:
   `Expresso.Overlay.Render.attributes/1`.
 - `data-morph-signature` on each element of a kind that the auto morph uses, and on the
   heading container of the default slide template. `Expresso.Morph.sign/1` computes it
-  before the render. See "The signature of the morph".
+  before the render. See "Signature of the morph".
 
 `pairs` in `morph.ts` finds the partners of two slides:
 
@@ -3026,7 +3026,7 @@ of the transition. The old and the new image of a group have `object-fit: contai
 full height of the group, so an element that changes its aspect ratio does not show two
 images of different sizes.
 
-### The signature of the morph
+### Signature of the morph
 
 `Expresso.Morph.sign/1` gives a signature to each element of a kind with a morph content:
 a hash of the name of its kind and of its content. `Expresso.Morph` tells the content of
@@ -3056,7 +3056,7 @@ each kind. These are the reasons for this design:
   it on the heading container. A custom template that writes no signature gets no morph
   of its heading.
 
-### The accessibility
+### Accessibility
 
 The document is an application, and not a page of text, so a screen reader needs more than
 the HTML of the slides. `docs/reference/accessibility.md` lists each part, and the browser
@@ -3113,7 +3113,7 @@ test `test/e2e/accessibility_test.exs` runs axe-core on each view. These are the
   file is small, so each copy of the slide holds its own copy, and the script needs no
   change.
 
-### The overview
+### Overview
 
 The overview shows the page of the last step of each slide in a grid. The state holds
 `overview` and `selected`, the number of the selected slide. `o` opens the overview, and
@@ -3139,7 +3139,7 @@ in the window.
 In the speaker view, the overview replaces the grid of the speaker view while it shows. A
 deck can set `--overview-color` for the outline of the selected slide, which has the color `--accent`.
 
-### The menu
+### Menu
 
 The menu lists each slide with a small copy of its last step, and a row for each step
 under it. A row of a step shows the number and the label of the step. See "Step labels"
@@ -3174,7 +3174,7 @@ each change. A slide with one step and no label gets `data-single` on the row of
 and the style sheet puts that row over the row of the slide. A deck can set `--menu-color`
 for the marks, which have the color `--accent`.
 
-### The handout view
+### Handout view
 
 The handout view knows only `j`, `k`, `p`, `a`, `?` and `/`. `j` and `k` change the state, and
 `p` then shows that step in the present view. The browser keeps each other key, so the
@@ -3182,7 +3182,7 @@ arrow keys and the space bar scroll the pages. A key with the Control, Alt or Me
 modifier always goes to the browser. `main.ts` stops the default operation of a key only
 when the key changes the state or calls a built-in function.
 
-### The speaker view
+### Speaker view
 
 The speaker view is the same document in a second window, with `?speaker` in the address.
 It shows two pages of the handout view: the page of the current step and the page of the
@@ -3221,7 +3221,7 @@ that part of the time. `done` is not `fraction`, because `fraction` is 1 at the 
 and the last step also needs its part of the time. The time left goes up to the next full
 second, so the timer and the time left always give the length of the talk.
 
-### The messages between the windows
+### Messages between the windows
 
 Each window sends its position to the other window with `postMessage`. The message holds
 the slide, the step and the fields of the option `sync`. Thus `b` in the speaker view
@@ -3260,7 +3260,7 @@ Before this rule, each window sent each position back. Two keys that came faster
 message then gave a loop. The echo of the first key came back after the second key. The
 two windows then sent the two positions to each other with no end.
 
-### The address
+### Address
 
 The fragment of the address holds the slide and the step, such as `#4.2`. `main.ts` reads
 it at load and at each `hashchange` event. It writes the fragment with
@@ -3271,7 +3271,7 @@ of slide 4.
 The query of the address gives options of the window: `?speaker`, `?all`, `?check`,
 `?duration=` and `?scheme=`. `main.ts` reads them at load only, and it does not write them.
 
-### The print
+### Print
 
 A printer gets the handout view, because a `@media print` block selects it. The key `p` is
 not necessary for a printer. It makes the handout view available on a screen, and a
@@ -3308,7 +3308,7 @@ A page of the handout view takes the full height of the screen, or of the paper.
 print block gives the paper a landscape orientation, because a slide is wider than it is
 high. Therefore each page keeps the proportions of a slide.
 
-### The layout check
+### Layout check
 
 `?check` in the address runs the layout check of `layout.ts`. `docs/reference/layout-check.md`
 gives what it finds. These are the reasons for its design:
@@ -3351,7 +3351,7 @@ gives what it finds. These are the reasons for its design:
   `axes.svg` and `cache.svg` was too small at 1920 × 1080, at 17 and 15.9 pixels. The text
   of the two files is 1 to 3 units larger than in the original deck of `iso-factories`.
 
-## The build
+## Build
 
 The repository gives a Nix shell. `flake.nix` and `shell.nix` give Erlang/OTP 29, Elixir
 1.20, Node 24 and Zig 0.16. `flake.nix` pins `nixpkgs` to one commit, so the shell gives

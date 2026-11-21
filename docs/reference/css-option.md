@@ -1,11 +1,11 @@
-# The css option
+# `css` option
 
 The `css` option of a deck adds a style sheet to the theme. The document puts the style
 sheet after the theme and after the generated rules. A rule of the deck can therefore
 replace each rule of the theme, and it can give new effects, new transitions and new
 states.
 
-## The forms
+## Forms
 
 | Value | Style sheet |
 | --- | --- |
@@ -96,7 +96,7 @@ compiler gives no warning for a state or a `set` key that the style sheet uses.
 The theme lists the properties that each element animates in `transition`. A rule of the
 deck that sets `transition` replaces that list, so a new state usually changes at once.
 
-## The properties of the theme
+## Properties of the theme
 
 A rule of the deck can set or read these custom properties of the theme:
 
@@ -107,7 +107,7 @@ A rule of the deck can set or read these custom properties of the theme:
 - The effect `:type`: `--type-char`, `--type-cursor-width` and `--type-cursor-color`.
   `--type-char` is the time of one character, which is `40ms` in the theme.
   `--type-cursor-width` is `0.08em`, and `--type-cursor-color` is the color of the text. The
-  width `0` gives no cursor. See [The effect `:type`](overlay-options.md#the-effect-type).
+  width `0` gives no cursor. See [The effect `:type`](overlay-options.md#effect-type).
 - The font of the text, and of the text in a formula: `--font-text`.
 - The parts of the page: `--slide-padding`, `--progress-color`, `--progress-height`,
   `--slide-number-color`, `--slide-number-size`, `--slide-number-right`,

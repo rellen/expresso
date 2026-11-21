@@ -1,4 +1,4 @@
-# The check option
+# `--check` option
 
 The option `--check` of `mix expresso` and of the binary does a check of a deck, and writes a
 report to the standard output. The exit status is 1 for a problem, so a continuous integration
@@ -15,7 +15,7 @@ mix expresso <input> [output] --check=layout --size 1920x1080 --size 1024x768
 For the steps and the installation of the tools, see
 [Check a deck before the talk](../how-to/check-a-deck.md).
 
-## The arguments
+## Arguments
 
 | Argument | Effect |
 | --- | --- |
@@ -25,16 +25,16 @@ For the steps and the installation of the tools, see
 
 `--check` with `--watch` is an error, and so is a level that is not `layout`, `a11y` or `browser`.
 
-## The levels
+## Levels
 
 | Level | The checks |
 | --- | --- |
 | `--check` | The render, the theme, the size of the document, and the text for a screen reader |
 | `--check=layout` | The checks of `--check`, and [the layout check](layout-check.md) at each step |
-| `--check=a11y` | The checks of `--check=layout`, the rules of axe-core at each step and in each view, and the contrast of each text on [the background of its slide](background-option.md#the-contrast-of-the-text) |
+| `--check=a11y` | The checks of `--check=layout`, the rules of axe-core at each step and in each view, and the contrast of each text on [the background of its slide](background-option.md#contrast-of-the-text) |
 | `--check=browser` | The checks of `--check=a11y` in Playwright, and the keys of the presenter |
 
-### The checks with no tool
+### Checks with no tool
 
 | Check | Kind | Finds |
 | --- | --- | --- |
@@ -47,7 +47,7 @@ For the steps and the installation of the tools, see
 | A hidden heading | Note | A slide with no visible heading. A screen reader reads [the hidden heading](accessibility.md). |
 | No `h1` | Note | A slide with `sr_heading false` and no heading. A screen reader finds no name for it. |
 
-### The checks in a browser
+### Checks in a browser
 
 `--check=layout` and `--check=a11y` open a copy of the document in a headless Chrome or
 Chromium, with `?check` or `?check=a11y` in the address. The page of the copy has the size
@@ -116,7 +116,7 @@ one time, in the variant of the document, because the keys do not change with th
 The check with no tool already examines the colors of each variant, as
 [the theme option](theme-option.md) does.
 
-### The keys of the presenter
+### Keys of the presenter
 
 `--check=browser` opens the document in the Chromium of Playwright, in a page of
 1920 × 1080 with reduced motion. First it runs the layout check and axe-core with
@@ -144,11 +144,11 @@ During these actions, each of these items is a problem too:
 
 An example is `The script: TypeError: x is undefined`.
 
-## The tools
+## Tools
 
 | Variable | Gives | Without it |
 | --- | --- | --- |
-| `EXPRESSO_CHROMIUM` | The path of Chrome or Chromium | The check looks in [the sequence of the search](#the-search-for-the-browser). |
+| `EXPRESSO_CHROMIUM` | The path of Chrome or Chromium | The check looks in [the sequence of the search](#search-for-the-browser). |
 | `EXPRESSO_AXE` | The path of `axe.min.js` | The check looks for `node_modules/axe-core/axe.min.js` in the current directory, and then in the directory of the deck. Then it looks in each parent of them, and then in the directory of the tools. Thus the directory of the deck comes before a parent of the current directory. |
 | `EXPRESSO_PLAYWRIGHT` | The path of `cli.js` in the npm package `playwright` | The check looks for `node_modules/playwright/cli.js` in the same directories as axe-core. |
 | `EXPRESSO_TOOLS` | The directory of the tools | `--install-check-tools` uses `expresso` in the cache directory of the user, such as `~/.cache/expresso` on Linux and `~/Library/Caches/expresso` on macOS. |
@@ -169,7 +169,7 @@ takes no other argument. It runs these commands, in sequence:
 The exit status is 1 when a command fails. The error for a missing tool of a level gives
 this command.
 
-### The search for the browser
+### Search for the browser
 
 Without `EXPRESSO_CHROMIUM`, `--check=layout` and `--check=a11y` look for the browser in
 this sequence:
@@ -205,7 +205,7 @@ copy of the document, in a temporary directory with its own profile. The directo
 random name, and the other users of the computer cannot read it. The check removes the
 directory after the run, and also when you stop the check with Ctrl-C.
 
-## The report
+## Report
 
 The report has these parts, in this sequence:
 
@@ -236,14 +236,14 @@ Problems:
 2 problems.
 ```
 
-## The exit status
+## Exit status
 
 | Status | When |
 | --- | --- |
 | 0 | The report has no problem. A note does not change the status. |
 | 1 | The report has a problem, or the check stopped for an error. An error goes to the standard error, and the standard output then holds no report. |
 
-## The time
+## Time
 
 `--check` takes the time of a render. `--check=layout` and `--check=a11y` add the start of
 the browser two times: one time to measure its window, and one time for the check.

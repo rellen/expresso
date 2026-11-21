@@ -5,11 +5,11 @@ how can the presenter use less TypeScript, and how can more of its logic go into
 
 The investigation read each module of `assets/src/`, the renderer and the style sheet. It
 did not build a prototype. A second investigation on the same day examined the command
-variant in more depth, and the section "The interpreter" gives its result. The line counts
+variant in more depth, and the section "Interpreter" gives its result. The line counts
 below come from the repository at commit `0b22e7f`. The estimates of the result are
 estimates, and the text marks each one.
 
-## The answer
+## Answer
 
 Much of the logic in the presenter does not need the browser. It needs only the deck, and
 Elixir has the deck at render time. Today the renderer writes these values as `data-*`
@@ -27,13 +27,13 @@ clock, the second window and the transitions. The decisions of `docs/typescript.
 change.
 
 A variant of part 2 takes the idea of the JS commands of Phoenix LiveView. The section
-"The command variant" gives it. The section "The interpreter" takes the variant further:
+"Command variant" gives it. The section "Interpreter" takes the variant further:
 Elixir writes a small program for each deck, and a general interpreter in TypeScript runs
 it. The tests of the behavior then go to Elixir. Gleam, Elixir in WebAssembly and a server
-do not agree with the constraints, and the section "The options that do not agree" tells
+do not agree with the constraints, and the section "Options that do not agree" tells
 why.
 
-## The presenter today
+## Presenter today
 
 | Part | Files | Lines |
 | --- | --- | --- |
@@ -61,7 +61,7 @@ slide and writes it as `data-max-step`. `dom.ts` reads each value into `Limits`,
 it. The same fact is in two languages, and the document is the only connection between
 them.
 
-## The proposal
+## Proposal
 
 ### 1. A list of the steps from Elixir
 
@@ -154,7 +154,7 @@ The port removes `gifenc` and `pngjs`. Node stays, because `playwright_ex` runs 
 driver of Playwright. Therefore the only gain is one language for the tools, and this part
 has the least value.
 
-### The result
+### Result
 
 The estimate for parts 1 to 3 is that `assets/src/` goes from 1398 lines to between 800
 and 900 lines. A similar part of the unit tests moves to ExUnit. The investigation did not
@@ -164,7 +164,7 @@ The size of a document stays approximately the same. The list of steps adds appr
 60 bytes for each step, so a deck with 150 steps gets approximately 9 kB more. The text of
 the list of keys moves from the script into the HTML, and the script becomes smaller.
 
-## The command variant
+## Command variant
 
 ### How LiveView does it
 
@@ -183,7 +183,7 @@ This project cannot use the library itself. The client script of LiveView is a p
 the LiveView socket, and it expects a connection to a server. It is also much larger than
 the presenter. The idea can come into this project, but the code cannot.
 
-### The design
+### Design
 
 The attributes of the `body` hold the state. Each mode is a CSS selector on the `body`, and
 the interpreter uses the first mode that the `body` matches:
@@ -256,9 +256,9 @@ The interpreter in TypeScript knows approximately ten commands:
 - **The document holds the state.** The object `State` goes away, and the attributes of
   the `body` are the only copy of the position and the flags. LiveView does the same, but
   a unit test of a state in the DOM is more difficult than a unit test of an object. The
-  section "The interpreter" replaces this design with an object for the state.
+  section "Interpreter" replaces this design with an object for the state.
 
-## The interpreter
+## Interpreter
 
 A second investigation on the same day examined the command variant in more depth. It
 compared each rule of `state.ts` and `main.ts` with the command model. It did not build a
@@ -424,7 +424,7 @@ These numbers are estimates. The prototype measures them.
 The TypeScript estimate is smaller than the estimate of the command variant above. The
 projections and the program for each deck also remove most of `dom.ts`.
 
-### The new risks
+### New risks
 
 - **Two interpreters must agree.** The fixtures keep them equal. That work stays small only
   while the set of commands stays small. This is one more reason for the rule "no
@@ -440,7 +440,7 @@ projections and the program for each deck also remove most of `dom.ts`.
   - An element declares each state that a command can give it, and the print shows each
     declared state.
 
-### The prototype
+### Prototype
 
 Do the steps in this sequence. Each step gives a measurement, and the work can stop after
 each step:
@@ -457,7 +457,7 @@ each step:
 4. **The Spark DSL and its verifiers.** Then add the first public feature: `goto(slide: n)`
    on an element.
 
-### The result of step 2
+### Result of step 2
 
 Step 2 is done. Each rule of `state.ts` and `main.ts` fits the model, and no command needs
 a condition or a variable. Three modules in `lib/expresso/presenter/` hold the model:
@@ -525,7 +525,7 @@ The key `r` keeps the typed digits, as the code of today does. The binding of `r
 `each: false`, so the definition shows the difference from `s` and `f`. Decision 10 is
 still open. Later, the answer to decision 10 removed this difference.
 
-### The result of step 3
+### Result of step 3
 
 Step 3 is done. The script of the browser runs the program of each deck with a TypeScript
 interpreter. The table `BINDINGS`, the function `next` and the module `help.ts` are not in
@@ -595,7 +595,7 @@ The first fixture file had 281 kB, and fewer random decks made it smaller. The p
 tests of `test/expresso/presenter/` examine the Elixir model with more events. The fixture
 file keeps the TypeScript interpreter equal to the Elixir interpreter.
 
-### The result of step 4
+### Result of step 4
 
 Step 4 is done. The maintainer settled two decisions for this step:
 
@@ -646,7 +646,7 @@ Now it is 99 lines in `Expresso.Presenter.Default`, 64 lines in
 commands. The extra lines find a bad definition when the module compiles, and not when the
 presenter uses a document.
 
-### The result of the projections
+### Result of the projections
 
 After step 4, the projections are done too. They are part 3 of the proposal, and the
 `project` declaration of "2. An object holds the state". Elixir now tells how the script
@@ -689,7 +689,7 @@ defect of the renderer, and the ExUnit tests and the fixtures already find such 
 Without the examination, `program.ts` needs approximately 50 lines for its types and one
 parse. Decision 11 asks the maintainer about this.
 
-### The result of decision 11
+### Result of decision 11
 
 The maintainer answered decision 11 after a comparison of three options. The script
 trusts the program, and the tests examine it:
@@ -734,7 +734,7 @@ style sheet gives the fade of the browser.
 The estimate of "What moves" was 400 to 550 lines. The script is now 811 lines of code.
 Since the start of the interpreter, the bundle went from 13766 bytes to 8979 bytes.
 
-### The result of decision 7
+### Result of decision 7
 
 The recorder is now `Expresso.Recorder`, in Elixir, and `Expresso.Gif` encodes the GIFs.
 `playwright_ex` drives Chromium, as it does for the browser tests. `gifenc`, `pngjs` and
@@ -772,7 +772,7 @@ Before this change, the progress bar could move after the load, and two runs mad
 different pixels in a still. Now two runs write the same 28 files, byte for byte. Zigler
 compiles the encoder, so dev and test need Zig. The binary does not hold the encoder.
 
-## The options that do not agree
+## Options that do not agree
 
 | Option | The reason |
 | --- | --- |
@@ -780,18 +780,18 @@ compiles the encoder, so dev and test need Zig. The binary does not hold the enc
 | Elixir in WebAssembly (Popcorn) | Popcorn 0.3 runs Elixir on AtomVM in WebAssembly, and the prerelease 0.4 runs the BEAM of Erlang/OTP in WebAssembly. The investigation did not measure the size of the runtime, and it did not open a Popcorn page from the disk. A runtime of that type is much larger than a script of 13 kB, and each deck must hold it. Measure both facts before a new decision. |
 | Hologram or LiveView | Both need a server. A deck is one HTML file that opens from the disk, so a server breaks the constraint of `docs/typescript.md`. A presenter that a server controls can be an optional mode on the server of the watch mode later. It cannot replace the file. |
 
-## The risks
+## Risks
 
 - **The contract changes form.** Today the contract is a set of `data-*` attributes in
   different places. After part 1, it is one JSON block that Elixir defines. That is
   better, but each field needs a type in TypeScript and an examination at load.
 - **The browser tests are the safety net.** The 15 modules of `test/e2e/` are in Elixir,
   and they test the behavior and not the script. Each part above can keep them unchanged.
-- **The documents change.** The section "The presenter" of `docs/architecture.md` and the
-  section "The JavaScript code" of `docs/overlays.md` describe the attributes that the
+- **The documents change.** The section "Presenter" of `docs/architecture.md` and the
+  section "JavaScript code" of `docs/overlays.md` describe the attributes that the
   script reads today. Each part must update them.
 
-## The order of the work
+## Order of the work
 
 Part 1 is done: `Expresso.Steps` makes the list, and the state of the script holds an index
 into it. The script did not become smaller:
@@ -804,21 +804,21 @@ The calculations that moved to Elixir were short. The larger gain is in the test
 tests of `fraction`, `done` and the position text are now ExUnit tests of
 `Expresso.Steps`.
 
-Steps 2, 3 and 4 of "The prototype" are also done. Each rule fits the model, the script
+Steps 2, 3 and 4 of "Prototype" are also done. Each rule fits the model, the script
 runs the program of each deck, and an element can hold a link to a step. After step 4, the
 projections moved the writes of the document to Elixir. The sections "The result of step
-2", "The result of step 3", "The result of step 4" and "The result of the projections"
+2", "Result of step 3", "Result of step 4" and "Result of the projections"
 contain the measurements.
 
 Do each part in its own pull request, in this sequence:
 
 1. Part 1, the list of the steps. Part 2 and the command variant need it.
 2. Part 3, the parts that do not change. It is small and it needs no other part.
-3. Part 2, or the interpreter. For the interpreter, do steps 2 to 4 of "The prototype".
+3. Part 2, or the interpreter. For the interpreter, do steps 2 to 4 of "Prototype".
    Step 2 changes no code in the browser, and it shows if each rule fits the model.
 4. Part 4, if the maintainer wants it.
 
-## The decisions
+## Decisions
 
 The maintainer decides each of these. Decisions 8, 9, 10 and 11 are settled, and the
 answer follows each of them. The work on the interpreter gave the answers to decisions 1
@@ -837,7 +837,7 @@ result of decision 7" gives the details.
    program in the browser.
 4. In the command variant, what holds the state? The attributes of the `body` can hold
    it. Or TypeScript can keep the object `State` and write the attributes from it. The
-   section "The interpreter" recommends the object. Answer: the object. The projections
+   section "Interpreter" recommends the object. Answer: the object. The projections
    write the attributes from it.
 5. In the command variant, is the set of commands closed, or can an extension add a
    command? Answer: the set is closed. `Expresso.Presenter.Verifier` refuses a command
@@ -856,15 +856,15 @@ result of decision 7" gives the details.
    a slide and a step.
 10. Does the key `r` remove the typed digits, as `s` and `f` do? Answer: yes. The old
     code kept the digits only because it handled `r` outside the function that removes
-    them. Now only a digit and `Enter` keep the digits, as the section "The keys" of
+    them. Now only a digit and `Enter` keep the digits, as the section "Keys" of
     `docs/architecture.md` says.
 11. Does `program.ts` examine the program at load? The renderer writes the program and the
     script into the same document, and the tests already examine the program. Without the
     examination, the script is approximately 230 lines of code smaller. Answer: the script
-    trusts the program, and the tests examine it. "The result of decision 11" gives the
+    trusts the program, and the tests examine it. "Result of decision 11" gives the
     details.
 
-## The sources
+## Sources
 
 - [`Phoenix.LiveView.JS`](https://phoenix-live-view.hexdocs.pm/Phoenix.LiveView.JS.html)
   gives the commands of version 1.2.12. It says that "JS commands are DOM-patch aware, so

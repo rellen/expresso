@@ -2,10 +2,10 @@
 
 This document gives the design for the background of a slide: an image, a color or a
 gradient behind its content. The code contains this design. Issue #403 asked for it. The
-document records ten decisions, and each is settled. Its last section, "The result", tells
+document records ten decisions, and each is settled. Its last section, "Result", tells
 what changed during the work.
 
-## The problem
+## Problem
 
 A title slide or a section slide often has a photo behind its text. Before this design,
 the author wrote a class and a rule of the `css` option, and the image went into the style
@@ -13,7 +13,7 @@ sheet as a data URI. `docs/how-to/put-files-into-the-css.md` gives those steps, 
 are long for a common need. A rule of the author also has no check for the contrast of the
 text on the photo.
 
-## The plan
+## Plan
 
 1. A `background` option of a slide and of the deck. `Expresso.Background.option/1` makes
    a struct from each form of the value.
@@ -22,7 +22,7 @@ text on the photo.
    the style sheet puts it behind the content.
 4. The accessibility check measures the contrast of each text on the background.
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -70,7 +70,7 @@ Each decision is settled.
     `video` element, and a background needs its own. An image, a color and a gradient are
     the common needs.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 

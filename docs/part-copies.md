@@ -3,10 +3,10 @@
 This document gives the design for a copy of a part: a step makes a copy of a part of a
 diagram or of a formula, and the copy moves to a different place while the part stays. The
 code contains this design. The document records ten decisions, and each is settled. Its
-last section, "The result", tells what changed during the work. Issue #473 holds the same
+last section, "Result", tells what changed during the work. Issue #473 holds the same
 plan.
 
-## The problem
+## Problem
 
 A β-reduction puts a copy of its argument in the place of each bound variable. The argument
 stays in the line before, and one copy goes into each hole. `move_to` moves one part to one
@@ -23,7 +23,7 @@ Each copy needs its own `part` and its own element in the file. A formula cannot
 workaround, because the MathML of a formula cannot hold a hidden copy of a sub-term without
 a change to the layout of the formula.
 
-## The constraints
+## Constraints
 
 - The output stays one HTML file.
 - A copy obeys the overlay contract of `docs/overlays.md`, so the steps, the identities, the
@@ -66,7 +66,7 @@ At step 3, a copy of `arg` fades in on `arg` and then moves to `hole1`, and a se
 moves to `hole2`. The part `arg` stays at its place. Each copy keeps its place at each later
 step, and it does not show before step 3.
 
-## The decisions
+## Decisions
 
 | Number | Question | Decision |
 | --- | --- | --- |
@@ -81,7 +81,7 @@ step, and it does not show before step 3.
 | 9 | A copy in a formula | The render writes each copy of a formula as its own `math` element in the box of the formula, out of the flow, so the formula keeps its layout. The presenter script puts the copy on its source. |
 | 10 | The stack and the examples | Seven pull requests. `examples/animations/y_combinator.exs` uses copies, and its SVG file holds no extra copy. A new example of a formula goes into the guide with a GIF. |
 
-## The design
+## Design
 
 - **The entity.** `Expresso.Element.Copy` holds a copy: `target`, `as`, `at`, `effect` and
   `on`. A `part` of a diagram and a `part` of a formula hold `copy` entities. The check of
@@ -109,7 +109,7 @@ step, and it does not show before step 3.
   list of a graph and the MathML of the formula give the term one time.
 - **The handout.** The page of each step shows the copies of that step at their places.
 
-## The stack
+## Stack
 
 Each pull request is based on the one before it.
 
@@ -121,7 +121,7 @@ Each pull request is based on the one before it.
 6. `examples/animations/y_combinator.exs` with copies, and its SVG file with no extra copy.
 7. The guide, a new example of a formula and its GIF.
 
-## The progress
+## Progress
 
 | Pull request | State |
 | --- | --- |
@@ -133,7 +133,7 @@ Each pull request is based on the one before it.
 | 6. The example of the Y combinator | Done. The SVG file holds each line of the proof one time, with an `id` on each symbol, and no template: 97 texts in the place of 149. Each move is a copy from one line to its place in the next line. When the copies of a line land, the line shows, and the copies fade with `set: [opacity: 0]`. A part of an element inside a copy, such as the bound variables of the copy of the body, names the new `id` of that element. |
 | 7. The guide and the example of a formula | Done. `docs/how-to/explain-a-formula-step-by-step.md` shows `examples/animations/math_copy.exs`: a copy of the argument goes into each hole of the reduced term, and `mix expresso.gifs` records `math-copy.gif`. |
 
-## The result
+## Result
 
 The seven pull requests of the stack contain the design. These parts are different from the
 plan, or the plan did not tell them:

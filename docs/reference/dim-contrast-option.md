@@ -1,4 +1,4 @@
-# The dim_contrast option
+# `dim_contrast` option
 
 The `dim_contrast` option of a deck gives the minimum contrast ratio of dimmed text on its
 background. Give `4.5` to meet criterion 1.4.3 of WCAG 2.2 for normal text. At `4.5`, each
@@ -15,7 +15,7 @@ end
 
 `Expresso.Builder` takes the same option, such as `deck(slides, dim_contrast: 4.5)`.
 
-## The values
+## Values
 
 | Value | Effect |
 | --- | --- |
@@ -119,7 +119,7 @@ On a slide, the text is usually large. Give `dim_contrast 4.5` when:
 - the deck has dimmed text under 24 px, such as a long code listing at a small size, or
 - a checker such as axe-core must find no violation.
 
-## The errors and the warnings
+## Errors and warnings
 
 The compiler gives an error for a value that is not a number from 3 to 7. It gives a warning
 for a theme that does not dim at the value. See

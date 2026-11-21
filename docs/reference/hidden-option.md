@@ -1,4 +1,4 @@
-# The hidden option
+# `hidden` option
 
 The `hidden` option of a slide keeps the slide out of the talk. The keys of the next step
 and of the previous step skip the slide, and the presenter can still go to it. Use it for a
@@ -13,14 +13,14 @@ end
 
 `Expresso.Builder` takes the same option, such as `slide("the numbers", hidden: true)`.
 
-## The values
+## Values
 
 | Value | Effect |
 | --- | --- |
 | No option, or `hidden false` | The slide is a slide of the talk. This is the default. |
 | `hidden true` | The slide is a hidden slide. |
 
-## The talk
+## Talk
 
 The **talk** is the slides that are not hidden, in the sequence of the deck. A hidden slide
 keeps its place in the deck, and it is not a part of the talk.
@@ -53,7 +53,7 @@ next slide of the talk. Before its first step, `k` goes to the slide of the talk
 of it. Two hidden slides in sequence are one gap in the talk, so `j` on the first does not
 go to the second.
 
-## The place and the number
+## Place and number
 
 A slide has two numbers:
 
@@ -66,7 +66,7 @@ In a deck with no hidden slide, the two numbers are the same. A template reads t
 from `slide.metadata.slide_number` and the number in the talk from
 `slide.metadata.talk_number`, which is `nil` for a hidden slide.
 
-## The handout view and paper
+## Handout view and paper
 
 The handout view and paper leave out each page of a hidden slide. The key `a`, which shows
 each step, does not show them. The page of the sources leaves out the footnotes of a hidden
@@ -86,13 +86,13 @@ end
 A hidden slide then obeys its `handout` option, as each other slide does. The page of the
 sources then shows its footnotes under the heading `Hidden slide:` and the name of the slide.
 
-## The custom property
+## Custom property
 
 | Property | Effect |
 | --- | --- |
 | `--hidden-slide-opacity` | The opacity that the content of a hidden slide has in the overview and in the menu. The default is 0.45. |
 
-## The limits
+## Limits
 
 - A deck in which each slide is hidden has no talk. It starts at its first slide, and `j`
   and `k` go only through the steps of the slide that shows.

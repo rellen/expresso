@@ -1,4 +1,4 @@
-# The table element
+# `table` element
 
 The `table` element shows `row` elements in a grid. The first row can be the header of the
 table, and the first cell of each row can be the header of its row. A caption can give the
@@ -25,7 +25,7 @@ end
 `Expresso.Builder` takes the same options, such as
 `table(caption: "Keys", header: true, elements: [row(["Key", "Action"])])`.
 
-## The options of the table
+## Options of the table
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -38,7 +38,7 @@ end
 | `class` | CSS class names | See [the class option](class-option.md). |
 | `morph` | A string | A key of the morph. See [the morph option](morph-option.md). |
 
-## The options of a row
+## Options of a row
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -49,7 +49,7 @@ end
 A table and a row each take the overlay options, such as `at`, `effect` and the `on`
 entity. See [the overlay options](overlay-options.md).
 
-## The headers for a screen reader
+## Headers for a screen reader
 
 A screen reader reads the headers of a cell when it moves to that cell. Give the options
 that name the cells:
@@ -63,7 +63,7 @@ that name the cells:
 Use `caption_hidden true` when a heading of the slide already shows the name of the table.
 The caption then names the table for a screen reader only.
 
-## The HTML
+## HTML
 
 The document writes a `table` element with the class `table`. Each row is a `tr` element
 with the class `row`.

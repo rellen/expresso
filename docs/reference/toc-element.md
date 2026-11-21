@@ -1,4 +1,4 @@
-# The toc element
+# `toc` element
 
 The `toc` element is a table of contents: a numbered list of the deck's sections. The list has
 a link to the first slide of each section.
@@ -22,7 +22,7 @@ end
 `Expresso.Builder` takes the same options, such as `toc(reveal: true, dim: true)` and
 `slide("why", section: "Why a release")`.
 
-## The section option of a slide
+## `section` option of a slide
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -37,7 +37,7 @@ template reads it from `@metadata[:section]`, and a deck template reads it from
 `@slide.metadata[:section]`. A slide before the first section has no key `:section`. See
 [the template option](template-option.md).
 
-## The options of the toc
+## Options of the toc
 
 | Option | Value | Effect |
 | --- | --- | --- |
@@ -53,7 +53,7 @@ The element also takes the overlay options, such as `at`, `effect` and the `on` 
 A slide, a text box and a column can hold a toc. A deck can have a toc on more than one
 slide. Examples are an agenda at the start and a recap at the start of each section.
 
-## The current section
+## Current section
 
 The section of the slide that holds the toc is the current section. Its entry has the accent
 color and bold text. The `progress` option tells how each other entry looks:
@@ -70,7 +70,7 @@ color and bold text. The `progress` option tells how each other entry looks:
 A toc on a slide before the first section has no current section. Each entry then keeps the
 color of the text, whatever the value of `progress`.
 
-## The steps
+## Steps
 
 Without `reveal`, the entries show at each step at which the toc shows. With `reveal`, the
 first entry shows at the first step of the toc, and each later entry takes the next step.
@@ -80,7 +80,7 @@ The `dim` option and the `progress` option are independent. On a recap slide, `p
 marks the current section. On an agenda that shows its entries one after the other, `dim`
 keeps the attention of the audience on the newest entry.
 
-## The HTML
+## HTML
 
 The renderer writes a `nav` with the label "Contents" and the classes `toc` and
 `toc-<progress>`, such as `toc-dim-rest`. The `nav` holds an `ol` with one `li` for each
@@ -92,7 +92,7 @@ Each title is a link of the [goto option](goto-option.md) with the class `toc-li
 click on it in the present view goes to the first slide of its section, at step 1. The title
 is text, and not HTML.
 
-## The errors
+## Errors
 
 The compiler gives an error for these:
 

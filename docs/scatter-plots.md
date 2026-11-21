@@ -4,9 +4,9 @@ This document gives the design for the chart kinds `:scatter` and `:bubble`, and
 of their progress. A scatter plot shows each item as one mark, and the mark shows up to five
 values of the item: its x position, its y position, its symbol, its color and its size. The
 code contains this design. The document records ten decisions, and each is settled. Its last
-section, "The result", tells what changed during the work. Issue #426 holds the same plan.
+section, "Result", tells what changed during the work. Issue #426 holds the same plan.
 
-## The problem
+## Problem
 
 A talk often compares many items on two or more measures, such as the cost and the speed of
 each service, or the income and the life expectancy of each country. A bar chart and a line
@@ -14,7 +14,7 @@ chart put each value on a category, so they cannot show two numbers for one item
 must draw the plot in another tool and import it as an image, and then the plot cannot take
 steps.
 
-## The constraints
+## Constraints
 
 - The output stays one HTML file. The compiler calculates each place, and the presenter
   script calculates no layout.
@@ -24,7 +24,7 @@ steps.
 - A screen reader gets each point with each of its values.
 - The theme gives each color, so each theme and its dark variant work.
 
-## The encodings
+## Encodings
 
 | Encoding | The data | The scale |
 | --- | --- | --- |
@@ -34,7 +34,7 @@ steps.
 | Color | A category, or a number | A category takes `--chart-1` to `--chart-8` of the theme. A number takes the scale of the `color_scale` option. |
 | Size | A number more than zero | The area of the mark grows in proportion to the number |
 
-## The decisions
+## Decisions
 
 | Number | Question | Decision |
 | --- | --- | --- |
@@ -49,7 +49,7 @@ steps.
 | 9 | A symbol and a color that are not a category | A point and a series take a symbol by its name, such as `:square`, and a color by its role, such as `:chart_3` or `:accent`. Such a mark is in no legend of the categories. |
 | 10 | The order of the marks | Inside a group, the larger marks come first in the SVG. The groups keep the order of the data, because a group holds the steps of its marks. |
 
-## The design
+## Design
 
 - `point "api", x: 1200, y: 840, symbol: "EU", color: "EU", size: 30_000` gives one point.
   The name is the label of the mark, and the `highlight` option uses it.
@@ -74,7 +74,7 @@ steps.
 - `docs/reference/chart-element.md` gives the options. A how-to guide gives the tasks, with
   example decks and their GIFs.
 
-## The stack
+## Stack
 
 1. This document.
 2. The kind `:scatter`, the `point` entity, the axes, `x_range`, `y_range`, `x_scale`,
@@ -90,7 +90,7 @@ steps.
 10. The color from a number and `color_scale`.
 11. The guide, the example decks and their GIFs.
 
-## The progress
+## Progress
 
 | Pull request | State |
 | --- | --- |
@@ -106,7 +106,7 @@ steps.
 | 10. The color from a number | Done. A mark has the channel `--h<n>` with the place of its number on the scale, and `--series` mixes the colors of the scale with `color-mix()` from `--chart-h`. The registered property moves the color from one frame to the next. The legend draws ten cells of the scale. |
 | 11. The guide, the example decks and their GIFs | Done. `docs/how-to/show-points-in-a-scatter-plot.md` shows three example decks: the services of a team with reveal, two series with trend lines and highlight, and six countries that move through three frames of a CSV file. |
 
-## The result
+## Result
 
 The eleven pull requests of the stack contain the plan. These parts are different from the
 plan, or the plan did not tell them:

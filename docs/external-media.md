@@ -3,11 +3,11 @@
 This document gives the design for a `video` and an `audio` element that keep their file
 next to the document, in place of a data URI in the document. The code contains this
 design. Issue #317 asked for it. The document records ten decisions, and each is settled.
-Its section "The result" tells what changed during the work. A later change gave the
+Its section "Result" tells what changed during the work. A later change gave the
 `image` element the same option, and it gave the deck an option for the default. See
 "A later change: an image, and an option of the deck".
 
-## The problem
+## Problem
 
 The document of a deck holds each video file and each sound file as a data URI, in a JSON
 element such as `expresso-videos`. One file is easy to send and to keep. For a deck on a
@@ -20,7 +20,7 @@ web host, the data URI has three costs:
 3. A change of one word of the deck changes the document, so a viewer gets each file
    again.
 
-## The plan
+## Plan
 
 1. The `video` and the `audio` elements get the option `external true`.
 2. The render makes a copy of the file for a directory next to the output file, such as
@@ -30,7 +30,7 @@ web host, the data URI has three costs:
 4. Each code that writes a document also writes the copies: `mix expresso`, the binary,
    the watch mode, `--check` and the export.
 
-## The decisions
+## Decisions
 
 Each decision is settled.
 
@@ -66,7 +66,7 @@ Each decision is settled.
     open a private copy of the document in a browser. They write the copies into that
     private directory, so the browser plays the same files.
 
-## The result
+## Result
 
 The code follows the plan, with these changes:
 
@@ -93,7 +93,7 @@ document".
 
 ### A later change to the first cost
 
-The first cost of "The problem" was not correct. A measurement for issue #568 showed that
+The first cost of "Problem" was not correct. A measurement for issue #568 showed that
 the first slide did not wait for each file: it showed after approximately 2 s. The
 presenter waited, so the deck did not answer a key before the browser received each file.
 
@@ -183,7 +183,7 @@ They show these results:
 
 `docs/reference/image-element.md` gives the rule in "When the browser gets the file".
 
-## The limits
+## Limits
 
 - The render does not remove an old copy. After a change of the file, the directory holds
   the old copy and the new copy.

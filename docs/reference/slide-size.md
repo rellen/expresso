@@ -1,10 +1,10 @@
-# The size of a slide
+# Size of a slide
 
 A slide fills the window of the browser, and its text has a size of 48 pixels for 1rem. In a
 window that is smaller than 1280 by 720 pixels, the text becomes smaller with the window. Thus
 a slide always has 26.67rem by 15rem or more.
 
-## The font size
+## Font size
 
 The `html` element has this rule on a screen:
 
@@ -31,7 +31,7 @@ A browser that does not know `svh` uses `100vh` in its place.
   tall slide. This is the intended layout: the slide does not turn, and it does not show
   16:9 with an empty area above and below it.
 
-## The height of the window
+## Height of the window
 
 The height of the window is `100svh`, the small viewport height. A browser of a phone shows
 bars, such as the address bar, and it can hide them. `100svh` is the height while the bars
@@ -44,7 +44,7 @@ show, so the bars do not cover the bottom of the slide, the footer or the progre
 - `vh` and `vw` in the `css` option of a deck keep their meaning. Use `svh` for a height
   that must not go under the bars.
 
-## The lengths of a deck
+## Lengths of a deck
 
 | Length | In a window smaller than 1280 by 720 pixels |
 | --- | --- |
@@ -59,7 +59,7 @@ show, so the bars do not cover the bottom of the slide, the footer or the progre
 
 In a window of 1280 by 720 pixels or larger, a length in pixels is that number of pixels.
 
-## The parts of the presenter
+## Parts of the presenter
 
 These parts of the presenter are not a slide:
 
@@ -72,9 +72,9 @@ These parts of the presenter are not a slide:
 
 Their text keeps its size in each window. On a touch screen, the button of the menu is in the
 top right corner of the present view. See
-[The button of the menu](presenter.md#the-button-of-the-menu).
+[The button of the menu](presenter.md#button-of-the-menu).
 
-## The viewport tag
+## Viewport tag
 
 Each document has this tag:
 

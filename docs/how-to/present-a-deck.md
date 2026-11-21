@@ -121,4 +121,4 @@ chromium --headless --print-to-pdf=deck.pdf "file:///path/to/deck.html?all"
 
 The name of the command can be `google-chrome` or `chrome`. Without `?all`, the PDF gets
 the pages that the `handout` options select. See
-[The handout view](../reference/presenter.md#the-handout-view).
+[The handout view](../reference/presenter.md#handout-view).
