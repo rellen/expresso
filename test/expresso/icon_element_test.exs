@@ -83,6 +83,13 @@ defmodule Expresso.IconElementTest do
     refute html =~ "a badge"
   end
 
+  test "a name that Lucide renamed shows the icon of its new name" do
+    assert Expresso.Icon.svg("triangle-alert", "c", %{}) ==
+             Expresso.Icon.svg("triangle-exclamation-point", "c", %{})
+
+    assert {:ok, _svg} = Expresso.Icon.svg("music", "c", %{})
+  end
+
   test "a name that no icon has is an error with the names that are near" do
     assert_raise Spark.Error.DslError,
                  ~r/no icon has the name "rokcet". Names that are near: rocket/,

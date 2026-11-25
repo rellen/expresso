@@ -34,9 +34,13 @@ hold an icon.
 
 ## The names
 
-The Lucide set has 1,877 icons. Find a name at [lucide.dev/icons](https://lucide.dev/icons).
+The Lucide set has 2,119 icons. Find a name at [lucide.dev/icons](https://lucide.dev/icons).
 Write it as the page writes it, such as `"git-commit-horizontal"`. Expresso holds
-`lucide-static` 1.55.0, so an icon that a later version adds is not available.
+`lucide-static` 1.80.0, so an icon that a later version adds is not available.
+
+Lucide renamed some icons after version 1.55.0, such as `triangle-alert`, which is now
+`triangle-exclamation-point`. The old name still shows the same icon, so a deck that uses
+it does not change. Use the new name in a new deck.
 
 A name that no icon has is an error. The message gives three names that are near, such as
 `rocket` for `rokcet`.

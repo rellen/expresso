@@ -172,6 +172,12 @@ file. To take a later version:
 1. Run `npm pack lucide-static` in an empty directory, and unpack the archive.
 2. Write `icon-nodes.json` into `priv/icons/lucide.json` with no white space.
 3. Copy the `LICENSE` of the package into `priv/icons/LICENSE`.
-4. Write the new version into `priv/icons/SOURCE` and `docs/reference/icon-element.md`.
+4. Keep each name that the earlier file had. Lucide renames an icon, and the package still
+   holds the SVG file of the old name. For each old name that `icon-nodes.json` does not
+   have, find the icon with the same SVG file, and add the old name with its paths. A deck
+   that uses the old name then does not break. Version 1.80.0 renamed 42 icons, such as
+   `triangle-alert`, which is now `triangle-exclamation-point`.
+5. Write the new version and the number of icons into `priv/icons/SOURCE` and
+   `docs/reference/icon-element.md`.
 
 `Expresso.Icon` reads the file at compile time, so `mix compile` takes the new icons.

@@ -2281,7 +2281,7 @@ the elements at compile time. These are the reasons for this design:
 
 - **The icons in the package.** A document needs no network, so the SVG of each icon must
   be in Expresso. `priv/icons/lucide.json` holds the paths of the Lucide icons, about
-  420 KB, and `Expresso.Icon` reads it at compile time. A document holds only the icons
+  480 KB, and `Expresso.Icon` reads it at compile time. A document holds only the icons
   that its deck uses.
 - **A transformer, and not the render.** The `icons` option of the deck names files, and
   an element does not know the deck. The transformer reads the files once, with the `root`
