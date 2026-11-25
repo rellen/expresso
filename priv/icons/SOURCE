@@ -1,2 +1,4 @@
-lucide-static 1.55.0, the file icon-nodes.json, with no white space.
+lucide-static 1.80.0, the file icon-nodes.json, with no white space. The file also holds the
+42 names that version 1.55.0 had and that a later version renamed, each with the paths of
+its new name.
 https://lucide.dev
