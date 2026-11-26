@@ -281,7 +281,7 @@ Three other forms give the same groups:
   `"I/O > Disks"`. The default is `"/"`.
 - A category can be a list of its levels, such as `["I/O", "Disks"]`. A list needs no
   separator, so a level can hold any text.
-- The `levels` option names the columns of a CSV file that hold the levels. See "The CSV
+- The `levels` option names the columns of a CSV file that hold the levels. See "CSV
   file".
 
 These rules apply to the groups:

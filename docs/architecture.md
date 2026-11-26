@@ -2217,8 +2217,8 @@ in a body. These are the reasons for this design:
   is a part of the slide that it can skip.
 - **The elements of a text box, and no nest.** A callout holds the elements of a text box,
   and not a callout or `columns`. A slide, a text box and a column hold a callout.
-  `Expresso.PlacementTransformer` refuses a callout or `columns` in a callout. See "The
-  definitions of the elements".
+  `Expresso.PlacementTransformer` refuses a callout or `columns` in a callout. See
+  "Definitions of the elements".
 
 ### Table of contents
 
@@ -2310,7 +2310,7 @@ top level section. The section holds `slide` entities.
 
 - A `slide` holds the definition of each element entity, and the `pause` entity.
 - A `text_box`, a `column`, a `callout` and an `item` declare the key `elements` with no
-  definitions. Their blocks use the macros of the slide. See "The definitions of the
+  definitions. Their blocks use the macros of the slide. See "Definitions of the
   elements".
 - A `list` holds `item` entities, a `table` holds `row` entities, a `diagram` holds `part`
   entities, and a `columns` element holds `column` entities.
@@ -2445,7 +2445,7 @@ The extension imports nothing, and it lists seven transformers and four verifier
   the SVG of each icon into its element and into the text of each text area and item. See
   "Icons".
 - `Expresso.SectionTransformer` puts the section of each slide into its metadata, and the
-  entries into each `toc`. It runs before the overlay transformer. See "The table of
+  entries into each `toc`. It runs before the overlay transformer. See "Table of
   contents".
 - `Expresso.Overlay.Transformer` expands the overlay specifications of each slide at
   compile time.
@@ -2468,8 +2468,8 @@ The extension imports nothing, and it lists seven transformers and four verifier
 - `Expresso.TransitionVerifier` gives an error for a transition without a rule in the theme
   or in the CSS of the deck. See "Transitions".
 
-The four checks run in a transformer and not as verifiers, for the reason that "The
-definitions of the elements" gives. Spark reports the error of a verifier as a warning. The
+The four checks run in a transformer and not as verifiers, for the reason that
+"Definitions of the elements" gives. Spark reports the error of a verifier as a warning. The
 module then compiles, and `mix expresso` renders the deck as if the check gave no error.
 When more than one check gives an error, the transformer raises one error with each
 message. A verifier gives errors or warnings, and not both, so each kind of warning has its
@@ -2677,7 +2677,7 @@ order. Thus the order has one owner. Before, the renderer and the script each ha
 of the order, and nothing compared the two copies.
 
 The schema also gives the constants of the script. `ELEMENT_KINDS` holds the kinds of
-element from `Expresso.Element.kinds/0`, and the layout check reads it. See "The kinds of
+element from `Expresso.Element.kinds/0`, and the layout check reads it. See "Kinds of
 element in the script".
 
 ### Projections
@@ -3156,8 +3156,8 @@ the state matches the mode `menu`:
 - A click on a row runs the commands of the row, which go to the step and close the menu.
   The row of a slide goes to step 1 of the slide.
 - `m` and `Escape` close the menu, and the step does not change.
-- On a touch screen, a click on the button of the menu is the key `m`. See "The mouse and
-  the touch screen".
+- On a touch screen, a click on the button of the menu is the key `m`. See "Mouse and
+  touch screen".
 
 The step of the audience changes only at `Enter` or at a click. `menu` and `cursor` are
 not in the option `sync`, so the menu shows only in the window that opens it, as the
@@ -3316,8 +3316,8 @@ gives what it finds. These are the reasons for its design:
 - **It runs in the browser.** Only a browser engine knows the place of each element,
   because the place depends on the fonts, the style sheet and the size of the window. The
   compiler and the binary have no browser engine. `--check=layout` runs the check in a
-  headless Chrome with no window, so a continuous integration job can use it. See "The
-  check mode".
+  headless Chrome with no window, so a continuous integration job can use it. See
+  "Check mode".
 - **It measures the window, and not the slide.** Content past the edge of the window can
   make the slide larger too. The window is the part that the audience sees.
 - **It measures each kind of element.** The check measures each kind of

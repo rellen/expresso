@@ -55,8 +55,8 @@ color is the role at the strongest dimming that keeps it at 3:1 and at Lc 30 on 
 background. Thus each role dims as far as its own contrast lets it.
 
 The column "Text dim" gives the opacity that dims the text, and the column "Comment dim"
-gives the opacity that dims the comments. A lower value gives a stronger dimming. "The
-contrast of a theme" in `docs/architecture.md` gives the formulas.
+gives the opacity that dims the comments. A lower value gives a stronger dimming.
+"Contrast of a theme" in `docs/architecture.md` gives the formulas.
 
 | Name | Theme | Variant | Change | Text dim | Comment dim |
 | --- | --- | --- | --- | --- | --- |

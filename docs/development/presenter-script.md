@@ -9,7 +9,7 @@ run its type check and its lint.
   It examines no value.
 - `assets/src/schema.ts` — the type and the decoder of each value that Elixir writes for
   the script, and the constants of the script, such as `ELEMENT_KINDS`.
-  `Expresso.Test.SchemaWriter` writes it. Do not change it by hand. "The schema of the
+  `Expresso.Test.SchemaWriter` writes it. Do not change it by hand. "Schema of the
   presenter" below tells how to write it again.
 - `assets/src/decode.ts` — the functions that make the decoders of `schema.ts`.
 - `assets/src/interpreter.ts` — runs the program for each key, click and swipe.

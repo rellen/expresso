@@ -3,8 +3,8 @@ defmodule Expresso.Presenter.Interpreter do
   Runs the program of the presenter on a state
 
   This module is the reference interpreter that
-  `docs/research/elixir-presenter-report.md` describes in its section "The
-  interpreter". Each function is pure. `run/3` takes a state and an event,
+  `docs/research/elixir-presenter-report.md` describes in its section
+  "Interpreter". Each function is pure. `run/3` takes a state and an event,
   and it returns the next state. Thus the tests of the presenter behavior
   need no browser.
 

@@ -57,8 +57,8 @@ Read these documents before you change the code:
   what changed. Issues #603 and #604 hold the parts that nobody measured.
 - `docs/export.md` — the design for the export from the command line: a PDF of a deck, and
   a PNG file of each slide, from a headless Chrome or Chromium. The code contains this
-  design. The document records ten decisions, and each is settled. Its last section, "The
-  result", tells what changed during the work.
+  design. The document records ten decisions, and each is settled. Its last section,
+  "Result", tells what changed during the work.
 - `docs/laser-pointer.md` — the design for the laser pointer of the presenter: a red dot
   that goes with the mouse, in the two windows. The code contains this design. The
   document records ten decisions, and each is settled. Its last section, "Result",
@@ -77,8 +77,8 @@ Read these documents before you change the code:
   "Result", tells what changed during the work.
 - `docs/rehearsal.md` — the design for the rehearsal: the speaker view records the time
   of each slide, and it gives the lines of the `advance` option. The code contains this
-  design. The document records ten decisions, and each is settled. Its last section, "The
-  result", tells what changed during the work.
+  design. The document records ten decisions, and each is settled. Its last section,
+  "Result", tells what changed during the work.
 - `docs/external-media.md` — the design for an `image`, a `video` and an `audio` element
   that keep their file next to the document, in place of a data URI, and for the
   `external` option of the deck. The code contains this design. The document records ten
@@ -110,8 +110,8 @@ Read these documents before you change the code:
   tells what changed during the work.
 - `docs/math-parts.md` — the design for a `math` element that takes LaTeX and gives a name to
   each part of a formula, so a step can color, dim or move one part. The code contains this
-  design. The document records ten decisions, and each is settled. Its last section, "The
-  result", tells what changed during the work.
+  design. The document records ten decisions, and each is settled. Its last section,
+  "Result", tells what changed during the work.
 - `docs/part-copies.md` — the design for a copy of a part of a diagram or of a formula, which
   moves to a different place while the part stays. The code contains this design. The
   document records ten decisions, and each is settled. Its last section, "Result", tells
@@ -122,12 +122,12 @@ Read these documents before you change the code:
   what changed during the work.
 - `docs/each-occurrence.md` — the design for a part that names each occurrence of a symbol
   in a formula, and for each token with a text in a code element. The code contains this
-  design. The document records ten decisions, and each is settled. Its last section, "The
-  result", tells what changed during the work.
+  design. The document records ten decisions, and each is settled. Its last section,
+  "Result", tells what changed during the work.
 - `docs/line-rewrites.md` — the design for a `rewrite` entity, which makes the next line of a
   derivation from a line before it by a substitution or by a rule. The code contains this
-  design. The document records ten decisions, and each is settled. Its last section, "The
-  result", tells what changed during the work.
+  design. The document records ten decisions, and each is settled. Its last section,
+  "Result", tells what changed during the work.
 - `docs/beta-reductions.md` — the design for a `reduce` entity, which makes the next line of
   a derivation by one β-reduction and shows it in four steps. The code contains this design.
   The document records ten decisions, and each is settled. Its last section, "Result",

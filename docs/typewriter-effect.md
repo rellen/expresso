@@ -2,8 +2,8 @@
 
 This document gives the design for the effect `:type`, which shows the text of an element
 one character at a time, as if you type it. The code contains this design. Issue #405 asked
-for it. The document records ten decisions, and each is settled. Its last section, "The
-result", tells what changed during the work.
+for it. The document records ten decisions, and each is settled. Its last section,
+"Result", tells what changed during the work.
 
 ## Problem
 

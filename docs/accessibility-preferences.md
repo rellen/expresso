@@ -229,7 +229,7 @@ pixels for a step row, in windows from 320 to 1920 pixels wide. The section abou
 criterion 2.5.8 has the correct text now. The change for issue #590 made the text of a
 slide smaller in a small window, and the parts of the presenter kept their size.
 
-Issue #609 settled the controls of a video in forced colors, which the section "The parts
+Issue #609 settled the controls of a video in forced colors, which the section "Parts
 that stay open" gives. The maintainer selected the documents, and not a change of the
 code. See "Controls in forced colors" in `docs/reference/video-element.md`, and "A
 video in forced colors" in `docs/reference/accessibility.md`.

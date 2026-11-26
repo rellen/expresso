@@ -2,8 +2,8 @@
 
 This document gives the design for a part of a text that shows or changes at its own
 steps, such as one word of a sentence. The code contains this design. Issue #404 asked for
-it. The document records ten decisions, and each is settled. Its last section, "The
-result", tells what changed during the work.
+it. The document records ten decisions, and each is settled. Its last section,
+"Result", tells what changed during the work.
 
 ## Problem
 
