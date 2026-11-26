@@ -49,6 +49,27 @@ The workflow runs the same command in `.github/actions/setup-playwright`, and a 
 keeps the browser from one run to the next. The runner image already has each system
 library of the headless browser, so the workflow does not use `--with-deps`.
 
+## Native theme of the browser
+
+Two tests of `test/e2e/forced_colors_test.exs` measure the icons of the audio controls in
+forced colors. Their result depends on the native theme of Chromium. On macOS, the native
+theme is the appearance of the system.
+
+In forced colors, Chromium inverts the icons of the audio controls when its native theme
+is dark. The icons then have the color of the canvas, and the two tests fail. A test can
+set the color scheme of a page, but it cannot set the native theme.
+
+- The two tests do not run while macOS is in the dark appearance. The result of the run
+  shows them as skipped. `Expresso.E2E.dark_native_theme/0` returns the reason.
+- To run the two tests on a Mac, select the light appearance in the System Settings.
+- The browser argument `--force-dark-mode` makes the native theme dark on each computer.
+  No argument makes it light.
+- On Linux, the function makes no check. The runner of the workflow has a light native
+  theme, so the two tests run there.
+
+The section "Native theme and the audio controls" of `docs/accessibility-preferences.md`
+records the measurement. Issue #717 asks for a measurement on Windows.
+
 ## Look at a deck
 
 Make an HTML document, and then open it. `examples/demo.exs` uses the functions, and
