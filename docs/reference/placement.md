@@ -68,5 +68,5 @@ In a nested block, the macros of the outer blocks stay in scope. For example, th
 macro of the slide is in scope in the block of a callout. Therefore the DSL compiles an
 element in a wrong place, and `Expresso.PlacementTransformer` then refuses it. The check is a
 transformer, so its error stops the compile. The error of a `pause` inside an element also
-stops the compile. `docs/architecture.md` tells the reason in "The definitions of the
+stops the compile. `docs/architecture.md` tells the reason in "Definitions of the
 elements".

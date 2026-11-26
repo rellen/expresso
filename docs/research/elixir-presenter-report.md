@@ -806,7 +806,7 @@ tests of `fraction`, `done` and the position text are now ExUnit tests of
 
 Steps 2, 3 and 4 of "Prototype" are also done. Each rule fits the model, the script
 runs the program of each deck, and an element can hold a link to a step. After step 4, the
-projections moved the writes of the document to Elixir. The sections "The result of step
+projections moved the writes of the document to Elixir. The sections "Result of step
 2", "Result of step 3", "Result of step 4" and "Result of the projections"
 contain the measurements.
 
@@ -822,8 +822,8 @@ Do each part in its own pull request, in this sequence:
 
 The maintainer decides each of these. Decisions 8, 9, 10 and 11 are settled, and the
 answer follows each of them. The work on the interpreter gave the answers to decisions 1
-to 6, and the answer follows each of them. The answer to decision 7 follows it, and "The
-result of decision 7" gives the details.
+to 6, and the answer follows each of them. The answer to decision 7 follows it, and
+"Result of decision 7" gives the details.
 
 1. Does Elixir own the table of keys? Answer: yes. `Expresso.Presenter.Default` holds
    the keys of each mode. The renderer writes the lists of keys and the program from it.

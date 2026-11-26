@@ -4,8 +4,8 @@ This document gives the design for a `reduce` entity of a derivation. The entity
 next line by one β-reduction of the line before it, and it shows the reduction in four steps.
 The design holds only the parts that are special to the λ-calculus: a parser of λ-terms, the
 rules of scope and a preset of steps. The code contains this design. The document records
-ten decisions, and each is settled. Issue #475 holds the same plan. The last section, "The
-result", tells what changed during the work.
+ten decisions, and each is settled. Issue #475 holds the same plan. The last section,
+"Result", tells what changed during the work.
 
 ## Problem
 

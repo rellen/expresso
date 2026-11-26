@@ -2,8 +2,9 @@
 
 This document gives the design for the `meta` elements in the `head` of the document of a
 deck. Issue #566 asked for it. The document records a decision for each of 13 tags, and
-the answers to five questions. The code contains each tag of the decisions. Its section "Result" tells what the code has, "The tags with the address
-of the deck" tells the later change, and "Work that follows" names the issues.
+the answers to five questions. The code contains each tag of the decisions. Its section
+"Result" tells what the code has, "Tags with the address of the deck" tells the later
+change, and "Work that follows" names the issues.
 
 ## Problem
 
@@ -62,8 +63,8 @@ The facts about a card and about Google Search come from these pages, on 2026-11
    `title` element already holds.
 4. **Who makes the picture of the card?** The user, with `--png`, and an option gives its
    path. A render with no browser cannot make the picture.
-5. **Does the viewport tag change the layout of a slide on a phone?** Yes. See "The
-   viewport".
+5. **Does the viewport tag change the layout of a slide on a phone?** Yes. See
+   "Viewport".
 
 ## Viewport
 
