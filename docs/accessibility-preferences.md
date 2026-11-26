@@ -320,3 +320,57 @@ without the change.
   effect in each mode. Issue #607 later gave it a bar. See "Result".
 - **Firefox.** A session with Firefox can run the script of the first investigation and the
   measurements of this section.
+
+## Native theme and the audio controls
+
+This section gives the state on 2026-11-27. The two browser tests of the audio buttons
+failed on a Mac in some runs, and this measurement found the cause. Only the tests and
+the documents changed.
+
+### Method of the third measurement
+
+The browsers were Chromium 159 (headless shell) and Chromium 151 (full), on macOS, with the
+Playwright option `forcedColors`. Each measurement used a new page. A script counted the
+pixels of the play button, of the volume button and of the menu button that have a contrast
+of 3:1 or more with the color behind them.
+
+The native theme of Chromium is not the color scheme of the page. On macOS, it is the
+appearance of the system. The browser argument `--force-dark-mode` makes it dark on each
+computer, and no argument makes it light. Playwright sets the color scheme of the page,
+but not the native theme.
+
+### Results of the third measurement
+
+In forced colors, Chromium inverts the icons of the audio controls when its native theme
+is dark. The two browsers agree.
+
+| Native theme | Scheme of the user | Icons with `color-scheme: light dark` | Icons with `color-scheme: only light` and `forced-color-adjust: none` |
+| --- | --- | --- | --- |
+| Light | Light | They show. | They show. |
+| Light | Dark | They show. | They have the color of the canvas. |
+| Dark | Light | They have the color of the canvas. | They have the color of the canvas. |
+| Dark | Dark | They have the color of the canvas. | They show. |
+
+- The rule of the change for #603, `color-scheme: light dark`, is correct only for a light
+  native theme. The measurement for #603 used only a light native theme.
+- No rule of the style sheet made the icons show in each of the four combinations.
+- A `background-image` behind the buttons has no effect. A `background-color` with
+  `forced-color-adjust: none` also has no effect. The area of the controls keeps the color
+  of the canvas.
+- The time of the audio element shows in each combination.
+- Without forced colors, the native theme has no effect on the icons.
+
+### What the measurement does not tell
+
+Only Windows has a real forced colors mode, and nobody measured it. It is not known which
+of the four combinations a real user can have. If the theme of the Windows apps and the
+high contrast theme are independent, each combination is possible. A user with a dark
+native theme then cannot see the icons of the buttons. Issue #717 asks for this
+measurement.
+
+### Change to the tests
+
+The two tests of the audio buttons in `test/e2e/forced_colors_test.exs` do not run while
+macOS is in the dark appearance. `Expresso.E2E.dark_native_theme/0` returns the reason, and
+the result of the run shows the two tests as skipped. The style sheet did not change.
+"Native theme of the browser" in `docs/development/browser-tests.md` tells how to run them.

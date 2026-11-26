@@ -95,6 +95,30 @@ defmodule Expresso.E2E do
   end
 
   @doc """
+  Return the reason to skip a test that needs a light native theme, or `nil`
+
+  In forced colors, Chromium inverts the icons of the audio controls when its
+  native theme is dark. A test can set the color scheme of a page, but not the
+  native theme, and no argument of Chromium makes the native theme light. On
+  macOS, the native theme is the appearance of the system, so the function
+  returns a reason while macOS is in the dark appearance. On each other
+  system, it returns `nil`. Give the result to `@tag skip:` in the module of
+  the test. `docs/development/browser-tests.md` gives the details.
+  """
+  @spec dark_native_theme() :: String.t() | nil
+  def dark_native_theme do
+    with {:unix, :darwin} <- :os.type(),
+         {"Dark" <> _rest, 0} <-
+           System.cmd("defaults", ["read", "-g", "AppleInterfaceStyle"], stderr_to_stdout: true) do
+      "macOS is in the dark appearance, and Chromium then inverts the icons of the audio " <>
+        "controls in forced colors. Select the light appearance to run this test. " <>
+        "See docs/development/browser-tests.md."
+    else
+      _light -> nil
+    end
+  end
+
+  @doc """
   Render a deck to an HTML file in the directory of the test, and give its
   address. The deck is a module of the DSL or an `Expresso.Deck` struct.
   """
