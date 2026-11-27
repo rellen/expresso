@@ -72,3 +72,5 @@ documentation:
 - `docs/each-occurrence.md` — the design for each occurrence of a symbol, and its result.
 - `docs/line-rewrites.md` — the design for the next line by a rewrite, and its result.
 - `docs/beta-reductions.md` — the design for each step of a β-reduction, and its progress.
+- `docs/reveal-first-step.md` — the design for a step 0 of a slide, which opens the slide
+  with no child of `reveal` on it. The code does not contain it yet.
