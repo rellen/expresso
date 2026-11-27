@@ -133,6 +133,10 @@ Read these documents before you change the code:
   a derivation by one β-reduction and shows it in four steps. The code contains this design.
   The document records ten decisions, and each is settled. Its last section, "Result",
   tells what changed during the work.
+- `docs/reveal-first-step.md` — the design for a slide that opens with no child of `reveal`
+  on it: the slide gets a step 0 in front of step 1, and the option `reveal_with_slide`
+  gives the earlier steps back. Issue #716 asked for it. The code does not contain this
+  design yet. The document records twelve decisions, and each is settled.
 
 ## Build and test
 
