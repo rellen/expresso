@@ -55,8 +55,7 @@ Read these documents before you change the code:
   the state on 2026-11-15 and a proposal for each defect. The maintainer answered its two
   questions, and the code contains each proposal. Its section "Result" tells what
   changed. Issues #603 and #604 hold the parts that nobody measured. Its last section,
-  "Native theme and the audio controls", records a measurement of 2026-11-27, and
-  issue #717 holds the part that needs Windows.
+  "Native theme and the audio controls", records a measurement of 2026-11-27.
 - `docs/export.md` — the design for the export from the command line: a PDF of a deck, and
   a PNG file of each slide, from a headless Chrome or Chromium. The code contains this
   design. The document records ten decisions, and each is settled. Its last section,

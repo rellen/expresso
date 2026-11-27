@@ -68,7 +68,7 @@ set the color scheme of a page, but it cannot set the native theme.
   theme, so the two tests run there.
 
 The section "Native theme and the audio controls" of `docs/accessibility-preferences.md`
-records the measurement. Issue #717 asks for a measurement on Windows.
+records the measurement.
 
 ## Look at a deck
 

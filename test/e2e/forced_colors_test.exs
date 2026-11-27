@@ -594,9 +594,8 @@ defmodule Expresso.E2E.ForcedColorsTest do
   #
   # The result depends on the native theme of Chromium, which a test cannot
   # set. With a dark native theme, Chromium inverts the icons, and they have
-  # the color of the canvas again. Issue #717 asks for a measurement on
-  # Windows. Until then, the two tests do not run on a Mac in the dark
-  # appearance.
+  # the color of the canvas again. Thus the two tests do not run on a Mac in
+  # the dark appearance.
   for {deck, scheme} <- [{MarkDeck, :dark}, {DarkAudioDeck, :light}] do
     if reason = dark_native_theme() do
       @tag skip: reason

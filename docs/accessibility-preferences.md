@@ -370,8 +370,7 @@ that system.
 
 It is not known which of the four combinations that user can have. If the theme of the
 Windows apps and the high contrast theme are independent, each combination is possible. A
-user with a dark native theme then cannot see the icons of the buttons. Issue #717 asks
-for this measurement.
+user with a dark native theme then cannot see the icons of the buttons.
 
 ### Change to the tests
 
