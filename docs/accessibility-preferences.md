@@ -362,11 +362,16 @@ is dark. The two browsers agree.
 
 ### What the measurement does not tell
 
-Only Windows has a real forced colors mode, and nobody measured it. It is not known which
-of the four combinations a real user can have. If the theme of the Windows apps and the
-high contrast theme are independent, each combination is possible. A user with a dark
-native theme then cannot see the icons of the buttons. Issue #717 asks for this
-measurement.
+Each measurement used the Playwright option `forcedColors`, which only imitates the mode.
+For a real user, Chromium turns on forced colors only on Windows, when the user selects a
+high contrast theme. macOS and Linux have no such mode in Chromium. Thus a user of
+Chromium or Edge on Windows is the reader that this defect can affect, and nobody measured
+that system.
+
+It is not known which of the four combinations that user can have. If the theme of the
+Windows apps and the high contrast theme are independent, each combination is possible. A
+user with a dark native theme then cannot see the icons of the buttons. Issue #717 asks
+for this measurement.
 
 ### Change to the tests
 
